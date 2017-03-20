@@ -1,0 +1,1502 @@
+{
+	"status": "Bundle information: 149 bundles in total - all 149 bundles active.",
+	"s": [
+		149,
+		145,
+		4,
+		0,
+		0
+	],
+	"data": [
+		{
+			"id": 0,
+			"name": "System Bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "5.6.1",
+			"symbolicName": "org.apache.felix.framework",
+			"category": ""
+		},
+		{
+			"id": 86,
+			"name": "Apache Apache HttpClient OSGi bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "4.4.1",
+			"symbolicName": "org.apache.httpcomponents.httpclient",
+			"category": ""
+		},
+		{
+			"id": 87,
+			"name": "Apache Apache HttpCore OSGi bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "4.4.1",
+			"symbolicName": "org.apache.httpcomponents.httpcore",
+			"category": ""
+		},
+		{
+			"id": 22,
+			"name": "Apache Aries JMX API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.5",
+			"symbolicName": "org.apache.aries.jmx.api",
+			"category": ""
+		},
+		{
+			"id": 23,
+			"name": "Apache Aries JMX Core",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.7",
+			"symbolicName": "org.apache.aries.jmx.core",
+			"category": ""
+		},
+		{
+			"id": 4,
+			"name": "Apache Aries Util",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.3",
+			"symbolicName": "org.apache.aries.util",
+			"category": ""
+		},
+		{
+			"id": 24,
+			"name": "Apache Aries Whiteboard support for JMX DynamicMBean services",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.5",
+			"symbolicName": "org.apache.aries.jmx.whiteboard",
+			"category": ""
+		},
+		{
+			"id": 79,
+			"name": "Apache Commons Codec",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.9.0",
+			"symbolicName": "org.apache.commons.codec",
+			"category": ""
+		},
+		{
+			"id": 80,
+			"name": "Apache Commons Collections",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.2.2",
+			"symbolicName": "org.apache.commons.collections",
+			"category": ""
+		},
+		{
+			"id": 81,
+			"name": "Apache Commons Collections",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "4.1.0",
+			"symbolicName": "org.apache.commons.collections4",
+			"category": ""
+		},
+		{
+			"id": 19,
+			"name": "Apache Commons FileUpload",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.3.2",
+			"symbolicName": "org.apache.commons.fileupload",
+			"category": ""
+		},
+		{
+			"id": 20,
+			"name": "Apache Commons IO",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.5.0",
+			"symbolicName": "org.apache.commons.io",
+			"category": ""
+		},
+		{
+			"id": 84,
+			"name": "Apache Commons Lang",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.4.0",
+			"symbolicName": "org.apache.commons.lang3",
+			"category": ""
+		},
+		{
+			"id": 25,
+			"name": "Apache Felix Bundle Repository",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.6.4",
+			"symbolicName": "org.apache.felix.bundlerepository",
+			"category": ""
+		},
+		{
+			"id": 5,
+			"name": "Apache Felix Configuration Admin Service",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.8.10",
+			"symbolicName": "org.apache.felix.configadmin",
+			"category": "osgi"
+		},
+		{
+			"id": 44,
+			"name": "Apache Felix Declarative Services",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.0.8",
+			"symbolicName": "org.apache.felix.scr",
+			"category": "osgi"
+		},
+		{
+			"id": 6,
+			"name": "Apache Felix EventAdmin",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.4.8",
+			"symbolicName": "org.apache.felix.eventadmin",
+			"category": ""
+		},
+		{
+			"id": 26,
+			"name": "Apache Felix Http Jetty",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.4.2",
+			"symbolicName": "org.apache.felix.http.jetty",
+			"category": ""
+		},
+		{
+			"id": 41,
+			"name": "Apache Felix Http SSL Filter",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.0",
+			"symbolicName": "org.apache.felix.http.sslfilter",
+			"category": ""
+		},
+		{
+			"id": 90,
+			"name": "Apache Felix Http Whiteboard",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.0.0",
+			"symbolicName": "org.apache.felix.http.whiteboard",
+			"category": ""
+		},
+		{
+			"id": 28,
+			"name": "Apache Felix Inventory",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.4",
+			"symbolicName": "org.apache.felix.inventory",
+			"category": "osgi"
+		},
+		{
+			"id": 42,
+			"name": "Apache Felix JAAS Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.2",
+			"symbolicName": "org.apache.felix.jaas",
+			"category": ""
+		},
+		{
+			"id": 43,
+			"name": "Apache Felix Metatype Service",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.2",
+			"symbolicName": "org.apache.felix.metatype",
+			"category": "osgi"
+		},
+		{
+			"id": 29,
+			"name": "Apache Felix Preferences Service",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.0",
+			"symbolicName": "org.apache.felix.prefs",
+			"category": "osgi"
+		},
+		{
+			"id": 27,
+			"name": "Apache Felix Servlet API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.2",
+			"symbolicName": "org.apache.felix.http.servlet-api",
+			"category": ""
+		},
+		{
+			"id": 32,
+			"name": "Apache Felix Web Console Event Plugin",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.4",
+			"symbolicName": "org.apache.felix.webconsole.plugins.event",
+			"category": ""
+		},
+		{
+			"id": 33,
+			"name": "Apache Felix Web Console Memory Usage Plugin",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.6",
+			"symbolicName": "org.apache.felix.webconsole.plugins.memoryusage",
+			"category": ""
+		},
+		{
+			"id": 34,
+			"name": "Apache Felix Web Console OBR Plugin",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.2",
+			"symbolicName": "org.apache.felix.webconsole.plugins.obr",
+			"category": ""
+		},
+		{
+			"id": 35,
+			"name": "Apache Felix Web Console Package Admin Service Plugin",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.2",
+			"symbolicName": "org.apache.felix.webconsole.plugins.packageadmin",
+			"category": ""
+		},
+		{
+			"id": 31,
+			"name": "Apache Felix Web Console Service Component Runtime/Declarative Services Plugin",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.0.4",
+			"symbolicName": "org.apache.felix.webconsole.plugins.ds",
+			"category": ""
+		},
+		{
+			"id": 30,
+			"name": "Apache Felix Web Management Console",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "4.2.16",
+			"symbolicName": "org.apache.felix.webconsole",
+			"category": ""
+		},
+		{
+			"id": 82,
+			"name": "Apache Geronimo Bundles: commons-httpclient-3.1",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.1.0.1",
+			"symbolicName": "org.apache.geronimo.bundles.commons-httpclient",
+			"category": ""
+		},
+		{
+			"id": 21,
+			"name": "Apache Geronimo Bundles: json-20090211",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "20090211.0.0.1",
+			"symbolicName": "org.apache.geronimo.bundles.json",
+			"category": ""
+		},
+		{
+			"id": 88,
+			"name": "Apache Geronimo Bundles: jstl-1.2",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.2.0.1",
+			"symbolicName": "org.apache.geronimo.bundles.jstl",
+			"category": ""
+		},
+		{
+			"id": 1,
+			"name": "Apache Geronimo JSR-330 Spec API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0",
+			"symbolicName": "org.apache.geronimo.specs.geronimo-atinject_1.0_spec",
+			"category": ""
+		},
+		{
+			"id": 49,
+			"name": "Apache Jackrabbit API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.14.0",
+			"symbolicName": "org.apache.jackrabbit.jackrabbit-api",
+			"category": "jcr,jackrabbit"
+		},
+		{
+			"id": 78,
+			"name": "Apache Jackrabbit FileVault Core Bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.1.30",
+			"symbolicName": "org.apache.jackrabbit.vault",
+			"category": "jcr,granite"
+		},
+		{
+			"id": 128,
+			"name": "Apache Sling - Slingshot Demo",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "0.8.0",
+			"symbolicName": "org.apache.sling.sample.slingshot",
+			"category": "sling"
+		},
+		{
+			"id": 91,
+			"name": "Apache Sling Adapter Manager Implementation",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.1.8",
+			"symbolicName": "org.apache.sling.adapter",
+			"category": "sling"
+		},
+		{
+			"id": 92,
+			"name": "Apache Sling API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.16.2",
+			"symbolicName": "org.apache.sling.api",
+			"category": "sling"
+		},
+		{
+			"id": 93,
+			"name": "Apache Sling Authentication Service",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.3.24",
+			"symbolicName": "org.apache.sling.auth.core",
+			"category": "sling"
+		},
+		{
+			"id": 95,
+			"name": "Apache Sling Bundle Resource Provider",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.2.0",
+			"symbolicName": "org.apache.sling.bundleresource.impl",
+			"category": "sling"
+		},
+		{
+			"id": 98,
+			"name": "Apache Sling Commons FileSystem ClassLoader",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.6",
+			"symbolicName": "org.apache.sling.commons.fsclassloader",
+			"category": "sling"
+		},
+		{
+			"id": 97,
+			"name": "Apache Sling Commons Java Compiler",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.3.0",
+			"symbolicName": "org.apache.sling.commons.compiler",
+			"category": "sling"
+		},
+		{
+			"id": 100,
+			"name": "Apache Sling Commons OSGi support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.4.0",
+			"symbolicName": "org.apache.sling.commons.osgi",
+			"category": "sling"
+		},
+		{
+			"id": 65,
+			"name": "Apache Sling DavEx Access to repositories",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.3.8",
+			"symbolicName": "org.apache.sling.jcr.davex",
+			"category": "sling,jcr"
+		},
+		{
+			"id": 143,
+			"name": "Apache Sling Default GET Servlets",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.1.22",
+			"symbolicName": "org.apache.sling.servlets.get",
+			"category": "sling"
+		},
+		{
+			"id": 144,
+			"name": "Apache Sling Default POST Servlets",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.3.14",
+			"symbolicName": "org.apache.sling.servlets.post",
+			"category": "sling"
+		},
+		{
+			"id": 103,
+			"name": "Apache Sling Discovery API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.4",
+			"symbolicName": "org.apache.sling.discovery.api",
+			"category": "sling"
+		},
+		{
+			"id": 104,
+			"name": "Apache Sling Discovery Base",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.6",
+			"symbolicName": "org.apache.sling.discovery.base",
+			"category": "sling"
+		},
+		{
+			"id": 105,
+			"name": "Apache Sling Discovery Commons",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.18",
+			"symbolicName": "org.apache.sling.discovery.commons",
+			"category": "sling"
+		},
+		{
+			"id": 107,
+			"name": "Apache Sling Discovery Support Bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.0",
+			"symbolicName": "org.apache.sling.discovery.support",
+			"category": "sling"
+		},
+		{
+			"id": 110,
+			"name": "Apache Sling Distributed Event Admin",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.2",
+			"symbolicName": "org.apache.sling.event.dea",
+			"category": "sling"
+		},
+		{
+			"id": 96,
+			"name": "Apache Sling Dynamic Class Loader Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.4.0",
+			"symbolicName": "org.apache.sling.commons.classloader",
+			"category": "sling"
+		},
+		{
+			"id": 108,
+			"name": "Apache Sling Engine Implementation",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.6.6",
+			"symbolicName": "org.apache.sling.engine",
+			"category": "sling"
+		},
+		{
+			"id": 109,
+			"name": "Apache Sling Event Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "4.2.2",
+			"symbolicName": "org.apache.sling.event",
+			"category": "sling"
+		},
+		{
+			"id": 14,
+			"name": "Apache Sling File Installer",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.0",
+			"symbolicName": "org.apache.sling.installer.provider.file",
+			"category": "sling"
+		},
+		{
+			"id": 111,
+			"name": "Apache Sling Filesystem Resource Provider",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.2.2",
+			"symbolicName": "org.apache.sling.fsresource",
+			"category": "sling"
+		},
+		{
+			"id": 94,
+			"name": "Apache Sling Form Based Authentication Handler",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.8",
+			"symbolicName": "org.apache.sling.auth.form",
+			"category": "sling"
+		},
+		{
+			"id": 112,
+			"name": "Apache Sling Health Check Core",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.2.6",
+			"symbolicName": "org.apache.sling.hc.core",
+			"category": "sling"
+		},
+		{
+			"id": 113,
+			"name": "Apache Sling Health Check Webconsole Plugin",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.2",
+			"symbolicName": "org.apache.sling.hc.webconsole",
+			"category": "sling"
+		},
+		{
+			"id": 117,
+			"name": "Apache Sling Initial Content Loader",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.1.11.SNAPSHOT",
+			"symbolicName": "org.apache.sling.jcr.contentloader",
+			"category": "sling,jcr,jackrabbit"
+		},
+		{
+			"id": 12,
+			"name": "Apache Sling Installer",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.8.6",
+			"symbolicName": "org.apache.sling.installer.core",
+			"category": "sling"
+		},
+		{
+			"id": 13,
+			"name": "Apache Sling Installer Configuration Admin Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.2",
+			"symbolicName": "org.apache.sling.installer.factory.configuration",
+			"category": "sling"
+		},
+		{
+			"id": 115,
+			"name": "Apache Sling Installer WebConsole Plugin",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.2",
+			"symbolicName": "org.apache.sling.installer.console",
+			"category": "sling"
+		},
+		{
+			"id": 114,
+			"name": "Apache Sling Internationalization Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.5.8",
+			"symbolicName": "org.apache.sling.i18n",
+			"category": "sling"
+		},
+		{
+			"id": 66,
+			"name": "Apache Sling Jackrabbit JSR-283 Access Control Manager Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.1.2",
+			"symbolicName": "org.apache.sling.jcr.jackrabbit.accessmanager",
+			"category": "sling"
+		},
+		{
+			"id": 67,
+			"name": "Apache Sling Jackrabbit UserManager Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.2.4",
+			"symbolicName": "org.apache.sling.jcr.jackrabbit.usermanager",
+			"category": "sling"
+		},
+		{
+			"id": 15,
+			"name": "Apache Sling javax.activation bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "0.1.0",
+			"symbolicName": "org.apache.sling.javax.activation",
+			"category": "sling"
+		},
+		{
+			"id": 64,
+			"name": "Apache Sling JCR Base Bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.0.0",
+			"symbolicName": "org.apache.sling.jcr.base",
+			"category": "sling,jcr,jackrabbit"
+		},
+		{
+			"id": 116,
+			"name": "Apache Sling JCR Installer",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.1.24",
+			"symbolicName": "org.apache.sling.installer.provider.jcr",
+			"category": "sling"
+		},
+		{
+			"id": 72,
+			"name": "Apache Sling JCR Oak Repository Server",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.3.SNAPSHOT",
+			"symbolicName": "org.apache.sling.jcr.oak.server",
+			"category": "sling"
+		},
+		{
+			"id": 118,
+			"name": "Apache Sling JCR RepoInit module",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.2",
+			"symbolicName": "org.apache.sling.jcr.repoinit",
+			"category": "sling"
+		},
+		{
+			"id": 69,
+			"name": "Apache Sling JCR Repository Registration",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.2",
+			"symbolicName": "org.apache.sling.jcr.registration",
+			"category": "sling,jcr"
+		},
+		{
+			"id": 119,
+			"name": "Apache Sling JCR Resource Resolver",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.9.2",
+			"symbolicName": "org.apache.sling.jcr.resource",
+			"category": "sling"
+		},
+		{
+			"id": 70,
+			"name": "Apache Sling JCR WebConsole Bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.2",
+			"symbolicName": "org.apache.sling.jcr.webconsole",
+			"category": "sling,jcr"
+		},
+		{
+			"id": 36,
+			"name": "Apache Sling JSON Library",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.0.18",
+			"symbolicName": "org.apache.sling.commons.json",
+			"category": "sling"
+		},
+		{
+			"id": 135,
+			"name": "Apache Sling JSP Tag Library",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.2.6",
+			"symbolicName": "org.apache.sling.scripting.jsp.taglib",
+			"category": "sling"
+		},
+		{
+			"id": 120,
+			"name": "Apache Sling JUnit Core",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.23",
+			"symbolicName": "org.apache.sling.junit.core",
+			"category": "sling"
+		},
+		{
+			"id": 121,
+			"name": "Apache Sling Launchpad Content",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.0.9.SNAPSHOT",
+			"symbolicName": "org.apache.sling.launchpad.content",
+			"category": "sling"
+		},
+		{
+			"id": 16,
+			"name": "Apache Sling Launchpad Installer",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.2.2",
+			"symbolicName": "org.apache.sling.launchpad.installer",
+			"category": "sling"
+		},
+		{
+			"id": 37,
+			"name": "Apache Sling Log WebConsole",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.0",
+			"symbolicName": "org.apache.sling.commons.log.webconsole",
+			"category": "sling"
+		},
+		{
+			"id": 62,
+			"name": "Apache Sling Metrics",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.2.0",
+			"symbolicName": "org.apache.sling.commons.metrics",
+			"category": "sling"
+		},
+		{
+			"id": 99,
+			"name": "Apache Sling MIME type mapping support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.1.10",
+			"symbolicName": "org.apache.sling.commons.mime",
+			"category": "sling"
+		},
+		{
+			"id": 122,
+			"name": "Apache Sling Models API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.3.2",
+			"symbolicName": "org.apache.sling.models.api",
+			"category": "sling"
+		},
+		{
+			"id": 123,
+			"name": "Apache Sling Models Implementation",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.3.8",
+			"symbolicName": "org.apache.sling.models.impl",
+			"category": "sling"
+		},
+		{
+			"id": 124,
+			"name": "Apache Sling Models Validation Implementation",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.0.SNAPSHOT",
+			"symbolicName": "org.apache.sling.models.validation-impl",
+			"category": "sling"
+		},
+		{
+			"id": 106,
+			"name": "Apache Sling Oak-Based Discovery Service",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.2.16",
+			"symbolicName": "org.apache.sling.discovery.oak",
+			"category": "sling"
+		},
+		{
+			"id": 8,
+			"name": "Apache Sling OSGi LogService Implementation",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.6",
+			"symbolicName": "org.apache.sling.commons.logservice",
+			"category": "sling"
+		},
+		{
+			"id": 125,
+			"name": "Apache Sling Provisioning Model",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.8.0",
+			"symbolicName": "org.apache.sling.provisioning.model",
+			"category": "sling"
+		},
+		{
+			"id": 126,
+			"name": "Apache Sling RepoInit Parser",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.1.0",
+			"symbolicName": "org.apache.sling.repoinit.parser",
+			"category": "sling"
+		},
+		{
+			"id": 63,
+			"name": "Apache Sling Repository API Bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.4.0",
+			"symbolicName": "org.apache.sling.jcr.api",
+			"category": "sling,jcr,jackrabbit"
+		},
+		{
+			"id": 127,
+			"name": "Apache Sling Resource Resolver",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.5.21.SNAPSHOT",
+			"symbolicName": "org.apache.sling.resourceresolver",
+			"category": "sling"
+		},
+		{
+			"id": 101,
+			"name": "Apache Sling Scheduler Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.5.2",
+			"symbolicName": "org.apache.sling.commons.scheduler",
+			"category": "sling"
+		},
+		{
+			"id": 130,
+			"name": "Apache Sling Scripting Core implementation",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.0.46",
+			"symbolicName": "org.apache.sling.scripting.core",
+			"category": "sling"
+		},
+		{
+			"id": 137,
+			"name": "Apache Sling Scripting HTL Compiler",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.8",
+			"symbolicName": "org.apache.sling.scripting.sightly.compiler",
+			"category": "sling"
+		},
+		{
+			"id": 136,
+			"name": "Apache Sling Scripting HTL Engine",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.32",
+			"symbolicName": "org.apache.sling.scripting.sightly",
+			"category": "sling"
+		},
+		{
+			"id": 138,
+			"name": "Apache Sling Scripting HTL Java Compiler",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.8",
+			"symbolicName": "org.apache.sling.scripting.sightly.compiler.java",
+			"category": "sling"
+		},
+		{
+			"id": 139,
+			"name": "Apache Sling Scripting HTL JavaScript Use Provider",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.20",
+			"symbolicName": "org.apache.sling.scripting.sightly.js.provider",
+			"category": "sling"
+		},
+		{
+			"id": 141,
+			"name": "Apache Sling Scripting HTL Read-Eval-Print Loop Environment",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.4",
+			"symbolicName": "org.apache.sling.scripting.sightly.repl",
+			"category": "sling"
+		},
+		{
+			"id": 140,
+			"name": "Apache Sling Scripting HTL Sling Models Use Provider",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.6",
+			"symbolicName": "org.apache.sling.scripting.sightly.models.provider",
+			"category": "sling"
+		},
+		{
+			"id": 129,
+			"name": "Apache Sling Scripting Implementation API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.1.12",
+			"symbolicName": "org.apache.sling.scripting.api",
+			"category": "sling"
+		},
+		{
+			"id": 132,
+			"name": "Apache Sling Scripting JavaScript Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.0.30",
+			"symbolicName": "org.apache.sling.scripting.javascript",
+			"category": "sling"
+		},
+		{
+			"id": 133,
+			"name": "Apache Sling Scripting JSP Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.2.7.SNAPSHOT",
+			"symbolicName": "org.apache.sling.scripting.jsp",
+			"category": "sling"
+		},
+		{
+			"id": 142,
+			"name": "Apache Sling Service User Mapper",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.2.4",
+			"symbolicName": "org.apache.sling.serviceusermapper",
+			"category": "sling"
+		},
+		{
+			"id": 145,
+			"name": "Apache Sling Servlet Resolver",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.4.10",
+			"symbolicName": "org.apache.sling.servlets.resolver",
+			"category": "sling"
+		},
+		{
+			"id": 17,
+			"name": "Apache Sling Settings",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.3.8",
+			"symbolicName": "org.apache.sling.settings",
+			"category": "sling"
+		},
+		{
+			"id": 71,
+			"name": "Apache Sling Simple WebDAV Access to repositories",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.3.8",
+			"symbolicName": "org.apache.sling.jcr.webdav",
+			"category": "sling,jcr"
+		},
+		{
+			"id": 7,
+			"name": "Apache Sling SLF4J Implementation (Logback)",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "5.0.1.SNAPSHOT",
+			"symbolicName": "org.apache.sling.commons.log",
+			"category": "sling"
+		},
+		{
+			"id": 9,
+			"name": "Apache Sling System Bundle Extension: Java Transaction API",
+			"fragment": true,
+			"stateRaw": 4,
+			"state": "Fragment",
+			"version": "1.0.0",
+			"symbolicName": "org.apache.sling.fragment.transaction",
+			"category": "sling"
+		},
+		{
+			"id": 10,
+			"name": "Apache Sling System Bundle Extension: WS APIs",
+			"fragment": true,
+			"stateRaw": 4,
+			"state": "Fragment",
+			"version": "1.0.2",
+			"symbolicName": "org.apache.sling.fragment.ws",
+			"category": "sling"
+		},
+		{
+			"id": 11,
+			"name": "Apache Sling System Bundle Extension: XML APIs",
+			"fragment": true,
+			"stateRaw": 4,
+			"state": "Fragment",
+			"version": "1.0.2",
+			"symbolicName": "org.apache.sling.fragment.xml",
+			"category": "sling"
+		},
+		{
+			"id": 38,
+			"name": "Apache Sling Thread Dumper",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "0.2.2",
+			"symbolicName": "org.apache.sling.extensions.threaddump",
+			"category": "sling"
+		},
+		{
+			"id": 102,
+			"name": "Apache Sling Thread Support",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.2.6",
+			"symbolicName": "org.apache.sling.commons.threads",
+			"category": "sling"
+		},
+		{
+			"id": 146,
+			"name": "Apache Sling Validation Framework API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.0.SNAPSHOT",
+			"symbolicName": "org.apache.sling.validation.api",
+			"category": "sling"
+		},
+		{
+			"id": 147,
+			"name": "Apache Sling Validation Framework Core Implementation",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.0.SNAPSHOT",
+			"symbolicName": "org.apache.sling.validation.core",
+			"category": "sling"
+		},
+		{
+			"id": 39,
+			"name": "Apache Sling Web Console Branding",
+			"fragment": true,
+			"stateRaw": 4,
+			"state": "Fragment",
+			"version": "1.0.0",
+			"symbolicName": "org.apache.sling.extensions.webconsolebranding",
+			"category": "sling"
+		},
+		{
+			"id": 40,
+			"name": "Apache Sling Web Console Security Provider",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.0",
+			"symbolicName": "org.apache.sling.extensions.webconsolesecurityprovider",
+			"category": "sling"
+		},
+		{
+			"id": 131,
+			"name": "Apache Sling Wrapper Bundle for Apache Tomcat EL API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.0.SNAPSHOT",
+			"symbolicName": "org.apache.sling.scripting.el-api",
+			"category": "sling"
+		},
+		{
+			"id": 134,
+			"name": "Apache Sling Wrapper Bundle for Apache Tomcat JSP API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.0.SNAPSHOT",
+			"symbolicName": "org.apache.sling.scripting.jsp-api",
+			"category": "sling"
+		},
+		{
+			"id": 68,
+			"name": "Apache Sling Wrapper Bundle for the JCR API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.0.0",
+			"symbolicName": "org.apache.sling.jcr.jcr-wrapper",
+			"category": "sling"
+		},
+		{
+			"id": 148,
+			"name": "Apache Sling XSS Protection Bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.0.18",
+			"symbolicName": "org.apache.sling.xss",
+			"category": "sling"
+		},
+		{
+			"id": 46,
+			"name": "Apache Tika core",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.14.0",
+			"symbolicName": "org.apache.tika.core",
+			"category": ""
+		},
+		{
+			"id": 45,
+			"name": "Apache Tika OSGi bundle",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.14.0",
+			"symbolicName": "org.apache.tika.bundle",
+			"category": ""
+		},
+		{
+			"id": 83,
+			"name": "Commons Lang",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.6",
+			"symbolicName": "org.apache.commons.lang",
+			"category": ""
+		},
+		{
+			"id": 85,
+			"name": "Commons Math",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.2",
+			"symbolicName": "org.apache.commons.math",
+			"category": ""
+		},
+		{
+			"id": 74,
+			"name": "Composum Core Console",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.7.0",
+			"symbolicName": "com.composum.core.console",
+			"category": "composum,core"
+		},
+		{
+			"id": 75,
+			"name": "Composum Core JS Libraries",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.7.0",
+			"symbolicName": "com.composum.core.jslibs",
+			"category": "composum,core"
+		},
+		{
+			"id": 73,
+			"name": "Composum Core Sling API",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.7.0",
+			"symbolicName": "com.composum.core.commons",
+			"category": "composum,core"
+		},
+		{
+			"id": 76,
+			"name": "Composum Package Manager",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.7.0",
+			"symbolicName": "com.composum.core.pckgmgr",
+			"category": "composum,core"
+		},
+		{
+			"id": 77,
+			"name": "Composum User Managmenent",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.7.0",
+			"symbolicName": "com.composum.core.usermgnt",
+			"category": "composum,core"
+		},
+		{
+			"id": 48,
+			"name": "Guava: Google Core Libraries for Java",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "15.0.0",
+			"symbolicName": "com.google.guava",
+			"category": ""
+		},
+		{
+			"id": 50,
+			"name": "Jackrabbit Data",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.14.0",
+			"symbolicName": "org.apache.jackrabbit.jackrabbit-data",
+			"category": "jcr,jackrabbit"
+		},
+		{
+			"id": 51,
+			"name": "Jackrabbit JCR Commons",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.14.0",
+			"symbolicName": "org.apache.jackrabbit.jackrabbit-jcr-commons",
+			"category": "jcr,jackrabbit"
+		},
+		{
+			"id": 52,
+			"name": "Jackrabbit JCR-RMI",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.14.0",
+			"symbolicName": "org.apache.jackrabbit.jackrabbit-jcr-rmi",
+			"category": "jcr,jackrabbit"
+		},
+		{
+			"id": 53,
+			"name": "Jackrabbit SPI",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.14.0",
+			"symbolicName": "org.apache.jackrabbit.jackrabbit-spi",
+			"category": "jcr,jackrabbit"
+		},
+		{
+			"id": 54,
+			"name": "Jackrabbit SPI Commons",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.14.0",
+			"symbolicName": "org.apache.jackrabbit.jackrabbit-spi-commons",
+			"category": "jcr,jackrabbit"
+		},
+		{
+			"id": 55,
+			"name": "Jackrabbit WebDAV Library",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "2.14.0",
+			"symbolicName": "org.apache.jackrabbit.jackrabbit-webdav",
+			"category": "jcr,jackrabbit"
+		},
+		{
+			"id": 89,
+			"name": "JavaMail API (compat)",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.4.7",
+			"symbolicName": "javax.mail",
+			"category": ""
+		},
+		{
+			"id": 2,
+			"name": "jcl-over-slf4j",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.7.21",
+			"symbolicName": "jcl.over.slf4j",
+			"category": ""
+		},
+		{
+			"id": 3,
+			"name": "log4j-over-slf4j",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.7.21",
+			"symbolicName": "log4j.over.slf4j",
+			"category": ""
+		},
+		{
+			"id": 56,
+			"name": "Metrics Core",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "3.1.0",
+			"symbolicName": "io.dropwizard.metrics.core",
+			"category": ""
+		},
+		{
+			"id": 57,
+			"name": "Oak Blob Store",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.6.1",
+			"symbolicName": "org.apache.jackrabbit.oak-blob",
+			"category": "oak"
+		},
+		{
+			"id": 58,
+			"name": "Oak Commons",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.6.1",
+			"symbolicName": "org.apache.jackrabbit.oak-commons",
+			"category": "oak"
+		},
+		{
+			"id": 59,
+			"name": "Oak Core",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.6.1",
+			"symbolicName": "org.apache.jackrabbit.oak-core",
+			"category": "oak"
+		},
+		{
+			"id": 60,
+			"name": "Oak JCR Binding",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.6.1",
+			"symbolicName": "org.apache.jackrabbit.oak-jcr",
+			"category": "oak"
+		},
+		{
+			"id": 61,
+			"name": "Oak Lucene",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.6.1",
+			"symbolicName": "org.apache.jackrabbit.oak-lucene",
+			"category": "oak"
+		},
+		{
+			"id": 47,
+			"name": "Oak Segment Tar",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.6.1",
+			"symbolicName": "org.apache.jackrabbit.oak-segment-tar",
+			"category": "oak"
+		},
+		{
+			"id": 18,
+			"name": "slf4j-api",
+			"fragment": false,
+			"stateRaw": 32,
+			"state": "Active",
+			"version": "1.7.21",
+			"symbolicName": "slf4j.api",
+			"category": ""
+		}
+	]
+}

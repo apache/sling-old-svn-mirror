@@ -17,6 +17,8 @@
 package org.apache.sling.ide.impl.resource.transport;
 
 
+import java.io.InputStreamReader;
+
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -26,8 +28,9 @@ import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
-import org.json.JSONArray;
-import org.json.JSONObject;
+
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 
 class GetNodeContentCommand extends AbstractCommand<ResourceProxy> {
 
@@ -48,21 +51,21 @@ class GetNodeContentCommand extends AbstractCommand<ResourceProxy> {
             if (!isSuccessStatus(responseStatus))
                 return failureResultForStatusCode(responseStatus);
 
-            JSONObject result = new JSONObject(get.getResponseBodyAsString());
-
             ResourceProxy resource = new ResourceProxy(path);
-            JSONArray names = result.names();
-            for (int i = 0; i < names.length(); i++) {
-                String name = names.getString(i);
-                Object object = result.get(name);
-                if (object instanceof String) {
-                    resource.addProperty(name, object);
-                } else {
-                    System.out.println("Property '" + name + "' of type '" + object.getClass().getName()
-                            + " is not handled");
+            try (JsonReader jsonReader = new JsonReader(
+                    new InputStreamReader(get.getResponseBodyAsStream(), get.getResponseCharSet()))) {
+                jsonReader.beginObject();
+                while (jsonReader.hasNext()) {
+                    String name = jsonReader.nextName();
+                    JsonToken token = jsonReader.peek();
+                    if (token == JsonToken.STRING) {
+                        resource.addProperty(name, jsonReader.nextString());
+                    } else {
+                        jsonReader.skipValue();
+                    }
                 }
+                jsonReader.endObject();
             }
-
             return AbstractResult.success(resource);
     	} catch (Exception e) {
     		return AbstractResult.failure(new RepositoryException(e));

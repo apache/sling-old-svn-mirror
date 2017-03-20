@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.test.impl.helpers;
 
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,10 +30,9 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.junit.rules.ExternalResource;
+
+import com.google.gson.stream.JsonReader;
 
 import junit.framework.AssertionFailedError;
 
@@ -148,24 +146,29 @@ public class ExternalSlingLaunchpad extends ExternalResource {
                 return false;
             }
 
-            try ( InputStream input = httpMethod.getResponseBodyAsStream()) {
-            
-                JSONObject obj = new JSONObject(new JSONTokener(new InputStreamReader(input)));
+            try (JsonReader jsonReader = new JsonReader(
+                    new InputStreamReader(httpMethod.getResponseBodyAsStream(), httpMethod.getResponseCharSet()))) {
+                jsonReader.beginObject();
+                while (jsonReader.hasNext()) {
+                    String name = jsonReader.nextName();
+                    if (name.equals("s")) {
+                        jsonReader.beginArray();
+                        int total = jsonReader.nextInt();
+                        int active = jsonReader.nextInt();
+                        int fragment = jsonReader.nextInt();
+                        debug("bundle http call status: total = " + total + ", active = " + active + ", fragment = " + fragment);
 
-                JSONArray bundleStatus = obj.getJSONArray("s");
-
-                int total = bundleStatus.getInt(0);
-                int active = bundleStatus.getInt(1);
-                int fragment = bundleStatus.getInt(2);
-
-                debug("bundle http call status: total = " + total + ", active = " + active + ", fragment = " + fragment);
-
-                if (total == active + fragment) {
-                    debug("All bundles are started, we are done here");
-                    return true;
+                        if (total == active + fragment) {
+                            debug("All bundles are started, we are done here");
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        jsonReader.skipValue();
+                    }
                 }
             }
-            
             return false;
         }
     }
