@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -31,6 +32,7 @@ import org.apache.sling.caconfig.resource.impl.util.MapUtil;
 import org.apache.sling.caconfig.resource.impl.util.PropertiesFilterUtil;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
+import org.apache.sling.caconfig.spi.ConfigurationPersistenceAccessDeniedException;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceException;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.osgi.service.component.ComponentContext;
@@ -184,7 +186,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
                 resourceResolver.delete(resource);
             }
             catch (PersistenceException ex) {
-                throw new ConfigurationPersistenceException("Unable to delete configuration at " + configResourcePath, ex);
+                throw convertPeristenceException("Unable to delete configuration at " + configResourcePath, ex);
             }
         }
         commit(resourceResolver);
@@ -200,7 +202,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             return resource;
         }
         catch (PersistenceException ex) {
-            throw new ConfigurationPersistenceException("Unable to persist configuration to " + path, ex);
+            throw convertPeristenceException("Unable to persist configuration to " + path, ex);
         }
     }
 
@@ -213,7 +215,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             }
         }
         catch (PersistenceException ex) {
-            throw new ConfigurationPersistenceException("Unable to remove children from " + resource.getPath(), ex);
+            throw convertPeristenceException("Unable to remove children from " + resource.getPath(), ex);
         }
     }
     
@@ -222,6 +224,9 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             log.trace("! Store properties for resource {}: {}", resource.getPath(), MapUtil.traceOutput(properties));
         }
         ModifiableValueMap modValueMap = resource.adaptTo(ModifiableValueMap.class);
+        if (modValueMap == null) {
+            throw new ConfigurationPersistenceAccessDeniedException("Unable to write properties to " + resource.getPath() + " - access is read-only.");
+        }
         // remove all existing properties that are not filterd
         Set<String> propertyNamesToRemove = new HashSet<>(modValueMap.keySet());
         PropertiesFilterUtil.removeIgnoredProperties(propertyNamesToRemove);
@@ -236,8 +241,16 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
             resourceResolver.commit();
         }
         catch (PersistenceException ex) {
-            throw new ConfigurationPersistenceException("Unable to save configuration: " + ex.getMessage(), ex);
+            throw convertPeristenceException("Unable to commit configuration changes: " + ex.getMessage(), ex);
         }
+    }
+    
+    private ConfigurationPersistenceException convertPeristenceException(String message, PersistenceException ex) {
+        if (StringUtils.equals(ex.getCause().getClass().getName(), "javax.jcr.AccessDeniedException")) {
+            // detect if commit failed due to read-only access to repository 
+            return new ConfigurationPersistenceAccessDeniedException(message, ex);
+        }
+        return new ConfigurationPersistenceException(message, ex);
     }
 
 }
