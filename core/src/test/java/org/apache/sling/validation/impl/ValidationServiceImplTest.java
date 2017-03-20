@@ -56,6 +56,7 @@ import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.ValidatorAndSeverity;
+import org.apache.sling.validation.model.spi.ValidationModelRetriever;
 import org.apache.sling.validation.spi.DefaultValidationFailure;
 import org.apache.sling.validation.spi.DefaultValidationResult;
 import org.apache.sling.validation.spi.ValidationContext;

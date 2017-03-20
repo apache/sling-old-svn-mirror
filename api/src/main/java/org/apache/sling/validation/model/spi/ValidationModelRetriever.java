@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl;
+package org.apache.sling.validation.model.spi;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.model.ValidationModel;
 
+/** Retrieves the validation model. */
 public interface ValidationModelRetriever {
     /**
      * A model for the given resourceType at the given resourcePath

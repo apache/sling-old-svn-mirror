@@ -37,6 +37,7 @@ import org.apache.sling.validation.impl.model.MergedValidationModel;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.ValidatorAndSeverity;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
+import org.apache.sling.validation.model.spi.ValidationModelRetriever;
 import org.apache.sling.validation.spi.Validator;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
