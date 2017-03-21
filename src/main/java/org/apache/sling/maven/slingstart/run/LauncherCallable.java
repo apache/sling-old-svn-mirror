@@ -102,8 +102,8 @@ public class LauncherCallable implements Callable<ProcessDescription> {
             if ( !started ) {
                 throw new Exception("Launchpad did not start successfully in " + this.environment.getReadyTimeOutSec() + " seconds.");
             }
-            this.logger.info("Started Launchpad " + configuration.getId() +
-                    " [" + configuration.getRunmode() + ", " + configuration.getPort() + "]");
+            this.logger.info("Started Launchpad '" + configuration.getId() +
+                    "' at port " + configuration.getPort()+ " [run modes: " + configuration.getRunmode()+ "]");
         } finally {
             // stop control port
             cfg.getControlListener().stop();
@@ -212,7 +212,7 @@ public class LauncherCallable implements Callable<ProcessDescription> {
         boolean isNew = false;
 
         if (cfg.getProcess() != null || isNew ) {
-            LOG.info("Stopping Launchpad " + cfg.getId());
+            LOG.info("Stopping Launchpad '" + cfg.getId() + "'");
             boolean destroy = true;
             final int twoMinutes = 2 * 60 * 1000;
             final File controlPortFile = getControlPortFile(cfg.getDirectory());
