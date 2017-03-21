@@ -34,7 +34,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 abstract class AbstractBundlePostMojo extends AbstractMojo {
 
     /**
-     * The URL of the running Sling instance. The default is only useful for <strong>WebConsole</strong> deployment (see {@link #deploymentMethod}).
+     * The URL of the running Sling instance. The default is only useful for <strong>WebConsole</strong> deployment.
      */
     @Parameter(property="sling.url", defaultValue="http://localhost:8080/system/console", required = true)
     protected String slingUrl;

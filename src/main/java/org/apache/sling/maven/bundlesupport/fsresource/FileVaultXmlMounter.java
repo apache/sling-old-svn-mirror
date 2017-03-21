@@ -49,7 +49,8 @@ public final class FileVaultXmlMounter {
     /**
      * Add configurations to a running OSGi instance for FileVault XML
      * @param targetUrl The web console base url
-     * @param file The artifact (bundle)
+     * @param jcrRootFile jcr_root directory
+     * @param filterXmlFile FileVault Filter XML file
      * @throws MojoExecutionException
      */
     public void mount(final String targetUrl, final File jcrRootFile, final File filterXmlFile) throws MojoExecutionException {
@@ -74,7 +75,8 @@ public final class FileVaultXmlMounter {
     /**
      * Remove configurations to a running OSGi instance for FileVault XML
      * @param targetUrl The web console base url
-     * @param file The artifact (bundle)
+     * @param jcrRootFile jcr_root directory
+     * @param filterXmlFile FileVault Filter XML file
      * @throws MojoExecutionException
      */
     public void unmount(final String targetUrl, final File jcrRootFile, final File filterXmlFile) throws MojoExecutionException {
