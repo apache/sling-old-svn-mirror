@@ -25,15 +25,11 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.validation.impl.util.ValidatorTypeUtil;
-import org.apache.sling.validation.model.ParameterizedValidator;
-import org.apache.sling.validation.model.ValidatorAndSeverity;
-import org.apache.sling.validation.spi.Validator;
+import org.apache.sling.validation.model.ValidatorInvocation;
 
-public class ParameterizedValidatorImpl implements ParameterizedValidator {
-    private final @Nonnull Validator<?> validator;
+public class ParameterizedValidatorImpl implements ValidatorInvocation {
+    private final @Nonnull String id; 
     private final @Nonnull Map<String, Object> parameters;
-    private final @Nonnull Class<?> type;
     private final Integer severity;
     
     /**
@@ -43,41 +39,26 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
      * @param parameters
      * @param severity
      */
-    public ParameterizedValidatorImpl(@Nonnull ValidatorAndSeverity<?> validator, @Nonnull Map<String, Object> parameters, Integer severity) {
+    public ParameterizedValidatorImpl(@Nonnull String id, @Nonnull Map<String, Object> parameters, Integer severity) {
         super();
-        this.validator = validator.getValidator();
+        this.id = id;
         this.parameters = parameters;
-        // cache type information as this is using reflection
-        this.type = ValidatorTypeUtil.getValidatorType(this.validator);
-        if (severity == null) {
-            this.severity = validator.getSeverity();
-        } else {
-            this.severity = severity;
-        }
-    }
-
-    /* (non-Javadoc)
-     * @see org.apache.sling.validation.impl.ParameterizedValidator#getValidator()
-     */
-    @Override
-    public @Nonnull Validator<?> getValidator() {
-        return validator;
+        this.severity = severity;
     }
     
+
+    @Override
+    public String getValidatorId() {
+        return id;
+    }
+
+
     /* (non-Javadoc)
      * @see org.apache.sling.validation.impl.ParameterizedValidator#getParameters()
      */
     @Override
     public @Nonnull ValueMap getParameters() {
         return new ValueMapDecorator(parameters);
-    }
-    
-    /* (non-Javadoc)
-     * @see org.apache.sling.validation.impl.ParameterizedValidator#getType()
-     */
-    @Override
-    public @Nonnull Class<?> getType() {
-        return type;
     }
 
     @Override
@@ -86,22 +67,17 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
         return severity;
     }
 
-    @Override
-    public String toString() {
-        return "ParameterizedValidatorImpl [validator=" + validator + ", parameters=" + parameters + ", type=" + type
-                + ", severity=" + severity + "]";
-    }
 
-     @Override
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        result = prime * result + ((validator == null) ? 0 : validator.hashCode());
         result = prime * result + ((severity == null) ? 0 : severity.hashCode());
         return result;
     }
+
 
     @Override
     public boolean equals(Object obj) {
@@ -112,19 +88,28 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
         if (getClass() != obj.getClass())
             return false;
         ParameterizedValidatorImpl other = (ParameterizedValidatorImpl) obj;
-        if (!parameters.equals(other.parameters))
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
             return false;
-        if (!type.equals(other.type))
+        if (parameters == null) {
+            if (other.parameters != null)
+                return false;
+        } else if (!parameters.equals(other.parameters))
             return false;
-        if (!validator.getClass().getName().equals(other.validator.getClass().getName()))
+        if (severity == null) {
+            if (other.severity != null)
+                return false;
+        } else if (!severity.equals(other.severity))
             return false;
-        if (severity == null && other.severity != null) {
-            return false;
-        } else if (severity != null && other.severity == null) {
-            return false;
-        } else if (severity != null && other.severity != null && !severity.equals(other.severity)) {
-            return false;
-        }
         return true;
     }
+
+
+    @Override
+    public String toString() {
+        return "ParameterizedValidatorImpl [id=" + id + ", parameters=" + parameters + ", severity=" + severity + "]";
+    }
+
 }
