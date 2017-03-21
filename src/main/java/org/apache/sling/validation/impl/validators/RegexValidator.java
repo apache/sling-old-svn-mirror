@@ -27,9 +27,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.spi.DefaultValidationResult;
 import org.apache.sling.validation.spi.ValidationContext;
 import org.apache.sling.validation.spi.Validator;
+import org.apache.sling.validation.spi.support.DefaultValidationResult;
 import org.osgi.service.component.annotations.Component;
 
 /**
