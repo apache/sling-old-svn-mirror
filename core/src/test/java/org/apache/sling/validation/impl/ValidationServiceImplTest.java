@@ -115,7 +115,6 @@ public class ValidationServiceImplTest {
         validationService = new ValidationServiceImpl();
         validationService.searchPaths = Arrays.asList(context.resourceResolver().getSearchPath());
         validationService.configuration = configuration;
-        validationService.validatorMap = new ValidatorMap();
         Mockito.doReturn(20).when(configuration).defaultSeverity();
         validationService.resourceBundleProviders = Collections.singletonList(resourceBundleProvider);
         Mockito.doReturn(defaultResourceBundle).when(resourceBundleProvider).getResourceBundle(Mockito.anyObject());
