@@ -1,7 +1,17 @@
 Apache Sling Resource Presence
 ==============================
 
-This module allows presentation of `Resource`s as OSGi services and comes with a simple presenter and presence.
+This module creates proxy OSGi services that are registered only if specific resources are present.
+
+Like for example:
+
+	@Reference(target="(path=/content/foo/bar)")
+	private ResourcePresence barIsPresent;
+	
+The `barIsPresent` service is registered only if the `/content/foo/bar` resource is present, allowing OSGi
+components to be dependent on the presence of specific Resources.
+
+This is mostly meant for testing, to wait for test content before running specific tests.
 
 Getting Started
 ---------------
@@ -9,8 +19,8 @@ Getting Started
 1. Configure a service user mapping for `org.apache.sling.resource.presence` to allow reading resources, using e.g. service user `sling-readall`.
 2. Configure a presenter to observe a resource by path, e.g. `path=/apps`
    
-   Whenever resource `/apps` is available the presenter will register an OSGi service for it and unregisters the service whenever `/apps` gets removed.
-3. You can depend on that service now, e.g. using a `@Reference` annotation on your component:
+   Whenever resource `/apps` is available the presenter will register an OSGi service for it and unregister it whenever `/apps` gets removed.
+3. You can depend on that service now, e.g. using a `@Reference` annotation with a `target` on your component:
 
    ```
        @Reference(
