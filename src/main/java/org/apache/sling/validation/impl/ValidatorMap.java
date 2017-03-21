@@ -115,7 +115,7 @@ public class ValidatorMap {
         
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(ValidationServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ValidatorMap.class);
     private final Map<String, ValidatorMetaData> validatorMap;
     
     public ValidatorMap() {
