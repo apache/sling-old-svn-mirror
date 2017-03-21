@@ -81,7 +81,7 @@ public class ValidationServiceImpl implements ValidationService{
     
     /** List of all known validators (key=id of validator) */
     @Nonnull
-    ValidatorMap validatorMap;
+    final ValidatorMap validatorMap;
     
     Collection<String> searchPaths;
     
@@ -101,10 +101,13 @@ public class ValidationServiceImpl implements ValidationService{
 
     @Reference
     private ServiceUserMapped serviceUserMapped;
+    
+    public ValidationServiceImpl() {
+        this.validatorMap = new ValidatorMap();
+    }
 
     @Activate
     protected void activate(ValidationServiceConfiguration configuration) {
-        this.validatorMap = new ValidatorMap();
         this.configuration = configuration;
         ResourceResolver rr = null;
         try {
