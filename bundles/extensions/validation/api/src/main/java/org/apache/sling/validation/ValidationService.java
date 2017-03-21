@@ -68,9 +68,9 @@ public interface ValidationService {
      * @param model    the model with which to perform the validation
      * @return a {@link ValidationResult} that provides the necessary information
      * @throws SlingValidationException if one validator was called with invalid arguments
-     * @throws IllegalArgumentException if a validator id referenced in the given model could not be resolved
+     * @throws IllegalStateException if a validator id referenced in the given model could not be resolved
      */
-    @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model) throws SlingValidationException, IllegalArgumentException;
+    @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model) throws SlingValidationException, IllegalStateException;
 
     /**
      * Validates a {@link ValueMap} or any object adaptable to a {@code ValueMap} using a specific {@link ValidationModel}. Since the
