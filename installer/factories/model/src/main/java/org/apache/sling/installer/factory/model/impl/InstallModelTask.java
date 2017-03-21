@@ -93,11 +93,12 @@ public class InstallModelTask extends AbstractModelTask {
     public void execute(final InstallationContext ctx) {
         try {
             final TaskResource resource = this.getResource();
+            ctx.log("Installing {}", resource.getEntityId());
             final String modelTxt = (String) resource.getAttribute(ModelTransformer.ATTR_MODEL);
             final Integer featureIndex = (Integer) resource.getAttribute(ModelTransformer.ATTR_FEATURE_INDEX);
             final String name = (String) resource.getAttribute(ModelTransformer.ATTR_FEATURE_NAME);
             if ( modelTxt == null || featureIndex == null || name == null ) {
-                ctx.log("Unable to install model resource {} : no model found", this.getResource());
+                ctx.log("Unable to install model resource {} : no model found", resource);
                 this.getResourceGroup().setFinishState(ResourceState.IGNORED);
             } else {
                 final String path = (String) resource.getAttribute(ModelTransformer.ATTR_BASE_PATH);
@@ -107,7 +108,7 @@ public class InstallModelTask extends AbstractModelTask {
                 try {
                     final Result result = this.transform(name, modelTxt, featureIndex, resource, baseDir);
                     if ( result == null ) {
-                        ctx.log("Unable to install model resource {} : unable to create resources", this.getResource());
+                        ctx.log("Unable to install model resource {} : unable to create resources", resource);
                         this.getResourceGroup().setFinishState(ResourceState.IGNORED);
                     } else {
                         // repo init first
@@ -117,7 +118,7 @@ public class InstallModelTask extends AbstractModelTask {
                                 ops = this.repoInitParser.parse(r);
                             } catch (final IOException | RepoInitParsingException e) {
                                 logger.error("Unable to parse repoinit block.", e);
-                                ctx.log("Unable to install model resource {} : unable parse repoinit block.", this.getResource());
+                                ctx.log("Unable to install model resource {} : unable parse repoinit block.", resource);
                                 this.getResourceGroup().setFinishState(ResourceState.IGNORED);
                                 return;
                             }
@@ -130,7 +131,7 @@ public class InstallModelTask extends AbstractModelTask {
                                 session.save();
                             } catch ( final RepositoryException re) {
                                 logger.error("Unable to process repoinit block.", re);
-                                ctx.log("Unable to install model resource {} : unable to process repoinit block.", this.getResource());
+                                ctx.log("Unable to install model resource {} : unable to process repoinit block.", resource);
                                 this.getResourceGroup().setFinishState(ResourceState.IGNORED);
                                 return;
 
@@ -145,7 +146,7 @@ public class InstallModelTask extends AbstractModelTask {
                             if ( installer != null ) {
                                 installer.registerResources("model-" + name, result.resources.toArray(new InstallableResource[result.resources.size()]));
                             } else {
-                                ctx.log("Unable to install model resource {} : unable to get OSGi installer", this.getResource());
+                                ctx.log("Unable to install model resource {} : unable to get OSGi installer", resource);
                                 this.getResourceGroup().setFinishState(ResourceState.IGNORED);
                                 return;
                             }
@@ -157,6 +158,9 @@ public class InstallModelTask extends AbstractModelTask {
                     if ( !success && baseDir != null ) {
                         this.deleteDirectory(baseDir);
                     }
+                }
+                if ( success ) {
+                    ctx.log("Installed {}", resource.getEntityId());
                 }
             }
         } finally {

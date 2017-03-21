@@ -18,7 +18,6 @@
  */
 package org.apache.sling.installer.factory.model.impl;
 
-
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceState;
@@ -36,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This task factory process model resources detected by
+ * This task factory processes model resources detected by
  * the {@link ModelTransformer}.
  */
 @Component(service = InstallTaskFactory.class)
@@ -71,11 +70,8 @@ public class ModelTaskFactory implements InstallTaskFactory {
             return null;
         }
         if (rsrc.getState() == ResourceState.UNINSTALL ) {
-            logger.info("Uninstalling {}", rsrc.getEntityId());
-
             return new UninstallModelTask(group, bundleContext);
         }
-        logger.info("Installing {}", rsrc.getEntityId());
         return new InstallModelTask(group,
                 this.settings.getRunModes(),
                 this.repository,

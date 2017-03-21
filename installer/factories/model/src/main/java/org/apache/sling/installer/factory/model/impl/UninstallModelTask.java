@@ -23,6 +23,7 @@ import java.io.File;
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.framework.BundleContext;
 
@@ -43,13 +44,16 @@ public class UninstallModelTask extends AbstractModelTask {
             if ( installer == null ) {
                 ctx.log("Unable to get OSGi Installer service!");
             } else {
-                installer.registerResources("model-" + getResource().getAttribute(ModelTransformer.ATTR_FEATURE_NAME), null);
-                final String path = (String)this.getResource().getAttribute(ModelTransformer.ATTR_BASE_PATH);
+                final TaskResource resource = this.getResource();
+                ctx.log("Uninstalling {}", resource.getEntityId());
+                installer.registerResources("model-" + resource.getAttribute(ModelTransformer.ATTR_FEATURE_NAME), null);
+                final String path = (String)resource.getAttribute(ModelTransformer.ATTR_BASE_PATH);
                 if ( path != null ) {
                     final File dir = new File(path);
                     deleteDirectory(dir);
                 }
                 this.getResourceGroup().setFinishState(ResourceState.UNINSTALLED);
+                ctx.log("Uninstalled {}", resource.getEntityId());
             }
         } finally {
             this.cleanup();

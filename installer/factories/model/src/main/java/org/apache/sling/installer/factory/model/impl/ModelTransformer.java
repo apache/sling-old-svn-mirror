@@ -17,7 +17,6 @@ package org.apache.sling.installer.factory.model.impl;/*
  * under the License.
  */
 
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,7 +48,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This transformer detects a file with the ending ".model" containing
- * a provisioning model.
+ * a provisioning model or a model archive ending in ".mar"
  */
 @Component(service = ResourceTransformer.class)
 public class ModelTransformer implements ResourceTransformer {
