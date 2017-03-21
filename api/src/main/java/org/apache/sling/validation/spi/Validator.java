@@ -83,7 +83,7 @@ public interface Validator <T> {
     String PROPERTY_VALIDATOR_ID = "validator.id";
     
     /***
-     * Each {@link Validator} may have a service property with name {@code validator.severity} of type {@link String}. This is taken as the severity of all 
+     * Each {@link Validator} may have a service property with name {@code validator.severity} of type {@link Integer}. This is taken as the severity of all 
      * {@link ValidationFailure}s constructed by this {@link Validator} in case the model has not overwritten the severity. 
      * If this property is not set the default severity is being used.
      */
