@@ -22,7 +22,6 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;

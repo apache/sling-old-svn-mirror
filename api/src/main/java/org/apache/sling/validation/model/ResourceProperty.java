@@ -48,9 +48,8 @@ public interface ResourceProperty {
     @CheckForNull Pattern getNamePattern();
 
     /**
-     * Returns {@code true} if this property is expected to be a multiple property (e.g. array of values).
      *
-     * @return {@code true} if the  property is multiple, {@code false} otherwise
+     * @return {@code true} if the property is expected to contain multiple values, {@code false} otherwise
      */
     boolean isMultiple();
 
@@ -62,9 +61,9 @@ public interface ResourceProperty {
     boolean isRequired();
 
     /**
-     * Returns a list of {@link ParameterizedValidator}s which should be applied on this property.
+     * Returns a list of {@link ValidatorInvocation}s which should be applied on this property.
      *
-     * @return the list of validators
+     * @return the {@link List} of {@link ValidatorInvocation}s
      */
-    @Nonnull List<ParameterizedValidator> getValidators();
+    @Nonnull List<ValidatorInvocation> getValidatorInvocations();
 }

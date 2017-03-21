@@ -46,9 +46,7 @@ import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
-import org.apache.sling.validation.model.ValidatorAndSeverity;
 import org.apache.sling.validation.model.spi.ValidationModelProvider;
-import org.apache.sling.validation.spi.Validator;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -215,14 +213,13 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.sling.validation.model.spi.ValidationModelProvider#getModels(java.lang.String, java.util.Map)
+     * @see org.apache.sling.validation.model.spi.ValidationModelProvider#getModels(java.lang.String)
      */
     @Override
-    public @Nonnull List<ValidationModel> getModels(@Nonnull String relativeResourceType,
-            @Nonnull Map<String, ValidatorAndSeverity<?>> validatorsMap) {
+    public @Nonnull List<ValidationModel> getModels(@Nonnull String relativeResourceType) {
         List<ValidationModel> cacheEntry = validationModelCacheByResourceType.get(relativeResourceType);
         if (cacheEntry == null) {
-            cacheEntry = doGetModels(relativeResourceType, validatorsMap);
+            cacheEntry = doGetModels(relativeResourceType);
             validationModelCacheByResourceType.put(relativeResourceType, cacheEntry);
         } else {
             LOG.debug("Found entry in cache for resource type {}", relativeResourceType);
@@ -233,13 +230,11 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     /** Searches for validation models bound to a specific resource type through a search query.
      *
      * @param relativeResourceType the resource type to look for
-     * @param validatorsMap all known validators in a map (key=id of validator). Only one of those should be used in the returned validation
-     *            models.
      * @return a List of {@link ValidationModel}s. Never {@code null}, but might be empty collection in case no model for the given resource
      *         type could be found. Returns the models below "/apps" before the models below "/libs".
      * @throws IllegalStateException in case a validation model is found but it is invalid */
     @Nonnull
-    private List<ValidationModel> doGetModels(@Nonnull String relativeResourceType, @Nonnull Map<String, ValidatorAndSeverity<?>> validatorsMap) {
+    private List<ValidationModel> doGetModels(@Nonnull String relativeResourceType) {
         List<ValidationModel> validationModels = new ArrayList<ValidationModel>();
         ResourceResolver resourceResolver = null;
         try {
@@ -258,8 +253,8 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                         ValueMap validationModelProperties = model.getValueMap();
                         modelBuilder.addApplicablePaths(validationModelProperties.get(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, new String[] {}));
                         Resource propertiesResource = model.getChild(ResourceValidationModelProviderImpl.PROPERTIES);
-                        modelBuilder.resourceProperties(buildProperties(validatorsMap, propertiesResource));
-                        modelBuilder.childResources(buildChildren(model, model, validatorsMap));
+                        modelBuilder.resourceProperties(buildProperties(propertiesResource));
+                        modelBuilder.childResources(buildChildren(model, model));
                         ValidationModel vm = modelBuilder.build(relativeResourceType, resourcePath);
                         validationModels.add(vm);
                     } catch (IllegalArgumentException e) {
@@ -286,11 +281,10 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
 
     /** Creates a set of the properties that a resource is expected to have, together with the associated validators.
      *
-     * @param validatorsMap a map containing {@link Validator}s as values and their id's as keys
      * @param propertiesResource the resource identifying the properties node from a validation model's structure (might be {@code null})
      * @return a set of properties or an empty set if no properties are defined
      * @see ResourceProperty */
-    private @Nonnull List<ResourceProperty> buildProperties(@Nonnull Map<String, ValidatorAndSeverity<?>> validatorsMap, Resource propertiesResource) {
+    private @Nonnull List<ResourceProperty> buildProperties(@Nonnull Resource propertiesResource) {
         List<ResourceProperty> properties = new ArrayList<ResourceProperty>();
         if (propertiesResource != null) {
             for (Resource propertyResource : propertiesResource.getChildren()) {
@@ -318,10 +312,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                                     "Could not adapt resource at '" + validatorResource.getPath() + "' to ValueMap");
                         }
                         String validatorId = validatorResource.getName();
-                        ValidatorAndSeverity<?> validator = validatorsMap.get(validatorId);
-                        if (validator == null) {
-                            throw new IllegalArgumentException("Could not find validator with id '" + validatorId + "'");
-                        }
+                        
                         // get arguments for validator
                         String[] validatorArguments = validatorProperties.get(ResourceValidationModelProviderImpl.VALIDATOR_ARGUMENTS,
                                 String[].class);
@@ -357,7 +348,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                         }
                         // get severity
                         Integer severity = validatorProperties.get(SEVERITY, Integer.class);
-                        resourcePropertyBuilder.validator(validator, severity, validatorArgumentsMap);
+                        resourcePropertyBuilder.validator(validatorId, severity, validatorArgumentsMap);
                     }
                 }
                 properties.add(resourcePropertyBuilder.build(fieldName));
@@ -372,10 +363,8 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      * @param modelResource the resource describing a {@link org.apache.sling.validation.api.ValidationModel}
      * @param rootResource the model's resource from which to search for children (this resource has to have a
      *            {@link ResourceValidationModelProviderImpl#CHILDREN} node directly underneath it)
-     * @param validatorsMap a map containing {@link Validator}s as values and their class names as values
      * @return a list of all the children resources; the list will be empty if there are no children resources */
-    private @Nonnull List<ChildResource> buildChildren(@Nonnull Resource modelResource, @Nonnull Resource rootResource,
-            @Nonnull Map<String, ValidatorAndSeverity<?>> validatorsMap) {
+    private @Nonnull List<ChildResource> buildChildren(@Nonnull Resource modelResource, @Nonnull Resource rootResource) {
         List<ChildResource> children = new ArrayList<ChildResource>();
         Resource childrenResource = rootResource.getChild(ResourceValidationModelProviderImpl.CHILDREN);
         if (childrenResource != null) {
@@ -395,8 +384,8 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
                 }
                 boolean isRequired = !childrenProperties.get(ResourceValidationModelProviderImpl.OPTIONAL, false);
                 ChildResource childResource = new ChildResourceImpl(name, nameRegex, isRequired,
-                        buildProperties(validatorsMap, child.getChild(ResourceValidationModelProviderImpl.PROPERTIES)),
-                        buildChildren(modelResource, child, validatorsMap));
+                        buildProperties(child.getChild(ResourceValidationModelProviderImpl.PROPERTIES)),
+                        buildChildren(modelResource, child));
                 children.add(childResource);
             }
         }
