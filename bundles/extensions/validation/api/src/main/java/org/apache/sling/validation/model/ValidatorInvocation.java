@@ -27,35 +27,26 @@ import org.osgi.annotation.versioning.ProviderType;
 
 
 /**
- * Defines a validator instance with information about the type and the parameterization of the validator.
- *
+ * Defines a specific validator invocation for a given property (without actually exposing a reference to the underlying {@link Validator}).
  */
 @ProviderType
-public interface ParameterizedValidator {
+public interface ValidatorInvocation {
 
     /**
      * 
-     * @return the validator. Never {@code null}.
+     * @return the validator id of the {@link Validator} which is supposed to be called.
      */
-    @Nonnull Validator<?> getValidator();
+    @Nonnull String getValidatorId();
 
     /**
      * 
-     * @return the parameterization of the validator (never {@code null}, but might be empty map)
+     * @return the parameterization of the {@link Validator#validate(Object, org.apache.sling.validation.spi.ValidationContext, ValueMap)} call (never {@code null}, but might be empty map)
      */
     @Nonnull ValueMap getParameters();
 
     /**
-     * 
-     * @return the type of the validator (i.e. the type of the data it can handle)
-     */
-    @Nonnull Class<?> getType();
-
-    /**
-     *
-     * @return the severity of validation failures emitted by this validator.
-     * Was either set on the model or on the {@link Validator} itself.
-     * May be {@code null} in case it was set on none of them.
+     * @return the severity of validation failures emitted for this usage of the validator (as being set in the model).
+     * May be {@code null} in case it was not set on the model.
      */
     @CheckForNull Integer getSeverity();
 
