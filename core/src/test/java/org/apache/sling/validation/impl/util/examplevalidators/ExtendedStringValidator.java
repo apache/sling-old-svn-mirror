@@ -23,8 +23,8 @@ import javax.annotation.Nonnull;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.SlingValidationException;
-import org.apache.sling.validation.spi.DefaultValidationResult;
 import org.apache.sling.validation.spi.ValidationContext;
+import org.apache.sling.validation.spi.support.DefaultValidationResult;
 
 public class ExtendedStringValidator extends AbstractValidatorWithAdditionalType<Boolean, String, Integer> {
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.spi;
+package org.apache.sling.validation.spi.support;
 
 import java.io.Serializable;
 import java.text.MessageFormat;
@@ -29,6 +29,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
+import org.apache.sling.validation.spi.ValidationContext;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**

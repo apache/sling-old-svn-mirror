@@ -28,8 +28,8 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.spi.DefaultValidationResult;
 import org.apache.sling.validation.spi.Validator;
+import org.apache.sling.validation.spi.support.DefaultValidationResult;
 
 /**
  * Aggregates multiple {@link ValidationResult}s. Should not be from {@link Validator}s.
