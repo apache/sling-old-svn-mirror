@@ -170,16 +170,16 @@ public class ConfigurationPersistenceStrategyMultiplexerImplTest {
         }, Constants.SERVICE_RANKING, 1000);
         
         assertSame(resource2, underTest.getResource(resource1));
-        assertSame(resource2, underTest.getCollectionParentResource(resource1));
+        assertSame(resource1, underTest.getCollectionParentResource(resource1));
         assertSame(resource2, underTest.getCollectionItemResource(resource1));
         assertEquals(resource2.getPath(), underTest.getResourcePath(resource1.getPath()));
-        assertEquals(resource2.getPath(), underTest.getCollectionParentResourcePath(resource1.getPath()));
+        assertEquals(resource1.getPath(), underTest.getCollectionParentResourcePath(resource1.getPath()));
         assertEquals(resource2.getPath(), underTest.getCollectionItemResourcePath(resource1.getPath()));
         assertEquals(resource2.getPath(), underTest.getConfigName(resource1.getPath(), null));
-        assertEquals(resource2.getPath(), underTest.getCollectionParentConfigName(resource1.getPath(), null));
+        assertEquals(resource1.getPath(), underTest.getCollectionParentConfigName(resource1.getPath(), null));
         assertEquals(resource2.getPath(), underTest.getCollectionItemConfigName(resource1.getPath(), null));
         assertEquals(ImmutableList.of(resource2.getPath(), resource1.getPath()), ImmutableList.copyOf(underTest.getAllConfigNames(resource1.getPath())));
-        assertEquals(ImmutableList.of(resource2.getPath(), resource1.getPath()), ImmutableList.copyOf(underTest.getAllCollectionParentConfigNames(resource1.getPath())));
+        assertEquals(ImmutableList.of(resource1.getPath()), ImmutableList.copyOf(underTest.getAllCollectionParentConfigNames(resource1.getPath())));
         assertEquals(ImmutableList.of(resource2.getPath(), resource1.getPath()), ImmutableList.copyOf(underTest.getAllCollectionItemConfigNames(resource1.getPath())));
         assertTrue(underTest.persistConfiguration(context.resourceResolver(), "/conf/test1", new ConfigurationPersistData(resource1.getValueMap())));
         assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/testCol",

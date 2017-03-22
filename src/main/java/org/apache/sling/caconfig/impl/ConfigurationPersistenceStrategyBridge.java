@@ -143,7 +143,8 @@ public final class ConfigurationPersistenceStrategyBridge {
 
         @Override
         public Resource getCollectionParentResource(Resource resource) {
-            return delegate.getResource(resource);
+            // with SPI/Impl 1.2 it was not possible to manipulate collection parent resource
+            return resource;
         }
 
         @Override
@@ -158,7 +159,8 @@ public final class ConfigurationPersistenceStrategyBridge {
 
         @Override
         public String getCollectionParentResourcePath(String resourcePath) {
-            return delegate.getResourcePath(resourcePath);
+            // with SPI/Impl 1.2 it was not possible to manipulate collection parent resource
+            return resourcePath;
         }
 
         @Override
@@ -173,7 +175,8 @@ public final class ConfigurationPersistenceStrategyBridge {
 
         @Override
         public String getCollectionParentConfigName(String configName, String relatedConfigPath) {
-            return delegate.getResourcePath(configName);
+            // with SPI/Impl 1.2 it was not possible to manipulate collection parent resource
+            return configName;
         }
 
         @Override
