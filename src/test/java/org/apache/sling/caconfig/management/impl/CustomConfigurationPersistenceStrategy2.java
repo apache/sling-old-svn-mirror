@@ -18,6 +18,8 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -51,6 +53,7 @@ public class CustomConfigurationPersistenceStrategy2 implements ConfigurationPer
     
     @Override
     public Resource getResource(Resource resource) {
+        assertNotNull(resource);
         if (containsJcrContent(resource.getPath())) {
             return resource;
         }
@@ -61,6 +64,7 @@ public class CustomConfigurationPersistenceStrategy2 implements ConfigurationPer
 
     @Override
     public Resource getCollectionParentResource(Resource resource) {
+        assertNotNull(resource);
         if (containsJcrContent(resource.getPath())) {
             return resource;
         }
@@ -71,11 +75,13 @@ public class CustomConfigurationPersistenceStrategy2 implements ConfigurationPer
 
     @Override
     public Resource getCollectionItemResource(Resource resource) {
+        assertNotNull(resource);
         return resource;
     }
 
     @Override
     public String getResourcePath(String resourcePath) {
+        assertNotNull(resourcePath);
         if (containsJcrContent(resourcePath)) {
             return resourcePath;
         }
@@ -86,6 +92,7 @@ public class CustomConfigurationPersistenceStrategy2 implements ConfigurationPer
 
     @Override
     public String getCollectionParentResourcePath(String resourcePath) {
+        assertNotNull(resourcePath);
         if (containsJcrContent(resourcePath)) {
             return resourcePath;
         }
@@ -96,11 +103,13 @@ public class CustomConfigurationPersistenceStrategy2 implements ConfigurationPer
 
     @Override
     public String getCollectionItemResourcePath(String resourcePath) {
+        assertNotNull(resourcePath);
         return resourcePath;
     }
 
     @Override
     public String getConfigName(String configName, String relatedConfigPath) {
+        assertNotNull(configName);
         if (containsJcrContent(configName)) {
             return configName;
         }
@@ -111,6 +120,7 @@ public class CustomConfigurationPersistenceStrategy2 implements ConfigurationPer
 
     @Override
     public String getCollectionParentConfigName(String configName, String relatedConfigPath) {
+        assertNotNull(configName);
         if (containsJcrContent(configName)) {
             return configName;
         }
@@ -121,6 +131,7 @@ public class CustomConfigurationPersistenceStrategy2 implements ConfigurationPer
 
     @Override
     public String getCollectionItemConfigName(String configName, String relatedConfigPath) {
+        assertNotNull(configName);
         return configName;
     }
     
