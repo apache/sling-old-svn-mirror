@@ -56,13 +56,13 @@ public class ConfigurationOverrideMultiplexerImplTest {
 
         // 1st provider
         context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
-                "test/globalParam1='globalValue1'",
-                "[/a/b]test/param1='value1'"), Constants.SERVICE_RANKING, 200);
+                "test/globalParam1=\"globalValue1\"",
+                "[/a/b]test/param1=\"value1\""), Constants.SERVICE_RANKING, 200);
 
         // 2nd provider (may overwrite 1st one)
         context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
-                "test/globalParam1='globalValue1a'",
-                "[/a/b/c]test={'param1'='value2'}"), Constants.SERVICE_RANKING, 100);
+                "test/globalParam1=\"globalValue1a\"",
+                "[/a/b/c]test={\"param1\":\"value2\"}"), Constants.SERVICE_RANKING, 100);
 
         assertOverride("/a", "test",
                 ImmutableMap.<String,Object>of("param1", "initialValue"),

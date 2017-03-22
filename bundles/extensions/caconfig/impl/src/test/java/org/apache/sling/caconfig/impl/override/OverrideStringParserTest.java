@@ -37,7 +37,7 @@ public class OverrideStringParserTest {
     private static final Map<String,Object> BASICTYPES_MAP = ImmutableMap.<String,Object>builder()
             .put("param1", "value1")
             .put("param2", "value2")
-            .put("param3", 555)
+            .put("param3", 555L)
             .put("param4", 1.23d)
             .put("param5", true)
             .build();
@@ -45,7 +45,7 @@ public class OverrideStringParserTest {
     private static final Map<String,Object> BASICTYPES_ARRAY_MAP = ImmutableMap.<String,Object>builder()
             .put("param1", new String[] { "v1a", "v1b" })
             .put("param2", new String[] { "v2a", "v2b" })
-            .put("param3", new Integer[] { 555, 666 })
+            .put("param3", new Long[] { 555L, 666L })
             .put("param4", new Double[] { 1.23d, 2.34d })
             .put("param5", new Boolean[] { true, false })
             .put("param6", new String[0])
@@ -61,7 +61,7 @@ public class OverrideStringParserTest {
     public void testBasicTypes() {
         List<OverrideItem> result = parse(
                 "configName/param1=\"value1\"",
-                "configName/param2='value2'",
+                "configName/param2=\"value2\"",
                 "configName/param3=555",
                 "configName/param4=1.23",
                 "configName/param5=true");
@@ -78,7 +78,7 @@ public class OverrideStringParserTest {
     public void testBasicTypesArray() {
         List<OverrideItem> result = parse(
                 "config.name/param1=[\"v1a\",\"v1b\"]",
-                "config.name/param2=['v2a','v2b']",
+                "config.name/param2=[\"v2a\",\"v2b\"]",
                 "config.name/param3=[555,666]",
                 "config.name/param4=[1.23,2.34]",
                 "config.name/param5=[true,false]",
@@ -98,10 +98,10 @@ public class OverrideStringParserTest {
     public void testBasicTypesJson() {
         List<OverrideItem> result = parse(
                 "configName={\"param1\":\"value1\","
-                + "'param2':'value2',"
-                + "param3:555,"
-                + "param4:1.23,"
-                + "param5:true}");
+                + "\"param2\":\"value2\","
+                + "\"param3\":555,"
+                + "\"param4\":1.23,"
+                + "\"param5\":true}");
 
         assertEquals(1, result.size());
         OverrideItem item = result.get(0);
@@ -115,11 +115,11 @@ public class OverrideStringParserTest {
     public void testBasicTypesJsonArray() {
         List<OverrideItem> result = parse(
                 "configName={\"param1\":[\"v1a\",\"v1b\"],"
-                + "'param2':['v2a','v2b'],"
-                + "param3:[555,666],"
-                + "param4:[1.23,2.34],"
-                + "param5:[true,false],"
-                + "param6:[]}");
+                + "\"param2\":[\"v2a\",\"v2b\"],"
+                + "\"param3\":[555,666],"
+                + "\"param4\":[1.23,2.34],"
+                + "\"param5\":[true,false],"
+                + "\"param6\":[]}");
 
         assertEquals(1, result.size());
         OverrideItem item = result.get(0);
@@ -158,10 +158,10 @@ public class OverrideStringParserTest {
                 "[/a/b]configName/param1=\"value1\"",
                 "configName/param2=\"value2\"",
                 "[/a/b]configName={\"param1\":\"value1\","
-                        + "'param2':'value2',"
-                        + "param3:555,"
-                        + "param4:1.23,"
-                        + "param5:true}");
+                        + "\"param2\":\"value2\","
+                        + "\"param3\":555,"
+                        + "\"param4\":1.23,"
+                        + "\"param5\":true}");
         
         assertEquals(3, result.size());
         
@@ -193,7 +193,7 @@ public class OverrideStringParserTest {
                 "[/a/b]configName=\"value1\"",
                 "[/a/../b]configName/param1=\"value1\"",
                 "[]configName=\"value1\"",
-                "configName/param2:'value2'",
+                "configName/param2:\"value2\"",
                 "configName/param3",
                 "configName/param3=",
                 "[[/a/b]]configName/param4=1.23",
@@ -212,7 +212,7 @@ public class OverrideStringParserTest {
                 "configName1={param1:[\"value1\",123]}",
                 "configName2={param1:{\"subparam1\":\"value1\"}}",
                 "configName1={param1:null}",
-                "configName1={'param1:'value1'}");
+                "configName1={\"param1:\"value1\"}");
 
         // all ignored
         assertEquals(0, result.size());
