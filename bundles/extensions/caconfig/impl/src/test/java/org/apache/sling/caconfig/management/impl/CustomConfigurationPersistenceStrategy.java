@@ -18,6 +18,8 @@
  */
 package org.apache.sling.caconfig.management.impl;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.util.HashSet;
 import java.util.Map;
 
@@ -45,46 +47,55 @@ public class CustomConfigurationPersistenceStrategy implements ConfigurationPers
     
     @Override
     public Resource getResource(Resource resource) {
+        assertNotNull(resource);
         return resource.getChild(CHILD_NODE_NAME);
     }
 
     @Override
     public Resource getCollectionParentResource(Resource resource) {
+        assertNotNull(resource);
         return resource;
     }
 
     @Override
     public Resource getCollectionItemResource(Resource resource) {
+        assertNotNull(resource);
         return resource.getChild(CHILD_NODE_NAME);
     }
 
     @Override
     public String getResourcePath(String resourcePath) {
+        assertNotNull(resourcePath);
         return resourcePath + "/" + CHILD_NODE_NAME;
     }
 
     @Override
     public String getCollectionParentResourcePath(String resourcePath) {
+        assertNotNull(resourcePath);
         return resourcePath;
     }
 
     @Override
     public String getCollectionItemResourcePath(String resourcePath) {
+        assertNotNull(resourcePath);
         return resourcePath + "/" + CHILD_NODE_NAME;
     }
 
     @Override
     public String getConfigName(String configName, String relatedConfigPath) {
+        assertNotNull(configName);
         return configName + "/" + CHILD_NODE_NAME;
     }
 
     @Override
     public String getCollectionParentConfigName(String configName, String relatedConfigPath) {
+        assertNotNull(configName);
         return configName;
     }
 
     @Override
     public String getCollectionItemConfigName(String configName, String relatedConfigPath) {
+        assertNotNull(configName);
         return configName + "/" + CHILD_NODE_NAME;
     }
     

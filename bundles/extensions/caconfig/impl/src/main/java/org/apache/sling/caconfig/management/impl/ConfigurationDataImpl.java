@@ -30,6 +30,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
@@ -178,8 +179,9 @@ final class ConfigurationDataImpl implements ConfigurationData {
                 String relatedConfigPath = resolvedConfigurationResource != null ? resolvedConfigurationResource.getPath() : null;
                 String nestedConfigName;
                 if (configResourceCollection) {
+                    String collectionItemName = StringUtils.defaultString(getCollectionItemName(), "newItem");
                     nestedConfigName = configurationPersistenceStrategy.getCollectionParentConfigName(configName, relatedConfigPath)
-                            + "/" + configurationPersistenceStrategy.getCollectionItemConfigName(getCollectionItemName(), relatedConfigPath)
+                            + "/" + configurationPersistenceStrategy.getCollectionItemConfigName(collectionItemName, relatedConfigPath)
                             + "/" + nestedConfigMetadata.getName();
                 }
                 else {
