@@ -19,26 +19,19 @@
 
 package org.apache.sling.commons.metrics.internal;
 
-import java.util.Collections;
-
-import javax.management.ObjectName;
-
 import com.codahale.metrics.MetricRegistry;
+import javax.management.ObjectName;
 import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.testing.mock.osgi.MockBundle;
-import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
-import org.junit.After;
-import org.junit.Before;
+import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.Test;
+import static org.mockito.Mockito.mock;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceRegistration;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-
-public class MetricsServiceFactoryTest {
+public class InternalMetricsServiceFactoryTest {
     @Rule
     public final OsgiContext context = new OsgiContext();
     private MetricsServiceImpl serviceImpl = new MetricsServiceImpl();
