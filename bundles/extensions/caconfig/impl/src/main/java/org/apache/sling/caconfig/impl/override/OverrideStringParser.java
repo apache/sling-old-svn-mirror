@@ -24,6 +24,7 @@ import java.io.StringReader;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +37,8 @@ import javax.json.JsonArray;
 import javax.json.JsonException;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonReaderFactory;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 
@@ -59,6 +62,8 @@ class OverrideStringParser {
     private static final Logger log = LoggerFactory.getLogger(OverrideStringParser.class);
     
     private static final Pattern OVERRIDE_PATTERN = Pattern.compile("^(\\[([^\\[\\]=]+)\\])?([^\\[\\]=]+)=(.*)$");
+    
+    private static final JsonReaderFactory JSON_READER_FACTORY = Json.createReaderFactory(Collections.<String,Object>emptyMap());
     
     private OverrideStringParser() {
         // static method sonly
@@ -150,8 +155,9 @@ class OverrideStringParser {
         if (!StringUtils.startsWith(value, "{")) {
             return null;
         }
-        try (Reader reader = new StringReader(value)) {
-            return Json.createReader(reader).readObject();
+        try (Reader reader = new StringReader(value);
+                JsonReader jsonReader = JSON_READER_FACTORY.createReader(reader)) {
+            return jsonReader.readObject();
         }
         catch (IOException ex) {
             return null;
