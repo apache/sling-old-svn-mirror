@@ -46,7 +46,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Sling-Initial-Content>SLING-CONTENT;overwrite:=true</Sling-Initial-Content>
+                        <Sling-Initial-Content>SLING-CONTENT/apps/sling/validation;overwrite:=true;path=/apps/sling/validation</Sling-Initial-Content>
                     </instructions>
                 </configuration>
             </plugin>
