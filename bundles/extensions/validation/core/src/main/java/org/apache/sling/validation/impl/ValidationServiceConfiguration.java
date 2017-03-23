@@ -21,7 +21,7 @@ package org.apache.sling.validation.impl;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-@ObjectClassDefinition(name = "Apache Sling Validation Configuration", description = "Allows to influence the validation behaviour")
+@ObjectClassDefinition(name = "Apache Sling Validation Service", description = "Allows to influence the validation behaviour")
 public @interface ValidationServiceConfiguration {
     @AttributeDefinition(name = "Cache Validation Results on Resources", description = "If enabled will cache the validation result from calls to ValidationService.validate(Resource,ValidationModel) and expose it via Resource.adaptTo('ValidationResult.class').")
     boolean cacheValidationResultsOnResources() default false;
