@@ -71,7 +71,7 @@ public class MetricsServiceImpl implements MetricsService {
         svcProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Metrics Service");
         svcProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         regs.add(context.registerService(MetricsService.class.getName(),
-                new MetricsServiceFactory(this, metricsMapper), svcProps));
+                new InternalMetricsServiceFactory(this, metricsMapper), svcProps));
 
         final Dictionary<String, String> regProps = new Hashtable<>();
         regProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Metrics Registry");

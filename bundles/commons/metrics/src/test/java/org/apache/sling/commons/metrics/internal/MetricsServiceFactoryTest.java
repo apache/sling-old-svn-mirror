@@ -44,7 +44,7 @@ public class MetricsServiceFactoryTest {
     private MetricsServiceImpl serviceImpl = new MetricsServiceImpl();
     private MetricRegistry registry = serviceImpl.getRegistry();
     private BundleMetricsMapper mapper = new BundleMetricsMapper(registry);
-    private MetricsServiceFactory srvFactory = new MetricsServiceFactory(serviceImpl, mapper);
+    private InternalMetricsServiceFactory srvFactory = new InternalMetricsServiceFactory(serviceImpl, mapper);
     private ServiceRegistration<MetricsService> reg = mock(ServiceRegistration.class);
 
     @Test
