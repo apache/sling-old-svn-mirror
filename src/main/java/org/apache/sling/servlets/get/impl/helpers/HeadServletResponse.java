@@ -18,12 +18,14 @@
 package org.apache.sling.servlets.get.impl.helpers;
 
 
-import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
-
-import javax.servlet.ServletOutputStream;
 import java.io.PrintWriter;
 import java.io.Writer;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
+
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 
 /**
  * The <code>HeadServletResponse</code> is a Sling response wrapper which
@@ -86,6 +88,15 @@ public class HeadServletResponse extends
 
         @Override
         public void write(byte[] b, int off, int len) {
+        }
+
+        @Override
+        public boolean isReady() {
+            return true;
+        }
+
+        @Override
+        public void setWriteListener(WriteListener writeListener) {
         }
     }
 

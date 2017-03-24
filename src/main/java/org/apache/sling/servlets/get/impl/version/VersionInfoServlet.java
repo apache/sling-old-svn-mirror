@@ -33,11 +33,6 @@ import javax.jcr.version.VersionIterator;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -47,6 +42,11 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.io.JSONRenderer;
 import org.apache.sling.commons.json.jcr.JsonItemWriter;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
  * The <code>VersionInfoServlet</code> renders list of versions available for
@@ -54,19 +54,27 @@ import org.apache.sling.commons.json.jcr.JsonItemWriter;
  *
  * At the moment only JCR nodes are supported.
  */
-@Component(immediate=true, metatype=true, name="org.apache.sling.servlets.get.impl.version.VersionInfoServlet", label="%servlet.version.name", description="%servlet.version.description", policy=ConfigurationPolicy.REQUIRE)
-@Service(Servlet.class)
-@Properties({
-    @Property(name="service.description", value="Version info servlet"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-
-    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default", propertyPrivate=true),
-    @Property(name="sling.servlet.selectors", value="V"),
-    @Property(name="sling.servlet.methods", value="GET", propertyPrivate=true),
-    @Property(name="sling.servlet.extensions", value="json", propertyPrivate=true),
-})
+@Component(name="org.apache.sling.servlets.get.impl.version.VersionInfoServlet",
+           configurationPolicy=ConfigurationPolicy.REQUIRE,
+           service = Servlet.class,
+           property = {
+                    "service.description=Version info servlet",
+                    "service.vendor=The Apache Software Foundation",
+                    "sling.servlet.resourceTypes=sling/servlet/default",
+                    "sling.servlet.methods=GET",
+                    "sling.servlet.selectors=V",
+                    "sling.servlet.extensions=json"
+           })
+@Designate(ocd = VersionInfoServlet.Config.class)
 public class VersionInfoServlet extends SlingSafeMethodsServlet {
 
+    @ObjectClassDefinition(name = "Apache Sling Version Info Servlet",
+            description = "The Sling Version Info Servlet renders list of versions available for the current resource")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Selector", description="List of selectors this servlet handles to display the versions")
+        String[] sling_servlet_selectors() default "V";
+    }
     private static final long serialVersionUID = 1656887064561951302L;
 
     /** Selector that means "pretty-print the output */
@@ -83,6 +91,7 @@ public class VersionInfoServlet extends SlingSafeMethodsServlet {
 
     private final JSONRenderer renderer = new JSONRenderer();
 
+    @Override
     public void doGet(SlingHttpServletRequest req, SlingHttpServletResponse resp) throws ServletException,
             IOException {
         resp.setContentType(req.getResponseContentType());
@@ -127,7 +136,7 @@ public class VersionInfoServlet extends SlingSafeMethodsServlet {
     }
 
     private static Collection<String> getNames(Version[] versions) throws RepositoryException {
-        final List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<>();
         for (Version s : versions) {
             result.add(s.getName());
         }
