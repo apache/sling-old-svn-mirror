@@ -55,7 +55,7 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
     private static final String CACHE_CONTROL_HEADER_VALUE =
         "private, no-store, no-cache, max-age=0, must-revalidate";
 
-    private Map<String, SlingInfoProvider> infoProviders = new HashMap<String, SlingInfoProvider>();
+    private Map<String, SlingInfoProvider> infoProviders = new HashMap<>();
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
@@ -195,7 +195,11 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
 
     @Activate
     protected void activate() {
-        infoProviders.put(SessionInfoProvider.PROVIDER_LABEL,
-            new SessionInfoProvider());
+        try {
+            infoProviders.put(SessionInfoProvider.PROVIDER_LABEL,
+                new SessionInfoProvider());
+        } catch ( final Throwable t) {
+            // if no JCR API is available the above might throw an exception
+        }
     }
 }

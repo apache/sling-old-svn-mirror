@@ -41,6 +41,8 @@ import org.xml.sax.SAXException;
  */
 public class XMLRendererServlet extends SlingSafeMethodsServlet {
 
+    private static final long serialVersionUID = -3520278283206430415L;
+
     public static final String EXT_XML = "xml";
 
     private static final String SYSVIEW = "sysview";
@@ -62,35 +64,42 @@ public class XMLRendererServlet extends SlingSafeMethodsServlet {
         // are we included?
         final boolean isIncluded = req.getAttribute(SlingConstants.ATTR_REQUEST_SERVLET) != null;
 
-        final Node node = r.adaptTo(Node.class);
-        if ( node != null ) {
-            try {
-                if ( req.getRequestPathInfo().getSelectorString() == null
-                     || req.getRequestPathInfo().getSelectorString().equals(DOCVIEW) ) {
-                    // check if response is adaptable to a content handler
-                    final ContentHandler ch = resp.adaptTo(ContentHandler.class);
-                    if ( ch == null ) {
-                        node.getSession().exportDocumentView(node.getPath(), resp.getOutputStream(), false, false);
+        try {
+            final Node node = r.adaptTo(Node.class);
+            if ( node != null ) {
+                try {
+                    if ( req.getRequestPathInfo().getSelectorString() == null
+                         || req.getRequestPathInfo().getSelectorString().equals(DOCVIEW) ) {
+                        // check if response is adaptable to a content handler
+                        final ContentHandler ch = resp.adaptTo(ContentHandler.class);
+                        if ( ch == null ) {
+                            node.getSession().exportDocumentView(node.getPath(), resp.getOutputStream(), false, false);
+                        } else {
+                            node.getSession().exportDocumentView(node.getPath(), ch, false, false);
+                        }
+                    } else if ( req.getRequestPathInfo().getSelectorString().equals(SYSVIEW) ) {
+                        // check if response is adaptable to a content handler
+                        final ContentHandler ch = resp.adaptTo(ContentHandler.class);
+                        if ( ch == null ) {
+                            node.getSession().exportSystemView(node.getPath(), resp.getOutputStream(), false, false);
+                        } else {
+                            node.getSession().exportSystemView(node.getPath(), ch, false, false);
+                        }
                     } else {
-                        node.getSession().exportDocumentView(node.getPath(), ch, false, false);
+                        resp.sendError(HttpServletResponse.SC_NO_CONTENT); // NO Content
                     }
-                } else if ( req.getRequestPathInfo().getSelectorString().equals(SYSVIEW) ) {
-                    // check if response is adaptable to a content handler
-                    final ContentHandler ch = resp.adaptTo(ContentHandler.class);
-                    if ( ch == null ) {
-                        node.getSession().exportSystemView(node.getPath(), resp.getOutputStream(), false, false);
-                    } else {
-                        node.getSession().exportSystemView(node.getPath(), ch, false, false);
-                    }
-                } else {
+                } catch (RepositoryException e) {
+                    throw new ServletException("Unable to export resource as xml: " + r, e);
+                } catch (SAXException e) {
+                    throw new ServletException("Unable to export resource as xml: " + r, e);
+                }
+            } else {
+                if ( !isIncluded ) {
                     resp.sendError(HttpServletResponse.SC_NO_CONTENT); // NO Content
                 }
-            } catch (RepositoryException e) {
-                throw new ServletException("Unable to export resource as xml: " + r, e);
-            } catch (SAXException e) {
-                throw new ServletException("Unable to export resource as xml: " + r, e);
             }
-        } else {
+        } catch ( final Throwable t) {
+            // if the JCR api is not available, we get here
             if ( !isIncluded ) {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT); // NO Content
             }
