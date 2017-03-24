@@ -17,7 +17,6 @@
 package org.apache.sling.servlets.get.impl;
 
 import java.io.IOException;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -26,90 +25,115 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.servlets.get.impl.helpers.HeadServletResponse;
 import org.apache.sling.servlets.get.impl.helpers.HtmlRendererServlet;
 import org.apache.sling.servlets.get.impl.helpers.JsonRendererServlet;
 import org.apache.sling.servlets.get.impl.helpers.PlainTextRendererServlet;
 import org.apache.sling.servlets.get.impl.helpers.StreamRendererServlet;
 import org.apache.sling.servlets.get.impl.helpers.XMLRendererServlet;
-import org.apache.sling.servlets.get.impl.helpers.HeadServletResponse;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
  */
-@Component(immediate=true, metatype=true, name="org.apache.sling.servlets.get.DefaultGetServlet", label="%servlet.get.name", description="%servlet.get.description")
-@Service(Servlet.class)
-@Properties({
-    @Property(name="service.description", value="Default GET Servlet"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    
-    // Use this as a default servlet for Sling
-    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default", propertyPrivate=true),
-    @Property(name="sling.servlet.prefix", intValue=-1, propertyPrivate=true),
-    
-    // Generic handler for all get requests
-    @Property(name="sling.servlet.methods", value={"GET", "HEAD"}, propertyPrivate=true)
-})
+@Component(service = Servlet.class,
+    name="org.apache.sling.servlets.get.DefaultGetServlet",
+    property = {
+            "service.description=Default GET Servlet",
+            "service.vendor=The Apache Software Foundation",
+
+            // Use this as a default servlet for Sling
+            "sling.servlet.resourceTypes=sling/servlet/default",
+            "sling.servlet.prefix:Integer=-1",
+
+            // Generic handler for all get requests
+            "sling.servlet.methods=GET",
+            "sling.servlet.methods=HEAD"
+    })
+@Designate(ocd=DefaultGetServlet.Config.class)
 public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
-    private static final long serialVersionUID = -5815904221043005085L;
+    private static final long serialVersionUID = -2714152339750885354L;
+
+    @ObjectClassDefinition(name="Apache Sling GET Servlet",
+            description="The Sling GET servlet is registered as the default servlet to handle GET requests.")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Extension Aliases",
+                description="The aliases can be used to map several extensions to a " +
+                            "single servlet. For instance \"xml:pdf,rtf\" maps the extensions \".pdf\" and " +
+                            "\".rtf\" to the servlet helper handling the \".xml\" extension.")
+        String[] aliases();
+
+        @AttributeDefinition(name = "Auto Index",
+                description="Controls whether a simple directory index is rendered for " +
+                             "a directory request. A directory request is a request to a resource with a " +
+                             "trailing slash (/) character, for example http://host/apps/. If none of the " +
+                             "index resources exists, the default GET servlet may automatically render an " +
+                             "index listing of the child resources if this option is checked, which is the " +
+                             "default. If this option is not checked, the request to the resource is " +
+                             "forbidden and results in a status 403/FORBIDDEN. This configuration " +
+                             "corresponds to the \"Index\" option of the Options directive of Apache HTTP " +
+                             "Server (httpd).")
+        boolean index() default false;
+
+        @AttributeDefinition(name = "Index Resources",
+                description = "List of child resources to be considered for rendering  " +
+                             "the index of a \"directory\". The default value is [ \"index\", \"index.html\" ].  " +
+                             "Each entry in the list is checked and the first entry found is included to  " +
+                             "render the index. If an entry is selected, which has not extension (for  " +
+                             "example the \"index\" resource), the extension \".html\" is appended for the  " +
+                             "inclusion to indicate the desired text/html rendering. If the resource name  " +
+                             "has an extension (as in \"index.html\"), no additional extension is appended  " +
+                             "for the inclusion. This configuration corresponds to the <DirectoryIndex>  " +
+                             "directive of Apache HTTP Server (httpd).")
+        String[] index_files() default { "index","index.html" };
+
+        @AttributeDefinition(name = "Enable HTML",
+                description = "Whether the renderer for HTML of the default GET servlet is enabled or not. By default the HTML renderer is enabled.")
+        boolean enable_html() default true;
+
+        @AttributeDefinition(name = "Enable JSON",
+                description = "Whether the renderer for JSON of the default GET servlet is enabled or not. By default the JSON renderer is enabled.")
+        boolean enable_json() default true;
+
+        @AttributeDefinition(name = "Enable Plain Text",
+                description = "Whether the renderer for plain text of the default GET servlet is enabled or not. By default the plain text renderer is enabled.")
+        boolean enable_txt() default true;
+
+        @AttributeDefinition(name = "Enable XML",
+                description = "Whether the renderer for XML of the default GET servlet is enabled or not. By default the XML renderer is enabled.")
+        boolean enable_xml() default true;
+
+        @AttributeDefinition(name = "JSON Max results",
+                description = "The maximum number of resources that should " +
+                  "be returned when doing a node.5.json or node.infinity.json. In JSON terms " +
+                  "this basically means the number of Objects to return. Default value is " +
+                  "200.")
+        int json_maximumresults() default 200;
+    }
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private Map<String, Servlet> rendererMap = new HashMap<String, Servlet>();
+    private Map<String, Servlet> rendererMap = new HashMap<>();
 
     private Servlet streamerServlet;
 
-    @Property
-    private static final String ALIAS_PROPERTY = "aliases";
-
-    private static final boolean DEFAULT_INDEX_PROPERTY = false;
-
-    @Property(boolValue=DEFAULT_INDEX_PROPERTY)
-    private static final String INDEX_PROPERTY = "index";
-
-    private static final String[] DEFAULT_INDEX_FILES_PROPERTY = { "index",
-        "index.html" };
-
-    @Property(value={ "index", "index.html" })
-    private static final String INDEX_FILES_PROPERTY = "index.files";
-
-    /** Default value for renderer selection (value is "true"). */
-    private static final boolean DEFAULT_RENDERER_PROPERTY = true;
-
-    @Property(boolValue=DEFAULT_RENDERER_PROPERTY)
-    private static final String HTML_RENDERER_PROPERTY = "enable.html";
-
-    @Property(boolValue=DEFAULT_RENDERER_PROPERTY)
-    private static final String TXT_RENDERER_PROPERTY = "enable.txt";
-
-    @Property(boolValue=DEFAULT_RENDERER_PROPERTY)
-    private static final String JSON_RENDERER_PROPERTY = "enable.json";
-
-    @Property(boolValue=DEFAULT_RENDERER_PROPERTY)
-    private static final String XML_RENDERER_PROPERTY = "enable.xml";
-    
-    /** Default value for the maximum amount of results that should be returned by the jsonResourceWriter */
-    public static final int DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS = 200;
-    
-    @Property(intValue=DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS)
-    public static final String JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY = "json.maximumresults";
-    
     private int jsonMaximumResults;
-    
+
     /** Additional aliases. */
     private String[] aliases;
 
@@ -127,27 +151,24 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
     private boolean enableXml;
 
-    protected void activate(ComponentContext ctx) {
-        Dictionary<?, ?> props = ctx.getProperties();
-        this.aliases = OsgiUtil.toStringArray(props.get(ALIAS_PROPERTY));
-        this.index = OsgiUtil.toBoolean(props.get(INDEX_PROPERTY),
-            DEFAULT_INDEX_PROPERTY);
-        this.indexFiles = OsgiUtil.toStringArray(
-            props.get(INDEX_FILES_PROPERTY), DEFAULT_INDEX_FILES_PROPERTY);
+    @Activate
+    protected void activate(Config cfg) {
+        this.aliases = cfg.aliases();
+        this.index = cfg.index();
+        this.indexFiles = cfg.index_files();
+        if ( this.indexFiles == null ) {
+            this.indexFiles = new String[0];
+        }
 
-        this.enableHtml = OsgiUtil.toBoolean(props.get(HTML_RENDERER_PROPERTY),
-            DEFAULT_RENDERER_PROPERTY);
-        this.enableTxt = OsgiUtil.toBoolean(props.get(TXT_RENDERER_PROPERTY),
-            DEFAULT_RENDERER_PROPERTY);
-        this.enableJson = OsgiUtil.toBoolean(props.get(JSON_RENDERER_PROPERTY),
-            DEFAULT_RENDERER_PROPERTY);
-        this.enableXml = OsgiUtil.toBoolean(props.get(XML_RENDERER_PROPERTY),
-            DEFAULT_RENDERER_PROPERTY);
-        this.jsonMaximumResults = OsgiUtil.toInteger(props.get(JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY), 
-            DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS);
+        this.enableHtml = cfg.enable_html();
+        this.enableTxt = cfg.enable_txt();
+        this.enableJson = cfg.enable_json();
+        this.enableXml = cfg.enable_xml();
+        this.jsonMaximumResults = cfg.json_maximumresults();
     }
 
-    protected void deactivate(ComponentContext ctx) {
+    @Deactivate
+    protected void deactivate() {
         this.aliases = null;
         this.index = false;
         this.indexFiles = null;

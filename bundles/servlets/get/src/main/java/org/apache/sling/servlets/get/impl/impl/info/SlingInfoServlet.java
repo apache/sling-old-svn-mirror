@@ -27,36 +27,32 @@ import java.util.Map;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
 
 /**
- * The <code>SlingInfoServlet</code> TODO
+ * The <code>SlingInfoServlet</code>
  */
 @SuppressWarnings("serial")
-@Component(immediate=true)
-@Service(Servlet.class)
-@Properties({
-    @Property(name="service.description", value="Sling Info Servlet"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name="sling.servlet.paths", value="/system/sling/info")
-})
+@Component(service = Servlet.class,
+    property = {
+            "service.description=Sling Info Servlet",
+            "service.vendor=The Apache Software Foundation",
+            "sling.servlet.paths=/system/sling/info"
+    })
 public class SlingInfoServlet extends SlingSafeMethodsServlet {
-    
+
     /**
-     * 
+     *
      */
     private static final String CACHE_CONTROL_HEADER = "Cache-Control";
 
-    private static final String CACHE_CONTROL_HEADER_VALUE = 
+    private static final String CACHE_CONTROL_HEADER_VALUE =
         "private, no-store, no-cache, max-age=0, must-revalidate";
 
     private Map<String, SlingInfoProvider> infoProviders = new HashMap<String, SlingInfoProvider>();
@@ -197,7 +193,8 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
 
     // --------- SCR integration -----------------------------------------------
 
-    protected void activate(ComponentContext context) {
+    @Activate
+    protected void activate() {
         infoProviders.put(SessionInfoProvider.PROVIDER_LABEL,
             new SessionInfoProvider());
     }

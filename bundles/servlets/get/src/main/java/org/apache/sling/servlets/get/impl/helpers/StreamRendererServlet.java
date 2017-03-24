@@ -87,7 +87,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
     /**
      * Full range marker.
      */
-    private static ArrayList<Range> FULL = new ArrayList<Range>(0);
+    private static ArrayList<Range> FULL = new ArrayList<>(0);
 
     static final int IO_BUFFER_SIZE = 2048;
 
@@ -393,11 +393,11 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
                 contentType = ct;
             }
         }
-        
+
         if (contentType == null) {
             contentType = defaultContentType;
         }
-        
+
         response.setContentType(contentType);
 
         String encoding = meta.getCharacterEncoding();
@@ -560,7 +560,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         ostream.println();
         ostream.print("--" + mimeSeparation + "--");
-        
+
         if(exception != null) {
             throw exception;
         }
@@ -682,7 +682,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         // Vector which will contain all the ranges which are successfully
         // parsed.
-        ArrayList<Range> result = new ArrayList<Range>();
+        ArrayList<Range> result = new ArrayList<>();
         StringTokenizer commaTokenizer = new StringTokenizer(rangeHeader, ",");
 
         // Parsing the range list

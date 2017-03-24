@@ -19,16 +19,11 @@
 package org.apache.sling.servlets.get.impl;
 
 import java.io.IOException;
-import java.util.Dictionary;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -37,9 +32,12 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.servlets.get.impl.helpers.JsonRendererServlet;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,16 +59,28 @@ import org.slf4j.LoggerFactory;
  * also appended to the redirect URL.
  */
 @SuppressWarnings("serial")
-@Component(immediate=true, metatype=true)
-@Service(Servlet.class)
-@Properties({
-    @Property(name="service.description", value="Request Redirect Servlet"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name="sling.servlet.resourceTypes", value="sling:redirect", propertyPrivate=true),
-    @Property(name="sling.servlet.methods", value="GET", propertyPrivate=true),
-    @Property(name="sling.servlet.prefix", intValue=-1, propertyPrivate=true)   
-})
+@Component(service = Servlet.class,
+    property = {
+            "service.description=Request Redirect Servlet",
+            "service.vendor=The Apache Software Foundation",
+            "sling.servlet.resourceTypes=sling:redirect",
+            "sling.servlet.methods=GET",
+            "sling.servlet.prefix:Integer=-1"
+    })
+@Designate(ocd = RedirectServlet.Config.class)
 public class RedirectServlet extends SlingSafeMethodsServlet {
+
+    @ObjectClassDefinition(name="Apache Sling Redirect Servlet",
+            description="The Sling servlet handling redirect resources.")
+    public @interface Config {
+
+        @AttributeDefinition(name = "JSON Max results",
+                description = "The maximum number of resources that should " +
+                  "be returned when doing a node.5.json or node.infinity.json. In JSON terms " +
+                  "this basically means the number of Objects to return. Default value is " +
+                  "200.")
+        int json_maximumresults() default 200;
+    }
 
     /** The name of the target property */
     public static final String TARGET_PROP = "sling:target";
@@ -83,18 +93,11 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
     private Servlet jsonRendererServlet;
 
-    /** Default value for the maximum amount of results that should be returned by the jsonResourceWriter */
-    public static final int DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS = 200;
-
-    @Property(intValue=DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS)
-    public static final String JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY = "json.maximumresults";
-
     private int jsonMaximumResults;
 
-    protected void activate(ComponentContext ctx) {
-      Dictionary<?, ?> props = ctx.getProperties();
-      this.jsonMaximumResults = OsgiUtil.toInteger(props.get(JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY),
-          DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS);
+    @Activate
+    protected void activate(Config cfg) {
+      this.jsonMaximumResults = cfg.json_maximumresults();
       // When the maximumResults get updated, we force a reset for the jsonRendererServlet.
       jsonRendererServlet = getJsonRendererServlet();
     }
