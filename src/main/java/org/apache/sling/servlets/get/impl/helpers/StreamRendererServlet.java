@@ -31,9 +31,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -50,6 +47,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.slf4j.Logger;
@@ -81,8 +79,6 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
     // Accept-Ranges header value
     private static final String ACCEPT_RANGES_BYTES = "bytes";
-
-
 
     /**
      * Full range marker.
@@ -165,14 +161,9 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         // fall back to plain text rendering if the resource has no stream
         if (resource.getResourceType().equals(JcrConstants.NT_LINKEDFILE)) {
-            try {
-                String actualResourcePath = resource.adaptTo(Node.class).getProperty(JcrConstants.JCR_CONTENT).getNode().getPath();
-                resource = request.getResourceResolver().getResource(actualResourcePath);
-            } catch (PathNotFoundException e) {
-                throw new ResourceNotFoundException("No data to render");
-            } catch (RepositoryException e) {
-                throw new IOException(e);
-            }
+            final ValueMap vm = resource.adaptTo(ValueMap.class);
+            final String actualResourcePath = vm.get(JcrConstants.JCR_CONTENT, String.class);
+            resource = request.getResourceResolver().getResource(actualResourcePath);
         }
         InputStream stream = resource.adaptTo(InputStream.class);
         if (stream != null) {
