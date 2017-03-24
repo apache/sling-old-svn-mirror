@@ -25,7 +25,9 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 
@@ -62,23 +64,24 @@ public class WhitelistFragment {
 
     private String name;
 
-    private List<String> bundles;
+    private Set<String> bundles;
 
     @SuppressWarnings("unused")
     public WhitelistFragment() {
         // default constructor for SCR
     }
 
+    // constructor for tests and for backwards compatible deprecated fragments
     WhitelistFragment(String name, String[] bundles) {
         this.name = name;
-        this.bundles = asList(bundles);
+        this.bundles = asSet(bundles);
     }
 
     @Activate
     @SuppressWarnings("unused")
     void activate(Configuration config) {
         name = config.whitelist_name();
-        bundles = asList(config.whitelist_bundles() == null ? new String[0] : config.whitelist_bundles());
+        bundles = asSet(config.whitelist_bundles());
     }
 
     boolean allows(String bsn) {
@@ -88,5 +91,29 @@ public class WhitelistFragment {
     @Override
     public String toString() {
         return name + ": " + bundles + "";
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof WhitelistFragment)) {
+            return false;
+        }
+        final WhitelistFragment that = (WhitelistFragment) o;
+        return name.equals(that.name)
+                && bundles.equals(that.bundles);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + bundles.hashCode();
+        return result;
+    }
+
+    private Set<String> asSet(final String[] values) {
+        return Collections.unmodifiableSet(new HashSet<String>(asList(values)));
     }
 }

@@ -59,7 +59,7 @@ public class LoginAdminWhitelistTest {
 
     @Test
     public void testBypassWhitelist() throws ConfigurationException {
-        whitelist.configure(config(true, null, null, null));
+        configure(whitelist, true, null, null, null);
         
         for(String bsn : randomBsn()) {
             assertAdminLogin(bsn, true);
@@ -71,7 +71,7 @@ public class LoginAdminWhitelistTest {
         final String [] allowed = {
                 "bundle1", "bundle2"
         };
-        whitelist.configure(config(null, null, allowed, null));
+        configure(whitelist, null, null, allowed, null);
 
         assertAdminLogin("foo.1.bar", false);
 
@@ -89,8 +89,7 @@ public class LoginAdminWhitelistTest {
         final String [] allowed = {
                 "bundle5", "bundle6"
         };
-        final LoginAdminWhitelistConfiguration config = config(null, null, null, allowed);
-        whitelist.configure(config);
+        configure(whitelist, null, null, null, allowed);
 
         assertAdminLogin("foo.1.bar", false);
 
@@ -105,7 +104,7 @@ public class LoginAdminWhitelistTest {
     
     @Test
     public void testDefaultAndAdditionalConfig() throws ConfigurationException {
-        whitelist.configure(config(null, null, new String [] { "defB"}, new String [] { "addB"}));
+        configure(whitelist, null, null, new String [] { "defB"}, new String [] { "addB"});
         
         assertAdminLogin("defB", true);
         assertAdminLogin("addB", true);
@@ -121,7 +120,7 @@ public class LoginAdminWhitelistTest {
         final String [] allowed = {
                 "bundle3", "bundle4"
         };
-        whitelist.configure(config(null, "foo.*bar", allowed, null));
+        configure(whitelist, null, "foo.*bar", allowed, null);
 
         assertAdminLogin("foo.2.bar", true);
         assertAdminLogin("foo.somethingElse.bar", true);
@@ -144,7 +143,7 @@ public class LoginAdminWhitelistTest {
         final WhitelistFragment testFragment1 = new WhitelistFragment("test1", allowed1);
         final WhitelistFragment testFragment2 = new WhitelistFragment("test2", allowed2);
 
-        whitelist.configure(config(null, null, null, null));
+        configure(whitelist, null, null, null, null);
         whitelist.bindWhitelistFragment(testFragment1);
         whitelist.bindWhitelistFragment(testFragment2);
 
@@ -171,8 +170,7 @@ public class LoginAdminWhitelistTest {
         }
     }
 
-
-    private LoginAdminWhitelistConfiguration config(final Boolean bypass, final String regexp, final String[] defaultBSNs, final String[] additionalBSNs) throws ConfigurationException {
+    private void configure(final LoginAdminWhitelist whitelist, final Boolean bypass, final String regexp, final String[] defaultBSNs, final String[] additionalBSNs) throws ConfigurationException {
         final Hashtable<String, Object> props = new Hashtable<>();
         if (bypass != null) {
             props.put("whitelist.bypass", bypass);
@@ -186,6 +184,8 @@ public class LoginAdminWhitelistTest {
         if (additionalBSNs != null) {
             props.put("whitelist.bundles.additional", additionalBSNs);
         }
-        return ConfigAnnotationUtil.fromDictionary(LoginAdminWhitelistConfiguration.class, props);
+        LoginAdminWhitelistConfiguration configuration =
+                ConfigAnnotationUtil.fromDictionary(LoginAdminWhitelistConfiguration.class, props);
+        whitelist.configure(configuration, props);
     }
 }
