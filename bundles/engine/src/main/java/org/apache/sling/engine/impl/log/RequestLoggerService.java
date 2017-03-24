@@ -20,51 +20,71 @@ package org.apache.sling.engine.impl.log;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyOption;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.RequestLog;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.osgi.service.metatype.annotations.Option;
 
 /**
  * The <code>RequestLoggerService</code> is a factory component which gets
  * configuration to register loggers for the {@link RequestLogger}.
  */
-@Component(
-        metatype = true,
-        label = "%request.log.service.name",
-        description = "%request.log.service.description",
-        configurationFactory = true,
-        policy = ConfigurationPolicy.REQUIRE)
-@Properties({
-    @Property(name = "service.description", value = "Factory for configuration based request/access loggers"),
-    @Property(name = "service.vendor", value = "The Apache Software Foundation")
-})
-@Service(value = RequestLoggerService.class)
+@Component(service = RequestLoggerService.class, configurationPolicy = ConfigurationPolicy.REQUIRE,
+     property = {
+             "service.description=Factory for configuration based request/access loggers",
+             "service.vendor=The Apache Software Foundation"
+     })
+@Designate(ocd = RequestLoggerService.Config.class, factory = true)
 public class RequestLoggerService {
 
-    @Property
-    public static final String PARAM_FORMAT = "request.log.service.format";
+    @ObjectClassDefinition(name = "Apache Sling Customizable Request Data Logger",
+            description="This configuration creates customizable "+
+                 "loggers for request content. Each configuration results in a logger writing "+
+                 "the requested data. Deleting an existing configuration removes the respective "+
+                 "logger.")
+    public @interface Config {
 
-    @Property(value = "request.log")
-    public static final String PARAM_OUTPUT = "request.log.service.output";
+        @AttributeDefinition(name = "Log Format",
+                description="The format for log entries. This is "+
+                    "a format string as defined at http://sling.apache.org/site/client-request-logging.html#ClientRequestLogging-LogFormatSpecification.")
+        String request_log_service_format();
 
-    @Property(intValue = 0, options = {
-        @PropertyOption(name = "0", value = "Logger Name"), @PropertyOption(name = "1", value = "File Name"),
-        @PropertyOption(name = "2", value = "RequestLog Service")
-    })
-    public static final String PARAM_OUTPUT_TYPE = "request.log.service.outputtype";
+        @AttributeDefinition(name = "Logger Name",
+                description="Name of the destination for the log "+
+                     "output. Depending on the output type this is a file name (absolute or "+
+                     "relative), a SLF4J logger name or the name under which a RequestLog service "+
+                     "has been registered.")
+        String request_log_service_output() default "reuest.log";
 
-    @Property(boolValue = false)
-    public static final String PARAM_ON_ENTRY = "request.log.service.onentry";
+        @AttributeDefinition(name = "Logger Type",
+                description = "Type of log destination. Select "+
+                     "\"Logger Name\" to write the access log to an SLF4J logger, \"File Name\" to "+
+                     "write the access log to a file (relative paths resolved against sling.home) "+
+                     "or \"RequestLog Service\" to use a named OSGi service registered with the "+
+                     "service interface \"org.apache.sling.engine.RequestLog\" and a service property "+
+                     "\"requestlog.name\" equal to the Logger Name setting.",
+                options = {
+                    @Option(label = "Logger Name", value = "0"),
+                    @Option(label = "File Name", value = "1"),
+                    @Option(label = "RequestLog Service", value = "2")
+        })
+        int request_log_service_outputtype() default 0;
+
+        @AttributeDefinition(name = "Request Entry",
+                description="Check if the logger is called on "+
+                     "request entry. Otherwise leave unchecked and the logger will be called on "+
+                     "request exit (aka termination), which is the default for access logger type "+
+                     "loggers.")
+        boolean request_log_service_onentry() default false;
+    }
+
 
     private static final int OUTPUT_TYPE_LOGGER = 0;
 
@@ -84,26 +104,25 @@ public class RequestLoggerService {
     public RequestLoggerService() {
     }
 
-    RequestLoggerService(BundleContext bundleContext, Map<String, Object> configuration) {
+    RequestLoggerService(BundleContext bundleContext, Config configuration) {
         this.setup(bundleContext, configuration);
     }
 
     @Activate
-    void setup(BundleContext bundleContext, Map<String, Object> configuration) {
+    void setup(BundleContext bundleContext, Config configuration) {
         // whether to log on request entry or request exit
-        this.onEntry = PropertiesUtil.toBoolean(configuration.get(PARAM_ON_ENTRY), false);
+        this.onEntry = configuration.request_log_service_onentry();
 
         // shared or private CustomLogFormat
-        final String format = PropertiesUtil.toString(configuration.get(PARAM_FORMAT), null);
+        final String format = configuration.request_log_service_format();
         if (format != null) {
             this.logFormat = new CustomLogFormat(format);
         }
 
         // where to log to
-        final String output = PropertiesUtil.toString(configuration.get(PARAM_OUTPUT), null);
+        final String output = configuration.request_log_service_output();
         if (output != null) {
-            final int outputType = PropertiesUtil.toInteger(configuration.get(PARAM_OUTPUT_TYPE), OUTPUT_TYPE_LOGGER);
-            this.log = this.getLog(bundleContext, output, outputType);
+            this.log = this.getLog(bundleContext, output, configuration.request_log_service_outputtype());
         }
     }
 

@@ -18,55 +18,92 @@
  */
 package org.apache.sling.engine.impl.log;
 
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyOption;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.osgi.service.metatype.annotations.Option;
 
 /**
  * The <code>RequestLogger</code> just registers {@link RequestLoggerService}
  * instance on behalf of the provided configuration.
  */
-@Component(metatype = true, label = "%request.log.name", description = "%request.log.description")
-@Properties({
-    @Property(name = "service.description", value = "Request Logger"),
-    @Property(name = "service.vendor", value = "The Apache Software Foundation")
+@Component(property = {
+        "service.description=Request Logger",
+        "service.vendor=The Apache Software Foundation"
 })
+@Designate(ocd = RequestLogger.Config.class)
 public class RequestLogger {
 
-    @Property(value = "logs/request.log")
-    public static final String PROP_REQUEST_LOG_OUTPUT = "request.log.output";
+    @ObjectClassDefinition(name = "Apache Sling Request Logger",
+            description="Configures the main loggers of the request logger, " +
+                     "namely the request log and the access log. Further loggers may be configured " +
+                     "by creating configurations for the Request Logger Service.")
+    public @interface Config {
 
-    @Property(intValue = 0, options = {
-        @PropertyOption(name = "0", value = "Logger Name"), @PropertyOption(name = "1", value = "File Name"),
-        @PropertyOption(name = "2", value = "RequestLog Service")
-    })
-    public static final String PROP_REQUEST_LOG_OUTPUT_TYPE = "request.log.outputtype";
+        @AttributeDefinition(name = "Request Log Name",
+                description = "Name of the destination for the request log. "+
+                     "The request log logs the entry and exit of each request into and "+
+                     "out of the system together with the entry time, exit time, time to process "+
+                     "the request, a request counter as well as the final status code and response "+
+                     "content type. In terms of Request Logger Service formats, request entry is "+
+                     "logged with the format \"%t [%R] -> %m %U%q %H\" and request exit is logged "+
+                     "with the format \"%{end}t [%R] <- %s %{Content-Type}o %Dms\".")
+        String request_log_output() default "logs/request.log";
 
-    @Property(boolValue = true)
-    public static final String PROP_REQUEST_LOG_ENABLED = "request.log.enabled";
+        @AttributeDefinition(name = "Request Log Type",
+                description = "Type of request log destination. Select "+
+                     "\"Logger Name\" to write the access log to an SLF4J logger, \"File Name\" to "+
+                     "write the access log to a file (relative paths resolved against sling.home) "+
+                     "or \"RequestLog Service\" to use a named OSGi service registered with the "+
+                     "service interface \"org.apache.sling.engine.RequestLog\" and a service property "+
+                     "\"requestlog.name\" equal to the Logger Name setting.",
+                options = {
+                    @Option(label = "Logger Name", value = "0"),
+                    @Option(label = "File Name", value = "1"),
+                    @Option(label = "RequestLog Service", value = "2")
+        })
+        int request_log_outputtype() default 0;
 
-    @Property(value = "logs/access.log")
-    public static final String PROP_ACCESS_LOG_OUTPUT = "access.log.output";
+        @AttributeDefinition(name = "Enable Request Log",
+                description = "Whether to enable Request logging or not.")
+        boolean request_log_enabled() default true;
 
-    @Property(intValue = 0, options = {
-        @PropertyOption(name = "0", value = "Logger Name"), @PropertyOption(name = "1", value = "File Name"),
-        @PropertyOption(name = "2", value = "RequestLog Service")
-    })
-    public static final String PROP_ACCESS_LOG_OUTPUT_TYPE = "access.log.outputtype";
+        @AttributeDefinition(name = "Access Log Name",
+                description = "Name of the destination for the request log. "+
+                     "The access log writes an entry for each request as the request terminates "+
+                     "using the NCSA extended/combined log format. In terms of Request Logger "+
+                     "Service formats the access log is written with the format "+
+                     "\"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"\".")
+        String access_log_output() default "logs/access.log";
 
-    @Property(boolValue = true)
-    public static final String PROP_ACCESS_LOG_ENABLED = "access.log.enabled";
+        @AttributeDefinition(name = "Access Log Type",
+                description = "Type of access log destination. Select "+
+                     "\"Logger Name\" to write the access log to an SLF4J logger, \"File Name\" to "+
+                     "write the access log to a file (relative paths resolved against sling.home) "+
+                     "or \"RequestLog Service\" to use a named OSGi service registered with the "+
+                     "service interface \"org.apache.sling.engine.RequestLog\" and a service property "+
+                     "\"requestlog.name\" equal to the Logger Name setting.",
+                options = {
+                    @Option(label = "Logger Name", value = "0"),
+                    @Option(label = "File Name", value = "1"),
+                    @Option(label = "RequestLog Service", value = "2")
+        })
+        int access_log_outputtype() default 0;
+
+        @AttributeDefinition(name = "Enable Access Log",
+                description = "Whether to enable Access logging or not.")
+        boolean access_log_enabled() default true;
+    }
 
     /**
      * The log format string for the request log entry message (value is "%t
@@ -91,30 +128,24 @@ public class RequestLogger {
      * RequestLoggerService instances created on behalf of the static
      * configuration.
      */
-    private Map<ServiceRegistration, RequestLoggerService> services = new HashMap<ServiceRegistration, RequestLoggerService>();
+    private Map<ServiceRegistration, RequestLoggerService> services = new HashMap<>();
 
     // ---------- SCR Integration ----------------------------------------------
 
     @Activate
-    protected void activate(BundleContext bundleContext, Map<String, Object> props) {
+    protected void activate(BundleContext bundleContext, Config config) {
 
         // prepare the request loggers if a name is configured and the
         // request loggers are enabled
-        final String requestLogName = PropertiesUtil.toString(props.get(PROP_REQUEST_LOG_OUTPUT), null);
-        final boolean requestLogEnabled = PropertiesUtil.toBoolean(props.get(PROP_REQUEST_LOG_ENABLED), false);
-        if (requestLogName != null && requestLogEnabled) {
-            final int requestLogType = PropertiesUtil.toInteger(props.get(PROP_REQUEST_LOG_OUTPUT_TYPE), 0);
-            createRequestLoggerService(services, bundleContext, true, REQUEST_LOG_ENTRY_FORMAT, requestLogName, requestLogType);
-            createRequestLoggerService(services, bundleContext, false, REQUEST_LOG_EXIT_FORMAT, requestLogName, requestLogType);
+        if (config.request_log_output() != null && config.request_log_enabled()) {
+            createRequestLoggerService(services, bundleContext, true, REQUEST_LOG_ENTRY_FORMAT, config.request_log_output(), config.request_log_outputtype());
+            createRequestLoggerService(services, bundleContext, false, REQUEST_LOG_EXIT_FORMAT, config.request_log_output(), config.request_log_outputtype());
         }
 
         // prepare the access logger if a name is configured and the
         // access logger is enabled
-        final String accessLogName = PropertiesUtil.toString(props.get(PROP_ACCESS_LOG_OUTPUT), null);
-        final boolean accessLogEnabled = PropertiesUtil.toBoolean(props.get(PROP_ACCESS_LOG_ENABLED), false);
-        if (accessLogName != null && accessLogEnabled) {
-            final int accessLogType = PropertiesUtil.toInteger(props.get(PROP_ACCESS_LOG_OUTPUT_TYPE), 0);
-            createRequestLoggerService(services, bundleContext, false, ACCESS_LOG_FORMAT, accessLogName, accessLogType);
+        if (config.access_log_output() != null && config.access_log_enabled()) {
+            createRequestLoggerService(services, bundleContext, false, ACCESS_LOG_FORMAT, config.access_log_output(), config.access_log_outputtype());
         }
     }
 
@@ -127,15 +158,40 @@ public class RequestLogger {
         services.clear();
     }
 
-    private static void createRequestLoggerService(Map<ServiceRegistration, RequestLoggerService> services, BundleContext bundleContext, boolean onEntry, Object format, String output, Object outputType) {
-        final Hashtable<String, Object> config = new Hashtable<String, Object>();
-        config.put(RequestLoggerService.PARAM_ON_ENTRY, onEntry ? Boolean.TRUE : Boolean.FALSE);
-        config.put(RequestLoggerService.PARAM_FORMAT, format);
-        config.put(RequestLoggerService.PARAM_OUTPUT, output);
-        config.put(RequestLoggerService.PARAM_OUTPUT_TYPE, outputType);
+    private static void createRequestLoggerService(Map<ServiceRegistration, RequestLoggerService> services,
+            final BundleContext bundleContext,
+            final boolean onEntry,
+            final String format,
+            final String output,
+            final int outputType) {
+        final RequestLoggerService service = new RequestLoggerService(bundleContext, new RequestLoggerService.Config() {
 
-        final RequestLoggerService service = new RequestLoggerService(bundleContext, config);
-        final ServiceRegistration reg = bundleContext.registerService(service.getClass().getName(), service, config);
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return  RequestLoggerService.Config.class;
+            }
+
+            @Override
+            public int request_log_service_outputtype() {
+                return outputType;
+            }
+
+            @Override
+            public String request_log_service_output() {
+                return output;
+            }
+
+            @Override
+            public boolean request_log_service_onentry() {
+                return onEntry;
+            }
+
+            @Override
+            public String request_log_service_format() {
+                return format;
+            }
+        });
+        final ServiceRegistration reg = bundleContext.registerService(service.getClass().getName(), service, null);
         services.put(reg, service);
     }
 }
