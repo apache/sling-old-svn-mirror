@@ -20,6 +20,8 @@
 
 A Node JS (like) module loader for Apache Sling.
 
+This module is considered **experimental** for now.
+
 ## Description
 This module implements a Nashorn Apache Sling Script Engine for the "esx" extension.
 
