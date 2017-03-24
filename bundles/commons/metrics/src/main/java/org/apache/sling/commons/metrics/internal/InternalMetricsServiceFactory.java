@@ -32,11 +32,11 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
-class MetricsServiceFactory implements ServiceFactory<MetricsService> {
+class InternalMetricsServiceFactory implements ServiceFactory<MetricsService> {
     private final MetricsService delegate;
     private final BundleMetricsMapper metricsMapper;
 
-    public MetricsServiceFactory(MetricsService delegate, BundleMetricsMapper metricsMapper) {
+    public InternalMetricsServiceFactory(MetricsService delegate, BundleMetricsMapper metricsMapper) {
         this.delegate = delegate;
         this.metricsMapper = metricsMapper;
     }

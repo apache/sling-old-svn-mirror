@@ -28,6 +28,9 @@ def modules = [
         location: 'bundles/commons/json'
     ],
     [
+        location: 'bundles/commons/johnzon',
+    ],
+    [
         location: 'bundles/commons/log'
     ],
     [
