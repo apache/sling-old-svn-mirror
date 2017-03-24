@@ -30,9 +30,15 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.scripting.esx</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <name>Apache Sling Scripting ESX</name>
     <description>Support NodeJS like scripting and module resolution</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <sling.java.version>8</sling.java.version>
+    </properties>
 
     <build>
         <resources>
@@ -163,7 +169,6 @@
             <version>2.0.19-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-        
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -189,30 +194,4 @@
             <type>jar</type>
         </dependency>
     </dependencies>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <sling.java.version>8</sling.java.version>
-    </properties>
-    <profiles>
-        <profile>
-            <id>autoInstallBundle</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>maven-sling-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>install-bundle</id>
-                                <goals>
-                                    <goal>install</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>                    
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

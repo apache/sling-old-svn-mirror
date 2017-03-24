@@ -19,11 +19,6 @@ package org.apache.sling.scripting.esx;
 import java.io.IOException;
 import javax.script.ScriptException;
 
-/**
- *
- * @author stas
- */
-@FunctionalInterface
 public interface Require {
     public Object require(String id) throws ScriptException, IOException;
 }
