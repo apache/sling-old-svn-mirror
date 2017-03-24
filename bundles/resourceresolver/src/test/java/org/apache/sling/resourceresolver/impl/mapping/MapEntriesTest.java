@@ -101,7 +101,7 @@ public class MapEntriesTest {
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        final List<VanityPathConfig> configs = new ArrayList<MapConfigurationProvider.VanityPathConfig>();
+        final List<VanityPathConfig> configs = new ArrayList<>();
         configs.add(new VanityPathConfig("/libs/", false));
         configs.add(new VanityPathConfig("/libs/denied", true));
         configs.add(new VanityPathConfig("/foo/", false));
@@ -218,7 +218,7 @@ public class MapEntriesTest {
 
         when(resourceResolverFactory.getDefaultVanityPathRedirectStatus()).thenReturn(DEFAULT_VANITY_STATUS);
 
-        final List<Resource> resources = new ArrayList<Resource>();
+        final List<Resource> resources = new ArrayList<>();
 
         Resource justVanityPath = mock(Resource.class, "justVanityPath");
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
@@ -298,7 +298,7 @@ public class MapEntriesTest {
     }
 
     private ValueMap buildValueMap(Object... string) {
-        final Map<String, Object> data = new HashMap<String, Object>();
+        final Map<String, Object> data = new HashMap<>();
         for (int i = 0; i < string.length; i = i + 2) {
             data.put((String) string[i], string[i+1]);
         }
@@ -318,7 +318,7 @@ public class MapEntriesTest {
         final String[] validPaths = {"/libs/somewhere", "/libs/a/b", "/foo/a", "/baa/a"};
         final String[] invalidPaths = {"/libs/denied/a", "/libs/denied/b/c", "/nowhere"};
 
-        final List<Resource> resources = new ArrayList<Resource>();
+        final List<Resource> resources = new ArrayList<>();
         for(final String val : validPaths) {
             resources.add(getVanityPathResource(val));
         }
@@ -346,7 +346,7 @@ public class MapEntriesTest {
         // each valid resource results in 2 entries
         assertEquals(validPaths.length * 2, entries.size());
 
-        final Set<String> resultSet = new HashSet<String>();
+        final Set<String> resultSet = new HashSet<>();
         for(final String p : validPaths) {
             resultSet.add(p + "$1");
             resultSet.add(p + ".html");
@@ -1426,18 +1426,12 @@ public class MapEntriesTest {
 
     @Test
     public void test_isValidVanityPath() throws Exception {
-        Method method = MapEntries.class.getDeclaredMethod("isValidVanityPath", Resource.class);
+        Method method = MapEntries.class.getDeclaredMethod("isValidVanityPath", String.class);
         method.setAccessible(true);
 
-        final Resource resource = mock(Resource.class);
-        when(resource.getPath()).thenReturn("/jcr:system/node");
+        assertFalse((Boolean)method.invoke(mapEntries, "/jcr:system/node"));
 
-        assertFalse((Boolean)method.invoke(mapEntries, resource));
-
-        when(resource.getPath()).thenReturn("/justVanityPath");
-        when(resource.getValueMap()).thenReturn(mock(ValueMap.class));
-
-        assertTrue((Boolean)method.invoke(mapEntries, resource));
+        assertTrue((Boolean)method.invoke(mapEntries, "/justVanityPath"));
     }
 
     @Test
@@ -1803,7 +1797,7 @@ public class MapEntriesTest {
 
         when(this.resourceResolverFactory.getMaxCachedVanityPathEntries()).thenReturn(2L);
 
-        ArrayList<DataFuture> list = new ArrayList<DataFuture>();
+        ArrayList<DataFuture> list = new ArrayList<>();
         for (int i =0;i<10;i++) {
             list.add(createDataFuture(pool, mapEntries));
 
@@ -1814,7 +1808,7 @@ public class MapEntriesTest {
         }
 
     }
-    
+
     // tests SLING-6542
     @Test
     public void sessionConcurrency() throws Exception {
@@ -1822,7 +1816,7 @@ public class MapEntriesTest {
         addResource.setAccessible(true);
         final Method updateResource = MapEntries.class.getDeclaredMethod("updateResource", String.class, AtomicBoolean.class);
         updateResource.setAccessible(true);
-        final Method handleConfigurationUpdate = MapEntries.class.getDeclaredMethod("handleConfigurationUpdate", 
+        final Method handleConfigurationUpdate = MapEntries.class.getDeclaredMethod("handleConfigurationUpdate",
                 String.class, AtomicBoolean.class, AtomicBoolean.class, boolean.class);
         handleConfigurationUpdate.setAccessible(true);
 
@@ -1837,7 +1831,7 @@ public class MapEntriesTest {
                 simulateSomewhatSlowSessionOperation(sessionLock);
                 return null;
             }
-            
+
         }).when(resourceResolver).refresh();
         Mockito.doAnswer(new Answer<Resource>() {
 
@@ -1846,13 +1840,13 @@ public class MapEntriesTest {
                 simulateSomewhatSlowSessionOperation(sessionLock);
                 return null;
             }
-            
+
         }).when(resourceResolver).getResource(any(String.class));
-        
+
         when(resourceResolverFactory.isMapConfiguration(any(String.class))).thenReturn(true);
-        
+
         final AtomicInteger failureCnt = new AtomicInteger(0);
-        final List<Exception> exceptions = new LinkedList<Exception>();
+        final List<Exception> exceptions = new LinkedList<>();
         final Semaphore done = new Semaphore(0);
         final int NUM_THREADS = 30;
         final Random random = new Random(12321);
@@ -1925,5 +1919,5 @@ public class MapEntriesTest {
             this.future = future;
         }
     }
-    
+
 }
