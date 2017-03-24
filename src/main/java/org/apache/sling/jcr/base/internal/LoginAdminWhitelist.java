@@ -19,6 +19,8 @@
 package org.apache.sling.jcr.base.internal;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
@@ -35,6 +37,8 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.sling.commons.osgi.PropertiesUtil.toStringArray;
 
 /**
  * Whitelist that defines which bundles can use the
@@ -59,13 +63,15 @@ public class LoginAdminWhitelist {
 
     private volatile ConfigurationState config;
 
-    // for backwards compatibility only
-    private volatile WhitelistFragment defaultFragment;
+    private final List<WhitelistFragment> whitelistFragments = new CopyOnWriteArrayList<WhitelistFragment>();
 
-    // for backwards compatibility only
-    private volatile WhitelistFragment additionalFragment;
+    // for backwards compatibility only (read properties directly to prevent them from appearing in the metatype)
+    private static final String PROP_WHITELIST_BUNDLES_DEFAULT = "whitelist.bundles.default";
 
-    private final List<WhitelistFragment> whitelistFragments = new CopyOnWriteArrayList<>();
+    private static final String PROP_WHITELIST_BUNDLES_ADDITIONAL = "whitelist.bundles.additional";
+
+    private final Map<String, WhitelistFragment> backwardsCompatibleFragments =
+            new ConcurrentHashMap<String, WhitelistFragment>();
 
     @Reference(
             cardinality = ReferenceCardinality.MULTIPLE,
@@ -84,9 +90,10 @@ public class LoginAdminWhitelist {
     }
 
     @Activate @Modified @SuppressWarnings("unused")
-    void configure(LoginAdminWhitelistConfiguration configuration) {
+    void configure(LoginAdminWhitelistConfiguration configuration, Map<String, Object> properties) {
         this.config = new ConfigurationState(configuration);
-        backwardsCompatibility(configuration);
+        ensureBackwardsCompatibility(properties, PROP_WHITELIST_BUNDLES_DEFAULT);
+        ensureBackwardsCompatibility(properties, PROP_WHITELIST_BUNDLES_ADDITIONAL);
     }
 
     public boolean allowLoginAdministrative(Bundle b) {
@@ -130,7 +137,7 @@ public class LoginAdminWhitelist {
             final String regexp = config.whitelist_bundles_regexp();
             if(regexp.trim().length() > 0) {
                 whitelistRegexp = Pattern.compile(regexp);
-                LOG.warn("A whitelist.bundles.regexp is configured, this is NOT RECOMMENDED for production: {}",
+                LOG.warn("A 'whitelist.bundles.regexp' is configured, this is NOT RECOMMENDED for production: {}",
                         whitelistRegexp);
             } else {
                 whitelistRegexp = null;
@@ -139,7 +146,7 @@ public class LoginAdminWhitelist {
             bypassWhitelist = config.whitelist_bypass();
             if(bypassWhitelist) {
                 LOG.info("bypassWhitelist=true, whitelisted BSNs=<ALL>");
-                LOG.warn("All bundles are allowed to use loginAdministrative due to the 'bypass whitelist' " +
+                LOG.warn("All bundles are allowed to use loginAdministrative due to the 'whitelist.bypass' " +
                         "configuration of this service. This is NOT RECOMMENDED, for security reasons."
                 );
             }
@@ -147,25 +154,19 @@ public class LoginAdminWhitelist {
     }
 
     @SuppressWarnings("deprecated")
-    private void backwardsCompatibility(final LoginAdminWhitelistConfiguration configuration) {
-        if (defaultFragment != null) {
-            unbindWhitelistFragment(defaultFragment);
+    private void ensureBackwardsCompatibility(final Map<String, Object> properties, final String propertyName) {
+        final WhitelistFragment oldFragment = backwardsCompatibleFragments.remove(propertyName);
+        
+        final String[] bsns = toStringArray(properties.get(propertyName), new String[0]);
+        if (bsns.length != 0) {
+            LOG.warn("Using deprecated configuration property '{}'", propertyName);
+            final WhitelistFragment fragment = new WhitelistFragment("deprecated-" + propertyName, bsns);
+            bindWhitelistFragment(fragment);
+            backwardsCompatibleFragments.put(propertyName, fragment);
         }
-        if (additionalFragment != null) {
-            unbindWhitelistFragment(additionalFragment);
-        }
-        final String[] defaultBsns = configuration.whitelist_bundles_default();
-        if (defaultBsns != null && defaultBsns.length != 0) {
-            LOG.warn("Using deprecated configuration property 'whitelist.bundles.default'");
-            defaultFragment = new WhitelistFragment("deprecated-whitelist.bundles.default", defaultBsns);
-            bindWhitelistFragment(defaultFragment);
-        }
-
-        final String[] additionalBsns = configuration.whitelist_bundles_additional();
-        if (additionalBsns != null && additionalBsns.length != 0) {
-            LOG.warn("Using deprecated configuration property 'whitelist.bundles.additional'");
-            additionalFragment = new WhitelistFragment("deprecated-whitelist.bundles.additional", additionalBsns);
-            bindWhitelistFragment(additionalFragment);
+        
+        if (oldFragment != null) {
+            unbindWhitelistFragment(oldFragment);
         }
     }
 }

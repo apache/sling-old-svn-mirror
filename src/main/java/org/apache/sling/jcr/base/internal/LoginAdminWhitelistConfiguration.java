@@ -53,23 +53,11 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
      *
      * @return The configured regular exression.
      */
+    @AttributeDefinition(
+            name = "Whitelist regexp",
+            description = "Regular expression for bundle symbolic names for which loginAdministrative() " +
+                    "is allowed. NOT recommended for production use, but useful for testing with " +
+                    "generated bundles."
+    )
     String whitelist_bundles_regexp() default "";
-
-    /**
-     * Default list of bundle symbolic names for which loginAdministrative() is allowed.
-     *
-     * @return The default whitelisted BSNs
-     * @deprecated use {@link WhitelistFragment} configurations instead
-     */
-    @Deprecated
-    String[] whitelist_bundles_default() default {};
-
-    /**
-     * Additional list of bundle symbolic names for which loginAdministrative() is allowed.
-     *
-     * @return Additional whitelisted BSNs
-     * @deprecated use {@link WhitelistFragment} configurations instead
-     */
-    @Deprecated
-    String[] whitelist_bundles_additional() default {};
 }
