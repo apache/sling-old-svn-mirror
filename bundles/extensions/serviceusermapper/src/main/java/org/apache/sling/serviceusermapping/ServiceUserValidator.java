@@ -29,6 +29,8 @@ public interface ServiceUserValidator {
      * Validates the configured service user ID.
      *
      * @param serviceUserId The ID of the configured service user.
+     * @param serviceName The name of the service
+     * @param subServiceName The optional sub service name.
      * @return {@code true} if the configured service user is valid; {@code false} otherwise.
      */
     boolean isValid(String serviceUserId, String serviceName, String subServiceName);
