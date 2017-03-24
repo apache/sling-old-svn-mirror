@@ -57,6 +57,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
@@ -295,6 +297,78 @@ public class MapEntriesTest {
         Map<String, List<String>> vanityTargets = (Map<String, List<String>>) field.get(mapEntries);
         assertEquals(4, vanityTargets.size());
 
+    }
+
+    @Test
+    public void test_vanity_path_updates() throws Exception {
+        Resource parent = mock(Resource.class, "parent");
+        when(parent.getPath()).thenReturn("/foo/parent");
+        when(parent.getName()).thenReturn("parent");
+        when(parent.getValueMap()).thenReturn(new ValueMapDecorator(Collections.<String, Object>emptyMap()));
+        when(resourceResolver.getResource(parent.getPath())).thenReturn(parent);
+
+        Resource child = mock(Resource.class, "jcrcontent");
+        when(child.getPath()).thenReturn("/foo/parent/jcr:content");
+        when(child.getName()).thenReturn("jcr:content");
+        when(child.getValueMap()).thenReturn(buildValueMap("sling:vanityPath", "/target/found"));
+        when(child.getParent()).thenReturn(parent);
+        when(parent.getChild(child.getName())).thenReturn(child);
+        when(resourceResolver.getResource(child.getPath())).thenReturn(child);
+
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            @Override
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                return Collections.<Resource> emptySet().iterator();
+            }
+        });
+
+        mapEntries.doInit();
+        mapEntries.initializeVanityPaths();
+
+        // map entries should have no alias atm
+        assertTrue( mapEntries.getResolveMaps().isEmpty());
+
+        // add parent
+        mapEntries.onChange(Arrays.asList(new ResourceChange(ChangeType.ADDED, parent.getPath(), false)));
+        assertTrue( mapEntries.getResolveMaps().isEmpty());
+
+        // add child
+        mapEntries.onChange(Arrays.asList(new ResourceChange(ChangeType.ADDED, child.getPath(), false)));
+
+        // two entries for the vanity path
+        List<MapEntry> entries = mapEntries.getResolveMaps();
+        assertEquals(2, entries.size());
+        for (MapEntry entry : entries) {
+            assertTrue(entry.getPattern().contains("/target/found"));
+        }
+
+        // update parent - no change
+        mapEntries.onChange(Arrays.asList(new ResourceChange(ChangeType.CHANGED, parent.getPath(), false)));
+        entries = mapEntries.getResolveMaps();
+        assertEquals(2, entries.size());
+        for (MapEntry entry : entries) {
+            assertTrue(entry.getPattern().contains("/target/found"));
+        }
+
+        // update child - no change
+        mapEntries.onChange(Arrays.asList(new ResourceChange(ChangeType.CHANGED, child.getPath(), false)));
+        entries = mapEntries.getResolveMaps();
+        assertEquals(2, entries.size());
+        for (MapEntry entry : entries) {
+            assertTrue(entry.getPattern().contains("/target/found"));
+        }
+
+        // remove child - empty again
+        when(resourceResolver.getResource(child.getPath())).thenReturn(null);
+        when(parent.getChild(child.getName())).thenReturn(null);
+        mapEntries.onChange(Arrays.asList(new ResourceChange(ChangeType.REMOVED, child.getPath(), false)));
+        assertTrue( mapEntries.getResolveMaps().isEmpty());
+
+        // remove parent - still empty
+        when(resourceResolver.getResource(parent.getPath())).thenReturn(null);
+        mapEntries.onChange(Arrays.asList(new ResourceChange(ChangeType.REMOVED, parent.getPath(), false)));
+        assertTrue( mapEntries.getResolveMaps().isEmpty());
     }
 
     private ValueMap buildValueMap(Object... string) {
