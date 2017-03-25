@@ -22,8 +22,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.SlingException;
-
 /**
  * The <code>AbstractPostResponse</code> class provides a basic implementation
  * of the {@link PostResponse} interface maintaining properties to be
@@ -218,7 +216,7 @@ public abstract class AbstractPostResponse implements PostResponse {
     }
 
     public void setError(Throwable error) {
-        setProperty(PN_ERROR, new SlingException("Exception during response processing.", null));
+        setProperty(PN_ERROR, error);
     }
 
     /**

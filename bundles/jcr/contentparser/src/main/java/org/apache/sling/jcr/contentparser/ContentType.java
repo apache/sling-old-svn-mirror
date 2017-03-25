@@ -32,7 +32,11 @@ public enum ContentType {
     JSON("json"),
 
     /**
-     * JCR XML content (FileVault XML).
+     * JCR XML content (FileVault XML). Also known as extended document view XML.
+     * Extends the regular document view as specified by JCR 2.0 by specifics like
+     * multivalue and typing information. Is used by Jackrabbit FileVault.
+     * @see <a href="https://docs.adobe.com/content/docs/en/spec/jcr/2.0/7_Export.html#7.3%20Document%20View">JCR 2.0, 7.3 Document View</a>
+     * @see <a href="http://jackrabbit.apache.org/filevault/">Jackrabbit FileVault</a>
      */
     JCR_XML("jcr.xml");
 

@@ -31,9 +31,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -50,6 +47,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.slf4j.Logger;
@@ -82,12 +80,10 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
     // Accept-Ranges header value
     private static final String ACCEPT_RANGES_BYTES = "bytes";
 
-
-
     /**
      * Full range marker.
      */
-    private static ArrayList<Range> FULL = new ArrayList<Range>(0);
+    private static ArrayList<Range> FULL = new ArrayList<>(0);
 
     static final int IO_BUFFER_SIZE = 2048;
 
@@ -165,14 +161,9 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         // fall back to plain text rendering if the resource has no stream
         if (resource.getResourceType().equals(JcrConstants.NT_LINKEDFILE)) {
-            try {
-                String actualResourcePath = resource.adaptTo(Node.class).getProperty(JcrConstants.JCR_CONTENT).getNode().getPath();
-                resource = request.getResourceResolver().getResource(actualResourcePath);
-            } catch (PathNotFoundException e) {
-                throw new ResourceNotFoundException("No data to render");
-            } catch (RepositoryException e) {
-                throw new IOException(e);
-            }
+            final ValueMap vm = resource.adaptTo(ValueMap.class);
+            final String actualResourcePath = vm.get(JcrConstants.JCR_CONTENT, String.class);
+            resource = request.getResourceResolver().getResource(actualResourcePath);
         }
         InputStream stream = resource.adaptTo(InputStream.class);
         if (stream != null) {
@@ -393,11 +384,11 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
                 contentType = ct;
             }
         }
-        
+
         if (contentType == null) {
             contentType = defaultContentType;
         }
-        
+
         response.setContentType(contentType);
 
         String encoding = meta.getCharacterEncoding();
@@ -560,7 +551,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         ostream.println();
         ostream.print("--" + mimeSeparation + "--");
-        
+
         if(exception != null) {
             throw exception;
         }
@@ -682,7 +673,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         // Vector which will contain all the ranges which are successfully
         // parsed.
-        ArrayList<Range> result = new ArrayList<Range>();
+        ArrayList<Range> result = new ArrayList<>();
         StringTokenizer commaTokenizer = new StringTokenizer(rangeHeader, ",");
 
         // Parsing the range list
