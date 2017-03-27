@@ -53,13 +53,13 @@ public final class FileResource extends AbstractResource {
 
     /**
      * The resource type for file system files mapped into the resource tree by
-     * the {@link FsResourceProvider} (value is "nt:file").
+     * the {@link org.apache.sling.fsprovider.internal.FsResourceProvider} (value is "nt:file").
      */
     public static final String RESOURCE_TYPE_FILE = "nt:file";
 
     /**
      * The resource type for file system folders mapped into the resource tree
-     * by the {@link FsResourceProvider} (value is "nt:folder").
+     * by the {@link org.apache.sling.fsprovider.internal.FsResourceProvider} (value is "nt:folder").
      */
     public static final String RESOURCE_TYPE_FOLDER = "nt:folder";
 

@@ -77,7 +77,8 @@ import org.osgi.service.metatype.annotations.Option;
 public final class FsResourceProvider implements ResourceProvider {
     
     /**
-     * Resource metadata property set by {@link FsResource} if the underlying file reference is a directory.
+     * Resource metadata property set by {@link org.apache.sling.fsprovider.internal.mapper.FileResource}
+     * if the underlying file reference is a directory.
      */
     public static final String RESOURCE_METADATA_FILE_DIRECTORY = ":org.apache.sling.fsprovider.file.directory";
     
@@ -130,9 +131,7 @@ public final class FsResourceProvider implements ResourceProvider {
                 description = "Max. number of content files cached in memory.")
         int provider_cache_size() default 10000;
 
-        /**
-         * Internal Name hint for web console.
-         */
+        // Internal Name hint for web console.
         String webconsole_configurationFactory_nameHint() default "{provider.fs.mode}: {" + ResourceProvider.ROOTS + "}";
     }
 
