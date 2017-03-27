@@ -24,7 +24,7 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -104,7 +104,7 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
         pw.println("<h1>Resource dumped by " + getClass().getSimpleName() + "</h1>");
         pw.println("<p>Resource path: <b>" + r.getPath() + "</b></p>");
         pw.println("<p>Resource metadata: <b>"
-            + StringEscapeUtils.escapeHtml(String.valueOf(r.getResourceMetadata()))
+            + StringEscapeUtils.escapeHtml4(String.valueOf(r.getResourceMetadata()))
             + "</b></p>");
 
         pw.println("<p>Resource type: <b>" + r.getResourceType() + "</b></p>");
