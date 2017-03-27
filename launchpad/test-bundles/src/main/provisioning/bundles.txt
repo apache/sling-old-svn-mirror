@@ -20,7 +20,7 @@
 [feature name=launchpad-test-bundles]
 
 [artifacts startLevel=1]
-  org.apache.sling/org.apache.sling.servlets.compat/1.0.3-SNAPSHOT
+  org.apache.sling/org.apache.sling.servlets.compat/1.0.2
 
 [artifacts]
   org.apache.sling/org.apache.sling.junit.core/1.0.14

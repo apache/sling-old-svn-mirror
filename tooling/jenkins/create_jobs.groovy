@@ -347,9 +347,6 @@ def modules = [
         jdks: ['1.8']
     ],
     [
-        location: 'bundles/servlets/compat'
-    ],
-    [
         location: 'bundles/servlets/get'
     ],
     [
