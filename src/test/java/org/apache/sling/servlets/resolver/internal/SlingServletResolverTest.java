@@ -23,6 +23,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERLVET_NAME;
 import static org.junit.Assert.assertEquals;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -166,10 +167,35 @@ public class SlingServletResolverTest {
             SERVLET_EXTENSION);
         mockComponentContext.locateService(SERVLET_NAME, serviceReference);
 
-        configureComponentContext(mockComponentContext);
-
         servletResolver.bindServlet(serviceReference);
-        servletResolver.activate(mockComponentContext);
+        servletResolver.activate(mockComponentContext, new SlingServletResolver.Config() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return SlingServletResolver.Config.class;
+            }
+
+            @Override
+            public String servletresolver_servletRoot() {
+                return "0";
+            }
+
+            @Override
+            public String[] servletresolver_paths() {
+                return new String[] {"/"};
+            }
+
+            @Override
+            public String[] servletresolver_defaultExtensions() {
+                // TODO Auto-generated method stub
+                return new String[] {"html"};
+            }
+
+            @Override
+            public int servletresolver_cacheSize() {
+                return 200;
+            }
+        });
 
         String path = "/"
             + MockSlingHttpServletRequest.RESOURCE_TYPE
@@ -184,16 +210,13 @@ public class SlingServletResolverTest {
             ResourceUtil.getParent(res.getPath()), "nt:folder");
         mockResourceResolver.addResource(parent);
 
-        List<Resource> childRes = new ArrayList<Resource>();
+        List<Resource> childRes = new ArrayList<>();
         childRes.add(res);
         mockResourceResolver.addChildren(parent, childRes);
     }
 
     protected String getRequestWorkspaceName() {
         return "fromRequest";
-    }
-
-    protected void configureComponentContext(MockComponentContext mockComponentContext) {
     }
 
     @Test public void testAcceptsRequest() {
