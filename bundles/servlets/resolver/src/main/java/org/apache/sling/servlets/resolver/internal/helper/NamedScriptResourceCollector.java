@@ -24,7 +24,7 @@ import java.util.Set;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
+import org.apache.sling.api.servlets.ServletResolverConstants;
 
 /**
  * The <code>ResourceCollector</code> class provides a single public method -
@@ -47,7 +47,7 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
         if ( resource != null ) {
             resourceType = resource.getResourceType();
             resourceSuperType = resource.getResourceSuperType();
-            baseResourceType = ServletResolverConstants.DEFAULT_SERVLET_NAME;
+            baseResourceType = ServletResolverConstants.DEFAULT_RESOURCE_TYPE;
         } else {
             resourceType = "";
             resourceSuperType = null;

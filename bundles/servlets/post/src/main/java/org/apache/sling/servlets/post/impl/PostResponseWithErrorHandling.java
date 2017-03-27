@@ -16,19 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.post;
+package org.apache.sling.servlets.post.impl;
 
 import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.servlets.post.HtmlResponse;
+import org.apache.sling.servlets.post.PostResponse;
+import org.apache.sling.servlets.post.PostResponseCreator;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
-/**
- * @deprecated
- */
-@Deprecated
-public class PostResponseWithErrorHandling implements PostResponseCreator{
+@Component
+@Service
+public class PostResponseWithErrorHandling implements PostResponseCreator {
 
 	@Override
     public PostResponse createPostResponse(SlingHttpServletRequest request) {

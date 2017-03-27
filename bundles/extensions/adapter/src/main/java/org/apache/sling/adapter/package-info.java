@@ -16,14 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.get.impl.impl.info;
 
-import java.util.Map;
+@Version("2.1.0")
+package org.apache.sling.adapter;
 
-import org.apache.sling.api.SlingHttpServletRequest;
+import org.osgi.annotation.versioning.Version;
 
-public interface SlingInfoProvider {
-
-    Map<String, String> getInfo(SlingHttpServletRequest request);
-    
-}

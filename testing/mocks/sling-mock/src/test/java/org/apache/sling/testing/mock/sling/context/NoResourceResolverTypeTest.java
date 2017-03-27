@@ -16,32 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.get.impl.impl.info;
+package org.apache.sling.testing.mock.sling.context;
 
-import java.util.HashMap;
-import java.util.Map;
+import static org.junit.Assert.assertTrue;
 
-import javax.jcr.Session;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
+import org.junit.Rule;
+import org.junit.Test;
 
-import org.apache.sling.api.SlingHttpServletRequest;
+public class NoResourceResolverTypeTest {
 
-public class SessionInfoProvider implements SlingInfoProvider {
-
-    static final String PROVIDER_LABEL = "sessionInfo";
-
-    public Map<String, String> getInfo(SlingHttpServletRequest request) {
-        final Map<String, String> result = new HashMap<String, String>();
-
-        final Session s = request.getResourceResolver().adaptTo(Session.class);
-
-        result.put("workspace",s.getWorkspace().getName());
-        result.put("userID",s.getUserID());
-
-        if (request.getAuthType() != null) {
-            result.put("authType", request.getAuthType());
-        }
-
-        return result;
+    @Rule
+    public SlingContext context = new SlingContext(ResourceResolverType.NONE);
+    
+    @Test
+    public void testRoot() {
+        Resource root = context.resourceResolver().getResource("/");
+        assertTrue(root instanceof SyntheticResource);
     }
-
+    
 }

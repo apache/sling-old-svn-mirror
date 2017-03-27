@@ -28,7 +28,7 @@ import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
@@ -97,7 +97,7 @@ public class ResourceResolverMangleNamespacesTest {
         final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act);
 
         rr = new ResourceResolverImpl(fac, false, null, new ResourceProviderStorageProvider() {
-            
+
             @Override
             public ResourceProviderStorage getResourceProviderStorage() {
                 return new ResourceProviderStorage(Arrays.asList(MockedResourceResolverImplTest.createRPHandler(rp, "rp1", 0, "/")));

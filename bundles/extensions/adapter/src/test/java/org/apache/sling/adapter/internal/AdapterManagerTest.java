@@ -18,6 +18,14 @@
  */
 package org.apache.sling.adapter.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Dictionary;
+import java.util.Map;
+
 import org.apache.sling.adapter.Adaption;
 import org.apache.sling.adapter.mock.MockAdapterFactory;
 import org.apache.sling.api.adapter.AdapterFactory;
@@ -39,14 +47,7 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 
-import java.util.Dictionary;
-import java.util.Map;
-
 import junitx.util.PrivateAccessor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(JMock.class)
 public class AdapterManagerTest {
@@ -100,7 +101,7 @@ public class AdapterManagerTest {
             allowing(bundleCtx).getServiceReferences(with(any(String.class)), with(any(String.class)));
             will(returnValue(null));
             allowing(bundleCtx).removeServiceListener(with(any(ServiceListener.class)));
-            allowing(bundleCtx).registerService(with(Adaption.class.getName()), with(AdaptionImpl.INSTANCE), with(any(Dictionary.class)));
+            allowing(bundleCtx).registerService(with(Adaption.class), with(AdaptionImpl.INSTANCE), with(any(Dictionary.class)));
             will(returnValue(null));
         }});
         return ctx;
@@ -126,14 +127,14 @@ public class AdapterManagerTest {
             allowing(bundleCtx).getServiceReferences(with(any(String.class)), with(any(String.class)));
             will(returnValue(null));
             allowing(bundleCtx).removeServiceListener(with(any(ServiceListener.class)));
-            allowing(bundleCtx).registerService(with(Adaption.class.getName()), with(AdaptionImpl.INSTANCE), with(any(Dictionary.class)));
+            allowing(bundleCtx).registerService(with(Adaption.class), with(AdaptionImpl.INSTANCE), with(any(Dictionary.class)));
             will(returnValue(null));
         }});
         return ctx;
     }
 
     public static <T> Matcher<T> any(Class<T> type) {
-        return new IsAnything<T>();
+        return new IsAnything<>();
     }
 
     /**
@@ -156,21 +157,25 @@ public class AdapterManagerTest {
             this.classes = classes;
         }
 
+        @Override
         public boolean isAssignableTo(Bundle bundle, String className) {
             // TODO Auto-generated method stub
             return false;
         }
 
+        @Override
         public Bundle[] getUsingBundles() {
             // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public String[] getPropertyKeys() {
             // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public Object getProperty(String key) {
             if ( key.equals(Constants.SERVICE_RANKING) ) {
                 return ranking;
@@ -185,11 +190,13 @@ public class AdapterManagerTest {
             return null;
         }
 
+        @Override
         public Bundle getBundle() {
             // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public int compareTo(Object reference) {
             Integer ranking1 = (Integer)getProperty(Constants.SERVICE_RANKING);
             Integer ranking2 = (Integer)((ServiceReference)reference).getProperty(Constants.SERVICE_RANKING);
@@ -493,6 +500,7 @@ public class AdapterManagerTest {
 
     public class FirstImplementationAdapterFactory implements AdapterFactory {
 
+        @Override
         @SuppressWarnings("unchecked")
         public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
             if (adaptable instanceof AdapterObject) {
@@ -511,6 +519,7 @@ public class AdapterManagerTest {
 
     public class SecondImplementationAdapterFactory implements AdapterFactory {
 
+        @Override
         @SuppressWarnings("unchecked")
         public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
             if (adaptable instanceof AdapterObject) {

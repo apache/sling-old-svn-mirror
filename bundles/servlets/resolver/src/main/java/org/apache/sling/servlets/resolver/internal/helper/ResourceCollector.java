@@ -21,13 +21,13 @@ package org.apache.sling.servlets.resolver.internal.helper;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
+import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 
 /**
@@ -119,7 +119,7 @@ public class ResourceCollector extends AbstractResourceCollector {
             final String[] executionPaths) {
         super((baseResourceType != null
                 ? baseResourceType
-                : ServletResolverConstants.DEFAULT_SERVLET_NAME),
+                : ServletResolverConstants.DEFAULT_RESOURCE_TYPE),
             resource.getResourceType(), resource.getResourceSuperType(),
             null, executionPaths);
         this.methodName = methodName;
@@ -158,7 +158,7 @@ public class ResourceCollector extends AbstractResourceCollector {
             final boolean isDefaultExtension,
             final String methodName,
             final String[] selectors) {
-        super(ServletResolverConstants.DEFAULT_SERVLET_NAME,
+        super(ServletResolverConstants.DEFAULT_RESOURCE_TYPE,
                 resource.getResourceType(),
                 resource.getResourceSuperType(),
                 extension, executionPaths);

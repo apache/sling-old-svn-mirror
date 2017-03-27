@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.caconfig.impl</artifactId>
     <packaging>bundle</packaging>
-    <version>1.3.1-SNAPSHOT</version>
+    <version>1.3.3-SNAPSHOT</version>
     <name>Apache Sling Context-Aware Configuration Implementation</name>
     <description>Apache Sling Context-Aware Configuration Implementation</description>
 

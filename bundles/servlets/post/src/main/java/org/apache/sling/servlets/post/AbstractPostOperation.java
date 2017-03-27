@@ -48,7 +48,9 @@ import org.slf4j.LoggerFactory;
  * {@link PostOperation} service interface providing actual implementations with
  * useful tooling and common functionality like preparing the change logs or
  * saving or refreshing the JCR Session.
+ * @deprecated
  */
+@Deprecated
 public abstract class AbstractPostOperation implements PostOperation {
 
     /**
@@ -70,6 +72,7 @@ public abstract class AbstractPostOperation implements PostOperation {
      *            progress.
      * @param processors The array of processors
      */
+    @Override
     public void run(final SlingHttpServletRequest request,
                     final PostResponse response,
                     final SlingPostProcessor[] processors) {
@@ -92,7 +95,7 @@ public abstract class AbstractPostOperation implements PostOperation {
                 response.setParentLocation(externalizePath(request, path));
             }
 
-            final List<Modification> changes = new ArrayList<Modification>();
+            final List<Modification> changes = new ArrayList<>();
 
             doRun(request, response, changes);
 
@@ -104,8 +107,8 @@ public abstract class AbstractPostOperation implements PostOperation {
             }
 
             // check modifications for remaining postfix and store the base path
-            final Map<String, String> modificationSourcesContainingPostfix = new HashMap<String, String>();
-            final Set<String> allModificationSources = new HashSet<String>(changes.size());
+            final Map<String, String> modificationSourcesContainingPostfix = new HashMap<>();
+            final Set<String> allModificationSources = new HashSet<>(changes.size());
             for (final Modification modification : changes) {
                 final String source = modification.getSource();
                 if (source != null) {
@@ -129,7 +132,7 @@ public abstract class AbstractPostOperation implements PostOperation {
                 }
             }
 
-            final Set<String> nodesToCheckin = new LinkedHashSet<String>();
+            final Set<String> nodesToCheckin = new LinkedHashSet<>();
 
             // set changes on html response
             for(Modification change : changes) {
@@ -555,10 +558,12 @@ public abstract class AbstractPostOperation implements PostOperation {
             nextResource = seek();
         }
 
+        @Override
         public boolean hasNext() {
             return nextResource != null;
         }
 
+        @Override
         public Resource next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
@@ -570,6 +575,7 @@ public abstract class AbstractPostOperation implements PostOperation {
             return result;
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }

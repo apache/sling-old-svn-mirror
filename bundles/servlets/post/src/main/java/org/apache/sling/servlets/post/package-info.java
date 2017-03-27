@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("2.3.0")
+@Version("2.3.1")
 package org.apache.sling.servlets.post;
 
 import org.osgi.annotation.versioning.Version;

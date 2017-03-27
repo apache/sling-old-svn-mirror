@@ -60,6 +60,9 @@ public final class FileMonitor extends TimerTask {
      * Creates a new instance of this class.
      * @param provider The resource provider.
      * @param interval The interval between executions of the task, in milliseconds.
+     * @param fsMode FS mode
+     * @param contentFileExtensions Content file extensions
+     * @param contentFileCache Content file cache
      */
     public FileMonitor(final FsResourceProvider provider, final long interval, FsMode fsMode,
             final ContentFileExtensions contentFileExtensions, final ContentFileCache contentFileCache) {

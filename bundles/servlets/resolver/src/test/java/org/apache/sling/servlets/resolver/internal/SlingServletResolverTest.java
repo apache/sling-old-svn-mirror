@@ -20,9 +20,9 @@ package org.apache.sling.servlets.resolver.internal;
 
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
-import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERLVET_NAME;
 import static org.junit.Assert.assertEquals;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.OptingServlet;
+import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.commons.testing.osgi.MockBundle;
 import org.apache.sling.commons.testing.osgi.MockBundleContext;
 import org.apache.sling.commons.testing.osgi.MockComponentContext;
@@ -157,19 +158,44 @@ public class SlingServletResolverTest {
             bundleContext, SlingServletResolverTest.this.servlet);
         MockServiceReference serviceReference = new MockServiceReference(bundle);
         serviceReference.setProperty(Constants.SERVICE_ID, 1L);
-        serviceReference.setProperty(SLING_SERLVET_NAME,
+        serviceReference.setProperty(ServletResolverConstants.SLING_SERVLET_NAME,
             SERVLET_NAME);
         serviceReference.setProperty(
-            ServletResolverConstants.SLING_SERVLET_PATHS, SERVLET_PATH);
+                ServletResolverConstants.SLING_SERVLET_PATHS, SERVLET_PATH);
         serviceReference.setProperty(
             ServletResolverConstants.SLING_SERVLET_EXTENSIONS,
             SERVLET_EXTENSION);
         mockComponentContext.locateService(SERVLET_NAME, serviceReference);
 
-        configureComponentContext(mockComponentContext);
-
         servletResolver.bindServlet(serviceReference);
-        servletResolver.activate(mockComponentContext);
+        servletResolver.activate(mockComponentContext, new SlingServletResolver.Config() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return SlingServletResolver.Config.class;
+            }
+
+            @Override
+            public String servletresolver_servletRoot() {
+                return "0";
+            }
+
+            @Override
+            public String[] servletresolver_paths() {
+                return new String[] {"/"};
+            }
+
+            @Override
+            public String[] servletresolver_defaultExtensions() {
+                // TODO Auto-generated method stub
+                return new String[] {"html"};
+            }
+
+            @Override
+            public int servletresolver_cacheSize() {
+                return 200;
+            }
+        });
 
         String path = "/"
             + MockSlingHttpServletRequest.RESOURCE_TYPE
@@ -184,16 +210,13 @@ public class SlingServletResolverTest {
             ResourceUtil.getParent(res.getPath()), "nt:folder");
         mockResourceResolver.addResource(parent);
 
-        List<Resource> childRes = new ArrayList<Resource>();
+        List<Resource> childRes = new ArrayList<>();
         childRes.add(res);
         mockResourceResolver.addChildren(parent, childRes);
     }
 
     protected String getRequestWorkspaceName() {
         return "fromRequest";
-    }
-
-    protected void configureComponentContext(MockComponentContext mockComponentContext) {
     }
 
     @Test public void testAcceptsRequest() {

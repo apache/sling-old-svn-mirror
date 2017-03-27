@@ -141,6 +141,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.resource.presence</artifactId>
+            <version>0.0.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.serviceusermapper</artifactId>
             <version>1.2.0</version>
             <scope>provided</scope>
@@ -221,7 +227,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>5.6.1</version>
+            <version>5.6.2</version>
             <scope>test</scope>
         </dependency>
         <!-- Apache Sling -->
