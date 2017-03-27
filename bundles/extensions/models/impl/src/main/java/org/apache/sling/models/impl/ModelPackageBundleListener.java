@@ -155,6 +155,20 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                     ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
                     regs.add(reg);
 
+                    Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
+                    Exporter[] exporters = null;
+                    if(exportersAnnotation != null) {
+                        exporters = exportersAnnotation.value();
+                    }
+                    Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
+                    if (exporterAnnotation != null) {
+                        if(exporters != null) {
+                            exporters = (Exporter[]) ArrayUtils.add(exporters, exporterAnnotation);
+                        } else {
+                            exporters = new Exporter[] { exporterAnnotation };
+                        }
+                    }
+
                     String[] resourceTypes = annotation.resourceType();
                     for (String resourceType : resourceTypes) {
                         if (StringUtils.isNotEmpty(resourceType)) {
@@ -166,17 +180,12 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                                 } else if (adaptable == SlingHttpServletRequest.class) {
                                     accessor = new ExportServlet.RequestAccessor(implType);
                                 }
-                                Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
-                                if (exporterAnnotation != null) {
-                                    registerExporter(bundle, implType, resourceType, exporterAnnotation, regs, accessor);
-                                }
-                                Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
-                                if (exportersAnnotation != null) {
-                                    for (Exporter ann : exportersAnnotation.value()) {
+
+                                if (exporters != null) {
+                                    for (Exporter ann : exporters) {
                                         registerExporter(bundle, implType, resourceType, ann, regs, accessor);
                                     }
                                 }
-
                             }
                         }
                     }
