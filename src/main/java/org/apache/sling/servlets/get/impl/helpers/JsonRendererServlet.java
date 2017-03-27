@@ -20,7 +20,7 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -52,17 +52,17 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
     /** Selector that means "pretty-print the output */
     public static final String TIDY = "tidy";
-    
-    /** Selector that causes hierarchy to be rendered as arrays 
-     *  instead of child objects - useful to preserve the order of those 
-     *  child objects */ 
+
+    /** Selector that causes hierarchy to be rendered as arrays
+     *  instead of child objects - useful to preserve the order of those
+     *  child objects */
     public static final String HARRAY = "harray";
-    
+
     /** How much to indent in tidy mode */
     public static final int INDENT_SPACES = 2;
 
     private long maximumResults;
-    
+
     private final JSONRenderer renderer = new JSONRenderer();
 
     public JsonRendererServlet(long maximumResults) {
@@ -136,7 +136,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             reportException(je);
         }
     }
-    
+
     /**
      * Get recursion level from selectors. as per SLING-167: the last selector, if present, gives the recursion level.
      *
@@ -160,7 +160,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
                         if (StringUtils.isNumeric(level)){
                             maxRecursionLevels = -1;
                         } else {
-                            throw new IllegalArgumentException("Invalid recursion selector value '" + level + "'"); 
+                            throw new IllegalArgumentException("Invalid recursion selector value '" + level + "'");
                         }
                     }
                 }
