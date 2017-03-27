@@ -26,12 +26,12 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import junit.framework.TestCase;
-
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HttpConstants;
+import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.commons.testing.osgi.MockServiceReference;
-import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
+
+import junit.framework.TestCase;
 
 public class ServletResourceProviderCreateTest extends TestCase {
 
@@ -64,7 +64,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertNotNull(paths);
         assertEquals(2, paths.length);
 
-        Set<String> checkerSet = new HashSet<String>();
+        Set<String> checkerSet = new HashSet<>();
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_GET
             + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_HEAD
@@ -92,7 +92,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertNotNull(paths);
         assertEquals(1, paths.length);
 
-        Set<String> checkerSet = new HashSet<String>();
+        Set<String> checkerSet = new HashSet<>();
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_GET
             + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
 
@@ -119,7 +119,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertNotNull(paths);
         assertEquals(3, paths.length);
 
-        Set<String> checkerSet = new HashSet<String>();
+        Set<String> checkerSet = new HashSet<>();
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_GET
             + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_POST
@@ -149,7 +149,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertNotNull(paths);
         assertEquals(1, paths.length);
 
-        Set<String> checkerSet = new HashSet<String>();
+        Set<String> checkerSet = new HashSet<>();
         checkerSet.add(ROOT + RES_TYPE_PATH
             + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
 
@@ -180,7 +180,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertNotNull(paths);
         assertEquals(1, paths.length);
 
-        Set<String> checkerSet = new HashSet<String>();
+        Set<String> checkerSet = new HashSet<>();
         checkerSet.add(ROOT + RES_TYPE_PATH + "/ext.json."
             + HttpConstants.METHOD_GET
             + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
@@ -209,7 +209,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         assertNotNull(paths);
         assertEquals(4, paths.length);
 
-        Set<String> checkerSet = new HashSet<String>();
+        Set<String> checkerSet = new HashSet<>();
         checkerSet.add(ROOT + RES_TYPE_PATH + "/json."
             + HttpConstants.METHOD_GET
             + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);

@@ -22,7 +22,8 @@ import static org.apache.sling.api.SlingConstants.ERROR_MESSAGE;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
 import static org.apache.sling.api.SlingConstants.ERROR_STATUS;
 import static org.apache.sling.api.SlingConstants.SLING_CURRENT_SERVLET_NAME;
-import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERLVET_NAME;
+import static org.apache.sling.api.servlets.ServletResolverConstants.DEFAULT_ERROR_HANDLER_RESOURCE_TYPE;
+import static org.apache.sling.api.servlets.ServletResolverConstants.SLING_SERVLET_NAME;
 import static org.osgi.framework.Constants.SERVICE_ID;
 import static org.osgi.framework.Constants.SERVICE_PID;
 import static org.osgi.service.component.ComponentConstants.COMPONENT_NAME;
@@ -59,6 +60,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.request.RequestUtil;
+import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.api.request.SlingRequestEvent;
 import org.apache.sling.api.request.SlingRequestListener;
 import org.apache.sling.api.resource.LoginException;
@@ -74,7 +76,7 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolver;
-import org.apache.sling.engine.ResponseUtil;
+import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultErrorHandlerServlet;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet;
@@ -430,7 +432,7 @@ public class SlingServletResolver
 
             // find a servlet for the status as the method name
             ResourceCollector locationUtil = new ResourceCollector(String.valueOf(status),
-                    ServletResolverConstants.ERROR_HANDLER_PATH, resource,
+                    DEFAULT_ERROR_HANDLER_RESOURCE_TYPE, resource,
                     this.executionPaths);
             Servlet servlet = getServletInternal(locationUtil, request, scriptResolver);
 
@@ -487,7 +489,7 @@ public class SlingServletResolver
             while (servlet == null && tClass != Object.class) {
                 // find a servlet for the simple class name as the method name
                 ResourceCollector locationUtil = new ResourceCollector(tClass.getSimpleName(),
-                        ServletResolverConstants.ERROR_HANDLER_PATH, resource,
+                        DEFAULT_ERROR_HANDLER_RESOURCE_TYPE, resource,
                         this.executionPaths);
                 servlet = getServletInternal(locationUtil, request, scriptResolver);
 
@@ -564,7 +566,7 @@ public class SlingServletResolver
         Resource res = request.getResource();
         if (res == null) {
             res = new SyntheticResource(request.getResourceResolver(), request.getPathInfo(),
-                    ServletResolverConstants.ERROR_HANDLER_PATH);
+                    DEFAULT_ERROR_HANDLER_RESOURCE_TYPE);
         }
         return res;
     }
@@ -731,8 +733,8 @@ public class SlingServletResolver
         // find a default error handler according to the resource type
         // tree of the given resource
         final ResourceCollector locationUtil = new ResourceCollector(
-            ServletResolverConstants.DEFAULT_ERROR_HANDLER_NAME,
-            ServletResolverConstants.ERROR_HANDLER_PATH, resource,
+            ServletResolverConstants.DEFAULT_ERROR_HANDLER_METHOD,
+            DEFAULT_ERROR_HANDLER_RESOURCE_TYPE, resource,
             this.executionPaths);
         final Servlet servlet = getServletInternal(locationUtil, request, resolver);
         if (servlet != null) {
@@ -1098,7 +1100,7 @@ public class SlingServletResolver
     }
 
     /** The list of property names checked by {@link #getName(ServiceReference)} */
-    private static final String[] NAME_PROPERTIES = { SLING_SERLVET_NAME,
+    private static final String[] NAME_PROPERTIES = { SLING_SERVLET_NAME,
         COMPONENT_NAME, SERVICE_PID, SERVICE_ID };
 
     /**
