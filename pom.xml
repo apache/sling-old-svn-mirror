@@ -406,8 +406,6 @@
                             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-RequiredExecutionEnvironment>${sling.bree}</Bundle-RequiredExecutionEnvironment>
-                            <!-- Disable the new ScrPlugin for now -->
-                            <_plugin>org.apache.felix.bundleplugin.BlueprintPlugin,aQute.lib.spring.SpringXMLType</_plugin>
                         </instructions>
                     </configuration>
                     <executions>
