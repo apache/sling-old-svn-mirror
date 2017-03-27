@@ -29,10 +29,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.ResponseUtil;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
 /**
@@ -47,40 +48,49 @@ import org.osgi.service.component.annotations.Component;
     })
 public class SlingInfoServlet extends SlingSafeMethodsServlet {
 
-    /**
-     *
-     */
     private static final String CACHE_CONTROL_HEADER = "Cache-Control";
 
     private static final String CACHE_CONTROL_HEADER_VALUE =
         "private, no-store, no-cache, max-age=0, must-revalidate";
 
-    private Map<String, SlingInfoProvider> infoProviders = new HashMap<>();
+    static final String PROVIDER_LABEL = "sessionInfo";
+
+    private Map<String, String> getInfo(final SlingHttpServletRequest request) {
+        final Map<String, String> result = new HashMap<>();
+
+        final ResourceResolver resolver = request.getResourceResolver();
+
+        result.put("userID", resolver.getUserID());
+
+        if (request.getAuthType() != null) {
+            result.put("authType", request.getAuthType());
+        }
+
+        return result;
+    }
 
     @Override
-    protected void doGet(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) throws IOException {
+    protected void doGet(final SlingHttpServletRequest request,
+            final SlingHttpServletResponse response) throws IOException {
 
         Map<String, String> data = null;
 
         if (request.getRequestPathInfo().getSelectors().length > 0) {
-            String label = request.getRequestPathInfo().getSelectors()[0];
-            SlingInfoProvider uip = infoProviders.get(label);
-            if (uip != null) {
-                data = uip.getInfo(request);
+            final String label = request.getRequestPathInfo().getSelectors()[0];
+            if ( PROVIDER_LABEL.equals(label) ) {
+                data = this.getInfo(request);
             }
         }
 
         if (data == null) {
 
-            // listOptions(response);
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
                 "Unknown Info Request");
 
         } else {
             response.setHeader(CACHE_CONTROL_HEADER, CACHE_CONTROL_HEADER_VALUE);
 
-            String extension = request.getRequestPathInfo().getExtension();
+            final String extension = request.getRequestPathInfo().getExtension();
             if ("json".equals(extension)) {
                 renderJson(response, data);
             } else if ("txt".equals(extension)) {
@@ -91,39 +101,9 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
 
         }
     }
-/*
-    private void listOptions(SlingHttpServletResponse response)
-            throws IOException {
 
-        // render data in JSON format
-        response.setContentType("text/html");
-        response.setCharacterEncoding("UTF-8");
-
-        final PrintWriter out = response.getWriter();
-
-        out.println("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">");
-        out.println("<html><head><title>Sling Info Providers</title></head>");
-        out.println("<body><h1>Select from the following Providers</h1>");
-
-        out.println("<table>");
-        for (String label : infoProviders.keySet()) {
-            out.print("<tr><td>");
-            out.print("<a href='sling.");
-            out.print(label);
-            out.print(".html'>");
-            out.print(label);
-            out.print("</a>");
-            out.println("</td></tr>");
-        }
-        out.println("</table>");
-
-        out.println("</body>");
-        out.flush();
-
-    }
-*/
-    private void renderJson(SlingHttpServletResponse response,
-            Map<String, String> data) throws IOException {
+    private void renderJson(final SlingHttpServletResponse response,
+            final Map<String, String> data) throws IOException {
         // render data in JSON format
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -133,7 +113,7 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
 
         try {
             w.object();
-            for (Map.Entry<String, String> e : data.entrySet()) {
+            for (final Map.Entry<String, String> e : data.entrySet()) {
                 w.key(e.getKey());
                 w.value(e.getValue());
             }
@@ -147,8 +127,8 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
         }
     }
 
-    private void renderHtml(SlingHttpServletResponse response,
-            Map<String, String> data) throws IOException {
+    private void renderHtml(final SlingHttpServletResponse response,
+            final Map<String, String> data) throws IOException {
         // render data in JSON format
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
@@ -156,15 +136,15 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
         final PrintWriter out = response.getWriter();
 
         out.println("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">");
-        out.println("<html><head><title>Sling Info</title></head>");
-        out.println("<body><h1>Sling Info</h1>");
+        out.println("<html><head><title>Apche Sling Info</title></head>");
+        out.println("<body><h1>Apache Sling Info</h1>");
 
         out.println("<table>");
-        for (Map.Entry<String, String> e : data.entrySet()) {
+        for (final Map.Entry<String, String> e : data.entrySet()) {
             out.print("<tr><td>");
-            out.print(e.getKey());
+            out.print(ResponseUtil.escapeXml(e.getKey()));
             out.print("</td><td>");
-            out.print(e.getValue());
+            out.print(ResponseUtil.escapeXml(e.getValue()));
             out.println("</td></tr>");
         }
         out.println("</table>");
@@ -173,8 +153,8 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
         out.flush();
     }
 
-    private void renderPlainText(SlingHttpServletResponse response,
-            Map<String, String> data) throws IOException {
+    private void renderPlainText(final SlingHttpServletResponse response,
+            final Map<String, String> data) throws IOException {
 
         // render data in JSON format
         response.setContentType("text/plain");
@@ -182,24 +162,12 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
 
         final PrintWriter out = response.getWriter();
 
-        for (Map.Entry<String, String> e : data.entrySet()) {
+        for (final Map.Entry<String, String> e : data.entrySet()) {
             out.print(e.getKey());
             out.print(": ");
             out.println(e.getValue());
         }
 
         out.flush();
-    }
-
-    // --------- SCR integration -----------------------------------------------
-
-    @Activate
-    protected void activate() {
-        try {
-            infoProviders.put(SessionInfoProvider.PROVIDER_LABEL,
-                new SessionInfoProvider());
-        } catch ( final Throwable t) {
-            // if no JCR API is available the above might throw an exception
-        }
     }
 }
