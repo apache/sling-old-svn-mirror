@@ -23,13 +23,16 @@ import javax.inject.Inject;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.engine.SlingRequestProcessor;
+import org.apache.sling.resource.presence.ResourcePresence;
 import org.apache.sling.testing.paxexam.TestSupport;
 import org.apache.sling.validation.ValidationService;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.util.Filter;
 import org.ops4j.pax.exam.util.PathUtils;
 
 import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionI18n;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionResourcePresence;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingInstallerProviderJcr;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingLaunchpadOakTar;
 import static org.ops4j.pax.exam.CoreOptions.composite;
@@ -52,6 +55,10 @@ public class ValidationTestSupport extends TestSupport {
     @Inject
     protected ValidationService validationService;
 
+    @Inject
+    @Filter(value = "(path=/apps/sling/validation/models/model1)")
+    protected ResourcePresence models;
+
     @Configuration
     public Option[] configuration() {
         return new Option[]{
@@ -70,6 +77,9 @@ public class ValidationTestSupport extends TestSupport {
             // testing
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.tools").versionAsInProject(),
             mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.hamcrest").versionAsInProject(),
+            factoryConfiguration("org.apache.sling.resource.presence.internal.ResourcePresenter")
+                .put("path", "/apps/sling/validation/models/model1")
+                .asOption(),
             junitBundles(),
             logging()
         };
@@ -81,6 +91,7 @@ public class ValidationTestSupport extends TestSupport {
         return composite(
             slingLaunchpadOakTar(workingDirectory, httpPort),
             slingExtensionI18n(),
+            slingExtensionResourcePresence(),
             slingInstallerProviderJcr(),
             mavenBundle().groupId("org.apache.commons").artifactId("commons-collections4").versionAsInProject()
         );
