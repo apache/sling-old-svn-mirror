@@ -22,35 +22,34 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.servlet.GenericServlet;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.request.ResponseUtil;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>DefaultErrorHandlerServlet</code> TODO
+ * The <code>DefaultErrorHandlerServlet</code>
  *
  * This is the default error handler servlet registered at the end of the
  * global search path
  */
-@Component
-@Service(value=javax.servlet.Servlet.class)
-@Properties({
-    @Property(name="sling.servlet.paths", value="sling/servlet/errorhandler/default"),
-    @Property(name="sling.servlet.prefix", value="-1")
-})
 @SuppressWarnings("serial")
+@Component(service = Servlet.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            "sling.servlet.paths=sling/servlet/errorhandler/default",
+            "sling.servlet.prefix=-1"
+    })
 public class DefaultErrorHandlerServlet extends GenericServlet {
 
     /** default log */

@@ -28,9 +28,11 @@ import static org.apache.sling.servlets.resolver.internal.ServletResolverConstan
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.servlet.Servlet;
+
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HttpConstants;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
@@ -116,9 +118,9 @@ public class ServletResourceProviderFactory {
         }
     }
 
-    public ServletResourceProvider create(ServiceReference ref) {
+    public ServletResourceProvider create(ServiceReference<Servlet> ref) {
 
-        Set<String> pathSet = new HashSet<String>();
+        Set<String> pathSet = new HashSet<>();
 
         // check whether explicit paths are set
         addByPath(pathSet, ref);
@@ -146,7 +148,7 @@ public class ServletResourceProviderFactory {
     /**
      * Get the mount prefix.
      */
-    private String getPrefix(final ServiceReference ref) {
+    private String getPrefix(final ServiceReference<Servlet> ref) {
         Object value = ref.getProperty(SLING_SERVLET_PREFIX);
         if ( value == null ) {
             if ( this.servletRoot != null ) {
@@ -192,8 +194,8 @@ public class ServletResourceProviderFactory {
      * @param pathSet
      * @param ref
      */
-    private void addByPath(Set<String> pathSet, ServiceReference ref) {
-        String[] paths = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_PATHS));
+    private void addByPath(Set<String> pathSet, ServiceReference<Servlet> ref) {
+        String[] paths = PropertiesUtil.toStringArray(ref.getProperty(SLING_SERVLET_PATHS));
         if (paths != null && paths.length > 0) {
             for (String path : paths) {
                 if (!path.startsWith("/")) {
@@ -214,8 +216,8 @@ public class ServletResourceProviderFactory {
      * @param pathSet
      * @param ref
      */
-    private void addByType(Set<String> pathSet, ServiceReference ref) {
-        String[] types = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_RESOURCE_TYPES));
+    private void addByType(Set<String> pathSet, ServiceReference<Servlet> ref) {
+        String[] types = PropertiesUtil.toStringArray(ref.getProperty(SLING_SERVLET_RESOURCE_TYPES));
         if (types == null || types.length == 0) {
             if (log.isDebugEnabled()) {
                 log.debug("addByType({}): no resource types declared",
@@ -225,16 +227,16 @@ public class ServletResourceProviderFactory {
         }
 
         // check for selectors
-        String[] selectors = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_SELECTORS));
+        String[] selectors = PropertiesUtil.toStringArray(ref.getProperty(SLING_SERVLET_SELECTORS));
         if (selectors == null) {
             selectors = new String[] { null };
         }
 
         // we have types and expect extensions and/or methods
-        String[] extensions = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_EXTENSIONS));
+        String[] extensions = PropertiesUtil.toStringArray(ref.getProperty(SLING_SERVLET_EXTENSIONS));
 
         // handle the methods property specially (SLING-430)
-        String[] methods = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_METHODS));
+        String[] methods = PropertiesUtil.toStringArray(ref.getProperty(SLING_SERVLET_METHODS));
         if (methods == null || methods.length == 0) {
 
             // SLING-512 only, set default methods if no extensions are declared
@@ -313,7 +315,7 @@ public class ServletResourceProviderFactory {
         }
     }
 
-    private String getServiceIdentifier(ServiceReference ref) {
+    private String getServiceIdentifier(ServiceReference<Servlet> ref) {
         Object id = ref.getProperty(ComponentConstants.COMPONENT_NAME);
         if (id != null) {
             return id.toString();
