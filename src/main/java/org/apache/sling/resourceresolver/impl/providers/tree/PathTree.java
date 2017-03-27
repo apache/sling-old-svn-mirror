@@ -18,7 +18,7 @@
  */
 package org.apache.sling.resourceresolver.impl.providers.tree;
 
-import static org.apache.commons.lang.StringUtils.split;
+import static org.apache.commons.lang3.StringUtils.split;
 
 import java.util.Iterator;
 import java.util.List;
@@ -28,7 +28,7 @@ public class PathTree<T extends Pathable> {
     private Node<T> root;
 
     public PathTree(List<T> values) {
-        this.root = new Node<T>();
+        this.root = new Node<>();
         for (T v : values) {
             addNewValue(v);
         }

@@ -42,8 +42,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
@@ -66,7 +66,7 @@ public class LegacyResourceProviderWhiteboard {
 
     public static final String ORIGINAL_SERVICE_PID = "original.service.pid";
 
-    private Map<Object, List<ServiceRegistration>> registrations = new HashMap<Object, List<ServiceRegistration>>();
+    private Map<Object, List<ServiceRegistration>> registrations = new HashMap<>();
 
     @Reference(service = ResourceProvider.class, cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     protected void bindResourceProvider(final ServiceReference<ResourceProvider> ref) {
@@ -76,10 +76,10 @@ public class LegacyResourceProviderWhiteboard {
             final String[] propertyNames = ref.getPropertyKeys();
             final boolean ownsRoot = toBoolean(ref.getProperty(OWNS_ROOTS), false);
 
-            final List<ServiceRegistration> newServices = new ArrayList<ServiceRegistration>();
+            final List<ServiceRegistration> newServices = new ArrayList<>();
             for (final String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
                 if ( path != null && !path.isEmpty() ) {
-                    final Dictionary<String, Object> newProps = new Hashtable<String, Object>();
+                    final Dictionary<String, Object> newProps = new Hashtable<>();
                     newProps.put(PROPERTY_AUTHENTICATE, AuthType.no.toString());
                     newProps.put(PROPERTY_MODIFIABLE, provider instanceof ModifyingResourceProvider);
                     newProps.put(PROPERTY_ADAPTABLE, provider instanceof Adaptable);
@@ -122,10 +122,10 @@ public class LegacyResourceProviderWhiteboard {
             final String[] propertyNames = ref.getPropertyKeys();
             final boolean ownsRoot = toBoolean(ref.getProperty(OWNS_ROOTS), false);
 
-            final List<ServiceRegistration> newServices = new ArrayList<ServiceRegistration>();
+            final List<ServiceRegistration> newServices = new ArrayList<>();
             for (final String path : PropertiesUtil.toStringArray(ref.getProperty(ROOTS), new String[0])) {
                 if ( path != null && !path.isEmpty() ) {
-                    final Dictionary<String, Object> newProps = new Hashtable<String, Object>();
+                    final Dictionary<String, Object> newProps = new Hashtable<>();
                     if (PropertiesUtil.toBoolean(ref.getProperty(PROPERTY_REQUIRED), false)) {
                         newProps.put(PROPERTY_AUTHENTICATE, AuthType.required.toString());
                     } else {

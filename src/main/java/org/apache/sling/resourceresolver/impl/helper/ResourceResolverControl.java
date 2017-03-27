@@ -37,7 +37,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -48,6 +48,7 @@ import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.path.PathBuilder;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
 import org.apache.sling.resourceresolver.impl.providers.stateful.AuthenticatedResourceProvider;
@@ -97,7 +98,7 @@ public class ResourceResolverControl {
     public ResourceResolverControl(final boolean isAdmin,
             final Map<String, Object> authenticationInfo,
             final ResourceProviderStorageProvider resourceProviderTracker) {
-        this.authenticatedProviders = new IdentityHashMap<ResourceProviderHandler, Object>();
+        this.authenticatedProviders = new IdentityHashMap<>();
         this.authenticationInfo = authenticationInfo;
         this.isAdmin = isAdmin;
         this.resourceProviderTracker = resourceProviderTracker;
@@ -268,7 +269,7 @@ public class ResourceResolverControl {
             realChildren = provider.listChildren(parent);
         }
 
-        final Set<String> visitedNames = new HashSet<String>();
+        final Set<String> visitedNames = new HashSet<>();
 
         IteratorChain chain = new IteratorChain();
         if ( realChildren != null ) {
@@ -278,8 +279,8 @@ public class ResourceResolverControl {
         // synthetic and providers are done in one loop
         final Node<ResourceProviderHandler> node = getResourceProviderStorage().getTree().getNode(parent.getPath());
         if (node != null) {
-            final List<Resource> syntheticList = new ArrayList<Resource>();
-            final List<Resource> providerList = new ArrayList<Resource>();
+            final List<Resource> syntheticList = new ArrayList<>();
+            final List<Resource> providerList = new ArrayList<>();
 
             for (final Entry<String, Node<ResourceProviderHandler>> entry : node.getChildren().entrySet()) {
                 final String name = entry.getKey();
@@ -327,7 +328,7 @@ public class ResourceResolverControl {
      * Returns the union of all attribute names.
      */
     public Collection<String> getAttributeNames(final ResourceResolverContext context) {
-        final Set<String> names = new LinkedHashSet<String>();
+        final Set<String> names = new LinkedHashSet<>();
         for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(getResourceProviderStorage().getAttributableHandlers(), this)) {
             p.getAttributeNames(names);
         }
@@ -437,7 +438,7 @@ public class ResourceResolverControl {
      * Return the union of query languages supported by the providers.
      */
     public String[] getSupportedLanguages(final ResourceResolverContext context) {
-        final Set<String> supportedLanguages = new LinkedHashSet<String>();
+        final Set<String> supportedLanguages = new LinkedHashSet<>();
         for (AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(getResourceProviderStorage().getLanguageQueryableHandlers(), this)) {
             supportedLanguages.addAll(Arrays.asList(p.getSupportedLanguages()));
         }
@@ -450,17 +451,17 @@ public class ResourceResolverControl {
     public Iterator<Resource> findResources(final ResourceResolverContext context,
             final String query, final String language) {
         final List<AuthenticatedResourceProvider> queryableRP = getQueryableProviders(context, language);
-        final List<Iterator<Resource>> iterators = new ArrayList<Iterator<Resource>>(queryableRP.size());
+        final List<Iterator<Resource>> iterators = new ArrayList<>(queryableRP.size());
         for (AuthenticatedResourceProvider p : queryableRP) {
             iterators.add(p.findResources(query, language));
         }
-        return new ChainedIterator<Resource>(iterators.iterator());
+        return new ChainedIterator<>(iterators.iterator());
     }
 
     private List<AuthenticatedResourceProvider> getQueryableProviders(
             final ResourceResolverContext context,
             final String language) {
-        final List<AuthenticatedResourceProvider> queryableProviders = new ArrayList<AuthenticatedResourceProvider>();
+        final List<AuthenticatedResourceProvider> queryableProviders = new ArrayList<>();
         for (final AuthenticatedResourceProvider p : context.getProviderManager().getAllBestEffort(getResourceProviderStorage().getLanguageQueryableHandlers(), this)) {
             if (ArrayUtils.contains(p.getSupportedLanguages(), language)) {
                 queryableProviders.add(p);
@@ -475,11 +476,11 @@ public class ResourceResolverControl {
     public Iterator<Map<String, Object>> queryResources(final ResourceResolverContext context,
             final String query, final String language) {
         final List<AuthenticatedResourceProvider> queryableRP = getQueryableProviders(context, language);
-        final List<Iterator<Map<String, Object>>> iterators = new ArrayList<Iterator<Map<String, Object>>>(queryableRP.size());
+        final List<Iterator<Map<String, Object>>> iterators = new ArrayList<>(queryableRP.size());
         for (AuthenticatedResourceProvider p : queryableRP) {
             iterators.add(p.queryResources(query, language));
         }
-        return new ChainedIterator<Map<String, Object>>(iterators.iterator());
+        return new ChainedIterator<>(iterators.iterator());
     }
 
     /**
@@ -586,7 +587,7 @@ public class ResourceResolverControl {
         }
 
         final Resource srcResource = this.getResource(context, srcAbsPath, null, null, false);
-        final List<Resource> newResources = new ArrayList<Resource>();
+        final List<Resource> newResources = new ArrayList<>();
         boolean rollback = true;
         try {
             this.copy(context, srcResource, destAbsPath, newResources);
@@ -613,7 +614,7 @@ public class ResourceResolverControl {
             return this.getResource(context, destAbsPath + '/' + ResourceUtil.getName(srcAbsPath), null, null, false);
         }
         final Resource srcResource = this.getResource(context, srcAbsPath, null, null, false);
-        final List<Resource> newResources = new ArrayList<Resource>();
+        final List<Resource> newResources = new ArrayList<>();
         boolean rollback = true;
         try {
             this.copy(context, srcResource, destAbsPath, newResources);
@@ -697,7 +698,7 @@ public class ResourceResolverControl {
                     // make sure we're getting the resourceTypeResourceResolver on behalf of
                     // the resourceresolver bundle
                     final Bundle bundle = FrameworkUtil.getBundle(ResourceResolverControl.class);
-                    final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+                    final Map<String, Object> authenticationInfo = new HashMap<>();
                     authenticationInfo.put(ResourceProvider.AUTH_SERVICE_BUNDLE, bundle);
                     authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, "hierarchy");
                     this.resourceTypeResourceResolver = factory.getServiceResourceResolver(authenticationInfo);

@@ -18,7 +18,7 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
-import static org.apache.commons.lang.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -109,7 +109,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     private ResourceResolverImpl(final ResourceResolverImpl resolver, final Map<String, Object> authenticationInfo) throws LoginException {
         this.factory = resolver.factory;
-        Map<String, Object> authInfo = new HashMap<String, Object>();
+        Map<String, Object> authInfo = new HashMap<>();
         if (resolver.control.getAuthenticationInfo() != null) {
             authInfo.putAll(resolver.control.getAuthenticationInfo());
         }
@@ -461,7 +461,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             // find aliases for segments. we can't walk the parent chain
             // since the request session might not have permissions to
             // read all parents SLING-2093
-            final LinkedList<String> names = new LinkedList<String>();
+            final LinkedList<String> names = new LinkedList<>();
 
             Resource current = res;
             String path = res.getPath();
@@ -1229,7 +1229,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
              if (ResourceTypeUtil.areResourceTypesEqual(resourceType, resource.getResourceType(), getSearchPath())) {
                  result = true;
              } else {
-                 Set<String> superTypesChecked = new HashSet<String>();
+                 Set<String> superTypesChecked = new HashSet<>();
                  String superType = this.getParentResourceType(resource);
                  while (!result && superType != null) {
                      if (ResourceTypeUtil.areResourceTypesEqual(resourceType, superType, getSearchPath())) {
