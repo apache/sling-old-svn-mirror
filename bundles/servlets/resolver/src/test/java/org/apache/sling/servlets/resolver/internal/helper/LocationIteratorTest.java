@@ -18,7 +18,7 @@
  */
 package org.apache.sling.servlets.resolver.internal.helper;
 
-import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.DEFAULT_SERVLET_NAME;
+import static org.apache.sling.api.servlets.ServletResolverConstants.DEFAULT_RESOURCE_TYPE;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -28,7 +28,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
     private LocationIterator getLocationIterator(final String resourceType,
             final String resourceSuperType) {
-       return this.getLocationIterator(resourceType, resourceSuperType, DEFAULT_SERVLET_NAME);
+       return this.getLocationIterator(resourceType, resourceSuperType, DEFAULT_RESOURCE_TYPE);
     }
 
     private LocationIterator getLocationIterator(final String resourceType,
@@ -55,7 +55,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 2. /sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals("/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals("/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 3. finished
         assertFalse(li.hasNext());
@@ -75,7 +75,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 2. /apps/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root0 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 3. finished
         assertFalse(li.hasNext());
@@ -100,11 +100,11 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 3. /apps/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root0 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 4. /libs/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root1 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 5. finished
         assertFalse(li.hasNext());
@@ -129,7 +129,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 2. /sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals("/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals("/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 3. finished
         assertFalse(li.hasNext());
@@ -154,7 +154,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 2. /apps/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root0 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 3. finished
         assertFalse(li.hasNext());
@@ -180,11 +180,11 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 2. /apps/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root0 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 3. /libs/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root1 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 4. finished
         assertFalse(li.hasNext());
@@ -213,7 +213,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 3. /sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals("/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals("/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 4. finished
         assertFalse(li.hasNext());
@@ -242,7 +242,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 3. /apps/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root0 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 4. finished
         assertFalse(li.hasNext());
@@ -280,11 +280,11 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 5. /apps/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root0 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 6. /libs/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root1 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 7. finished
         assertFalse(li.hasNext());
@@ -318,7 +318,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 3. /sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals("/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals("/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 4. finished
         assertFalse(li.hasNext());
@@ -352,7 +352,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 3. /apps/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root0 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 4. finished
         assertFalse(li.hasNext());
@@ -391,11 +391,11 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 4. /apps/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root0 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 5. /libs/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root1 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 6. finished
         assertFalse(li.hasNext());
@@ -426,9 +426,9 @@ public class LocationIteratorTest extends HelperTestBase {
         assertTrue(li.hasNext());
         assertEquals(root1 + "/a/b", li.next());
         assertTrue(li.hasNext());
-        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root0 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
         assertTrue(li.hasNext());
-        assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root1 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
         assertFalse(li.hasNext());
     }
 
@@ -447,9 +447,9 @@ public class LocationIteratorTest extends HelperTestBase {
         assertTrue(li.hasNext());
         assertEquals(root1 + "/c/d", li.next());
         assertTrue(li.hasNext());
-        assertEquals(root0 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root0 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
         assertTrue(li.hasNext());
-        assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root1 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
         assertFalse(li.hasNext());
     }
 
@@ -488,7 +488,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // 4. /libs/sling/servlet/default
         assertTrue(li.hasNext());
-        assertEquals(root1 + "/" + DEFAULT_SERVLET_NAME, li.next());
+        assertEquals(root1 + "/" + DEFAULT_RESOURCE_TYPE, li.next());
 
         // 5. finished
         assertFalse(li.hasNext());
