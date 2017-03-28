@@ -103,7 +103,7 @@ public class U {
                     mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
                     mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
-                    mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.10"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.commons.johnzon").versionAsInProject(),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.1.0"),
