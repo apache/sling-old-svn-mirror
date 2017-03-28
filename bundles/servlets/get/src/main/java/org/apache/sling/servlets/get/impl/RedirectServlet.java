@@ -150,6 +150,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             targetPath = targetResource.adaptTo(String.class);
         }
 
+        boolean absolute = false;
         // if we got a target path, make it external and redirect to it
         if (targetPath != null) {
             if (!isUrl(targetPath)) {
@@ -160,6 +161,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
                 // just append any selectors, extension, suffix and query string
                 targetPath = appendSelectorsExtensionSuffixQuery(request,
                     new StringBuilder(targetPath)).toString();
+                absolute = true;
             }
 
             final int status = getStatus(valueMap);
@@ -169,7 +171,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             // into an absolute URI.
             response.reset();
             response.setStatus(status);
-            response.setHeader("Location", response.encodeRedirectURL(targetPath));
+            response.setHeader("Location", absolute ? targetPath : response.encodeRedirectURL(targetPath));
             response.flushBuffer();
 
             return;
