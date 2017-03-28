@@ -35,16 +35,6 @@ import javax.script.Compilable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -52,7 +42,6 @@ import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.scripting.api.CachedScript;
@@ -62,37 +51,27 @@ import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(
-        metatype = true,
-        label = "Apache Sling Script Cache",
-        description = "The Script Cache is useful for running previously compiled scripts."
-)
-@Properties({
-        @Property(
-                name = ScriptCacheImpl.PROP_CACHE_SIZE,
-                intValue = ScriptCacheImpl.DEFAULT_CACHE_SIZE,
-                label = "Cache Size",
-                description = "The Cache Size defines the maximum number of compiled script references that will be stored in the cache's" +
-                        " internal map."
-        ),
-        @Property(
-                name = ScriptCacheImpl.PROP_ADDITIONAL_EXTENSIONS,
-                value = "",
-                label = "Additional Extensions",
-                description = "Scripts from the search paths with these extensions will also be monitored so that changes to them will " +
-                        "clean the cache if the cache contains them.",
-                unbounded = PropertyUnbounded.ARRAY
-        )
-})
-@Service(ScriptCache.class)
-@Reference(
-        name = "scriptEngineFactory",
-        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-        referenceInterface = ScriptEngineFactory.class,
+    service = ScriptCache.class,
+    reference = @Reference(
+        name = "ScriptEngineFactory",
+        service = ScriptEngineFactory.class,
+        cardinality = ReferenceCardinality.OPTIONAL,
         policy = ReferencePolicy.DYNAMIC
+    )
+)
+@Designate(
+    ocd = ScriptCacheImplConfiguration.class
 )
 /**
  * The {@code ScriptCache} stores information about {@link CompiledScript} instances evaluated by various {@link ScriptEngine}s that
@@ -103,8 +82,6 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
     private static final Logger LOGGER = LoggerFactory.getLogger(ScriptCacheImpl.class);
 
     public static final int DEFAULT_CACHE_SIZE = 65536;
-    public static final String PROP_CACHE_SIZE = "org.apache.sling.scripting.cache.size";
-    public static final String PROP_ADDITIONAL_EXTENSIONS = "org.apache.sling.scripting.cache.additional_extensions";
 
     private BundleContext bundleContext;
     private Map<String, SoftReference<CachedScript>> internalMap;
@@ -114,7 +91,9 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
     private String[] searchPaths = {};
 
     // use a static policy so that we can reconfigure the watched script files if the search paths are changed
-    @Reference(policy = ReferencePolicy.STATIC)
+    @Reference(
+        policy = ReferencePolicy.STATIC
+    )
     private ResourceResolverFactory rrf = null;
 
     @Reference
@@ -232,12 +211,12 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
 
     @Activate
     @SuppressWarnings("unused")
-    protected void activate(ComponentContext componentContext) {
+    protected void activate(ScriptCacheImplConfiguration configuration, ComponentContext componentContext) {
         threadPool = threadPoolManager.get("Script Cache Thread Pool");
         bundleContext = componentContext.getBundleContext();
         Dictionary properties = componentContext.getProperties();
-        additionalExtensions = PropertiesUtil.toStringArray(properties.get(PROP_ADDITIONAL_EXTENSIONS));
-        int newMaxCacheSize = PropertiesUtil.toInteger(properties.get(PROP_CACHE_SIZE), DEFAULT_CACHE_SIZE);
+        additionalExtensions = configuration.org_apache_sling_scripting_cache_additional__extensions();
+        int newMaxCacheSize = configuration.org_apache_sling_scripting_cache_size();
         if (newMaxCacheSize != DEFAULT_CACHE_SIZE) {
             // change the map only if there's a configuration change regarding the cache's max size
             CachingMap<CachedScript> newMap = new CachingMap<>(newMaxCacheSize);

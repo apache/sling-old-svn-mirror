@@ -24,12 +24,10 @@ import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -42,6 +40,9 @@ import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
 import org.apache.felix.utils.json.JSONWriter;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Return all scripting variables for all registered scripting languages for the default context (=request).
@@ -49,11 +50,14 @@ import org.osgi.service.component.ComponentContext;
  * Also the context (i.e. the resource on which the request is acting) is important, 
  * because the actual binding variables might differ depending on the context
  */
-@SlingServlet(
-        resourceTypes = "sling/servlet/default",
-        selectors = "SLING_availablebindings",
-        methods = "GET",
-        extensions = "json"
+@Component(
+    service = Servlet.class,
+    property = {
+        "sling.servlet.resourceTypes=sling/servlet/default",
+        "sling.servlet.selectors=SLING_availablebindings",
+        "sling.servlet.methods=GET",
+        "sling.servlet.extensions=json"
+    }
 )
 public class SlingBindingsVariablesListJsonServlet extends SlingSafeMethodsServlet {
 
