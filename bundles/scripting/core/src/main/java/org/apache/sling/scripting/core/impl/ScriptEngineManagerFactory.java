@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 @Component(
+    immediate = true,
     reference = @Reference(
         name = "ScriptEngineFactory",
         service = ScriptEngineFactory.class,
