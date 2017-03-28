@@ -25,6 +25,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.json.JsonException;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -35,7 +37,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.base.connectors.BaseConfig;
@@ -243,7 +244,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             logger.error("listAnnouncementsInSameCluster: got a PersistenceException: " + e, e);
             throw new RuntimeException(
                     "Exception while talking to repository (" + e + ")", e);
-        } catch (JSONException e) {
+        } catch (JsonException e) {
             logger.error("listAnnouncementsInSameCluster: got a JSONException: " + e, e);
             throw new RuntimeException("Exception while converting json (" + e
                     + ")", e);
@@ -327,7 +328,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 }
                 logger.debug("registerAnnouncement: incoming announcement differs from existing one!");
 
-            } catch(JSONException e) {
+            } catch(JsonException e) {
                 logger.error("registerAnnouncement: got JSONException while converting incoming announcement to JSON: "+e, e);
             }
             // otherwise the repository and the cache require to be updated
@@ -395,7 +396,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                     + e, e);
             throw new RuntimeException(
                     "Exception while talking to repository (" + e + ")", e);
-        } catch (JSONException e) {
+        } catch (JsonException e) {
             logger.error("registerAnnouncement: got a JSONException: " + e, e);
             throw new RuntimeException("Exception while converting json (" + e
                     + ")", e);
@@ -467,7 +468,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             logger.error("handleEvent: got a PersistenceException: " + e, e);
             throw new RuntimeException(
                     "Exception while talking to repository (" + e + ")", e);
-        } catch (JSONException e) {
+        } catch (JsonException e) {
             logger.error("handleEvent: got a JSONException: " + e, e);
             throw new RuntimeException("Exception while converting json (" + e
                     + ")", e);

@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.zip.GZIPOutputStream;
 
+import javax.json.JsonException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -38,7 +39,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.base.commons.ClusterViewHelper;
 import org.apache.sling.discovery.base.commons.ClusterViewService;
@@ -320,7 +320,7 @@ public class TopologyConnectorServlet extends HttpServlet {
                 pw.print(p);
                 pw.flush();
             }
-        } catch (JSONException e) {
+        } catch (JsonException e) {
             logger.error("doPost: Got a JSONException: " + e, e);
             response.sendError(500);
         } catch (UndefinedClusterViewException e) {

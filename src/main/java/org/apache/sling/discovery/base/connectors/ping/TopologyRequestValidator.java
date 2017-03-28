@@ -18,6 +18,8 @@
 package org.apache.sling.discovery.base.connectors.ping;
 
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -46,6 +48,12 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -54,9 +62,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.discovery.base.connectors.BaseConfig;
 
 /**
@@ -138,9 +143,16 @@ public class TopologyRequestValidator {
         checkActive();
         if (encryptionEnabled) {
             try {
-                JSONObject json = new JSONObject();
-                json.put("payload", new JSONArray(encrypt(body)));
-                return json.toString();
+                JsonObjectBuilder json = Json.createObjectBuilder();
+                JsonArrayBuilder array = Json.createArrayBuilder();
+                for (String value : encrypt(body))
+                {
+                    array.add(value);
+                }
+                json.add("payload", array);
+                StringWriter writer = new StringWriter();
+                Json.createGenerator(writer).write(json.build()).close();
+                return writer.toString();
             } catch (InvalidKeyException e) {
                 e.printStackTrace();
                 throw new IOException("Unable to Encrypt Message " + e.getMessage());
@@ -154,7 +166,7 @@ public class TopologyRequestValidator {
                 throw new IOException("Unable to Encrypt Message " + e.getMessage());
             } catch (NoSuchPaddingException e) {
                 throw new IOException("Unable to Encrypt Message " + e.getMessage());
-            } catch (JSONException e) {
+            } catch (JsonException e) {
                 throw new IOException("Unable to Encrypt Message " + e.getMessage());
             } catch (InvalidKeySpecException e) {
                 throw new IOException("Unable to Encrypt Message " + e.getMessage());
@@ -211,11 +223,11 @@ public class TopologyRequestValidator {
             if (bodyHash.equals(requestHash)) {
                 if (encryptionEnabled) {
                     try {
-                        JSONObject json = new JSONObject(body);
-                        if (json.has("payload")) {
-                            return decrypt(json.getJSONArray("payload"));
+                        JsonObject json = Json.createReader(new StringReader(body)).readObject();
+                        if (json.containsKey("payload")) {
+                            return decrypt(json.getJsonArray("payload"));
                         }
-                    } catch (JSONException e) {
+                    } catch (JsonException e) {
                         throw new IOException("Encrypted Message is in the correct json format");
                     } catch (InvalidKeyException e) {
                         throw new IOException("Encrypted Message is in the correct json format");
@@ -418,9 +430,9 @@ public class TopologyRequestValidator {
      * @throws InvalidAlgorithmParameterException
      * @throws JSONException
      */
-    private String decrypt(JSONArray jsonArray) throws IllegalBlockSizeException,
+    private String decrypt(JsonArray jsonArray) throws IllegalBlockSizeException,
             BadPaddingException, UnsupportedEncodingException, InvalidKeyException,
-            NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeySpecException, JSONException {
+            NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeySpecException {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, getCiperKey(Base64.decodeBase64(jsonArray.getString(0).getBytes("UTF-8"))), new IvParameterSpec(Base64.decodeBase64(jsonArray.getString(1).getBytes("UTF-8"))));
         return new String(cipher.doFinal(Base64.decodeBase64(jsonArray.getString(2).getBytes("UTF-8"))));
