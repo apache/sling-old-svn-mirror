@@ -611,22 +611,22 @@ public class XSSAPIImplTest {
                 {"{}",      "{}"},
                 {"{1}",     RUBBISH_JSON},
                 {
-                        "{test: 'test'}",
+                        "{\"test\": \"test\"}",
                         "{\"test\":\"test\"}"
                 },
                 {
-                        "{test:\"test}",
+                        "{\"test\":\"test}",
                         RUBBISH_JSON
                 },
                 {
-                        "{test1:'test1', test2: {test21: 'test21', test22: 'test22'}}",
+                        "{\"test1\":\"test1\", \"test2\": {\"test21\": \"test21\", \"test22\": \"test22\"}}",
                         "{\"test1\":\"test1\",\"test2\":{\"test21\":\"test21\",\"test22\":\"test22\"}}"
                 },
                 {"[]",      "[]"},
                 {"[1,2]",   "[1,2]"},
                 {"[1",      RUBBISH_JSON},
                 {
-                        "[{test: 'test'}]",
+                        "[{\"test\": \"test\"}]",
                         "[{\"test\":\"test\"}]"
                 }
         };
