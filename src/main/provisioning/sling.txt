@@ -34,7 +34,7 @@
     org.apache.geronimo.bundles/commons-httpclient/3.1_1
     org.apache.httpcomponents/httpcore-osgi/4.4.1
     org.apache.httpcomponents/httpclient-osgi/4.4.1
-    org.apache.sling/org.apache.sling.adapter/2.1.8
+    org.apache.sling/org.apache.sling.adapter/2.1.9-SNAPSHOT
     org.apache.sling/org.apache.sling.api/2.16.2
     org.apache.sling/org.apache.sling.auth.core/1.3.24
     org.apache.sling/org.apache.sling.auth.form/1.0.8
@@ -48,7 +48,7 @@
     org.apache.sling/org.apache.sling.commons.threads/3.2.6
     org.apache.sling/org.apache.sling.engine/2.6.7-SNAPSHOT
     org.apache.sling/org.apache.sling.fsresource/1.2.2
-    org.apache.sling/org.apache.sling.hc.core/1.2.6
+    org.apache.sling/org.apache.sling.hc.core/1.2.7-SNAPSHOT
     org.apache.sling/org.apache.sling.hc.webconsole/1.1.2
     org.apache.sling/org.apache.sling.i18n/2.5.8
     org.apache.sling/org.apache.sling.installer.console/1.0.2
@@ -60,10 +60,10 @@
     org.apache.sling/org.apache.sling.models.impl/1.3.8
     org.apache.sling/org.apache.sling.resourceresolver/1.5.20
     org.apache.sling/org.apache.sling.serviceusermapper/1.2.4
-    org.apache.sling/org.apache.sling.servlets.get/2.1.22
-    org.apache.sling/org.apache.sling.servlets.post/2.3.14
+    org.apache.sling/org.apache.sling.servlets.get/2.1.23-SNAPSHOT
+    org.apache.sling/org.apache.sling.servlets.post/2.3.15-SNAPSHOT
     org.apache.sling/org.apache.sling.servlets.resolver/2.4.10
-    org.apache.sling/org.apache.sling.xss/1.0.18
+    org.apache.sling/org.apache.sling.xss/1.0.19-SNAPSHOT
     javax.mail/mail/1.4.7
     org.apache.geronimo.bundles/jstl/1.2_1
     org.apache.felix/org.apache.felix.http.whiteboard/3.0.0
@@ -73,14 +73,13 @@
     org.apache.sling/org.apache.sling.extensions.webconsolesecurityprovider/1.0.0
     org.apache.felix/org.apache.felix.inventory/1.0.4
     org.apache.felix/org.apache.felix.prefs/1.1.0
-    org.apache.felix/org.apache.felix.webconsole/4.2.16
-    org.apache.geronimo.bundles/json/20090211_1
-    org.apache.felix/org.apache.felix.webconsole.plugins.ds/2.0.4
-    org.apache.felix/org.apache.felix.webconsole.plugins.obr/1.0.2
-    org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.2
-    org.apache.felix/org.apache.felix.webconsole.plugins.event/1.1.4
+    org.apache.felix/org.apache.felix.webconsole/4.3.0
+    org.apache.felix/org.apache.felix.webconsole.plugins.ds/2.0.6
+    org.apache.felix/org.apache.felix.webconsole.plugins.obr/1.0.3-SNAPSHOT
+    org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.4
+    org.apache.felix/org.apache.felix.webconsole.plugins.event/1.1.6
     org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.6
-    org.apache.sling/org.apache.sling.commons.json/2.0.20
+    org.apache.sling/org.apache.sling.commons.johnzon/0.1.0-SNAPSHOT
     org.apache.felix/org.apache.felix.bundlerepository/1.6.4
     org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2
     org.apache.aries.jmx/org.apache.aries.jmx.api/1.1.5
@@ -112,7 +111,7 @@
     org.apache.sling/org.apache.sling.jcr.webdav/2.3.8
     org.apache.sling/org.apache.sling.jcr.davex/1.3.8
     org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.4
-    org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.2
+    org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/3.0.1-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.webconsole/1.0.2
     io.dropwizard.metrics/metrics-core/3.1.0
     org.apache.sling/org.apache.sling.commons.metrics/1.2.0
