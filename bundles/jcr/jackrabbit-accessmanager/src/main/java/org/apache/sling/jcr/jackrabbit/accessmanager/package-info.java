@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@org.osgi.annotation.versioning.Version("2.1.1")
+@org.osgi.annotation.versioning.Version("3.0.0")
 package org.apache.sling.jcr.jackrabbit.accessmanager;
 
 

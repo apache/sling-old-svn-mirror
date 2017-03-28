@@ -25,10 +25,9 @@ import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
+import javax.json.JsonObject;
 import javax.servlet.Servlet;
 
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl;
 import org.osgi.service.component.annotations.Component;
@@ -112,8 +111,8 @@ public class GetEffectiveAclServlet extends AbstractGetAclServlet implements Get
     /* (non-Javadoc)
 	 * @see org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl#getEffectiveAcl(javax.jcr.Session, java.lang.String)
 	 */
-	public JSONObject getEffectiveAcl(Session jcrSession, String resourcePath)
-			throws RepositoryException, JSONException {
+	public JsonObject getEffectiveAcl(Session jcrSession, String resourcePath)
+			throws RepositoryException {
 		return internalGetAcl(jcrSession, resourcePath);
 	}
 
