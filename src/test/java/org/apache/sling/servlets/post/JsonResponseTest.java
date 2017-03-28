@@ -18,16 +18,19 @@
 package org.apache.sling.servlets.post;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 import javax.servlet.http.HttpServletResponse;
 
 import junit.framework.TestCase;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletResponse;
 
 public class JsonResponseTest extends TestCase {
@@ -41,38 +44,38 @@ public class JsonResponseTest extends TestCase {
     public void testOnChange() throws Exception {
         res.onChange("modified", "argument1", "argument2");
         Object prop = res.getProperty("changes");
-        JSONArray changes = assertInstanceOf(prop, JSONArray.class);
-        assertEquals(1, changes.length());
-        Object obj = changes.get(0);
-        JSONObject change = assertInstanceOf(obj, JSONObject.class);
-        assertEquals("modified", assertProperty(change, JSONResponse.PROP_TYPE, String.class));
-        JSONArray arguments = assertProperty(change, JSONResponse.PROP_ARGUMENT, JSONArray.class);
-        assertEquals(2, arguments.length());
+        JsonArray changes = assertInstanceOf(prop, JsonArray.class);
+        assertEquals(1, changes.size());
+        Object obj = changes.getJsonObject(0);
+        JsonObject change = assertInstanceOf(obj, JsonObject.class);
+        assertProperty(change, JSONResponse.PROP_TYPE, "modified");
+        JsonArray arguments = change.getJsonArray(JSONResponse.PROP_ARGUMENT);
+        assertEquals(2, arguments.size());
     }
 
     public void testSetProperty() throws Exception {
         res.setProperty("prop", "value");
-        assertProperty(res.getJson(), "prop", String.class);
+        assertProperty(res.getJson(), "prop", "value");
     }
 
     @SuppressWarnings({"ThrowableInstanceNeverThrown"})
-    public void testSetError() throws IOException, JSONException {
+    public void testSetError() throws IOException {
         String errMsg = "Dummy error";
         res.setError(new Error(errMsg));
         MockSlingHttpServletResponse resp = new MockSlingHttpServletResponse();
         res.send(resp, true);
-        JSONObject json = res.getJson();
-        JSONObject error = assertProperty(json, "error", JSONObject.class);
-        assertProperty(error, "class", Error.class.getName());
-        assertProperty(error, "message", errMsg);
+        JsonObject json = res.getJson();
+        JsonValue error = assertProperty(json, "error");
+        assertProperty((JsonObject) error, "class", Error.class.getName());
+        assertProperty((JsonObject) error, "message", errMsg);
     }
 
     public void testSend() throws Exception {
         res.onChange("modified", "argument1");
         MockSlingHttpServletResponse response = new MockSlingHttpServletResponse();
         res.send(response, true);
-        JSONObject result = new JSONObject(response.getOutput().toString());
-        assertProperty(result, HtmlResponse.PN_STATUS_CODE, HttpServletResponse.SC_OK);
+        JsonObject result = Json.createReader(new StringReader(response.getOutput().toString())).readObject();
+        assertProperty(result, HtmlResponse.PN_STATUS_CODE, Integer.toString(HttpServletResponse.SC_OK));
         assertEquals(JSONResponse.RESPONSE_CONTENT_TYPE, response.getContentType());
         assertEquals(JSONResponse.RESPONSE_CHARSET, response.getCharacterEncoding());
     }
@@ -84,8 +87,8 @@ public class JsonResponseTest extends TestCase {
         res.setLocation(location);
         MockResponseWithHeader response = new MockResponseWithHeader();
         res.send(response, true);
-        JSONObject result = new JSONObject(response.getOutput().toString());
-        assertProperty(result, HtmlResponse.PN_STATUS_CODE, HttpServletResponse.SC_CREATED);
+        JsonObject result = Json.createReader(new StringReader(response.getOutput().toString())).readObject();
+        assertProperty(result, HtmlResponse.PN_STATUS_CODE, Integer.toString(HttpServletResponse.SC_CREATED));
         assertEquals(location, response.getHeader("Location"));
     }
 
@@ -98,21 +101,21 @@ public class JsonResponseTest extends TestCase {
             res.setLocation(location);
             MockResponseWithHeader response = new MockResponseWithHeader();
             res.send(response, true);
-            JSONObject result = new JSONObject(response.getOutput().toString());
-            assertProperty(result, HtmlResponse.PN_STATUS_CODE, status);
+            JsonObject result = Json.createReader(new StringReader(response.getOutput().toString())).readObject();
+            assertProperty(result, HtmlResponse.PN_STATUS_CODE, Integer.toString(status));
             assertEquals(location, response.getHeader("Location"));
         }
     }
 
-    private static <T> T assertProperty(JSONObject obj, String key, Class<T> clazz) throws JSONException {
-        assertTrue("JSON object does not have property " + key, obj.has(key));
-        return assertInstanceOf(obj.get(key), clazz);
+    private static JsonValue assertProperty(JsonObject obj, String key) {
+        assertTrue("JSON object does not have property " + key, obj.containsKey(key));
+        return obj.get(key);
     }
 
     @SuppressWarnings({"unchecked"})
-    private static <T> T assertProperty(JSONObject obj, String key, T expected) throws JSONException {
-        T res = (T) assertProperty(obj, key, expected.getClass());
-        assertEquals(expected, res);
+    private static JsonString assertProperty(JsonObject obj, String key, String expected) {
+        JsonString res = (JsonString) assertProperty(obj, key);
+        assertEquals(expected, res.getString());
         return res;
     }
 

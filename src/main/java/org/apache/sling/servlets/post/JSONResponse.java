@@ -18,12 +18,17 @@
  */
 package org.apache.sling.servlets.post;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The <code>JSONResponse</code> is an {@link AbstractPostResponse} preparing
@@ -44,47 +49,28 @@ public class JSONResponse extends AbstractPostResponse {
 
     private static final String PROP_CHANGES = "changes";
 
-    private JSONObject json = new JSONObject();
+    private Map<String, Object> json = new HashMap<>();
 
-    private JSONArray changes = new JSONArray();
+    private List<Map<String, Object>> changes = new ArrayList<>();
 
     private Throwable error;
 
-    public JSONResponse() throws JSONResponseException {
-        try {
-            json = new JSONObject();
-            changes = new JSONArray();
-            json.put(PROP_CHANGES, changes);
-        } catch (Throwable e) {
-            throw new JSONResponseException(e);
+    public void onChange(String type, String... arguments) {
+        Map<String,Object> change = new HashMap<>();
+        change.put(PROP_TYPE, type);
+        
+        if (arguments.length > 1) {
+            change.put(PROP_ARGUMENT, Arrays.asList(arguments));
         }
-    }
-
-    public void onChange(String type, String... arguments)
-            throws JSONResponseException {
-        try {
-            JSONObject change = new JSONObject();
-            change.put(PROP_TYPE, type);
-            for (String argument : arguments) {
-                change.accumulate(PROP_ARGUMENT, argument);
-            }
-            changes.put(change);
-        } catch (JSONException e) {
-            throw new JSONResponseException(e);
+        else if (arguments.length == 1) {
+            change.put(PROP_ARGUMENT, arguments[0]);
         }
+        changes.add(change);
     }
 
     @Override
     public void setError(Throwable error) {
-        try {
-            this.error = error;
-            JSONObject jsonError = new JSONObject();
-            jsonError.put("class", error.getClass().getName());
-            jsonError.put("message", error.getMessage());
-            json.put("error", jsonError);
-        } catch (JSONException e) {
-            throw new JSONResponseException(e);
-        }
+        this.error = error;
     }
 
     @Override
@@ -94,26 +80,13 @@ public class JSONResponse extends AbstractPostResponse {
 
     @Override
     public void setProperty(String name, Object value) {
-        try {
-            this.json.put(name, value);
-        } catch (Throwable e) {
-            throw new JSONResponseException("Error setting JSON property '"
-                + name + "' to '" + value + "'", e);
-        }
+        json.put(name, value);
     }
 
     @Override
-    public Object getProperty(String name) throws JSONResponseException {
-        try {
-            if (json.has(name)) {
-                return json.get(name);
-            } else {
-                return null;
-            }
-        } catch (JSONException e) {
-            throw new JSONResponseException("Error getting JSON property '"
-                + name + "'", e);
-        }
+    public Object getProperty(String name) {
+        return PROP_CHANGES.equals(name) ? getJson().getJsonArray(PROP_CHANGES) : 
+            "error".equals(name) && this.error != null ? getJson().get("error") : json.get(name);
     }
 
     @SuppressWarnings({ "ThrowableResultOfMethodCallIgnored" })
@@ -123,27 +96,59 @@ public class JSONResponse extends AbstractPostResponse {
         response.setContentType(RESPONSE_CONTENT_TYPE);
         response.setCharacterEncoding(RESPONSE_CHARSET);
 
-        try {
-            json.write(response.getWriter());
-        } catch (JSONException e) {
-            IOException ioe = new IOException("Error creating JSON response");
-            ioe.initCause(e);
-            throw ioe;
+        Json.createGenerator(response.getWriter()).write(getJson()).close();
+    }
+
+    JsonObject getJson() {
+        JsonObjectBuilder jsonBuilder = Json.createObjectBuilder();
+        for (Map.Entry<String, Object> entry : json.entrySet()) {
+            if (entry.getValue() != null) {
+                jsonBuilder.add(entry.getKey(), entry.getValue().toString());
+            }
+            else {
+                jsonBuilder.addNull(entry.getKey());
+            }
         }
+        if (this.error != null) {
+            jsonBuilder
+                .add("error", Json.createObjectBuilder()
+                    .add("class", error.getClass().getName())
+                    .add("message", error.getMessage()));
+        }
+        JsonArrayBuilder changesBuilder = Json.createArrayBuilder();
+        for (Map<String, Object> entry : changes) {
+            JsonObjectBuilder entryBuilder = Json.createObjectBuilder();
+            entryBuilder.add(PROP_TYPE, (String) entry.get(PROP_TYPE));
+            
+            Object arguments = entry.get(PROP_ARGUMENT);
+            
+            if (arguments != null) {
+                if (arguments instanceof List) {
+                    JsonArrayBuilder argumentsBuilder = Json.createArrayBuilder();
+                    
+                    for (String argument : ((List<String>) arguments))
+                    {
+                        argumentsBuilder.add(argument);
+                    }
+                    
+                    entryBuilder.add(PROP_ARGUMENT, argumentsBuilder);
+                }
+                else {
+                    entryBuilder.add(PROP_ARGUMENT, (String) arguments);
+                }
+            }
+            changesBuilder.add(entryBuilder);
+        }
+        jsonBuilder.add(PROP_CHANGES, changesBuilder);
+        return jsonBuilder.build();
     }
-
-    JSONObject getJson() {
-        return json;
-    }
-
+    
     public class JSONResponseException extends RuntimeException {
-
         public JSONResponseException(String message, Throwable exception) {
-            super(message, exception);
+           super(message, exception);
         }
-
         public JSONResponseException(Throwable e) {
-            super("Error building JSON response", e);
+           super("Error building JSON response", e);
         }
     }
 }
