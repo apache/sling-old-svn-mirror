@@ -25,24 +25,21 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Web Console Plugin exposing all binding provider values.
  */
-@Component
-@Service
-@Properties({
-    @Property(name = WebConsoleConstants.PLUGIN_LABEL, value = ScriptingVariablesConsolePlugin.LABEL),
-    @Property(name = WebConsoleConstants.PLUGIN_TITLE, value = ScriptingVariablesConsolePlugin.TITLE),
-    @Property(name = "felix.webconsole.category", value = "Sling")
-})
+@Component(
+    property = {
+        WebConsoleConstants.PLUGIN_LABEL + "=" + ScriptingVariablesConsolePlugin.LABEL,
+        WebConsoleConstants.PLUGIN_TITLE + "=" + ScriptingVariablesConsolePlugin.TITLE,
+        "felix.webconsole.category=sling"
+    }
+)
 public class ScriptingVariablesConsolePlugin extends AbstractWebConsolePlugin {
 
     protected static final String LABEL = "scriptingvariables";

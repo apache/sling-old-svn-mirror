@@ -32,10 +32,6 @@ import java.util.Set;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.scripting.core.impl.helper.ProxyScriptEngineManager;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
@@ -45,6 +41,10 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -55,9 +55,14 @@ import org.slf4j.LoggerFactory;
  * Component which exposes a ScriptEngineManager service.
  *
  */
-@Component(metatype=false, immediate=true, specVersion="1.1")
-@Reference(name="ScriptEngineFactory", referenceInterface=ScriptEngineFactory.class,
-           policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE)
+@Component(
+    reference = @Reference(
+        name = "ScriptEngineFactory",
+        service = ScriptEngineFactory.class,
+        policy = ReferencePolicy.DYNAMIC,
+        cardinality = ReferenceCardinality.OPTIONAL
+    )
+)
 public class ScriptEngineManagerFactory implements BundleListener {
 
     private final Logger log = LoggerFactory.getLogger(ScriptEngineManagerFactory.class);

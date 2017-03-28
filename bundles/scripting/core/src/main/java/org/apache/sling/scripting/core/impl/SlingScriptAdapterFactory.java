@@ -21,11 +21,6 @@ import java.util.List;
 
 import javax.script.ScriptEngine;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.mime.MimeTypeProvider;
@@ -35,21 +30,27 @@ import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * AdapterFactory that adapts Resources to the DefaultSlingScript servlet, which
  * executes the Resources as scripts.
  */
-@Component(metatype=false, immediate=true)
-@Service({AdapterFactory.class, MimeTypeProvider.class})
-@Properties({
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name="service.description", value="Default SlingScriptResolver"),
-    @Property(name="adaptables", value="org.apache.sling.api.resource.Resource"),
-    @Property(name="adapters", value={"org.apache.sling.api.scripting.SlingScript",
-                                      "javax.servlet.Servlet"}),
-    @Property(name="adapter.condition", value="If the resource's path ends in an extension registered by a script engine.")
-})
+@Component(
+    service = {
+        AdapterFactory.class,
+        MimeTypeProvider.class
+    },
+    property = {
+        "service.vendor=The Apache Software Foundation",
+        "service.description=Default SlingScriptResolver",
+        "adaptables=org.apache.sling.api.resource.Resource",
+        "adapters=org.apache.sling.api.scripting.SlingScript",
+        "adapters=javax.servlet.Servlet",
+        "adapter.condition=If the resource's path ends in an extension registered by a script engine."
+    }
+)
 public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvider {
 
     private BundleContext bundleContext;

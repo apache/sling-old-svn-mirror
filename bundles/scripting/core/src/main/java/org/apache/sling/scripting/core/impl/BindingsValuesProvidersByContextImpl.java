@@ -31,12 +31,6 @@ import java.util.Map;
 
 import javax.script.ScriptEngineFactory;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
@@ -45,6 +39,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -53,8 +52,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Our default {@link BindingsValuesProvidersByContext} implementation */
-@Component
-@Service(BindingsValuesProvidersByContext.class)
+@Component(
+    service = BindingsValuesProvidersByContext.class
+)
 public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvidersByContext, ServiceTrackerCustomizer {
 
     private final Map<String, ContextBvpCollector> customizers = new HashMap<String, ContextBvpCollector>();
@@ -73,7 +73,9 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
     @Reference
     private SlingScriptEngineManager scriptEngineManager;
 
-    @Reference(policy = ReferencePolicy.DYNAMIC)
+    @Reference(
+        policy = ReferencePolicy.DYNAMIC
+    )
     private volatile EventAdmin eventAdmin;
 
     private abstract class ContextLoop {
