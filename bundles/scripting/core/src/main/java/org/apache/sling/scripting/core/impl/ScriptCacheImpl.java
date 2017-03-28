@@ -214,7 +214,6 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
     protected void activate(ScriptCacheImplConfiguration configuration, ComponentContext componentContext) {
         threadPool = threadPoolManager.get("Script Cache Thread Pool");
         bundleContext = componentContext.getBundleContext();
-        Dictionary properties = componentContext.getProperties();
         additionalExtensions = configuration.org_apache_sling_scripting_cache_additional__extensions();
         int newMaxCacheSize = configuration.org_apache_sling_scripting_cache_size();
         if (newMaxCacheSize != DEFAULT_CACHE_SIZE) {
