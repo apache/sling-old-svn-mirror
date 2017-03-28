@@ -18,11 +18,15 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
+import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.List;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonException;
+import javax.json.JsonObjectBuilder;
 
 // {"seq":8,"final":true,"id":"aae34e9a-b08d-409e-be10-9ff4106e5387","me":4,"active":[4],"deactivating":[],"inactive":[1,2,3]}
 public class DiscoveryLiteDescriptorBuilder {
@@ -43,7 +47,7 @@ public class DiscoveryLiteDescriptorBuilder {
     public String toString() {
         try {
             return asJson();
-        } catch (JSONException e) {
+        } catch (JsonException e) {
             return "A DiscoLite["+e+"]";
         }
     }
@@ -83,16 +87,33 @@ public class DiscoveryLiteDescriptorBuilder {
         return this;
     }
     
-    public String asJson() throws JSONException {
-        JSONObject json = new JSONObject();
-        json.put("id", id);
-        json.put("final", isFinal);
-        json.put("me", me);
-        json.put("seq", seqNum);
-        json.put("active", new JSONArray(Arrays.asList(activeIds)));
-        json.put("inactive", new JSONArray(Arrays.asList(inactiveIds)));
-        json.put("deactivating", new JSONArray(Arrays.asList(deactivating)));
-        return json.toString();
+    public String asJson() {
+        JsonObjectBuilder json = Json.createObjectBuilder();
+        if (id != null)
+        {
+            json.add("id", id);
+        }
+        json.add("final", isFinal);
+        json.add("me", me);
+        json.add("seq", seqNum);
+        json.add("active", toArray(Arrays.asList(activeIds)));
+        json.add("inactive", toArray(Arrays.asList(inactiveIds)));
+        json.add("deactivating", toArray(Arrays.asList(deactivating)));
+        StringWriter writer = new StringWriter();
+        
+        Json.createGenerator(writer).write(json.build()).close();
+        
+        return writer.toString();
     }
+    
+    private JsonArray toArray(List<Integer> values) {
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        for (Integer value : values)
+        {
+            builder.add(value);
+        }
+        return builder.build();
+    }
+    
 
 }

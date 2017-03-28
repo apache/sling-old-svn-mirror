@@ -42,7 +42,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
@@ -180,7 +179,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
         return initialized;
     }
 
-    private synchronized boolean init() throws LoginException, JSONException, PersistenceException {
+    private synchronized boolean init() throws LoginException, PersistenceException {
         if (initialized) {
             return true;
         }

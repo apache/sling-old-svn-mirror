@@ -18,11 +18,18 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.jcr.Session;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReaderFactory;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
 
 /**
  * Simplifies access to the underlying JSON-backed oak discovery-lite descriptor
@@ -32,6 +39,12 @@ public class DiscoveryLiteDescriptor {
     /** TODO: avoid hardcoding the constant here but use an Oak constant class instead if possible */
     public static final String OAK_DISCOVERYLITE_CLUSTERVIEW = "oak.discoverylite.clusterview";
 
+    private static final JsonReaderFactory jsonReaderFactory;
+    static {
+        Map<String, Object> config = new HashMap<String, Object>();
+        config.put("org.apache.johnzon.supports-comments", true);
+        jsonReaderFactory = Json.createReaderFactory(config);
+    }
     /**
      * {"seq":8,"final":true,"id":"aae34e9a-b08d-409e-be10-9ff4106e5387","me":4,"active":[4],"deactivating":[],"inactive":[1,2,3]}
      */
@@ -44,14 +57,14 @@ public class DiscoveryLiteDescriptor {
         if (descriptorStr == null) {
             throw new Exception("No value available for descriptor " + OAK_DISCOVERYLITE_CLUSTERVIEW);
         }
-        JSONObject descriptor = new JSONObject(descriptorStr);
+        JsonObject descriptor = jsonReaderFactory.createReader(new StringReader(descriptorStr)).readObject();
         return new DiscoveryLiteDescriptor(descriptor);
     }
     
     /** the actual descriptor **/
-    private final JSONObject descriptor;
+    private final JsonObject descriptor;
 
-    DiscoveryLiteDescriptor(JSONObject descriptor) {
+    DiscoveryLiteDescriptor(JsonObject descriptor) {
         this.descriptor = descriptor;
     }
     
@@ -61,27 +74,15 @@ public class DiscoveryLiteDescriptor {
      * @throws Exception if anything in the descriptor is wrongly formatted
      */
     public int getMyId() throws Exception {
-        Object meObj = descriptor.get("me");
-        if (meObj == null || !(meObj instanceof Number)) {
-            throw new Exception("getMyId: 'me' value of descriptor not a Number: "+meObj+" (descriptor: "+descriptor+")");
-        }
-        Number me = (Number)meObj;
-        return me.intValue();
+        return descriptor.getInt("me");
     }
     
     private int[] getArray(String name) throws Exception {
-        Object deactivatingObj = descriptor.get(name);
-        if (deactivatingObj==null || !(deactivatingObj instanceof JSONArray)) {
-            throw new Exception("getArray: '" + name + "' value of descriptor not an array: "+deactivatingObj+" (descriptor: "+descriptor+")");
-        }
-        JSONArray deactivating = (JSONArray) deactivatingObj;
-        int[] result = new int[deactivating.length()];
-        for(int i=0; i<deactivating.length(); i++) {
-            Object obj = deactivating.get(i);
-            if (obj==null || !(obj instanceof Number)) {
-                throw new Exception("getArray: '" + name + "' at "+i+" null or not a number: "+obj+", (descriptor: "+descriptor+")");
-            }
-            result[i] = ((Number)obj).intValue();
+        JsonArray deactivating = descriptor.getJsonArray(name);
+        
+        int[] result = new int[deactivating.size()];
+        for(int i=0; i<deactivating.size(); i++) {
+            result[i] = deactivating.getInt(i);
         }
         return result;
     }
@@ -115,11 +116,7 @@ public class DiscoveryLiteDescriptor {
             // so treat this separately and return null here too
             return null;
         }
-        Object idObj = descriptor.get("id");
-        if (idObj == null || !(idObj instanceof String)) {
-            throw new Exception("getViewId: 'id' value of descriptor not a String: "+idObj+" (descriptor: "+descriptor+")");
-        }
-        return String.valueOf(idObj);
+        return descriptor.getString("id");
     }
 
     @Override
@@ -132,25 +129,17 @@ public class DiscoveryLiteDescriptor {
      * @return the raw toString of the underlying descriptor
      */
     public String getDescriptorStr() {
-        return descriptor.toString();
+        StringWriter writer = new StringWriter();
+        Json.createGenerator(writer).write(descriptor).close();
+        return writer.toString();
     }
 
     public Long getSeqNum() throws Exception {
-        Object seqObj = descriptor.get("seq");
-        if (seqObj == null || !(seqObj instanceof Number)) {
-            throw new Exception("getSeqNum: 'seq' value of descriptor not a Number: "+seqObj+" (descriptor: "+descriptor+")");
-        }
-        Number seqNum = (Number)seqObj;
-        return seqNum.longValue();
+        return descriptor.getJsonNumber("seq").longValue();
     }
 
     public boolean isFinal() throws Exception {
-        Object finalObj = descriptor.get("final");
-        if (finalObj == null || !(finalObj instanceof Boolean)) {
-            throw new Exception("isFinal: 'final' value of descriptor not a Boolean: "+finalObj+" (descriptor: "+descriptor+")");
-        }
-        Boolean isFinal = (Boolean)finalObj;
-        return isFinal;
+        return descriptor.getBoolean("final");
     }
 
 }
