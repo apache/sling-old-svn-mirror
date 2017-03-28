@@ -49,6 +49,7 @@ public final class PaxExamUtilities {
                     provision(bundle(thisProjectsBundle.toURI().toString())),
                     wrappedBundle(mavenBundle("org.apache.sling", "org.apache.sling.commons.testing").versionAsInProject()),
                     wrappedBundle(mavenBundle("org.ops4j.pax.tinybundles", "tinybundles").versionAsInProject()),
+                    mavenBundle("org.apache.sling", "org.apache.sling.commons.johnzon").versionAsInProject(),
                     mavenBundle("biz.aQute.bnd", "bndlib").versionAsInProject()
             ).getOptions();
         } finally {

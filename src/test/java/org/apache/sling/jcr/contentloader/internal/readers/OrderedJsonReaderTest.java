@@ -38,9 +38,9 @@ public class OrderedJsonReaderTest extends JsonReaderTest {
 
     @org.junit.Test public void testTwoOrderedChildren() throws Exception {
         String json = "{ " +
-                " 'SLING:ordered' : [" +
-                        "{ 'SLING:name': c1}," +
-                        "{ 'SLING:name': c2}" +
+                " \"SLING:ordered\" : [" +
+                        "{ \"SLING:name\": \"c1\"}," +
+                        "{ \"SLING:name\": \"c2\"}" +
                     "]" +
                 "}";
         this.mockery.checking(new Expectations() {{

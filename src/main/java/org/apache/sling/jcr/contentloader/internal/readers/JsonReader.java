@@ -22,6 +22,8 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -30,14 +32,18 @@ import java.util.regex.Pattern;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentReader;
 
@@ -152,15 +158,16 @@ public class JsonReader implements ContentReader {
             if (!jsonString.startsWith("{")) {
                 jsonString = "{" + jsonString + "}";
             }
-
-            JSONObject json = new JSONObject(jsonString);
+            Map<String, Object> config = new HashMap<>();
+            config.put("org.apache.johnzon.supports-comments", true);
+            JsonObject json = Json.createReaderFactory(config).createReader(new StringReader(jsonString)).readObject();
             this.createNode(null, json, contentCreator);
-        } catch (JSONException je) {
+        } catch (JsonException je) {
             throw (IOException) new IOException(je.getMessage()).initCause(je);
         }
     }
 
-    protected boolean handleSecurity(String n, Object o, ContentCreator contentCreator) throws JSONException, RepositoryException{
+    protected boolean handleSecurity(String n, Object o, ContentCreator contentCreator) throws RepositoryException{
         if (SECURITY_PRINCIPLES.equals(n)) {
             this.createPrincipals(o, contentCreator);
         } else if (SECURITY_ACL.equals(n)) {
@@ -171,17 +178,16 @@ public class JsonReader implements ContentReader {
         return true;
     }
 
-    protected void writeChildren(JSONObject obj, ContentCreator contentCreator) throws JSONException, RepositoryException{
+    protected void writeChildren(JsonObject obj, ContentCreator contentCreator) throws RepositoryException{
         // add properties and nodes
-        JSONArray names = obj.names();
-        for (int i = 0; names != null && i < names.length(); i++) {
-            final String n = names.getString(i);
+        for (Map.Entry<String, JsonValue> entry : obj.entrySet()) {
+            final String n = entry.getKey();
             // skip well known objects
             if (!ignoredNames.contains(n)) {
-                Object o = obj.get(n);
+                Object o = entry.getValue();
                 if (!handleSecurity(n, o, contentCreator)) {
-                    if (o instanceof JSONObject) {
-                        this.createNode(n, (JSONObject) o, contentCreator);
+                    if (o instanceof JsonObject) {
+                        this.createNode(n, (JsonObject) o, contentCreator);
                     } else {
                         this.createProperty(n, o, contentCreator);
                     }
@@ -190,20 +196,15 @@ public class JsonReader implements ContentReader {
         }
     }
 
-    protected void createNode(String name, JSONObject obj, ContentCreator contentCreator)
-    throws JSONException, RepositoryException {
-        Object primaryTypeObj = obj.opt("jcr:primaryType");
-        String primaryType = null;
-        if (primaryTypeObj != null) {
-            primaryType = String.valueOf(primaryTypeObj);
-        }
+    protected void createNode(String name, JsonObject obj, ContentCreator contentCreator) throws RepositoryException {
+        String primaryType = obj.getString("jcr:primaryType", null);
 
         String[] mixinTypes = null;
-        Object mixinsObject = obj.opt("jcr:mixinTypes");
-        if (mixinsObject instanceof JSONArray) {
-            JSONArray mixins = (JSONArray) mixinsObject;
-            mixinTypes = new String[mixins.length()];
-            for (int i = 0; i < mixins.length(); i++) {
+        Object mixinsObject = obj.get("jcr:mixinTypes");
+        if (mixinsObject instanceof JsonArray) {
+            JsonArray mixins = (JsonArray) mixinsObject;
+            mixinTypes = new String[mixins.size()];
+            for (int i = 0; i < mixinTypes.length; i++) {
                 mixinTypes[i] = mixins.getString(i);
             }
         }
@@ -213,30 +214,55 @@ public class JsonReader implements ContentReader {
         contentCreator.finishNode();
     }
 
-    protected void createProperty(String name, Object value, ContentCreator contentCreator)
-    throws JSONException, RepositoryException {
+    protected void createProperty(String name, Object value, ContentCreator contentCreator) throws RepositoryException {
         // assume simple value
-        if (value instanceof JSONArray) {
+        if (value instanceof JsonArray) {
             // multivalue
-            final JSONArray array = (JSONArray) value;
-            if (array.length() > 0) {
-                final String values[] = new String[array.length()];
-                for (int i = 0; i < array.length(); i++) {
-                    values[i] = array.get(i).toString();
+            final JsonArray array = (JsonArray) value;
+            if (array.size() > 0) {
+                final String values[] = new String[array.size()];
+                for (int i = 0; i < values.length; i++) {
+                    values[i] =  unbox(array.get(i)).toString();
                 }
-                final int propertyType = getType(name, array.get(0));
+                final int propertyType = getType(name, unbox(array.get(0)));
                 contentCreator.createProperty(getName(name), propertyType, values);
             } else {
                 contentCreator.createProperty(getName(name), PropertyType.STRING, new String[0]);
             }
 
-        } else {
+        } else if (value instanceof JsonValue) {
             // single value
+            value = unbox(value);
             final int propertyType = getType(name, value);
             contentCreator.createProperty(getName(name), propertyType, value.toString());
         }
     }
 
+    private Object unbox(Object o) {
+        if (o instanceof JsonValue) {
+            switch (((JsonValue)o).getValueType()) {
+                case FALSE:
+                    return false;
+                case TRUE:
+                    return true;
+                case NULL:
+                    return null;
+                case NUMBER:
+                    if (((JsonNumber) o).isIntegral()) {
+                        return Long.valueOf(((JsonNumber) o).longValue());
+                    }
+                    else
+                    {
+                        return Double.valueOf(((JsonNumber)o).doubleValue());
+                    }
+                case STRING:
+                    return ((JsonString) o).getString();
+                default:
+                    return o;
+            }
+        }
+        return o;
+    }
     private int getType(String name, Object object) {
         if (object instanceof Double || object instanceof Float) {
             return PropertyType.DOUBLE;
@@ -311,20 +337,19 @@ public class JsonReader implements ContentReader {
      *  }
      *  </code>
      */
-    protected void createPrincipals(Object obj, ContentCreator contentCreator)
-    throws JSONException, RepositoryException {
-    	if (obj instanceof JSONObject) {
+    protected void createPrincipals(Object obj, ContentCreator contentCreator) throws RepositoryException {
+    	if (obj instanceof JsonObject) {
     		//single principal
-    		createPrincipal((JSONObject)obj, contentCreator);
-    	} else if (obj instanceof JSONArray) {
+    		createPrincipal((JsonObject)obj, contentCreator);
+    	} else if (obj instanceof JsonArray) {
     		//array of principals
-    		JSONArray jsonArray = (JSONArray)obj;
-    		for (int i=0; i < jsonArray.length(); i++) {
+    		JsonArray jsonArray = (JsonArray)obj;
+    		for (int i=0; i < jsonArray.size(); i++) {
     			Object object = jsonArray.get(i);
-    			if (object instanceof JSONObject) {
-    	    		createPrincipal((JSONObject)object, contentCreator);
+    			if (object instanceof JsonObject) {
+    	    		createPrincipal((JsonObject)object, contentCreator);
     			} else {
-    				throw new JSONException("Unexpected data type in principals array: " + object.getClass().getName());
+    				throw new JsonException("Unexpected data type in principals array: " + object.getClass().getName());
     			}
     		}
     	}
@@ -333,29 +358,27 @@ public class JsonReader implements ContentReader {
     /**
      * Create or update a user or group
      */
-    private void createPrincipal(JSONObject json, ContentCreator contentCreator)
-    throws JSONException, RepositoryException {
+    private void createPrincipal(JsonObject json, ContentCreator contentCreator) throws RepositoryException {
     	//create a principal
     	String name = json.getString("name");
-    	boolean isGroup = json.optBoolean("isgroup", false);
+    	boolean isGroup = json.getBoolean("isgroup", false);
 
     	//collect the extra property names to assign to the new principal
     	Map<String, Object> extraProps = new LinkedHashMap<String, Object>();
-		JSONArray names = json.names();
-		for(int p=0; p < names.length(); p++) {
-			String propName = names.getString(p);
+		for(Map.Entry<String, JsonValue> entry : json.entrySet()) {
+			String propName = entry.getKey();
 			if (!ignoredPrincipalPropertyNames.contains(propName)) {
-    			Object value = json.get(propName);
+    			Object value = unbox(entry.getValue());
     			extraProps.put(propName, value);
 			}
 		}
 
     	if (isGroup) {
     		String [] members = null;
-    		JSONArray membersJSONArray = json.optJSONArray("members");
+    		JsonArray membersJSONArray = (JsonArray) json.get("members");
     		if (membersJSONArray != null) {
-    			members = new String[membersJSONArray.length()];
-    			for (int i=0; i < membersJSONArray.length(); i++) {
+    			members = new String[membersJSONArray.size()];
+    			for (int i=0; i < members.length; i++) {
     				members[i] = membersJSONArray.getString(i);
     			}
     		}
@@ -393,20 +416,19 @@ public class JsonReader implements ContentReader {
      *  }
      *  </code>
      */
-    private void createAcl(Object obj, ContentCreator contentCreator)
-    throws JSONException, RepositoryException {
-    	if (obj instanceof JSONObject) {
+    private void createAcl(Object obj, ContentCreator contentCreator) throws RepositoryException {
+    	if (obj instanceof JsonObject) {
     		//single ace
-    		createAce((JSONObject)obj, contentCreator);
-    	} else if (obj instanceof JSONArray) {
+    		createAce((JsonObject)obj, contentCreator);
+    	} else if (obj instanceof JsonArray) {
     		//array of aces
-    		JSONArray jsonArray = (JSONArray)obj;
-    		for (int i=0; i < jsonArray.length(); i++) {
+    		JsonArray jsonArray = (JsonArray)obj;
+    		for (int i=0; i < jsonArray.size(); i++) {
     			Object object = jsonArray.get(i);
-    			if (object instanceof JSONObject) {
-    	    		createAce((JSONObject)object, contentCreator);
+    			if (object instanceof JsonObject) {
+    	    		createAce((JsonObject)object, contentCreator);
     			} else {
-    				throw new JSONException("Unexpected data type in acl array: " + object.getClass().getName());
+    				throw new JsonException("Unexpected data type in acl array: " + object.getClass().getName());
     			}
     		}
     	}
@@ -415,29 +437,28 @@ public class JsonReader implements ContentReader {
     /**
      * Create or update an access control entry
      */
-    private void createAce(JSONObject ace, ContentCreator contentCreator)
-    throws JSONException, RepositoryException {
+    private void createAce(JsonObject ace, ContentCreator contentCreator) throws RepositoryException {
 		String principalID = ace.getString("principal");
 
 		String [] grantedPrivileges = null;
-		JSONArray granted = ace.optJSONArray("granted");
+		JsonArray granted = (JsonArray) ace.get("granted");
 		if (granted != null) {
-			grantedPrivileges = new String[granted.length()];
-			for (int a=0; a < granted.length(); a++) {
+			grantedPrivileges = new String[granted.size()];
+			for (int a=0; a < grantedPrivileges.length; a++) {
 				grantedPrivileges[a] = granted.getString(a);
 			}
 		}
 
 		String [] deniedPrivileges = null;
-		JSONArray denied = ace.optJSONArray("denied");
+		JsonArray denied = (JsonArray) ace.get("denied");
 		if (denied != null) {
-			deniedPrivileges = new String[denied.length()];
-			for (int a=0; a < denied.length(); a++) {
+			deniedPrivileges = new String[denied.size()];
+			for (int a=0; a < deniedPrivileges.length; a++) {
 				deniedPrivileges[a] = denied.getString(a);
 			}
 		}
 
-		String order = ace.optString("order", null);
+		String order = ace.getString("order", null);
 
 		//do the work.
 		contentCreator.createAce(principalID, grantedPrivileges, deniedPrivileges, order);

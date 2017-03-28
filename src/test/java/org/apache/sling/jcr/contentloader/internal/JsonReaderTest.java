@@ -19,14 +19,17 @@ package org.apache.sling.jcr.contentloader.internal;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonWriter;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.internal.readers.JsonReader;
 import org.jmock.Expectations;
@@ -208,7 +211,7 @@ public class JsonReaderTest {
 
     @org.junit.Test public void testChild() throws Exception {
         String json = "{ " +
-                      " c1 : {}" +
+                      " \"c1\" : {}" +
                       "}";
         this.mockery.checking(new Expectations() {{
             allowing(creator).createNode(null, null, null); inSequence(mySequence);
@@ -221,7 +224,7 @@ public class JsonReaderTest {
 
     @org.junit.Test public void testChildWithMixin() throws Exception {
         String json = "{ " +
-        " c1 : {" +
+        " \"c1\" : {" +
               "\"jcr:mixinTypes\" : [\"xyz:TestType\"]" +
               "}" +
         "}";
@@ -236,8 +239,8 @@ public class JsonReaderTest {
 
     @org.junit.Test public void testTwoChildren() throws Exception {
         String json = "{ " +
-        " c1 : {}," +
-        " c2 : {}" +
+        " \"c1\" : {}," +
+        " \"c2\" : {}" +
         "}";
         this.mockery.checking(new Expectations() {{
             allowing(creator).createNode(null, null, null); inSequence(mySequence);
@@ -252,8 +255,8 @@ public class JsonReaderTest {
 
     @org.junit.Test public void testChildWithProperty() throws Exception {
         String json = "{ " +
-        " c1 : {" +
-        "      c1p1 : \"v1\"" +
+        " \"c1\" : {" +
+        "      \"c1p1\" : \"v1\"" +
               "}" +
         "}";
         this.mockery.checking(new Expectations() {{
@@ -350,7 +353,17 @@ public class JsonReaderTest {
         this.jsonReader.parse(ins, this.creator);
     }
 
-    protected JSONArray toJsonArray(String[] array) throws JSONException {
-        return new JSONArray(Arrays.asList(array));
+    protected String toJsonArray(String[] array) {
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        for (String value : array)
+        {
+            builder.add(value);
+        }
+        StringWriter stringWriter = new StringWriter();
+        try (JsonWriter writer = Json.createWriter(stringWriter))
+        {
+            writer.writeArray(builder.build());
+        }
+        return stringWriter.toString();
     }
 }
