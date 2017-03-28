@@ -103,7 +103,7 @@ public class CreateNodeTest extends HttpTestBase {
         }
 
         String content = getContent(urlOfNewNode + ".json", CONTENT_TYPE_JSON);
-        assertJavascript("nt:folder", content, "out.println(data['jcr:primaryType'])");
+        assertJavascript("nt:folder", content, "out.println(data[\"jcr:primaryType\"])");
     }
 
     public void testCreateNewNodeWithNodeType() throws IOException {
@@ -122,7 +122,7 @@ public class CreateNodeTest extends HttpTestBase {
         }
 
         String content = getContent(urlOfNewNode + ".json", CONTENT_TYPE_JSON);
-        assertJavascript("nt:folder", content, "out.println(data['jcr:primaryType'])");
+        assertJavascript("nt:folder", content, "out.println(data[\"jcr:primaryType\"])");
     }
 
     public void testDeepCreateNodeWithNodeType() throws IOException {
@@ -143,9 +143,10 @@ public class CreateNodeTest extends HttpTestBase {
         }
 
         String content = getContent(urlOfNewNode + ".3.json", CONTENT_TYPE_JSON);
-        assertJavascript("nt:folder", content, "out.println(data['jcr:primaryType'])");
-        assertJavascript("nt:folder", content, "out.println(data.foo['jcr:primaryType'])");
-        assertJavascript("nt:folder", content, "out.println(data.foo.bar['jcr:primaryType'])");
+
+        assertJavascript("nt:folder", content, "out.println(data[\"jcr:primaryType\"])");
+        assertJavascript("nt:folder", content, "out.println(data.foo[\"jcr:primaryType\"])");
+        assertJavascript("nt:folder", content, "out.println(data.foo.bar[\"jcr:primaryType\"])");
     }
 
     public void testCreateEmptyNode() throws IOException {
