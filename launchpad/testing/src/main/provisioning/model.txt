@@ -21,7 +21,7 @@
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
   org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/slingfeature
-
+  org.apache.sling/org.apache.sling.commons.json/2.0.20
 
 # additional configuration for testing
 [configurations]
@@ -37,7 +37,7 @@
 
 [settings]
   org.apache.sling.commons.log.julenabled=true
-  
+
  # Test repository initialization from provisioning model
  # No need to test all repoinit statements, this is done
  # by the repoinit it module

@@ -183,7 +183,7 @@ public class PostServletAtCopyTest extends HttpTestBase {
 
         // expect new data
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.-1.json", CONTENT_TYPE_JSON);
-        assertJavascript("Hello", content, "out.println(data.deep['new'].text)");
+        assertJavascript("Hello", content, "out.println(data.deep[\"new\"].text)");
     }
 
     public void testCopyNodeDeepAbsolute() throws IOException {

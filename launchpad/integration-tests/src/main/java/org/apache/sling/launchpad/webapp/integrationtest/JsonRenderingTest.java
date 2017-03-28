@@ -63,7 +63,7 @@ public class JsonRenderingTest extends HttpTestBase {
 
     /** test our assertJavascript method with static json */
     public void testAssertJavascript() throws IOException {
-        final String json = "{ 'a' : '123', 'b' : '456' }";
+        final String json = "{ \"a\" : \"123\", \"b\" : \"456\" }";
         assertJavascript("123456", json, "out.println(data.a + data.b)");
     }
 
@@ -88,10 +88,10 @@ public class JsonRenderingTest extends HttpTestBase {
             CONTENT_TYPE_JSON);
         assertJavascript(testText, json, "out.print(data.text)");
         for (String child : children) {
-            assertJavascript(child, json, "out.print(data['" + child
-                + "'].child)");
-            assertJavascript(testText, json, "out.print(data['" + child
-                + "'].text)");
+            assertJavascript(child, json, "out.print(data[\"" + child
+                + "\"].child)");
+            assertJavascript(testText, json, "out.print(data[\"" + child
+                + "\"].text)");
         }
     }
 
@@ -118,8 +118,8 @@ public class JsonRenderingTest extends HttpTestBase {
             assertJavascript(testText, json, "out.print(data.text)");
             for (String child : children) {
                 final String testInfo = "extension: " + extension;
-                assertJavascript("undefined", json, "out.print(typeof data['"
-                    + child + "'])", testInfo);
+                assertJavascript("undefined", json, "out.print(typeof data[\""
+                    + child + "\"])", testInfo);
             }
         }
 
@@ -250,29 +250,29 @@ public class JsonRenderingTest extends HttpTestBase {
 
     public void testHarrayRootNoRecursion() throws IOException {
         final String json = getContent(HTTP_BASE_URL + "/.harray.json", CONTENT_TYPE_JSON);
-        assertJavascript("undefined", json, "out.print(typeof data['__children__'])");
+        assertJavascript("undefined", json, "out.print(typeof data[\"__children__\"])");
     }
 
     public void testHarrayRootWithRecursion() throws IOException {
         final String json = getContent(HTTP_BASE_URL + "/.harray.1.json", CONTENT_TYPE_JSON);
-        assertJavascript("[object Array]", json, "out.print(Object.prototype.toString.call(data['__children__']))");
+        assertJavascript("[object Array]", json, "out.print(Object.prototype.toString.call(data[\"__children__\"]))");
     }
 
     public void testHarrayRootNameWithRecursion() throws IOException {
         // test if _name is existing in child node
         final String json = getContent(HTTP_BASE_URL + "/.harray.1.json", CONTENT_TYPE_JSON);
-        assertJavascript("true", json, "out.print(data['__children__'][0].__name__.length > 0)");
+        assertJavascript("true", json, "out.print(data[\"__children__\"][0].__name__.length > 0)");
     }
     
     public void testRootNoRecursion() throws IOException {
     	final String json = getContent(HTTP_BASE_URL + "/.json", CONTENT_TYPE_JSON);
-    	assertJavascript("rep:root", json, "out.print(data['jcr:primaryType'])");
-    	assertJavascript("undefined", json, "out.print(typeof data['jcr:system'])");
+    	assertJavascript("rep:root", json, "out.print(data[\"jcr:primaryType\"])");
+    	assertJavascript("undefined", json, "out.print(typeof data[\"jcr:system\"])");
     }
     
     public void testRootWithRecursion() throws IOException {
     	final String json = getContent(HTTP_BASE_URL + "/.1.json", CONTENT_TYPE_JSON);
-    	assertJavascript("rep:root", json, "out.print(data['jcr:primaryType'])");
-    	assertJavascript("rep:system", json, "out.print(data['jcr:system']['jcr:primaryType'])");
+    	assertJavascript("rep:root", json, "out.print(data[\"jcr:primaryType\"])");
+    	assertJavascript("rep:system", json, "out.print(data[\"jcr:system\"][\"jcr:primaryType\"])");
     }
 }
