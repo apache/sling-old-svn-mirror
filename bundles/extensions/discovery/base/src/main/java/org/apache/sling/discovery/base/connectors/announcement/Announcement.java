@@ -18,6 +18,8 @@
  */
 package org.apache.sling.discovery.base.connectors.announcement;
 
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -26,13 +28,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReaderFactory;
+import javax.json.JsonValue;
+
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.commons.providers.DefaultClusterView;
@@ -83,6 +90,13 @@ public class Announcement {
     private long originallyCreatedAt = -1;
     
     private long receivedAt = System.currentTimeMillis();
+    
+    private static final JsonReaderFactory jsonReaderFactory;
+    static {
+        Map<String, Object> config = new HashMap<String, Object>();
+        config.put("org.apache.johnzon.supports-comments", true);
+        jsonReaderFactory = Json.createReaderFactory(config);
+    }
 
     public Announcement(final String ownerId) {
         this(ownerId, PROTOCOL_VERSION);
@@ -226,88 +240,95 @@ public class Announcement {
     }
 
     /** Convert this announcement into a json object **/
-    public JSONObject asJSONObject() throws JSONException {
+    public JsonObject asJSONObject() {
         return asJSONObject(false);
     }
     
     /** Convert this announcement into a json object **/
-    private JSONObject asJSONObject(boolean filterTimes) throws JSONException {
-        JSONObject announcement = new JSONObject();
-        announcement.put("ownerId", ownerId);
-        announcement.put("protocolVersion", protocolVersion);
+    private JsonObject asJSONObject(boolean filterTimes) {
+        JsonObjectBuilder announcement = Json.createObjectBuilder();
+        announcement.add("ownerId", ownerId);
+        announcement.add("protocolVersion", protocolVersion);
         // SLING-3389: leaving the 'created' property in the announcement
         // for backwards compatibility!
         if (!filterTimes) {
-            announcement.put("created", System.currentTimeMillis());
+            announcement.add("created", System.currentTimeMillis());
         }
-        announcement.put("inherited", inherited);
+        announcement.add("inherited", inherited);
         if (loop) {
-            announcement.put("loop", loop);
+            announcement.add("loop", loop);
         }
         if (serverInfo != null) {
-            announcement.put("serverInfo", serverInfo);
+            announcement.add("serverInfo", serverInfo);
         }
         if (localCluster!=null) {
-            announcement.put("localClusterView", asJSON(localCluster));
+            announcement.add("localClusterView", asJSON(localCluster));
         }
         if (!filterTimes && backoffInterval>0) {
-            announcement.put("backoffInterval", backoffInterval);
+            announcement.add("backoffInterval", backoffInterval);
         }
         if (resetBackoff) {
-            announcement.put("resetBackoff", resetBackoff);
+            announcement.add("resetBackoff", resetBackoff);
         }
-        JSONArray incomingAnnouncements = new JSONArray();
+        JsonArrayBuilder incomingAnnouncements = Json.createArrayBuilder();
         for (Iterator<Announcement> it = incomings.iterator(); it.hasNext();) {
             Announcement incoming = it.next();
-            incomingAnnouncements.put(incoming.asJSONObject(filterTimes));
+            incomingAnnouncements.add(incoming.asJSONObject(filterTimes));
         }
-        announcement.put("topologyAnnouncements", incomingAnnouncements);
-        return announcement;
+        announcement.add("topologyAnnouncements", incomingAnnouncements);
+        return announcement.build();
     }
 
     /** Create an announcement form json **/
-    public static Announcement fromJSON(final String topologyAnnouncementJSON)
-            throws JSONException {
-        JSONObject announcement = new JSONObject(topologyAnnouncementJSON);
+    public static Announcement fromJSON(final String topologyAnnouncementJSON) {
+        
+        JsonObject announcement = jsonReaderFactory.createReader(new StringReader(topologyAnnouncementJSON)).readObject();
         final String ownerId = announcement.getString("ownerId");
         final int protocolVersion;
-        if (!announcement.has("protocolVersion")) {
+        if (!announcement.containsKey("protocolVersion")) {
             protocolVersion = -1;
         } else {
             protocolVersion = announcement.getInt("protocolVersion");
         }
         final Announcement result = new Announcement(ownerId, protocolVersion);
-        if (announcement.has("created")) {
-            result.originallyCreatedAt = announcement.getLong("created");
+        if (announcement.containsKey("created")) {
+            result.originallyCreatedAt = announcement.getJsonNumber("created").longValue();
         }
-        if (announcement.has("backoffInterval")) {
-            long backoffInterval = announcement.getLong("backoffInterval");
+        if (announcement.containsKey("backoffInterval")) {
+            long backoffInterval = announcement.getJsonNumber("backoffInterval").longValue();
             result.backoffInterval = backoffInterval;
         }
-        if (announcement.has("resetBackoff")) {
+        if (announcement.containsKey("resetBackoff")) {
             boolean resetBackoff = announcement.getBoolean("resetBackoff");
             result.resetBackoff = resetBackoff;
         }
-        if (announcement.has("loop") && announcement.getBoolean("loop")) {
+        if (announcement.containsKey("loop") && announcement.getBoolean("loop")) {
             result.setLoop(true);
             return result;
         }
-        final String localClusterViewJSON = announcement
-                .getString("localClusterView");
-        final ClusterView localClusterView = asClusterView(localClusterViewJSON);
-        final JSONArray subAnnouncements = announcement
-                .getJSONArray("topologyAnnouncements");
+        if (announcement.containsKey("localClusterView"))
+        {
+            final String localClusterViewJSON = asJSON(announcement
+                    .getJsonObject("localClusterView"));
+            
+            final ClusterView localClusterView = asClusterView(localClusterViewJSON);
+    
+            result.setLocalCluster(localClusterView);
+        }
 
-        if (announcement.has("inherited")) {
+        if (announcement.containsKey("inherited")) {
             final Boolean inherited = announcement.getBoolean("inherited");
             result.inherited = inherited;
         }
-        if (announcement.has("serverInfo")) {
+        if (announcement.containsKey("serverInfo")) {
             String serverInfo = announcement.getString("serverInfo");
             result.serverInfo = serverInfo;
         }
-        result.setLocalCluster(localClusterView);
-        for (int i = 0; i < subAnnouncements.length(); i++) {
+
+        final JsonArray subAnnouncements = announcement
+                .getJsonArray("topologyAnnouncements");
+        
+        for (int i = 0; i < subAnnouncements.size(); i++) {
             String subAnnouncementJSON = subAnnouncements.getString(i);
             result.addIncomingTopologyAnnouncement(fromJSON(subAnnouncementJSON));
         }
@@ -315,15 +336,14 @@ public class Announcement {
     }
 
     /** create a clusterview from json **/
-    private static ClusterView asClusterView(final String localClusterViewJSON)
-            throws JSONException {
-        JSONObject obj = new JSONObject(localClusterViewJSON);
+    private static ClusterView asClusterView(final String localClusterViewJSON) {
+        JsonObject obj = jsonReaderFactory.createReader(new StringReader(localClusterViewJSON)).readObject();
         DefaultClusterView clusterView = new DefaultClusterView(
                 obj.getString("id"));
-        JSONArray instancesObj = obj.getJSONArray("instances");
+        JsonArray instancesObj = obj.getJsonArray("instances");
 
-        for (int i = 0; i < instancesObj.length(); i++) {
-            JSONObject anInstance = instancesObj.getJSONObject(i);
+        for (int i = 0; i < instancesObj.size(); i++) {
+            JsonObject anInstance = instancesObj.getJsonObject(i);
             clusterView.addInstanceDescription(asInstance(anInstance));
         }
 
@@ -331,29 +351,27 @@ public class Announcement {
     }
 
     /** convert a clusterview into json **/
-    private static JSONObject asJSON(final ClusterView clusterView)
-            throws JSONException {
-        JSONObject obj = new JSONObject();
-        obj.put("id", clusterView.getId());
-        JSONArray instancesObj = new JSONArray();
+    private static JsonObject asJSON(final ClusterView clusterView) {
+        JsonObjectBuilder obj = Json.createObjectBuilder();
+        obj.add("id", clusterView.getId());
+        JsonArrayBuilder instancesObj = Json.createArrayBuilder();
         List<InstanceDescription> instances = clusterView.getInstances();
         for (Iterator<InstanceDescription> it = instances.iterator(); it
                 .hasNext();) {
             InstanceDescription instanceDescription = it.next();
-            instancesObj.put(asJSON(instanceDescription));
+            instancesObj.add(asJSON(instanceDescription));
         }
-        obj.put("instances", instancesObj);
-        return obj;
+        obj.add("instances", instancesObj);
+        return obj.build();
     }
 
     /** create an instancedescription from json **/
-    private static DefaultInstanceDescription asInstance(
-            final JSONObject anInstance) throws JSONException {
+    private static DefaultInstanceDescription asInstance(final JsonObject anInstance) {
         final boolean isLeader = anInstance.getBoolean("isLeader");
         final String slingId = anInstance.getString("slingId");
 
-        final JSONObject propertiesObj = anInstance.getJSONObject("properties");
-        Iterator<String> it = propertiesObj.keys();
+        final JsonObject propertiesObj = anInstance.getJsonObject("properties");
+        Iterator<String> it = propertiesObj.keySet().iterator();
         Map<String, String> properties = new HashMap<String, String>();
         while (it.hasNext()) {
             String key = it.next();
@@ -366,24 +384,23 @@ public class Announcement {
     }
 
     /** convert an instance description into a json object **/
-    private static JSONObject asJSON(final InstanceDescription instanceDescription)
-            throws JSONException {
-        JSONObject obj = new JSONObject();
-        obj.put("slingId", instanceDescription.getSlingId());
-        obj.put("isLeader", instanceDescription.isLeader());
+    private static JsonObject asJSON(final InstanceDescription instanceDescription) {
+        JsonObjectBuilder obj = Json.createObjectBuilder();
+        obj.add("slingId", instanceDescription.getSlingId());
+        obj.add("isLeader", instanceDescription.isLeader());
         ClusterView cluster = instanceDescription.getClusterView();
         if (cluster != null) {
-            obj.put("cluster", cluster.getId());
+            obj.add("cluster", cluster.getId());
         }
-        JSONObject propertiesObj = new JSONObject();
+        JsonObjectBuilder propertiesObj = Json.createObjectBuilder();
         Map<String, String> propertiesMap = instanceDescription.getProperties();
         for (Iterator<Entry<String, String>> it = propertiesMap.entrySet()
                 .iterator(); it.hasNext();) {
             Entry<String, String> entry = it.next();
-            propertiesObj.put(entry.getKey(), entry.getValue());
+            propertiesObj.add(entry.getKey(), entry.getValue());
         }
-        obj.put("properties", propertiesObj);
-        return obj;
+        obj.add("properties", propertiesObj);
+        return obj.build();
     }
 
     /** sets the local clusterview **/
@@ -398,8 +415,14 @@ public class Announcement {
     }
 
     /** Convert this announcement into json **/
-    public String asJSON() throws JSONException {
-        return asJSONObject().toString();
+    public String asJSON() {
+        return asJSON(asJSONObject());
+    }
+    
+    private static String asJSON(JsonValue json) {
+        StringWriter writer = new StringWriter();
+        Json.createGenerator(writer).write(json).close();
+        return writer.toString();
     }
 
     /** the key which is unique to this announcement **/
@@ -424,7 +447,7 @@ public class Announcement {
      * under which a node with the primary key is created
      **/
     public void persistTo(Resource announcementsResource)
-            throws PersistenceException, JSONException {
+            throws PersistenceException {
         Resource announcementChildResource = announcementsResource.getChild(getPrimaryKey());
         
         // SLING-2967 used to introduce 'resetting the created time' here
@@ -466,10 +489,10 @@ public class Announcement {
      * to SLING-3389 wire-backwards-compatibility - and backoffInterval
      * introduced as part of SLING-3382
      */
-    public boolean correspondsTo(Announcement announcement) throws JSONException {
-        final JSONObject myJson = asJSONObject(true);
-        final JSONObject otherJson = announcement.asJSONObject(true);
-        return myJson.toString().equals(otherJson.toString());
+    public boolean correspondsTo(Announcement announcement) {
+        final JsonObject myJson = asJSONObject(true);
+        final JsonObject otherJson = announcement.asJSONObject(true);
+        return asJSON(myJson).equals(asJSON(otherJson));
     }
 
     public void registerPing(Announcement incomingAnnouncement) {

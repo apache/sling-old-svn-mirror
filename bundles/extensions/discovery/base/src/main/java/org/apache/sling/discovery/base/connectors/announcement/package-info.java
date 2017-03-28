@@ -23,7 +23,7 @@
  *
  * @version 1.1.2
  */
-@Version("1.1.2")
+@Version("2.0.0")
 package org.apache.sling.discovery.base.connectors.announcement;
 
 import aQute.bnd.annotation.Version;
