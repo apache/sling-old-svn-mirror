@@ -16,9 +16,8 @@
  ******************************************************************************/
 package org.apache.sling.xss;
 
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.io.JSONWriter;
+import javax.json.JsonObjectBuilder;
+import javax.json.stream.JsonGenerator;
 
 /**
  * JSON utilities
@@ -44,13 +43,12 @@ public final class JSONUtil {
      * @param key    Key to write
      * @param value  Value to write
      * @param xss    XSS protection filter
-     * @throws JSONException        If value could not be put into the object
+     * @throws JsonException        If value could not be put into the object
      * @throws NullPointerException If xss protection filter is <code>null</code>
      */
-    public static void putProtected(final JSONObject object, final String key, final String value, final XSSFilter xss)
-            throws JSONException {
+    public static void putProtected(final JsonObjectBuilder object, final String key, final String value, final XSSFilter xss) {
         final String xssValue = xss.filter(ProtectionContext.PLAIN_HTML_CONTENT, value);
-        object.put(key, xssValue);
+        object.add(key, xssValue);
     }
 
     /**
@@ -61,13 +59,12 @@ public final class JSONUtil {
      * @param key    Key to write
      * @param value  Value to write
      * @param xss    XSS protection filter
-     * @throws JSONException        If value could not be put into the object
+     * @throws JsonException        If value could not be put into the object
      * @throws NullPointerException If xss protection filter is <code>null</code>
      */
-    public static void putWithProtected(final JSONObject object, final String key, final String value, final XSSFilter xss)
-            throws JSONException {
+    public static void putWithProtected(final JsonObjectBuilder object, final String key, final String value, final XSSFilter xss) {
         putProtected(object, key + KEY_SUFFIX_XSS, value, xss);
-        object.put(key, value);
+        object.add(key, value);
     }
 
     /**
@@ -81,10 +78,9 @@ public final class JSONUtil {
      * @throws JSONException        If value could not be written
      * @throws NullPointerException If xss protection filter is <code>null</code>
      */
-    public static void writeProtected(final JSONWriter writer, final String key, final String value, final XSSFilter xss)
-            throws JSONException {
+    public static void writeProtected(final JsonGenerator writer, final String key, final String value, final XSSFilter xss) {
         final String xssValue = xss.filter(ProtectionContext.PLAIN_HTML_CONTENT, value);
-        writer.key(key).value(xssValue);
+        writer.write(key, xssValue);
     }
 
     /**
@@ -95,18 +91,17 @@ public final class JSONUtil {
      * @param key    Key to use.
      * @param values The value arrays.
      * @param xss    The XSS protection filter.
-     * @throws JSONException        If an JSON specific error occurs.
+     * @throws JsonException        If value could not be written
      * @throws NullPointerException If xss protection filter is <code>null</code>
      */
-    public static void writeProtected(JSONWriter writer, String key,
-                                      String[] values, XSSFilter xss) throws JSONException {
-        writer.key(key);
-        writer.array();
+    public static void writeProtected(JsonGenerator writer, String key,
+                                      String[] values, XSSFilter xss) {
+        writer.writeStartArray(key);
         for (String value : values) {
             String xssValue = xss.filter(ProtectionContext.PLAIN_HTML_CONTENT, value);
-            writer.value(xssValue);
+            writer.write(xssValue);
         }
-        writer.endArray();
+        writer.writeEnd();
     }
 
     /**
@@ -120,10 +115,9 @@ public final class JSONUtil {
      * @throws JSONException        If value could not be written
      * @throws NullPointerException If xss protection filter is <code>null</code>
      */
-    public static void writeWithProtected(final JSONWriter writer, final String key, final String value, final XSSFilter xss)
-            throws JSONException {
+    public static void writeWithProtected(final JsonGenerator writer, final String key, final String value, final XSSFilter xss) {
         writeProtected(writer, key + KEY_SUFFIX_XSS, value, xss);
-        writer.key(key).value(value);
+        writer.write(key, value);
     }
 
     /**
@@ -135,19 +129,18 @@ public final class JSONUtil {
      * @param key    The key to write.
      * @param values The value array.
      * @param xss    The xss protection filter.
-     * @throws JSONException        If a JSON specific error occurs.
+     * @throws JSONException        If value could not be written
      * @throws NullPointerException If xss protection filter is <code>null</code>
      */
-    public static void writeWithProtected(JSONWriter writer, String key,
-                                          String[] values, XSSFilter xss) throws JSONException {
+    public static void writeWithProtected(JsonGenerator writer, String key,
+                                          String[] values, XSSFilter xss) {
 
         writeProtected(writer, key + KEY_SUFFIX_XSS, values, xss);
         // and the non-xss array variant
-        writer.key(key);
-        writer.array();
+        writer.writeStartArray(key);
         for (String value : values) {
-            writer.value(value);
+            writer.write(value);
         }
-        writer.endArray();
+        writer.writeEnd();
     }
 }
