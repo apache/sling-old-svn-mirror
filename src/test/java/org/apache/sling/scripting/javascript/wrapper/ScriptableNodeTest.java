@@ -25,7 +25,6 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.Value;
 
-import org.apache.sling.commons.json.jcr.JsonItemWriter;
 import org.apache.sling.scripting.javascript.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 
@@ -146,7 +145,7 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
     }
 
     public void testViaNodeDirectPropertyAccessCal() throws Exception {
-    	final SimpleDateFormat f = new SimpleDateFormat(JsonItemWriter.ECMA_DATE_FORMAT, JsonItemWriter.DATE_FORMAT_LOCALE);
+    	final SimpleDateFormat f = new SimpleDateFormat(ScriptableCalendar.ECMA_DATE_FORMAT, ScriptableCalendar.DATE_FORMAT_LOCALE);
     	final String expected = f.format(testCal.getTime());
         assertEquals(
                 expected,
