@@ -21,12 +21,15 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
@@ -47,60 +50,65 @@ public class ResultJsonSerializer {
 
         LOG.debug("Sending json response... ");
 
-        JSONObject result = new JSONObject();
+        JsonObjectBuilder result = Json.createObjectBuilder();
         try {
 
-            result.put("overallResult", overallResult.getStatus());
-            JSONArray resultsJsonArr = new JSONArray();
-            result.put("results", resultsJsonArr);
-
+            result.add("overallResult", overallResult.getStatus().toString());
+            JsonArrayBuilder resultsJsonArr = Json.createArrayBuilder();
+            
             for (HealthCheckExecutionResult healthCheckResult : executionResults) {
-                resultsJsonArr.put(getJsonForSimpleResult(healthCheckResult, includeDebug));
+                resultsJsonArr.add(getJsonForSimpleResult(healthCheckResult, includeDebug));
             }
-
-        } catch (JSONException e) {
+            
+            result.add("results", resultsJsonArr);
+        } catch (JsonException e) {
             LOG.info("Could not serialize health check result: " + e, e);
         }
 
-        String resultStr;
+        StringWriter writer = new StringWriter();
+        Json.createGenerator(writer).write(result.build()).close();
+        
+        String resultStr = writer.toString();
+        
         if (StringUtils.isNotBlank(jsonpCallback)) {
-            resultStr = jsonpCallback + "(" + result.toString() + ");";
-        } else {
-            resultStr = result.toString();
+            resultStr = jsonpCallback + "(" + resultStr + ");";
         }
 
         return resultStr;
 
     }
 
-    private JSONObject getJsonForSimpleResult(final HealthCheckExecutionResult healthCheckResult, boolean includeDebug) throws JSONException {
+    private JsonObject getJsonForSimpleResult(final HealthCheckExecutionResult healthCheckResult, boolean includeDebug) {
 
-        JSONObject result = new JSONObject();
+        JsonObjectBuilder result = Json.createObjectBuilder();
 
-        result.put("name", healthCheckResult.getHealthCheckMetadata().getName());
-        result.put("status", healthCheckResult.getHealthCheckResult().getStatus());
-        result.put("timeInMs", healthCheckResult.getElapsedTimeInMs());
-        result.put("finishedAt", healthCheckResult.getFinishedAt());
+        result.add("name", healthCheckResult.getHealthCheckMetadata().getName());
+        result.add("status", healthCheckResult.getHealthCheckResult().getStatus().toString());
+        result.add("timeInMs", healthCheckResult.getElapsedTimeInMs());
+        result.add("finishedAt", healthCheckResult.getFinishedAt().toString());
 
-        JSONArray messagesArr = new JSONArray();
-        result.put("messages", messagesArr);
+        JsonArrayBuilder messagesArr = Json.createArrayBuilder();
+        
         for (ResultLog.Entry entry : healthCheckResult.getHealthCheckResult()) {
             if (!includeDebug && entry.getStatus() == Result.Status.DEBUG) {
                 continue;
             }
-            JSONObject jsonEntry = new JSONObject();
-            jsonEntry.put("status", entry.getStatus());
-            jsonEntry.put("message", entry.getMessage());
+            JsonObjectBuilder jsonEntry = Json.createObjectBuilder();
+            jsonEntry.add("status", entry.getStatus().toString());
+            jsonEntry.add("message", entry.getMessage());
             Exception exception = entry.getException();
             if (exception != null) {
                 StringWriter stringWriter = new StringWriter();
                 exception.printStackTrace(new PrintWriter(stringWriter));
-                jsonEntry.put("exception", stringWriter.toString());
+                jsonEntry.add("exception", stringWriter.toString());
             }
-            messagesArr.put(jsonEntry);
+            messagesArr.add(jsonEntry);
         }
+        
+        result.add("messages", messagesArr);
+        
 
-        return result;
+        return result.build();
     }
 
 }
