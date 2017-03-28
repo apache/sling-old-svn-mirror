@@ -23,13 +23,18 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentReader;
 
+import java.util.Map;
+
 import javax.jcr.RepositoryException;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
 
 /**
  * Specific <code>JsonReader</code>, <code>OrderedJsonReader</code> parse json document exactly the same,
@@ -50,38 +55,45 @@ public class OrderedJsonReader extends JsonReader {
     private static final String PN_ORDEREDCHILDNAME = "SLING:name";
 
     @Override
-    protected void writeChildren(JSONObject obj, ContentCreator contentCreator) throws JSONException, RepositoryException {
-        if (! obj.has(PN_ORDEREDCHILDREN)) {
+    protected void writeChildren(JsonObject obj, ContentCreator contentCreator) throws RepositoryException {
+        if (! obj.containsKey(PN_ORDEREDCHILDREN)) {
             super.writeChildren(obj, contentCreator);
         } else {
-            JSONArray names = obj.names();
-            for (int i = 0; names != null && i < names.length(); i++) {
-                final String n = names.getString(i);
+            for (Map.Entry<String, JsonValue> entry : obj.entrySet()) {
+                final String n = entry.getKey();
                 // skip well known objects
                 if (!ignoredNames.contains(n)) {
-                    Object o = obj.get(n);
+                    Object o = entry.getValue();
                     if (!handleSecurity(n, o, contentCreator)) {
                         if (n.equals(PN_ORDEREDCHILDREN)) {
-                            if (o instanceof JSONArray) {
-                                JSONArray children = (JSONArray) o;
-                                for (int childIndex = 0; childIndex < children.length(); childIndex++) {
+                            if (o instanceof JsonArray) {
+                                JsonArray children = (JsonArray) o;
+                                for (int childIndex = 0; childIndex < children.size(); childIndex++) {
                                     Object oc = children.get(childIndex);
-                                    if (oc instanceof JSONObject) {
-                                        JSONObject child = (JSONObject) oc;
-                                        String childName = child.optString(PN_ORDEREDCHILDNAME);
+                                    if (oc instanceof JsonObject) {
+                                        JsonObject child = (JsonObject) oc;
+                                        String childName = child.getString(PN_ORDEREDCHILDNAME, null);
                                         if (StringUtils.isNotBlank(childName)) {
-                                            child.remove(PN_ORDEREDCHILDNAME);
+                                            JsonObjectBuilder builder = Json.createObjectBuilder();
+                                            for (Map.Entry<String, JsonValue> e : child.entrySet())
+                                            {
+                                                if (!PN_ORDEREDCHILDNAME.equals(e.getKey()))
+                                                {
+                                                    builder.add(e.getKey(), e.getValue());
+                                                }
+                                            }
+                                            child = builder.build();
                                             this.createNode(childName, child, contentCreator);
                                         } else {
-                                            throw new JSONException(PN_ORDEREDCHILDREN + " children must have a name whose key is " + PN_ORDEREDCHILDNAME);
+                                            throw new JsonException(PN_ORDEREDCHILDREN + " children must have a name whose key is " + PN_ORDEREDCHILDNAME);
                                         }
                                     } else {
-                                        throw new JSONException(PN_ORDEREDCHILDREN + " array must only have JSONObject items");
+                                        throw new JsonException(PN_ORDEREDCHILDREN + " array must only have JSONObject items");
                                     }
 
                                 }
                             } else {
-                                throw new JSONException(PN_ORDEREDCHILDREN + " value must be a JSON array");
+                                throw new JsonException(PN_ORDEREDCHILDREN + " value must be a JSON array");
                             }
                         }
                     } else {
