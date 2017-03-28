@@ -24,6 +24,10 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.json.Json;
+import javax.json.JsonException;
+import javax.json.JsonWriter;
+import javax.json.stream.JsonGenerator;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,8 +36,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.service.component.annotations.Component;
 
 /**
@@ -109,21 +111,19 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
         response.setCharacterEncoding("UTF-8");
 
         final Writer out = response.getWriter();
-        final JSONWriter w = new JSONWriter(out);
+        final JsonGenerator w = Json.createGenerator(out);
 
         try {
-            w.object();
+            w.writeStartObject();
             for (final Map.Entry<String, String> e : data.entrySet()) {
-                w.key(e.getKey());
-                w.value(e.getValue());
+                w.write(e.getKey(), e.getValue());
             }
-            w.endObject();
-
-        } catch (JSONException jse) {
+            w.writeEnd();
+        } catch (JsonException jse) {
             out.write(jse.toString());
-
-        } finally {
             out.flush();
+        } finally {
+            w.flush();
         }
     }
 

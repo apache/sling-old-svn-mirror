@@ -21,7 +21,6 @@ package org.apache.sling.servlets.get.impl.version;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -30,6 +29,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
@@ -38,10 +41,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.io.JSONRenderer;
-import org.apache.sling.commons.json.jcr.JsonItemWriter;
+import org.apache.sling.servlets.get.impl.util.JsonObjectCreator;
+import org.apache.sling.servlets.get.impl.util.JsonRenderer;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
@@ -88,8 +89,8 @@ public class VersionInfoServlet extends SlingSafeMethodsServlet {
 
     /** How much to indent in tidy mode */
     public static final int INDENT_SPACES = 2;
-
-    private final JSONRenderer renderer = new JSONRenderer();
+    
+    private final JsonRenderer renderer = new JsonRenderer();
 
     @Override
     public void doGet(SlingHttpServletRequest req, SlingHttpServletResponse resp) throws ServletException,
@@ -99,40 +100,58 @@ public class VersionInfoServlet extends SlingSafeMethodsServlet {
         final boolean tidy = hasSelector(req, TIDY);
         final boolean harray = hasSelector(req, HARRAY);
 
-        final JSONRenderer.Options opt = renderer.options().withIndent(tidy ? INDENT_SPACES : 0)
-                .withArraysForChildren(harray);
+        final JsonRenderer.Options opt = renderer.options().withIndent(tidy ? INDENT_SPACES : 0)
+                    .withArraysForChildren(harray);
+        
         try {
             resp.getWriter().write(renderer.prettyPrint(getJsonObject(req.getResource()), opt));
-        } catch (RepositoryException e) {
-            throw new ServletException(e);
-        } catch (JSONException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }
 
-    private JSONObject getJsonObject(Resource resource) throws RepositoryException, JSONException {
-        final JSONObject result = new JSONObject();
+    private JsonObject getJsonObject(Resource resource) throws RepositoryException {
+        final JsonObjectBuilder result = Json.createObjectBuilder();
         final Node node = resource.adaptTo(Node.class);
         if (node == null || !node.isNodeType(JcrConstants.MIX_VERSIONABLE)) {
-            return result;
+            return result.build();
         }
 
         final VersionHistory history = node.getVersionHistory();
         final Version baseVersion = node.getBaseVersion();
         for (final VersionIterator it = history.getAllVersions(); it.hasNext();) {
             final Version v = it.nextVersion();
-            final JSONObject obj = new JSONObject();
-            obj.put("created", createdDate(v));
-            obj.put("successors", getNames(v.getSuccessors()));
-            obj.put("predecessors", getNames(v.getPredecessors()));
-            obj.put("labels", Arrays.asList(history.getVersionLabels(v)));
-            obj.put("baseVersion", baseVersion.isSame(v));
-            result.put(v.getName(), obj);
+            final JsonObjectBuilder obj = Json.createObjectBuilder();
+            obj.add("created", createdDate(v));
+            obj.add("successors", getArrayBuilder(getNames(v.getSuccessors())));
+            obj.add("predecessors", getArrayBuilder(getNames(v.getPredecessors())));
+            
+            obj.add("labels", getArrayBuilder(history.getVersionLabels(v)));
+            obj.add("baseVersion", baseVersion.isSame(v));
+            result.add(v.getName(), obj);
         }
 
-        final JSONObject wrapper = new JSONObject();
-        wrapper.put("versions", result);
-        return wrapper;
+        return Json.createObjectBuilder().add("versions", result).build();
+    }
+    
+    private JsonArrayBuilder getArrayBuilder(String[] values) {
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        
+        for (String value : values) {
+            builder.add(value);
+        }
+        
+        return builder;
+    }
+    
+    private JsonArrayBuilder getArrayBuilder(Collection<String> values) {
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        
+        for (String value : values) {
+            builder.add(value);
+        }
+        
+        return builder;
     }
 
     private static Collection<String> getNames(Version[] versions) throws RepositoryException {
@@ -154,7 +173,7 @@ public class VersionInfoServlet extends SlingSafeMethodsServlet {
     }
 
     private static String createdDate(Node node) throws RepositoryException {
-        return JsonItemWriter.format(node.getProperty(JcrConstants.JCR_CREATED).getDate());
+        return JsonObjectCreator.format(node.getProperty(JcrConstants.JCR_CREATED).getDate());
     }
 
 }
