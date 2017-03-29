@@ -16,8 +16,6 @@
  */
 package org.apache.sling.servlets.post.impl.helper;
 
-import java.util.Map;
-
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -27,15 +25,14 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,26 +56,37 @@ import org.slf4j.LoggerFactory;
  * default workspace assuming users are stored in that workspace and the
  * administrative user has full access.
  */
-@Component(metatype = true, label = "Apache Sling Post Chunk Upload : Cleanup Task", description = "Task to regularly purge incomplete chunks from the repository")
-@Service(value = Runnable.class)
-@Properties({
-    @Property(name = "scheduler.expression", value = "31 41 0/12 * * ?", label = "Schedule", description = "Cron expression scheudling this job. Default is hourly 17m23s after the hour. "
-        + "See http://www.docjar.com/docs/api/org/quartz/CronTrigger.html for a description "
-        + "of the format for this value."),
-    @Property(name = "service.description", value = "Periodic Chunk Cleanup Job", propertyPrivate = true),
-    @Property(name = "service.vendor", value = "The Apache Software Foundation", propertyPrivate = true),
-    @Property(name = "scheduler.concurrent", label = "scheduler.concurrent", boolValue = false,
-        description = "Allow Chunk Cleanup Task to run concurrently (default: false).")})
+@Component(service = Runnable.class,
+    property = {
+           "service.description=Periodic Chunk Cleanup Job",
+           "service.vendor=The Apache Software Foundation"
+    })
+@Designate(ocd = ChunkCleanUpTask.Config.class)
 public class ChunkCleanUpTask implements Runnable {
+
+    @ObjectClassDefinition(name = "Apache Sling Post Chunk Upload : Cleanup Task",
+            description = "Task to regularly purge incomplete chunks from the repository")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Schedule", description = "Cron expression scheudling this job. Default is hourly 17m23s after the hour. "
+                + "See http://www.docjar.com/docs/api/org/quartz/CronTrigger.html for a description "
+                + "of the format for this value.")
+        String scheduler_expression() default "31 41 0/12 * * ?";
+
+        @AttributeDefinition(name = "scheduler.concurrent",
+                description = "Allow Chunk Cleanup Task to run concurrently (default: false).")
+        boolean scheduler_concurrent() default false;
+
+        @AttributeDefinition(name = "Cleanup Age",
+                description = "The chunk's age in minutes before it is considered for clean up.")
+        int chunk_cleanup_age() default 360;
+    }
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
     private SlingRepository repository;
-
-    @Property(intValue = 360, label = "chunk.cleanup.age", description = "The chunk's age in minutes before it is considered for clean up.")
-    private static final String CHUNK_CLEANUP_AGE = "chunk.cleanup.age";
 
     private SlingFileUploadHandler uploadhandler = new SlingFileUploadHandler();
 
@@ -175,11 +183,10 @@ public class ChunkCleanUpTask implements Runnable {
     }
 
     @Activate
-    protected void activate(final Map<String, Object> configuration) {
-        chunkCleanUpAge = OsgiUtil.toInteger(
-            configuration.get(CHUNK_CLEANUP_AGE), 1) * 60 * 1000;
+    protected void activate(final Config configuration) {
+        chunkCleanUpAge = configuration.chunk_cleanup_age();
         log.info("scheduler config [{}], chunkGarbageTime  [{}] ms",
-            OsgiUtil.toString(configuration.get("scheduler.expression"), ""),
+            configuration.scheduler_expression(),
             chunkCleanUpAge);
 
     }
