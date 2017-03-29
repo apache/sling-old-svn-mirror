@@ -216,7 +216,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
      * @see org.apache.sling.validation.model.spi.ValidationModelProvider#getModels(java.lang.String)
      */
     @Override
-    public @Nonnull List<ValidationModel> getModels(@Nonnull String relativeResourceType) {
+    public @Nonnull List<ValidationModel> getValidationModels(@Nonnull String relativeResourceType) {
         List<ValidationModel> cacheEntry = validationModelCacheByResourceType.get(relativeResourceType);
         if (cacheEntry == null) {
             cacheEntry = doGetModels(relativeResourceType);
