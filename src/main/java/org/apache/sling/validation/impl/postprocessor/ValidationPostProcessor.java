@@ -81,13 +81,17 @@ public class ValidationPostProcessor implements SlingPostProcessor {
         // request.getResource() contains the old resource (might even be the non-existing one), 
         // therefore retrieve the transient new resource at the same path
         Resource newResource = request.getResourceResolver().getResource(request.getResource().getPath());
+        if (newResource == null) {
+            LOG.debug("Could not find new/modified resource at {} to validate", request.getResource().getPath());
+            return;
+        }
         // get model for resource type
         ValidationModel model = validationService.getValidationModel(newResource, configuration.considerResourceSuperTypes());
         if (model == null) {
             if (configuration.failForMissingValidationModels()) {
-                throw new IllegalStateException("Could not find validation model for resource type " + request.getResource().getResourceType());
+                throw new IllegalStateException("Could not find validation model for resource type " + newResource.getResourceType());
             } else {
-                LOG.debug("Could not find validation model for resource type {} -> skip validation", request.getResource().getResourceType());
+                LOG.debug("Could not find validation model for resource type {} -> skip validation", newResource.getResourceType());
                 return;
             }
         }
