@@ -895,6 +895,8 @@ for more details</p>''')
                 }
             }
 
+            blockOnUpstreamProjects()
+
             triggers {
                 snapshotDependencies(true)
                 scm('H/15 * * * *')
