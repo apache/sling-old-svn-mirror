@@ -45,7 +45,6 @@ import org.apache.sling.servlets.post.PostOperation;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.PostResponseCreator;
 import org.apache.sling.servlets.post.SlingPostConstants;
-import org.apache.sling.servlets.post.SlingPostOperation;
 import org.apache.sling.servlets.post.SlingPostProcessor;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
@@ -167,7 +166,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private final StreamedUploadOperation streamedUploadOperation = new StreamedUploadOperation();
 
-    private ServiceRegistration[] internalOperations;
+    private ServiceRegistration<PostOperation>[] internalOperations;
 
     /** Map of post operations. */
     private final Map<String, PostOperation> postOperations = new HashMap<>();
@@ -297,7 +296,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         }
 
         // Fall through to default behavior
-        @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
         final MediaRangeList mediaRangeList = new MediaRangeList(req);
         if (JSONResponse.RESPONSE_CONTENT_TYPE.equals(mediaRangeList.prefer("text/html", JSONResponse.RESPONSE_CONTENT_TYPE))) {
             return new JSONResponse();
@@ -417,6 +415,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     // ---------- SCR Integration ----------------------------------------------
 
+    @SuppressWarnings("unchecked")
     @Activate
     protected void activate(final BundleContext bundleContext,
             final Config configuration) {
@@ -424,7 +423,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         this.configure(configuration);
 
         // other predefined operations
-        final ArrayList<ServiceRegistration> providedServices = new ArrayList<>();
+        final ArrayList<ServiceRegistration<PostOperation>> providedServices = new ArrayList<>();
         providedServices.add(registerOperation(bundleContext,
             SlingPostConstants.OPERATION_MODIFY, modifyOperation));
         providedServices.add(registerOperation(bundleContext,
@@ -436,18 +435,23 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         providedServices.add(registerOperation(bundleContext,
             SlingPostConstants.OPERATION_NOP, new NopOperation()));
         providedServices.add(registerOperation(bundleContext,
-            SlingPostConstants.OPERATION_CHECKIN, new CheckinOperation()));
-        providedServices.add(registerOperation(bundleContext,
-            SlingPostConstants.OPERATION_CHECKOUT, new CheckoutOperation()));
-        providedServices.add(registerOperation(bundleContext,
-                SlingPostConstants.OPERATION_RESTORE, new RestoreOperation()));
-        providedServices.add(registerOperation(bundleContext,
             SlingPostConstants.OPERATION_IMPORT, importOperation));
 
+        // the following operations require JCR:
+        try {
+            providedServices.add(registerOperation(bundleContext,
+                    SlingPostConstants.OPERATION_CHECKIN, new CheckinOperation()));
+            providedServices.add(registerOperation(bundleContext,
+                    SlingPostConstants.OPERATION_CHECKOUT, new CheckoutOperation()));
+            providedServices.add(registerOperation(bundleContext,
+                    SlingPostConstants.OPERATION_RESTORE, new RestoreOperation()));
+        } catch ( final Throwable t) {
+            // ignore as JCR is optional
+        }
         internalOperations = providedServices.toArray(new ServiceRegistration[providedServices.size()]);
     }
 
-    private ServiceRegistration registerOperation(final BundleContext context,
+    private ServiceRegistration<PostOperation> registerOperation(final BundleContext context,
             final String opCode, final PostOperation operation) {
         final Hashtable<String, Object> properties = new Hashtable<>();
         properties.put(PostOperation.PROP_OPERATION_NAME, opCode);
@@ -455,7 +459,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             "Apache Sling POST Servlet Operation " + opCode);
         properties.put(Constants.SERVICE_VENDOR,
             context.getBundle().getHeaders().get(Constants.BUNDLE_VENDOR));
-        return context.registerService(PostOperation.SERVICE_NAME, operation,
+        return context.registerService(PostOperation.class, operation,
             properties);
     }
 
@@ -506,7 +510,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     @Deactivate
     protected void deactivate() {
         if (internalOperations != null) {
-            for (final ServiceRegistration registration : internalOperations) {
+            for (final ServiceRegistration<PostOperation> registration : internalOperations) {
                 registration.unregister();
             }
             internalOperations = null;
@@ -523,7 +527,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             cardinality = ReferenceCardinality.MULTIPLE,
             policy = ReferencePolicy.DYNAMIC)
     protected void bindPostOperation(final PostOperation operation, final Map<String, Object> properties) {
-        final String operationName = (String) properties.get(SlingPostOperation.PROP_OPERATION_NAME);
+        final String operationName = (String) properties.get(PostOperation.PROP_OPERATION_NAME);
         if ( operationName != null && operation != null ) {
             synchronized (this.postOperations) {
                 this.postOperations.put(operationName, operation);
@@ -535,7 +539,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      * Unbind a post operation
      */
     protected void unbindPostOperation(final PostOperation operation, final Map<String, Object> properties) {
-        final String operationName = (String) properties.get(SlingPostOperation.PROP_OPERATION_NAME);
+        final String operationName = (String) properties.get(PostOperation.PROP_OPERATION_NAME);
         if ( operationName != null ) {
             synchronized (this.postOperations) {
                 this.postOperations.remove(operationName);

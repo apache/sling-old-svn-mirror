@@ -33,6 +33,7 @@ import org.apache.sling.servlets.post.PostResponse;
  * The <code>CheckinOperation</code> class implements the
  * {@link org.apache.sling.servlets.post.SlingPostConstants#OPERATION_CHECKIN checkin}
  * operation for the Sling default POST servlet.
+ * The checkin operation depends on the resources being backed up by a JCR node.
  */
 public class CheckinOperation extends AbstractPostOperation {
 

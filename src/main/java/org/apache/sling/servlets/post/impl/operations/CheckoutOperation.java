@@ -33,6 +33,7 @@ import org.apache.sling.servlets.post.PostResponse;
  * The <code>CheckoutOperation</code> class implements the
  * {@link org.apache.sling.servlets.post.SlingPostConstants#OPERATION_CHECKOUT checkout}
  * operation for the Sling default POST servlet.
+ * The checkout operation depends on the resources being backed up by a JCR node.
  */
 public class CheckoutOperation extends AbstractPostOperation {
     @Override

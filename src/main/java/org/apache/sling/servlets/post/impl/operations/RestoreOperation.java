@@ -37,6 +37,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * The <code>RestoreOperation</code> class implements the
  * {@link org.apache.sling.servlets.post.SlingPostConstants#OPERATION_RESTORE restore}
  * operation for the Sling default POST servlet.
+ * The restore operation depends on the resources being backed up by a JCR node.
  */
 public class RestoreOperation extends AbstractPostOperation {
 
