@@ -226,7 +226,7 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel2", model2);
 
         // check that both models are returned
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.containsInAnyOrder(model1, model2));
     }
 
@@ -243,7 +243,7 @@ public class ResourceValidationModelProviderImplTest {
         properties.remove("applicablePaths");
 
         // check that both models are returned
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.containsInAnyOrder(model1));
     }
     
@@ -258,7 +258,7 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
         
         // check that both models are returned
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.containsInAnyOrder(model1));
     }
     
@@ -274,7 +274,7 @@ public class ResourceValidationModelProviderImplTest {
             createValidationModelResource(rr, contentValidatorsRoot.getPath(), "testValidationModel1", model1);
 
             // check that no model is found
-            Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+            Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
             Assert.assertThat("Model was placed outside resource resolver search path but still found", models, Matchers.empty());
         } finally {
             rr.delete(contentValidatorsRoot);
@@ -296,7 +296,7 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
 
         // compare both models
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.contains(model1));
     }
 
@@ -312,7 +312,7 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, appsValidatorsRoot.getPath(), "testValidationModel1", model2);
 
         // only the apps model should be returned
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.contains(model2));
     }
 
@@ -327,7 +327,7 @@ public class ResourceValidationModelProviderImplTest {
         Resource resource = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
         // make created model invalid by removing the properties sub resource
         rr.delete(resource.getChild("properties"));
-        modelProvider.getModels("sling/validation/test");
+        modelProvider.getValidationModels("sling/validation/test");
     }
 
     @Test
@@ -344,7 +344,7 @@ public class ResourceValidationModelProviderImplTest {
         modelBuilder.addApplicablePath("content/site1");
         ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.contains(model1));
     }
 
@@ -358,7 +358,7 @@ public class ResourceValidationModelProviderImplTest {
         Resource validatorResource = modelResource.getChild("properties/field1/validators/validatorId");
         ModifiableValueMap validatorArguments = validatorResource.adaptTo(ModifiableValueMap.class);
         validatorArguments.put("validatorArguments", "key1"); // value without "="
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.contains(model1));
     }
 
@@ -372,7 +372,7 @@ public class ResourceValidationModelProviderImplTest {
         Resource validatorResource = modelResource.getChild("properties/field1/validators/validatorId");
         ModifiableValueMap validatorArguments = validatorResource.adaptTo(ModifiableValueMap.class);
         validatorArguments.put("validatorArguments", "=value2"); // starting with "="
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.contains(model1));
     }
 
@@ -386,7 +386,7 @@ public class ResourceValidationModelProviderImplTest {
         Resource validatorResource = modelResource.getChild("properties/field1/validators/validatorId");
         ModifiableValueMap validatorArguments = validatorResource.adaptTo(ModifiableValueMap.class);
         validatorArguments.put("validatorArguments", "key1="); // ending with "="
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.contains(model1));
     }
 
@@ -401,11 +401,11 @@ public class ResourceValidationModelProviderImplTest {
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
 
         // check that both models are returned
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.containsInAnyOrder(model1));
         
         // the 2nd time the same instance should be returned
-        Collection<ValidationModel> models2 = modelProvider.getModels("sling/validation/test");
+        Collection<ValidationModel> models2 = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertEquals("Due to caching both models should be actually the same instance", System.identityHashCode(models), System.identityHashCode(models2));
     }
 
