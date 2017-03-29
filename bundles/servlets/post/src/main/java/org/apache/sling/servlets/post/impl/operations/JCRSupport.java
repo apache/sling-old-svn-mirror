@@ -24,6 +24,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,5 +62,14 @@ public class JCRSupport {
             return ((JCRSupportImpl)supportImpl).checkin(rsrc);
         }
         return false;
+    }
+
+    public void checkoutIfNecessary(final Resource rsrc,
+            final List<Modification> changes,
+            final VersioningConfiguration versioningConfiguration)
+    throws PersistenceException {
+        if ( rsrc != null && supportImpl != null ) {
+            ((JCRSupportImpl)supportImpl).checkoutIfNecessary(rsrc, changes, versioningConfiguration);
+        }
     }
 }

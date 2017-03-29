@@ -20,6 +20,7 @@ package org.apache.sling.servlets.post.impl.operations;
 
 import java.util.List;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -29,6 +30,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,5 +161,40 @@ public class JCRSupportImpl {
             }
         }
         return false;
+    }
+
+    private Node findVersionableAncestor(Node node) throws RepositoryException {
+        if (isVersionable(node)) {
+            return node;
+        }
+        try {
+            node = node.getParent();
+            return findVersionableAncestor(node);
+        } catch (ItemNotFoundException e) {
+            // top-level
+            return null;
+        }
+    }
+
+    public void checkoutIfNecessary(final Resource resource,
+            final List<Modification> changes,
+            final VersioningConfiguration versioningConfiguration)
+    throws PersistenceException {
+        if (resource != null && versioningConfiguration.isAutoCheckout()) {
+            final Node node = resource.adaptTo(Node.class);
+            if ( node != null ) {
+                try {
+                    Node versionableNode = findVersionableAncestor(node);
+                    if (versionableNode != null) {
+                        if (!versionableNode.isCheckedOut()) {
+                            versionableNode.getSession().getWorkspace().getVersionManager().checkout(versionableNode.getPath());
+                            changes.add(Modification.onCheckout(versionableNode.getPath()));
+                        }
+                    }
+                } catch ( final RepositoryException re) {
+                    throw new PersistenceException(re.getMessage(), re);
+                }
+            }
+        }
     }
 }

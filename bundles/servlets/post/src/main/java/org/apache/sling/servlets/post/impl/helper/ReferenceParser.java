@@ -109,7 +109,7 @@ public class ReferenceParser {
             // we ignore this
         }
         try {
-            return session.getNodeByUUID(value);
+            return session.getNodeByIdentifier(value);
         } catch (RepositoryException ignore) {
             // we ignore this
         }

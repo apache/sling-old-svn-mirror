@@ -17,16 +17,6 @@
 
 package org.apache.sling.servlets.post.impl.helper;
 
-import org.apache.sling.api.resource.ModifiableValueMap;
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.servlets.post.Modification;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.Part;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +29,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.Part;
+
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.servlets.post.Modification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Supports streamed uploads including where the stream is made up of partial body parts.
@@ -82,7 +83,6 @@ public class StreamedChunk {
     private final long chunkLength;
     private final long fileLength;
     private final Part part;
-    private final Map<String, List<String>> formFields;
     private ServletContext servletContext;
     private final boolean completed;
     private final boolean chunked;
@@ -97,7 +97,6 @@ public class StreamedChunk {
      */
     public StreamedChunk(Part part, Map<String, List<String>> formFields, ServletContext servletContext) {
         this.part = part;
-        this.formFields = formFields;
         this.servletContext = servletContext;
 
         String contentRangeHeader = part.getHeader("Content-Range");
@@ -187,14 +186,14 @@ public class StreamedChunk {
         vm.put(JCR_MIMETYPE, getContentType(part));
         if (chunked) {
             if ( vm.containsKey(SLING_FILE_LENGTH)) {
-                long previousFileLength = (Long) vm.get(SLING_FILE_LENGTH, Long.class);
+                long previousFileLength = vm.get(SLING_FILE_LENGTH, Long.class);
                 if (previousFileLength != fileLength) {
                     throw new IllegalStateException("Chunk file length has changed while cunks were being uploaded expected " + previousFileLength + " chunk contained  " + fileLength);
                 }
             }
             long previousChunksLength = 0;
             if ( vm.containsKey(SLING_CHUNKS_LENGTH)) {
-                previousChunksLength = (Long) vm.get(SLING_CHUNKS_LENGTH, Long.class);
+                previousChunksLength = vm.get(SLING_CHUNKS_LENGTH, Long.class);
                 if (previousChunksLength != offset) {
                     throw new IllegalStateException("Chunks recieved out of order, was expecting chunk starting at " + offset + " found last chunk ending at " + previousChunksLength);
                 }
@@ -218,7 +217,7 @@ public class StreamedChunk {
      * @throws PersistenceException
      */
     private Resource initState(Resource fileResource, List<Modification> changes) throws PersistenceException {
-        Map<String, Object> resourceProps = new HashMap<String, Object>();
+        Map<String, Object> resourceProps = new HashMap<>();
         resourceProps.put(JCR_PRIMARY_TYPE, NT_RESOURCE);
         resourceProps.put(JCR_LASTMODIFIED, Calendar.getInstance());
         resourceProps.put(JCR_MIMETYPE, getContentType(part));
@@ -252,7 +251,7 @@ public class StreamedChunk {
      */
     private void storeChunk(Resource contentResource, List<Modification> changes) throws PersistenceException {
         if (chunked) {
-            Map<String, Object> chunkProperties = new HashMap<String, Object>();
+            Map<String, Object> chunkProperties = new HashMap<>();
             chunkProperties.put(JCR_PRIMARY_TYPE, SLING_CHUNK_NT);
             chunkProperties.put(SLING_OFFSET, offset);
             try {
@@ -314,7 +313,7 @@ public class StreamedChunk {
      * @return
      */
     private InputStream getChunksInputStream(Resource contentResource) {
-        List<Resource> chunkResources = new ArrayList<Resource>();
+        List<Resource> chunkResources = new ArrayList<>();
         for ( Resource r : contentResource.getChildren()) {
             if (r.isResourceType(SLING_CHUNK_NT)) {
                 chunkResources.add(r);

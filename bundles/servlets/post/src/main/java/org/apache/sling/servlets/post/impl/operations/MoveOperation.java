@@ -61,7 +61,7 @@ public class MoveOperation extends AbstractCopyMoveOperation {
         String destPath = destParent + "/" + destName;
         Session session = item.getSession();
 
-        checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
+        this.jcrSsupport.checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
 
         if (session.itemExists(destPath)) {
             session.getItem(destPath).remove();
