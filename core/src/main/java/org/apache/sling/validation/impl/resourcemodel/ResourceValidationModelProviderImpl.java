@@ -65,7 +65,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
 
     static final String MODEL_XPATH_QUERY = "/jcr:root%s/*[@sling:resourceType=\""
             + ResourceValidationModelProviderImpl.VALIDATION_MODEL_RESOURCE_TYPE + "\" and @"
-            + ResourceValidationModelProviderImpl.VALIDATED_RESOURCE_TYPE + "=\"%s\"]";
+            + ResourceValidationModelProviderImpl.VALIDATING_RESOURCE_TYPE + "=\"%s\"]";
     static final String[] TOPICS = { SlingConstants.TOPIC_RESOURCE_REMOVED, SlingConstants.TOPIC_RESOURCE_CHANGED,
             SlingConstants.TOPIC_RESOURCE_ADDED };
 
@@ -78,7 +78,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     public static final @Nonnull String PROPERTIES = "properties";
     public static final @Nonnull String VALIDATION_MODEL_RESOURCE_TYPE = "sling/validation/model";
     public static final @Nonnull String APPLICABLE_PATHS = "applicablePaths";
-    public static final @Nonnull String VALIDATED_RESOURCE_TYPE = "validatedResourceType";
+    public static final @Nonnull String VALIDATING_RESOURCE_TYPE = "validatingResourceType";
     public static final @Nonnull String SEVERITY = "severity";
 
     @Reference
@@ -202,7 +202,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
             if (properties == null) {
                 throw new IllegalStateException("Could not adapt resource at " + path + " to a ValueMap");
             }
-            return properties.get(VALIDATED_RESOURCE_TYPE, String.class);
+            return properties.get(VALIDATING_RESOURCE_TYPE, String.class);
         } finally {
             if (resourceResolver != null) {
                 resourceResolver.close();

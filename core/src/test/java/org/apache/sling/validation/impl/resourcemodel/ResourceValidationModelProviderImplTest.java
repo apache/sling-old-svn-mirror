@@ -133,7 +133,7 @@ public class ResourceValidationModelProviderImplTest {
 
     // extract resource type from strings like
     // "/jcr:root/apps//validation//*[@sling:resourceType="sling/validation/model" and @validatedResourceType="<some-resource-type>"]"
-    private static final Pattern RESOURCE_TYPE_PATTERN = Pattern.compile(".*@validatedResourceType=\"([^\"]*)\".*");
+    private static final Pattern RESOURCE_TYPE_PATTERN = Pattern.compile(".*@validatingResourceType=\"([^\"]*)\".*");
 
     @Rule
     public SlingContext context = new SlingContext(ResourceResolverType.JCR_MOCK); // search capability necessary
@@ -161,7 +161,7 @@ public class ResourceValidationModelProviderImplTest {
                 }
                 String statement = query.getStatement();
                 // query looks like /jcr:root/apps//validation//*[@sling:resourceType="sling/validation/model" and
-                // @validatedResourceType="<some-resource-type>"]
+                // @validatingResourceType="<some-resource-type>"]
                 if (statement.startsWith("/jcr:root/")) {
                     statement = statement.substring("/jcr:root/".length() - 1);
                 }
@@ -414,7 +414,7 @@ public class ResourceValidationModelProviderImplTest {
     private Resource createValidationModelResource(ResourceResolver rr, String root, String name, ValidationModel model)
             throws Exception {
         Map<String, Object> modelProperties = new HashMap<String, Object>();
-        modelProperties.put(ResourceValidationModelProviderImpl.VALIDATED_RESOURCE_TYPE, model.getValidatedResourceType());
+        modelProperties.put(ResourceValidationModelProviderImpl.VALIDATING_RESOURCE_TYPE, model.getValidatingResourceType());
         modelProperties.put(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, model.getApplicablePaths().toArray());
         modelProperties.put(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, ResourceValidationModelProviderImpl.VALIDATION_MODEL_RESOURCE_TYPE);
         modelProperties.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
@@ -428,7 +428,7 @@ public class ResourceValidationModelProviderImplTest {
             // add to search handler (with root path)
             String prefix = Text.getAbsoluteParent(root, 0);
             PrefixAndResourceType prefixAndResourceType = new PrefixAndResourceType(prefix,
-                    model.getValidatedResourceType());
+                    model.getValidatingResourceType());
             List<Node> nodes;
             nodes = validatorModelNodesPerPrefixAndResourceType.get(prefixAndResourceType);
             if (nodes == null) {

@@ -87,7 +87,7 @@ public class MergedValidationModelTest {
     public void testValidatedResourceTypes() {
         ValidationModel mergedModel = new MergedValidationModel(modelBuilder.build("base", "some source"),
                 modelBuilder.build("superType", "some source"));
-        Assert.assertThat(mergedModel.getValidatedResourceType(), Matchers.equalTo("base"));
+        Assert.assertThat(mergedModel.getValidatingResourceType(), Matchers.equalTo("base"));
     }
 
 }
