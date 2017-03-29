@@ -153,7 +153,7 @@ public class ValidationServiceImpl implements ValidationService{
         }
         // convert to relative resource types, see https://issues.apache.org/jira/browse/SLING-4262
         validatedResourceType = getRelativeResourceType(validatedResourceType);
-        return modelRetriever.getModel(validatedResourceType, resourcePath,  considerResourceSuperTypeModels);
+        return modelRetriever.getValidationModel(validatedResourceType, resourcePath,  considerResourceSuperTypeModels);
     }
     
     

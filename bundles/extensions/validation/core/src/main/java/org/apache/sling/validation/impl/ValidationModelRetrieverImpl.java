@@ -70,7 +70,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
      * @see org.apache.sling.validation.impl.ValidationModelRetriever#getModels(java.lang.String, java.lang.String)
      */
     @CheckForNull
-    public ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
+    public ValidationModel getValidationModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
         // first get model for exactly the requested resource type
         ValidationModel baseModel = getModel(resourceType, resourcePath);
         String currentResourceType = resourceType;
@@ -133,7 +133,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
         // lowest ranked model provider inserts first (i.e. higher ranked should overwrite)
         for (ValidationModelProvider modelProvider : modelProviders) {
             LOG.debug("Retrieving validation models with resource type {} from provider {}...", resourceType, modelProvider.getClass().getName());
-            List<ValidationModel> models = modelProvider.getModels(resourceType);
+            List<ValidationModel> models = modelProvider.getValidationModels(resourceType);
             for (ValidationModel model : models) {
                 for (String applicablePath : model.getApplicablePaths()) {
                     LOG.debug("Found validation model for resource type {} for applicable path {}", resourceType, applicablePath);

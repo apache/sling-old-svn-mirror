@@ -133,14 +133,14 @@ public class ValidationServiceImplTest {
     public void testGetValidationModelWithAbsolutePath() throws Exception {
         // check conversion to relative resource type
         validationService.getValidationModel("/libs/some/type", "some path", true);
-        Mockito.verify(modelRetriever).getModel("some/type", "some path", true);
+        Mockito.verify(modelRetriever).getValidationModel("some/type", "some path", true);
     }
 
     @Test
     public void testGetValidationModelWithRelativePath() throws Exception {
         // check conversion to relative resource type
         validationService.getValidationModel("some/type", "some path", true);
-        Mockito.verify(modelRetriever).getModel("some/type", "some path", true);
+        Mockito.verify(modelRetriever).getValidationModel("some/type", "some path", true);
     }
 
     @Test(expected=IllegalArgumentException.class)
@@ -520,7 +520,7 @@ public class ValidationServiceImplTest {
         validationService.modelRetriever = new ValidationModelRetriever() {
 
             @Override
-            public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
+            public @CheckForNull ValidationModel getValidationModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
                 if (resourceType.equals("resourcetype1")) {
                     return vm1;
                 } else if (resourceType.equals("resourcetype2")) {
@@ -581,7 +581,7 @@ public class ValidationServiceImplTest {
         // set model retriever which never retrieves anything
         validationService.modelRetriever = new ValidationModelRetriever() {
             @Override
-            public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
+            public @CheckForNull ValidationModel getValidationModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
                 return null;
             }
         };
@@ -599,7 +599,7 @@ public class ValidationServiceImplTest {
         // set model retriever which never retrieves anything
         validationService.modelRetriever = new ValidationModelRetriever() {
             @Override
-            public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
+            public @CheckForNull ValidationModel getValidationModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels) {
                 return null;
             }
         };
