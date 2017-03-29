@@ -140,4 +140,24 @@ public class JCRSupportImpl {
             throw new PersistenceException("Unable to order resource", re, resource.getPath(), null);
         }
     }
+
+    private boolean isVersionable(final Node node) throws RepositoryException {
+        return node.isNodeType("mix:versionable");
+    }
+
+    public boolean checkin(final Resource rsrc)
+    throws PersistenceException {
+        final Node node = rsrc.adaptTo(Node.class);
+        if (node != null) {
+            try {
+                if (node.isCheckedOut() && isVersionable(node)) {
+                    node.getSession().getWorkspace().getVersionManager().checkin(node.getPath());
+                    return true;
+                }
+            } catch ( final RepositoryException re) {
+                throw new PersistenceException(re.getMessage(), re, rsrc.getPath(), null);
+            }
+        }
+        return false;
+    }
 }

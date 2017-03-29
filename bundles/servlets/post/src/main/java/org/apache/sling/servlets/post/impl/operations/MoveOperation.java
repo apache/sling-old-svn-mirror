@@ -22,6 +22,7 @@ import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.VersioningConfiguration;
@@ -42,7 +43,7 @@ public class MoveOperation extends AbstractCopyMoveOperation {
     protected Resource execute(List<Modification> changes, Resource source,
             String destParent, String destName,
             VersioningConfiguration versioningConfiguration)
-    throws RepositoryException {
+    throws PersistenceException, RepositoryException {
         // ensure we have an item underlying the request's resource
         Item item = source.adaptTo(Item.class);
         if (item == null) {
@@ -60,7 +61,7 @@ public class MoveOperation extends AbstractCopyMoveOperation {
         String destPath = destParent + "/" + destName;
         Session session = item.getSession();
 
-        checkoutIfNecessary(item.getParent(), changes, versioningConfiguration);
+        checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
 
         if (session.itemExists(destPath)) {
             session.getItem(destPath).remove();

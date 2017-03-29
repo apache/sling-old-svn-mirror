@@ -54,4 +54,12 @@ public class JCRSupport {
             ((JCRSupportImpl)supportImpl).orderNode(request, resource, changes);
         }
     }
+
+    public boolean checkin(final Resource rsrc)
+    throws PersistenceException {
+        if ( rsrc != null && supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).checkin(rsrc);
+        }
+        return false;
+    }
 }

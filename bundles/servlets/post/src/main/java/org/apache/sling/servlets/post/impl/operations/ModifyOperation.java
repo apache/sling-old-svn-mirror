@@ -249,17 +249,14 @@ public class ModifyOperation extends AbstractCreateOperation {
             // first, otherwise ensure the parent location
             if (session.itemExists(propPath)) {
                 Node parent = session.getItem(propPath).getParent();
-                checkoutIfNecessary(parent, changes, versioningConfiguration);
+                checkoutIfNecessary(resolver.getResource(parent.getPath()), changes, versioningConfiguration);
 
                 session.getItem(propPath).remove();
                 changes.add(Modification.onDeleted(propPath));
             } else {
                 Resource parent = deepGetOrCreateNode(resolver, property.getParentPath(),
                     reqProperties, changes, versioningConfiguration);
-                final Node node = parent.adaptTo(Node.class);
-                if ( node != null ) {
-                    checkoutIfNecessary(node, changes, versioningConfiguration);
-                }
+                checkoutIfNecessary(parent, changes, versioningConfiguration);
             }
 
             // move through the session and record operation
@@ -268,12 +265,12 @@ public class ModifyOperation extends AbstractCreateOperation {
 
                 // node move/copy through session
                 if (isMove) {
-                    checkoutIfNecessary(sourceItem.getParent(), changes, versioningConfiguration);
+                    checkoutIfNecessary(resolver.getResource(sourceItem.getParent().getPath()), changes, versioningConfiguration);
                     session.move(source, propPath);
                 } else {
                     Node sourceNode = (Node) sourceItem;
                     Node destParent = (Node) session.getItem(property.getParentPath());
-                    checkoutIfNecessary(destParent, changes, versioningConfiguration);
+                    checkoutIfNecessary(resolver.getResource(destParent.getPath()), changes, versioningConfiguration);
                     CopyOperation.copy(sourceNode, destParent,
                         property.getName());
                 }
@@ -285,12 +282,12 @@ public class ModifyOperation extends AbstractCreateOperation {
 
                 // create destination property
                 Node destParent = (Node) session.getItem(property.getParentPath());
-                checkoutIfNecessary(destParent, changes, versioningConfiguration);
+                checkoutIfNecessary(resolver.getResource(destParent.getPath()), changes, versioningConfiguration);
                 CopyOperation.copy(sourceProperty, destParent, null);
 
                 // remove source property (if not just copying)
                 if (isMove) {
-                    checkoutIfNecessary(sourceProperty.getParent(), changes, versioningConfiguration);
+                    checkoutIfNecessary(resolver.getResource(sourceProperty.getParent().getPath()), changes, versioningConfiguration);
                     sourceProperty.remove();
                 }
             }
@@ -337,7 +334,7 @@ public class ModifyOperation extends AbstractCreateOperation {
                 final Node parentNode = parent.adaptTo(Node.class);
 
                 if ( parentNode != null ) {
-                    checkoutIfNecessary(parentNode, changes, versioningConfiguration);
+                    checkoutIfNecessary(parent, changes, versioningConfiguration);
 
                     if (property.getName().equals("jcr:mixinTypes")) {
 
@@ -388,10 +385,7 @@ public class ModifyOperation extends AbstractCreateOperation {
                 final Resource parent = deepGetOrCreateNode(resolver,
                     prop.getParentPath(), reqProperties, changes, versioningConfiguration);
 
-                final Node parentNode = parent.adaptTo(Node.class);
-                if ( parentNode != null ) {
-                    checkoutIfNecessary(parentNode, changes, versioningConfiguration);
-                }
+                checkoutIfNecessary(parent, changes, versioningConfiguration);
 
                 // skip jcr special properties
                 if (prop.getName().equals("jcr:primaryType")

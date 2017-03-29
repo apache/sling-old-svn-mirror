@@ -50,7 +50,7 @@ public class CheckoutOperation extends AbstractPostOperation {
                     return;
                 }
 
-                node.checkout();
+                node.getSession().getWorkspace().getVersionManager().checkout(node.getPath());
                 changes.add(Modification.onCheckout(resource.getPath()));
 
             } else {
@@ -59,7 +59,7 @@ public class CheckoutOperation extends AbstractPostOperation {
                     Resource resource = res.next();
                     Node node = resource.adaptTo(Node.class);
                     if (node != null) {
-                        node.checkout();
+                        node.getSession().getWorkspace().getVersionManager().checkout(node.getPath());
                         changes.add(Modification.onCheckout(resource.getPath()));
                     }
                 }

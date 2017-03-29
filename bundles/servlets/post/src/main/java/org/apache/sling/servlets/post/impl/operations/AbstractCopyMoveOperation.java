@@ -19,7 +19,6 @@ package org.apache.sling.servlets.post.impl.operations;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletResponse;
@@ -70,7 +69,7 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
             dest = ResourceUtil.normalize(dest);
 
             // destination parent and name
-            String dstParent = trailingSlash ? dest : ResourceUtil.getParent(dest);
+            final String dstParent = trailingSlash ? dest : ResourceUtil.getParent(dest);
 
             // delete destination if already exists
             if (!trailingSlash && session.itemExists(dest)) {
@@ -83,7 +82,8 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
                             + dest + ": destination exists");
                     return;
                 } else {
-                    checkoutIfNecessary(session.getItem(dest).getParent(), changes, versioningConfiguration);
+                    checkoutIfNecessary(request.getResourceResolver().getResource(dstParent),
+                            changes, versioningConfiguration);
                 }
 
             } else {
@@ -91,8 +91,9 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
                 // check if path to destination exists and create it, but only
                 // if it's a descendant of the current node
                 if (!dstParent.equals("")) {
-                    if (session.itemExists(dstParent)) {
-                        checkoutIfNecessary((Node) session.getItem(dstParent), changes, versioningConfiguration);
+                    final Resource parentResource = request.getResourceResolver().getResource(dstParent);
+                    if (parentResource != null ) {
+                        checkoutIfNecessary(parentResource, changes, versioningConfiguration);
                     } else {
                         response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
                             "Cannot " + getOperationName() + " " + resource + " to "
@@ -167,6 +168,7 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
     protected abstract Resource execute(List<Modification> changes, Resource source,
             String destParent,
             String destName,
-            VersioningConfiguration versioningConfiguration) throws RepositoryException;
+            VersioningConfiguration versioningConfiguration)
+    throws PersistenceException, RepositoryException;
 
 }

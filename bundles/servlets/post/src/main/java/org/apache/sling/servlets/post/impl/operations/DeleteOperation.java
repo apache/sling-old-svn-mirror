@@ -94,25 +94,20 @@ public class DeleteOperation extends AbstractPostOperation {
      */
     private void deleteResource(final Resource resource,
             final List<Modification> changes,
-            VersioningConfiguration versioningConfiguration,
-            boolean deleteChunks) throws RepositoryException {
-        final Node node = resource.adaptTo(Node.class);
-        if (node != null) {
-            if (deleteChunks) {
+            final VersioningConfiguration versioningConfiguration,
+            final boolean deleteChunks)
+    throws PersistenceException, RepositoryException {
+        if (deleteChunks) {
+            final Node node = resource.adaptTo(Node.class);
+            if (node != null) {
                 uploadHandler.deleteChunks(node);
-            } else {
-                checkoutIfNecessary(node.getParent(), changes,
-                    versioningConfiguration);
             }
+        } else {
+            checkoutIfNecessary(resource.getParent(), changes,
+                versioningConfiguration);
         }
-        try {
-            resource.getResourceResolver().delete(resource);
-        } catch (final PersistenceException pe) {
-            if (pe.getCause() instanceof RepositoryException) {
-                throw (RepositoryException) pe.getCause();
-            }
-            throw new RepositoryException(pe);
-        }
+
+        resource.getResourceResolver().delete(resource);
 
         changes.add(Modification.onDeleted(resource.getPath()));
     }
