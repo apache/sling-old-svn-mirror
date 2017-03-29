@@ -1,7 +1,8 @@
 {
     "validatedResourceType": "validation/test/resourceType1",
     "applicablePaths": [
-        "/validation/testing/fakeFolder1"
+        "/validation/testing/fakeFolder1",
+		"/content/validated"
     ],
     "sling:resourceType": "sling/validation/model",
     "properties": {
