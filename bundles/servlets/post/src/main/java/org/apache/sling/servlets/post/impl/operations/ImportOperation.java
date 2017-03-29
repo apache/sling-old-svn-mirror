@@ -120,7 +120,6 @@ public class ImportOperation extends AbstractCreateOperation {
         final boolean autoCheckout = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_AUTO_CHECKOUT));
 
         String basePath = getItemPath(request);
-        basePath = removeAndValidateWorkspace(basePath, request.getResourceResolver().adaptTo(Session.class));
         if (basePath.endsWith("/")) {
             //remove the trailing slash
             basePath = basePath.substring(0, basePath.length() - 1);
@@ -208,33 +207,41 @@ public class ImportOperation extends AbstractCreateOperation {
                         },
                         new ContentImportListener() {
 
+                            @Override
                             public void onReorder(String orderedPath, String beforeSibbling) {
                                 changes.add(Modification.onOrder(orderedPath, beforeSibbling));
                             }
 
+                            @Override
                             public void onMove(String srcPath, String destPath) {
                                 changes.add(Modification.onMoved(srcPath, destPath));
                             }
 
+                            @Override
                             public void onModify(String srcPath) {
                                 changes.add(Modification.onModified(srcPath));
                             }
 
+                            @Override
                             public void onDelete(String srcPath) {
                                 changes.add(Modification.onDeleted(srcPath));
                             }
 
+                            @Override
                             public void onCreate(String srcPath) {
                                 changes.add(Modification.onCreated(srcPath));
                             }
 
+                            @Override
                             public void onCopy(String srcPath, String destPath) {
                                 changes.add(Modification.onCopied(srcPath, destPath));
                             }
 
+                            @Override
                             public void onCheckin(String srcPath) {
                                 changes.add(Modification.onCheckin(srcPath));
                             }
+                            @Override
                             public void onCheckout(String srcPath) {
                                 changes.add(Modification.onCheckout(srcPath));
                             }

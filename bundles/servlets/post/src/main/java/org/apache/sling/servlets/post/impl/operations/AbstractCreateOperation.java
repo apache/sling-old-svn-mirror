@@ -29,8 +29,8 @@ import java.util.regex.Pattern;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
+import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
@@ -40,7 +40,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.PostResponse;
@@ -161,7 +160,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             if ( mvm != null ) {
                 final Node node = rsrc.adaptTo(Node.class);
 
-                final Set<String> newMixins = new HashSet<String>();
+                final Set<String> newMixins = new HashSet<>();
                 newMixins.addAll(Arrays.asList(mixins));
 
                 // clear existing mixins first
@@ -206,7 +205,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
         final boolean requireItemPrefix = requireItemPathPrefix(request);
 
         // walk the request parameters and collect the properties
-        final LinkedHashMap<String, RequestProperty> reqProperties = new LinkedHashMap<String, RequestProperty>();
+        final LinkedHashMap<String, RequestProperty> reqProperties = new LinkedHashMap<>();
         for (final Map.Entry<String, RequestParameter[]> e : request.getRequestParameterMap().entrySet()) {
             final String paramName = e.getKey();
 
@@ -570,7 +569,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                 }
 
                 try {
-                    final Map<String, Object> props = new HashMap<String, Object>();
+                    final Map<String, Object> props = new HashMap<>();
                     if (nodeType != null) {
                         props.put("jcr:primaryType", nodeType);
                     }
@@ -636,9 +635,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 		        basePath = basePath += "/" + specialParam.getString();
 
 		        // if the resulting path already exists then report an error
-		        Session session = request.getResourceResolver().adaptTo(Session.class);
-	            String jcrPath = removeAndValidateWorkspace(basePath, session);
-	            if (request.getResourceResolver().getResource(jcrPath) != null) {
+	            if (request.getResourceResolver().getResource(basePath) != null) {
 	    		    throw new RepositoryException(
 	    			        "Collision in node names for path=" + basePath);
 	            }
@@ -676,31 +673,26 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     private String ensureUniquePath(SlingHttpServletRequest request, String basePath) throws RepositoryException {
 		// if resulting path exists, add a suffix until it's not the case
 		// anymore
-		final Session session = request.getResourceResolver().adaptTo(Session.class);
         final ResourceResolver resolver = request.getResourceResolver();
-
-        // basePath might contain a workspace prefix, need to remove it
-        // to test for existence
-        String jcrPath = removeAndValidateWorkspace(basePath, session);
 
 		// if resulting path exists, add a random suffix until it's not the case
 		// anymore
 		final int MAX_TRIES = 1000;
-		if (resolver.getResource(jcrPath) != null ) {
+		if (resolver.getResource(basePath) != null ) {
 		    for(int i=0; i < MAX_TRIES; i++) {
 		        final int uniqueIndex = Math.abs(randomCollisionIndex.nextInt());
-		        String newPath = jcrPath + "_" + uniqueIndex;
+		        String newPath = basePath + "_" + uniqueIndex;
 		        if (resolver.getResource(newPath) == null) {
 		            basePath = basePath + "_" + uniqueIndex;
-		            jcrPath = newPath;
+		            basePath = newPath;
 		            break;
 		        }
 		    }
 
 	        // Give up after MAX_TRIES
-	        if (resolver.getResource(jcrPath) != null ) {
+	        if (resolver.getResource(basePath) != null ) {
 	            throw new RepositoryException(
-	                "Collision in generated node names under " + basePath + ", generated path " + jcrPath + " already exists");
+	                "Collision in generated node names under " + basePath + ", generated path " + basePath + " already exists");
 	        }
 		}
 

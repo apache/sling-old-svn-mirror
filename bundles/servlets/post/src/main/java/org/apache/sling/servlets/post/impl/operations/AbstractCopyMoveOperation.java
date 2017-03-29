@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -37,7 +36,7 @@ import org.apache.sling.servlets.post.VersioningConfiguration;
 /**
  * The <code>AbstractCopyMoveOperation</code> is the abstract base close for
  * the {@link CopyOperation} and {@link MoveOperation} classes implementing
- * commong behaviour.
+ * common behaviour.
  */
 abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
 
@@ -68,7 +67,6 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
             dest = ResourceUtil.getParent(source) + "/" + dest;
         }
         dest = ResourceUtil.normalize(dest);
-        dest = removeAndValidateWorkspace(dest, session);
 
         // destination parent and name
         String dstParent = trailingSlash ? dest : ResourceUtil.getParent(dest);
