@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>30</version>
+        <version>29</version>
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.event</artifactId>
+    <artifactId>org.apache.sling.event.api</artifactId>
     <packaging>bundle</packaging>
-    <version>4.2.3-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
 
     <name>Apache Sling Event Support</name>
     <description>
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/event</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event/api</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event/api</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/event/api</url>
     </scm>
 
     <properties>
@@ -71,12 +71,6 @@
                             javax.servlet.http,
                             org.apache.felix.inventory
                         </DynamicImport-Package>
-                        <Sling-Nodetypes>
-                            SLING-INF/nodetypes/event.cnd
-                        </Sling-Nodetypes>
-                        <Sling-Namespaces>
-                            slingevent=http://sling.apache.org/jcr/event/1.0
-                        </Sling-Namespaces>
                         <Embed-Dependency>
                             jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/ISO8601.*|org/apache/jackrabbit/util/XMLChar.*",
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*",
