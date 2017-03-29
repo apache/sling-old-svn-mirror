@@ -22,16 +22,14 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.servlets.post.HtmlResponse;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.PostResponseCreator;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.osgi.service.component.annotations.Component;
 
-@Component
-@Service
+@Component(service = PostResponseCreator.class)
 public class PostResponseWithErrorHandling implements PostResponseCreator {
 
 	@Override
