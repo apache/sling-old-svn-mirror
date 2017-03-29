@@ -159,6 +159,10 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
         }
     }
 
+    private boolean isVersionable(final Node node) throws RepositoryException {
+        return node.isNodeType("mix:versionable");
+    }
+
     protected void updateNodeType(final ResourceResolver resolver,
                     final String path,
                     final Map<String, RequestProperty> reqProperties,
@@ -174,7 +178,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                 final boolean wasVersionable = (node == null ? false : isVersionable(node));
 
                 if ( node != null ) {
-                    checkoutIfNecessary(rsrc, changes, versioningConfiguration);
+                    this.jcrSsupport.checkoutIfNecessary(rsrc, changes, versioningConfiguration);
                     node.setPrimaryType(nodeType);
                 } else {
                     mvm.put("jcr:primaryType", nodeType);
@@ -212,7 +216,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
                 // clear existing mixins first
                 if ( node != null ) {
-                    checkoutIfNecessary(rsrc, changes, versioningConfiguration);
+                    this.jcrSsupport.checkoutIfNecessary(rsrc, changes, versioningConfiguration);
                     for (NodeType mixin : node.getMixinNodeTypes()) {
                         String mixinName = mixin.getName();
                         if (!newMixins.remove(mixinName)) {
@@ -610,7 +614,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                 // check for node type
                 final String nodeType = getPrimaryType(reqProperties, tmpPath);
 
-                checkoutIfNecessary(resource, changes, versioningConfiguration);
+                this.jcrSsupport.checkoutIfNecessary(resource, changes, versioningConfiguration);
 
                 try {
                     final Map<String, Object> props = new HashMap<>();

@@ -26,9 +26,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -59,6 +56,7 @@ public abstract class AbstractPostOperation implements PostOperation {
      */
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
+    /** The JCR support provides additional functionality if the resources a backed up by JCR. */
     protected final JCRSupport jcrSsupport = JCRSupport.INSTANCE;
 
     /**
@@ -307,45 +305,6 @@ public abstract class AbstractPostOperation implements PostOperation {
      */
     protected String getResourcePath(SlingHttpServletRequest request) {
         return request.getResource().getPath();
-    }
-
-    private Node findVersionableAncestor(Node node) throws RepositoryException {
-        if (isVersionable(node)) {
-            return node;
-        }
-        try {
-            node = node.getParent();
-            return findVersionableAncestor(node);
-        } catch (ItemNotFoundException e) {
-            // top-level
-            return null;
-        }
-    }
-
-    protected boolean isVersionable(Node node) throws RepositoryException {
-        return node.isNodeType("mix:versionable");
-    }
-
-    protected void checkoutIfNecessary(final Resource resource,
-            final List<Modification> changes,
-            final VersioningConfiguration versioningConfiguration)
-    throws PersistenceException {
-        if (resource != null && versioningConfiguration.isAutoCheckout()) {
-            final Node node = resource.adaptTo(Node.class);
-            if ( node != null ) {
-                try {
-                    Node versionableNode = findVersionableAncestor(node);
-                    if (versionableNode != null) {
-                        if (!versionableNode.isCheckedOut()) {
-                            versionableNode.getSession().getWorkspace().getVersionManager().checkout(versionableNode.getPath());
-                            changes.add(Modification.onCheckout(versionableNode.getPath()));
-                        }
-                    }
-                } catch ( final RepositoryException re) {
-                    throw new PersistenceException(re.getMessage(), re);
-                }
-            }
-        }
     }
 
     private static class ApplyToIterator implements Iterator<Resource> {

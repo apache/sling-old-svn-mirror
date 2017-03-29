@@ -82,7 +82,7 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
                             + dest + ": destination exists");
                     return;
                 } else {
-                    checkoutIfNecessary(request.getResourceResolver().getResource(dstParent),
+                    this.jcrSsupport.checkoutIfNecessary(request.getResourceResolver().getResource(dstParent),
                             changes, versioningConfiguration);
                 }
 
@@ -93,7 +93,7 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
                 if (!dstParent.equals("")) {
                     final Resource parentResource = request.getResourceResolver().getResource(dstParent);
                     if (parentResource != null ) {
-                        checkoutIfNecessary(parentResource, changes, versioningConfiguration);
+                        this.jcrSsupport.checkoutIfNecessary(parentResource, changes, versioningConfiguration);
                     } else {
                         response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
                             "Cannot " + getOperationName() + " " + resource + " to "
