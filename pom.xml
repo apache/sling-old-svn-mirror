@@ -147,6 +147,22 @@
                             </rules>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>ban-maven-scr-plugin</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedPlugins>
+                                    <excludes>
+                                        <exclude>org.apache.felix:maven-scr-plugin</exclude>
+                                    </excludes>
+                                    <message>Felix SCR annotations and the maven-scr-plugin are no longer supported - please migrate to OSGi annotations or stick with Sling Parent 29.</message>
+                                </bannedPlugins>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
@@ -355,38 +371,6 @@
                     <configuration>
                         <retryFailedDeploymentCount>10</retryFailedDeploymentCount>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>maven-scr-plugin</artifactId>
-                    <version>1.23.0</version>
-                    <!-- As QDox is trying to inspect/load the classes
-                         we have to add a slf4j implementation to the
-                         class path of the plugin - we usually use
-                         a static field for the logger and during class
-                         loading this field requires an slf4j implementation!
-                     -->
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-simple</artifactId>
-                            <version>1.7.6</version>
-                        </dependency>
-                    </dependencies>
-                    <executions>
-                        <execution>
-                            <id>generate-scr-scrdescriptor</id>
-                            <goals>
-                                <goal>scr</goal>
-                            </goals>
-                            <configuration>
-                                <strictMode>true</strictMode>
-                                <properties>
-                                    <service.vendor>The Apache Software Foundation</service.vendor>
-                                </properties>
-                            </configuration>
-                        </execution>
-                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
