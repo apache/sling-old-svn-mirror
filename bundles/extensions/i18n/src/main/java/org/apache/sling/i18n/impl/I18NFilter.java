@@ -37,14 +37,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.ReferencePolicyOption;
-import org.apache.felix.scr.annotations.sling.SlingFilter;
-import org.apache.felix.scr.annotations.sling.SlingFilterScope;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.commons.osgi.Order;
@@ -54,6 +46,11 @@ import org.apache.sling.i18n.LocaleResolver;
 import org.apache.sling.i18n.RequestLocaleResolver;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,14 +59,16 @@ import org.slf4j.LoggerFactory;
  * The <code>I18NFilter</code> class is a request level filter, which provides
  * the resource bundle for the current request.
  */
-@SlingFilter(generateService = true,
-             order = 700, scope = { SlingFilterScope.REQUEST, SlingFilterScope.ERROR })
-@Properties({
-    @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, value="/"),
-    @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-              value = "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)"),
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Internationalization Support Filter"),
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
+@Component(service = Filter.class,
+    property = {
+            Constants.SERVICE_DESCRIPTION + "=Internationalization Support Filter",
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            Constants.SERVICE_RANKING + ":Integer=700",
+            "sling.filter.scope=REQUEST",
+            "sling.filter.scope=ERROR",
+            HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN + "=/",
+            HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT + "=(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)"
+    })
 public class I18NFilter implements Filter {
 
     /**
@@ -82,17 +81,11 @@ public class I18NFilter implements Filter {
 
     private final DefaultLocaleResolver DEFAULT_LOCALE_RESOLVER = new DefaultLocaleResolver();
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
     private volatile LocaleResolver localeResolver = DEFAULT_LOCALE_RESOLVER;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
     private volatile RequestLocaleResolver requestLocaleResolver = DEFAULT_LOCALE_RESOLVER;
 
-    @Reference(name = "resourceBundleProvider",
-               referenceInterface = ResourceBundleProvider.class,
-               cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-               policy = ReferencePolicy.DYNAMIC)
-    private final Map<Object, ResourceBundleProvider> providers = new TreeMap<Object, ResourceBundleProvider>();
+    private final Map<Object, ResourceBundleProvider> providers = new TreeMap<>();
 
     private volatile ResourceBundleProvider[] sortedProviders = new ResourceBundleProvider[0];
 
@@ -150,6 +143,9 @@ public class I18NFilter implements Filter {
 
     // ---------- SCR Integration ----------------------------------------------
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            policyOption=ReferencePolicyOption.GREEDY)
     protected void bindLocaleResolver(final LocaleResolver resolver) {
         this.localeResolver = resolver;
     }
@@ -160,6 +156,9 @@ public class I18NFilter implements Filter {
         }
     }
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            policyOption=ReferencePolicyOption.GREEDY)
     protected void bindRequestLocaleResolver(final RequestLocaleResolver resolver) {
         this.requestLocaleResolver = resolver;
     }
@@ -170,6 +169,9 @@ public class I18NFilter implements Filter {
         }
     }
 
+    @Reference(service = ResourceBundleProvider.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC)
     protected void bindResourceBundleProvider(final ResourceBundleProvider provider, final Map<String, Object> props) {
         synchronized ( this.providers ) {
             this.providers.put(ServiceUtil.getComparableForServiceRanking(props, Order.ASCENDING), provider);

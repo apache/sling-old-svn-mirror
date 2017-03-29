@@ -39,10 +39,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -51,13 +47,20 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,23 +70,39 @@ import org.slf4j.LoggerFactory;
  * <code>ResourceBundle</code> instances from resources stored in the
  * repository.
  */
-@Component(immediate = true, metatype = true, label = "%provider.name", description = "%provider.description")
-@Service({ResourceBundleProvider.class, ResourceChangeListener.class})
-@Property(name=ResourceChangeListener.PATHS, value="/")
+@Component(service = {ResourceBundleProvider.class, ResourceChangeListener.class},
+    property = {
+            Constants.SERVICE_DESCRIPTION + "=I18n Resource Bundle Provider",
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            ResourceChangeListener.PATHS + "=/"
+    })
+@Designate(ocd = JcrResourceBundleProvider.Config.class)
 public class JcrResourceBundleProvider implements ResourceBundleProvider, ResourceChangeListener, ExternalResourceChangeListener {
 
-    private static final boolean DEFAULT_PRELOAD_BUNDLES = false;
+    @ObjectClassDefinition(name ="Apache Sling I18N ResourceBundle Provider",
+            description ="ResourceBundleProvider service which loads the messages "+
+                 "from the repository. If the user name field is left empty, the provider will "+
+                 "log into the repository as the administrative user. Otherwise the given user "+
+                 "name and password are used to access the repository. Failing to access the "+
+                 "repository, effectively disables the provider.")
+    public @interface Config {
 
-    private static final int DEFAULT_INVALIDATION_DELAY = 5000;
+        @AttributeDefinition(name = "Default Locale",
+            description = "The default locale to assume if none can be "+
+                 "resolved otherwise. This value must be in the form acceptable to the "+
+                 "java.util.Locale class.")
+        String locale_default() default "en";
 
-    @Property(value = "en")
-    private static final String PROP_DEFAULT_LOCALE = "locale.default";
+        @AttributeDefinition(name = "Preload Bundles",
+                description = "Whether or not to eagerly load the resource bundles "+
+                    "on bundle start or a cache invalidation.")
+        boolean preload_bundles() default false;
 
-    @Property(boolValue = DEFAULT_PRELOAD_BUNDLES)
-    private static final String PROP_PRELOAD_BUNDLES = "preload.bundles";
-
-    @Property(longValue = DEFAULT_INVALIDATION_DELAY)
-    private static final String PROP_INVALIDATION_DELAY = "invalidation.delay";
+        @AttributeDefinition(name = "Invalidation Delay",
+                description = "In case of dictionary change events the cached "+
+                        "resource bundle becomes invalid after the given delay (in ms). ")
+        long invalidation_delay() default 5000;
+    }
 
     @Reference
     private Scheduler scheduler;
@@ -117,9 +136,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
      * Map of cached resource bundles indexed by a key combined of the base name
      * and <code>Locale</code> used to load and identify the <code>ResourceBundle</code>.
      */
-    private final ConcurrentHashMap<Key, JcrResourceBundle> resourceBundleCache = new ConcurrentHashMap<Key, JcrResourceBundle>();
+    private final ConcurrentHashMap<Key, JcrResourceBundle> resourceBundleCache = new ConcurrentHashMap<>();
 
-    private final ConcurrentHashMap<Key, Semaphore> loadingGuards = new ConcurrentHashMap<Key, Semaphore>();
+    private final ConcurrentHashMap<Key, Semaphore> loadingGuards = new ConcurrentHashMap<>();
 
     /**
      * paths from which JCR resource bundles have been loaded
@@ -137,7 +156,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
     /**
      * Each ResourceBundle is registered as a service. Each registration is stored in this map with the locale & base name used as a key.
      */
-    private final Map<Key, ServiceRegistration<ResourceBundle>> bundleServiceRegistrations = new HashMap<Key, ServiceRegistration<ResourceBundle>>();
+    private final Map<Key, ServiceRegistration<ResourceBundle>> bundleServiceRegistrations = new HashMap<>();
 
     private boolean preloadBundles;
 
@@ -331,7 +350,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
             log.warn("Could not find resource bundle service for {}", key);
         }
 
-        Collection<JcrResourceBundle> dependentBundles = new ArrayList<JcrResourceBundle>();
+        Collection<JcrResourceBundle> dependentBundles = new ArrayList<>();
         // this bundle might be a parent of a cached bundle -> invalidate those dependent bundles as well
         for (JcrResourceBundle bundle : resourceBundleCache.values()) {
             if (bundle.getParent() instanceof JcrResourceBundle) {
@@ -360,14 +379,14 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
      * details and the default locale to use
      * @throws LoginException
      */
-    protected void activate(BundleContext context, Map<String, Object> props) throws LoginException {
-        String localeString = PropertiesUtil.toString(props.get(PROP_DEFAULT_LOCALE),
-            null);
+    @Activate
+    protected void activate(final BundleContext context, final Config config) throws LoginException {
+        String localeString = config.locale_default();
         this.defaultLocale = toLocale(localeString);
-        this.preloadBundles = PropertiesUtil.toBoolean(props.get(PROP_PRELOAD_BUNDLES), DEFAULT_PRELOAD_BUNDLES);
+        this.preloadBundles = config.preload_bundles();
 
         this.bundleContext = context;
-        invalidationDelay = PropertiesUtil.toLong(props.get(PROP_INVALIDATION_DELAY), DEFAULT_INVALIDATION_DELAY);
+        invalidationDelay = config.invalidation_delay();
         if (this.resourceResolverFactory != null) { // this is only null during test execution!
             resourceResolver = resourceResolverFactory.getServiceResourceResolver(null);
             scheduleReloadBundles(false);
@@ -375,6 +394,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
 
     }
 
+    @Deactivate
     protected void deactivate() {
         clearCache();
         resourceResolver.close();
@@ -423,7 +443,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
     }
 
     private void registerResourceBundle(Key key, JcrResourceBundle resourceBundle) {
-        Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
+        Dictionary<String, Object> serviceProps = new Hashtable<>();
         if (key.baseName != null) {
             serviceProps.put("baseName", key.baseName);
         }
@@ -525,7 +545,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
             resourceResolver.refresh();
             Iterator<Map<String, Object>> bundles = resourceResolver.queryResources(
                     JcrResourceBundle.QUERY_LANGUAGE_ROOTS, "xpath");
-            Set<Key> usedKeys = new HashSet<Key>();
+            Set<Key> usedKeys = new HashSet<>();
             while (bundles.hasNext()) {
                 Map<String,Object> bundle = bundles.next();
                 if (bundle.containsKey(PROP_LANGUAGE)) {
