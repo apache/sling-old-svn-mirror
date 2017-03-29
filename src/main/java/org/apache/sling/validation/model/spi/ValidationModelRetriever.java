@@ -28,11 +28,11 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ValidationModelRetriever {
     /**
-     * A model for the given resourceType at the given resourcePath
+     * A validation model for the given resourceType at the given resourcePath
      * @param resourceType
      * @param resourcePath may be {@code null} or empty
-     * @return a model which should be used for validation or null, if no validation model could be found
+     * @return a validation model which should be used for validation or null, if no validation model could be found
      * @throws IllegalStateException in case some error occurred during looking up models
      */
-    public @CheckForNull ValidationModel getModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels);
+    public @CheckForNull ValidationModel getValidationModel(@Nonnull String resourceType, String resourcePath, boolean considerResourceSuperTypeModels);
 }
