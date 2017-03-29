@@ -27,15 +27,13 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -53,19 +51,21 @@ import org.slf4j.LoggerFactory;
  * The <code>AbstractPostOperation</code> class is a base implementation of the
  * {@link PostOperation} service interface providing actual implementations with
  * useful tooling and common functionality like preparing the change logs or
- * saving or refreshing the JCR Session.
+ * saving or refreshing.
  */
 public abstract class AbstractPostOperation implements PostOperation {
 
     /**
-     * default log
+     * Default logger
      */
     protected final Logger log = LoggerFactory.getLogger(getClass());
+
+    protected final JCRSupport jcrSsupport = JCRSupport.INSTANCE;
 
     /**
      * Prepares and finalizes the actual operation. Preparation encompasses
      * getting the absolute path of the item to operate on by calling the
-     * {@link #getItemPath(SlingHttpServletRequest)} method and setting the
+     * {@link #getResourcePath(SlingHttpServletRequest)} method and setting the
      * location and parent location on the response. After the operation has
      * been done in the {@link #doRun(SlingHttpServletRequest, PostResponse, List)}
      * method the session is saved if there are unsaved modifications. In case
@@ -80,13 +80,11 @@ public abstract class AbstractPostOperation implements PostOperation {
     public void run(final SlingHttpServletRequest request,
                     final PostResponse response,
                     final SlingPostProcessor[] processors) {
-        final Session session = request.getResourceResolver().adaptTo(Session.class);
-
         final VersioningConfiguration versionableConfiguration = getVersioningConfiguration(request);
 
         try {
             // calculate the paths
-            String path = getItemPath(request);
+            String path = this.getResourcePath(request);
             response.setPath(path);
 
             // location
@@ -159,10 +157,12 @@ public abstract class AbstractPostOperation implements PostOperation {
                         response.onChange("checkin", change.getSource());
                         nodesToCheckin.remove(change.getSource());
                         break;
+                    case RESTORE : response.onChange("restore", change.getSource());
+                        break;
                 }
             }
 
-            if (isSessionSaveRequired(session, request)) {
+            if (isResourceResolverCommitRequired(request)) {
                 request.getResourceResolver().commit();
             }
 
@@ -181,16 +181,10 @@ public abstract class AbstractPostOperation implements PostOperation {
             response.setError(e);
 
         } finally {
-            try {
-                if (isSessionSaveRequired(session, request)) {
-                    request.getResourceResolver().revert();
-                }
-            } catch (RepositoryException e) {
-                log.warn("RepositoryException in finally block: {}",
-                    e.getMessage(), e);
+            if (isResourceResolverCommitRequired(request)) {
+                request.getResourceResolver().revert();
             }
         }
-
     }
 
     /**
@@ -209,19 +203,19 @@ public abstract class AbstractPostOperation implements PostOperation {
      *            information
      * @param changes A container to add {@link Modification} instances
      *            representing the operations done.
-     * @throws RepositoryException Maybe thrown if any error occurrs while
+     * @throws PersistenceException Maybe thrown if any error occurs while
      *             accessing the repository.
      */
     protected abstract void doRun(SlingHttpServletRequest request,
             PostResponse response,
-            List<Modification> changes) throws RepositoryException;
+            List<Modification> changes) throws PersistenceException;
 
     /**
      * Get the versioning configuration.
      * @param request The http request
      * @return The versioning configuration
      */
-    protected VersioningConfiguration getVersioningConfiguration(SlingHttpServletRequest request) {
+    protected VersioningConfiguration getVersioningConfiguration(final SlingHttpServletRequest request) {
         VersioningConfiguration versionableConfiguration =
             (VersioningConfiguration) request.getAttribute(VersioningConfiguration.class.getName());
         return versionableConfiguration != null ? versionableConfiguration : new VersioningConfiguration();
@@ -239,34 +233,19 @@ public abstract class AbstractPostOperation implements PostOperation {
     /**
      * Check whether changes should be written back
      * @param request The http request
-     * @return {@code true} If session handling should be skipped
+     * @return {@code true} If committing be skipped
      */
-    protected boolean isSkipSessionHandling(SlingHttpServletRequest request) {
+    private boolean isSkipSessionHandling(SlingHttpServletRequest request) {
         return Boolean.parseBoolean((String) request.getAttribute(SlingPostConstants.ATTR_SKIP_SESSION_HANDLING)) == true;
     }
 
     /**
      * Check whether commit to the resource resolver should be called.
-     * @param session The JCR session
      * @param request The http request
-     * @return {@code true} if a save is required.
-     * @throws RepositoryException
+     * @return {@code true} if a commit is required.
      */
-    protected boolean isSessionSaveRequired(Session session, SlingHttpServletRequest request)
-            throws RepositoryException {
+    private boolean isResourceResolverCommitRequired(SlingHttpServletRequest request) {
         return !isSkipSessionHandling(request) && request.getResourceResolver().hasChanges();
-    }
-
-    /**
-     * Returns the path of the resource of the request as the item path.
-     * <p>
-     * This method may be overwritten by extension if the operation has
-     * different requirements on path processing.
-     * @param request The http request
-     * @return The item path
-     */
-    protected String getItemPath(SlingHttpServletRequest request) {
-        return request.getResource().getPath();
     }
 
     /**
@@ -335,6 +314,18 @@ public abstract class AbstractPostOperation implements PostOperation {
     }
 
     /**
+     * Returns the path of the resource of the request as the item path.
+     * <p>
+     * This method may be overwritten by extension if the operation has
+     * different requirements on path processing.
+     * @param request The http request
+     * @return The resource path
+     */
+    protected String getResourcePath(SlingHttpServletRequest request) {
+        return request.getResource().getPath();
+    }
+
+    /**
      * Returns true if any of the request parameters starts with
      * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>}.
      * In this case only parameters starting with either of the prefixes
@@ -376,104 +367,6 @@ public abstract class AbstractPostOperation implements PostOperation {
         return name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
             || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT)
             || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_PARENT);
-    }
-
-    /**
-     * Orders the given node according to the specified command. The following
-     * syntax is supported: &lt;xmp&gt; | first | before all child nodes | before A |
-     * before child node A | after A | after child node A | last | after all
-     * nodes | N | at a specific position, N being an integer &lt;/xmp&gt;
-     *
-     * @param request The http request
-     * @param item node to order
-     * @param changes The list of modifications
-     * @throws RepositoryException if an error occurs
-     */
-    protected void orderNode(SlingHttpServletRequest request, Item item,
-            List<Modification> changes) throws RepositoryException {
-
-        String command = request.getParameter(SlingPostConstants.RP_ORDER);
-        if (command == null || command.length() == 0) {
-            // nothing to do
-            return;
-        }
-
-        if (!item.isNode()) {
-            return;
-        }
-
-        Node parent = item.getParent();
-
-        String next = null;
-        if (command.equals(SlingPostConstants.ORDER_FIRST)) {
-
-            next = parent.getNodes().nextNode().getName();
-
-        } else if (command.equals(SlingPostConstants.ORDER_LAST)) {
-
-            next = "";
-
-        } else if (command.startsWith(SlingPostConstants.ORDER_BEFORE)) {
-
-            next = command.substring(SlingPostConstants.ORDER_BEFORE.length());
-
-        } else if (command.startsWith(SlingPostConstants.ORDER_AFTER)) {
-
-            String name = command.substring(SlingPostConstants.ORDER_AFTER.length());
-            NodeIterator iter = parent.getNodes();
-            while (iter.hasNext()) {
-                Node n = iter.nextNode();
-                if (n.getName().equals(name)) {
-                    if (iter.hasNext()) {
-                        next = iter.nextNode().getName();
-                    } else {
-                        next = "";
-                    }
-                }
-            }
-
-        } else {
-            // check for integer
-            try {
-                // 01234
-                // abcde move a -> 2 (above 3)
-                // bcade move a -> 1 (above 1)
-                // bacde
-                int newPos = Integer.parseInt(command);
-                next = "";
-                NodeIterator iter = parent.getNodes();
-                while (iter.hasNext() && newPos >= 0) {
-                    Node n = iter.nextNode();
-                    if (n.getName().equals(item.getName())) {
-                        // if old node is found before index, need to
-                        // inc index
-                        newPos++;
-                    }
-                    if (newPos == 0) {
-                        next = n.getName();
-                        break;
-                    }
-                    newPos--;
-                }
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(
-                    "provided node ordering command is invalid: " + command);
-            }
-        }
-
-        if (next != null) {
-            if (next.equals("")) {
-                next = null;
-            }
-            parent.orderBefore(item.getName(), next);
-            changes.add(Modification.onOrder(item.getPath(), next));
-            if (log.isDebugEnabled()) {
-                log.debug("Node {} moved '{}'", item.getPath(), command);
-            }
-        } else {
-            throw new IllegalArgumentException(
-                "provided node ordering command is invalid: " + command);
-        }
     }
 
     protected Node findVersionableAncestor(Node node) throws RepositoryException {

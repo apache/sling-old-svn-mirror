@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.RepositoryException; // required due to AbstractPostOperation signature.
 import javax.servlet.ServletContext;
 import javax.servlet.http.Part;
 
@@ -76,36 +75,30 @@ public class StreamedUploadOperation extends AbstractPostOperation {
     }
 
     @Override
-    protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes) throws RepositoryException {
-        try {
-            Iterator<Part> partsIterator = (Iterator<Part>) request.getAttribute("request-parts-iterator");
-            Map<String, List<String>> formFields = new HashMap<>();
-            boolean streamingBodies = false;
-            while (partsIterator.hasNext()) {
-                Part part = partsIterator.next();
-                String name = part.getName();
+    protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes)
+    throws PersistenceException {
+        @SuppressWarnings("unchecked")
+        Iterator<Part> partsIterator = (Iterator<Part>) request.getAttribute("request-parts-iterator");
+        Map<String, List<String>> formFields = new HashMap<>();
+        boolean streamingBodies = false;
+        while (partsIterator.hasNext()) {
+            Part part = partsIterator.next();
+            String name = part.getName();
 
-                if (isFormField(part)) {
-                    addField(formFields, name, part);
-                    if (streamingBodies) {
-                        LOG.warn("Form field {} was sent after the bodies started to be streamed. " +
-                                "Will not have been available to all streamed bodies. " +
-                                "It is recommended to send all form fields before streamed bodies in the POST ", name);
-                    }
-                } else {
-                    streamingBodies = true;
-                    // process the file body and commit.
-                    writeContent(request.getResourceResolver(), part, formFields, response, changes);
-
+            if (isFormField(part)) {
+                addField(formFields, name, part);
+                if (streamingBodies) {
+                    LOG.warn("Form field {} was sent after the bodies started to be streamed. " +
+                            "Will not have been available to all streamed bodies. " +
+                            "It is recommended to send all form fields before streamed bodies in the POST ", name);
                 }
-            }
-        } catch ( final PersistenceException pe) {
-            if ( pe.getCause() instanceof RepositoryException ) {
-                throw (RepositoryException)pe.getCause();
-            }
-            throw new RepositoryException(pe);
-        }
+            } else {
+                streamingBodies = true;
+                // process the file body and commit.
+                writeContent(request.getResourceResolver(), part, formFields, response, changes);
 
+            }
+        }
     }
 
     /**
