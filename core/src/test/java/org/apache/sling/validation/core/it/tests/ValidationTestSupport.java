@@ -40,6 +40,7 @@ import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 public class ValidationTestSupport extends TestSupport {
 
@@ -73,6 +74,11 @@ public class ValidationTestSupport extends TestSupport {
                     "org.apache.sling.validation.core=sling-validation",
                     "org.apache.sling.validation.test-services=sling-validation"
                 })
+                .asOption(),
+            // configure post processor
+            newConfiguration("org.apache.sling.validation.impl.postprocessor.ValidationPostProcessor")
+                .put("enabledForPathPrefix", new String[] {"/content/validated"})
+                .put("failForMissingValidationModels", Boolean.TRUE)
                 .asOption(),
             // testing
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.tools").versionAsInProject(),

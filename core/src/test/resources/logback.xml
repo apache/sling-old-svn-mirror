@@ -24,7 +24,9 @@
       <pattern>%date %level [%thread] %logger{10} [%file : %line] %msg%n</pattern>
     </encoder>
   </appender>
-  <root level="debug">
+  <logger name="org.apache.sling.validation" level="DEBUG"/>
+  
+  <root level="INFO">
     <appender-ref ref="file"/>
   </root>
 </configuration>

@@ -55,7 +55,7 @@
                         <!-- embed the commons.osgi bundle as described in http://njbartlett.name/2014/05/26/static-linking.html, 
                              to make this bundle compatible with older versions of Sling -->
                         <Conditional-Package>org.apache.sling.commons.osgi</Conditional-Package>
-                        <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
+                        <Sling-Initial-Content>SLING-INF/libs/sling/validation/i18n;overwrite:=true;path:=/libs/sling/validation/i18n</Sling-Initial-Content>
                     </instructions>
                 </configuration>
             </plugin>
@@ -164,6 +164,13 @@
             <version>3.1</version>
             <scope>provided</scope>
         </dependency>
+        <!-- for the SlingPostProcessor (https://issues.apache.org/jira/browse/SLING-594)-->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.servlets.post</artifactId>
+            <version>2.2.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-library</artifactId>
@@ -230,13 +237,6 @@
             <version>5.6.2</version>
             <scope>test</scope>
         </dependency>
-        <!-- Apache Sling -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.servlets.post</artifactId>
-            <version>2.2.0</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.paxexam</artifactId>
@@ -246,7 +246,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.14</version>
+            <version>1.0.15-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <!-- testing -->
