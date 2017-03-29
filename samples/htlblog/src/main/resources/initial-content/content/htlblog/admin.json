@@ -1,0 +1,11 @@
+{
+	"jcr:primaryType": "nt:unstructured",
+	"sling:resourceType": "htlblog/admin/list",
+	"title": "HTL Blog Admin",
+	"description": "The blog admin.",
+	"edit": {
+		"jcr:primaryType": "nt:unstructured",
+		"sling:resourceType": "htlblog/admin/edit",
+		"title": "HTL Blog Edit"
+	}
+}

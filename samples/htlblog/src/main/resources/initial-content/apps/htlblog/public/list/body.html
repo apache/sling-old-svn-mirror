@@ -1,0 +1,14 @@
+<body data-sly-use.list="org.apache.sling.samples.htlblog.models.List">
+<sly data-sly-include="nav.html"></sly>
+<div class="container" data-sly-repeat.child="${list.children}">
+	<div class="row">
+		<div class="col-sm-12">
+			<h1>${child.title}</h1>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+			${child.body}
+		</div>
+	</div>
+</div>

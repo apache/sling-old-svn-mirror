@@ -1,0 +1,29 @@
+<body data-sly-use.list="org.apache.sling.samples.htlblog.models.List">
+<sly data-sly-include="nav.html"></sly>
+<div class="container">
+    <div>
+        <a href="/content/htlblog/admin/edit.html">Create New</a>
+    </div>
+    <sly data-sly-repeat.child="${list.children}">
+        <div class="panel panel-default post-item">
+          <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-8">
+                    <h6>${child.title}</h6>
+                </div>
+                <div class="col-sm-4">
+                    <div class="pull-right">
+                        <button type="button" class="btn btn-primary"><a href="/content/htlblog/admin/edit.html?post=${child.path}">Edit</a></button>
+                        <button type="button" class="btn btn-info"><a href="${child.path}">View</a></button>
+                        <form method="POST" action="${child.path}">
+                            <input type="hidden" name=":redirect" value="/content/htlblog/admin.html"/>
+                            <input type="hidden" name=":operation" value="delete"/>
+                            <input type="submit" class="btn btn-danger" value="Delete"/>
+                        </form>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+    </sly>
+</div>

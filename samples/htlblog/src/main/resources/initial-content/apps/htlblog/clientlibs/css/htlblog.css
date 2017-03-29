@@ -1,0 +1,12 @@
+body {
+	margin-top: 50px;
+}
+
+button.btn-primary a, button.btn-info a, button.btn-danger a {
+	color: white;
+	display: block;
+}
+
+.post-item form {
+	display: inline;
+}
