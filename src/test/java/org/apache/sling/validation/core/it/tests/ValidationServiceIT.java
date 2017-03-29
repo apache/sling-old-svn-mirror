@@ -69,7 +69,8 @@ public class ValidationServiceIT extends ValidationTestSupport {
         entity.addPart(SlingPostConstants.RP_OPERATION, new StringBody("validation"));
         RequestExecutor re = requestExecutor.execute(requestBuilder.buildPostRequest
                 ("/validation/testing/fakeFolder1/resource").withEntity(entity)).assertStatus(200);
-        JSONObject jsonResponse = new JSONObject(re.getContent());
+        String content = re.getContent();
+        JSONObject jsonResponse = new JSONObject(content);
         assertTrue(jsonResponse.getBoolean("valid"));
     }
 
@@ -94,5 +95,22 @@ public class ValidationServiceIT extends ValidationTestSupport {
         assertEquals("Missing required property with name \"field2\".", failure.get("message"));
         assertEquals("", failure.get("location")); // location is empty as the property is not found (property name is part of the message rather)
         assertEquals(0, failure.get("severity"));
+    }
+    
+    @Test
+    public void testPostProcessorWithInvalidModel() throws IOException, JSONException {
+        MultipartEntity entity = new MultipartEntity();
+        entity.addPart("sling:resourceType", new StringBody("validation/test/resourceType1"));
+        entity.addPart("field1", new StringBody("Hello World"));
+        final String url = String.format("http://localhost:%s", httpPort());
+        RequestBuilder requestBuilder = new RequestBuilder(url);
+        // test JSON response, because the HTML response overwrites the original exception (https://issues.apache.org/jira/browse/SLING-6703)
+        RequestExecutor re = requestExecutor.execute(requestBuilder.buildPostRequest
+                ("/content/validated/invalidresource").withEntity(entity).withHeader("Accept", "application/json").withCredentials("admin", "admin")).assertStatus(500);
+        String content = re.getContent();
+        JSONObject jsonResponse = new JSONObject(content);
+        JSONObject error = jsonResponse.getJSONObject("error");
+        assertEquals("org.apache.sling.validation.impl.postprocessor.InvalidResourcePostProcessorException", error.getString("class"));
+        assertEquals("Validation errors: field1 : Property does not match the pattern \"^\\p{Upper}+$\"., Missing required property with name \"field2\".", error.getString("message"));
     }
 }
