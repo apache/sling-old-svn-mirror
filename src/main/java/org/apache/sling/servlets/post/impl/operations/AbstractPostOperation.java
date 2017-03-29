@@ -17,7 +17,6 @@
 package org.apache.sling.servlets.post.impl.operations;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -169,7 +168,7 @@ public abstract class AbstractPostOperation implements PostOperation {
             if (!isSkipCheckin(request)) {
                 // now do the checkins
                 for(String checkinPath : nodesToCheckin) {
-                    if (checkin(request.getResourceResolver(), checkinPath)) {
+                    if (this.jcrSsupport.checkin(request.getResourceResolver().getResource(checkinPath))) {
                         response.onChange("checkin", checkinPath);
                     }
                 }
@@ -262,7 +261,7 @@ public abstract class AbstractPostOperation implements PostOperation {
      *         <code>null</code> if the parameter is not set in the request.
      */
     protected Iterator<Resource> getApplyToResources(
-            SlingHttpServletRequest request) {
+            final SlingHttpServletRequest request) {
 
         final String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
         if (applyTo == null) {
@@ -280,8 +279,8 @@ public abstract class AbstractPostOperation implements PostOperation {
      * @param path the path to externalize
      * @return the url
      */
-    protected final String externalizePath(SlingHttpServletRequest request,
-            String path) {
+    protected final String externalizePath(final SlingHttpServletRequest request,
+            final String path) {
         StringBuilder ret = new StringBuilder();
         ret.append(SlingRequestPaths.getContextPath(request));
         ret.append(request.getResourceResolver().map(path));
@@ -299,22 +298,7 @@ public abstract class AbstractPostOperation implements PostOperation {
     }
 
     /**
-     * Resolves the given path with respect to the current root path.
-     *
-     * @param absPath The absolute base path
-     * @param relPath the path to resolve
-     * @return the given path if it starts with a '/'; a resolved path
-     *         otherwise.
-     */
-    protected final String resolvePath(String absPath, String relPath) {
-        if (relPath.startsWith("/")) {
-            return relPath;
-        }
-        return absPath + "/" + relPath;
-    }
-
-    /**
-     * Returns the path of the resource of the request as the item path.
+     * Returns the path of the resource of the request as the resource path.
      * <p>
      * This method may be overwritten by extension if the operation has
      * different requirements on path processing.
@@ -325,51 +309,7 @@ public abstract class AbstractPostOperation implements PostOperation {
         return request.getResource().getPath();
     }
 
-    /**
-     * Returns true if any of the request parameters starts with
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>}.
-     * In this case only parameters starting with either of the prefixes
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
-     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>} are
-     * considered as providing content to be stored. Otherwise all parameters
-     * not starting with the command prefix <code>:</code> are considered as
-     * parameters to be stored.
-     *
-     * @param request The http request
-     * @return If a prefix is required.
-     */
-    protected final boolean requireItemPathPrefix(
-            SlingHttpServletRequest request) {
-
-        boolean requirePrefix = false;
-
-        Enumeration<?> names = request.getParameterNames();
-        while (names.hasMoreElements() && !requirePrefix) {
-            String name = (String) names.nextElement();
-            requirePrefix = name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT);
-        }
-
-        return requirePrefix;
-    }
-
-    /**
-     * Returns <code>true</code> if the <code>name</code> starts with either
-     * of the prefixes
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
-     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>}.
-     *
-     * @param name The name
-     * @return {@code true} if the name has a prefix
-     */
-    protected boolean hasItemPathPrefix(String name) {
-        return name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
-            || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT)
-            || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_PARENT);
-    }
-
-    protected Node findVersionableAncestor(Node node) throws RepositoryException {
+    private Node findVersionableAncestor(Node node) throws RepositoryException {
         if (isVersionable(node)) {
             return node;
         }
@@ -386,29 +326,26 @@ public abstract class AbstractPostOperation implements PostOperation {
         return node.isNodeType("mix:versionable");
     }
 
-    protected void checkoutIfNecessary(Node node, List<Modification> changes,
-            VersioningConfiguration versioningConfiguration) throws RepositoryException {
-        if (versioningConfiguration.isAutoCheckout()) {
-            Node versionableNode = findVersionableAncestor(node);
-            if (versionableNode != null) {
-                if (!versionableNode.isCheckedOut()) {
-                    versionableNode.checkout();
-                    changes.add(Modification.onCheckout(versionableNode.getPath()));
+    protected void checkoutIfNecessary(final Resource resource,
+            final List<Modification> changes,
+            final VersioningConfiguration versioningConfiguration)
+    throws PersistenceException {
+        if (resource != null && versioningConfiguration.isAutoCheckout()) {
+            final Node node = resource.adaptTo(Node.class);
+            if ( node != null ) {
+                try {
+                    Node versionableNode = findVersionableAncestor(node);
+                    if (versionableNode != null) {
+                        if (!versionableNode.isCheckedOut()) {
+                            versionableNode.getSession().getWorkspace().getVersionManager().checkout(versionableNode.getPath());
+                            changes.add(Modification.onCheckout(versionableNode.getPath()));
+                        }
+                    }
+                } catch ( final RepositoryException re) {
+                    throw new PersistenceException(re.getMessage(), re);
                 }
             }
         }
-    }
-
-    private boolean checkin(final ResourceResolver resolver, final String path) throws RepositoryException {
-        final Resource rsrc = resolver.getResource(path);
-        final Node node = (rsrc == null ? null : rsrc.adaptTo(Node.class));
-        if (node != null) {
-            if (node.isCheckedOut() && isVersionable(node)) {
-                node.checkin();
-                return true;
-            }
-        }
-        return false;
     }
 
     private static class ApplyToIterator implements Iterator<Resource> {

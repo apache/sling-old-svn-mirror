@@ -51,7 +51,7 @@ public class CheckinOperation extends AbstractPostOperation {
                     return;
                 }
 
-                node.checkin();
+                node.getSession().getWorkspace().getVersionManager().checkin(node.getPath());
                 changes.add(Modification.onCheckin(resource.getPath()));
 
             } else {
@@ -60,7 +60,7 @@ public class CheckinOperation extends AbstractPostOperation {
                     Resource resource = res.next();
                     Node node = resource.adaptTo(Node.class);
                     if (node != null) {
-                        node.checkin();
+                        node.getSession().getWorkspace().getVersionManager().checkin(node.getPath());
                         changes.add(Modification.onCheckin(resource.getPath()));
                     }
                 }

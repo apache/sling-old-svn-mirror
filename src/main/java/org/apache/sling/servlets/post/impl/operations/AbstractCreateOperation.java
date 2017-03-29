@@ -18,6 +18,7 @@
 package org.apache.sling.servlets.post.impl.operations;
 
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -88,6 +89,52 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     }
 
     /**
+     * Returns true if any of the request parameters starts with
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>}.
+     * In this case only parameters starting with either of the prefixes
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
+     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>} are
+     * considered as providing content to be stored. Otherwise all parameters
+     * not starting with the command prefix <code>:</code> are considered as
+     * parameters to be stored.
+     *
+     * @param request The http request
+     * @return If a prefix is required.
+     */
+    private final boolean requireItemPathPrefix(
+            SlingHttpServletRequest request) {
+
+        boolean requirePrefix = false;
+
+        Enumeration<?> names = request.getParameterNames();
+        while (names.hasMoreElements() && !requirePrefix) {
+            String name = (String) names.nextElement();
+            requirePrefix = name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT);
+        }
+
+        return requirePrefix;
+    }
+
+
+
+    /**
+     * Returns <code>true</code> if the <code>name</code> starts with either
+     * of the prefixes
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
+     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>}.
+     *
+     * @param name The name
+     * @return {@code true} if the name has a prefix
+     */
+    private boolean hasItemPathPrefix(String name) {
+        return name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
+            || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT)
+            || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_PARENT);
+    }
+
+    /**
      * Create node(s) according to current request
      *
      * @throws RepositoryException if a repository error occurs
@@ -117,7 +164,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,
                     final VersioningConfiguration versioningConfiguration)
-    throws RepositoryException {
+    throws PersistenceException, RepositoryException {
         final String nodeType = getPrimaryType(reqProperties, path);
         if (nodeType != null) {
             final Resource rsrc = resolver.getResource(path);
@@ -127,7 +174,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                 final boolean wasVersionable = (node == null ? false : isVersionable(node));
 
                 if ( node != null ) {
-                    checkoutIfNecessary(node, changes, versioningConfiguration);
+                    checkoutIfNecessary(rsrc, changes, versioningConfiguration);
                     node.setPrimaryType(nodeType);
                 } else {
                     mvm.put("jcr:primaryType", nodeType);
@@ -151,7 +198,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,
                     final VersioningConfiguration versioningConfiguration)
-    throws RepositoryException {
+    throws PersistenceException, RepositoryException {
         final String[] mixins = getMixinTypes(reqProperties, path);
         if (mixins != null) {
 
@@ -165,7 +212,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
                 // clear existing mixins first
                 if ( node != null ) {
-                    checkoutIfNecessary(node, changes, versioningConfiguration);
+                    checkoutIfNecessary(rsrc, changes, versioningConfiguration);
                     for (NodeType mixin : node.getMixinNodeTypes()) {
                         String mixinName = mixin.getName();
                         if (!newMixins.remove(mixinName)) {
@@ -563,10 +610,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                 // check for node type
                 final String nodeType = getPrimaryType(reqProperties, tmpPath);
 
-                final Node node = resource.adaptTo(Node.class);
-                if ( node != null ) {
-                    checkoutIfNecessary(node, changes, versioningConfiguration);
-                }
+                checkoutIfNecessary(resource, changes, versioningConfiguration);
 
                 try {
                     final Map<String, Object> props = new HashMap<>();
