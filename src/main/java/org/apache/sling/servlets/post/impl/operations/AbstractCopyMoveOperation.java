@@ -19,13 +19,13 @@ package org.apache.sling.servlets.post.impl.operations;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.servlets.post.Modification;
@@ -44,107 +44,106 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
     protected final void doRun(SlingHttpServletRequest request,
             PostResponse response,
             List<Modification> changes)
-    throws RepositoryException {
-        Session session = request.getResourceResolver().adaptTo(Session.class);
+    throws PersistenceException {
+        try {
+            Session session = request.getResourceResolver().adaptTo(Session.class);
 
-        VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
+            VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
-        Resource resource = request.getResource();
-        String source = resource.getPath();
+            Resource resource = request.getResource();
+            String source = resource.getPath();
 
-        // ensure dest is not empty/null and is absolute
-        String dest = request.getParameter(SlingPostConstants.RP_DEST);
-        if (dest == null || dest.length() == 0) {
-            throw new IllegalArgumentException("Unable to process "
-                + getOperationName() + ". Missing destination");
-        }
-
-        // register whether the path ends with a trailing slash
-        boolean trailingSlash = dest.endsWith("/");
-
-        // ensure destination is an absolute and normalized path
-        if (!dest.startsWith("/")) {
-            dest = ResourceUtil.getParent(source) + "/" + dest;
-        }
-        dest = ResourceUtil.normalize(dest);
-
-        // destination parent and name
-        String dstParent = trailingSlash ? dest : ResourceUtil.getParent(dest);
-
-        // delete destination if already exists
-        if (!trailingSlash && session.itemExists(dest)) {
-
-            final String replaceString = request.getParameter(SlingPostConstants.RP_REPLACE);
-            final boolean isReplace = "true".equalsIgnoreCase(replaceString);
-            if (!isReplace) {
-                response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
-                    "Cannot " + getOperationName() + " " + resource + " to "
-                        + dest + ": destination exists");
-                return;
-            } else {
-                checkoutIfNecessary(session.getItem(dest).getParent(), changes, versioningConfiguration);
+            // ensure dest is not empty/null and is absolute
+            String dest = request.getParameter(SlingPostConstants.RP_DEST);
+            if (dest == null || dest.length() == 0) {
+                throw new IllegalArgumentException("Unable to process "
+                    + getOperationName() + ". Missing destination");
             }
 
-        } else {
+            // register whether the path ends with a trailing slash
+            boolean trailingSlash = dest.endsWith("/");
 
-            // check if path to destination exists and create it, but only
-            // if it's a descendant of the current node
-            if (!dstParent.equals("")) {
-                if (session.itemExists(dstParent)) {
-                    checkoutIfNecessary((Node) session.getItem(dstParent), changes, versioningConfiguration);
-                } else {
+            // ensure destination is an absolute and normalized path
+            if (!dest.startsWith("/")) {
+                dest = ResourceUtil.getParent(source) + "/" + dest;
+            }
+            dest = ResourceUtil.normalize(dest);
+
+            // destination parent and name
+            String dstParent = trailingSlash ? dest : ResourceUtil.getParent(dest);
+
+            // delete destination if already exists
+            if (!trailingSlash && session.itemExists(dest)) {
+
+                final String replaceString = request.getParameter(SlingPostConstants.RP_REPLACE);
+                final boolean isReplace = "true".equalsIgnoreCase(replaceString);
+                if (!isReplace) {
                     response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
                         "Cannot " + getOperationName() + " " + resource + " to "
-                            + dest + ": parent of destination does not exist");
+                            + dest + ": destination exists");
                     return;
+                } else {
+                    checkoutIfNecessary(session.getItem(dest).getParent(), changes, versioningConfiguration);
                 }
+
+            } else {
+
+                // check if path to destination exists and create it, but only
+                // if it's a descendant of the current node
+                if (!dstParent.equals("")) {
+                    if (session.itemExists(dstParent)) {
+                        checkoutIfNecessary((Node) session.getItem(dstParent), changes, versioningConfiguration);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
+                            "Cannot " + getOperationName() + " " + resource + " to "
+                                + dest + ": parent of destination does not exist");
+                        return;
+                    }
+                }
+
+                // the destination is newly created, hence a create request
+                response.setCreateRequest(true);
             }
 
-            // the destination is newly created, hence a create request
-            response.setCreateRequest(true);
-        }
+            Iterator<Resource> resources = getApplyToResources(request);
+            Resource destResource = null;
+            if (resources == null) {
 
-        Iterator<Resource> resources = getApplyToResources(request);
-        Item destItem = null;
-        if (resources == null) {
 
-            // ensure we have an item underlying the request's resource
-            Item item = resource.adaptTo(Item.class);
-            if (item == null) {
+                String dstName = trailingSlash ? null : ResourceUtil.getName(dest);
+                destResource = execute(changes, resource, dstParent, dstName, versioningConfiguration);
+
+            } else {
+
+                // multiple applyTo requires trailing slash on destination
+                if (!trailingSlash) {
+                    throw new IllegalArgumentException(
+                        "Applying "
+                            + getOperationName()
+                            + " to multiple resources requires a trailing slash on the destination");
+                }
+
+                // multiple copy will never return 201/CREATED
+                response.setCreateRequest(false);
+
+                while (resources.hasNext()) {
+                    Resource applyTo = resources.next();
+                    execute(changes, applyTo, dstParent, null, versioningConfiguration);
+                }
+                destResource = request.getResourceResolver().getResource(dest);
+
+            }
+
+            if ( destResource == null ) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND,
-                    "Missing source " + resource + " for " + getOperationName());
+                        "Missing source " + resource + " for " + getOperationName());
                 return;
             }
-
-            String dstName = trailingSlash ? null : ResourceUtil.getName(dest);
-            destItem = execute(changes, item, dstParent, dstName, versioningConfiguration);
-
-        } else {
-
-            // multiple applyTo requires trailing slash on destination
-            if (!trailingSlash) {
-                throw new IllegalArgumentException(
-                    "Applying "
-                        + getOperationName()
-                        + " to multiple resources requires a trailing slash on the destination");
-            }
-
-            // multiple copy will never return 201/CREATED
-            response.setCreateRequest(false);
-
-            while (resources.hasNext()) {
-                Resource applyTo = resources.next();
-                Item item = applyTo.adaptTo(Item.class);
-                if (item != null) {
-                    execute(changes, item, dstParent, null, versioningConfiguration);
-                }
-            }
-            destItem = session.getItem(dest);
-
+            // finally apply the ordering parameter
+            this.jcrSsupport.orderNode(request, destResource, changes);
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
         }
-
-        // finally apply the ordering parameter
-        orderNode(request, destItem, changes);
     }
 
     /**
@@ -162,11 +161,12 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
      * @param destName The name of the target item inside the
      *            <code>destParent</code>. If <code>null</code> the name of
      *            the <code>source</code> is used as the target item name.
-     * @throws RepositoryException May be thrown if an error occurrs executing
+     * @throws RepositoryException May be thrown if an error occurs executing
      *             the operation.
      */
-    protected abstract Item execute(List<Modification> changes, Item source,
-            String destParent, String destName,
+    protected abstract Resource execute(List<Modification> changes, Resource source,
+            String destParent,
+            String destName,
             VersioningConfiguration versioningConfiguration) throws RepositoryException;
 
 }

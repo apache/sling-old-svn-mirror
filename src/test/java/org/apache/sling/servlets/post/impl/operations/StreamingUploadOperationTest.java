@@ -19,6 +19,22 @@
 
 package org.apache.sling.servlets.post.impl.operations;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -39,21 +55,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 
 public class StreamingUploadOperationTest {
 
@@ -72,8 +73,8 @@ public class StreamingUploadOperationTest {
     }
 
     @Test
-    public void test() throws RepositoryException, UnsupportedEncodingException {
-        List<Modification> changes = new ArrayList<Modification>();
+    public void test() throws PersistenceException, RepositoryException, UnsupportedEncodingException {
+        List<Modification> changes = new ArrayList<>();
         PostResponse response = new AbstractPostResponse() {
             @Override
             protected void doSend(HttpServletResponse response) throws IOException {
@@ -91,14 +92,14 @@ public class StreamingUploadOperationTest {
             }
         };
 
-        List<Part> partsList = new ArrayList<Part>();
+        List<Part> partsList = new ArrayList<>();
         partsList.add(new MockPart("formfield1", null, null, 0, new ByteArrayInputStream("testformfield1".getBytes("UTF-8")), Collections.EMPTY_MAP));
         partsList.add(new MockPart("formfield2", null, null, 0, new ByteArrayInputStream("testformfield2".getBytes("UTF-8")), Collections.EMPTY_MAP));
         partsList.add(new MockPart("test1.txt", "text/plain", "test1bad.txt", 4, new ByteArrayInputStream("test".getBytes("UTF-8")), Collections.EMPTY_MAP));
         partsList.add(new MockPart("*", "text/plain2", "test2.txt", 8, new ByteArrayInputStream("test1234".getBytes("UTF-8")), Collections.EMPTY_MAP));
         partsList.add(new MockPart("badformfield2", null, null, 0, new ByteArrayInputStream("testbadformfield2".getBytes("UTF-8")), Collections.EMPTY_MAP));
         final Iterator<Part> partsIterator = partsList.iterator();
-        final Map<String, Resource> repository = new HashMap<String, Resource>();
+        final Map<String, Resource> repository = new HashMap<>();
         final ResourceResolver resourceResolver = new MockResourceResolver() {
             @Override
             public Resource getResource(String path) {
@@ -244,8 +245,8 @@ public class StreamingUploadOperationTest {
     }
 
     @Test
-    public void testParts() throws RepositoryException, UnsupportedEncodingException {
-        List<Modification> changes = new ArrayList<Modification>();
+    public void testParts() throws PersistenceException, RepositoryException, UnsupportedEncodingException {
+        List<Modification> changes = new ArrayList<>();
         PostResponse response = new AbstractPostResponse() {
             @Override
             protected void doSend(HttpServletResponse response) throws IOException {
@@ -263,7 +264,7 @@ public class StreamingUploadOperationTest {
             }
         };
 
-        List<Part> partsList = new ArrayList<Part>();
+        List<Part> partsList = new ArrayList<>();
         partsList.add(new MockPart("test1.txt@Length", null, null, 0, new ByteArrayInputStream("8".getBytes("UTF-8")), Collections.EMPTY_MAP));
         partsList.add(new MockPart("test1.txt@Offset", null, null, 0, new ByteArrayInputStream("0".getBytes("UTF-8")), Collections.EMPTY_MAP));
         partsList.add(new MockPart(
@@ -284,7 +285,7 @@ public class StreamingUploadOperationTest {
         partsList.add(new MockPart("*", "text/plain2", "test2.txt", 8, new ByteArrayInputStream("test1234".getBytes("UTF-8")), Collections.EMPTY_MAP));
         partsList.add(new MockPart("badformfield2", null, null, 0, new ByteArrayInputStream("testbadformfield2".getBytes("UTF-8")), Collections.EMPTY_MAP));
         final Iterator<Part> partsIterator = partsList.iterator();
-        final Map<String, Resource> repository = new HashMap<String, Resource>();
+        final Map<String, Resource> repository = new HashMap<>();
         final ResourceResolver resourceResolver = new MockResourceResolver() {
             @Override
             public Resource getResource(String path) {
@@ -309,7 +310,7 @@ public class StreamingUploadOperationTest {
             @Override
             public Iterable<Resource> getChildren(Resource resource) {
 
-                List<Resource> children = new ArrayList<Resource>();
+                List<Resource> children = new ArrayList<>();
                 for(Map.Entry<String, Resource> e : repository.entrySet()) {
                     if (isChild(resource.getPath(), e.getKey())) {
                         children.add(e.getValue());
@@ -457,8 +458,8 @@ public class StreamingUploadOperationTest {
     }
 
     @Test
-    public void testPartsContentRange() throws RepositoryException, UnsupportedEncodingException {
-        List<Modification> changes = new ArrayList<Modification>();
+    public void testPartsContentRange() throws PersistenceException, RepositoryException, UnsupportedEncodingException {
+        List<Modification> changes = new ArrayList<>();
         PostResponse response = new AbstractPostResponse() {
             @Override
             protected void doSend(HttpServletResponse response) throws IOException {
@@ -476,7 +477,7 @@ public class StreamingUploadOperationTest {
             }
         };
 
-        List<Part> partsList = new ArrayList<Part>();
+        List<Part> partsList = new ArrayList<>();
         partsList.add(new MockPart("formfield1", null, null, 0, new ByteArrayInputStream("testformfield1".getBytes("UTF-8")), Collections.EMPTY_MAP));
         partsList.add(new MockPart("formfield2", null, null, 0, new ByteArrayInputStream("testformfield2".getBytes("UTF-8")), Collections.EMPTY_MAP));
         partsList.add(new MockPart(
@@ -496,7 +497,7 @@ public class StreamingUploadOperationTest {
         partsList.add(new MockPart("*", "text/plain2", "test2.txt", 8, new ByteArrayInputStream("test1234".getBytes("UTF-8")), Collections.EMPTY_MAP));
         partsList.add(new MockPart("badformfield2", null, null, 0, new ByteArrayInputStream("testbadformfield2".getBytes("UTF-8")), Collections.EMPTY_MAP));
         final Iterator<Part> partsIterator = partsList.iterator();
-        final Map<String, Resource> repository = new HashMap<String, Resource>();
+        final Map<String, Resource> repository = new HashMap<>();
         final ResourceResolver resourceResolver = new MockResourceResolver() {
             @Override
             public Resource getResource(String path) {
@@ -521,7 +522,7 @@ public class StreamingUploadOperationTest {
             @Override
             public Iterable<Resource> getChildren(Resource resource) {
 
-                List<Resource> children = new ArrayList<Resource>();
+                List<Resource> children = new ArrayList<>();
                 for(Map.Entry<String, Resource> e : repository.entrySet()) {
                     if (isChild(resource.getPath(), e.getKey())) {
                         children.add(e.getValue());
@@ -671,7 +672,7 @@ public class StreamingUploadOperationTest {
 
 
     private Map<String,Object> mapOf(String ... s) {
-        Map<String, Object> m = new HashMap<String, Object>();
+        Map<String, Object> m = new HashMap<>();
         for (int i = 0; i < s.length; i+=2) {
             m.put(s[i],s[i+1]);
         }

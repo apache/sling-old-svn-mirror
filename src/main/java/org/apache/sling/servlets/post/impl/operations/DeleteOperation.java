@@ -52,7 +52,7 @@ public class DeleteOperation extends AbstractPostOperation {
     @Override
     protected void doRun(final SlingHttpServletRequest request,
             final PostResponse response, final List<Modification> changes)
-            throws RepositoryException {
+            throws PersistenceException {
 
         // SLING-3203: selectors, extension and suffix make no sense here and
         // might lead to deleting other resources than the one the user means.
@@ -69,17 +69,21 @@ public class DeleteOperation extends AbstractPostOperation {
         final VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
         final boolean deleteChunks = isDeleteChunkRequest(request);
         final Iterator<Resource> res = getApplyToResources(request);
-        if (res == null) {
-            final Resource resource = request.getResource();
-            deleteResource(resource, changes, versioningConfiguration,
-                deleteChunks);
-        } else {
-            while (res.hasNext()) {
-                final Resource resource = res.next();
+        try {
+            if (res == null) {
+                final Resource resource = request.getResource();
                 deleteResource(resource, changes, versioningConfiguration,
                     deleteChunks);
-            }
+            } else {
+                while (res.hasNext()) {
+                    final Resource resource = res.next();
+                    deleteResource(resource, changes, versioningConfiguration,
+                        deleteChunks);
+                }
 
+            }
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
         }
     }
 

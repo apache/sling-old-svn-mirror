@@ -78,7 +78,7 @@ public class ModifyOperation extends AbstractCreateOperation {
     protected void doRun(final SlingHttpServletRequest request,
                     final PostResponse response,
                     final List<Modification> changes)
-    throws RepositoryException {
+    throws PersistenceException {
 
         try {
             final Map<String, RequestProperty> reqProperties = collectContent(request, response);
@@ -102,20 +102,14 @@ public class ModifyOperation extends AbstractCreateOperation {
 
             // order content
             final Resource newResource = request.getResourceResolver().getResource(response.getPath());
-            final Node newNode = newResource.adaptTo(Node.class);
-            if ( newNode != null ) {
-                orderNode(request, newNode, changes);
-            }
-        } catch ( final PersistenceException pe) {
-            if ( pe.getCause() instanceof RepositoryException ) {
-                throw (RepositoryException)pe.getCause();
-            }
-            throw new RepositoryException(pe);
+            this.jcrSsupport.orderNode(request, newResource, changes);
+        } catch ( final RepositoryException pe) {
+            throw new PersistenceException(pe.getMessage(), pe);
         }
     }
 
     @Override
-    protected String getItemPath(SlingHttpServletRequest request) {
+    protected String getResourcePath(SlingHttpServletRequest request) {
 
         // calculate the paths
         StringBuilder rootPathBuf = new StringBuilder();

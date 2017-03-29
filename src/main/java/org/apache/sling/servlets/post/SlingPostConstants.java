@@ -320,13 +320,13 @@ public interface SlingPostConstants {
      * not set or set to any other value.
      */
     public static final String RP_STATUS = RP_PREFIX + "status";
-    
+
 	/**
-     * Optional request parameter: defines if to enable the error handling 
-     * also for POST request. 
+     * Optional request parameter: defines if to enable the error handling
+     * also for POST request.
      * The parameter value is checked to see if it matches the case-insensitive
-     * value true. 
-     * 
+     * value true.
+     *
      * @since 2.2.0 (Bundle version 2.3.0)
      */
     public static final String RP_SEND_ERROR = RP_PREFIX + "sendError";
@@ -508,15 +508,15 @@ public interface SlingPostConstants {
     /**
      * Name of the request parameter indicating whether versionable nodes should
      * be checked in during an {@link SlingPostConstants#OPERATION_IMPORT} operation.
-     * 
+     *
      * @since 2.1.2
      */
     public static final String RP_AUTO_CHECKOUT = RP_PREFIX + "autoCheckout";
 
     /**
      * Name of the request attribute (not parameter) indicating that a post operation
-     * should not invoke session.save() upon completion.
-     * 
+     * should not invoke the commit method on the resource resolver upon completion.
+     *
      * @since 2.1.2
      */
     public static final String ATTR_SKIP_SESSION_HANDLING = "skip-session-handling";
@@ -582,7 +582,7 @@ public interface SlingPostConstants {
      * @since 2.3.4
      */
     public static final String NT_SLING_CHUNK_OFFSET = "sling:offset";
-    
+
     /**
      * Constant for prefix for sling:chunk node name.
      * @since 2.3.4
