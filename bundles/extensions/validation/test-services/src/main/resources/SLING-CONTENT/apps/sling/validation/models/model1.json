@@ -1,5 +1,5 @@
 {
-    "validatedResourceType": "validation/test/resourceType1",
+    "validatingResourceType": "validation/test/resourceType1",
     "applicablePaths": [
         "/validation/testing/fakeFolder1",
 		"/content/validated"
