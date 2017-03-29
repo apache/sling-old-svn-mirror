@@ -38,6 +38,7 @@ import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.ValuePreparer;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
