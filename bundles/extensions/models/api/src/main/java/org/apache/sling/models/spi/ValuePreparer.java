@@ -14,7 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.impl.injectors;
+package org.apache.sling.models.spi;
+
+import aQute.bnd.annotation.ConsumerType;
 
 import javax.annotation.Nonnull;
 
@@ -23,6 +25,7 @@ import javax.annotation.Nonnull;
  * based on the adaptable. If an Injector implements this interface, it must also be prepared
  * to handle the case where ObjectUtils.NULL is passed as the adaptable.
  */
+@ConsumerType
 public interface ValuePreparer {
 
     /**
