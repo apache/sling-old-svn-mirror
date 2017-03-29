@@ -70,7 +70,7 @@ public class ValidationModelImpl implements ValidationModel {
     }
 
     @Override
-    public @Nonnull String getValidatedResourceType() {
+    public @Nonnull String getValidatingResourceType() {
         return validatedResourceType;
     }
 

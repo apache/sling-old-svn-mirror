@@ -104,8 +104,8 @@ public class MergedValidationModel implements ValidationModel {
 
     @Override
     @Nonnull
-    public String getValidatedResourceType() {
-        return baseModel.getValidatedResourceType();
+    public String getValidatingResourceType() {
+        return baseModel.getValidatingResourceType();
     }
 
     @Override

@@ -4,7 +4,7 @@
     "applicablePaths": [
         "/content/validationdemo/users/"
     ],
-    "validatedResourceType": "/apps/validationdemo/components/user",
+    "validatingResourceType": "/apps/validationdemo/components/user",
     "properties": {
         "jcr:primaryType": "nt:unstructured",
         "firstName": {
