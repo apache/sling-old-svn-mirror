@@ -17,6 +17,17 @@
 
 package org.apache.sling.servlets.post.impl.operations;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.RepositoryException; // required due to AbstractPostOperation signature.
+import javax.servlet.ServletContext;
+import javax.servlet.http.Part;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -24,22 +35,11 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.impl.helper.StreamedChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException; // required due to AbstractPostOperation signature.
-import javax.servlet.ServletContext;
-import javax.servlet.http.Part;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Performs a streamed modification of the content.
@@ -79,7 +79,7 @@ public class StreamedUploadOperation extends AbstractPostOperation {
     protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes) throws RepositoryException {
         try {
             Iterator<Part> partsIterator = (Iterator<Part>) request.getAttribute("request-parts-iterator");
-            Map<String, List<String>> formFields = new HashMap<String, List<String>>();
+            Map<String, List<String>> formFields = new HashMap<>();
             boolean streamingBodies = false;
             while (partsIterator.hasNext()) {
                 Part part = partsIterator.next();
@@ -117,7 +117,7 @@ public class StreamedUploadOperation extends AbstractPostOperation {
     private void addField(Map<String, List<String>> formFields, String name, Part part) {
         List<String> values = formFields.get(name);
         if ( values == null ) {
-            values = new ArrayList<String>();
+            values = new ArrayList<>();
             formFields.put(name, values);
         }
         try {
@@ -153,7 +153,7 @@ public class StreamedUploadOperation extends AbstractPostOperation {
         }
         String name = getUploadName(part);
         Resource fileResource = parentResource.getChild(name);
-        Map<String, Object> fileProps = new HashMap<String, Object>();
+        Map<String, Object> fileProps = new HashMap<>();
         if (fileResource == null) {
             fileProps.put("jcr:primaryType", NT_FILE);
             fileResource = parentResource.getResourceResolver().create(parentResource, name, fileProps);
