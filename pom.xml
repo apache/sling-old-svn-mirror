@@ -27,9 +27,9 @@
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.event</artifactId>
+    <artifactId>org.apache.sling.event.resource</artifactId>
     <packaging>bundle</packaging>
-    <version>4.2.3-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
 
     <name>Apache Sling Event Support</name>
     <description>
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/event</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event/resource</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event/resourc33</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/event/resource</url>
     </scm>
 
     <properties>
@@ -373,5 +373,12 @@
             <version>1</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>
+<!-- SLING-6739 : update once sling.event.api is released (and then remove identical packages in this bundle)
+         <dependency>
+        	<groupId>org.apache.sling</groupId>
+        	<artifactId>org.apache.sling.event.api</artifactId>
+        	<version>1.0.0</version>
+        	<type>bundle</type>
+        </dependency>
+ -->    </dependencies>
 </project>
