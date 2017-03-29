@@ -29,5 +29,9 @@
 	"sling.validator.wrong-property-type" : {
 		"jcr:primaryType": "sling:MessageEntry",
 		"sling:message": "Property was expected to be of type \"{0}\" but it cannot be converted to that type."
+	},
+	"sling.validator.invalid-resource-post-processor-exception" : {
+		"jcr:primaryType": "sling:MessageEntry",
+		"sling:message": "Validation errors: {0}"
 	}
 }
