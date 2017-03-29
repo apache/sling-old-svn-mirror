@@ -41,9 +41,9 @@ public interface ValidationModel {
     /**
      * Returns the type of resource this model validates.
      *
-     * @return the validated resource type, never {@code null}
+     * @return the resource type to be validated, never {@code null}
      */
-    @Nonnull String getValidatedResourceType();
+    @Nonnull String getValidatingResourceType();
 
     /**
      * Returns the paths under which resources will be validated by this model. 
