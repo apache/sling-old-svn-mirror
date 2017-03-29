@@ -4,7 +4,7 @@
   "applicablePaths": [
     "/content/fling/"
   ],
-  "validatedResourceType": "fling/form/comment",
+  "validatingResourceType": "fling/form/comment",
   "properties": {
     "jcr:primaryType": "nt:unstructured",
     "name": {
