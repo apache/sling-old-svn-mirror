@@ -54,6 +54,8 @@ public class AuthorizableValueMap implements ValueMap {
 
     private static final String MEMBER_OF_KEY = "memberOf";
 
+    private static final Logger LOG = LoggerFactory.getLogger(AuthorizableValueMap.class);
+
     private Logger logger = LoggerFactory.getLogger(AuthorizableValueMap.class);
 
     private boolean fullyRead;
@@ -165,7 +167,7 @@ public class AuthorizableValueMap implements ValueMap {
                 return value;
             }
         } catch (RepositoryException re) {
-            // TODO: log !!
+            LOG.error("Could not access authorizable property", re);
         }
 
         // property not found or some error accessing it
