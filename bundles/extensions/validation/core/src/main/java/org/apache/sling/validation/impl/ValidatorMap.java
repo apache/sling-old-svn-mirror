@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ValidatorMap {
 
-    final static class ValidatorMetaData implements Comparable<ValidatorMetaData> {
+    final static class ValidatorMetadata implements Comparable<ValidatorMetadata> {
         protected final @Nonnull Validator<?> validator;
         // default severity of the validator
         protected final Integer severity;
@@ -44,7 +44,7 @@ public class ValidatorMap {
         /** used for comparison, to sort by service ranking and id */
         protected final @Nonnull ServiceReference<Validator<?>> serviceReference;
 
-        public ValidatorMetaData(Validator<?> validator, ServiceReference<Validator<?>> serviceReference, Integer severity) {
+        public ValidatorMetadata(Validator<?> validator, ServiceReference<Validator<?>> serviceReference, Integer severity) {
             this.validator = validator;
             this.severity = severity;
             this.serviceReference = serviceReference;
@@ -53,7 +53,7 @@ public class ValidatorMap {
         }
 
         @Override
-        public int compareTo(ValidatorMetaData o) {
+        public int compareTo(ValidatorMetadata o) {
             return serviceReference.compareTo(o.serviceReference);
         }
 
@@ -76,7 +76,7 @@ public class ValidatorMap {
                 return false;
             if (getClass() != obj.getClass())
                 return false;
-            ValidatorMetaData other = (ValidatorMetaData) obj;
+            ValidatorMetadata other = (ValidatorMetadata) obj;
             if (serviceReference == null) {
                 if (other.serviceReference != null)
                     return false;
@@ -116,7 +116,7 @@ public class ValidatorMap {
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidatorMap.class);
-    private final Map<String, ValidatorMetaData> validatorMap;
+    private final Map<String, ValidatorMetadata> validatorMap;
     
     public ValidatorMap() {
         validatorMap = new ConcurrentHashMap<>();
@@ -163,9 +163,9 @@ public class ValidatorMap {
 
     void put(@Nonnull String id, @Nonnull Validator<?> validator, ServiceReference<Validator<?>> serviceReference, Integer severity) {
         // create new entry
-        ValidatorMetaData entry = new ValidatorMetaData(validator, serviceReference, severity);
+        ValidatorMetadata entry = new ValidatorMetadata(validator, serviceReference, severity);
         if (validatorMap.containsKey(id)) {
-            ValidatorMetaData existingEntry = validatorMap.get(id);
+            ValidatorMetadata existingEntry = validatorMap.get(id);
             if (entry.compareTo(existingEntry) > 0) {
                 LOG.info("Overwriting already existing validator {} with {}, because it has the same id '{}' and a higher service ranking",
                         existingEntry, entry, id);
@@ -195,8 +195,8 @@ public class ValidatorMap {
     }
 
     private boolean remove(ServiceReference<Validator<?>> serviceReference) {
-        for (java.util.Iterator<ValidatorMetaData> iterator = validatorMap.values().iterator(); iterator.hasNext();) {
-            ValidatorMetaData value = iterator.next();
+        for (java.util.Iterator<ValidatorMetadata> iterator = validatorMap.values().iterator(); iterator.hasNext();) {
+            ValidatorMetadata value = iterator.next();
             if (value.serviceReference.equals(serviceReference)) {
                iterator.remove();
                return true;
@@ -215,7 +215,7 @@ public class ValidatorMap {
         if (id == null) {
             // find by service reference
         }
-        ValidatorMetaData entry = validatorMap.get(id);
+        ValidatorMetadata entry = validatorMap.get(id);
         if (entry == null) {
             LOG.warn("Could not remove validator with id '{}' from map, because it is not there!", id);
             return false;
@@ -230,7 +230,7 @@ public class ValidatorMap {
         }
     }
 
-    public ValidatorMetaData get(String id) {
+    public ValidatorMetadata get(String id) {
         return validatorMap.get(id);
     }
 }

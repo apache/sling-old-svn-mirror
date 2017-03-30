@@ -44,6 +44,7 @@ import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
+import org.apache.sling.validation.impl.ValidatorMap.ValidatorMetadata;
 import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ValidatorInvocation;
 import org.apache.sling.validation.model.ResourceProperty;
@@ -348,14 +349,14 @@ public class ValidationServiceImpl implements ValidationService{
         
         for (ValidatorInvocation validatorInvocation : validatorInvocations) {
             // lookup validator by id
-            ValidatorMap.ValidatorMetaData validatorMetaData = validatorMap.get(validatorInvocation.getValidatorId());
-            if (validatorMetaData == null) {
+            ValidatorMetadata validatorMetadata = validatorMap.get(validatorInvocation.getValidatorId());
+            if (validatorMetadata == null) {
                 throw new IllegalStateException("Could not find validator with id '" + validatorInvocation.getValidatorId() + "'");
             }
-            int severity = getSeverityForValidator(validatorInvocation.getSeverity(), validatorMetaData.getSeverity());
+            int severity = getSeverityForValidator(validatorInvocation.getSeverity(), validatorMetadata.getSeverity());
             
             // convert the type always to an array
-            Class<?> type = validatorMetaData.getType();
+            Class<?> type = validatorMetadata.getType();
             if (!type.isArray()) {
                 try {
                     // https://docs.oracle.com/javase/6/docs/api/java/lang/Class.html#getName%28%29 has some hints on class names
@@ -369,23 +370,23 @@ public class ValidationServiceImpl implements ValidationService{
             // see https://issues.apache.org/jira/browse/SLING-4178 for why the second check is necessary
             if (typedValue == null || (typedValue.length > 0 && typedValue[0] == null)) {
                 // here the missing required property case was already treated in validateValueMap
-                result.addFailure(relativePath + property, severity, defaultResourceBundle, I18N_KEY_WRONG_PROPERTY_TYPE, validatorMetaData.getType());
+                result.addFailure(relativePath + property, severity, defaultResourceBundle, I18N_KEY_WRONG_PROPERTY_TYPE, validatorMetadata.getType());
                 return;
             }
             
             // see https://issues.apache.org/jira/browse/SLING-662 for a description on how multivalue properties are treated with ValueMap
-            if (validatorMetaData.getType().isArray()) {
+            if (validatorMetadata.getType().isArray()) {
                 // ValueMap already returns an array in both cases (property is single value or multivalue)
-                validateValue(result, typedValue, property, relativePath, valueMap, resource, validatorMetaData.getValidator(), validatorInvocation.getParameters(), defaultResourceBundle, severity);
+                validateValue(result, typedValue, property, relativePath, valueMap, resource, validatorMetadata.getValidator(), validatorInvocation.getParameters(), defaultResourceBundle, severity);
             } else {
                 // call validate for each entry in the array (supports both singlevalue and multivalue)
                 @Nonnull Object[] array = (Object[])typedValue;
                 if (array.length == 1) {
-                   validateValue(result, array[0], property, relativePath, valueMap, resource, validatorMetaData.getValidator(), validatorInvocation.getParameters(), defaultResourceBundle, severity);
+                   validateValue(result, array[0], property, relativePath, valueMap, resource, validatorMetadata.getValidator(), validatorInvocation.getParameters(), defaultResourceBundle, severity);
                 } else {
                     int n = 0;
                     for (Object item : array) {
-                        validateValue(result, item, property + "[" + n++ + "]", relativePath, valueMap, resource, validatorMetaData.getValidator(), validatorInvocation.getParameters(), defaultResourceBundle, severity);
+                        validateValue(result, item, property + "[" + n++ + "]", relativePath, valueMap, resource, validatorMetadata.getValidator(), validatorInvocation.getParameters(), defaultResourceBundle, severity);
                     }
                 }
             }
