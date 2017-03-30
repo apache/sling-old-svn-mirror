@@ -17,6 +17,7 @@
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
 import java.security.Principal;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,8 +177,7 @@ public class CreateGroupServlet extends AbstractGroupPostServlet implements Crea
             String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
                 + group.getID();
             
-            Map<String, RequestProperty> reqProperties = collectContent(
-                properties, groupPath);
+            Collection<RequestProperty> reqProperties = collectContent(properties, groupPath);
             changes.add(Modification.onCreated(groupPath));
 
             // write content from form

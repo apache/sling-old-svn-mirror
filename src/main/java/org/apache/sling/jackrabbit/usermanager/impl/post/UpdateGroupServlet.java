@@ -16,6 +16,7 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -156,7 +157,7 @@ public class UpdateGroupServlet extends AbstractGroupPostServlet
         String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
             + group.getID();
 
-        Map<String, RequestProperty> reqProperties = collectContent(properties, groupPath);
+        Collection<RequestProperty> reqProperties = collectContent(properties, groupPath);
         try {
             // cleanup any old content (@Delete parameters)
             processDeletes(group, reqProperties, changes);
