@@ -21,6 +21,7 @@ package org.apache.sling.validation.impl;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.validation.impl.ValidatorMap.ValidatorMetadata;
 import org.apache.sling.validation.impl.util.examplevalidators.DateValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.StringValidator;
 import org.apache.sling.validation.spi.Validator;
@@ -80,7 +81,7 @@ public class ValidatorMapTest {
         Mockito.doReturn(1).when(newValidatorServiceReference).compareTo(Mockito.anyObject());
         Validator<String> stringValidator = new StringValidator();
         validatorMap.put(validatorProperties,stringValidator, newValidatorServiceReference);
-        Assert.assertEquals(new ValidatorMap.ValidatorMetaData(stringValidator, newValidatorServiceReference, 2), validatorMap.get(DATE_VALIDATOR_ID));
+        Assert.assertEquals(new ValidatorMetadata(stringValidator, newValidatorServiceReference, 2), validatorMap.get(DATE_VALIDATOR_ID));
     }
 
     @Test
@@ -91,7 +92,7 @@ public class ValidatorMapTest {
         Mockito.doReturn(-1).when(newValidatorServiceReference).compareTo(Mockito.anyObject());
         Validator<String> stringValidator = new StringValidator();
         validatorMap.put(validatorProperties, stringValidator, newValidatorServiceReference);
-        Assert.assertEquals(new ValidatorMap.ValidatorMetaData(dateValidator, validatorServiceReference, 10), validatorMap.get(DATE_VALIDATOR_ID));
+        Assert.assertEquals(new ValidatorMetadata(dateValidator, validatorServiceReference, 10), validatorMap.get(DATE_VALIDATOR_ID));
     }
 
     @Test
@@ -102,7 +103,7 @@ public class ValidatorMapTest {
         validatorProperties.put(Validator.PROPERTY_VALIDATOR_SEVERITY, 1);
         Mockito.doReturn(-1).when(newValidatorServiceReference).compareTo(Mockito.anyObject());
         validatorMap.update(validatorProperties, dateValidator, validatorServiceReference);
-        Assert.assertEquals(new ValidatorMap.ValidatorMetaData(dateValidator, validatorServiceReference, 1), validatorMap.get(newId));
+        Assert.assertEquals(new ValidatorMetadata(dateValidator, validatorServiceReference, 1), validatorMap.get(newId));
         // make sure that the old validator id is no longer in the list
         Assert.assertNull(validatorMap.get(DATE_VALIDATOR_ID));
     }
