@@ -359,7 +359,7 @@ public abstract class AbstractAuthorizablePostServlet extends
             }
         } else if (values.length == 0) {
             // do not create new prop here, but clear existing
-            if (parent.hasProperty(relativePath) {
+            if (parent.hasProperty(relativePath)) {
                 Value val = session.getValueFactory().createValue("");
                 parent.setProperty(relativePath, val);
                 changes.add(Modification.onModified(parentPath + "/"
