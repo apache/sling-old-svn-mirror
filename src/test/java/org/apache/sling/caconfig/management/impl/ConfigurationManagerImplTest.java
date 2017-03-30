@@ -293,7 +293,7 @@ public class ConfigurationManagerImplTest {
     @Test
     public void testGetConfiguration_WithOverride() {
         context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
-                "[/content]" + CONFIG_NAME + "={prop1='override1'}"));
+                "[/content]" + CONFIG_NAME + "={\"prop1\":\"override1\"}"));
         
         ConfigurationData configData = underTest.getConfiguration(contextResource, CONFIG_NAME);
         assertNotNull(configData);
@@ -458,7 +458,7 @@ public class ConfigurationManagerImplTest {
     @Test
     public void testGetConfigurationCollection_WithOverride() {
         context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
-                "[/content]" + CONFIG_COL_NAME + "/prop1='override1'"));
+                "[/content]" + CONFIG_COL_NAME + "/prop1=\"override1\""));
         
         List<ConfigurationData> configDatas = ImmutableList.copyOf(underTest.getConfigurationCollection(contextResource, CONFIG_COL_NAME).getItems());
         assertEquals(2, configDatas.size());

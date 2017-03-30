@@ -147,7 +147,7 @@ public class ConfigurationResolverValueMapTest {
     @Test
     public void testConfigWithOverride() {
         context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
-                "[/content]sampleName={stringParam='override1',intParam=222}"));
+                "[/content]sampleName={\"stringParam\":\"override1\",\"intParam\":222}"));
 
         context.build().resource("/conf/content/site1/sling:configs/sampleName", 
                 "stringParam", "configValue1",
@@ -164,7 +164,7 @@ public class ConfigurationResolverValueMapTest {
     @Test
     public void testConfigCollectionWithOverride() {
         context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
-                "[/content]sampleList/stringParam='override1'"));
+                "[/content]sampleList/stringParam=\"override1\""));
 
         context.build().resource("/conf/content/site1/sling:configs/sampleList")
             .siblingsMode()
