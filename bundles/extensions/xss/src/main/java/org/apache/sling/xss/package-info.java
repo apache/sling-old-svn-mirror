@@ -22,5 +22,4 @@
 @Version("2.0.0")
 package org.apache.sling.xss;
 
-import aQute.bnd.annotation.Version;
-
+import org.osgi.annotation.versioning.Version;

@@ -19,18 +19,13 @@ package org.apache.sling.xss.impl;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -41,6 +36,9 @@ import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.xss.ProtectionContext;
 import org.apache.sling.xss.XSSFilter;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.owasp.validator.html.model.Attribute;
 import org.owasp.validator.html.model.Tag;
 import org.slf4j.Logger;
@@ -50,12 +48,15 @@ import org.slf4j.LoggerFactory;
  * This class implements the <code>XSSFilter</code> using the Antisamy XSS protection library found at
  * <a href="http://code.google.com/p/owaspantisamy/">http://code.google.com/p/owaspantisamy/</a>.
  */
-@Component(immediate = true)
-@Service(value = {ResourceChangeListener.class, XSSFilter.class})
-@Properties({
-    @Property(name = ResourceChangeListener.CHANGES, value = {"ADDED", "CHANGED", "REMOVED"}),
-    @Property(name = ResourceChangeListener.PATHS, value = XSSFilterImpl.DEFAULT_POLICY_PATH)
-})
+@Component(
+        service = {ResourceChangeListener.class, XSSFilter.class},
+        property = {
+                ResourceChangeListener.CHANGES + "=ADDED",
+                ResourceChangeListener.CHANGES + "=CHANGED",
+                ResourceChangeListener.CHANGES + "=REMOVED",
+                ResourceChangeListener.PATHS + "=" + XSSFilterImpl.DEFAULT_POLICY_PATH
+        }
+)
 public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, ExternalResourceChangeListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(XSSFilterImpl.class);
@@ -71,7 +72,7 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
             "removeAttribute", ""
     );
 
-    public static final String DEFAULT_POLICY_PATH = "sling/xss/config.xml";
+    static final String DEFAULT_POLICY_PATH = "sling/xss/config.xml";
     private static final String EMBEDDED_POLICY_PATH = "SLING-INF/content/config.xml";
     private static final int DEFAULT_POLICY_CACHE_SIZE = 128;
     private PolicyHandler defaultHandler;
@@ -82,7 +83,7 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
     private final XSSFilterRule plainHtmlContext = new PlainTextToHtmlContentContext();
 
     // policies cache
-    private Map<String, PolicyHandler> policies = new ConcurrentHashMap<String, PolicyHandler>();
+    private Map<String, PolicyHandler> policies = new ConcurrentHashMap<>();
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory = null;
@@ -91,7 +92,7 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
     private ServiceUserMapped serviceUserMapped;
 
     @Override
-    public void onChange(List<ResourceChange> resourceChanges) {
+    public void onChange(@Nonnull List<ResourceChange> resourceChanges) {
         for (ResourceChange change : resourceChanges) {
             if (change.getPath().endsWith(DEFAULT_POLICY_PATH)) {
                 LOGGER.info("Detected policy file change ({}) at {}. Updating default handler.", change.getType().name(), change.getPath());
@@ -115,11 +116,73 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
         return this.filter(context, src, null);
     }
 
+    @Override
+    public boolean isValidHref(String url) {
+        // Same logic as in org.owasp.validator.html.scan.MagicSAXFilter.startElement()
+        boolean isValid = hrefAttribute.containsAllowedValue(url.toLowerCase());
+        if (!isValid) {
+            isValid = hrefAttribute.matchesAllowedExpression(url);
+        }
+        return isValid;
+    }
+
     @Activate
-    @SuppressWarnings("unused")
     protected void activate() {
         // load default handler
         updateDefaultHandler();
+    }
+
+    /*
+        The following methods are not part of the API. Client-code dependency to these methods is risky as they can be removed at any
+        point in time from the implementation.
+     */
+
+    public boolean check(final ProtectionContext context, final String src, final String policy) {
+        final XSSFilterRule ctx = this.getFilterRule(context);
+        PolicyHandler handler = null;
+        if (ctx.supportsPolicy()) {
+            if (policy == null || (handler = policies.get(policy)) == null) {
+                handler = defaultHandler;
+            }
+        }
+        return ctx.check(handler, src);
+    }
+
+    public String filter(final ProtectionContext context, final String src, final String policy) {
+        if (src == null) {
+            return "";
+        }
+        final XSSFilterRule ctx = this.getFilterRule(context);
+        PolicyHandler handler = null;
+        if (ctx.supportsPolicy()) {
+            if (policy == null || (handler = policies.get(policy)) == null) {
+                handler = defaultHandler;
+            }
+        }
+        return ctx.filter(handler, src);
+    }
+
+    public void setDefaultPolicy(InputStream policyStream) throws Exception {
+        setDefaultHandler(new PolicyHandler(policyStream));
+    }
+
+    public void resetDefaultPolicy() {
+        updateDefaultHandler();
+    }
+
+    public void loadPolicy(String policyName, InputStream policyStream) throws Exception {
+        if (policies.size() < DEFAULT_POLICY_CACHE_SIZE) {
+            PolicyHandler policyHandler = new PolicyHandler(policyStream);
+            policies.put(policyName, policyHandler);
+        }
+    }
+
+    public void unloadPolicy(String policyName) {
+        policies.remove(policyName);
+    }
+
+    public boolean hasPolicy(String policyName) {
+        return policies.containsKey(policyName);
     }
 
     private synchronized void updateDefaultHandler() {
@@ -184,41 +247,6 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
         return this.plainHtmlContext;
     }
 
-    /*
-        The following methods are not part of the API. Client-code dependency to these methods is risky as they can be removed at any
-        point in time from the implementation.
-     */
-
-    public boolean check(final ProtectionContext context, final String src, final String policy) {
-        final XSSFilterRule ctx = this.getFilterRule(context);
-        PolicyHandler handler = null;
-        if (ctx.supportsPolicy()) {
-            if (policy == null || (handler = policies.get(policy)) == null) {
-                handler = defaultHandler;
-            }
-        }
-        return ctx.check(handler, src);
-    }
-
-    public String filter(final ProtectionContext context, final String src, final String policy) {
-        if (src == null) {
-            return "";
-        }
-        final XSSFilterRule ctx = this.getFilterRule(context);
-        PolicyHandler handler = null;
-        if (ctx.supportsPolicy()) {
-            if (policy == null || (handler = policies.get(policy)) == null) {
-                handler = defaultHandler;
-            }
-        }
-        return ctx.filter(handler, src);
-    }
-
-    @SuppressWarnings("unused")
-    public void setDefaultPolicy(InputStream policyStream) throws Exception {
-        setDefaultHandler(new PolicyHandler(policyStream));
-    }
-
     private void setDefaultHandler(PolicyHandler defaultHandler) {
         Tag linkTag = defaultHandler.getPolicy().getTagByLowercaseName("a");
         Attribute hrefAttribute = (linkTag != null) ? linkTag.getAttributeByName("href") : null;
@@ -229,38 +257,5 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
 
         this.defaultHandler = defaultHandler;
         this.hrefAttribute = hrefAttribute;
-    }
-
-    @SuppressWarnings("unused")
-    public void resetDefaultPolicy() {
-        updateDefaultHandler();
-    }
-
-    @SuppressWarnings("unused")
-    public void loadPolicy(String policyName, InputStream policyStream) throws Exception {
-        if (policies.size() < DEFAULT_POLICY_CACHE_SIZE) {
-            PolicyHandler policyHandler = new PolicyHandler(policyStream);
-            policies.put(policyName, policyHandler);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    public void unloadPolicy(String policyName) {
-        policies.remove(policyName);
-    }
-
-    @SuppressWarnings("unused")
-    public boolean hasPolicy(String policyName) {
-        return policies.containsKey(policyName);
-    }
-
-    @Override
-    public boolean isValidHref(String url) {
-        // Same logic as in org.owasp.validator.html.scan.MagicSAXFilter.startElement()
-        boolean isValid = hrefAttribute.containsAllowedValue(url.toLowerCase());
-        if (!isValid) {
-            isValid = hrefAttribute.matchesAllowedExpression(url);
-        }
-        return isValid;
     }
 }
