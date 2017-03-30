@@ -229,6 +229,7 @@ public class AuthorizableValueMap implements ValueMap {
                 cache.put(MEMBER_OF_KEY, getMemberships(authorizable, true));
                 cache.put(DECLARED_MEMBER_OF_KEY, getMemberships(authorizable, false));
 
+                // only direct properties are supported here
                 Iterator<String> pi = authorizable.getPropertyNames();
                 while (pi.hasNext()) {
                     String key = (String) pi.next();
@@ -241,7 +242,7 @@ public class AuthorizableValueMap implements ValueMap {
 
                 fullyRead = true;
             } catch (RepositoryException re) {
-                // TODO: log !!
+                LOG.error("Could not access certain properties of user {}", authorizable, re);
             }
         }
     }
