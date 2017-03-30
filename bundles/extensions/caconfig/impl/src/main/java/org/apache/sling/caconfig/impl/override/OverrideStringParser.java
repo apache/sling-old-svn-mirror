@@ -18,9 +18,13 @@
  */
 package org.apache.sling.caconfig.impl.override;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -28,12 +32,19 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonReaderFactory;
+import javax.json.JsonString;
+import javax.json.JsonValue;
+
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +62,8 @@ class OverrideStringParser {
     private static final Logger log = LoggerFactory.getLogger(OverrideStringParser.class);
     
     private static final Pattern OVERRIDE_PATTERN = Pattern.compile("^(\\[([^\\[\\]=]+)\\])?([^\\[\\]=]+)=(.*)$");
+    
+    private static final JsonReaderFactory JSON_READER_FACTORY = Json.createReaderFactory(Collections.<String,Object>emptyMap());
     
     private OverrideStringParser() {
         // static method sonly
@@ -81,7 +94,7 @@ class OverrideStringParser {
             OverrideItem item;
             try {
                 // check if value is JSON = defines whole parameter map for a config name
-                JSONObject json = toJson(value);
+                JsonObject json = toJson(value);
                 if (json != null) {
                     item = new OverrideItem(path, configName, toMap(json), true);
                 }
@@ -98,13 +111,10 @@ class OverrideStringParser {
                     item = new OverrideItem(path, configName, props, false);
                 }
             }
-            catch (JSONException ex) {
+            catch (JsonException ex) {
                 log.warn("Ignore config override string - invalid JSON syntax ({}): {}", ex.getMessage(), overrideString);
                 continue;
             }
-            
-            // convert arrays
-            convertArrays(item.getProperties());
             
             // validate item
             if (!isValid(item, overrideString)) {
@@ -141,11 +151,17 @@ class OverrideStringParser {
      * @return JSON object or null if the string does not start with "{"
      * @throws JSONException when JSON parsing failed
      */
-    private static JSONObject toJson(String value) throws JSONException {
+    private static JsonObject toJson(String value) {
         if (!StringUtils.startsWith(value, "{")) {
             return null;
         }
-        return new JSONObject(value);
+        try (Reader reader = new StringReader(value);
+                JsonReader jsonReader = JSON_READER_FACTORY.createReader(reader)) {
+            return jsonReader.readObject();
+        }
+        catch (IOException ex) {
+            return null;
+        }
     }
     
     /**
@@ -153,17 +169,12 @@ class OverrideStringParser {
      * @param json JSON object
      * @return Map (keys/values are not validated)
      */
-    private static Map<String,Object> toMap(JSONObject json) {
+    private static Map<String,Object> toMap(JsonObject json) {
         Map<String,Object> props = new HashMap<>();
-        Iterator<String> keys = json.keys();
+        Iterator<String> keys = json.keySet().iterator();
         while (keys.hasNext()) {
             String key = keys.next();
-            try {
-                props.put(key, json.get(key));
-            }
-            catch (JSONException e) {
-                // should never happen
-            }
+            props.put(key, convertJsonValue(json.get(key)));
         }
         return props;
     }
@@ -174,46 +185,50 @@ class OverrideStringParser {
      * @return Object
      * @throws JSONException If JSON-parsing of value failed
      */
-    private static Object convertJsonValue(String jsonValue) throws JSONException {
+    private static Object convertJsonValue(String jsonValue) {
         String jsonString = "{\"value\":" + jsonValue + "}";
-        JSONObject json = toJson(jsonString);
-        return json.opt("value");
+        JsonObject json = toJson(jsonString);
+        return convertJsonValue(json.get("value"));
     }
     
-    /**
-     * Convert all JSON arrays in the properties map to Java Array counterparts. Invalid arrays are ignored.
-     * @param props Properties
-     */
-    private static void convertArrays(Map<String,Object> props) {
-        Map<String,Object> convertedProps = new HashMap<>();
-        for (Map.Entry<String, Object> entry : props.entrySet()) {
-            Object value = entry.getValue();
-            if (value.getClass().equals(JSONArray.class)) {
-                JSONArray array = (JSONArray)value;
-                if (array.length() == 0) {             
-                    convertedProps.put(entry.getKey(), new String[0]);
+    private static Object convertJsonValue(JsonValue jsonValue) {
+        switch (jsonValue.getValueType()) {
+        case STRING:
+            return ((JsonString)jsonValue).getString();
+        case NUMBER:
+            JsonNumber number = (JsonNumber)jsonValue;
+            if (number.isIntegral()) {
+                return number.longValue();
+            }
+            else {
+                return number.doubleValue();
+            }
+        case TRUE:
+            return true;
+        case FALSE:
+            return false;
+        case NULL:
+            return null;
+        case ARRAY:
+            return convertJsonArray((JsonArray)jsonValue);
+        default:
+            throw new RuntimeException("Unexpected JSON value type: " + jsonValue.getValueType() + ": " + jsonValue);
+        }
+    }
+    
+    private static Object convertJsonArray(JsonArray jsonArray) {
+        if (jsonArray.size() > 0) {             
+            Object firstValue = convertJsonValue(jsonArray.get(0));
+            if (firstValue != null) {
+                Class firstType = firstValue.getClass();
+                Object convertedArray = Array.newInstance(firstType, jsonArray.size());
+                for (int i=0; i<jsonArray.size(); i++) {
+                    Array.set(convertedArray, i, convertJsonValue(jsonArray.get(i)));
                 }
-                else {
-                    Object firstValue = array.opt(0);
-                    if (firstValue != null) {
-                        try {
-                            Class firstType = firstValue.getClass();
-                            Object convertedArray = Array.newInstance(firstType, array.length());
-                            for (int i=0; i<array.length(); i++) {
-                                Array.set(convertedArray, i, array.opt(i));
-                            }
-                            convertedProps.put(entry.getKey(), convertedArray);
-                        }
-                        catch (IllegalArgumentException ex) {
-                            // ignore arrays with mixed types - will fail later in validation
-                        }
-                    }
-                }
+                return convertedArray;
             }
         }
-        if (!convertedProps.isEmpty()) {
-            props.putAll(convertedProps);
-        }
+        return new String[0];
     }
     
     /**
@@ -239,7 +254,7 @@ class OverrideStringParser {
             }
             Object value = entry.getValue();
             if (value == null || !isSupportedType(value)) {
-                log.warn("Ignore config override string - invalid property value ({} - {}): {}", value, value.getClass().getName(), overrideString);
+                log.warn("Ignore config override string - invalid property value ({} - {}): {}", value, value != null ? value.getClass().getName() : "", overrideString);
                 return false;
             }
         }
