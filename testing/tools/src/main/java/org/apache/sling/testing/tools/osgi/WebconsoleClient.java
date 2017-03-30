@@ -19,13 +19,16 @@ package org.apache.sling.testing.tools.osgi;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.StringReader;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.http.RetryingContentChecker;
@@ -108,7 +111,7 @@ public class WebconsoleClient {
         new RetryingContentChecker(executor, builder, username, password).check(path, 200, timeoutSeconds, 500);
     }
     
-    private JSONObject getBundleData(String symbolicName) throws Exception {
+    private JsonObject getBundleData(String symbolicName) throws Exception {
         // This returns a data structure like
         // {"status":"Bundle information: 173 bundles in total - all 173 bundles active.","s":[173,171,2,0,0],"data":
         //  [
@@ -121,16 +124,16 @@ public class WebconsoleClient {
         ).assertStatus(200)
         .getContent();
         
-        final JSONObject root = new JSONObject(content);
-        if(!root.has(JSON_KEY_DATA)) {
+        final JsonObject root = Json.createReader(new StringReader(content)).readObject();
+        if(!root.containsKey(JSON_KEY_DATA)) {
             fail(path + " does not provide '" + JSON_KEY_DATA + "' element, JSON content=" + content);
         }
-        final JSONArray data = root.getJSONArray(JSON_KEY_DATA);
-        if(data.length() < 1) {
+        final JsonArray data = root.getJsonArray(JSON_KEY_DATA);
+        if(data.size() < 1) {
             fail(path + "." + JSON_KEY_DATA + " is empty, JSON content=" + content);
         }
-        final JSONObject bundle = data.getJSONObject(0);
-        if(!bundle.has(JSON_KEY_STATE)) {
+        final JsonObject bundle = data.getJsonObject(0);
+        if(!bundle.containsKey(JSON_KEY_STATE)) {
             fail(path + ".data[0].state missing, JSON content=" + content);
         }
         return bundle;
@@ -138,19 +141,19 @@ public class WebconsoleClient {
 
     /** Get bundle id */
     public long getBundleId(String symbolicName) throws Exception {
-        final JSONObject bundle = getBundleData(symbolicName);
-        return bundle.getLong(JSON_KEY_ID);
+        final JsonObject bundle = getBundleData(symbolicName);
+        return bundle.getJsonNumber(JSON_KEY_ID).longValue();
     }
     
     /** Get bundle version **/
     public String getBundleVersion(String symbolicName) throws Exception {
-        final JSONObject bundle = getBundleData(symbolicName);
+        final JsonObject bundle = getBundleData(symbolicName);
         return bundle.getString(JSON_KEY_VERSION);
     }
     
     /** Get specified bundle state */
     public String getBundleState(String symbolicName) throws Exception {
-        final JSONObject bundle = getBundleData(symbolicName);
+        final JsonObject bundle = getBundleData(symbolicName);
         return bundle.getString(JSON_KEY_STATE);
     }
     
