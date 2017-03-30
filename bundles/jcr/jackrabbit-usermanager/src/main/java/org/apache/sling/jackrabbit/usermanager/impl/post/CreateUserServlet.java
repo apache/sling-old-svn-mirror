@@ -16,6 +16,7 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -296,8 +297,7 @@ public class CreateUserServlet extends AbstractAuthorizablePostServlet implement
                 String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
                     + user.getID();
 
-                Map<String, RequestProperty> reqProperties = collectContent(
-                    properties, userPath);
+                Collection<RequestProperty> reqProperties = collectContent(properties, userPath);
 
                 changes.add(Modification.onCreated(userPath));
 

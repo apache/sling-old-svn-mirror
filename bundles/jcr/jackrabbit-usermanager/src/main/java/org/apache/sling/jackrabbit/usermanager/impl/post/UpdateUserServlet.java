@@ -16,6 +16,7 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -146,7 +147,7 @@ public class UpdateUserServlet extends AbstractAuthorizablePostServlet
         String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
             + user.getID();
 
-        Map<String, RequestProperty> reqProperties = collectContent(properties, userPath);
+        Collection<RequestProperty> reqProperties = collectContent(properties, userPath);
         try {
             // cleanup any old content (@Delete parameters)
             processDeletes(user, reqProperties, changes);
