@@ -44,11 +44,6 @@ public class InvalidResourcePostProcessorException extends RuntimeException {
         this.resourceBundle = resourceBundle;
     }
 
-    /** @return the underlying {@link ValidationResult} */
-    public ValidationResult getResult() {
-        return result;
-    }
-
     public String getMessage() {
         StringBuilder builder = new StringBuilder();
         boolean isFirst = true;
