@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.core.it.tests;
+package org.apache.sling.validation.impl.it.tests;
 
 import java.io.IOException;
 
