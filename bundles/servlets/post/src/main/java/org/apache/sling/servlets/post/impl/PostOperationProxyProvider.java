@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * {@link SlingPostOperation} services being registered and wraps them with a
  * proxy for the new {@link PostOperation} API and registers the procies.
  */
-@Component
+@Component(service = {})
 public class PostOperationProxyProvider implements ServiceListener {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
