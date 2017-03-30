@@ -21,12 +21,17 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonBuilderFactory;
+import javax.json.JsonException;
+import javax.json.JsonValue;
+import javax.json.JsonWriter;
+import javax.json.stream.JsonGenerator;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.junit.Renderer;
 import org.apache.sling.junit.RendererFactory;
 import org.apache.sling.junit.SlingTestContextProvider;
@@ -38,7 +43,7 @@ import org.junit.runner.notification.RunListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** JSON renderer for JUnit servlet */
+/** Json renderer for JUnit servlet */
 @Component(immediate=false)
 @Service
 public class JsonRenderer extends RunListener implements Renderer,RendererFactory {
@@ -48,7 +53,7 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
     public static final String INFO_SUBTYPE_KEY = "INFO_SUBTYPE";
     public static final String TEST_METADATA = "test_metadata";
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private JSONWriter writer;
+    private JsonGenerator writer;
     
     public Renderer createRenderer() { 
         return new JsonRenderer();
@@ -68,11 +73,10 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
         }
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        writer = new JSONWriter(response.getWriter());
-        writer.setTidy(true);
+        writer = Json.createGenerator(response.getWriter());
         try {
-            writer.array();
-        } catch(JSONException jex) {
+            writer.writeStartArray();
+        } catch(JsonException jex) {
             throw (IOException)new IOException().initCause(jex);
         }
     }
@@ -80,9 +84,9 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
     public void cleanup() {
         if(writer != null) {
             try {
-                writer.endArray();
-            } catch(JSONException jex) {
-                log.warn("JSONException in cleanup()", jex);
+                writer.writeEnd();
+            } catch(JsonException jex) {
+                log.warn("JsonException in cleanup()", jex);
             }
         }
         writer = null;
@@ -91,43 +95,42 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
     public void info(String cssClass, String info) {
         try {
             startItem("info");
-            writer.key(INFO_SUBTYPE_KEY).value(cssClass);
-            writer.key("info").value(info);
+            writer.write(INFO_SUBTYPE_KEY, cssClass);
+            writer.write("info", info);
             endItem();
-        } catch(JSONException jex) {
-            log.warn("JSONException in info()", jex);
+        } catch(JsonException jex) {
+            log.warn("JsonException in info()", jex);
         }
     }
 
     public void list(String cssClass, Collection<String> data) {
         try {
             startItem("list");
-            writer.key(INFO_SUBTYPE_KEY).value(cssClass);
-            writer.key("data");
-            writer.array();
+            writer.write(INFO_SUBTYPE_KEY, cssClass);
+            writer.writeStartArray("data");
             for(String str : data) {
-                writer.value(str);
+                writer.write(str);
             }
-            writer.endArray();
+            writer.writeEnd();
             endItem();
-        } catch(JSONException jex) {
-            log.warn("JSONException in list()", jex);
+        } catch(JsonException jex) {
+            log.warn("JsonException in list()", jex);
         }
     }
 
     public void title(int level, String title) {
-        // Titles are not needed in JSON
+        // Titles are not needed in Json
     }
     
     public void link(String info, String url, String method) {
         try {
             startItem("link");
-            writer.key("info").value(info);
-            writer.key("method").value(method);
-            writer.key("url").value(url);
+            writer.write("info",info);
+            writer.write("method",method);
+            writer.write("url",url);
             endItem();
-        } catch(JSONException jex) {
-            log.warn("JSONException in link()", jex);
+        } catch(JsonException jex) {
+            log.warn("JsonException in link()", jex);
         }
     }
 
@@ -139,7 +142,7 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
     public void testStarted(Description description) throws Exception {
         super.testStarted(description);
         startItem("test");
-        writer.key("description").value(description.toString());
+        writer.write("description",description.toString());
     }
     
     @Override
@@ -154,8 +157,8 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
     
     @Override
     public void testFailure(Failure failure) throws Exception {
-        writer.key("failure").value(failure.toString());
-        writer.key("trace").value(failure.getTrace());
+        writer.write("failure",failure.toString());
+        writer.write("trace",failure.getTrace());
     }
     
     @Override
@@ -163,25 +166,41 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
         // Not needed, info is already present in the output
     }
     
-    void startItem(String name) throws JSONException {
-        writer.object();
-        writer.key(INFO_TYPE_KEY).value(name);
+    void startItem(String name) throws JsonException {
+        writer.writeStartObject();
+        writer.write(INFO_TYPE_KEY,name);
     }
     
-    void endItem() throws JSONException {
-        writer.endObject();
+    void endItem() throws JsonException {
+        writer.writeEnd();
     }
     
-    void outputContextMap(Map<String, Object> data) throws JSONException {
-        writer.key(TEST_METADATA);
-        writer.object();
+    void outputContextMap(Map<String, Object> data) throws JsonException {
+        writer.writeStartObject(TEST_METADATA);
         try {
             for(Map.Entry<String, Object> e : data.entrySet()) {
-                writer.key(e.getKey());
-                writer.value(e.getValue());
+                Object value = e.getValue();
+                if (value instanceof Long) {
+                    writer.write(e.getKey(), (Long)e.getValue());
+                }
+                else if (value instanceof Integer) {
+                    writer.write(e.getKey(), (Integer)e.getValue());
+                }
+                else if (value instanceof Double) {
+                    writer.write(e.getKey(), (Double)e.getValue());
+                }
+                else if (value instanceof Boolean) {
+                    writer.write(e.getKey(), (Boolean)e.getValue());
+                }
+                else if (value instanceof String) {
+                    writer.write(e.getKey(), (String)e.getValue());
+                }
+                else {
+                    throw new IllegalArgumentException("Unexpected value for JSON: " + value);
+                }
             }
         } finally {
-            writer.endObject();
+            writer.writeEnd();
         }
     }
 }
