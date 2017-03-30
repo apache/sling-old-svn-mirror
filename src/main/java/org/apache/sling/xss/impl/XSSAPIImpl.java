@@ -29,16 +29,15 @@ import javax.json.JsonReaderFactory;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.xss.ProtectionContext;
 import org.apache.sling.xss.XSSAPI;
 import org.apache.sling.xss.XSSFilter;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.owasp.encoder.Encode;
 import org.owasp.esapi.ESAPI;
 import org.owasp.esapi.Validator;
@@ -48,7 +47,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
 @Component
-@Service(value = XSSAPI.class)
 public class XSSAPIImpl implements XSSAPI {
     private static final Logger LOGGER = LoggerFactory.getLogger(XSSAPIImpl.class);
 
@@ -64,7 +62,6 @@ public class XSSAPIImpl implements XSSAPI {
     private volatile JsonReaderFactory jsonReaderFactory;
 
     @Activate
-    @SuppressWarnings("unused")
     protected void activate() {
         factory = SAXParserFactory.newInstance();
         factory.setValidating(false);
@@ -82,7 +79,6 @@ public class XSSAPIImpl implements XSSAPI {
     }
 
     @Deactivate
-    @SuppressWarnings("unused")
     protected void deactivate() {
         factory = null;
         jsonReaderFactory = null;
@@ -165,9 +161,6 @@ public class XSSAPIImpl implements XSSAPI {
         // fall through to default if empty, null, or validation failure
         return defaultValue;
     }
-
-    private static final String LINK_PREFIX = "<a href=\"";
-    private static final String LINK_SUFFIX = "\"></a>";
 
     private static final String MANGLE_NAMESPACE_OUT_SUFFIX = ":";
 

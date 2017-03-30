@@ -16,7 +16,7 @@
  ******************************************************************************/
 package org.apache.sling.xss;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * This service should be used to protect output against potential XSS attacks.
