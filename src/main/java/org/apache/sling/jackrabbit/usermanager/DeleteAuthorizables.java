@@ -44,7 +44,7 @@ public interface DeleteAuthorizables {
      * @param baseResource the base resource to calculate the relative paths from (required)
      * @param paths An array of relative resource paths to Authorizables to be deleted (required)
      * @param changes The list of changes for this operation (optional)
-     * @throws RepositoryException
+     * @throws RepositoryException if authorizable (user or group) can't be deleted
      */
     public void deleteAuthorizables(Session jcrSession,
                             Resource baseResource,

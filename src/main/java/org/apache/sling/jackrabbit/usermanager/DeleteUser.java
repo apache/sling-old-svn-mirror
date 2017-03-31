@@ -42,7 +42,7 @@ public interface DeleteUser {
      * @param jcrSession the JCR session of the user creating the user
      * @param name The name of the user to delete (required)
      * @param changes The list of changes for this operation (optional)
-     * @throws RepositoryException
+     * @throws RepositoryException if user can't be deleted
      */
     public void deleteUser(Session jcrSession,
                             String name,

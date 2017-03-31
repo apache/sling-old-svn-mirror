@@ -208,14 +208,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
     //keep track of the bundle context
     private BundleContext bundleContext;
 
-    /**
-     * Called by SCR to activate the component.
-     *
-     * @throws InvalidKeyException
-     * @throws NoSuchAlgorithmException
-     * @throws IllegalStateException
-     * @throws UnsupportedEncodingException
-     */
     @Activate
     protected void activate(BundleContext bundleContext, Map<String, Object> properties)
             throws InvalidKeyException, NoSuchAlgorithmException,

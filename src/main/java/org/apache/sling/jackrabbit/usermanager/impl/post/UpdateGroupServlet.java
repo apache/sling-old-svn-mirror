@@ -57,18 +57,18 @@ import org.osgi.service.component.annotations.Reference;
  * <code>/system/userManager/group/testGroup</code>. This servlet responds at
  * <code>/system/userManager/group/testGroup.update.html</code>
  * </p>
- * <h4>Methods</h4>
+ * <h3>Methods</h3>
  * <ul>
  * <li>POST</li>
  * </ul>
- * <h4>Post Parameters</h4>
+ * <h3>Post Parameters</h3>
  * <dl>
  * <dt>*</dt>
  * <dd>Any additional parameters become properties of the group node (optional)</dd>
  * <dt>*@Delete</dt>
  * <dd>The property is deleted, eg prop1@Delete</dd>
  * </dl>
- * <h4>Response</h4>
+ * <h3>Response</h3>
  * <dl>
  * <dt>200</dt>
  * <dd>Success, a redirect is sent to the group's resource locator. The redirect comes with
@@ -78,7 +78,7 @@ import org.osgi.service.component.annotations.Reference;
  * <dt>500</dt>
  * <dd>Failure</dd>
  * </dl>
- * <h4>Example</h4>
+ * <h3>Example</h3>
  * 
  * <code>
  * curl -Fprop1=value2 -Fproperty1=value1 http://localhost:8080/system/userManager/group/testGroup.update.html
@@ -157,7 +157,7 @@ public class UpdateGroupServlet extends AbstractGroupPostServlet
         String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
             + group.getID();
 
-        Collection<RequestProperty> reqProperties = collectContent(properties, groupPath);
+        Collection<RequestProperty> reqProperties = collectContent(properties);
         try {
             // cleanup any old content (@Delete parameters)
             processDeletes(group, reqProperties, changes);

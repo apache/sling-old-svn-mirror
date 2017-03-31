@@ -57,18 +57,18 @@ import org.osgi.service.component.annotations.Reference;
  * <code>/system/userManager/group</code>. This servlet responds at
  * <code>/system/userManager/group.create.html</code>
  * </p>
- * <h4>Methods</h4>
+ * <h3>Methods</h3>
  * <ul>
  * <li>POST</li>
  * </ul>
- * <h4>Post Parameters</h4>
+ * <h3>Post Parameters</h3>
  * <dl>
  * <dt>:name</dt>
  * <dd>The name of the new group (required)</dd>
  * <dt>*</dt>
  * <dd>Any additional parameters become properties of the group node (optional)</dd>
  * </dl>
- * <h4>Response</h4>
+ * <h3>Response</h3>
  * <dl>
  * <dt>200</dt>
  * <dd>Success, a redirect is sent to the group resource locator. The redirect comes with
@@ -76,7 +76,7 @@ import org.osgi.service.component.annotations.Reference;
  * <dt>500</dt>
  * <dd>Failure, including group already exists. HTML explains the failure.</dd>
  * </dl>
- * <h4>Example</h4>
+ * <h3>Example</h3>
  * 
  * <code>
  * curl -F:name=newGroupA  -Fproperty1=value1 http://localhost:8080/system/userManager/group.create.html
@@ -177,7 +177,7 @@ public class CreateGroupServlet extends AbstractGroupPostServlet implements Crea
             String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
                 + group.getID();
             
-            Collection<RequestProperty> reqProperties = collectContent(properties, groupPath);
+            Collection<RequestProperty> reqProperties = collectContent(properties);
             changes.add(Modification.onCreated(groupPath));
 
             // write content from form

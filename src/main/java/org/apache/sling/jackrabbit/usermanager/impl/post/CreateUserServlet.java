@@ -59,11 +59,11 @@ import org.slf4j.LoggerFactory;
  * <code>/rep:system/rep:userManager/rep:users</code> mapped to a resource url
  * <code>/system/userManager/user</code>. This servlet responds at <code>/system/userManager/user.create.html</code>
  * </p>
- * <h4>Methods</h4>
+ * <h3>Methods</h3>
  * <ul>
  * <li>POST</li>
  * </ul>
- * <h4>Post Parameters</h4>
+ * <h3>Post Parameters</h3>
  * <dl>
  * <dt>:name</dt>
  * <dd>The name of the new user (required)</dd>
@@ -74,7 +74,7 @@ import org.slf4j.LoggerFactory;
  * <dt>*</dt>
  * <dd>Any additional parameters become properties of the user node (optional)</dd>
  * </dl>
- * <h4>Response</h4>
+ * <h3>Response</h3>
  * <dl>
  * <dt>200</dt>
  * <dd>Success, a redirect is sent to the users resource locator. The redirect comes with
@@ -82,7 +82,7 @@ import org.slf4j.LoggerFactory;
  * <dt>500</dt>
  * <dd>Failure, including user already exists. HTML explains the failure.</dd>
  * </dl>
- * <h4>Example</h4>
+ * <h3>Example</h3>
  *
  * <code>
  * curl -F:name=ieb -Fpwd=password -FpwdConfirm=password -Fproperty1=value1 http://localhost:8080/system/userManager/user.create.html
@@ -151,11 +151,6 @@ public class CreateUserServlet extends AbstractAuthorizablePostServlet implement
 
     // ---------- SCR integration ---------------------------------------------
 
-    /**
-     * Activates this component.
-     *
-     * @param props The configuration properties
-     */
     @Activate
     protected void activate(Config config, Map<String, Object> props) {
         super.activate(props);
@@ -297,7 +292,7 @@ public class CreateUserServlet extends AbstractAuthorizablePostServlet implement
                 String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
                     + user.getID();
 
-                Collection<RequestProperty> reqProperties = collectContent(properties, userPath);
+                Collection<RequestProperty> reqProperties = collectContent(properties);
 
                 changes.add(Modification.onCreated(userPath));
 

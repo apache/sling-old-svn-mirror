@@ -44,11 +44,11 @@ public interface CreateUser {
      * @param jcrSession the JCR session of the user creating the user
      * @param name The name of the new user (required)
      * @param password The password of the new user (required)
-     * @param password The password of the new user again (required)
+     * @param passwordConfirm The password of the new user again (required)
      * @param properties Extra properties to update on the user.  The entry values should be either a String or String[] (optional)
      * @param changes The list of changes for this operation (optional)
      * @return the user that was created
-     * @throws RepositoryException
+     * @throws RepositoryException if user can't be created
      */
     public User createUser(Session jcrSession,
                             String name,
