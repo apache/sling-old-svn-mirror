@@ -150,7 +150,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
         final Resource resource = resolver.getResource(path);
 
         if ( resource == null || ResourceUtil.isSyntheticResource(resource) ) {
-            deepGetOrCreateNode(resolver, path, reqProperties, changes, versioningConfiguration);
+            deepGetOrCreateResource(resolver, path, reqProperties, changes, versioningConfiguration);
             response.setCreateRequest(true);
 
         } else {
@@ -541,17 +541,16 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
 
     /**
-     * Deep gets or creates a node, parent-padding with default nodes nodes. If
-     * the path is empty, the given parent node is returned.
+     * Deep gets or creates a resource, parent-padding with default resources. If
+     * the path is empty, the given parent resource is returned.
      *
-     * @param path path to node that needs to be deep-created
-     * @param checkedOutNodes
-     * @return node at path
-     * @throws RepositoryException if an error occurs
+     * @param path path to resources that needs to be deep-created
+     * @return Resource at path
+     * @throws PersistenceException if an error occurs
      * @throws IllegalArgumentException if the path is relative and parent is
      *             <code>null</code>
      */
-    protected Resource deepGetOrCreateNode(final ResourceResolver resolver,
+    protected Resource deepGetOrCreateResource(final ResourceResolver resolver,
                     final String path,
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,

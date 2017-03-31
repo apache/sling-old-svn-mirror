@@ -19,18 +19,19 @@
 package org.apache.sling.servlets.post.impl.operations;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.servlets.post.PostOperation;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
-import org.apache.sling.servlets.post.PostOperation;
 import org.apache.sling.servlets.post.SlingPostProcessor;
 
 /**
  * The <code>NopOperation</code> class implements no operation at all. It just
- * sets the response status accroding to the <i>:nopstatus</i> parameter if
+ * sets the response status according to the <i>:nopstatus</i> parameter if
  * availables. Otherwise the status is set as 200/OK.
  */
 public class NopOperation implements PostOperation {
 
+    @Override
     public void run(SlingHttpServletRequest request, PostResponse response,
             SlingPostProcessor[] processors) {
 

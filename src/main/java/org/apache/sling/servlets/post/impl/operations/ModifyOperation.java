@@ -254,7 +254,7 @@ public class ModifyOperation extends AbstractCreateOperation {
                 session.getItem(propPath).remove();
                 changes.add(Modification.onDeleted(propPath));
             } else {
-                Resource parent = deepGetOrCreateNode(resolver, property.getParentPath(),
+                Resource parent = deepGetOrCreateResource(resolver, property.getParentPath(),
                     reqProperties, changes, versioningConfiguration);
                 this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);
             }
@@ -382,7 +382,7 @@ public class ModifyOperation extends AbstractCreateOperation {
 
         for (final RequestProperty prop : reqProperties.values()) {
             if (prop.hasValues()) {
-                final Resource parent = deepGetOrCreateNode(resolver,
+                final Resource parent = deepGetOrCreateResource(resolver,
                     prop.getParentPath(), reqProperties, changes, versioningConfiguration);
 
                 this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);

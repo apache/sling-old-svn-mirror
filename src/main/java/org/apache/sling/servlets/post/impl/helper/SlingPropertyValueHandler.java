@@ -34,6 +34,7 @@ import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -48,17 +49,17 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 public class SlingPropertyValueHandler {
 
     /**
-     * Defins a map of auto properties
+     * Defines a map of auto properties
      */
     private static final Map<String, AutoType> AUTO_PROPS = new HashMap<>();
     static {
         AUTO_PROPS.put("created", AutoType.CREATED);
         AUTO_PROPS.put("createdBy", AutoType.CREATED_BY);
-        AUTO_PROPS.put("jcr:created", AutoType.CREATED);
+        AUTO_PROPS.put(JcrConstants.JCR_CREATED, AutoType.CREATED);
         AUTO_PROPS.put("jcr:createdBy", AutoType.CREATED_BY);
         AUTO_PROPS.put("lastModified", AutoType.MODIFIED);
         AUTO_PROPS.put("lastModifiedBy", AutoType.MODIFIED_BY);
-        AUTO_PROPS.put("jcr:lastModified", AutoType.MODIFIED);
+        AUTO_PROPS.put(JcrConstants.JCR_LASTMODIFIED, AutoType.MODIFIED);
         AUTO_PROPS.put("jcr:lastModifiedBy", AutoType.MODIFIED_BY);
     }
 
@@ -75,10 +76,6 @@ public class SlingPropertyValueHandler {
      * current date for all properties in this request
      */
     private final Calendar now = Calendar.getInstance();
-
-    // hard-coding WEAKREFERENCE as propertyType = 10 because we don'
-    // want to depend upon jcr 2 api just for the constant.
-    private static final int PROPERTY_TYPE_WEAKREFERENCE = 10;
 
     /**
      * Constructs a propert value handler
@@ -370,11 +367,11 @@ public class SlingPropertyValueHandler {
 
 
     private boolean isReferencePropertyType(int propertyType) {
-        return propertyType == PropertyType.REFERENCE || propertyType == PROPERTY_TYPE_WEAKREFERENCE;
+        return propertyType == PropertyType.REFERENCE || propertyType == PropertyType.WEAKREFERENCE;
     }
 
     private boolean isWeakReference(int propertyType) {
-        return propertyType == PROPERTY_TYPE_WEAKREFERENCE;
+        return propertyType == PropertyType.WEAKREFERENCE;
     }
 
     /**
