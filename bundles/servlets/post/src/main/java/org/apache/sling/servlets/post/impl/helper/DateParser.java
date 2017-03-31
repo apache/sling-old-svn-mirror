@@ -24,9 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
-import javax.jcr.Value;
-import javax.jcr.ValueFactory;
-
 import org.apache.jackrabbit.util.ISO8601;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +42,7 @@ public class DateParser {
     /**
      * lits of formats
      */
-    private final List<CalendarParserSupport> formats = new LinkedList<CalendarParserSupport>();
+    private final List<CalendarParserSupport> formats = new LinkedList<>();
 
     /**
      * Registers a format string to the list of internally checked ones.
@@ -67,12 +64,11 @@ public class DateParser {
      * Parses the given source string and returns the respective calendar
      * instance. If no format matches returns <code>null</code>.
      * <p/>
-     * Note: method is synchronized because SimpleDateFormat is not.
      *
      * @param source date time source string
      * @return calendar representation of the source or <code>null</code>
      */
-    public synchronized Calendar parse(String source) {
+    public Calendar parse(String source) {
         for (CalendarParserSupport fmt : formats) {
             try {
                 final Calendar c = fmt.parse(source);
@@ -95,40 +91,16 @@ public class DateParser {
      * instances. If no format matches for any of the sources
      * returns <code>null</code>.
      * <p/>
-     * Note: method is synchronized because SimpleDateFormat is not.
      *
      * @param sources date time source strings
      * @return calendar representations of the source or <code>null</code>
      */
-    public synchronized Calendar[] parse(String sources[]) {
+    public Calendar[] parse(String sources[]) {
         Calendar ret[] = new Calendar[sources.length];
         for (int i=0; i< sources.length; i++) {
             if ((ret[i] = parse(sources[i])) == null) {
                 return null;
             }
-        }
-        return ret;
-    }
-
-    /**
-     * Parses the given source strings and returns the respective jcr date value
-     * instances. If no format matches for any of the sources
-     * returns <code>null</code>.
-     * <p/>
-     * Note: method is synchronized because SimpleDateFormat is not.
-     *
-     * @param sources date time source strings
-     * @param factory the value factory
-     * @return jcr date value representations of the source or <code>null</code>
-     */
-    public synchronized Value[] parse(String sources[], ValueFactory factory) {
-        Value ret[] = new Value[sources.length];
-        for (int i=0; i< sources.length; i++) {
-            Calendar c = parse(sources[i]);
-            if (c == null) {
-                return null;
-            }
-            ret[i] = factory.createValue(c);
         }
         return ret;
     }
@@ -144,6 +116,7 @@ public class DateParser {
             this.dateFormat = new SimpleDateFormat(format, Locale.US);
         }
 
+        @Override
         public Calendar parse(String dateTime) throws ParseException {
             final Date d;
             synchronized (dateFormat) {
@@ -166,6 +139,7 @@ public class DateParser {
 
         static final String FORMAT_MARKER = "ISO8601";
 
+        @Override
         public Calendar parse(String dateTime) throws ParseException {
             try {
                 final Calendar c = ISO8601.parse(dateTime);

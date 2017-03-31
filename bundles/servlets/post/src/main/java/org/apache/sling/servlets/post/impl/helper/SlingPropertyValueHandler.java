@@ -50,7 +50,7 @@ public class SlingPropertyValueHandler {
     /**
      * Defins a map of auto properties
      */
-    private static final Map<String, AutoType> AUTO_PROPS = new HashMap<String, AutoType>();
+    private static final Map<String, AutoType> AUTO_PROPS = new HashMap<>();
     static {
         AUTO_PROPS.put("created", AutoType.CREATED);
         AUTO_PROPS.put("createdBy", AutoType.CREATED_BY);
@@ -316,7 +316,7 @@ public class SlingPropertyValueHandler {
         // add/remove patch operations; e.g. if the value "foo" occurs twice
         // in the existing array, and is not touched, afterwards there should
         // still be two times "foo" in the list, even if this is not a real set.
-        List<String> oldValues = new ArrayList<String>();
+        List<String> oldValues = new ArrayList<>();
 
         if (parent.valueMap.containsKey(name)) {
             if ( parent.node != null ) {
@@ -496,15 +496,38 @@ public class SlingPropertyValueHandler {
     }
 
     /**
+     * Parses the given source strings and returns the respective jcr date value
+     * instances. If no format matches for any of the sources
+     * returns <code>null</code>.
+     * <p/>
+     *
+     * @param sources date time source strings
+     * @param factory the value factory
+     * @return jcr date value representations of the source or <code>null</code>
+     */
+    private Value[] parse(String sources[], ValueFactory factory) {
+        Value ret[] = new Value[sources.length];
+        for (int i=0; i< sources.length; i++) {
+            Calendar c = dateParser.parse(sources[i]);
+            if (c == null) {
+                return null;
+            }
+            ret[i] = factory.createValue(c);
+        }
+        return ret;
+    }
+
+
+    /**
      * Stores property value(s) as date(s). Will parse the date(s) from the string
      * value(s) in the {@link RequestProperty}.
      *
-     * @return true only if parsing was successfull and the property was actually changed
+     * @return true only if parsing was successful and the property was actually changed
      */
     private boolean storeAsDate(final Modifiable parent, String name, String[] values, boolean multiValued, ValueFactory valFac)
             throws RepositoryException, PersistenceException {
         if (multiValued) {
-            final Value[] array = dateParser.parse(values, valFac);
+            final Value[] array = parse(values, valFac);
             if (array != null) {
                 if ( parent.node != null ) {
                     parent.node.setProperty(name, array);

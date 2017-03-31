@@ -19,16 +19,16 @@
 
 package org.apache.sling.servlets.post.impl.operations;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 
 /**
  * MockResource is synthetic, which doesnt work here.
@@ -131,5 +131,15 @@ public class MockRealResource implements Resource {
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean hasChildren() {
+        return resourceResolver.listChildren(this).hasNext();
+    }
+
+    @Override
+    public ValueMap getValueMap() {
+        return adaptTo(ValueMap.class);
     }
 }
