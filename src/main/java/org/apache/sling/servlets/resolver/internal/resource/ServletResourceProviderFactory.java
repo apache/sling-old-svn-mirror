@@ -20,10 +20,12 @@ package org.apache.sling.servlets.resolver.internal.resource;
 
 import static org.apache.sling.api.servlets.ServletResolverConstants.SLING_SERVLET_EXTENSIONS;
 import static org.apache.sling.api.servlets.ServletResolverConstants.SLING_SERVLET_METHODS;
+import static org.apache.sling.api.servlets.ServletResolverConstants.SLING_SERVLET_NAME;
 import static org.apache.sling.api.servlets.ServletResolverConstants.SLING_SERVLET_PATHS;
 import static org.apache.sling.api.servlets.ServletResolverConstants.SLING_SERVLET_PREFIX;
 import static org.apache.sling.api.servlets.ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES;
 import static org.apache.sling.api.servlets.ServletResolverConstants.SLING_SERVLET_SELECTORS;
+import static org.osgi.service.component.ComponentConstants.COMPONENT_NAME;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,9 +35,9 @@ import javax.servlet.Servlet;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,14 +134,14 @@ public class ServletResourceProviderFactory {
             if (log.isDebugEnabled()) {
                 log.debug(
                     "create({}): ServiceReference has no registration settings, ignoring",
-                    getServiceIdentifier(ref));
+                    getServiceReferenceInfo(ref));
             }
             return null;
         }
 
         if (log.isDebugEnabled()) {
             log.debug("create({}): Registering servlet for paths {}",
-                getServiceIdentifier(ref), pathSet);
+                    getServiceReferenceInfo(ref), pathSet);
         }
 
         return new ServletResourceProvider(pathSet);
@@ -172,7 +174,7 @@ public class ServletResourceProviderFactory {
                 if ( !isNumber ) {
                     if (log.isDebugEnabled()) {
                         log.debug("getPrefix({}): Configuration property is ignored {}",
-                            getServiceIdentifier(ref), value);
+                                getServiceReferenceInfo(ref), value);
                     }
                     if ( this.servletRoot != null ) {
                         return this.servletRoot;
@@ -221,7 +223,7 @@ public class ServletResourceProviderFactory {
         if (types == null || types.length == 0) {
             if (log.isDebugEnabled()) {
                 log.debug("addByType({}): no resource types declared",
-                    getServiceIdentifier(ref));
+                        getServiceReferenceInfo(ref));
             }
             return;
         }
@@ -244,7 +246,7 @@ public class ServletResourceProviderFactory {
                 if (log.isDebugEnabled()) {
                     log.debug(
                         "addByType({}): No methods declared, assuming GET/HEAD",
-                        getServiceIdentifier(ref));
+                        getServiceReferenceInfo(ref));
                 }
                 methods = DEFAULT_SERVLET_METHODS;
             }
@@ -252,7 +254,7 @@ public class ServletResourceProviderFactory {
         } else if (methods.length == 1 && ALL_METHODS.equals(methods[0])) {
             if (log.isDebugEnabled()) {
                 log.debug("addByType({}): Assuming all methods for '*'",
-                    getServiceIdentifier(ref));
+                        getServiceReferenceInfo(ref));
             }
             methods = null;
         }
@@ -315,18 +317,69 @@ public class ServletResourceProviderFactory {
         }
     }
 
-    private String getServiceIdentifier(ServiceReference<Servlet> ref) {
-        Object id = ref.getProperty(ComponentConstants.COMPONENT_NAME);
-        if (id != null) {
-            return id.toString();
+    public static String getServiceReferenceInfo(final ServiceReference<Servlet> reference) {
+        final StringBuilder sb = new StringBuilder("service ");
+        sb.append(String.valueOf(reference.getProperty(Constants.SERVICE_ID)));
+        final Object servletName = reference.getProperty(SLING_SERVLET_NAME);
+        final Object pid = reference.getProperty(Constants.SERVICE_PID);
+        Object componentName = reference.getProperty(COMPONENT_NAME);
+        if ( pid != null && pid.equals(componentName) ) {
+            componentName = null;
         }
-
-        id = ref.getProperty(Constants.SERVICE_PID);
-        if (id != null) {
-            return id.toString();
+        if ( servletName != null || pid != null || componentName != null ) {
+            sb.append(" (");
+            boolean needsComma = false;
+            if ( servletName != null ) {
+                sb.append("name=");
+                sb.append(servletName);
+                needsComma = true;
+            }
+            if ( pid != null ) {
+                if ( needsComma ) {
+                    sb.append(", ");
+                }
+                sb.append("pid=");
+                sb.append(pid);
+                needsComma = true;
+            }
+            if ( componentName != null ) {
+                if ( needsComma ) {
+                    sb.append(", ");
+                }
+                sb.append("component=");
+                sb.append(componentName);
+                needsComma = true;
+            }
+            sb.append(")");
         }
-
-        // service.id is guaranteed to be set by the framework
-        return ref.getProperty(Constants.SERVICE_ID).toString();
+        sb.append(" from ");
+        final Bundle bundle = reference.getBundle();
+        if ( bundle == null ) {
+            sb.append("uninstalled bundle");
+        } else {
+            sb.append("bundle ");
+            if ( bundle.getSymbolicName() == null ) {
+                sb.append(String.valueOf(bundle.getBundleId()));
+            } else {
+                sb.append(bundle.getSymbolicName());
+                sb.append(":");
+                sb.append(bundle.getVersion());
+                sb.append(" (");
+                sb.append(String.valueOf(bundle.getBundleId()));
+                sb.append(") ");
+            }
+        }
+        final String[] ocs = (String[]) reference.getProperty("objectClass");
+        if ( ocs != null ) {
+            sb.append("[");
+            for(int i = 0; i < ocs.length; i++) {
+                sb.append(ocs[i]);
+                if (i < ocs.length - 1) {
+                    sb.append(", ");
+                }
+            }
+            sb.append("]");
+        }
+        return sb.toString();
     }
 }
