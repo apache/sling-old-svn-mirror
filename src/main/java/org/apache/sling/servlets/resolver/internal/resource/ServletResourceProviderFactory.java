@@ -120,7 +120,7 @@ public class ServletResourceProviderFactory {
         }
     }
 
-    public ServletResourceProvider create(ServiceReference<Servlet> ref) {
+    public ServletResourceProvider create(final ServiceReference<Servlet> ref, final Servlet servlet) {
 
         Set<String> pathSet = new HashSet<>();
 
@@ -144,7 +144,7 @@ public class ServletResourceProviderFactory {
                     getServiceReferenceInfo(ref), pathSet);
         }
 
-        return new ServletResourceProvider(pathSet);
+        return new ServletResourceProvider(servlet, pathSet);
     }
 
     /**

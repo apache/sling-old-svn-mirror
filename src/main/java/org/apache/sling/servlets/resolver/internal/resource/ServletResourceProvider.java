@@ -35,18 +35,15 @@ public class ServletResourceProvider extends ResourceProvider<Object> {
 
     private Set<String> resourcePaths;
 
-    ServletResourceProvider(Set<String> resourcePaths) {
-        this.resourcePaths = resourcePaths;
-    }
-
-    public void setServlet(Servlet servlet) {
+    ServletResourceProvider(final Servlet servlet, final Set<String> resourcePaths) {
         this.servlet = servlet;
+        this.resourcePaths = resourcePaths;
     }
 
     @Override
     public Resource getResource(final ResolveContext<Object> ctx, String path, ResourceContext resourceContext, Resource parent) {
         // only return a resource if the servlet has been assigned
-        if (servlet != null && resourcePaths.contains(path)) {
+        if (resourcePaths.contains(path)) {
             return new ServletResource(ctx.getResourceResolver(), servlet, path);
         }
 
