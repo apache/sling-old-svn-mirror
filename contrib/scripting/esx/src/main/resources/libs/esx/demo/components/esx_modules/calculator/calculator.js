@@ -15,8 +15,10 @@
  * limitations under the License.
  */
 
+console.log("calculator");
+
 function calulate(a, b) {
   return a + b;
 }
 exports.math = calulate;
-exports.VERSION = "version 1.1 " + __dirname;
+exports.VERSION = "version 1.1 " + __dirname + " filename: " + __filename;

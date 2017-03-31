@@ -18,6 +18,7 @@
 var Handlebars = require("handlebars");
 var marked = require("marked");
 var URL = require("url");
+var pathInfo = require("pathinfo");
 
 var renderer = new marked.Renderer();
 renderer.blockquote = function (quote) {
@@ -36,6 +37,7 @@ function BlogComponent () {
   this.stylesheet = "";
   this.partialContentTemplateURL = "../../hbstemplates/content.html";
   this.model = currentNode;
+  this.model.viewTypeSmall = pathInfo.hasSelector("small");
   this.model.title = currentNode.properties.pageTitle || currentNode.properties.title || currentNode.properties["jcr:title"] || currentNode.resource.name;
 }
 
@@ -46,19 +48,19 @@ BlogComponent.prototype.pages = function () {
   var pages = [];
   var homePage =
     pages.push({
-        path: this.basePath,
+        path: pathInfo.hasSelector("small") ? this.basePath + ".small": this.basePath,
         title: resolveTitle(this.baseResource),
-        active: (currentNode.resource.path === this.basePath ? 'active' : '')
+        active: ((currentNode.resource.path.indexOf(this.basePath + "/posts")===0 || currentNode.resource.path === this.basePath )? 'active' : '')
     });
 
   var rootPage = require("resource!" + this.basePath + "/pages");
-   var children = rootPage.simpleResource.children;
+   var children = rootPage.children;
 
     for(var key in children) {
         var child =  children[key];
         var nav = {};
-        nav.path =child.path;
-        nav.title =  resolveTitle(child) ;
+        nav.path = pathInfo.hasSelector("small") ? child.path + ".small": child.path;
+        nav.title =  resolveTitle(child);
         nav.active = (currentNode.resource.path === child.path ? 'active' : '');
         pages.push(nav);
     }

@@ -23,9 +23,11 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
+import javax.script.Invocable;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import jdk.nashorn.api.scripting.JSObject;
@@ -38,8 +40,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.scripting.esx.plugins.ConsoleLog;
 import org.apache.sling.scripting.esx.plugins.SimpleResource;
 import org.slf4j.Logger;
@@ -115,16 +115,13 @@ public class Module extends SimpleBindings implements Require {
     private ScriptObjectMirror decoreateScript(String source)
             throws ScriptException {
 
-        String polyfill = "";
-
-        if ("polyfill".equals(get(CONTEXT_FIELD_ID))) {
-            //polyfill = "require('/libs/esx/esx_modules/polyfills/index.js')(this).bind(this)";
-        }
+        // TODO: refactor polyfill for window, global and make require outside the wrapper as function parameter        
         source = "//@sourceURL=" + (String) get("filename") + "\n"
-                + "(function (exports, require, module, __filename,"
+                + "(function (exports, Require, module, __filename,"
                 + " __dirname, currentNode, console, properties, sling, simpleResource) { "
                 + "var window = this;"
                 + "var global = this;"
+                + "function require(id) { console.log('require id= ' + id); return Require.require(id); } require.resolve = function (id) { return Require.resolve(id, currentNode.resource, 1);  };"
                 + source
                 + "})";
 
@@ -182,19 +179,24 @@ public class Module extends SimpleBindings implements Require {
 
                 put("children", children);
 
-                ValueMap map = moduleResource.adaptTo(ValueMap.class);
+                /*ValueMap map = moduleResource.adaptTo(ValueMap.class);
 
-                JSONObject values = new JSONObject(map);
-
-                String jsonprop = values.toString();
-
+                Invocable invocable = (Invocable) factory.getNashornEngine();
+                Object jsonprop = null;
+                try {
+                    jsonprop = invocable.invokeMethod(factory.getNashornEngine().eval("JSON"), "stringify", map);
+                } catch (NoSuchMethodException ex) {
+                    throw new ScriptException(ex);
+                }
+*/
                 SimpleResource simpleResource = moduleResource.adaptTo(SimpleResource.class);
                 put("simpleResource", simpleResource);
-
-                String source = "exports.properties =  " + jsonprop + ";"
+                log.info("this.simpleResource; = " + simpleResource.getPath());
+             /*   String source = "exports.properties =  " + jsonprop + ";"
                         + "exports.path = currentNode.resource.path;"
                         + "exports.simpleResource = this.simpleResource;"
-                        + "exports.children = this.children;";
+                        + "exports.children = this.children;";*/
+               String source = "module.exports = this.simpleResource;";
 
                 function = decoreateScript(source);
             }
@@ -226,7 +228,9 @@ public class Module extends SimpleBindings implements Require {
                 log.debug("module id {} resource is null", get(CONTEXT_FIELD_ID));
             }
 
-            function.call(this, get(CONTEXT_FIELD_EXPORTS), (Require) this::require, this, get(CONTEXT_FIELD_FILENAME),
+            // changed require to be generated within the wrapper
+            // TODO: need to be refactored
+            function.call(this, get(CONTEXT_FIELD_EXPORTS), this, this, get(CONTEXT_FIELD_FILENAME),
                     ((Resource) get(CONTEXT_FIELD_MODULE_RESOURCE)).getParent().getPath(), currentNode,
                     (ConsoleLog) get(CONTEXT_FIELD_CONSOLE),
                     null,
@@ -418,24 +422,20 @@ public class Module extends SimpleBindings implements Require {
                     try {
                         String jsonData = IOUtils.toString(is);
 
-                        JSONObject json;
+                        Invocable invocable = (Invocable) factory.getNashornEngine();
+                        JSObject jsonprop = null;
                         try {
-                            json = new JSONObject(jsonData);
-                        } catch (JSONException ex) {
+                            jsonprop = (JSObject) invocable.invokeMethod(factory.getNashornEngine().eval("JSON"), "parse", jsonData);
+                        } catch (NoSuchMethodException ex) {
                             throw new ScriptException(ex);
                         }
 
-                        if (json.has("main")) {
-                            String packageModule;
-                            try {
-                                packageModule = json.getString("main");
-                            } catch (JSONException ex) {
-                                throw new ScriptException(ex);
-                            }
+                        Object main = jsonprop.getMember("main");
+                        if (main != null) {
+                            String packageModule = (String) main;
 
                             String mainpath = normalizePath(packageModule,
                                     path);
-
                             return loadAsFile(packageModule, mainpath, currentResource, loader);
                         }
 
