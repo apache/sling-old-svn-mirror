@@ -288,6 +288,7 @@
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-extension-i18n</feature>
+    <feature version="${project.version}">sling-servlets</feature>
     <bundle dependency="true">mvn:org.apache.commons/commons-collections4/4.1</bundle>
   </feature>
   <feature name="sling-extension-xss" version="${project.version}">
