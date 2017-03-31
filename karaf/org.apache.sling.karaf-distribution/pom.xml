@@ -44,9 +44,9 @@
   <!-- https://github.com/apache/karaf/blob/master/assemblies/apache-karaf/pom.xml -->
 
   <properties>
-    <org.apache.karaf.version>4.1.0</org.apache.karaf.version>
-    <jna.version>4.2.2</jna.version>
-    <servicemix.specs.version>2.7.0</servicemix.specs.version>
+    <org.apache.karaf.version>4.1.1</org.apache.karaf.version>
+    <jna.version>4.3.0</jna.version>
+    <servicemix.specs.version>2.8.0</servicemix.specs.version>
     <xerces.version>2.11.0_1</xerces.version>
     <xalan.bundle.version>2.7.2_3</xalan.bundle.version>
     <xalan-serializer.bundle.version>2.7.2_1</xalan-serializer.bundle.version>
