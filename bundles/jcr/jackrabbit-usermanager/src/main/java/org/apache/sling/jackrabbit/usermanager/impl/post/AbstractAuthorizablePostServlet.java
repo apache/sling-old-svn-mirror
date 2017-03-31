@@ -31,7 +31,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.api.SlingIOException;
@@ -78,13 +77,11 @@ public abstract class AbstractAuthorizablePostServlet extends
     /**
      * Collects the properties that form the content to be written back to the
      * repository.
-     *
-     * @throws RepositoryException if a repository error occurs
-     * @throws ServletException if an internal error occurs
+     * @param properties the properties out of which to generate the {@link RequestProperty}s
+     * @return the list of {@link RequestProperty}s
      */
     protected Collection<RequestProperty> collectContent(
-            Map<String, ?> properties,
-            String authorizablePath) {
+            Map<String, ?> properties) {
 
         boolean requireItemPrefix = requireItemPathPrefix(properties);
 
@@ -275,9 +272,12 @@ public abstract class AbstractAuthorizablePostServlet extends
 
     /**
      * Writes back the content
+     * @param session the sessioin to write the authorizable properties
+     * @param authorizable the authorizable to modify
+     * @param reqProperties the properties to write
+     * @param changes the list of changes which is supposed to be extended
      *
      * @throws RepositoryException if a repository error occurs
-     * @throws ServletException if an internal error occurs
      */
     protected void writeContent(Session session, Authorizable authorizable,
             Collection<RequestProperty> reqProperties,
@@ -472,11 +472,11 @@ public abstract class AbstractAuthorizablePostServlet extends
     // ------ These methods were copied from AbstractSlingPostOperation ------
 
     /**
-     * Returns <code>true</code> if the <code>name</code> starts with either of
-     * the prefixes {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT
-     * <code>./</code>}, {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT
-     * <code>../</code>} and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE
-     * <code>/</code>}.
+     * @param name the name
+     * @return <code>true</code> if the <code>name</code> starts with either of
+     * the prefixes {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT},
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT} and 
+     * {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE}
      */
     protected boolean hasItemPathPrefix(String name) {
         return name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
@@ -485,12 +485,13 @@ public abstract class AbstractAuthorizablePostServlet extends
     }
 
     /**
-     * Returns true if any of the request parameters starts with
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>}.
+     * @param properties the request parameters
+     * @return {@code true} if any of the request parameters starts with
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT}.
      * In this case only parameters starting with either of the prefixes
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
-     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>} are
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT},
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT}
+     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE} are
      * considered as providing content to be stored. Otherwise all parameters
      * not starting with the command prefix <code>:</code> are considered as
      * parameters to be stored.

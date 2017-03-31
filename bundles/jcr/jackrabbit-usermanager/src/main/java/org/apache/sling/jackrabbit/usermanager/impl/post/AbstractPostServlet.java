@@ -155,11 +155,11 @@ public abstract class AbstractPostServlet extends
     /**
      * Creates an instance of a HtmlResponse.
      * @param req The request being serviced
-     * @return a {@link org.apache.sling.servlets.post.impl.helper.JSONResponse} if any of these conditions are true:
+     * @return a {@link org.apache.sling.servlets.post.JSONResponse} if any of these conditions are true:
      * <ul>
      *   <li>the response content type is application/json
      * </ul>
-     * or a {@link org.apache.sling.api.servlets.HtmlResponse} otherwise
+     * or a {@link org.apache.sling.servlets.post.HtmlResponse} otherwise
      */
     protected AbstractPostResponse createHtmlResponse(SlingHttpServletRequest req) {
         if (JSONResponse.RESPONSE_CONTENT_TYPE.equals(req.getResponseContentType())) {
@@ -174,7 +174,8 @@ public abstract class AbstractPostServlet extends
      * 
      * @param request the sling http request to process
      * @param response the response
-     * @param changes
+     * @param changes the changes to report
+     * @throws RepositoryException in case of exceptions during the operation
      */
     abstract protected void handleOperation(SlingHttpServletRequest request,
     		AbstractPostResponse response, List<Modification> changes)
@@ -182,7 +183,7 @@ public abstract class AbstractPostServlet extends
 
     /**
      * compute redirect URL (SLING-126)
-     * 
+     * @param request the request
      * @param ctx the post processor
      * @return the redirect location or <code>null</code>
      */
@@ -261,6 +262,8 @@ public abstract class AbstractPostServlet extends
      * <p>
      * This method may be overwritten by extension if the operation has
      * different requirements on path processing.
+     * @param request the current request
+     * @return the path of the resource
      */
     protected String getItemPath(SlingHttpServletRequest request) {
         return request.getResource().getPath();
@@ -270,6 +273,7 @@ public abstract class AbstractPostServlet extends
      * Returns an external form of the given path prepending the context path
      * and appending a display extension.
      * 
+     * @param request the request
      * @param path the path to externalize
      * @return the url
      */

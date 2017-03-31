@@ -31,7 +31,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.jackrabbit.usermanager.UpdateUser;
-import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
@@ -51,18 +50,18 @@ import org.osgi.service.component.annotations.Deactivate;
  * <code>/system/userManager/user/ieb</code>. This servlet responds at
  * <code>/system/userManager/user/ieb.update.html</code>
  * </p>
- * <h4>Methods</h4>
+ * <h3>Methods</h3>
  * <ul>
  * <li>POST</li>
  * </ul>
- * <h4>Post Parameters</h4>
+ * <h3>Post Parameters</h3>
  * <dl>
  * <dt>*</dt>
  * <dd>Any additional parameters become properties of the user node (optional)</dd>
  * <dt>*@Delete</dt>
  * <dd>Delete the property eg prop3@Delete means prop3 will be deleted (optional)</dd>
  * </dl>
- * <h4>Response</h4>
+ * <h3>Response</h3>
  * <dl>
  * <dt>200</dt>
  * <dd>Success, a redirect is sent to the users resource locator. The redirect comes with
@@ -72,7 +71,7 @@ import org.osgi.service.component.annotations.Deactivate;
  * <dt>500</dt>
  * <dd>Failure</dd>
  * </dl>
- * <h4>Example</h4>
+ * <h3>Example</h3>
  *
  * <code>
  * curl -Fprop1=value2 -Fproperty1=value1 http://localhost:8080/system/userManager/user/ieb.update.html
@@ -144,10 +143,7 @@ public class UpdateUserServlet extends AbstractAuthorizablePostServlet
                 "User to update could not be determined");
         }
 
-        String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
-            + user.getID();
-
-        Collection<RequestProperty> reqProperties = collectContent(properties, userPath);
+        Collection<RequestProperty> reqProperties = collectContent(properties);
         try {
             // cleanup any old content (@Delete parameters)
             processDeletes(user, reqProperties, changes);
