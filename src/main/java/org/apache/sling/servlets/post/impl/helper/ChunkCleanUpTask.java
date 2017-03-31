@@ -16,16 +16,14 @@
  */
 package org.apache.sling.servlets.post.impl.helper;
 
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.QueryResult;
+import java.util.Calendar;
+import java.util.Iterator;
 
-import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -86,7 +84,7 @@ public class ChunkCleanUpTask implements Runnable {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
-    private SlingRepository repository;
+    private ResourceResolverFactory rrFactory;
 
     private SlingFileUploadHandler uploadhandler = new SlingFileUploadHandler();
 
@@ -105,10 +103,10 @@ public class ChunkCleanUpTask implements Runnable {
     }
 
     /**
-     * This method deletes chunks which are {@link #isEligibleForCleanUp(Node)}
+     * This method deletes chunks which are {@link #isEligibleForCleanUp(Resource)}
      * for cleanup. It queries all
      * {@link SlingPostConstants#NT_SLING_CHUNK_MIXIN} nodes and filter nodes
-     * which are {@link #isEligibleForCleanUp(Node)} for cleanup. It then
+     * which are {@link #isEligibleForCleanUp(Resource)} for cleanup. It then
      * deletes old chunks upload.
      */
     private void cleanup() {
@@ -118,31 +116,26 @@ public class ChunkCleanUpTask implements Runnable {
         int numCleaned = 0;
         int numLive = 0;
 
-        Session admin = null;
+        ResourceResolver admin = null;
         try {
-            // assume chunks are stored in the default workspace
-            admin = repository.loginAdministrative(null);
-            QueryManager qm = admin.getWorkspace().getQueryManager();
+            admin = rrFactory.getAdministrativeResourceResolver(null);
 
-            QueryResult queryres = qm.createQuery(
-                "SELECT * FROM [sling:chunks] ", Query.JCR_SQL2).execute();
-            NodeIterator nodeItr = queryres.getNodes();
-            while (nodeItr.hasNext()) {
-                Node node = nodeItr.nextNode();
-                if (isEligibleForCleanUp(node)) {
+            final Iterator<Resource> rsrcIter = admin.findResources(
+                "SELECT * FROM [sling:chunks] ", "sql");
+            while (rsrcIter.hasNext()) {
+                final Resource rsrc = rsrcIter.next();
+                if (isEligibleForCleanUp(rsrc)) {
                     numCleaned++;
-                    uploadhandler.deleteChunks(node);
+                    uploadhandler.deleteChunks(rsrc);
                 } else {
                     numLive++;
                 }
             }
-            if (admin.hasPendingChanges()) {
+            if (admin.hasChanges()) {
                 try {
-                    admin.refresh(true);
-                    admin.save();
-                } catch (InvalidItemStateException iise) {
-                    log.info("ChunkCleanUpTask: Concurrent modification to one or more of the chunk to be removed. Retrying later");
-                } catch (RepositoryException re) {
+                    admin.refresh();
+                    admin.commit();
+                } catch (PersistenceException re) {
                     log.info("ChunkCleanUpTask: Failed persisting chunk removal. Retrying later");
                 }
             }
@@ -153,7 +146,7 @@ public class ChunkCleanUpTask implements Runnable {
                 t);
         } finally {
             if (admin != null) {
-                admin.logout();
+                admin.close();
             }
         }
         long end = System.currentTimeMillis();
@@ -163,23 +156,27 @@ public class ChunkCleanUpTask implements Runnable {
     }
 
     /**
-     * Check if {@link Node} is eligible of
+     * Check if {@link Resource} is eligible of
      * {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE} cleanup. To be
      * eligible the age of last
      * {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE} uploaded should be
      * greater than @link {@link #chunkCleanUpAge}
      *
-     * @param node {@link Node} containing
+     * @param rsrc {@link Resource} containing
      *            {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE}
-     *            {@link Node}s
+     *            {@link Resource}s
      * @return true if eligible else false.
-     * @throws RepositoryException
      */
-    private boolean isEligibleForCleanUp(Node node) throws RepositoryException {
-        Node lastChunkNode = uploadhandler.getLastChunk(node);
-        return lastChunkNode != null
-            && (System.currentTimeMillis() - lastChunkNode.getProperty(
-                javax.jcr.Property.JCR_CREATED).getDate().getTimeInMillis()) > chunkCleanUpAge;
+    private boolean isEligibleForCleanUp(Resource rsrc) {
+        boolean result = false;
+        final Resource lastChunkNode = uploadhandler.getLastChunk(rsrc);
+        if ( lastChunkNode != null ) {
+            final Calendar created = lastChunkNode.getValueMap().get(JcrConstants.JCR_CREATED, Calendar.class);
+            if ( created != null && System.currentTimeMillis() - created.getTimeInMillis() > chunkCleanUpAge ) {
+                result = true;
+            }
+        }
+        return result;
     }
 
     @Activate
@@ -190,5 +187,4 @@ public class ChunkCleanUpTask implements Runnable {
             chunkCleanUpAge);
 
     }
-
 }

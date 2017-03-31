@@ -40,11 +40,13 @@ import javax.jcr.nodetype.NodeTypeManager;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.slf4j.Logger;
@@ -213,7 +215,7 @@ public class SlingFileUploadHandler {
                             + parentResource.getPath() + "] doesn't exists");
         }
         // create properties
-        final Map<String, Object> props = new HashMap<String, Object>();
+        final Map<String, Object> props = new HashMap<>();
         props.put("sling:resourceType", typeHint);
         props.put(JCR_LASTMODIFIED, Calendar.getInstance());
         props.put(JCR_MIMETYPE, contentType);
@@ -378,7 +380,7 @@ public class SlingFileUploadHandler {
             String startPattern = SlingPostConstants.CHUNK_NODE_NAME + "_"
                 + "0_*";
             NodeIterator nodeItr = parentNode.getNodes(startPattern);
-            Set<InputStream> inpStrmSet = new LinkedHashSet<InputStream>();
+            Set<InputStream> inpStrmSet = new LinkedHashSet<>();
             while (nodeItr.hasNext()) {
                 if (nodeItr.getSize() > 1) {
                     throw new RepositoryException(
@@ -411,90 +413,94 @@ public class SlingFileUploadHandler {
         return file;
     }
 
-    /**
-     * Delete all chunks saved within a node. If no chunks exist, it is no-op.
-     */
-    public void deleteChunks(final Node node) throws RepositoryException {
-        // parent node containing all chunks and has mixin sling:chunks applied
+    private Resource getChunkParent(final Resource rsrc) {
+        // parent resource containing all chunks and has mixin sling:chunks applied
         // on it.
-        Node chunkParent = null;
-        Node jcrContentNode = null;
-        if (hasChunks(node)) {
-            chunkParent = node;
-        } else if (node.hasNode(JCR_CONTENT)
-            && hasChunks((jcrContentNode = node.getNode(JCR_CONTENT)))) {
-            chunkParent = jcrContentNode;
-
+        Resource chunkParent = null;
+        Resource jcrContentNode = null;
+        if (hasChunks(rsrc)) {
+            chunkParent = rsrc;
+        } else {
+            jcrContentNode = rsrc.getChild(JCR_CONTENT);
+            if ( hasChunks(jcrContentNode)) {
+                chunkParent = jcrContentNode;
+            }
         }
+        return chunkParent;
+    }
+
+    /**
+     * Delete all chunks saved within a resource. If no chunks exist, it is no-op.
+     */
+    public void deleteChunks(final Resource rsrc) throws PersistenceException {
+        final Resource chunkParent = getChunkParent(rsrc);
+
         if (chunkParent != null) {
-            NodeIterator nodeItr = chunkParent.getNodes(SlingPostConstants.CHUNK_NODE_NAME
-                + "*");
-            while (nodeItr.hasNext()) {
-                Node rangeNode = nodeItr.nextNode();
-                rangeNode.remove();
+            for(final Resource c : chunkParent.getChildren()) {
+                if ( c.getName().startsWith(SlingPostConstants.CHUNK_NODE_NAME) ) {
+                    c.getResourceResolver().delete(c);
+                }
             }
-            if (chunkParent.hasProperty(SlingPostConstants.NT_SLING_FILE_LENGTH)) {
-                chunkParent.getProperty(SlingPostConstants.NT_SLING_FILE_LENGTH).remove();
+            final ModifiableValueMap vm = chunkParent.adaptTo(ModifiableValueMap.class);
+            vm.remove(SlingPostConstants.NT_SLING_FILE_LENGTH);
+            vm.remove(SlingPostConstants.NT_SLING_CHUNKS_LENGTH);
+            final String[] mixins = vm.get(JcrConstants.JCR_MIXINTYPES, String[].class);
+            final String[] newMixins = new String[mixins.length - 1];
+            int i = 0;
+            for(final String mt : mixins) {
+                if ( !SlingPostConstants.NT_SLING_CHUNK_MIXIN.equals(mt) ) {
+                    newMixins[i] = mt;
+                    i++;
+                }
             }
-            if (chunkParent.hasProperty(SlingPostConstants.NT_SLING_CHUNKS_LENGTH)) {
-                chunkParent.getProperty(
-                    SlingPostConstants.NT_SLING_CHUNKS_LENGTH).remove();
-            }
-            chunkParent.removeMixin(SlingPostConstants.NT_SLING_CHUNK_MIXIN);
+            vm.put(JcrConstants.JCR_MIXINTYPES, newMixins);
         }
     }
 
     /**
      * Get the last {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE}
-     * {@link Node}.
+     * {@link Resource}.
      *
-     * @param node {@link Node} containing
+     * @param rsrc {@link Resource} containing
      *            {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE}
-     *            {@link Node}s
+     *            {@link Resource}s
      * @return the {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE} chunk
-     *         node.
-     * @throws RepositoryException
+     *         resource.
      */
-    public Node getLastChunk(Node node) throws RepositoryException {
-        // parent node containing all chunks and has mixin sling:chunks applied
-        // on it.
-        Node chunkParent = null;
-        Node jcrContentNode = null;
-        if (hasChunks(node)) {
-            chunkParent = node;
-        } else if (node.hasNode(JCR_CONTENT)
-            && hasChunks((jcrContentNode = node.getNode(JCR_CONTENT)))) {
-            chunkParent = jcrContentNode;
-
-        }
+    public Resource getLastChunk(Resource rsrc)  {
+        final Resource chunkParent = getChunkParent(rsrc);
         if (chunkParent == null) {
             return null;
         }
-        NodeIterator nodeItr = chunkParent.getNodes(SlingPostConstants.CHUNK_NODE_NAME + "_*");
-        Node chunkNode = null;
+        Resource lastChunkRsrc = null;
         long lastChunkStartIndex = -1;
-        while (nodeItr.hasNext()) {
-            Node currentNode = nodeItr.nextNode();
-
-            String[] indexBounds = currentNode.getName().substring(
-                (SlingPostConstants.CHUNK_NODE_NAME + "_").length()).split("_");
-            long chunkStartIndex = Long.valueOf(indexBounds[0]);
-            if (chunkStartIndex > lastChunkStartIndex) {
-                chunkNode = currentNode;
+        for(final Resource chunkRsrc : chunkParent.getChildren()) {
+            if ( !chunkRsrc.getName().startsWith(SlingPostConstants.CHUNK_NODE_NAME + "_") ) {
+                continue;
+            }
+            final String[] indexBounds = chunkRsrc.getName().substring(
+                    (SlingPostConstants.CHUNK_NODE_NAME + "_").length()).split("_");
+           long chunkStartIndex = Long.valueOf(indexBounds[0]);
+           if (chunkStartIndex > lastChunkStartIndex) {
+               lastChunkRsrc = chunkRsrc;
                 lastChunkStartIndex = chunkStartIndex;
             }
         }
-        return chunkNode;
+
+        return lastChunkRsrc;
     }
 
     /**
-     * Return true if node has chunks stored in it, otherwise false.
+     * Return true if resource has chunks stored in it, otherwise false.
      */
-    private boolean hasChunks(final Node node) throws RepositoryException {
-        for (NodeType nodeType : node.getMixinNodeTypes()) {
-            if (nodeType.getName().equals(
-                SlingPostConstants.NT_SLING_CHUNK_MIXIN)) {
-                return true;
+    private boolean hasChunks(final Resource rsrc) {
+        final ValueMap vm = rsrc.getValueMap();
+        final String[] mixinTypes = vm.get(JcrConstants.JCR_MIXINTYPES, String[].class);
+        if ( mixinTypes != null ) {
+            for (final String nodeType : mixinTypes) {
+                if (nodeType.equals(SlingPostConstants.NT_SLING_CHUNK_MIXIN)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -583,7 +589,7 @@ public class SlingFileUploadHandler {
                     throws PersistenceException {
         Map<String, Object> properties = null;
         if ( typeHint != null ) {
-            properties = new HashMap<String, Object>();
+            properties = new HashMap<>();
             if ( parent.adaptTo(Node.class) != null ) {
                 properties.put("jcr:primaryType", typeHint);
             } else {

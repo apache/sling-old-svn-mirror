@@ -19,8 +19,6 @@ package org.apache.sling.servlets.post.impl.operations;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -69,21 +67,17 @@ public class DeleteOperation extends AbstractPostOperation {
         final VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
         final boolean deleteChunks = isDeleteChunkRequest(request);
         final Iterator<Resource> res = getApplyToResources(request);
-        try {
-            if (res == null) {
-                final Resource resource = request.getResource();
+        if (res == null) {
+            final Resource resource = request.getResource();
+            deleteResource(resource, changes, versioningConfiguration,
+                deleteChunks);
+        } else {
+            while (res.hasNext()) {
+                final Resource resource = res.next();
                 deleteResource(resource, changes, versioningConfiguration,
                     deleteChunks);
-            } else {
-                while (res.hasNext()) {
-                    final Resource resource = res.next();
-                    deleteResource(resource, changes, versioningConfiguration,
-                        deleteChunks);
-                }
-
             }
-        } catch ( final RepositoryException re) {
-            throw new PersistenceException(re.getMessage(), re);
+
         }
     }
 
@@ -96,12 +90,9 @@ public class DeleteOperation extends AbstractPostOperation {
             final List<Modification> changes,
             final VersioningConfiguration versioningConfiguration,
             final boolean deleteChunks)
-    throws PersistenceException, RepositoryException {
+    throws PersistenceException {
         if (deleteChunks) {
-            final Node node = resource.adaptTo(Node.class);
-            if (node != null) {
-                uploadHandler.deleteChunks(node);
-            }
+            uploadHandler.deleteChunks(resource);
         } else {
             this.jcrSsupport.checkoutIfNecessary(resource.getParent(), changes,
                 versioningConfiguration);
