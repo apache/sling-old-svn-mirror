@@ -933,7 +933,8 @@ public class SlingServletResolver
             name = REF_SERVLET,
             service = javax.servlet.Servlet.class,
             cardinality = ReferenceCardinality.MULTIPLE,
-            policy = ReferencePolicy.DYNAMIC)
+            policy = ReferencePolicy.DYNAMIC,
+            target="(|(" + ServletResolverConstants.SLING_SERVLET_PATHS + "=*)(" + ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=*))")
     protected void bindServlet(final ServiceReference<Servlet> reference) {
         boolean directCreate = true;
         if (context == null) {
