@@ -1,8 +1,16 @@
 <body data-sly-use.edit="org.apache.sling.samples.htlblog.models.Edit">
 <sly data-sly-include="nav.html"></sly>
 <div class="container">
-    <h1 data-sly-test.isEdit="${edit.post}">Editing ${edit.post.title}</h1>
-    <h1 data-sly-test="${!isEdit}">Create New</h1>
+    <div class="row">
+        <div class="col-sm-6">
+            <h1 data-sly-test.isEdit="${edit.post}">Editing ${edit.post.title}</h1>
+            <h1 data-sly-test="${!isEdit}">Create New</h1>
+        </div>
+        <div class="col-sm-6">
+            <h2 data-sly-test="${edit.canEdit}">Logged In</h2>
+            <h2 data-sly-test="${!edit.canEdit}"><a href="/system/sling/form/login">Log In</a></h2>
+        </div>
+    </div>
     <form method="POST" action="${isEdit ? edit.post.getPath : '/content/htlblog/posts/*'}">
         <div class="form-group">
           <label for="title">Title</label>
@@ -11,6 +19,9 @@
         <div class="form-group">
           <label for="content-body">Body</label>
           <textarea name="body" class="form-control" rows="10" id="content-body">${edit.post.body}</textarea>
+        </div>
+        <div class="form-group">
+          <input data-sly-test="${isEdit}" type="text" class="form-control" name="date" value="${edit.post.created}" disabled/>
         </div>
         <div>
             <input type="hidden" name="created"/>

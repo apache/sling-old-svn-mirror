@@ -51,6 +51,7 @@
                 <extensions>true</extensions>
                 <configuration>
                   <instructions>
+                    <Import-Package>javax.inject;version=0.0.0,*</Import-Package>
                     <Sling-Model-Packages>
                       org.apache.sling.samples.htlblog
                     </Sling-Model-Packages>
@@ -103,6 +104,18 @@
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
             <version>2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
+            <version>2.11.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-api</artifactId>
+            <version>2.11.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

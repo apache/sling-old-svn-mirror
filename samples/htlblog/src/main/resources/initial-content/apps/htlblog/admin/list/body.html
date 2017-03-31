@@ -14,7 +14,7 @@
                 <div class="col-sm-4">
                     <div class="pull-right">
                         <button type="button" class="btn btn-primary"><a href="/content/htlblog/admin/edit.html?post=${child.path}">Edit</a></button>
-                        <button type="button" class="btn btn-info"><a href="${child.path}">View</a></button>
+                        <button type="button" class="btn btn-info"><a href="${child.url}">View</a></button>
                         <form method="POST" action="${child.path}">
                             <input type="hidden" name=":redirect" value="/content/htlblog/admin.html"/>
                             <input type="hidden" name=":operation" value="delete"/>
