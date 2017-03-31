@@ -74,7 +74,7 @@ public class AdapterImplementationsTest {
     
     @Test
     public void testSingleMapping() {
-        underTest.add(SAMPLE_ADAPTER, String.class);
+        underTest.addAll(String.class, SAMPLE_ADAPTER);
         
         assertEquals(String.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE).getType());
         
@@ -85,9 +85,9 @@ public class AdapterImplementationsTest {
 
     @Test
     public void testMultipleMappings() {
-        underTest.add(SAMPLE_ADAPTER, String.class);
-        underTest.add(SAMPLE_ADAPTER, Integer.class);
-        underTest.add(SAMPLE_ADAPTER, Long.class);
+        underTest.addAll(String.class, SAMPLE_ADAPTER);
+        underTest.addAll(Integer.class, SAMPLE_ADAPTER);
+        underTest.addAll(Long.class, SAMPLE_ADAPTER);
         
         assertEquals(Integer.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE).getType());
         
@@ -103,9 +103,9 @@ public class AdapterImplementationsTest {
     
     @Test
     public void testRemoveAll() {
-        underTest.add(SAMPLE_ADAPTER, String.class);
-        underTest.add(SAMPLE_ADAPTER, Integer.class);
-        underTest.add(SAMPLE_ADAPTER, Long.class);
+        underTest.addAll(String.class, SAMPLE_ADAPTER);
+        underTest.addAll(Integer.class, SAMPLE_ADAPTER);
+        underTest.addAll(Long.class, SAMPLE_ADAPTER);
         
         underTest.removeAll();
         
@@ -120,16 +120,16 @@ public class AdapterImplementationsTest {
             new FirstImplementationPicker()
         ));
 
-        underTest.add(SAMPLE_ADAPTER, String.class);
-        underTest.add(SAMPLE_ADAPTER, Integer.class);
-        underTest.add(SAMPLE_ADAPTER, Long.class);
+        underTest.addAll(String.class, SAMPLE_ADAPTER);
+        underTest.addAll(Integer.class, SAMPLE_ADAPTER);
+        underTest.addAll(Long.class, SAMPLE_ADAPTER);
         
         assertEquals(String.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE).getType());
     }
     
     @Test
     public void testSimpleModel() {
-        underTest.add(SAMPLE_ADAPTER, SAMPLE_ADAPTER);
+        underTest.addAll(SAMPLE_ADAPTER, SAMPLE_ADAPTER);
         
         assertEquals(SAMPLE_ADAPTER, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE).getType());
     }

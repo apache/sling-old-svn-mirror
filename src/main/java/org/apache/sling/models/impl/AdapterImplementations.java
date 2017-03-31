@@ -102,38 +102,52 @@ final class AdapterImplementations {
     }
     
     /** Add implementation mapping for the given model class (implementation is the model class itself).
-     * Only used for testing purposes. Use {@link #add(Class, Class)} in case you want to register a different implementation.
+     * Only used for testing purposes. Use {@link #addAll(Class, Class...)} in case you want to register a different implementation.
      * @param modelClasses the model classes to register
      */
     protected void addClassesAsAdapterAndImplementation(Class<?>... modelClasses) {
         for (Class<?> modelClass : modelClasses) {
-            add(modelClass, modelClass);
+            addAll(modelClass, modelClass);
         }
     }
     
     /**
-     * Add implementation mapping for the given adapter type.
-     * @param adapterType Adapter type
+     * Add implementation mapping for the given adapter types.
      * @param implType Implementation type
+     * @param adapterTypes Adapter types
+     * @result true if adapters were successfully added
      */
     @SuppressWarnings("unchecked")
-    public void add(Class<?> adapterType, Class<?> implType) {
-        String key = adapterType.getName();
-        if (adapterType == implType) {
-            modelClasses.put(key, new ModelClass(implType, sortedStaticInjectAnnotationProcessorFactories));
+    boolean addAll(Class<?> implType, Class<?>... adapterTypes) {
+        ModelClass<?> modelClass = null;
+        try {
+            modelClass = new ModelClass(implType, sortedStaticInjectAnnotationProcessorFactories);
+        } catch (Exception e) {
+            log.warn("Unable to reflect on " + implType.getName(), e);
+            return false;
+        } catch (NoClassDefFoundError e) {
+            log.warn("Unable to reflect on " + implType.getName(), e);
+            return false;
         }
-        else {
-            // although we already use a ConcurrentMap synchronize explicitly because we apply non-atomic operations on it
-            synchronized (adapterImplementations) {
-                ConcurrentNavigableMap<String,ModelClass<?>> implementations = adapterImplementations.get(key);
-                if (implementations == null) {
-                    // to have a consistent ordering independent of bundle loading use a ConcurrentSkipListMap that sorts by class name
-                    implementations = new ConcurrentSkipListMap<String,ModelClass<?>>();
-                    adapterImplementations.put(key, implementations);
+
+        for (Class<?> adapterType : adapterTypes) {
+            String key = adapterType.getName();
+            if (adapterType == implType) {
+                modelClasses.put(key, modelClass);
+            } else {
+                // although we already use a ConcurrentMap synchronize explicitly because we apply non-atomic operations on it
+                synchronized (adapterImplementations) {
+                    ConcurrentNavigableMap<String, ModelClass<?>> implementations = adapterImplementations.get(key);
+                    if (implementations == null) {
+                        // to have a consistent ordering independent of bundle loading use a ConcurrentSkipListMap that sorts by class name
+                        implementations = new ConcurrentSkipListMap<String, ModelClass<?>>();
+                        adapterImplementations.put(key, implementations);
+                    }
+                    implementations.put(implType.getName(), modelClass);
                 }
-                implementations.put(implType.getName(), new ModelClass(implType, sortedStaticInjectAnnotationProcessorFactories));
             }
         }
+        return true;
     }
     
     /**
