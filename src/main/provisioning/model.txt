@@ -21,6 +21,7 @@
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
   org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/slingfeature
+  org.apache.sling/org.apache.sling.commons.json/2.0.20
   javax.servlet.jsp/javax.servlet.jsp-api/2.2.1
   javax.el/javax.el-api/2.2.1
 
