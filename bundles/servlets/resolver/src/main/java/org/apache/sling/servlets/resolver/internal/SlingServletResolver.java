@@ -964,31 +964,29 @@ public class SlingServletResolver
         }
     }
 
-    private boolean createServlet(final ServiceReference<Servlet> reference) {
 
+    private boolean createServlet(final ServiceReference<Servlet> reference) {
         // check for a name, this is required
         final String name = getName(reference);
-        if (name == null) {
-            LOGGER.error("bindServlet: Cannot register servlet {} without a servlet name", reference);
-            return false;
-        }
 
         // check for Sling properties in the service registration
-        ServletResourceProvider provider = servletResourceProviderFactory.create(reference);
+        final ServletResourceProvider provider = servletResourceProviderFactory.create(reference);
         if (provider == null) {
             // this is expected if the servlet is not destined for Sling
             return false;
         }
 
         // only now try to access the servlet service, this may still fail
+        Throwable exception = null;
         Servlet servlet = null;
         try {
             servlet = context.locateService(REF_SERVLET, reference);
         } catch (Throwable t) {
-            LOGGER.warn("bindServlet: Failed getting the service for reference " + reference, t);
+            exception = t;
         }
         if (servlet == null) {
-            LOGGER.error("bindServlet: Servlet service not available from reference {}", reference);
+            LOGGER.error("bindServlet: Servlet service not available from reference "
+                      + ServletResourceProviderFactory.getServiceReferenceInfo(reference), exception);
             return false;
         }
 
@@ -998,12 +996,12 @@ public class SlingServletResolver
         // initialize now
         try {
             servlet.init(new SlingServletConfig(servletContext, reference, name));
-            LOGGER.debug("bindServlet: Servlet {} added", name);
+            LOGGER.debug("bindServlet: Servlet {} initialized", name);
         } catch (ServletException ce) {
-            LOGGER.error("bindServlet: Component " + name + " failed to initialize", ce);
+            LOGGER.error("bindServlet: Servlet " + ServletResourceProviderFactory.getServiceReferenceInfo(reference) + " failed to initialize", ce);
             return false;
         } catch (Throwable t) {
-            LOGGER.error("bindServlet: Unexpected problem initializing component " + name, t);
+            LOGGER.error("bindServlet: Unexpected problem initializing servlet " + ServletResourceProviderFactory.getServiceReferenceInfo(reference), t);
             return false;
         }
 
@@ -1016,7 +1014,9 @@ public class SlingServletResolver
                 createServiceProperties(reference, provider, root));
             regs.add(reg);
         }
-        LOGGER.debug("Registered {}", provider.toString());
+        if ( LOGGER.isDebugEnabled() ) {
+            LOGGER.debug("Registered {}", provider.toString());
+        }
         synchronized (this.servletsByReference) {
             servletsByReference.put(reference, new ServletReg(servlet, regs));
         }
@@ -1107,6 +1107,7 @@ public class SlingServletResolver
      * Looks for a name value in the service reference properties. See the
      * class comment at the top for the list of properties checked by this
      * method.
+     * @return The servlet name. This method never returns {@code null}
      */
     private static String getName(final ServiceReference<Servlet> reference) {
         String servletName = null;
