@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.slf4j.Logger;
@@ -71,5 +72,26 @@ public class JCRSupport {
         if ( rsrc != null && supportImpl != null ) {
             ((JCRSupportImpl)supportImpl).checkoutIfNecessary(rsrc, changes, versioningConfiguration);
         }
+    }
+
+    public boolean isNode(final Resource rsrc) {
+        if ( rsrc != null && supportImpl != null ) {
+            return  ((JCRSupportImpl)supportImpl).isNode(rsrc);
+        }
+        return false;
+    }
+
+    public boolean isNodeType(final Resource rsrc, final String typeHint) {
+        if ( rsrc != null && supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).isNodeType(rsrc, typeHint);
+        }
+        return false;
+    }
+
+    public boolean isFileNodeType(final ResourceResolver resolver, final String nodeType) {
+        if ( supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).isFileNodeType(resolver, nodeType);
+        }
+        return false;
     }
 }
