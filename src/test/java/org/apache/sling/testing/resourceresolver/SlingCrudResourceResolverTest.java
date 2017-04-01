@@ -38,6 +38,7 @@ import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.NonExistingResource;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -287,6 +288,23 @@ public class SlingCrudResourceResolverTest {
         Resource resource = resourceResolver.resolve("/non/existing/path");
         assertTrue(resource instanceof NonExistingResource);
         assertEquals("/non/existing/path", resource.getPath());
+    }
+    
+    @Test
+    public void testGetParentResourceType() throws PersistenceException {
+        Resource r1 = resourceResolver.create(testRoot, "resource1", ImmutableMap.<String, Object>of());
+        Resource r2 = resourceResolver.create(testRoot, "resource2", ImmutableMap.<String, Object>of(
+                "sling:resourceSuperType", testRoot.getPath() + "/resource1"));
+        Resource r3 = resourceResolver.create(testRoot, "resource3", ImmutableMap.<String, Object>of(
+                "sling:resourceType", testRoot.getPath() + "/resource2"));
+        Resource r4 = resourceResolver.create(testRoot, "resource4", ImmutableMap.<String, Object>of(
+                "sling:resourceSuperType", testRoot.getPath() + "/resource2"));
+        
+        assertNull(resourceResolver.getParentResourceType(r1));
+        assertEquals(r1.getPath(), resourceResolver.getParentResourceType(r2));
+        assertEquals(r1.getPath(), resourceResolver.getParentResourceType(r3));
+        assertEquals(r2.getPath(), resourceResolver.getParentResourceType(r4));
+        assertEquals(r2.getPath(), resourceResolver.getParentResourceType(r4.getPath()));
     }
     
 }
