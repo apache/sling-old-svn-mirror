@@ -59,3 +59,4 @@ The content is built using a single JSON file called `htlblog.json`. It maps to 
 
 * The [SlingPostServet](https://sling.apache.org/documentation/bundles/manipulating-content-the-slingpostservlet-servlets-post.html) and [Sling CRUD](https://sling.apache.org/documentation/the-sling-engine/sling-api-crud-support.html) docs. Everything in this sample uses these concepts extensively.
 * The [HTL Specification](https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/master/SPECIFICATION.md). If you have a question about HTL, it will likely be answered here. Note: The spec and the current release in Sling can be out of sync.
+* [Sling Content Loading](https://sling.apache.org/documentation/bundles/content-loading-jcr-contentloader.html) - Understand how to create initial content and map resourceTypes.
