@@ -36,6 +36,10 @@ header .sling-logo {
 	text-decoration: none;
 }
 
+.create-new {
+
+}
+
 .post-item form {
 	display: inline;
 }
@@ -46,8 +50,4 @@ article {
 
 .featured-image {
 	width: 100%;
-}
-
-.jumbotron {
-    margin-top: 30px;
 }

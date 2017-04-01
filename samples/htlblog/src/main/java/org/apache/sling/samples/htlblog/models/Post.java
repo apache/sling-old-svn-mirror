@@ -45,7 +45,7 @@ public class Post {
     @Inject
     private String body;
 
-    /** The created. */
+    /** The created date */
     @Inject @Optional
     private Calendar created;
 
