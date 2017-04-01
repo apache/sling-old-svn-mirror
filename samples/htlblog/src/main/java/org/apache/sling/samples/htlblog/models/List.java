@@ -28,18 +28,18 @@ import org.apache.sling.models.annotations.Model;
 
 @Model(adaptables=SlingHttpServletRequest.class)
 public class List {
-	
-	private final Resource resource;
-	
-	public List(final SlingHttpServletRequest request) {
-		ResourceResolver resourceResolver = request.getResourceResolver();
-		this.resource = resourceResolver.getResource("/content/htlblog/posts");
-	}
-	
-	@SuppressWarnings("unchecked")
-	public Iterator<Post> getChildren() {
-		java.util.List<Resource> childrenList = IteratorUtils.toList(this.resource.getChildren().iterator());
+
+    private final Resource resource;
+
+    public List(final SlingHttpServletRequest request) {
+        ResourceResolver resourceResolver = request.getResourceResolver();
+        this.resource = resourceResolver.getResource("/content/htlblog/posts");
+    }
+
+    @SuppressWarnings("unchecked")
+    public Iterator<Post> getChildren() {
+        java.util.List<Resource> childrenList = IteratorUtils.toList(this.resource.getChildren().iterator());
         Iterator<Resource> reverseChildren = new ReverseListIterator(childrenList);
-		return ResourceUtil.adaptTo(reverseChildren, Post.class);
-	}
+        return ResourceUtil.adaptTo(reverseChildren, Post.class);
+    }
 }

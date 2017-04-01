@@ -21,31 +21,27 @@ import javax.jcr.Session;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.models.annotations.Model;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Model(adaptables=SlingHttpServletRequest.class)
 public class Author {
-	
-	private static final Logger LOGGER = LoggerFactory.getLogger(Author.class);
-	
-	ResourceResolver resourceResolver;
-	
-	public Author(SlingHttpServletRequest request) {
-		resourceResolver = request.getResourceResolver();
-	}
-	
-	public String getUserId() {
-		Session session = resourceResolver.adaptTo(Session.class);
-		return session.getUserID();
-	}
-	
-	public boolean isLoggedIn() {
-		boolean isLoggedIn = false;
-		String userId = getUserId();
-		if(!userId.equals("anonymous")) {
-        	isLoggedIn = true;
+
+    ResourceResolver resourceResolver;
+
+    public Author(SlingHttpServletRequest request) {
+        resourceResolver = request.getResourceResolver();
+    }
+
+    public String getUserId() {
+        Session session = resourceResolver.adaptTo(Session.class);
+        return session.getUserID();
+    }
+
+    public boolean isLoggedIn() {
+        boolean isLoggedIn = false;
+        String userId = getUserId();
+        if(!userId.equals("anonymous")) {
+            isLoggedIn = true;
         }
-    	return isLoggedIn;
-	}
+        return isLoggedIn;
+    }
 }

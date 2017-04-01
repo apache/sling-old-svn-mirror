@@ -42,7 +42,7 @@ public class Edit {
     private Post post;
 
     /**
-     * Instantiates a new Edits model.
+     * Instantiates a new Edit model.
      *
      * @param request the request
      */

@@ -23,56 +23,105 @@ import java.util.Iterator;
 import javax.inject.Inject;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Optional;
 
+/**
+ * The Class Post.
+ * 
+ * <p>The post model to inject, set, or get our properties for a post resource</p>
+ */
 @Model(adaptables=Resource.class)
 public class Post {
-	
-	private final Resource resource;
-	
-	@Inject
-	private String title;
-	
-	@Inject
-	private String body;
-	
-	@Inject @Optional
+
+    /** The resource. */
+    private final Resource resource;
+
+    /** The title. */
+    @Inject
+    private String title;
+
+    /** The body. */
+    @Inject
+    private String body;
+
+    /** The created. */
+    @Inject @Optional
     private Calendar created;
-	
-	public Post(final Resource resource) {
-		this.resource = resource;
-	}
-	
-	public String getTitle() {
-		return title;
-	}
-	
-	public String getBody() {
-		return body;
-	}
-	
-	public String getCreated() {
-		SimpleDateFormat formatter = new SimpleDateFormat("MMMM, d yyyy");
-		return formatter.format(created.getTime());
-	}
-	
-	public String getPath() {
-    	return resource.getPath();
+
+    /**
+     * Instantiates a new post.
+     *
+     * @param resource the resource
+     */
+    public Post(final Resource resource) {
+        this.resource = resource;
     }
-	
-	public String getUrl() {
-		return getPath() + ".html";
-	}
-	
-	public Iterator<Post> getChildren() {
-		Iterator<Resource> children = resource.getChildren().iterator();
-		return ResourceUtil.adaptTo(children, Post.class);
-	}
-	
-	public String getFeaturedImagePath() {
-		Iterator<Resource> featuredChildren = resource.getChild("featuredImage").listChildren();
-		return featuredChildren.next().getPath();
-	}
+
+    /**
+     * Gets the title.
+     *
+     * @return the title
+     */
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * Gets the body.
+     *
+     * @return the body
+     */
+    public String getBody() {
+        return body;
+    }
+
+    /**
+     * Gets the created date.
+     * 
+     * <p>Format the date using a simple string</p>
+     * 
+     * <p>HTL does not support showing the raw JCR date due to XSS concerns.</p>
+     *
+     * @return the created
+     * 
+     * TODO: When Sling 9 is released, this should use HTL's native date formating feature.
+     */
+    public String getCreated() {
+        SimpleDateFormat formatter = new SimpleDateFormat("MMMM, d yyyy");
+        return formatter.format(created.getTime());
+    }
+
+    /**
+     * Gets the path.
+     *
+     * @return the path
+     */
+    public String getPath() {
+        return resource.getPath();
+    }
+
+    /**
+     * Gets the url.
+     * 
+     * <p>A simple util to add the extension for the post.</p>
+     *
+     * @return the url
+     */
+    public String getUrl() {
+        return getPath() + ".html";
+    }
+
+    /**
+     * Gets the featured image path.
+     * 
+     * <p>We don't know what the image name will be and we may end up
+     * having comments inside the post, so we grab the first featuredImage child.</p>
+     *
+     * @return the featured image path
+     */
+    public String getFeaturedImagePath() {
+        Iterator<Resource> featuredChildren = resource.getChild("featuredImage").listChildren();
+        return featuredChildren.next().getPath();
+    }
 }
