@@ -1,9 +1,27 @@
+<!--/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Licensed to the Apache Software Foundation (ASF) under one or more
+  ~ contributor license agreements.  See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright ownership.
+  ~ The ASF licenses this file to You under the Apache License, Version 2.0
+  ~ (the "License"); you may not use this file except in compliance with
+  ~ the License.  You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/-->
+
 <body data-sly-use.list="org.apache.sling.samples.htlblog.models.List">
 <sly data-sly-include="nav.html"></sly>
 <div class="container">
-    <div>
-        <a href="/content/htlblog/admin/edit.html">Create New</a>
-    </div>
+    <header>
+        <img class="sling-logo" src="/apps/htlblog/clientlibs/img/sling-logo.svg"/>
+    </header>
+    <a href="/content/htlblog/admin/edit.html" class="btn-anchor btn-primary create-new">Create New Post</a>
     <sly data-sly-repeat.child="${list.children}">
         <div class="panel panel-default post-item">
           <div class="panel-body">
@@ -13,8 +31,8 @@
                 </div>
                 <div class="col-sm-4">
                     <div class="pull-right">
-                        <button type="button" class="btn btn-primary"><a href="/content/htlblog/admin/edit.html?post=${child.path}">Edit</a></button>
-                        <button type="button" class="btn btn-info"><a href="${child.url}">View</a></button>
+                        <a href="/content/htlblog/admin/edit.html?post=${child.path}" class="btn-anchor btn-primary">Edit</a>
+                        <a href="${child.url}" class="btn-anchor btn-info">View</a>
                         <form method="POST" action="${child.path}">
                             <input type="hidden" name=":redirect" value="/content/htlblog/admin.html"/>
                             <input type="hidden" name=":operation" value="delete"/>

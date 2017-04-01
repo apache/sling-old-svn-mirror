@@ -2,11 +2,52 @@ body {
 	margin-top: 50px;
 }
 
-button.btn-primary a, button.btn-info a, button.btn-danger a {
-	color: white;
-	display: block;
+header {
+	margin: 30px 0;
+}
+
+header .sling-logo {
+	max-width: 180px;
+}
+
+.btn-anchor {
+    display: inline-block;
+    padding: 6px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.btn-anchor:hover {
+	text-decoration: none;
 }
 
 .post-item form {
 	display: inline;
+}
+
+article {
+	margin-bottom: 120px;
+}
+
+.featured-image {
+	width: 100%;
+}
+
+.jumbotron {
+    margin-top: 30px;
 }

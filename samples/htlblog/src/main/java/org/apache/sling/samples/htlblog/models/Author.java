@@ -16,37 +16,36 @@
  */
 package org.apache.sling.samples.htlblog.models;
 
+import javax.jcr.Session;
+
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.models.annotations.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Model(adaptables=SlingHttpServletRequest.class)
-public class Edit {
+public class Author {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(Edit.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(Author.class);
 	
-	/** The resource resolver. */
-    private ResourceResolver resourceResolver;
-    
-    private Post post;
-    
-    public Edit(SlingHttpServletRequest request) {
-    	this.resourceResolver = request.getResourceResolver();
-		try {
-            String path = request.getParameter("post");
-            if (path != null) {
-                Resource resource = this.resourceResolver.getResource(path);
-                this.post = resource.adaptTo(Post.class);
-            }
-        } catch (Exception e) {
-            LOGGER.info("Couldn't get the post to edit.", e);
-        }
+	ResourceResolver resourceResolver;
+	
+	public Author(SlingHttpServletRequest request) {
+		resourceResolver = request.getResourceResolver();
 	}
-    
-    public Post getPost() {
-    	return post;
-    }	
+	
+	public String getUserId() {
+		Session session = resourceResolver.adaptTo(Session.class);
+		return session.getUserID();
+	}
+	
+	public boolean isLoggedIn() {
+		boolean isLoggedIn = false;
+		String userId = getUserId();
+		if(!userId.equals("anonymous")) {
+        	isLoggedIn = true;
+        }
+    	return isLoggedIn;
+	}
 }
