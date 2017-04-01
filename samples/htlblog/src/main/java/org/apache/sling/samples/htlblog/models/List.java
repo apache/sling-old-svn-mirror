@@ -26,16 +26,36 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.models.annotations.Model;
 
+/**
+ * The Class List.
+ * 
+ * <p>This class is specifically used public posts. 
+ * It should not be used for listing other types of content.</p>
+ */
 @Model(adaptables=SlingHttpServletRequest.class)
 public class List {
 
+    /** The parent resource that holds our posts. */
     private final Resource resource;
 
+    /**
+     * Instantiates a new list model.
+     * 
+     * @param request the request
+     */
     public List(final SlingHttpServletRequest request) {
         ResourceResolver resourceResolver = request.getResourceResolver();
         this.resource = resourceResolver.getResource("/content/htlblog/posts");
     }
 
+    /**
+     * Gets the children.
+     * 
+     * <p>Get the children, convert them to a Java List, reverse them, 
+     * and adapt the collection to a Post model</p>
+     * 
+     * @return the children
+     */
     @SuppressWarnings("unchecked")
     public Iterator<Post> getChildren() {
         java.util.List<Resource> childrenList = IteratorUtils.toList(this.resource.getChildren().iterator());

@@ -4,7 +4,7 @@
 	"title": "HTL Blog",
 	"description": "The blog homepage.",
 	"posts": {
-		"jcr:primaryType": "nt:unstructured",
+		"jcr:primaryType": "sling:OrderedFolder",
 		"sling:resourceType": "htlblog/public/list",
 		"title": "HTL Blog",
 		"description": "The blog homepage.",
@@ -13,6 +13,7 @@
 			"sling:resourceType": "htlblog/public/post",
 			"title": "Hello World",
 			"jcr:createdBy": "admin",
+			"created": "2017-04-01T13:26:00.000+01:00",
 			"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 		},
 		"hola-mundo" : {
@@ -20,7 +21,7 @@
 			"sling:resourceType": "htlblog/public/post",
 			"title": "Hola Mundo",
 			"jcr:createdBy": "admin",
-			"jcr:created": "{Date}28.03.2017",
+			"created": "2017-04-01T13:26:00.000+01:00",
 			"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 		}
 	},

@@ -22,20 +22,41 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.models.annotations.Model;
 
+/**
+ * The Class Author.
+ * 
+ * <p>A simple model to get a userId and check if an author is logged in</p>
+ */
 @Model(adaptables=SlingHttpServletRequest.class)
 public class Author {
 
+    /** The resource resolver. */
     ResourceResolver resourceResolver;
 
+    /**
+     * Instantiates a new author model.
+     *
+     * @param request the request
+     */
     public Author(SlingHttpServletRequest request) {
         resourceResolver = request.getResourceResolver();
     }
 
+    /**
+     * Gets the user id.
+     *
+     * @return the user id
+     */
     public String getUserId() {
         Session session = resourceResolver.adaptTo(Session.class);
         return session.getUserID();
     }
 
+    /**
+     * Check if an author is logged in.
+     *
+     * @return true, if an author is logged in
+     */
     public boolean isLoggedIn() {
         boolean isLoggedIn = false;
         String userId = getUserId();
