@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+    jcr:description="Defines ordering options for our customers"
+    jcr:primaryType="nt:unstructured"
+    jcr:title="Coffee store options"
+    sling:resourceType="slingbucks2App/options">
+    <fields jcr:primaryType="nt:unstructured">
+        <coffeetype
+            jcr:primaryType="nt:unstructured"
+            jcr:title="Coffee type">
+            <espresso
+                jcr:description="The Italian job"
+                jcr:primaryType="nt:unstructured"
+                jcr:title="Espresso"
+                priceOffset="{Double}2.2"/>
+            <capuccino
+                jcr:description="The one with cream on top"
+                jcr:primaryType="nt:unstructured"
+                jcr:title="Capuccino"
+                priceOffset="{Double}3.4"/>
+            <macchiato
+                jcr:description="Espresso, hot milk and cream"
+                jcr:primaryType="nt:unstructured"
+                jcr:title="Macchiato"
+                priceOffset="{Double}4.3"/>
+        </coffeetype>
+        <size
+            jcr:primaryType="nt:unstructured"
+            jcr:title="Size">
+            <small
+                jcr:description="1dl"
+                jcr:primaryType="nt:unstructured"
+                jcr:title="Small"
+                priceFactor="{Long}1"/>
+            <medium
+                jcr:description="2dl"
+                jcr:primaryType="nt:unstructured"
+                jcr:title="Medium"
+                priceFactor="{Double}1.5"/>
+            <large
+                jcr:description="5dl"
+                jcr:primaryType="nt:unstructured"
+                jcr:title="Large"
+                priceFactor="{Long}2"/>
+        </size>
+        <sugar
+            jcr:primaryType="nt:unstructured"
+            jcr:title="Sugar">
+            <none
+                jcr:primaryType="nt:unstructured"
+                jcr:title="No sugar"
+                priceFactor="{Long}1"/>
+            <white
+                jcr:primaryType="nt:unstructured"
+                jcr:title="White sugar"
+                priceFactor="{Double}1.1"/>
+            <raw
+                jcr:primaryType="nt:unstructured"
+                jcr:title="Raw sugar"
+                priceFactor="{Double}1.2"/>
+        </sugar>
+        <cup
+            jcr:primaryType="nt:unstructured"
+            jcr:title="Cup type">
+            <plastic
+                jcr:primaryType="nt:unstructured"
+                jcr:title="Standard plastic"
+                priceFactor="{Long}1"/>
+            <rosewood
+                jcr:primaryType="nt:unstructured"
+                jcr:title="Rosewood"
+                priceFactor="{Long}5"/>
+            <china
+                jcr:primaryType="nt:unstructured"
+                jcr:title="Industrial china"
+                priceFactor="{Double}1.5"/>
+        </cup>
+    </fields>
+</jcr:root>

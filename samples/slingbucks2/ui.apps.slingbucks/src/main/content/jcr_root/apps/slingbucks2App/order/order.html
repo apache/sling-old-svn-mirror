@@ -1,0 +1,76 @@
+<!-- /*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/ -->
+<html>
+<div data-sly-use.slingbucksOptions="org.apache.sling.slingbucks2.model.SlingbucksOptionsModel">
+    <head>
+        <sly data-sly-include="../common/head.html"/>
+        <title>
+            <div data-sly-test="${!slingbucksOptions.confirmed}" data-sly-unwrap>Please review and confirm your order</div>
+            <div data-sly-test="${slingbucksOptions.confirmed}" data-sly-unwrap>Your order is confirmed</div>
+        </title>
+        <link rel="slingbucks/order/price" href="${resource.path}.price.html"/>
+    </head>
+    <body>
+    <h1>
+        <div data-sly-test="${!slingbucksOptions.confirmed}" data-sly-unwrap>Please review and confirm your order</div>
+        <div data-sly-test="${slingbucksOptions.confirmed}" data-sly-unwrap>Your order is confirmed</div>
+    </h1>
+
+    <form method="POST" onSubmit="return clearLastModified()">
+
+        <div id="orderHead">
+            <div class="field" id="customerName">
+                <div class="fieldName">Your name</div>
+                <div class="fieldValue">${resource.properties.customerName}</div>
+            </div>
+
+            <div class="field" id="price">
+                <div class="fieldName">Price of your order</div>
+                <div class="fieldValue">${slingbucksOptions.price}</div>
+            </div>
+        </div>
+
+        <div id="orderBody">
+            <div data-sly-test="${slingbucksOptions.confirmed}" data-sly-unwrap>
+                Your order number is <b>${resource.name}</b>
+                <br/>
+                Please pick it up at the
+                counter when called.
+            </div>
+            <div data-sly-test="${!slingbucksOptions.confirmed}" data-sly-unwrap>
+                <sly data-sly-resource="${'/content/slingbucks2Content/readonly/options'}"/>
+                <div class="submit">
+                    <input type="submit" value="Recalculate"/>
+                    <span class="spacer"/>
+                    <input type="submit" name="orderConfirmed" value="Confirm this order"/>
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" name=":redirect" value="*.html"/>
+
+    </form>
+
+    <script src="/system/sling.js"></script>
+    <script>
+        Sling.wizard();
+    </script>
+
+</body>
+</html>

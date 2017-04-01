@@ -71,6 +71,7 @@
           <module>webloader/ui</module>
           <module>custom-login-form</module>
           <module>slingbucks</module>
+          <module>slingbucks2</module>
           <module>installing-dependencies</module>
           <module>framework-fragment</module>
           <module>usermanager-ui</module>
