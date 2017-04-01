@@ -23,19 +23,32 @@ import org.apache.sling.models.annotations.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The Class Edit.
+ * 
+ * <p>Use our request to get the post parameter and
+ * a resourceResolver to get our post resource</p>
+ */
 @Model(adaptables=SlingHttpServletRequest.class)
 public class Edit {
-	
-	private static final Logger LOGGER = LoggerFactory.getLogger(Edit.class);
-	
-	/** The resource resolver. */
+
+    /** The Constant LOGGER. */
+    private static final Logger LOGGER = LoggerFactory.getLogger(Edit.class);
+
+    /** The resource resolver. */
     private ResourceResolver resourceResolver;
-    
+
+    /** The post. */
     private Post post;
-    
+
+    /**
+     * Instantiates a new Edits model.
+     *
+     * @param request the request
+     */
     public Edit(SlingHttpServletRequest request) {
-    	this.resourceResolver = request.getResourceResolver();
-		try {
+        this.resourceResolver = request.getResourceResolver();
+        try {
             String path = request.getParameter("post");
             if (path != null) {
                 Resource resource = this.resourceResolver.getResource(path);
@@ -44,9 +57,14 @@ public class Edit {
         } catch (Exception e) {
             LOGGER.info("Couldn't get the post to edit.", e);
         }
-	}
-    
+    }
+
+    /**
+     * Gets the post.
+     *
+     * @return the post
+     */
     public Post getPost() {
-    	return post;
-    }	
+        return post;
+    }
 }
