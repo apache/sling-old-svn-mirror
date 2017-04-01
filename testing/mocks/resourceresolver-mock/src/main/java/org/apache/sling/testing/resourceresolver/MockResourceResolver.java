@@ -371,6 +371,33 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         this.temporaryResources.put(path, props);
     }
 
+    @Override
+    public String getParentResourceType(Resource resource) {
+        String resourceSuperType = null;
+        if ( resource != null ) {
+            resourceSuperType = resource.getResourceSuperType();
+            if (resourceSuperType == null) {
+                resourceSuperType = this.getParentResourceType(resource.getResourceType());
+            }
+        }
+        return resourceSuperType;
+    }
+
+    @Override
+    public String getParentResourceType(String resourceType) {
+        // normalize resource type to a path string
+        final String rtPath = (resourceType == null ? null : ResourceUtil.resourceTypeToPath(resourceType));
+        // get the resource type resource and check its super type
+        String resourceSuperType = null;
+        if ( rtPath != null ) {
+            final Resource rtResource = getResource(rtPath);
+            if (rtResource != null) {
+                resourceSuperType = rtResource.getResourceSuperType();
+            }
+        }
+        return resourceSuperType;
+    }
+    
     // part of Resource API 2.6.0
     public boolean hasChildren(Resource resource) {
         return this.listChildren(resource).hasNext();
@@ -391,16 +418,6 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     @Override
     @Deprecated
     public Resource resolve(final HttpServletRequest request) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getParentResourceType(Resource resource) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getParentResourceType(String resourceType) {
         throw new UnsupportedOperationException();
     }
 
