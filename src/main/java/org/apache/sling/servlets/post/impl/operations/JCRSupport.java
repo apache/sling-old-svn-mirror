@@ -88,7 +88,7 @@ public class JCRSupport {
         return false;
     }
 
-    public boolean isFileNodeType(final ResourceResolver resolver, final String nodeType) {
+    public Boolean isFileNodeType(final ResourceResolver resolver, final String nodeType) {
         if ( supportImpl != null ) {
             return ((JCRSupportImpl)supportImpl).isFileNodeType(resolver, nodeType);
         }
