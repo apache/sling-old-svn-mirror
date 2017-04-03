@@ -576,7 +576,13 @@ public class SlingFileUploadHandler {
     throws PersistenceException {
         Map<String, Object> properties = null;
         if ( typeHint != null ) {
-            properties = Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)typeHint);
+            // sling resource type not allowed for nt:file nor nt:resource
+            if ( !jcrSupport.isNode(parent)
+                 || (!JcrConstants.NT_FILE.equals(typeHint) && !JcrConstants.NT_RESOURCE.equals(typeHint)) ) {
+                properties = Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)typeHint);
+            } else {
+                properties = Collections.singletonMap(JcrConstants.JCR_PRIMARYTYPE, (Object)typeHint);
+            }
         }
         final Resource result = parent.getResourceResolver().create(parent, name, properties);
         changes.add(Modification.onCreated(result.getPath()));
