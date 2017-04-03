@@ -219,7 +219,7 @@ public class JCRSupportImpl {
         return false;
     }
 
-    public boolean isFileNodeType(final ResourceResolver resolver, final String nodeType) {
+    public Boolean isFileNodeType(final ResourceResolver resolver, final String nodeType) {
         final Session session = resolver.adaptTo(Session.class);
         if ( session != null ) {
             try {
@@ -228,6 +228,7 @@ public class JCRSupportImpl {
                 return nt.isNodeType(JcrConstants.NT_FILE);
             } catch (RepositoryException e) {
                 // assuming type not valid.
+                return null;
             }
         }
         return false;

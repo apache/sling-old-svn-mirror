@@ -127,10 +127,13 @@ public class SlingFileUploadHandler {
         boolean createNtFile = parentResource.isResourceType(JcrConstants.NT_FOLDER) || this.jcrSupport.isNodeType(parentResource, JcrConstants.NT_FOLDER);
         String typeHint = prop.getTypeHint();
         if (typeHint != null) {
-            createNtFile = this.jcrSupport.isFileNodeType(parentResource.getResourceResolver(), typeHint);
-            if ( !createNtFile ) {
+            Boolean isFileNodeType = this.jcrSupport.isFileNodeType(parentResource.getResourceResolver(), typeHint);
+            if ( isFileNodeType == null ) {
                 // assuming type not valid.
+                createNtFile = false;
                 typeHint = null;
+            } else {
+                createNtFile = isFileNodeType;
             }
         }
 
