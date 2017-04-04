@@ -18,8 +18,12 @@
  */
 package org.apache.sling.validation.impl.model;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -55,5 +59,28 @@ public class ChildResourceBuilder {
 
     public @Nonnull ChildResource build(@Nonnull String name) {
         return new ChildResourceImpl(name, nameRegex, !optional, resourceProperties, children);
+    }
+
+
+    public ChildResource getChildResource(DefaultInjectionStrategy defaultInjectionStrategy, Field field) {
+        ChildrenValidator childrenValidator = field.getAnnotation(ChildrenValidator.class);
+
+        nameRegex(childrenValidator.nameRegex());
+
+
+        childrenValidator.properties();
+
+
+
+        //TODO: Add ability to add validators.
+        Map<String, Object> validatorArguments = Arrays.asList(childrenValidator.properties())
+                .parallelStream()
+                .map(str -> str.split("="))
+                .collect(Collectors.toMap(keyvalue -> keyvalue[0], keyvalue ->keyvalue[1]));
+
+
+
+
+        return build(field.getName());
     }
 }
