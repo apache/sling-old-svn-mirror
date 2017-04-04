@@ -233,6 +233,14 @@
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
   </feature>
+  <feature name="sling-extension-models-jacksonexporter" version="${project.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.models.jacksonexporter/1.0.6</bundle>
+    <!-- dependencies -->
+    <feature version="${project.version}">sling-extension-models</feature>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/2.8.7</bundle>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/2.8.7</bundle>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/2.8.7</bundle>
+  </feature>
   <feature name="sling-extension-pipes" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.pipes/0.0.10</bundle>
     <!-- dependencies -->
