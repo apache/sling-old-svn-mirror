@@ -384,6 +384,7 @@
             <feature>sling-extension-i18n</feature>
             <feature>sling-extension-jmx-provider</feature>
             <feature>sling-extension-models</feature>
+            <feature>sling-extension-models-jacksonexporter</feature>
             <feature>sling-extension-pipes</feature>
             <feature>sling-extension-query</feature>
             <feature>sling-extension-resource-inventory</feature>
