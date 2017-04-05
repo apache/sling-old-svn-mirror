@@ -106,22 +106,36 @@ public class Module extends SimpleBindings implements Require {
         put(CONTEXT_FIELD_CONSOLE, new ConsoleLog((String) get(CONTEXT_FIELD_FILENAME)));
     }
 
+    private ScriptObjectMirror decoreateScript(String source)
+            throws ScriptException {
+        return decoreateScript(source, true);
+    }
+
     /**
      *
      * @param source
      * @return
      * @throws ScriptException
      */
-    private ScriptObjectMirror decoreateScript(String source)
+    private ScriptObjectMirror decoreateScript(String source, boolean es6)
             throws ScriptException {
+        String filename = (String) get("filename");
+        if (filename.indexOf("node_modules") == -1 && es6) {
+            try {
+                source = factory.getSandboxService().compileSource(source);
+            } catch (ScriptException e) {
+                log.error("Could not transpile script", e);
+                throw new ScriptException("could not load " + get("filename"));
+            }
+        }
 
         // TODO: refactor polyfill for window, global and make require outside the wrapper as function parameter        
         source = "//@sourceURL=" + (String) get("filename") + "\n"
                 + "(function (exports, Require, module, __filename,"
                 + " __dirname, currentNode, console, properties, sling, simpleResource) { "
-                + "var window = this;"
-                + "var global = this;"
-                + "function require(id) { console.log('require id= ' + id); return Require.require(id); } require.resolve = function (id) { return Require.resolve(id, currentNode.resource, 1);  };"
+                + "var window = (this.window == 'undefined' || this.window == null) ? this : this.window;"
+                + "var global = (global == 'undefined') ? this : global;"
+                + "function require(id) {  return Require.require(id); } require.resolve = function (id) { return Require.resolve(id, currentNode.resource, 1);  };"
                 + source
                 + "})";
 
@@ -169,7 +183,7 @@ public class Module extends SimpleBindings implements Require {
                 String jsonfile = readScript(moduleResource);
                 function = decoreateScript(
                         "module.exports = " + jsonfile
-                );
+                , false);
             }
 
             if (moduleScript.isResourceFile()) {
@@ -181,24 +195,23 @@ public class Module extends SimpleBindings implements Require {
 
                 /*ValueMap map = moduleResource.adaptTo(ValueMap.class);
 
-                Invocable invocable = (Invocable) factory.getNashornEngine();
-                Object jsonprop = null;
-                try {
-                    jsonprop = invocable.invokeMethod(factory.getNashornEngine().eval("JSON"), "stringify", map);
-                } catch (NoSuchMethodException ex) {
-                    throw new ScriptException(ex);
-                }
-*/
+                 Invocable invocable = (Invocable) factory.getNashornEngine();
+                 Object jsonprop = null;
+                 try {
+                 jsonprop = invocable.invokeMethod(factory.getNashornEngine().eval("JSON"), "stringify", map);
+                 } catch (NoSuchMethodException ex) {
+                 throw new ScriptException(ex);
+                 }
+                 */
                 SimpleResource simpleResource = moduleResource.adaptTo(SimpleResource.class);
                 put("simpleResource", simpleResource);
-                log.info("this.simpleResource; = " + simpleResource.getPath());
-             /*   String source = "exports.properties =  " + jsonprop + ";"
-                        + "exports.path = currentNode.resource.path;"
-                        + "exports.simpleResource = this.simpleResource;"
-                        + "exports.children = this.children;";*/
-               String source = "module.exports = this.simpleResource;";
+                /*   String source = "exports.properties =  " + jsonprop + ";"
+                 + "exports.path = currentNode.resource.path;"
+                 + "exports.simpleResource = this.simpleResource;"
+                 + "exports.children = this.children;";*/
+                String source = "module.exports = this.simpleResource;";
 
-                function = decoreateScript(source);
+                function = decoreateScript(source, false);
             }
             if (!moduleScript.isResourceFile()) {
                 factory.getModuleCache().put(moduleScript.getResource().getPath(), function);

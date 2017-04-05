@@ -29,6 +29,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.scripting.esx.services.ScriptSandboxService;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
@@ -48,6 +49,9 @@ public class EsxScriptEngineFactory extends AbstractScriptEngineFactory {
     
     @Reference
     ScriptModuleCache moduleCache;
+
+    @Reference
+    ScriptSandboxService sandboxService;
 
     public EsxScriptEngineFactory() {
         setNames("esx", "ESX");
@@ -69,6 +73,9 @@ public class EsxScriptEngineFactory extends AbstractScriptEngineFactory {
         return new EsxScriptEngine(this);
     }
 
+    public ScriptSandboxService getSandboxService() {
+        return sandboxService;
+    }
     /**
      * 
      * @return 

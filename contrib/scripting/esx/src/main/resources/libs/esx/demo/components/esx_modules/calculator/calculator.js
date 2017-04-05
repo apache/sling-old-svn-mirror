@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-console.log("calculator");
-
 function calulate(a, b) {
   return a + b;
 }
