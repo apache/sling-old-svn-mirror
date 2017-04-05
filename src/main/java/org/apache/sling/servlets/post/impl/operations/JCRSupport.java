@@ -81,6 +81,13 @@ public class JCRSupport {
         return false;
     }
 
+    public boolean isVersionable(final Resource rsrc) throws PersistenceException {
+        if ( supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).isVersionable(rsrc);
+        }
+        return false;
+    }
+
     public boolean isNodeType(final Resource rsrc, final String typeHint) {
         if ( rsrc != null && supportImpl != null ) {
             return ((JCRSupportImpl)supportImpl).isNodeType(rsrc, typeHint);

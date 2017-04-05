@@ -17,22 +17,19 @@
 
 package org.apache.sling.servlets.post.impl.operations;
 
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeType;
 import javax.servlet.ServletException;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
@@ -135,9 +132,9 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     }
 
     /**
-     * Create node(s) according to current request
+     * Create resource(s) according to current request
      *
-     * @throws RepositoryException if a repository error occurs
+     * @throws PersistenceException if a resource error occurs
      */
     protected void processCreate(final ResourceResolver resolver,
             final Map<String, RequestProperty> reqProperties,
@@ -159,10 +156,6 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
         }
     }
 
-    private boolean isVersionable(final Node node) throws RepositoryException {
-        return node.isNodeType("mix:versionable");
-    }
-
     protected void updateNodeType(final ResourceResolver resolver,
                     final String path,
                     final Map<String, RequestProperty> reqProperties,
@@ -175,13 +168,13 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             final ModifiableValueMap mvm = rsrc.adaptTo(ModifiableValueMap.class);
             if ( mvm != null ) {
                 final Node node = rsrc.adaptTo(Node.class);
-                final boolean wasVersionable = (node == null ? false : isVersionable(node));
+                final boolean wasVersionable = (node == null ? false : this.jcrSsupport.isVersionable(rsrc));
 
                 if ( node != null ) {
                     this.jcrSsupport.checkoutIfNecessary(rsrc, changes, versioningConfiguration);
                     node.setPrimaryType(nodeType);
                 } else {
-                    mvm.put("jcr:primaryType", nodeType);
+                    mvm.put(JcrConstants.JCR_PRIMARYTYPE, nodeType);
                 }
 
                 if ( node != null ) {
@@ -189,7 +182,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     // the mix:versionable mixin does an implicit checkout
                     if (!wasVersionable &&
                             versioningConfiguration.isCheckinOnNewVersionableNode() &&
-                            isVersionable(node)) {
+                            this.jcrSsupport.isVersionable(rsrc)) {
                         changes.add(Modification.onCheckout(path));
                     }
                 }
@@ -202,42 +195,24 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,
                     final VersioningConfiguration versioningConfiguration)
-    throws PersistenceException, RepositoryException {
+    throws PersistenceException {
         final String[] mixins = getMixinTypes(reqProperties, path);
         if (mixins != null) {
 
             final Resource rsrc = resolver.getResource(path);
             final ModifiableValueMap mvm = rsrc.adaptTo(ModifiableValueMap.class);
             if ( mvm != null ) {
-                final Node node = rsrc.adaptTo(Node.class);
+                this.jcrSsupport.checkoutIfNecessary(rsrc, changes, versioningConfiguration);
+                mvm.put(JcrConstants.JCR_MIXINTYPES, mixins);
 
-                final Set<String> newMixins = new HashSet<>();
-                newMixins.addAll(Arrays.asList(mixins));
-
-                // clear existing mixins first
-                if ( node != null ) {
-                    this.jcrSsupport.checkoutIfNecessary(rsrc, changes, versioningConfiguration);
-                    for (NodeType mixin : node.getMixinNodeTypes()) {
-                        String mixinName = mixin.getName();
-                        if (!newMixins.remove(mixinName)) {
-                            node.removeMixin(mixinName);
-                        }
+                for(final String mixin : mixins) {
+                    // this is a bit of a cheat; there isn't a formal checkout, but assigning
+                    // the mix:versionable mixin does an implicit checkout
+                    if (mixin.equals(JcrConstants.MIX_VERSIONABLE) &&
+                            versioningConfiguration.isCheckinOnNewVersionableNode()) {
+                        changes.add(Modification.onCheckout(path));
                     }
-
-                    // add new mixins
-                    for (String mixin : newMixins) {
-                        node.addMixin(mixin);
-                        // this is a bit of a cheat; there isn't a formal checkout, but assigning
-                        // the mix:versionable mixin does an implicit checkout
-                        if (mixin.equals("mix:versionable") &&
-                                versioningConfiguration.isCheckinOnNewVersionableNode()) {
-                            changes.add(Modification.onCheckout(path));
-                        }
-                    }
-                } else {
-                    mvm.put("jcr:mixinTypes", mixins);
                 }
-
             }
         }
     }

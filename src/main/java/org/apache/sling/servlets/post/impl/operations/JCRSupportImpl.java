@@ -149,7 +149,16 @@ public class JCRSupportImpl {
     }
 
     private boolean isVersionable(final Node node) throws RepositoryException {
-        return node.isNodeType("mix:versionable");
+        return node.isNodeType(JcrConstants.MIX_VERSIONABLE);
+    }
+
+    public boolean isVersionable(final Resource rsrc) throws PersistenceException {
+        try {
+            final Node node = rsrc.adaptTo(Node.class);
+            return node != null && isVersionable(node);
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re, rsrc.getPath(), null);
+        }
     }
 
     public boolean checkin(final Resource rsrc)
