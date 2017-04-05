@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.validation.core</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <properties>
         <sling.java.version>8</sling.java.version>
