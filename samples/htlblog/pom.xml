@@ -34,15 +34,19 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-                <version>1.21.0</version>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>*</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>generate-scr-descriptor</id>
                         <goals>
-                            <goal>scr</goal>
+                            <goal>check</goal>
                         </goals>
+                        <phase>verify</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -52,6 +56,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <!-- Enable processing of OSGI DS component annotations -->
+                        <_dsannotations>*</_dsannotations>
                         <Import-Package>javax.inject;version=0.0.0,*</Import-Package>
                         <Sling-Model-Packages>
                             org.apache.sling.samples.htlblog
@@ -60,7 +66,7 @@
                         <Sling-Initial-Content>initial-content;overwrite:=true;uninstall:=true</Sling-Initial-Content>
                   </instructions>
                 </configuration>
-                <version>3.0.0</version>
+                <version>3.3.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
