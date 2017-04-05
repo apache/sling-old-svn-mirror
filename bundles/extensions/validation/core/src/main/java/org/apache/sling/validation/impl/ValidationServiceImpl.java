@@ -134,10 +134,6 @@ public class ValidationServiceImpl implements ValidationService{
     
     /** 
      * Necessary to deal with property changes which do not lead to service restarts (when a modified method is provided)
-     * 
-     * @param validator
-     * @param properties
-     * @param serviceReference
      */
     protected void updatedValidator(@Nonnull Validator<?> validator, Map<String, Object> properties, ServiceReference<Validator<?>> serviceReference) {
         validatorMap.update(properties, validator, serviceReference);
@@ -161,7 +157,7 @@ public class ValidationServiceImpl implements ValidationService{
     /**
      * If the given resourceType is starting with a "/", it will strip out the leading search path from the given resource type.
      * Otherwise it will just return the given resource type (as this is already relative).
-     * @param resourceType
+     * @param resourceType the resource type to convert
      * @return a relative resource type (without the leading search path)
      * @throws IllegalArgumentException in case the resource type is starting with a "/" but not with any of the search paths.
      */
