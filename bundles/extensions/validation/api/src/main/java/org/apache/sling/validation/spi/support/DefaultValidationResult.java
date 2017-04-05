@@ -29,7 +29,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.spi.ValidationContext;
+import org.apache.sling.validation.spi.ValidatorContext;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -58,7 +58,7 @@ public final class DefaultValidationResult implements ValidationResult, Serializ
      * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}
      * @param messageArguments optional number of arguments being used in {@link MessageFormat#format(String, Object...)}
      */
-    public DefaultValidationResult(@Nonnull ValidationContext validationContext, @Nonnull String messageKey, Object... messageArguments) {
+    public DefaultValidationResult(@Nonnull ValidatorContext validationContext, @Nonnull String messageKey, Object... messageArguments) {
         this.isValid = false;
         this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(validationContext, messageKey, messageArguments));
     }

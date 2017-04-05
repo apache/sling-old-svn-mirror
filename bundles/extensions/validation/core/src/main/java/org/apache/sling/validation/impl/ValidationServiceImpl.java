@@ -50,7 +50,7 @@ import org.apache.sling.validation.model.ValidatorInvocation;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.spi.ValidationModelRetriever;
-import org.apache.sling.validation.spi.ValidationContext;
+import org.apache.sling.validation.spi.ValidatorContext;
 import org.apache.sling.validation.spi.Validator;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
@@ -392,7 +392,7 @@ public class ValidationServiceImpl implements ValidationService{
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void validateValue(CompositeValidationResult result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, Resource resource, @Nonnull Validator validator, ValueMap validatorParameters, @Nonnull ResourceBundle defaultResourceBundle, int severity) {
         try {
-            ValidationContext validationContext = new ValidationContextImpl(relativePath + property, severity, valueMap, resource, defaultResourceBundle);
+            ValidatorContext validationContext = new ValidationContextImpl(relativePath + property, severity, valueMap, resource, defaultResourceBundle);
             ValidationResult validatorResult = ((Validator)validator).validate(value, validationContext, validatorParameters);
             result.addValidationResult(validatorResult);
         } catch (SlingValidationException e) {
