@@ -24,6 +24,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
+import org.apache.sling.ide.eclipse.core.DefaultSlingLaunchpadConfiguration;
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.eclipse.core.resources.IProject;
@@ -105,7 +107,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 
         try {
             // create projects
-            final List<IProject> createdProjects = new ArrayList<IProject>();
+            final List<IProject> createdProjects = new ArrayList<>();
             getContainer().run(false, true, new WorkspaceModifyOperation() {
                 @Override
                 protected void execute(IProgressMonitor monitor) throws CoreException, InvocationTargetException,
@@ -172,7 +174,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 
         IServerWorkingCopy wc = server.createWorkingCopy();
         // add the bundle and content projects, ie modules, to the server
-        List<IModule> modules = new LinkedList<IModule>();
+        List<IModule> modules = new LinkedList<>();
         for (IProject project : projects.getBundleProjects()) {
             IModule module = ServerUtil.getModule(project);
             if (module != null && shouldDeploy(module)) {
@@ -214,7 +216,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
         if (setupServerWizardPage.getStartServer()) {
             server.start(ILaunchManager.RUN_MODE, monitor);
         }
-        List<IModule[]> modules = new ArrayList<IModule[]>();
+        List<IModule[]> modules = new ArrayList<>();
         for (IProject project : createdProjects) {
             IModule module = ServerUtil.getModule(project);
             if (module != null && shouldDeploy(module)) {
@@ -251,4 +253,8 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
     }
 
     public abstract String doGetWindowTitle();
+    
+    protected ISlingLaunchpadConfiguration getDefaultConfig() {
+        return DefaultSlingLaunchpadConfiguration.INSTANCE;
+    }
 }

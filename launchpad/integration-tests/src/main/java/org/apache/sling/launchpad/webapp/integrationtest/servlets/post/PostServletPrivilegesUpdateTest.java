@@ -46,7 +46,6 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.commons.testing.integration.NameValuePairList;
-import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
 import org.apache.sling.launchpad.webapp.integrationtest.AuthenticatedTestUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.junit.After;
@@ -54,7 +53,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.TestName;
 
 public class PostServletPrivilegesUpdateTest {
@@ -94,8 +92,7 @@ public class PostServletPrivilegesUpdateTest {
      *     of a PROPERTY_REMOVED event and a PROPERTY_ADDED event
      */
     @Test 
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
-    @Ignore // TODO fails on jackrabbit 2.6.5
+    @Ignore // TODO fails on jackrabbit 2.6.5 and on Oak
     public void testUpdatePropertyPrivilegesAndEvents() throws IOException, JSONException, RepositoryException, InterruptedException {
     	//1. Create user as admin (OK)
         // curl -F:name=myuser -Fpwd=password -FpwdConfirm=password http://admin:admin@localhost:8080/system/userManager/user.create.html

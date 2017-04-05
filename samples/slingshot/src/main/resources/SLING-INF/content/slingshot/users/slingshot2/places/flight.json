@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Streamentry",
+    "title":"Flight Route",
+    "description":"Looks different from above..."
+}

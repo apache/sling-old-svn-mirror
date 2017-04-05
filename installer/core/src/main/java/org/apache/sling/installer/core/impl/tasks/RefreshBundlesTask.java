@@ -63,7 +63,9 @@ public class RefreshBundlesTask
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
+    @Override
     public void execute(final InstallationContext ctx) {
+        boolean doFullRefresh = false;
         final List<Bundle> bundles = new ArrayList<Bundle>();
         synchronized ( BUNDLE_IDS ) {
             for(final Long id : BUNDLE_IDS) {
@@ -72,18 +74,19 @@ public class RefreshBundlesTask
                     getLogger().debug("Will refresh bundle {}", b);
                     bundles.add(b);
                 } else {
-                    getLogger().debug("Unable to refresh bundle {} - already gone.", id);
+                    getLogger().debug("Bundle {} is already gone. Full refresh", id);
+                    doFullRefresh = true;
                 }
             }
             BUNDLE_IDS.clear();
         }
-        if ( bundles.size() > 0 ) {
+        if ( doFullRefresh || bundles.size() > 0 ) {
             // check if the installer bundle is affected
             if ( !this.getBundleRefresher().isInstallerBundleAffected(bundles) ) {
-                this.getBundleRefresher().refreshBundles(ctx, bundles, true);
+                this.getBundleRefresher().refreshBundles(ctx, (doFullRefresh ? null : bundles), true);
             } else {
                 ctx.log("Installer bundle is affected by bundle refresh, initiating asynchronous refresh");
-                ctx.addTaskToCurrentCycle(new AsyncRefreshBundlesTask(this.getTaskSupport(), bundles));
+                ctx.addTaskToCurrentCycle(new AsyncRefreshBundlesTask(this.getTaskSupport(), (doFullRefresh ? null : bundles)));
             }
         }
 	}

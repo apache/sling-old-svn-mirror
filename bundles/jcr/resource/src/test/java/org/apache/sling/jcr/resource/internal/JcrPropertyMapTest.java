@@ -38,6 +38,8 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
 
+import static org.apache.sling.jcr.resource.internal.AssertCalendar.assertEqualsCalendar;
+
 public class JcrPropertyMapTest extends RepositoryTestBase {
 
     private static final String PROP_NAME = "prop_name";
@@ -249,6 +251,11 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     private void testValue(Node node, Object value) throws RepositoryException {
         ValueMap map = createProperty(node, value);
         assertEquals(value, map.get(PROP_NAME));
+    }
+
+    private void testValue(Node node, Calendar value) throws RepositoryException {
+        ValueMap map = createProperty(node, value);
+        assertEqualsCalendar(value, map.get(PROP_NAME, Calendar.class));
     }
 
     private ValueMap createProperty(Node node, Object value)

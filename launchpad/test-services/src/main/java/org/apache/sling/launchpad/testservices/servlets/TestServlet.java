@@ -57,6 +57,9 @@ class TestServlet extends SlingAllMethodsServlet {
     props.put("sling.resource.path", r == null ? "" : r.getPath());
     props.put("sling.resource.type", r == null ? "" : r.getResourceType());
     props.put("http.request.method", request.getMethod());
+    props.put("http.request.pathInfo", request.getPathInfo());
+    props.put("http.request.requestURI", request.getRequestURI());
+    props.put("http.request.requestURL", request.getRequestURL().toString());
     
     setCustomProperties(props);
     props.store(response.getOutputStream(), "Data created by " + getClass().getName() + " at " + new Date());

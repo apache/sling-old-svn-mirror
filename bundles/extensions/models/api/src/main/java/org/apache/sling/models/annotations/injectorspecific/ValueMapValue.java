@@ -47,7 +47,7 @@ public @interface ValueMapValue {
      * If set to true, the model can be instantiated even if that value is missing.
      * Only considered if default is not set, because any default value implicitly
      * sets optional to true
-     * @deprecated Use {@link injectionStrategy} instead
+     * @deprecated Use {@link #injectionStrategy} instead
      */
     @Deprecated
     boolean optional() default false;

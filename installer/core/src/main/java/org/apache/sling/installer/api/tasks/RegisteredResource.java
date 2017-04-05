@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A resource that's been registered in the OSGi controller.
@@ -34,13 +34,15 @@ public interface RegisteredResource {
 
     /**
      * Return the scheme from where the artifact is originated.
+     * @return The scheme.
      */
     String getScheme();
 
     /**
      * Return this data's URL. The URL is the {@link #getScheme}
      * followed by a colon, followed by a unique identifier of
-     * the resource within the providers space..
+     * the resource within the providers space.
+     * @return The url.
      */
     String getURL();
 
@@ -56,7 +58,8 @@ public interface RegisteredResource {
      * closing the stream.
      * If this resource is of type PROPERTIES it must not return an input stream and
      * if this resource is of type FILE it must return an input stream!
-     * @return The input stream or null.
+     * @return The input stream or {@code null}.
+     * @throws IOException If an error occurs.
      */
     InputStream getInputStream() throws IOException;
 
@@ -65,13 +68,14 @@ public interface RegisteredResource {
      * Null if resource contains an InputStream instead. If this resource is of
      * type PROPERTIES it must return a dictionary and if this resource is of type FILE
      * it might return a dictionary!
-     * @return The resource's dictionary or null.
+     * @return The resource's dictionary or {@code null}.
      */
     Dictionary<String, Object> getDictionary();
 
     /**
      * Return this resource's digest. Not necessarily an actual md5 or other digest of the
      * data, can be any string that changes if the data changes.
+     * @return The digest.
      */
     String getDigest();
 
@@ -79,6 +83,7 @@ public interface RegisteredResource {
      * Return the priority of this resource. Priorities are used to decide which
      * resource to install when several are registered for the same OSGi entity
      * (bundle, configuration, etc.)
+     * @return The priority.
      */
     int getPriority();
 
@@ -86,6 +91,7 @@ public interface RegisteredResource {
      * Return the identifier of the OSGi "entity" that this resource
      * represents, for example "bundle:SID" where SID is the bundle's
      * symbolic ID, or "config:PID" where PID is config's PID.
+     * @return The entity id.
      */
     String getEntityId();
 }

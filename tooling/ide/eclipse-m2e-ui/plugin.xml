@@ -44,17 +44,85 @@
     <!-- marker to tell m2e that this plugin contains a lifecycle-mapping-metadata.xml -->
     <extension point="org.eclipse.m2e.core.lifecycleMappingMetadataSource">
     </extension>
+
     <extension
             point="org.eclipse.m2e.core.projectConfigurators">
+        <!-- make sure this runs after the default java configurator, being provided by http://git.eclipse.org/c/m2e/m2e-core.git/tree/org.eclipse.m2e.jdt/plugin.xml#n42  -->
+        <!-- the secondaryTo does only work in case the according configurator is bound to the same plugin execution -->
         <configurator
-                class="org.apache.sling.ide.eclipse.m2e.internal.BundleProjectConfigurator"
-                id="org.apache.sling.ide.eclipse.m2e.bundleconfigurator"
-                name="Sling Bundle Configurator"
-                secondaryTo="maven-bundle-plugin">
+                class="org.apache.sling.ide.eclipse.m2e.internal.MavenBundlePluginProjectConfigurator"
+                id="org.apache.sling.ide.eclipse.m2e.bundlePluginProjectConfigurator"
+                name="Sling Bundle Configurator (for maven-bundle-plugin)"
+                runsBefore="maven-bundle-plugin">
         </configurator>
+        <configurator
+                class="org.apache.sling.ide.eclipse.m2e.internal.BndMavenPluginProjectConfigurator"
+                id="org.apache.sling.ide.eclipse.m2e.bndPluginProjectConfigurator"
+                name="Sling Bundle Configurator (for bnd-maven-plugin)"
+                runsAfter="org.eclipse.m2e.jdt.javaConfigurator?">
+        </configurator>
+        <configurator 
+                id="org.apache.sling.ide.eclipse.m2e.configurator"
+                class="org.apache.sling.ide.eclipse.m2e.internal.ContentPackageProjectConfigurator"
+                name="Sling Content Package Configurator" />
     </extension>
+    
+    <!-- generic error marker (not bound to any quick fixes) for errors in any project configurators -->
+    <extension point="org.eclipse.core.resources.markers"
+         id="projectconfiguratorproblem" 
+         name="Project Configurator Problem">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <persistent value="true"/>
+   </extension>
+   
+    <!-- custom marker used in the BundleProjectConfigurator, see http://help.eclipse.org/mars/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Fguide%2FresAdv_markers.htm -->
+    <extension point="org.eclipse.core.resources.markers"
+         id="bundleprojectnotsupportingm2e" 
+         name="Bundle Project Not Supporting M2E">
+      <super type="org.apache.sling.ide.eclipse-m2e-ui.projectconfiguratorproblem"/>
+      <persistent value="true"/>
+   </extension>
+    
+    <extension
+         point="org.eclipse.ui.ide.markerSupport">
+        <markerTypeCategory
+              name="Sling IDE">
+           <markerTypeReference
+               id="org.apache.sling.ide.eclipse-m2e-ui.projectconfiguratorproblem">
+           </markerTypeReference>
+           <markerTypeReference
+               id="org.apache.sling.ide.eclipse-m2e-ui.bundleprojectnotsupportingm2e">
+           </markerTypeReference>
+       </markerTypeCategory>
+   </extension>
+    
+    <!--https://wiki.eclipse.org/FAQ_How_do_I_implement_Quick_Fixes_for_my_own_language%3F -->
+    <extension point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+         markerType="org.apache.sling.ide.eclipse-m2e-ui.bundleprojectnotsupportingm2e"
+         class="org.apache.sling.ide.eclipse.m2e.internal.BundleProjectNotSupportingM2EIncrementalBuildQuickFix"/>
+   </extension>
+    
 	<extension point="org.eclipse.m2e.core.archetypeCatalogs">
 		<remote url="http://repo1.maven.org/maven2/"
 			description="Maven Central"/>
-	</extension>    
+	</extension>
+	
+	<extension point="org.eclipse.ui.keywords">
+      <keyword id="org.apache.sling.ide.eclipse.m2e" label="maven project configurator sling ide bundle content-package content-packages"/>
+    </extension>
+    
+    <extension point="org.eclipse.core.runtime.preferences">
+      <initializer class="org.apache.sling.ide.eclipse.m2e.internal.preferences.PreferencesInitializer">
+      </initializer>
+    </extension>
+   
+    <extension point="org.eclipse.ui.preferencePages">
+      <page id="org.apache.sling.ide.eclipse.m2e.SlingIdePreferencePage"
+            class="org.apache.sling.ide.eclipse.m2e.internal.MavenProjectConfiguratorPreferencesPage"
+            name="Maven Project Configurator"
+            category="org.apache.sling.ide.eclipse.ui.SlingIdePreferencePage">
+         <keywordReference id="org.apache.sling.ide.eclipse.m2e"/>
+      </page>
+    </extension>
 </plugin>

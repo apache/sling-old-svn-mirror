@@ -23,14 +23,18 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
-import junit.framework.TestCase;
-
+import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.javascript.helper.SlingWrapFactory;
+import org.mockito.Mockito;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ImporterTopLevel;
 import org.mozilla.javascript.Scriptable;
 
+import junit.framework.TestCase;
+
 public class RhinoJavaScriptEngineTest extends TestCase {
+
+    private static ScriptCache scriptCache = Mockito.mock(ScriptCache.class);
 
     public void testPreserveScopeBetweenEvals() throws ScriptException {
         MockRhinoJavaScriptEngineFactory factory = new MockRhinoJavaScriptEngineFactory();
@@ -55,7 +59,7 @@ public class RhinoJavaScriptEngineTest extends TestCase {
         public ScriptEngine getScriptEngine() {
             final Context rhinoContext = Context.enter();
             Scriptable scope = rhinoContext.initStandardObjects(new ImporterTopLevel(), false);
-            return new RhinoJavaScriptEngine(this, scope);
+            return new RhinoJavaScriptEngine(this, scope, scriptCache);
         }
 
         @Override

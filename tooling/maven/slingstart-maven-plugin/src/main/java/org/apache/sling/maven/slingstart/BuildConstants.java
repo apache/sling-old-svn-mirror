@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.provisioning.model.ModelConstants;
+import org.apache.sling.provisioning.model.io.ModelArchiveWriter;
 
 public abstract class BuildConstants {
 
@@ -28,6 +29,8 @@ public abstract class BuildConstants {
     public static final String CONTEXT_STANDALONE = "slingstart" + ModelConstants.RUN_MODE_STANDALONE;
     public static final String CONTEXT_WEBAPP = "slingstart" + ModelConstants.RUN_MODE_WEBAPP;
 
+    // Model artifact name
+    public static final String MODEL_ARTIFACT_NAME = "slingstart.txt";
 
     // Types
 
@@ -52,6 +55,8 @@ public abstract class BuildConstants {
     public static final String CLASSIFIER_APP = "app";
 
     public static final String CLASSIFIER_WEBAPP = "webapp";
+
+    public static final String CLASSIFIER_MAR = ModelArchiveWriter.DEFAULT_EXTENSION;
 
     // Manifest attributes
 

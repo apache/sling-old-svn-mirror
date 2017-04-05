@@ -25,6 +25,7 @@ import org.apache.sling.commons.json.JSONTokener;
 /**
  * Utility class for validating JSON text.
  */
+@Deprecated
 public class Validator {
 
     /**
@@ -32,9 +33,15 @@ public class Validator {
      * @param text The text to check.
      * @throws JSONException If the text is not valid.
      */
-    public static void validate(final String text)
-    throws JSONException {
-        validate(new JSONTokener(text));
+    public static void validate(final String text) throws JSONException {
+        JSONTokener x = new JSONTokener(text);
+        validate(x);
+        
+        // make sure nothing more is present after last array or object
+        char c = x.nextClean();
+        if ( c != 0 ) {
+            throw x.syntaxError("Unexpected '" + c + "' at end of file.");
+        }
     }
 
     /**
@@ -42,15 +49,18 @@ public class Validator {
      * @param x The tokener to check.
      * @throws JSONException If the text is not valid.
      */
-    public static void validate(JSONTokener x)
-    throws JSONException {
+    public static void validate(JSONTokener x) throws JSONException {
         char c = x.nextClean();
         if ( c == 0 ) {
             // no tokens at all - we consider this valid
             return;
         } else  if (c == '[') {
-            if (x.nextClean() == ']') {
+            char nextChar = x.nextClean();
+            if (nextChar == ']') {
                 return;
+            }
+            else if (nextChar == 0) {
+                throw x.syntaxError("Detected unclosed array.");
             }
             x.back();
             for (;;) {
@@ -61,7 +71,7 @@ public class Validator {
                     c = x.nextClean();
                     x.back();
                     if ( c == '{' || c == '[') {
-                        // recursiv validation for object and array
+                        // recursive validation for object and array
                         validate(x);
                     } else {
                         x.nextValue();

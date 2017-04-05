@@ -44,6 +44,8 @@ public class SortingServiceTracker<T>
 
     /**
      * Constructor
+     * @param context Bundle context
+     * @param clazz Class
      */
     public SortingServiceTracker(final BundleContext context,
             final String clazz) {
@@ -81,6 +83,7 @@ public class SortingServiceTracker<T>
 
     /**
      * Return a sorted list of the services.
+     * @return Service list
      */
     public List<T> getSortedServices() {
         List<T> result = this.sortedServiceCache;
@@ -107,6 +110,7 @@ public class SortingServiceTracker<T>
 
     /**
      * Return a sorted list of the services references.
+     * @return Service list
      */
     public List<ServiceReference> getSortedServiceReferences() {
         List<ServiceReference> result = this.sortedReferences;

@@ -34,17 +34,17 @@ public class ManifestHeader {
     public interface Entry {
 
         /**
-         * The value of the entry.
+         * @return The value of the entry.
          */
         String getValue();
 
         /**
-         * The attributes specified for this entry.
+         * @return The attributes specified for this entry.
          */
         NameValuePair[] getAttributes();
 
         /**
-         * The directives for this entry.
+         * @return The directives for this entry.
          */
         NameValuePair[] getDirectives();
 
@@ -69,7 +69,7 @@ public class ManifestHeader {
     }
 
     /**
-     * Return the entries for this header.
+     * @return Return the entries for this header.
      */
     public Entry[] getEntries() {
         return this.entries;
@@ -107,6 +107,8 @@ public class ManifestHeader {
      * Like this: path; path; dir1:=dirval1; dir2:=dirval2; attr1=attrval1; attr2=attrval2,
      *            path; path; dir1:=dirval1; dir2:=dirval2; attr1=attrval1; attr2=attrval2
      * The returned object maintains the order of entries (paths), directives and attributes.
+     * @param header Header name
+     * @return Parsed header or null if not found
      */
     public static ManifestHeader parse(String header) {
         final ManifestHeader entry = new ManifestHeader();

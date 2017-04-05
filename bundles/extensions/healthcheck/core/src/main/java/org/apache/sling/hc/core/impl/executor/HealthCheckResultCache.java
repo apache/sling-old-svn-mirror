@@ -64,7 +64,7 @@ public class HealthCheckResultCache {
         final Iterator<HealthCheckMetadata> checksIt = metadatas.iterator();
         while (checksIt.hasNext()) {
             final HealthCheckMetadata md = checksIt.next();
-            final HealthCheckExecutionResult result = useValidCacheResults(md, resultCacheTtlInMs);
+            final HealthCheckExecutionResult result = getValidCacheResult(md, resultCacheTtlInMs);
             if (result != null) {
                 cachedResults.add(result);
                 checksIt.remove();
@@ -77,12 +77,12 @@ public class HealthCheckResultCache {
     /**
      * Return the cached result if it's still valid.
      */
-    public HealthCheckExecutionResult useValidCacheResults(final HealthCheckMetadata metadata,
+    public HealthCheckExecutionResult getValidCacheResult(final HealthCheckMetadata metadata,
             final long resultCacheTtlInMs) {
         return get(metadata, resultCacheTtlInMs);
     }
 
-    private HealthCheckExecutionResult get(final HealthCheckMetadata metadata, final long resultCacheTtlInMs) {
+    private HealthCheckExecutionResult get(final HealthCheckMetadata metadata, final long globalResultCacheTtlInMs) {
         final Long key = metadata.getServiceId();
         final HealthCheckExecutionResult cachedResult = cache.get(key);
         if (cachedResult != null) {
@@ -93,20 +93,42 @@ public class HealthCheckResultCache {
                 return null;
             }
 
-            // Option: add resultCacheTtlInMs as property to health check to make it configurable per check
-            Date validUntil = new Date(finishedAt.getTime() + resultCacheTtlInMs);
+            long effectiveTtl = getEffectiveTtl(metadata, globalResultCacheTtlInMs);
+            long validUntilLong = finishedAt.getTime() + effectiveTtl;
+            if(validUntilLong < 0) { // if Long.MAX_VALUE is configured, this can become negative
+                validUntilLong = Long.MAX_VALUE;
+            }
+            Date validUntil = new Date(validUntilLong);
             Date now = new Date();
             if (validUntil.after(now)) {
                 logger.debug("Cache hit: validUntil={} cachedResult={}", validUntil, cachedResult);
                 return cachedResult;
             } else {
                 logger.debug("Outdated result: validUntil={} cachedResult={}", validUntil, cachedResult);
-                cache.remove(key);
+                // not removing result for key as out-dated results are shown for timed out checks if available
             }
         }
 
         // null => no cache hit
         return null;
+    }
+
+    /**
+     * Obtains the effective TTL for a given Metadata descriptor.
+     *
+     * @param metadata Metadata descriptor of health check 
+     * @param globalTtl TTL from service configuration of health check executor (used as default)
+     * @return effective TTL
+     */
+    private long getEffectiveTtl(HealthCheckMetadata metadata, long globalTtl) {
+        final long ttl;
+        Long hcTtl = metadata.getResultCacheTtlInMs();
+        if (hcTtl != null && hcTtl > 0) {
+            ttl = hcTtl;
+        } else {
+            ttl = globalTtl;
+        }
+        return ttl;
     }
 
     /**

@@ -22,6 +22,7 @@ import javax.inject.Named;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.models.annotations.Model;
+import org.slf4j.Logger;
 
 @Model(adaptables=SlingHttpServletRequest.class)
 public class BindingsModel {
@@ -29,9 +30,16 @@ public class BindingsModel {
     @Inject
     @Named("sling")
     private SlingScriptHelper sling;
+
+    @Inject
+    private Logger log;
     
     public SlingScriptHelper getSling() {
         return sling;
+    }
+
+    public Logger getLog() {
+        return log;
     }
 
 }

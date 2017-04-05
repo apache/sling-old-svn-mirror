@@ -16,6 +16,7 @@
  */
 package org.apache.sling.commons.logservice.internal;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -37,6 +38,7 @@ import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogListener;
 import org.osgi.service.log.LogService;
+import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,21 +70,25 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
     // The loggers by bundle id used for logging messages originated from
     // specific bundles
     @SuppressWarnings("serial")
-    private Map<Long, Logger> loggers = new LinkedHashMap<Long, Logger>(16,
+    private final Map<Long, Logger> loggers = new LinkedHashMap<Long, Logger>(16,
         0.75f, true) {
         private static final int MAX_SIZE = 50;
 
+        @Override
         protected boolean removeEldestEntry(Map.Entry<Long, Logger> eldest) {
             return size() > MAX_SIZE;
         }
     };
 
     // the worker thread actually sending LogEvents to LogListeners
-    private LogEntryDispatcher logEntryDispatcher;
+    private final LogEntryDispatcher logEntryDispatcher;
 
-    /* package */LogSupport() {
+    private final StartLevel startLevelService;
+
+    /* package */LogSupport(final StartLevel startLevelService) {
         logEntryDispatcher = new LogEntryDispatcher(this);
         logEntryDispatcher.start();
+        this.startLevelService = startLevelService;
     }
 
     /* package */void shutdown() {
@@ -290,11 +296,6 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
                 message = "ServiceEvent " + event.getType();
         }
 
-        String s = (event.getServiceReference().getBundle() == null)
-                ? null
-                : "Bundle " + event.getServiceReference().getBundle();
-        s = (s == null) ? message : s + " " + message;
-
         LogEntry entry = new LogEntryImpl(
             event.getServiceReference().getBundle(),
             event.getServiceReference(), level, message, null);
@@ -350,7 +351,7 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
                 message = "FrameworkEvent PACKAGES REFRESHED";
                 break;
             case FrameworkEvent.STARTLEVEL_CHANGED:
-                message = "FrameworkEvent STARTLEVEL CHANGED";
+                message = "FrameworkEvent STARTLEVEL CHANGED to " + this.startLevelService.getStartLevel();
                 break;
             case FrameworkEvent.WARNING:
                 message = "FrameworkEvent WARNING";
@@ -362,11 +363,7 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
                 message = "FrameworkEvent " + event.getType();
         }
 
-        String s = (event.getBundle() == null) ? null : "Bundle "
-            + event.getBundle();
-        s = (s == null) ? message : s + " " + message;
-
-        LogEntry entry = new LogEntryImpl(event.getBundle(), null, level,
+        final LogEntry entry = new LogEntryImpl(event.getBundle(), null, level,
             message, exception);
         fireLogEvent(entry);
     }
@@ -434,13 +431,13 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
      * in the log entry.
      */
     private void logOut(LogEntry logEntry) {
-        // /* package */ void logOut(Bundle bundle, ServiceReference sr, int
-        // level, String message, Throwable exception) {
-
         // get the logger for the bundle
         Logger log = getLogger(logEntry.getBundle());
+        if (logEntry.getLevel() > getLevel(log))
+            // early Exit, this message will not be logged, don't do any work...
+            return;
 
-        StringBuffer msg = new StringBuffer();
+        final StringBuilder msg = new StringBuilder();
 
         ServiceReference sr = logEntry.getServiceReference();
         if (sr != null) {
@@ -453,7 +450,10 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
                 msg.append(sr.getProperty(Constants.SERVICE_DESCRIPTION)).append(
                     ',');
             }
-            msg.append(sr.getProperty(Constants.SERVICE_ID)).append("] ");
+            msg.append(sr.getProperty(Constants.SERVICE_ID))
+                .append(", ")
+                .append(Arrays.toString((String[]) sr.getProperty(Constants.OBJECTCLASS)))
+                .append("] ");
         }
 
         if (logEntry.getMessage() != null) {
@@ -487,6 +487,18 @@ public class LogSupport implements SynchronousBundleListener, ServiceListener,
                 }
                 break;
         }
+    }
+
+    static int getLevel(Logger log) {
+        if (log.isTraceEnabled())
+            return LogService.LOG_DEBUG + 1; // No constant for trace in LogService
+        else if (log.isDebugEnabled())
+            return LogService.LOG_DEBUG;
+        else if (log.isInfoEnabled())
+            return LogService.LOG_INFO;
+        else if (log.isWarnEnabled())
+            return LogService.LOG_WARNING;
+        return LogService.LOG_ERROR;
     }
 
     // ---------- internal class -----------------------------------------------

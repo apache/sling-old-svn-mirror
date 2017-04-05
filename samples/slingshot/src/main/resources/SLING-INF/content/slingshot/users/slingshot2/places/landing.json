@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Streamentry",
+    "title":"Landing Place",
+    "description":"Something happened here long time ago!"
+}

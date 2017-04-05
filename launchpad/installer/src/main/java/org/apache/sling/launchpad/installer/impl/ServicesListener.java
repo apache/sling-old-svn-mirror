@@ -149,7 +149,7 @@ public class ServicesListener {
                         + Constants.OBJECTCLASS + "=" + serviceName + ")");
             } catch (final InvalidSyntaxException ise) {
                 // this should really never happen
-                throw new RuntimeException("Unexpected exception occured.", ise);
+                throw new RuntimeException("Unexpected exception occurred.", ise);
             }
             this.retainService();
         }

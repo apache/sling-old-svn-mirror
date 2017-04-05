@@ -127,9 +127,9 @@ public class SlingBundleModuleFactory extends ProjectModuleFactoryDelegate {
         @Override
         public IModuleResource[] members() throws CoreException {
             final IJavaProject javaProject = ProjectHelper.asJavaProject(getProject());
-            final List<IModuleResource> resources = new ArrayList<IModuleResource>();
+            final List<IModuleResource> resources = new ArrayList<>();
             
-            final Set<String> filteredLocations = new HashSet<String>();
+            final Set<String> filteredLocations = new HashSet<>();
 
             final IJavaProject jp = javaProject;
             final IClasspathEntry[] rawCp = jp.getRawClasspath();

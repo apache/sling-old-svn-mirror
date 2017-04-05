@@ -42,6 +42,7 @@ public class SimpleTest {
     private ResourceResolverFactory rrFactory;
     
     private String value;
+    private String childValue;
     private ResourceResolver resolver;
     private Resource resource;
     private Node createdNode;
@@ -49,12 +50,15 @@ public class SimpleTest {
     @Before
     public void setUp() throws Exception {
         value = RandomStringUtils.randomAlphanumeric(10);
+        childValue = RandomStringUtils.randomAlphanumeric(10);
 
-        resolver = rrFactory.getAdministrativeResourceResolver(null);     
+        resolver = rrFactory.getAdministrativeResourceResolver(null);
         Session session = resolver.adaptTo(Session.class);
         Node rootNode = session.getRootNode();
         createdNode = rootNode.addNode("test_" + RandomStringUtils.randomAlphanumeric(10));
         createdNode.setProperty("testProperty", value);
+        Node child = createdNode.addNode("child");
+        child.setProperty("childProperty", childValue);
         session.save();
 
         resource = resolver.getResource(createdNode.getPath());
@@ -76,6 +80,7 @@ public class SimpleTest {
     
         assertNotNull("Model is null", model);
         assertEquals("Test Property is not set correctly", value, model.getTestProperty());
+        assertEquals("Child Test Property is not set correctly", childValue, model.getChildProperty());
         assertNotNull("Filters is null", model.getFilters());
         assertSame("Adaptable is not injected", resource, model.getResource());
     }

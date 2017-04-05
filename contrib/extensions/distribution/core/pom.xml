@@ -17,8 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <!-- ======================================================================= -->
     <!-- P A R E N T   P R O J E C T                                             -->
@@ -26,14 +25,14 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>20</version>
+        <version>26</version>
     </parent>
 
     <!-- ======================================================================= -->
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.distribution.core</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.2.7-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Distribution Core</name>
@@ -69,15 +68,39 @@
                     <instructions>
                         <Bundle-SymbolicName>org.apache.sling.distribution.core</Bundle-SymbolicName>
                         <Export-Package>
-                            org.apache.sling.distribution.util
+                            org.apache.sling.distribution.util,
+                            org.apache.sling.distribution.common,
+                            org.apache.sling.distribution.serialization
                         </Export-Package>
-                        <Embed-Dependency>httpasyncclient</Embed-Dependency>
+                        <Import-Package>
+                            org.apache.http.nio.*;resolution:=optional,
+                            org.apache.http.impl.nio.client.*;resolution:=optional,
+                            org.apache.sling.event.jobs;version="[1.5.0,3.0)",
+                            org.apache.sling.event.jobs.consumer;version="[1.1,2)",
+                            org.apache.sling.jcr.api;version="2.2.0",
+                            *
+                        </Import-Package>
                     </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*-checkpoint</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -86,6 +109,12 @@
     <!-- D E P E N D E N C I E S                                                 -->
     <!-- ======================================================================= -->
     <dependencies>
+        <!-- need it here as to avoid classpath conflicts with testing mock -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.2.0</version>
+        </dependency>
         <!-- TESTING -->
         <dependency>
             <groupId>junit</groupId>
@@ -104,21 +133,41 @@
             <version>2.6.4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.resourceresolver-mock</artifactId>
+            <version>1.1.16</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Sling Mock -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.osgi-mock</artifactId>
+            <version>1.7.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.sling-mock</artifactId>
+            <version>1.6.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.sling-mock-oak</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
+        </dependency>
         <!-- SLING -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.5.0</version>
+            <version>2.7.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.2.0</version>
+            <version>0.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -128,12 +177,12 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.api</artifactId>
-            <version>2.2.0</version>
+            <version>2.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.event</artifactId>
-            <version>3.3.0</version>
+            <version>4.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -194,13 +243,14 @@
         <dependency>
             <groupId>org.apache.jackrabbit.vault</groupId>
             <artifactId>org.apache.jackrabbit.vault</artifactId>
-            <version>3.0.0</version>
+            <version>3.1.28</version>
         </dependency>
         <!-- HTTP -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpasyncclient</artifactId>
             <version>4.0.2</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -230,7 +280,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.4</version>
+            <version>2.5</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

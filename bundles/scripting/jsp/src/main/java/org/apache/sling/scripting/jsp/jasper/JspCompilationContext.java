@@ -304,10 +304,6 @@ public class JspCompilationContext {
         return className;
     }
 
-    public void setServletClassName(String className) {
-        this.className = className;
-    }
-
     /**
      * Path of the JSP URI. Note that this is not a file name. This is
      * the context rooted URI of the JSP file.
@@ -385,13 +381,6 @@ public class JspCompilationContext {
                     JspUtil.makeJavaPackage(jspUri.substring(1,iSep)) : "";
         }
         return derivedPackageName;
-    }
-
-    /**
-     * The package name into which the servlet class is generated.
-     */
-    public void setServletPackageName(String servletPackageName) {
-        this.basePackageName = servletPackageName;
     }
 
     /**

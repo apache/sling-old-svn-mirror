@@ -26,7 +26,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
 import org.apache.sling.testing.mock.sling.spi.ResourceResolverTypeAdapter;
@@ -54,16 +53,17 @@ public final class MockSling {
 
     /**
      * Creates new sling resource resolver factory instance.
-     * @param type Type of underlying repository.
+     * @param bundleContext Bundle context
      * @return Resource resolver factory instance
      */
-    public static ResourceResolverFactory newResourceResolverFactory(final ResourceResolverType type) {
-        return newResourceResolverFactory(type, MockOsgi.newBundleContext());
+    public static ResourceResolverFactory newResourceResolverFactory(final BundleContext bundleContext) {
+        return newResourceResolverFactory(DEFAULT_RESOURCERESOLVER_TYPE, bundleContext);
     }
-    
+
     /**
      * Creates new sling resource resolver factory instance.
      * @param type Type of underlying repository.
+     * @param bundleContext Bundle context
      * @return Resource resolver factory instance
      */
     public static ResourceResolverFactory newResourceResolverFactory(final ResourceResolverType type,
@@ -72,10 +72,10 @@ public final class MockSling {
         ResourceResolverFactory factory = adapter.newResourceResolverFactory();
         if (factory == null) {
             SlingRepository repository = adapter.newSlingRepository();
-            if (repository == null) {
-                throw new RuntimeException("Adapter neither provides resource resolver factory nor sling repository.");
-            }
-            factory = new MockJcrResourceResolverFactory(repository, bundleContext);
+            factory = ResourceResolverFactoryInitializer.setUp(repository, bundleContext, type.getNodeTypeMode());
+        }
+        else {
+            bundleContext.registerService(ResourceResolverFactory.class.getName(), factory, null);
         }
         return factory;
     }
@@ -84,40 +84,35 @@ public final class MockSling {
         try {
             Class clazz = Class.forName(type.getResourceResolverTypeAdapterClass());
             return (ResourceResolverTypeAdapter) clazz.newInstance();
-        } catch (ClassNotFoundException ex) {
+        }
+        catch (ClassNotFoundException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
-                    + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
+                    + (type.getArtifactCoordinates() != null ? ". Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
-        } catch (InstantiationException ex) {
+        }
+        catch (InstantiationException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
-                    + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
+                    + (type.getArtifactCoordinates() != null ? ". Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
-        } catch (IllegalAccessException ex) {
+        }
+        catch (IllegalAccessException ex) {
             throw new RuntimeException("Unable to instantiate resourcer resolver: "
                     + type.getResourceResolverTypeAdapterClass()
-                    + (type.getArtifactCoordinates() != null ? "Make sure this maven dependency is included: "
+                    + (type.getArtifactCoordinates() != null ? ". Make sure this maven dependency is included: "
                             + type.getArtifactCoordinates() : ""), ex);
         }
     }
 
     /**
-     * Creates new sling resource resolver factory instance using
-     * {@link #DEFAULT_RESOURCERESOLVER_TYPE}.
-     * @return Resource resolver factory instance
-     */
-    public static ResourceResolverFactory newResourceResolverFactory() {
-        return newResourceResolverFactory(DEFAULT_RESOURCERESOLVER_TYPE);
-    }
-
-    /**
      * Creates new sling resource resolver instance.
      * @param type Type of underlying repository.
+     * @param bundleContext Bundle context
      * @return Resource resolver instance
      */
-    public static ResourceResolver newResourceResolver(final ResourceResolverType type) {
-        ResourceResolverFactory factory = newResourceResolverFactory(type);
+    public static ResourceResolver newResourceResolver(final ResourceResolverType type, BundleContext bundleContext) {
+        ResourceResolverFactory factory = newResourceResolverFactory(type, bundleContext);
         try {
             return factory.getAdministrativeResourceResolver(null);
         } catch (LoginException ex) {
@@ -128,10 +123,11 @@ public final class MockSling {
     /**
      * Creates new sling resource resolver instance using
      * {@link #DEFAULT_RESOURCERESOLVER_TYPE}.
+     * @param bundleContext Bundle context
      * @return Resource resolver instance
      */
-    public static ResourceResolver newResourceResolver() {
-        return newResourceResolver(DEFAULT_RESOURCERESOLVER_TYPE);
+    public static ResourceResolver newResourceResolver(BundleContext bundleContext) {
+        return newResourceResolver(DEFAULT_RESOURCERESOLVER_TYPE, bundleContext);
     }
 
     /**
@@ -149,12 +145,12 @@ public final class MockSling {
     /**
      * Creates a new sling script helper instance using
      * {@link #DEFAULT_RESOURCERESOLVER_TYPE} for the resource resolver.
+     * @param bundleContext Bundle context
      * @return Sling script helper instance
      */
-    public static SlingScriptHelper newSlingScriptHelper() {
-        SlingHttpServletRequest request = new MockSlingHttpServletRequest(newResourceResolver());
+    public static SlingScriptHelper newSlingScriptHelper(BundleContext bundleContext) {
+        SlingHttpServletRequest request = new MockSlingHttpServletRequest(newResourceResolver(bundleContext), bundleContext);
         SlingHttpServletResponse response = new MockSlingHttpServletResponse();
-        BundleContext bundleContext = MockOsgi.newBundleContext();
         return newSlingScriptHelper(request, response, bundleContext);
     }
 

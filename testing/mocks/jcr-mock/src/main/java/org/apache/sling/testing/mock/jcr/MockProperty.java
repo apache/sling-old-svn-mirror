@@ -25,6 +25,7 @@ import java.util.Calendar;
 import javax.jcr.Binary;
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -52,7 +53,7 @@ class MockProperty extends AbstractItem implements Property {
     }
 
     private Value internalGetValue() throws RepositoryException {
-        if (this.itemData.getValues().length > 1) {
+        if (this.itemData.isMultiple()) {
             throw new ValueFormatException(this
                     + " is a multi-valued property, so it's values can only be retrieved as an array");
         } else {
@@ -67,6 +68,9 @@ class MockProperty extends AbstractItem implements Property {
 
     @Override
     public Value[] getValues() throws RepositoryException {
+        if (!this.itemData.isMultiple()) {
+            throw new ValueFormatException("Property is single-valued.");
+        }
         Value[] valuesCopy = new Value[this.itemData.getValues().length];
         for (int i = 0; i < this.itemData.getValues().length; i++) {
             valuesCopy[i] = this.itemData.getValues()[i];
@@ -197,7 +201,12 @@ class MockProperty extends AbstractItem implements Property {
 
     @Override
     public int getType() throws RepositoryException {
-        return this.itemData.getValues()[0].getType();
+        if (this.itemData.getValues().length > 0) {
+            return this.itemData.getValues()[0].getType();
+        }
+        else {
+            return PropertyType.UNDEFINED;
+        }    
     }
 
     @Override
@@ -207,6 +216,9 @@ class MockProperty extends AbstractItem implements Property {
 
     @Override
     public long[] getLengths() throws RepositoryException {
+        if (!this.itemData.isMultiple()) {
+            throw new ValueFormatException("Property is single-valued.");
+        }
         long[] lengths = new long[this.itemData.getValues().length];
         for (int i = 0; i < this.itemData.getValues().length; i++) {
             lengths[i] = this.itemData.getValues()[i].getString().length();
@@ -260,6 +272,31 @@ class MockProperty extends AbstractItem implements Property {
             return MockProperty.this.itemData.isMultiple();
         }
 
+        @Override
+        public boolean isAutoCreated() {
+            return false;
+        }
+
+        @Override
+        public boolean isMandatory() {
+            return false;
+        }
+
+        @Override
+        public boolean isProtected() {
+            return false;
+        }
+        
+        @Override
+        public boolean isFullTextSearchable() {
+            return false;
+        }
+
+        @Override
+        public boolean isQueryOrderable() {
+            return false;
+        }
+        
         // --- unsupported operations ---
         @Override
         public Value[] getDefaultValues() {
@@ -292,34 +329,10 @@ class MockProperty extends AbstractItem implements Property {
         }
 
         @Override
-        public boolean isAutoCreated() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isMandatory() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isProtected() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public String[] getAvailableQueryOperators() {
             throw new UnsupportedOperationException();
         }
 
-        @Override
-        public boolean isFullTextSearchable() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isQueryOrderable() {
-            throw new UnsupportedOperationException();
-        }
     }
 
 }

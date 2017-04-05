@@ -146,7 +146,7 @@ public class JcrEditingSupport extends EditingSupport {
                 final String oldKey = String.valueOf(getValue());
                 final String newKey = String.valueOf(value);
                 pd.setNewPropertyName(newKey);
-                Map<String, String> pseudoMap = new HashMap<String, String>();
+                Map<String, String> pseudoMap = new HashMap<>();
                 final String propertyValue = jcrNode.getProperties().getValue(oldKey);
                 pseudoMap.put(newKey, propertyValue);
                 final Entry<String, String> mapEntry = pseudoMap.entrySet().iterator().next();

@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../parent/pom.xml</relativePath>
+        <version>26</version>
+        <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.launchpad.testing</artifactId>
-    <packaging>jar</packaging>
-    <version>7-SNAPSHOT</version>
+    <packaging>slingstart</packaging>
+    <version>9-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Testing</name>
     <description>
@@ -44,11 +44,9 @@
     </scm>
 
     <properties>
-        <!-- HTTP port to use when running mvn launchpad:run -->
-        <run.http.port>8888</run.http.port>
-
-        <!-- Timeout when checking for Sling readyness before starting tests -->
-        <HttpTestBase.readyTimeoutSeconds>62</HttpTestBase.readyTimeoutSeconds>
+        <sling.java.version>7</sling.java.version>
+        
+        <sling.default.vm.options>-Xmx1024m -XX:MaxPermSize=256m -Djava.awt.headless=true</sling.default.vm.options>
 
         <!-- path suffix for HTTP access to Sling -->
         <http.base.path />
@@ -59,47 +57,18 @@
         <!-- hostname for integration tests -->
         <test.host>localhost</test.host>
 
-        <!--
-            Defines which tests are for the "integration-testing" phase
-        -->
-        <integration.test.code.path>
-            **/launchpad/webapp/integrationtest
-        </integration.test.code.path>
-
         <!-- optionally exclude some integration tests  -->
         <failsafe.exclude></failsafe.exclude>
 
-        <!--
-            Set this to true to stop mvn once the integration test Jetty instance is
-            started. Useful to manually test the integration testing webapp.
-        -->
-        <integration.test.wait>false</integration.test.wait>
+        <slf4j.version>1.7.6</slf4j.version>
+        <logback.version>1.1.2</logback.version>
 
-        <resources.bundles.path>${project.build.directory}/launchpad-bundles/resources/bundles</resources.bundles.path>
-        
-        <slf4j.version>1.5.11</slf4j.version>
-        <logback.version>0.9.20</logback.version>
+        <min.port>41000</min.port>
+        <max.port>41199</max.port>
     </properties>
 
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${basedir}</directory>
-                            <includes>
-                                <include>derby.log</include>
-                                <include>cachedir</include>
-                                <include>sling/**</include>
-                                <include>jackrabbit</include>
-                                <include>coverage.ec</include>
-                            </includes>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -115,376 +84,134 @@
                                 <portName>http.port</portName>
                                 <portName>sling.control.port</portName>
                             </portNames>
+                            <minPortNumber>${min.port}</minPortNumber>
+                            <maxPortNumber>${max.port}</maxPortNumber>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-    	                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-                        <manifest>
-                            <addDefaultImplementationEntries>
-                                true
-                            </addDefaultImplementationEntries>
-                        </manifest>
-                    </archive>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.sling</groupId>
-                <artifactId>maven-launchpad-plugin</artifactId>
-                <version>2.3.3-SNAPSHOT</version>
+                <artifactId>slingstart-maven-plugin</artifactId>
+                <version>1.7.0</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
-                        <id>prepare-package</id>
+                         <id>start-container</id>
                         <goals>
-                            <goal>prepare-package</goal>
+                            <goal>start</goal>
+                            <goal>stop</goal>
                         </goals>
-                    </execution>
-                    <execution>
-                        <id>default-cli</id>
-                        <configuration>
-                            <httpPort>${run.http.port}</httpPort>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>attach-bundle-list</id>
-                        <goals>
-                            <goal>attach-bundle-list</goal>
-                        </goals>
-                        <configuration>
-                            <ignoreBundleListConfig>true</ignoreBundleListConfig>
-                        </configuration>
                     </execution>
                 </executions>
                 <configuration>
-                    <defaultBundleList>
-                        <version>8-SNAPSHOT</version>
-                    </defaultBundleList>
-                    <jarWebSupport>
-                        <bundles>
-                          <bundle>
-                                <groupId>org.apache.felix</groupId>
-                                <artifactId>org.apache.felix.http.api</artifactId>
-                                <version>2.3.2</version>
-                                <startLevel>5</startLevel>
-                            </bundle>
-                            <bundle>
-                                <groupId>org.apache.felix</groupId>
-                                <artifactId>org.apache.felix.http.servlet-api</artifactId>
-                                <version>1.0.1</version>
-                                <startLevel>5</startLevel>
-                            </bundle>
-                            <bundle>
-                                <groupId>org.apache.felix</groupId>
-                                <artifactId>org.apache.felix.http.jetty</artifactId>
-                                <version>2.3.2</version>
-                                <startLevel>5</startLevel>
-                            </bundle>
-                        </bundles>
-                    </jarWebSupport>
+                    <servers>
+                        <server>
+                            <port>${http.port}</port>
+                            <controlPort>${sling.control.port}</controlPort>
+                            <runmode>${sling.run.modes}</runmode>
+                            <contextPath>${http.base.path}</contextPath>
+                            <vmOpts>${sling.vm.options}</vmOpts>
+                        </server>
+                    </servers>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>org.apache.sling.launchpad.base</artifactId>
-                        <version>4.6.1-2.5.8</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>org.apache.sling.launchpad.base</artifactId>
-                        <version>4.6.1-2.5.8</version>
-                        <classifier>app</classifier>
-                    </dependency>
-                </dependencies>
             </plugin>
-
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>emma-maven-plugin</artifactId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
-                    <filters>
-                        <filter>-*</filter>
-                    </filters>
+                    <dependenciesToScan>
+                        <dependency>org.apache.sling:org.apache.sling.launchpad.integration-tests</dependency>
+                    </dependenciesToScan>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*IT.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>${failsafe.exclude}</exclude>
+                    </excludes>
+                    <systemPropertyVariables>
+                        <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
+                        <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
+                        <launchpad.servlet.context>${http.base.path}</launchpad.servlet.context>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                  <!-- No javadocs -->
-                    <excludePackageNames>
-                        org.apache.sling
-                    </excludePackageNames>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
 
     <profiles>
         <profile>
-            <!--
-                Run the integration tests.
-            -->
-            <id>integrationTesting</id>
+            <id>port-java6</id>
             <activation>
-                <property>
-                    <name>!maven.test.skip</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <!-- Version newer than the one declared in the parent pom -->
-                        <version>2.16</version>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                    <goal>verify</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <dependenciesToScan>
-                                <dependency>org.apache.sling:org.apache.sling.launchpad.integration-tests</dependency>
-                            </dependenciesToScan>
-                            <includes>
-                                <include>**/*Test.java</include>
-                                <include>**/*IT.java</include>
-                            </includes>
-                            <excludes>
-                                <exclude>${failsafe.exclude}</exclude>
-                            </excludes>
-                            <excludedGroups>${sling.it.excludedGroups}</excludedGroups>
-                            <systemPropertyVariables>
-                                <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
-                                <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
-                                <HttpTestBase.readyTimeoutSeconds>${HttpTestBase.readyTimeoutSeconds}</HttpTestBase.readyTimeoutSeconds>
-                                
-                                <!-- Additional readyness checks, SLING-3235 and SLING-4261 -->
-                                <launchpad.ready.1>GET:/system/console/status-Configurations/configuration-status-20131115-101714.txt:200:config.comment.*setup the JSP engine for running tests</launchpad.ready.1>
-                                <launchpad.ready.2>GET:/.EXPORTED_PACKAGES.txt?package=org.apache.sling.api:200:PACKAGE FOUND.*org.apache.sling.api</launchpad.ready.2>
-                                <launchpad.ready.3>GET:/system/sling/junit/org.apache.sling.launchpad.testservices.serversidetests.WriteableResourcesTest.json:200:WriteableResourcesTest</launchpad.ready.3>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>maven-launchpad-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>start-container</id>
-                                <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>start</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>stop-container</id>
-                                <phase>post-integration-test</phase>
-                                <goals>
-                                    <goal>stop</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <httpPort>${http.port}</httpPort>
-                            <controlHost>${test.host}</controlHost>
-                            <controlPort>${sling.control.port}</controlPort>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>jackrabbit</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <property>
-                    <name>sling.run.modes</name>
-                    <value>!oak</value>
-                </property>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.6</jdk>
             </activation>
             <properties>
-                <sling.it.excludedGroups>org.apache.sling.commons.testing.junit.categories.OakOnly</sling.it.excludedGroups>
+                <min.port>41200</min.port>
+                <max.port>41399</max.port>
             </properties>
         </profile>
         <profile>
-            <id>oak</id>
+            <id>port-java7</id>
             <activation>
-                <property>
-                    <name>sling.run.modes</name>
-                    <value>oak</value>
-                </property>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.7</jdk>
             </activation>
             <properties>
-                <sling.it.excludedGroups>org.apache.sling.commons.testing.junit.categories.JackrabbitOnly</sling.it.excludedGroups>
+                <min.port>41400</min.port>
+                <max.port>41599</max.port>
             </properties>
         </profile>
         <profile>
-            <id>pax-web</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>maven-launchpad-plugin</artifactId>
-                        <configuration>
-                            <jarWebSupport>
-                                <groupId>org.ops4j.pax.web</groupId>
-                                <artifactId>pax-web-service</artifactId>
-                                <version>0.6.0</version>
-                            </jarWebSupport>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
+            <id>port-java8</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <min.port>41600</min.port>
+                <max.port>41799</max.port>
+            </properties>
         </profile>
         <profile>
-            <id>exclude-initial-content</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>maven-launchpad-plugin</artifactId>
-                        <configuration>
-                            <bundleExclusions>
-                                <bundle>
-                                    <groupId>org.apache.sling</groupId>
-                                    <artifactId>org.apache.sling.launchpad.content</artifactId>
-                                </bundle>
-                            </bundleExclusions>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
+             <id>debug</id>
+             <activation>
+                <property>
+                    <name>debug</name>
+                </property>
+             </activation>
+             <properties>
+                <sling.vm.options>${sling.default.vm.options} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000</sling.vm.options>
+             </properties>
         </profile>
         <profile>
-            <id>test-reactor-sling-bundles</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>maven-launchpad-plugin</artifactId>
-                        <configuration>
-                            <rewriteRuleFiles>
-                                <rewriteRuleFile>
-                                    ${basedir}/src/test/rules/reactor.drl
-                                </rewriteRuleFile>
-                            </rewriteRuleFiles>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>emma</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.sling</groupId>
-                        <artifactId>maven-launchpad-plugin</artifactId>
-                        <configuration>
-                            <rewriteRuleFiles combine.children="append">
-                                <rewriteRuleFile>
-                                    ${basedir}/src/test/rules/emma.drl
-                                </rewriteRuleFile>
-                            </rewriteRuleFiles>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>emma</groupId>
-                                <artifactId>emma</artifactId>
-                                <version>2.0.5312</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>emma-report</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>emma-report</id>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>java</goal>
-                                </goals>
-                                <configuration>
-                                    <mainClass>emma</mainClass>
-                                    <arguments>
-                                        <argument>report</argument>
-                                        <argument>-r</argument>
-                                        <argument>html</argument>
-                                        <argument>-in</argument>
-                                        <argument>${user.dir}/coverage.em,${user.dir}/coverage.ec</argument>
-                                        <argument>-sp</argument>
-                                        <argument>${sourceDirs}</argument>
-                                    </arguments>
-                                    <includePluginDependencies>true</includePluginDependencies>
-                                    <includeProjectDependencies>false</includeProjectDependencies>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>emma</groupId>
-                                <artifactId>emma</artifactId>
-                                <version>2.0.5312</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                </plugins>
-            </build>
+             <id>no-debug</id>
+             <activation>
+                <property>
+                    <name>!debug</name>
+                </property>
+             </activation>
+             <properties>
+                <sling.vm.options>${sling.default.vm.options}</sling.vm.options>
+             </properties>
         </profile>
     </profiles>
-
+    
     <dependencies>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad</artifactId>
-            <version>8-SNAPSHOT</version>
-            <type>partialbundlelist</type>
-            <classifier>bundlelist</classifier>
-        </dependency>
-
       <!-- The integration tests -->
         <dependency>
              <groupId>org.apache.sling</groupId>
              <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
-             <version>1.0.1-SNAPSHOT</version>
+             <version>1.0.3-SNAPSHOT</version>
              <scope>test</scope>
-        </dependency>
-
-      <!-- The test services bundles -->
-        <dependency>
-             <groupId>org.apache.sling</groupId>
-             <artifactId>org.apache.sling.launchpad.test-bundles</artifactId>
-             <version>0.0.1-SNAPSHOT</version>
-             <type>partialbundlelist</type>
-        </dependency>
-
-      <!--  The basic Sling WebApp -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>4.6.1-2.5.8</version>
-            <classifier>app</classifier>
         </dependency>
 
         <!-- Dependencies for the Test Build and Run -->

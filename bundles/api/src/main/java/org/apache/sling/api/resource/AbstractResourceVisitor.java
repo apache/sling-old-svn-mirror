@@ -20,12 +20,14 @@ package org.apache.sling.api.resource;
 
 import java.util.Iterator;
 
+import javax.annotation.Nonnull;
+
 /**
  * The <code>AbstractResourceVisitor</code> helps in traversing a
  * resource tree by decoupling the actual traversal code
  * from application code. Concrete subclasses should implement
- * the {@link ResourceVisitor#visit(Resource)} method.
- * 
+ * the {@link AbstractResourceVisitor#visit(Resource)} method.
+ *
  * @since 2.2 (Sling API Bundle 2.2.0)
  */
 public abstract class AbstractResourceVisitor {
@@ -45,7 +47,7 @@ public abstract class AbstractResourceVisitor {
      * Visit the given resources.
      * @param children The list of resources
      */
-    protected void traverseChildren(final Iterator<Resource> children) {
+    protected void traverseChildren(final @Nonnull Iterator<Resource> children) {
         while (children.hasNext()) {
             final Resource child = children.next();
 
@@ -57,5 +59,5 @@ public abstract class AbstractResourceVisitor {
      * Implement this method to do actual work on the resources.
      * @param res The resource
      */
-    protected abstract void visit(final Resource res);
+    protected abstract void visit(final @Nonnull Resource res);
 }

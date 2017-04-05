@@ -26,7 +26,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>SlingScriptHelper</code> interface defines the API of a helper
@@ -39,17 +39,20 @@ public interface SlingScriptHelper {
     /**
      * Returns the {@link SlingHttpServletRequest} representing the input of the
      * request.
+     * @return The request
      */
     @Nonnull SlingHttpServletRequest getRequest();
 
     /**
      * Returns the {@link SlingHttpServletResponse} representing the output of
      * the request.
+     * @return The response
      */
     @Nonnull SlingHttpServletResponse getResponse();
 
     /**
      * Returns the {@link SlingScript} being called to handle the request.
+     * @return The script
      */
     @Nonnull SlingScript getScript();
 
@@ -57,6 +60,7 @@ public interface SlingScriptHelper {
      * Same as {@link #include(String,RequestDispatcherOptions)}, but using
      * empty options.
      *
+     * @param path The path to include
      * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
      *             while handling the include.
      * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
@@ -124,6 +128,7 @@ public interface SlingScriptHelper {
      * Same as {@link #include(Resource,RequestDispatcherOptions)}, but using
      * empty options.
      *
+     * @param resource The resource to include
      * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
      *             while handling the include.
      * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
@@ -191,6 +196,7 @@ public interface SlingScriptHelper {
      * Same as {@link #forward(String,RequestDispatcherOptions)}, but using
      * empty options.
      *
+     * @param path The path to forward to
      * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
      *             while handling the forward.
      * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
@@ -258,6 +264,7 @@ public interface SlingScriptHelper {
      * Same as {@link #forward(Resource,RequestDispatcherOptions)}, but using
      * empty options.
      *
+     * @param resource The resource to forward to.
      * @throws org.apache.sling.api.SlingIOException Wrapping a <code>IOException</code> thrown
      *             while handling the forward.
      * @throws org.apache.sling.api.SlingServletException Wrapping a <code>ServletException</code>
@@ -322,21 +329,37 @@ public interface SlingScriptHelper {
     void forward(@Nonnull Resource resource, RequestDispatcherOptions options);
 
     /**
-     * Lookup a single service
-     *
+     * Lookup a single service.
+     * <p>
+     * If multiple such services exist, the service with the highest ranking (as specified in its Constants.SERVICE_RANKING property) is returned.
+     * If there is a tie in ranking, the service with the lowest service ID (as specified in its Constants.SERVICE_ID property); that is, the service that was registered first is returned.
+     * </p>
+     * <p>This is equal to the semantics from
+     * <a href="https://osgi.org/javadoc/r5/core/org/osgi/framework/BundleContext.html#getServiceReference(java.lang.Class)">
+     * BundleContext.getServiceReference(Class)</a>.</p>
      * @param serviceType The type (interface) of the service.
-     * @return The service instance, or null if the service is not available.
+     * @param <ServiceType> The type (interface) of the service.
+     * @return The service instance, or {@code null} if no services are registered which implement the specified class.
      */
     @CheckForNull <ServiceType> ServiceType getService(@Nonnull Class<ServiceType> serviceType);
 
     /**
-     * Lookup one or several services
+     * Lookup one or several services.
+     * <p>
+     * The returned array is sorted descending by service ranking (i.e. the service with the highest ranking is returned first).
+     * If there is a tie in ranking, the service with the lowest service ID
+     * (as specified in its Constants.SERVICE_ID property);
+     * that is, the service that was registered first is returned first.
+     * </p>
      *
      * @param serviceType The type (interface) of the service.
+     * @param <ServiceType> The type (interface) of the service.
      * @param filter An optional filter (LDAP-like, see OSGi spec)
-     * @return The services object or null.
+     * @return An array of services objects or {@code null}.
      * @throws InvalidServiceFilterSyntaxException If the <code>filter</code>
      *             string is not a valid OSGi service filter string.
+     *
+     * @see <a href="https://osgi.org/javadoc/r5/core/org/osgi/framework/Filter.html">Filter class in OSGi</a>
      */
     @CheckForNull <ServiceType> ServiceType[] getServices(@Nonnull Class<ServiceType> serviceType,
             String filter);

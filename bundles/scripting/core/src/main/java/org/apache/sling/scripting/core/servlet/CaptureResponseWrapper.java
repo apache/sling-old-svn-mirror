@@ -47,7 +47,7 @@ public final class CaptureResponseWrapper extends HttpServletResponseWrapper {
     /**
      * Returns true if the response is binary.
      *
-     * @return
+     * @return true if the response is binary, false otherwise
      */
     public boolean isBinaryResponse() {
         return isBinaryResponse;
@@ -69,6 +69,8 @@ public final class CaptureResponseWrapper extends HttpServletResponseWrapper {
     /*
      * (non-Javadoc)
      * @see javax.servlet.ServletResponseWrapper#getOutputStream()
+     *
+     * @return the output stream from the response
      */
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
@@ -82,6 +84,8 @@ public final class CaptureResponseWrapper extends HttpServletResponseWrapper {
     /*
      * (non-Javadoc)
      * @see javax.servlet.ServletResponseWrapper#getWriter()
+     *
+     * @return the writer
      */
     @Override
     public PrintWriter getWriter() throws IOException {

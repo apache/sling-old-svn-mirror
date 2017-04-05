@@ -49,7 +49,7 @@ public abstract class AbstractAuthenticationHandlerHolder extends
      *
      * @param request the current request
      * @param response the current response
-     * @returns the result of calling
+     * @return the result of calling
      *          {@link #doExtractCredentials(HttpServletRequest, HttpServletResponse)}
      */
     public final AuthenticationInfo extractCredentials(
@@ -72,7 +72,7 @@ public abstract class AbstractAuthenticationHandlerHolder extends
      *
      * @param request the current request
      * @param response the current response
-     * @returns the result of calling
+     * @return the result of calling
      *          {@link #doRequestCredentials(HttpServletRequest, HttpServletResponse)}
      * @throws IOException if an error occurs interacting with the client
      */

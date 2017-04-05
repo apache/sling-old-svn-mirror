@@ -20,7 +20,12 @@ package org.apache.sling.testing.mock.jcr;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -74,11 +79,12 @@ public class MockNodeTest {
     @Test
     public void testGetProperties() throws RepositoryException {
         PropertyIterator properties = this.node1.getProperties();
-        assertEquals(1, properties.getSize());
-        assertEquals(this.prop1, properties.next());
+        Map<String, Property> props = propertiesToMap(properties);
+        assertEquals(2, properties.getSize());
+        assertEquals(this.prop1, props.get("prop1"));
 
         assertTrue(this.node1.hasProperties());
-        assertFalse(this.node11.hasProperties());
+        assertTrue(this.node11.hasProperties());
 
         properties = this.node1.getProperties("^prop.*$");
         assertEquals(1, properties.getSize());
@@ -86,6 +92,29 @@ public class MockNodeTest {
 
         properties = this.node1.getProperties("unknown?");
         assertEquals(0, properties.getSize());
+    }
+
+    private Map<String, Property> propertiesToMap(PropertyIterator properties) throws RepositoryException {
+        final HashMap<String, Property> props = new HashMap<String, Property>();
+        while (properties.hasNext()) {
+            final Property property = properties.nextProperty();
+            props.put(property.getName(), property);
+        }
+        return props;
+    }
+
+    @Test
+    public void testPrimaryType() throws RepositoryException {
+        assertEquals("nt:unstructured", this.node1.getPrimaryNodeType().getName());
+        assertEquals("nt:unstructured", this.node1.getProperty("jcr:primaryType").getString());
+        final PropertyIterator properties = this.node1.getProperties();
+        while (properties.hasNext()) {
+            final Property property = properties.nextProperty();
+            if (JcrConstants.JCR_PRIMARYTYPE.equals(property.getName())) {
+                return;
+            }
+        }
+        fail("Properties did not include jcr:primaryType");
     }
 
     @Test
@@ -128,4 +157,30 @@ public class MockNodeTest {
         this.node1.getPrimaryItem();
     }
 
+    @Test
+    public void testNtFileNode() throws RepositoryException {
+        Node ntFile = this.session.getRootNode().addNode("testFile", JcrConstants.NT_FILE);
+        assertNotNull(ntFile.getProperty(JcrConstants.JCR_CREATED).getDate());
+        assertNotNull(ntFile.getProperty("jcr:createdBy").getString());
+    }
+
+    @Test
+    public void testGetMixinNodeTypes() throws Exception {
+        assertEquals(0, this.node1.getMixinNodeTypes().length);
+    }
+
+    @Test
+    public void testIsModified() throws RepositoryException {
+        Node foo = this.session.getRootNode().addNode("foo");
+        // according to "if this Item has been saved but has subsequently been modified through
+        // the current session.
+        assertFalse(foo.isModified());
+        this.session.save();
+        assertFalse(foo.isModified());
+        foo.setProperty("bar", 1);
+        assertTrue(foo.isModified());
+        this.session.save();
+        assertFalse(foo.isModified());
+    }
+    
 }

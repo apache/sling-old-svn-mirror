@@ -16,29 +16,56 @@
  */
 package org.apache.sling.scripting.javascript.wrapper;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.scripting.javascript.SlingWrapper;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.Wrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Resource in JavaScript has following signature: [Object] getData(); [Object]
- * data [Item] getItem(); [Item] item [String] getResourceType(); [String] type
- * [String] getPath(); [String] path
+ * Resource in JavaScript has following signature:
+ * <ul>
+ * <li>[String] getName()</li>
+ * <li>[String] name</li>
+ * <li>[Object] getResourceMetadata()</li>
+ * <li>[Object] resourceMetadata</li>
+ * <li>[String] getPath()</li>
+ * <li>[String] path</li>
+ * <li>[String] getResourceType()</li>
+ * <li>[String] resourceType</li>
+ * <li>[String] getResourceSuperType()</li>
+ * <li>[String] resourceSuperType</li>
+ * <li>[Resource] getParent()</li>
+ * <li>[Resource] parent</li>
+ * <li>[ResourceResolver] getResourceResolver()</li>
+ * <li>[ResourceResolver] resourceResolver</li>
+ * <li>[Resource] getChild(String)</li>
+ * <li>[Resource[]] getChildren()</li>
+ * <li>[Resource[]] listChildren()</li>
+ * <li>[Boolean] isResourceType(String)</li>
+ * <li>[Object] properties</li>
+ * </ul>
  */
 public class ScriptableResource extends ScriptableObject implements
         SlingWrapper {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScriptableResource.class);
+
     public static final String CLASSNAME = "Resource";
 
-    public static final Class<?>[] WRAPPED_CLASSES = { Resource.class };
+    private static final Class<?>[] WRAPPED_CLASSES = { Resource.class };
 
     private Resource resource;
+    private ValueMap properties;
 
     public ScriptableResource() {
     }
@@ -51,15 +78,29 @@ public class ScriptableResource extends ScriptableObject implements
         this.resource = (Resource) res;
     }
 
-    /**
-     * Mapps getPath() method as path property.
+    /*
+     * Maps getName() method as name property.
+     */
+    public String jsGet_name() {
+        return this.jsFunction_getName();
+    }
+
+    /*
+     * Maps getName() method as getName() method.
+     */
+    public String jsFunction_getName() {
+        return resource.getName();
+    }
+
+    /*
+     * Maps getPath() method as path property.
      */
     public String jsGet_path() {
         return this.jsFunction_getPath();
     }
 
-    /**
-     * Mapps getPath() method as getPath() method.
+    /*
+     * Maps getPath() method as getPath() method.
      */
     public String jsFunction_getPath() {
         return resource.getPath();
@@ -71,38 +112,65 @@ public class ScriptableResource extends ScriptableObject implements
      * property.
      *
      * @deprecated since 2.1.0 because it maps the method name incorrectly.
+     * @return the resource type
      */
     @Deprecated
     public String jsGet_type() {
         return this.jsFunction_getResourceType();
     }
 
-    /**
+    /*
      * Maps getResourceType() to resourceType property.
      */
     public String jsGet_resourceType() {
         return this.jsFunction_getResourceType();
     }
 
-    /**
+    /*
      * Maps getResourceType() to the getResourceType() method.
      */
     public String jsFunction_getResourceType() {
         return resource.getResourceType();
     }
 
-    /**
+    public NativeArray jsFunction_listChildren() {
+        return jsFunction_getChildren();
+    }
+
+    public NativeArray jsFunction_getChildren() {
+        return new NativeArray(IteratorUtils.toArray(resource.listChildren()));
+    }
+
+    /*
+     * Maps getParent() method as parent property.
+     */
+    public Object jsGet_parent() {
+        return this.jsFunction_getParent();
+    }
+
+    /*
+     * Maps getParent() method as getParent() method.
+     */
+    public Object jsFunction_getParent() {
+        return resource.getParent();
+    }
+
+    /*
      * Maps getResourceSuperType() to resourceSuperType property.
      */
     public String jsGet_resourceSuperType() {
         return this.jsFunction_getResourceSuperType();
     }
 
-    /**
+    /*
      * Maps getResourceSuperType() to the getResourceSuperType() method.
      */
     public String jsFunction_getResourceSuperType() {
         return resource.getResourceSuperType();
+    }
+
+    public boolean jsFunction_isResourceType(String type) {
+        return resource.isResourceType(type);
     }
 
     /**
@@ -111,13 +179,14 @@ public class ScriptableResource extends ScriptableObject implements
      * property.
      *
      * @deprecated since 2.1.0 because it maps the method name incorrectly.
+     * @return the resource metadata
      */
     @Deprecated
     public Object jsGet_meta() {
         return jsFunction_getResourceMetadata();
     }
 
-    /**
+    /*
      * Maps getResourceMetadata() to resourceMetadata property.
      */
     public Object jsGet_resourceMetadata() {
@@ -130,27 +199,28 @@ public class ScriptableResource extends ScriptableObject implements
      * getResourceMetadata() method.
      *
      * @deprecated since 2.1.0 because the method is named incorrectly.
+     * @return the resource metadata
      */
     @Deprecated
     public Object jsFunction_getMetadata() {
         return jsFunction_getResourceMetadata();
     }
 
-    /**
+    /*
      * Maps getResourceMetadata() to getResourceMetadata method.
      */
     public Object jsFunction_getResourceMetadata() {
         return toJS(resource.getResourceMetadata());
     }
 
-    /**
+    /*
      * Maps getResourceResolver() to resourceResolver property.
      */
     public Object jsFunction_getResourceResolver() {
         return toJS(resource.getResourceResolver());
     }
 
-    /**
+    /*
      * Maps getResourceResolver() to getResourceResolver method.
      */
     public Object jsGet_resourceResolver() {
@@ -158,10 +228,20 @@ public class ScriptableResource extends ScriptableObject implements
     }
 
     /**
+     * Maps getChild(String childPath) to getChild method.
+     *
+     * @param childPath the child path
+     * @return the child resource if one exists at {@code childPath} or {@code null}
+     */
+    public Object jsFunction_getChild(String childPath) {
+        return resource.getChild(childPath);
+    }
+
+    /*
      * Helper method to easily retrieve the default adapted object of the
      * resource. In case of Object Content Mapping support, this method will
      * return the correctly mapped content object for this resource.
-     * <p>
+     *
      * Calling this method is equivalent to calling the adaptTo method with the
      * argument "java.lang.Object".
      */
@@ -217,7 +297,7 @@ public class ScriptableResource extends ScriptableObject implements
                 }
                 adapter = loader.loadClass(className);
             } catch (Exception e) {
-                // TODO: log exception
+                LOGGER.error("Unable to adapt object.", e);
             }
 
         }
@@ -228,6 +308,13 @@ public class ScriptableResource extends ScriptableObject implements
         }
 
         return Undefined.instance;
+    }
+
+    public Object jsGet_properties() {
+        if (properties == null) {
+            properties = resource.adaptTo(ValueMap.class);
+        }
+        return properties;
     }
 
     // --------- ScriptableObject API

@@ -43,6 +43,7 @@ public class OsgiUtil {
      * object.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default boolean value
+     * @return Boolean value
      */
     public static boolean toBoolean(final Object propValue, final boolean defaultValue) {
         return PropertiesUtil.toBoolean(propValue, defaultValue);
@@ -53,6 +54,7 @@ public class OsgiUtil {
      * <code>defaultValue</code> if the parameter is <code>null</code>.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default string value
+     * @return String value
      */
     public static String toString(final Object propValue, final String defaultValue) {
         return PropertiesUtil.toString(propValue, defaultValue);
@@ -65,6 +67,7 @@ public class OsgiUtil {
      * a <code>Long</code> from the parameter's string value.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default long value
+     * @return Long value
      */
     public static long toLong(final Object propValue, final long defaultValue) {
         return PropertiesUtil.toLong(propValue, defaultValue);
@@ -77,6 +80,7 @@ public class OsgiUtil {
      * an <code>Integer</code> from the parameter's string value.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default integer value
+     * @return Integer value
      */
     public static int toInteger(final Object propValue, final int defaultValue) {
         return PropertiesUtil.toInteger(propValue, defaultValue);
@@ -89,6 +93,7 @@ public class OsgiUtil {
      * a <code>Double</code> from the parameter's string value.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default double value
+     * @return Double value
      *
      * @deprecated since 2.0.4, use {@link #toDouble(Object, double)} instead
      */
@@ -104,6 +109,7 @@ public class OsgiUtil {
      * a <code>Double</code> from the parameter's string value.
      * @param propValue the property value or <code>null</code>
      * @param defaultValue the default double value
+     * @return Double value
      *
      * @since 2.0.4
      */
@@ -119,6 +125,7 @@ public class OsgiUtil {
      * <code>java.util.Collection</code>, the first collection element is returned.
      * Otherwise <code>null</code> is returned.
      * @param propValue the parameter to convert.
+     * @return Object value
      */
     public static Object toObject(final Object propValue) {
         return PropertiesUtil.toObject(propValue);
@@ -133,6 +140,7 @@ public class OsgiUtil {
      * Otherwise (if the parameter is <code>null</code>) <code>null</code> is
      * returned.
      * @param propValue The object to convert.
+     * @return String array value
      */
     public static String[] toStringArray(final Object propValue) {
         return PropertiesUtil.toStringArray(propValue);
@@ -149,6 +157,7 @@ public class OsgiUtil {
      * @since 2.0.4
      * @param propValue The object to convert.
      * @param defaultArray The default array to return.
+     * @return String array value
      */
     public static String[] toStringArray(final Object propValue, final String[] defaultArray) {
         return PropertiesUtil.toStringArray(propValue, defaultArray);

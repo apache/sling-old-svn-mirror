@@ -19,10 +19,12 @@ package org.apache.sling.models.it.models;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.Filter;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Optional;
 
 @Model(adaptables=Resource.class)
 public class FieldInjectionTestModel {
@@ -30,6 +32,10 @@ public class FieldInjectionTestModel {
     @Inject
     private String testProperty;
     
+    @Inject @Optional
+    @Named("child/childProperty")
+    private String childProperty;
+
     @Inject
     private List<Filter> filters;
     
@@ -43,6 +49,8 @@ public class FieldInjectionTestModel {
         return testProperty;
     }
     
+    public String getChildProperty() { return childProperty; }
+
     public List<Filter> getFilters() {
         return filters;
     }

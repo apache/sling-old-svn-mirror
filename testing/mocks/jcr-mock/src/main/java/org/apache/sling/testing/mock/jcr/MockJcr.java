@@ -28,8 +28,7 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.query.QueryManager;
 
 import org.apache.commons.lang3.StringUtils;
-
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Factory for mock JCR objects.

@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Streamentry",
+    "title":"My Pet",
+    "description":"Always hungry...but never gets fat"
+}

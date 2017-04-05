@@ -19,24 +19,19 @@ package org.apache.sling.maven.projectsupport;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * Stop a running Launchpad standalone application.
- *
- * @goal stop
- * @requiresProject false
- *
  */
+@Mojo( name = "stop", requiresProject = false)
 public class StopMojo extends AbstractMojo {
 
-    /**
-     * @parameter expression="${sling.control.port}" default-value="63000"
-     */
+    @Parameter( property = "sling.control.port", defaultValue = "63000")
     private int controlPort;
 
-    /**
-     * @parameter expression="${sling.control.host}" default-value="localhost"
-     */
+    @Parameter( property = "sling.control.host")
     private String controlHost;
 
     /**

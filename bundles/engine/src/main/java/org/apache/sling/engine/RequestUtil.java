@@ -40,7 +40,7 @@ public class RequestUtil {
      *
      * "," and ";" are not allowed within name and value
      *
-     * @param value
+     * @param value The header value to parse
      * @return A Map indexed by the Token names where the values are Map
      *         instances indexed by parameter name
      */
@@ -59,7 +59,7 @@ public class RequestUtil {
      *
      * "," and ";" are not allowed within name and value
      *
-     * @param value
+     * @param value The header value to parse
      * @return A Map indexed by the Token names where the values are
      *         <code>Double</code> instances providing the value of the
      *         <code>q</code> parameter.
@@ -78,6 +78,9 @@ public class RequestUtil {
      * <li>Otherwise check the servlet info
      * <li>Otherwise use the fully qualified name of the servlet class
      * </ol>
+     *
+     * @param servlet The servlet instance
+     * @return The name of the servlet
      */
     public static String getServletName(final Servlet servlet) {
         return org.apache.sling.api.request.RequestUtil.getServletName(servlet);

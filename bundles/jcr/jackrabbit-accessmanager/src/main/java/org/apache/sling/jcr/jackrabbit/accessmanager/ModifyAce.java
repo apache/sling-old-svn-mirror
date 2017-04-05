@@ -44,7 +44,7 @@ public interface ModifyAce {
      * @return the user that was updated or null if not found 
 	 * @throws RepositoryException
 	 */
-	public void modifyAce(Session jcrSession,
+	void modifyAce(Session jcrSession,
 							String resourcePath,
 							String principalId,
 							Map<String, String> privileges,

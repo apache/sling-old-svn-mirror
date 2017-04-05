@@ -18,13 +18,13 @@
 <configuration>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <file>target/sling-tests.log</file>
         <encoder>
             <pattern>%date{HH:mm:ss.SSS} %-5level %-40([%thread] %F:%L) %msg%n</pattern>
         </encoder>
     </appender>
 
-    <logger name="org.apache.sling.jcr.jcrinstall.impl" level="DEBUG" />
+    <logger name="org.apache.sling.installer.provider.jcr.impl" level="DEBUG" />
+    <logger name="org.apache.jackrabbit" level="WARN" />
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />

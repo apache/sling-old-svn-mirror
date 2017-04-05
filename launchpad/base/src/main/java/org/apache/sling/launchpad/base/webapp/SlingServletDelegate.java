@@ -346,9 +346,18 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
         // The following property must start with a comma!
         final String servletVersion = getServletContext().getMajorVersion() + "." +
                                       getServletContext().getMinorVersion();
+        String packages = ",javax.servlet;javax.servlet.http;javax.servlet.resources";
+        if ( getServletContext().getMajorVersion() >= 3 ) {
+            // servlet 3.x adds new packages and we should export as 2.6 and 3.x
+            packages = packages + "; version=2.6" + packages + ";javax.servlet.annotation;javax.servlet.descriptor";
+        }
         props.put(
-            Sling.PROP_SYSTEM_PACKAGES,
-            ",javax.servlet;javax.servlet.http;javax.servlet.resources; version=" + servletVersion);
+                 Sling.PROP_SYSTEM_PACKAGES,
+                 packages + "; version=" + servletVersion);
+        // extra capabilities
+        final String servletCaps = "osgi.contract;osgi.contract=JavaServlet;version:Version=\" " + servletVersion + "\";" +
+                        "uses:=\"javax.servlet,javax.servlet.http,javax.servlet.descriptor,javax.servlet.annotation\"";
+        props.put(Sling.PROP_EXTRA_CAPS, servletCaps);
 
         // prevent system properties from being considered
         props.put(Sling.SLING_IGNORE_SYSTEM_PROPERTIES, "true");
@@ -357,7 +366,6 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             props.putAll(this.properties);
         } else {
             // copy context init parameters
-            @SuppressWarnings("unchecked")
             Enumeration<String> cpe = getServletContext().getInitParameterNames();
             while (cpe.hasMoreElements()) {
                 String name = cpe.nextElement();
@@ -365,7 +373,6 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             }
 
             // copy servlet init parameters
-            @SuppressWarnings("unchecked")
             Enumeration<String> pe = getInitParameterNames();
             while (pe.hasMoreElements()) {
                 String name = pe.nextElement();
@@ -438,7 +445,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
 
         @Override
         protected void doLog(
-                Bundle bundle, ServiceReference sr, int level,
+                Bundle bundle, @SuppressWarnings("rawtypes") ServiceReference sr, int level,
                 String msg, Throwable throwable) {
 
             // unwind throwable if it is a BundleException

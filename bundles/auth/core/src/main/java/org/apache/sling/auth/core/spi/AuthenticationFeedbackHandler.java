@@ -21,11 +21,14 @@ package org.apache.sling.auth.core.spi;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * The <code>AuthenticationFeedbackHandler</code> may be implemented by
  * {@link AuthenticationHandler} services to request being informed on the
  * success or failure of authentication.
  */
+@ConsumerType
 public interface AuthenticationFeedbackHandler {
 
     /**

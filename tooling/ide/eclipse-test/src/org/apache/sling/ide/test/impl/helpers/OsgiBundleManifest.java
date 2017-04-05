@@ -28,7 +28,7 @@ public class OsgiBundleManifest {
         return new OsgiBundleManifest(symbolicName);
     }
 
-    private final Map<String, String> attributes = new LinkedHashMap<String, String>();
+    private final Map<String, String> attributes = new LinkedHashMap<>();
 
     public OsgiBundleManifest(String symbolicName) {
         attributes.put(Attributes.Name.MANIFEST_VERSION.toString(), "1.0");

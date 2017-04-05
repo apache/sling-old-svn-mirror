@@ -19,12 +19,15 @@ package org.apache.sling.ide.eclipse.ui.wizards.np;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.archetype.catalog.ArchetypeCatalog;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -39,6 +42,8 @@ import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.internal.MavenPluginActivator;
 import org.eclipse.m2e.core.internal.archetype.ArchetypeCatalogFactory;
 import org.eclipse.m2e.core.internal.archetype.ArchetypeManager;
+import org.eclipse.m2e.core.internal.index.IndexListener;
+import org.eclipse.m2e.core.repository.IRepository;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -54,15 +59,51 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.m2e.core.internal.index.IndexListener;
-import org.eclipse.m2e.core.repository.IRepository;
 
 @SuppressWarnings("restriction")
 public class ChooseArchetypeWizardPage extends WizardPage implements IndexListener {
 	
+    static final Comparator<String> ARTIFACT_KEY_COMPARATOR = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            
+            String[] gav1 = o1.split(" : ");
+            String[] gav2 = o2.split(" : ");
+            
+            // ensure we have sane values
+            if ( gav1.length != 3 || gav2.length != 3 ) {
+                return 0;
+            }
+            
+            // natural order by groupId
+            String groupId1 = gav1[0];
+            String groupId2 = gav2[0];
+            
+            int res = groupId1.compareTo(groupId2);
+            if ( res != 0 ) {
+                return res;
+            }
+            
+            // natural order by artifactId
+            String artifactId1 = gav1[1];
+            String artifactId2 = gav2[1];
+            
+            res = artifactId1.compareTo(artifactId2);
+            if ( res != 0 ) {
+                return res;
+            }
+            
+            // reverse order by version ( newest first )
+            ArtifactVersion version1 = new DefaultArtifactVersion(gav1[2]);
+            ArtifactVersion version2 = new DefaultArtifactVersion(gav2[2]);
+            
+            return version2.compareTo(version1);
+        }
+    };
+    
     private static final String LOADING_PLEASE_WAIT = "loading, please wait...";
     private Combo knownArchetypes;
-	private Map<String, Archetype> archetypesMap = new HashMap<String, Archetype>();
+	private Map<String, Archetype> archetypesMap = new TreeMap<>(ARTIFACT_KEY_COMPARATOR);
 	private Button useDefaultWorkspaceLocationButton;
 	private Label locationLabel;
 	private Combo locationCombo;
@@ -79,7 +120,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
         return (AbstractNewMavenBasedSlingApplicationWizard) super.getWizard();
     }
 
-	public void createControl(Composite parent) {
+	@Override
+    public void createControl(Composite parent) {
 		Composite container = new Composite(parent, SWT.NULL);
 		GridLayout layout = new GridLayout();
 		container.setLayout(layout);
@@ -92,7 +134,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 	    useDefaultWorkspaceLocationButton
 	        .setText("Use default Workspace location");
 	    useDefaultWorkspaceLocationButton.addSelectionListener(new SelectionAdapter() {
-	      public void widgetSelected(SelectionEvent e) {
+	      @Override
+        public void widgetSelected(SelectionEvent e) {
 	        boolean inWorkspace = useDefaultWorkspaceLocationButton.getSelection();
 	        locationLabel.setEnabled(!inWorkspace);
 	        locationCombo.setEnabled(!inWorkspace);
@@ -112,7 +155,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 	    GridData locationComboData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 	    locationCombo.setLayoutData(locationComboData);
 	    locationCombo.addModifyListener(new ModifyListener() {
-	      public void modifyText(ModifyEvent e) {
+	      @Override
+        public void modifyText(ModifyEvent e) {
 	    	  dialogChanged();
 	      }
 	    });
@@ -123,7 +167,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 	    locationBrowseButton.setLayoutData(locationBrowseButtonData);
 	    locationBrowseButton.setText("Browse...");
 	    locationBrowseButton.addSelectionListener(new SelectionAdapter() {
-	      public void widgetSelected(SelectionEvent e) {
+	      @Override
+        public void widgetSelected(SelectionEvent e) {
 	        DirectoryDialog dialog = new DirectoryDialog(getShell());
 	        dialog.setText("Select Location");
 
@@ -299,12 +344,9 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
             ArchetypeManager manager = MavenPluginActivator.getDefault().getArchetypeManager();
             monitor.worked(1);
 
-            // optionally allow the parent to install any archetypes
-            getWizard().installArchetypes();
-
             Collection<ArchetypeCatalogFactory> archetypeCatalogs = manager.getArchetypeCatalogs();
             monitor.worked(2);
-            ArrayList<Archetype> candidates = new ArrayList<Archetype>();
+            ArrayList<Archetype> candidates = new ArrayList<>();
             for (ArchetypeCatalogFactory catalogFactory : archetypeCatalogs) {
                 try {
                     ArchetypeCatalog catalog = catalogFactory.getArchetypeCatalog();
@@ -346,6 +388,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
             if (changed || archetypesMap.isEmpty()) {
                 logger.trace("Triggering refresh since changed is true");
                 Display.getDefault().asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         Set<String> keys = archetypesMap.keySet();
                         knownArchetypes.removeAll();
@@ -354,10 +397,11 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
                         }
                         knownArchetypes.pack();
 
-                        if (knownArchetypes.getItems().length == 0) {
+                        if (knownArchetypes.getItemCount() == 0) {
                             setErrorMessage("No suitable archetypes found. Please make sure that the proper maven repositories are configured and indexes are up to date.");
                         } else {
-                            setErrorMessage(null);
+                            knownArchetypes.select(0);
+                            updateStatus(null);
                         }
 
                     }

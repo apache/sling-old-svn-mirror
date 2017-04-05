@@ -1,0 +1,9 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "impersonate-publish-reverse-scheduled",
+    "action": "pull",
+    "seconds": "30",
+
+    "serviceName" : "distributionService"
+}

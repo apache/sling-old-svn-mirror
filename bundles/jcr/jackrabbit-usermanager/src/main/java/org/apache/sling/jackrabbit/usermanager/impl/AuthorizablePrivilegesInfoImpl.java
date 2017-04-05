@@ -19,18 +19,14 @@ package org.apache.sling.jackrabbit.usermanager.impl;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Dictionary;
+import java.util.Collection;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.Servlet;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -39,7 +35,8 @@ import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,25 +50,13 @@ import org.slf4j.LoggerFactory;
  *
  * <li>every known user is allowed to modify it's own properties except for
  * her/his group membership,</li>
- *
- * <li>members of the 'User administrator' group are allowed to create, modify
- * and remove users,</li>
- *
- * <li>members of the 'Group administrator' group are allowed to create, modify
- * and remove groups,</li>
- *
- * <li>group membership can only be edited by members of the 'Group administrator'
- * and the 'User administrator' group.</li>
  * </ul>
  */
-@Component (immediate=true, metatype=true)
-@Service (value=AuthorizablePrivilegesInfo.class)
-@Properties ({
-	@Property (name="service.description",
-			value="User/Group Privileges Information"),
-	@Property (name="service.vendor",
-			value="The Apache Software Foundation")
-})
+@Component(service=AuthorizablePrivilegesInfo.class,
+    property={
+    		AuthorizablePrivilegesInfoImpl.PAR_USER_ADMIN_GROUP_NAME + "=" + AuthorizablePrivilegesInfoImpl.DEFAULT_USER_ADMIN_GROUP_NAME,
+    		AuthorizablePrivilegesInfoImpl.PAR_GROUP_ADMIN_GROUP_NAME + "=" + AuthorizablePrivilegesInfoImpl.DEFAULT_GROUP_ADMIN_GROUP_NAME		
+    })
 public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInfo {
 
     /** default log */
@@ -82,33 +67,26 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
      *
      * @see #PAR_USER_ADMIN_GROUP_NAME
      */
-    private static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
+    static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
  
     /**
      * The name of the configuration parameter providing the 
      * 'User administrator' group name.
      */
-    @Property (value=DEFAULT_USER_ADMIN_GROUP_NAME)
-    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
-
-    private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
+    static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
 
     /**
      * The default 'User administrator' group name
      *
      * @see #PAR_GROUP_ADMIN_GROUP_NAME
      */
-    private static final String DEFAULT_GROUP_ADMIN_GROUP_NAME = "GroupAdmin";
+    static final String DEFAULT_GROUP_ADMIN_GROUP_NAME = "GroupAdmin";
  
     /**
      * The name of the configuration parameter providing the 
      * 'Group administrator' group name.
      */
-    @Property (value=DEFAULT_GROUP_ADMIN_GROUP_NAME)
-    private static final String PAR_GROUP_ADMIN_GROUP_NAME = "group.admin.group.name";
-
-    private String groupAdminGroupName = DEFAULT_GROUP_ADMIN_GROUP_NAME;
-    
+    static final String PAR_GROUP_ADMIN_GROUP_NAME = "group.admin.group.name";
     
     /* (non-Javadoc)
      * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canAddGroup(javax.jcr.Session)
@@ -121,15 +99,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
             if (currentUser != null) {
                 if (((User)currentUser).isAdmin()) {
                     return true; //admin user has full control
-                }
-                
-                //check if the user is a member of the 'Group administrator' group
-                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-                if (groupAdmin instanceof Group) {
-                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
                 }
             }
         } catch (RepositoryException e) {
@@ -144,13 +113,12 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
     public boolean canAddUser(Session jcrSession) {
         try {
             //if self-registration is enabled, then anyone can create a user
-            if (componentContext != null) {
+            if (bundleContext != null) {
                 String filter = "(&(sling.servlet.resourceTypes=sling/users)(|(sling.servlet.methods=POST)(sling.servlet.selectors=create)))";
-                BundleContext bundleContext = componentContext.getBundleContext();
-                ServiceReference[] serviceReferences = bundleContext.getServiceReferences(Servlet.class.getName(), filter);
+                Collection<ServiceReference<Servlet>> serviceReferences = bundleContext.getServiceReferences(Servlet.class, filter);
                 if (serviceReferences != null) {
                     String propName = "self.registration.enabled";
-                    for (ServiceReference serviceReference : serviceReferences) {
+                    for (ServiceReference<Servlet> serviceReference : serviceReferences) {
                         Object propValue = serviceReference.getProperty(propName);
                         if (propValue != null) {
                             boolean selfRegEnabled = Boolean.TRUE.equals(propValue);
@@ -168,15 +136,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
             if (currentUser != null) {
                 if (((User)currentUser).isAdmin()) {
                     return true; //admin user has full control
-                }
-                
-                //check if the user is a member of the 'User administrator' group
-                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-                if (userAdmin instanceof Group) {
-                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
                 }
             }
         } catch (RepositoryException e) {
@@ -198,27 +157,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
             if (((User)currentUser).isAdmin()) {
                 return true; //admin user has full control
             }
-
-            Authorizable authorizable = userManager.getAuthorizable(principalId);
-            if (authorizable instanceof User) {
-                //check if the user is a member of the 'User administrator' group
-                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-                if (userAdmin instanceof Group) {
-                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
-            } else if (authorizable instanceof Group) {
-                //check if the user is a member of the 'Group administrator' group
-                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-                if (groupAdmin instanceof Group) {
-                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
-            }
         } catch (RepositoryException e) {
             log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), principalId);
         }
@@ -235,27 +173,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
 
             if (((User)currentUser).isAdmin()) {
                 return true; //admin user has full control
-            }
-
-            Authorizable authorizable = userManager.getAuthorizable(groupId);
-            if (authorizable instanceof Group) {
-                //check if the user is a member of the 'Group administrator' group
-                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-                if (groupAdmin instanceof Group) {
-                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
-                
-                //check if the user is a member of the 'User administrator' group
-                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-                if (userAdmin instanceof Group) {
-                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
             }
         } catch (RepositoryException e) {
             log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), groupId);
@@ -279,27 +196,6 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
             if (((User)currentUser).isAdmin()) {
                 return true; //admin user has full control
             }
-
-            Authorizable authorizable = userManager.getAuthorizable(principalId);
-            if (authorizable instanceof User) {
-                //check if the user is a member of the 'User administrator' group
-                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-                if (userAdmin instanceof Group) {
-                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
-            } else if (authorizable instanceof Group) {
-                //check if the user is a member of the 'Group administrator' group
-                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-                if (groupAdmin instanceof Group) {
-                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-                    if (isMember) {
-                        return true;
-                    }
-                }
-            }
         } catch (RepositoryException e) {
             log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), principalId);
         }
@@ -310,35 +206,23 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
     // ---------- SCR Integration ----------------------------------------------
 
     //keep track of the bundle context
-    private ComponentContext componentContext;
+    private BundleContext bundleContext;
 
-    /**
-     * Called by SCR to activate the component.
-     *
-     * @throws InvalidKeyException
-     * @throws NoSuchAlgorithmException
-     * @throws IllegalStateException
-     * @throws UnsupportedEncodingException
-     */
-    protected void activate(ComponentContext componentContext)
+    @Activate
+    protected void activate(BundleContext bundleContext, Map<String, Object> properties)
             throws InvalidKeyException, NoSuchAlgorithmException,
             IllegalStateException, UnsupportedEncodingException {
 
-        this.componentContext = componentContext;
+        this.bundleContext = bundleContext;
         
-        Dictionary<?, ?> properties = componentContext.getProperties();
+        String userAdminGroupName = OsgiUtil.toString(properties.get(PAR_USER_ADMIN_GROUP_NAME), null);
+        if ( userAdminGroupName != null && ! DEFAULT_USER_ADMIN_GROUP_NAME.equals(userAdminGroupName)) {
+            log.warn("Configuration setting for {} is deprecated and will not have any effect", PAR_USER_ADMIN_GROUP_NAME);
+        }
 
-        this.userAdminGroupName = OsgiUtil.toString(properties.get(PAR_USER_ADMIN_GROUP_NAME),
-                DEFAULT_USER_ADMIN_GROUP_NAME);
-        log.info("User Admin Group Name {}", this.userAdminGroupName);
-
-        this.groupAdminGroupName = OsgiUtil.toString(properties.get(PAR_GROUP_ADMIN_GROUP_NAME), 
-                DEFAULT_GROUP_ADMIN_GROUP_NAME);
-        log.info("Group Admin Group Name {}", this.groupAdminGroupName);
-    }
-
-    protected void deactivate(ComponentContext componentContext) {
-        this.userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
-        this.groupAdminGroupName = DEFAULT_GROUP_ADMIN_GROUP_NAME;
+        String groupAdminGroupName = OsgiUtil.toString(properties.get(PAR_GROUP_ADMIN_GROUP_NAME), null);
+        if ( groupAdminGroupName != null && ! DEFAULT_GROUP_ADMIN_GROUP_NAME.equals(userAdminGroupName)) {
+            log.warn("Configuration setting for {} is deprecated and will not have any effect", PAR_GROUP_ADMIN_GROUP_NAME);
+        }
     }
 }

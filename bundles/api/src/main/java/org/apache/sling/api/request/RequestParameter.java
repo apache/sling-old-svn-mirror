@@ -25,7 +25,7 @@ import java.io.UnsupportedEncodingException;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>RequestParameter</code> class represents a single parameter sent

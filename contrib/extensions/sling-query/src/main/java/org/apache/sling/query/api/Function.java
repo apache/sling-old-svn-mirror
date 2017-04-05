@@ -24,8 +24,6 @@ import aQute.bnd.annotation.ConsumerType;
 /**
  * Function can transform one value into another.
  * 
- * @author Tomasz Rękawek
- * 
  * @param <F> Input type
  * @param <T> Output type
  */

@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api.tasks;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A resource transformer transform a registered resource
@@ -29,6 +29,14 @@ import aQute.bnd.annotation.ConsumerType;
  */
 @ConsumerType
 public interface ResourceTransformer {
+
+    /**
+     * Optional service registration property setting a unique name
+     * for the transformer.
+     * The value of this property must be of type String.
+     * @since 1.4.0
+     */
+    String NAME = "resourcetransformer.name";
 
     /**
      * Try to transform the registered resource.

@@ -1,0 +1,7 @@
+{
+	"jcr:primaryType": "nt:unstructured",
+	"resource-types" : {
+		"jcr:primaryType": "nt:unstructured",
+		"sling:resourceType" : "sling/resource-editor/resource-type-list"
+	}
+}

@@ -21,13 +21,18 @@ package org.apache.sling.distribution.it;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import junit.framework.Assert;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -48,6 +53,9 @@ public class DistributionUtils {
 
     private static final String JSON_SELECTOR = ".json";
     private static final String DISTRIBUTION_ROOT_PATH = "/libs/sling/distribution";
+    public static final String DISTRIBUTOR_USER = "testDistributorUser";
+    private static final String DISTRIBUTOR_PASSWORD = "123";
+
 
     public static JSONObject getResource(SlingInstance slingInstance, String path) throws IOException, JSONException {
         if (!path.endsWith(JSON_SELECTOR)) {
@@ -84,7 +92,7 @@ public class DistributionUtils {
         }
 
         return slingInstance.getRequestExecutor().execute(
-                request.withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword())
+                request.withCredentials(DISTRIBUTOR_USER, DISTRIBUTOR_PASSWORD)
         ).assertStatus(status).getContent();
     }
 
@@ -201,10 +209,24 @@ public class DistributionUtils {
     public static String createRandomNode(SlingClient slingClient, String parentPath) throws Exception {
         String nodePath = parentPath + "/" + UUID.randomUUID();
         if (!slingClient.exists(parentPath)) {
-            slingClient.mkdirs(parentPath);
+            createNode(slingClient, parentPath);
         }
+
         slingClient.createNode(nodePath, "jcr:primaryType", "nt:unstructured", "propName", "propValue");
         return nodePath;
+    }
+
+    public static void createNode(SlingClient slingClient, String path) throws IOException {
+
+        if (slingClient.exists(path)) {
+            return;
+        }
+
+        String parentPath = Text.getRelativeParent(path, 1);
+
+        createNode(slingClient, parentPath);
+
+        slingClient.createNode(path, "jcr:primaryType", "nt:unstructured");
     }
 
     public static String agentRootUrl() {
@@ -267,6 +289,83 @@ public class DistributionUtils {
 
     public static String triggerEventUrl(String triggerName) {
         return triggerRootUrl() + "/" + triggerName + ".event";
+    }
+
+
+    public static void assertEmptyFolder(SlingInstance instance, SlingClient client, String path) throws IOException, JSONException {
+
+        if (client.exists(path)) {
+            List<String> children = getChildrenForFolder(instance, path);
+
+            assertEquals(0, children.size());
+        }
+
+    }
+
+
+    public static List<String> getChildrenForFolder(SlingInstance instance, String path) throws IOException, JSONException {
+        List<String> result = new ArrayList<String>();
+        JSONObject authorJson = getResource(instance, path + ".1.json");
+        Iterator<String> it = authorJson.keys();
+        while (it.hasNext()) {
+            String key = it.next();
+
+            if (!key.contains(":")) {
+                result.add(key);
+            }
+        }
+        return result;
+    }
+
+    public static Map<String, Map<String, Object>> getQueues(SlingInstance instance, String agentName) throws IOException, JSONException {
+        Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
+
+        JSONObject json = getResource(instance, queueUrl(agentName) + ".infinity");
+
+        JSONArray items = json.getJSONArray("items");
+
+        for(int i=0; i < items.length(); i++) {
+            String queueName = items.getString(i);
+
+            Map<String, Object> queueProperties = new HashMap<String, Object>();
+
+            JSONObject queue = json.getJSONObject(queueName);
+            queueProperties.put("empty", queue.getBoolean("empty"));
+            queueProperties.put("itemsCount", queue.get("itemsCount"));
+
+            result.put(queueName, queueProperties);
+        }
+
+        return result;
+    }
+
+    public static List<Map<String, Object>> getQueueItems(SlingInstance instance, String queueUrl) throws IOException, JSONException {
+        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+
+        JSONObject json = getResource(instance, queueUrl + ".infinity");
+
+
+        Iterator<String> keys = json.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            JSONObject queueItem = json.optJSONObject(key);
+            if (queueItem != null && queueItem.optString("id") != null) {
+
+                Map<String, Object> itemProperties = new HashMap<String, Object>();
+
+                itemProperties.put("id", queueItem.get("id"));
+                itemProperties.put("paths", queueItem.get("paths"));
+                itemProperties.put("action", queueItem.get("action"));
+                itemProperties.put("userid", queueItem.get("userid"));
+                itemProperties.put("attempts", queueItem.get("attempts"));
+                itemProperties.put("time", queueItem.get("time"));
+                itemProperties.put("state", queueItem.get("state"));
+
+                result.add(itemProperties);
+            }
+        }
+
+        return result;
     }
 
 }

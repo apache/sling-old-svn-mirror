@@ -18,75 +18,127 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
-import java.net.URI;
+import javax.annotation.CheckForNull;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.event.jobs.Job;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class JobHandlingUtils {
+class JobHandlingUtils {
+    private final static Logger log = LoggerFactory.getLogger(JobHandlingUtils.class);
 
-    private static final String PATHS = "distribution.package.paths";
+    private static final String ID_START = "dstrpck-";
 
-    public static final String ID = "distribution.package.id";
-
-    private static final String TYPE = "distribution.package.type";
-
-    protected static final String REQUEST_TYPE = "distribution.package.request.type";
-
-    protected static final String ORIGIN = "distribution.package.origin";
+    private static final String DISTRIBUTION_PACKAGE_PREFIX = "distribution.";
+    private static final String DISTRIBUTION_PACKAGE_ID = DISTRIBUTION_PACKAGE_PREFIX + "item.id";
+    private static final String DISTRIBUTION_PACKAGE_SIZE = DISTRIBUTION_PACKAGE_PREFIX + "package.size";
 
     public static DistributionQueueItem getItem(final Job job) {
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setOrigin((URI) job.getProperty(ORIGIN));
-        packageInfo.setPaths((String[]) job.getProperty(PATHS));
-        packageInfo.setRequestType((DistributionRequestType) job.getProperty(REQUEST_TYPE));
 
-        return new DistributionQueueItem((String) job.getProperty(ID),
-                String.valueOf(job.getProperty(TYPE)), packageInfo);
-    }
-
-    public static Map<String, Object> createFullProperties(
-            DistributionQueueItem distributionQueueItem) {
         Map<String, Object> properties = new HashMap<String, Object>();
 
-        properties.put(ID, distributionQueueItem.getId());
-        properties.put(TYPE, distributionQueueItem.getType());
+        String packageId = (String) job.getProperty(DISTRIBUTION_PACKAGE_ID);
+        Object sizeProperty = job.getProperty(DISTRIBUTION_PACKAGE_SIZE);
+        long size;
+        if (sizeProperty != null) {
+            size = Long.valueOf(sizeProperty.toString());
+        } else {
+            size = -1;
+        }
 
-        DistributionPackageInfo info = distributionQueueItem.getPackageInfo();
-        if (info.getPaths() != null) {
-            properties.put(PATHS, info.getPaths());
+        try {
+            Set<String> propertyNames = job.getPropertyNames();
+            for (String key : propertyNames) {
+                if (key.startsWith(DISTRIBUTION_PACKAGE_PREFIX)) {
+                    String infoKey = key.substring(DISTRIBUTION_PACKAGE_PREFIX.length());
+                    properties.put(infoKey, job.getProperty(key));
+                }
+            }
+        } catch (Throwable t) {
+            log.error("Cannot read job {} properties", job.getId(), t);
         }
-        if (info.getRequestType() != null) {
-            properties.put(REQUEST_TYPE, info.getRequestType());
+
+        return new DistributionQueueItem(packageId, size, properties);
+    }
+
+    public static Map<String, Object> createFullProperties(DistributionQueueItem queueItem) {
+        Map<String, Object> properties = new HashMap<String, Object>();
+
+        for (String key : queueItem.keySet()) {
+            Object value = queueItem.get(key);
+            if (value != null) {
+                properties.put(DISTRIBUTION_PACKAGE_PREFIX + key, queueItem.get(key));
+            }
         }
-        if (info.getOrigin() != null) {
-            properties.put(ORIGIN, info.getOrigin());
-        }
+
+        properties.put(DISTRIBUTION_PACKAGE_ID, queueItem.getPackageId());
+        properties.put(DISTRIBUTION_PACKAGE_SIZE, queueItem.getSize());
 
         return properties;
     }
 
-    public static Map<String, Object> createIdProperties(String itemId) {
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(ID, itemId);
-        return properties;
-    }
-
-    public static String getQueueName(Job job) {
+    @CheckForNull
+    private static String getQueueName(Job job) {
 
         String topic = job.getTopic();
         if (topic == null || !topic.startsWith(JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC)) return null;
 
         String queue = topic.substring(JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC.length() + 1);
-        int idx = queue.indexOf("/");
+
+
+        int idx = queue.lastIndexOf("/");
 
         if (idx < 0) return "";
 
         return queue.substring(idx + 1);
     }
+
+    public static DistributionQueueItemStatus getStatus(final Job job) {
+        String queueName = getQueueName(job);
+        int attempts = job.getRetryCount();
+
+        return new DistributionQueueItemStatus(job.getCreated(),
+                attempts > 0 ? DistributionQueueItemState.ERROR : DistributionQueueItemState.QUEUED,
+                attempts, queueName);
+    }
+
+    @CheckForNull
+    public static DistributionQueueEntry getEntry(final Job job) {
+        DistributionQueueItem item = getItem(job);
+        DistributionQueueItemStatus itemStatus = getStatus(job);
+
+        if (item != null && itemStatus != null) {
+            return new DistributionQueueEntry(escapeId(job.getId()), item, itemStatus);
+        }
+
+        return null;
+    }
+
+    private static String escapeId(String jobId) {
+        //return id;
+        if (jobId == null) {
+            return null;
+        }
+        return ID_START + jobId.replace("/", "--");
+    }
+
+    public static String unescapeId(String itemId) {
+        if (itemId == null) {
+            return null;
+        }
+        if (!itemId.startsWith(ID_START)) {
+            return null;
+        }
+
+        return itemId.replace(ID_START, "").replace("--", "/");
+    }
+
 
 }

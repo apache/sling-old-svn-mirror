@@ -110,6 +110,7 @@ public class InjectorSpecificAnnotationTest {
         bindings.setLog(log);
         Mockito.when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
 
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(InjectorSpecificAnnotationModel.class, org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel.class);
     }
 
     @Test

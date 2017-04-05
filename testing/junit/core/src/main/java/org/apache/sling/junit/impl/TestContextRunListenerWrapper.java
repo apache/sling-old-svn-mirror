@@ -21,10 +21,13 @@ import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class TestContextRunListenerWrapper extends RunListener {
     private final RunListener wrapped;
     private long testStartTime;
+    private static final Logger log = LoggerFactory.getLogger(TestContextRunListenerWrapper.class);
     
     TestContextRunListenerWrapper(RunListener toWrap) {
         wrapped = toWrap;
@@ -37,6 +40,7 @@ public class TestContextRunListenerWrapper extends RunListener {
 
     @Override
     public void testFailure(Failure failure) throws Exception {
+        log.warn("JUnit test execution failed: {}", failure.toString(), failure.getException());
         wrapped.testFailure(failure);
     }
 

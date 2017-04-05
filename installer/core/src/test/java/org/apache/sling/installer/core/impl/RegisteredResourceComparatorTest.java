@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -75,9 +76,16 @@ public class RegisteredResourceComparatorTest {
         }
         final RegisteredResourceImpl result = (RegisteredResourceImpl)rr.clone(tr[0]);
         if ( state != null ) {
-            result.setState(state);
+            result.setState(state, null);
         }
         return result;
+    }
+    
+    private RegisteredResource untransformedResource(String id, int prio) throws IOException {
+        final ByteArrayInputStream is = new ByteArrayInputStream(id.getBytes("UTF-8")); 
+        final InstallableResource r = new InstallableResource(id, is, null, id, id, prio);
+        final InternalResource internal = InternalResource.create("test", r);
+        return RegisteredResourceImpl.create(internal);
     }
 
     private void assertOrder(RegisteredResource[] inOrder) {
@@ -208,5 +216,15 @@ public class RegisteredResourceComparatorTest {
         inOrder[0] = getConfig("pidA", null, 100, "a", ResourceState.INSTALLED);
         inOrder[1] = getConfig("pidA", null, 100, "b", ResourceState.INSTALL);
         assertOrder(inOrder);
+    }
+    
+    @Test
+    public void testNullEntityId() throws IOException {
+        final SortedSet<RegisteredResource> set = new TreeSet<RegisteredResource>();
+        final RegisteredResource a = untransformedResource("a", 1);
+        final RegisteredResource b = untransformedResource("b", 1);
+        set.add(a);
+        set.add(b);
+        assertEquals("Expecting a to be first", a, set.first());
     }
 }

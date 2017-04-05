@@ -21,18 +21,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.provisioning.model.Model;
+import org.apache.sling.provisioning.model.ModelUtility;
 import org.apache.sling.provisioning.model.io.ModelWriter;
 
 /**
- * Attaches the subsystem as a project artifact.
- *
+ * Attach the model as a project artifact.
  */
 @Mojo(
         name = "attach-slingfeature",
@@ -44,19 +43,22 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final Model model = ModelUtils.getRawModel(this.project);
+        Model model = ProjectHelper.getRawModel(this.project);
+        if (usePomVariables) {
+            model = ModelUtility.applyVariables(model, new PomVariableResolver(project));
+        }
+        if (usePomDependencies) {
+            model = ModelUtility.applyArtifactVersions(model, new PomArtifactVersionResolver(project, allowUnresolvedPomDependencies));
+        }
 
-        final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + "slingstart.txt");
+        // write the model
+        final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + BuildConstants.MODEL_ARTIFACT_NAME);
         outputFile.getParentFile().mkdirs();
-        Writer writer = null;
-        try {
 
-            writer = new FileWriter(outputFile);
+        try ( final Writer writer = new FileWriter(outputFile)) {
             ModelWriter.write(writer, model);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new MojoExecutionException("Unable to write model to " + outputFile, e);
-        } finally {
-            IOUtils.closeQuietly(writer);
         }
 
         // if this project is a partial bundle list, it's the main artifact
@@ -64,7 +66,8 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
             project.getArtifact().setFile(outputFile);
         } else {
             // otherwise attach it as an additional artifact
-            projectHelper.attachArtifact(project, BuildConstants.PACKAGING_PARTIAL_SYSTEM, BuildConstants.CLASSIFIER_PARTIAL_SYSTEM, outputFile);
+            projectHelper.attachArtifact(project, BuildConstants.PACKAGING_PARTIAL_SYSTEM,
+                    BuildConstants.CLASSIFIER_PARTIAL_SYSTEM, outputFile);
         }
     }
 }

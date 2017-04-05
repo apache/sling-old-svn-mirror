@@ -27,6 +27,8 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.path.PathSet;
+import org.apache.sling.jcr.resource.internal.HelperData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,49 +52,47 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     /** The prefetched next iterator entry, null at the end of iterating */
     private Resource nextResult;
 
-    private final ClassLoader dynamicClassLoader;
-
-    private final PathMapper pathMapper;
+    private final HelperData helper;
 
     private final String parentPath;
 
     private final String parentVersion;
 
-    /**
-     * Creates an instance using the given resource manager and the nodes
-     * provided as a node iterator.
-     */
-    public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
-                                   final NodeIterator nodes,
-                                   final ClassLoader dynamicClassLoader,
-                                   final PathMapper pathMapper) {
-        this(resourceResolver, null, null, nodes, dynamicClassLoader, pathMapper);
-    }
+    private final PathSet excludedPaths;
 
     /**
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator. Paths of the iterated resources will be
      * concatenated from the parent path, node name and the version number.
+     *
+     * @param resourceResolver the resolver
+     * @param parentPath the parent path
+     * @param parentVersion the parent version
+     * @param nodes the node iterator
+     * @param helper the helper
+     * @param excludedPaths the set of excluded paths
      */
     public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
                                    final String parentPath,
                                    final String parentVersion,
                                    final NodeIterator nodes,
-                                   final ClassLoader dynamicClassLoader,
-                                   final PathMapper pathMapper) {
+                                   final HelperData helper,
+                                   final PathSet excludedPaths) {
         this.resourceResolver = resourceResolver;
         this.parentPath = parentPath;
         this.parentVersion = parentVersion;
         this.nodes = nodes;
-        this.dynamicClassLoader = dynamicClassLoader;
-        this.pathMapper = pathMapper;
+        this.helper = helper;
+        this.excludedPaths = excludedPaths == null ? PathSet.EMPTY_SET : excludedPaths;
         this.nextResult = seek();
     }
 
+    @Override
     public boolean hasNext() {
         return nextResult != null;
     }
 
+    @Override
     public Resource next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
@@ -107,6 +107,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
      * Throws <code>UnsupportedOperationException</code> as this method is not
      * supported by this implementation.
      */
+    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }
@@ -116,9 +117,9 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
             try {
                 final Node n = nodes.nextNode();
                 final String path = getPath(n);
-                if ( path != null ) {
+                if ( path != null && this.excludedPaths.matches(path) == null ) {
                     final Resource resource = new JcrNodeResource(resourceResolver,
-                        path, parentVersion, n, dynamicClassLoader, pathMapper);
+                        path, parentVersion, n, helper);
                     LOGGER.debug("seek: Returning Resource {}", resource);
                     return resource;
                 }
@@ -134,13 +135,13 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         return null;
     }
 
-    private String getPath(Node node) throws RepositoryException {
+    private String getPath(final Node node) throws RepositoryException {
         final String path;
         if (parentPath == null) {
             path = node.getPath();
         } else {
-            path = String.format("%s/%s", parentPath, node.getName());
+            path = "/".equals(parentPath) ? '/' + node.getName() : parentPath + '/' + node.getName();
         }
-        return pathMapper.mapJCRPathToResourcePath(path);
+        return helper.pathMapper.mapJCRPathToResourcePath(path);
     }
 }

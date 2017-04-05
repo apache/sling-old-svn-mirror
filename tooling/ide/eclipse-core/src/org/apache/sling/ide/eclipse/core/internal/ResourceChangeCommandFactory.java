@@ -22,23 +22,23 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.serialization.SerializationDataBuilder;
+import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationKindManager;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
+import org.apache.sling.ide.transport.CommandContext;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
@@ -63,16 +63,13 @@ import org.eclipse.ui.statushandlers.StatusManager;
  */
 public class ResourceChangeCommandFactory {
 
-    private final Set<String> ignoredFileNames = new HashSet<String>();
-    {
-        ignoredFileNames.add(".vlt");
-        ignoredFileNames.add(".vltignore");
-    }
+    private final Set<String> ignoredFileNames;
 
     private final SerializationManager serializationManager;
 
-    public ResourceChangeCommandFactory(SerializationManager serializationManager) {
+    public ResourceChangeCommandFactory(SerializationManager serializationManager, Set<String> ignoredFileNames) {
         this.serializationManager = serializationManager;
+        this.ignoredFileNames = ignoredFileNames;
     }
 
     public Command<?> newCommandForAddedOrUpdated(Repository repository, IResource addedOrUpdated) throws CoreException {
@@ -91,13 +88,15 @@ public class ResourceChangeCommandFactory {
         if (rai == null) {
             return null;
         }
+        
+        CommandContext context = new CommandContext(ProjectUtil.loadFilter(resource.getProject()));
 
         if (rai.isOnlyWhenMissing()) {
-            return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource(),
+            return repository.newAddOrUpdateNodeCommand(context, rai.getInfo(), rai.getResource(),
                     Repository.CommandExecutionFlag.CREATE_ONLY_WHEN_MISSING);
         }
 
-        return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource());
+        return repository.newAddOrUpdateNodeCommand(context, rai.getInfo(), rai.getResource());
     }
 
     /**
@@ -141,10 +140,8 @@ public class ResourceChangeCommandFactory {
         ResourceProxy resourceProxy = null;
 
         if (serializationManager.isSerializationFile(resource.getLocation().toOSString())) {
-            InputStream contents = null;
-            try {
-                IFile file = (IFile) resource;
-                contents = file.getContents();
+            IFile file = (IFile) resource;
+            try (InputStream contents = file.getContents()) {
                 String resourceLocation = file.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
                         .toPortableString();
                 resourceProxy = serializationManager.readSerializationData(resourceLocation, contents);
@@ -176,8 +173,6 @@ public class ResourceChangeCommandFactory {
                         + resource.getFullPath(), e);
                 StatusManager.getManager().handle(s, StatusManager.LOG | StatusManager.SHOW);
                 return null;
-            } finally {
-                IOUtils.closeQuietly(contents);
             }
         } else {
 
@@ -241,7 +236,7 @@ public class ResourceChangeCommandFactory {
      * The resourceProxy may be null, typically when a resource is already deleted.
      * 
      * <p>
-     * The filter may be null, in which case all combinations are included in the filed, i.e. allowed.
+     * In case the filter is {@code null} no resource should be added, i.e. {@link FilterResult#DENY} is returned
      * 
      * @param resource the resource to filter for, must not be <code>null</code>
      * @param resourceProxy the resource proxy to filter for, possibly <code>null</code>
@@ -251,7 +246,7 @@ public class ResourceChangeCommandFactory {
     private FilterResult getFilterResult(IResource resource, ResourceProxy resourceProxy, Filter filter) {
 
         if (filter == null) {
-            return FilterResult.ALLOW;
+            return FilterResult.DENY;
         }
 
         File contentSyncRoot = ProjectUtil.getSyncDirectoryFile(resource.getProject());
@@ -259,8 +254,7 @@ public class ResourceChangeCommandFactory {
         String repositoryPath = resourceProxy != null ? resourceProxy.getPath() : getRepositoryPathForDeletedResource(
                 resource, contentSyncRoot);
 
-        FilterResult filterResult = filter.filter(ProjectUtil.getSyncDirectoryFile(resource.getProject()),
-                repositoryPath);
+        FilterResult filterResult = filter.filter(repositoryPath);
 
         Activator.getDefault().getPluginLogger().trace("Filter result for {0} for {1}", repositoryPath, filterResult);
 
@@ -341,7 +335,7 @@ public class ResourceChangeCommandFactory {
         // don't use isRoot() to prevent infinite loop when the final path is '//'
         while (serializationFilePath.segmentCount() != 0) {
             serializationFilePath = serializationFilePath.removeLastSegments(1);
-            IFolder folderWithPossibleSerializationFile = (IFolder) syncDirectory.findMember(serializationFilePath);
+            IFolder folderWithPossibleSerializationFile = syncDirectory.getFolder(serializationFilePath);
             if (folderWithPossibleSerializationFile == null) {
                 logger.trace("No folder found at {0}, moving up to the next level", serializationFilePath);
                 continue;
@@ -366,13 +360,11 @@ public class ResourceChangeCommandFactory {
                     continue;
                 }
 
-                InputStream contents = possibleSerializationFile.getContents();
+                
                 ResourceProxy serializationData;
-                try {
+                try (InputStream contents = possibleSerializationFile.getContents()) {
                     serializationData = serializationManager.readSerializationData(
                             parentSerializationFilePath.toPortableString(), contents);
-                } finally {
-                    IOUtils.closeQuietly(contents);
                 }
 
                 String repositoryPath = serializationManager.getRepositoryPath(resourceLocation);
@@ -399,17 +391,14 @@ public class ResourceChangeCommandFactory {
             IFolder syncDirectory, String fallbackPrimaryType, Repository repository) throws CoreException, IOException {
         if (serializationResource instanceof IFile) {
             IFile serializationFile = (IFile) serializationResource;
-            InputStream contents = null;
-            try {
-                contents = serializationFile.getContents();
+            try (InputStream contents = serializationFile.getContents() ) {
+                
                 String serializationFilePath = serializationResource.getFullPath()
                         .makeRelativeTo(syncDirectory.getFullPath()).toPortableString();
                 ResourceProxy resourceProxy = serializationManager.readSerializationData(serializationFilePath, contents);
                 normaliseResourceChildren(serializationFile, resourceProxy, syncDirectory, repository);
 
                 return resourceProxy;
-            } finally {
-                IOUtils.closeQuietly(contents);
             }
         }
 
@@ -450,7 +439,7 @@ public class ResourceChangeCommandFactory {
         IPath serializationDirectoryPath = serializationFile.getFullPath().removeLastSegments(1);
 
         Iterator<ResourceProxy> childIterator = resourceProxy.getChildren().iterator();
-        Map<String, IResource> extraChildResources = new HashMap<String, IResource>();
+        Map<String, IResource> extraChildResources = new HashMap<>();
         for (IResource member : serializationFile.getParent().members()) {
             if (member.equals(serializationFile)) {
                 continue;
@@ -557,7 +546,7 @@ public class ResourceChangeCommandFactory {
                     .trace("Found covering resource data ( repository path = {0} ) for resource at {1},  skipping deletion and performing an update instead",
                             coveringParentData.getPath(), resource.getFullPath());
             FileInfo info = createFileInfo(resource);
-            return repository.newAddOrUpdateNodeCommand(info, coveringParentData);
+            return repository.newAddOrUpdateNodeCommand(new CommandContext(filter), info, coveringParentData);
         }
         
         return repository.newDeleteNodeCommand(serializationManager.getRepositoryPath(resourceLocation));

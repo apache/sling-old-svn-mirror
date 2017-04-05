@@ -45,6 +45,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.component.ComponentContext;
 
 public class CompositeHealthCheckTest {
 
@@ -54,12 +55,14 @@ public class CompositeHealthCheckTest {
     @Mock
     private HealthCheckExecutor healthCheckExecutor;
 
+    @Mock
+    private ComponentContext componentContext;
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
         compositeHealthCheck.setHealthCheckExecutor(healthCheckExecutor);
         compositeHealthCheck.setFilterTags(new String[] {});
-
+        compositeHealthCheck.setComponentContext(componentContext);
     }
 
     @Test
@@ -69,17 +72,17 @@ public class CompositeHealthCheckTest {
         String[] testTags = new String[] { "tag1" };
         compositeHealthCheck.setFilterTags(testTags);
 
-        
+
         List<HealthCheckExecutionResult> executionResults = new LinkedList<HealthCheckExecutionResult>();
         executionResults.add(createExecutionResult("Check 1", testTags, new Result(Result.Status.INFO, "Good")));
         executionResults.add(createExecutionResult("Check 2", testTags, new Result(Result.Status.CRITICAL, "Bad")));
 
         when(healthCheckExecutor.execute(testTags)).thenReturn(executionResults);
-        
+
         Result result = compositeHealthCheck.execute();
 
         verify(healthCheckExecutor, times(1)).execute(testTags);
-        
+
         assertEquals(Result.Status.CRITICAL, result.getStatus());
 
     }
@@ -98,7 +101,7 @@ public class CompositeHealthCheckTest {
         final DummyHcServiceReference hcRef = new DummyHcServiceReference("Check 1", new String[] { "check1" }, filterTags);
 
         // test check is hcRef
-        compositeHealthCheck.setReferenceToThis(hcRef);
+        doReturn(hcRef).when(componentContext).getServiceReference();
         compositeHealthCheck.setFilterTags(filterTags);
 
         compositeHealthCheck.setHealthCheckFilter(new HealthCheckFilter(null) { // not using @Spy because varargs matcher does not work with spies
@@ -132,7 +135,7 @@ public class CompositeHealthCheckTest {
         final DummyHcServiceReference hcRef3 = new DummyHcServiceReference("Check 3", new String[] { "check3" }, new String[] { "check1" });
 
         // test check is hcRef1
-        compositeHealthCheck.setReferenceToThis(hcRef1);
+        doReturn(hcRef1).when(componentContext).getServiceReference();
         compositeHealthCheck.setFilterTags(filterTags);
 
         compositeHealthCheck.setHealthCheckFilter(new HealthCheckFilter(null) {

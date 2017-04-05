@@ -25,7 +25,7 @@ public final class NoScrMetadataException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     public NoScrMetadataException(Class<?> type) {
-        super("No OSGi SCR metadata found in classpath at " + OsgiMetadataUtil.getMetadataPath(type));
+        super("No OSGi SCR metadata found for class " + OsgiMetadataUtil.cleanupClassName(type.getName()));
     }
 
 }

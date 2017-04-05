@@ -22,18 +22,18 @@ import java.io.IOException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 
 /**
  * Create and attach a Pax Runner bundle provision file.
- * 
- * @goal create-paxrunner-provision-file
- * @phase package
- * @description create a Pax Runner bundle provision file
- * @requiresDependencyResolution test
  */
+@Mojo(name = "create-paxrunner-provision-file", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.TEST)
 public class CreatePaxRunnerBundleProvisionFileMojo extends AbstractUsingBundleListMojo {
 
     private static final String CLASSIFIER = "bundles";
@@ -42,9 +42,8 @@ public class CreatePaxRunnerBundleProvisionFileMojo extends AbstractUsingBundleL
 
     /**
      * The output directory.
-     * 
-     * @parameter default-value="${project.build.directory}/bundles-pax"
      */
+    @Parameter(defaultValue = "${project.build.directory}/bundles-pax")
     private File outputFile;
 
     @Override

@@ -1,0 +1,18 @@
+{
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "freemarker/page/main",
+    "sling:resourceSuperType": "freemarker/page",
+    "title": "Apache Sling Scripting Freemarker",
+    "simple": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "freemarker/page/simple",
+        "sling:resourceSuperType": "freemarker/page",
+        "title": "freemarker simple"
+    },
+    "adaptto": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "freemarker/page/adaptto",
+        "sling:resourceSuperType": "freemarker/page",
+        "title": "Sling Models adaptTo()"
+    }
+}

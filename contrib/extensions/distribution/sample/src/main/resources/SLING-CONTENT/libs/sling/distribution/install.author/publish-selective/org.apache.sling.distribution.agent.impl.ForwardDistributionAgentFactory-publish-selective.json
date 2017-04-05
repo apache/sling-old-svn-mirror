@@ -1,0 +1,13 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "publish-selective",
+
+    "serviceName" : "distributionService",
+
+    "priorityQueues": ["news=/content/news.*"],
+
+    "packageImporter.endpoints": [
+        "publisher1=http://localhost:4503/libs/sling/distribution/services/importers/default"
+    ]
+}

@@ -15,13 +15,13 @@
 	<parent>
 		<groupId>org.apache.sling</groupId>
 		<artifactId>sling</artifactId>
-		<version>22</version>
-		<relativePath>../../../parent/pom.xml</relativePath>
+		<version>30</version>
+		<relativePath />
 	</parent>
 
 	<artifactId>org.apache.sling.commons.json</artifactId>
 	<packaging>bundle</packaging>
-	<version>2.0.11-SNAPSHOT</version>
+	<version>2.0.21-SNAPSHOT</version>
 
 	<name>Apache Sling JSON Library</name>
 	<description>Apache Sling JSON Library</description>
@@ -49,6 +49,28 @@
 					</instructions>
 				</configuration>
 			</plugin>
+			<plugin>
+			    <groupId>org.apache.rat</groupId>
+			    <artifactId>apache-rat-plugin</artifactId>
+			    <configuration>
+			        <excludes>
+                        <exclude>src/main/java/org/apache/sling/commons/json/JSONArray.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/JSONException.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/JSONObject.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/JSONString.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/JSONTokener.java</exclude>
+			            <exclude>src/main/java/org/apache/sling/commons/json/http/Cookie.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/http/CookieList.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/http/HTTP.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/http/HTTPTokener.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/io/JSONStringer.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/io/JSONWriter.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/util/CDL.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/xml/XML.java</exclude>
+                        <exclude>src/main/java/org/apache/sling/commons/json/xml/XMLTokener.java</exclude>
+			        </excludes>
+			    </configuration>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -64,15 +86,16 @@
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
 		<dependency>
+            <!-- A recent version is required to use Sling mocks in tests, if that's a problem we'll need to change them -->
 			<groupId>org.apache.sling</groupId>
 			<artifactId>org.apache.sling.api</artifactId>
-			<version>2.0.6</version>
+			<version>2.3.0</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.sling</groupId>
 			<artifactId>org.apache.sling.commons.testing</artifactId>
-			<version>2.0.16</version>
+			<version>2.0.22</version>
 			<scope>test</scope>
 			<exclusions>
 			    <exclusion>
@@ -96,8 +119,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.sling-mock</artifactId>
+            <version>1.6.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
             <scope>test</scope>
         </dependency>
 	</dependencies>

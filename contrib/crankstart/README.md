@@ -1,16 +1,10 @@
-Apache Sling Crankstart
-=======================
+Sling Crankstart Launcher
+=========================
 
-This is an early prototype of a different way of starting Sling,
-based on a single text file that describes the Sling configuration.
+This small and generic OSGi launcher starts a Sling instance (or anything else for that matter)
+by interpreting a Sling Provisioning Model at runtime.
 
-For now, the crank start launcher reads a .crank.txt file, starts 
-the OSGi framework and installs and starts bundles that it gets from
-a Maven repository.
+The `launcher` module contains examples and integration tests that demonstrate it, and provides 
+a runnable jar that's self-explaining if you launch it without any parameters.
 
-Note that this module is in contrib for now: it might be completely
-changed, abandoned etc. - there's no guarantes that this will ever
-become a supported Sling component.
-
-To test this, build it and run java -jar path-to-crankstart.jar, 
-optionally with the name of a .crank.txt file as an argument.
+The Sling Provisioning Model syntax is described at https://sling.apache.org/documentation/development/slingstart.html

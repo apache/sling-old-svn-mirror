@@ -33,7 +33,7 @@ import org.mozilla.javascript.Wrapper;
 public class ScriptablePrintWriter extends ScriptableObject implements SlingWrapper {
 
     public static final String CLASSNAME = "PrintWriter";
-    public static final Class<?> [] WRAPPED_CLASSES = { PrintWriter.class };
+    private static final Class<?> [] WRAPPED_CLASSES = { PrintWriter.class };
 
     private PrintWriter writer;
 

@@ -24,38 +24,38 @@ import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.transport.core.DistributionTransport;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.DistributionTransportContext;
+import org.apache.sling.distribution.transport.impl.DistributionTransport;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransport;
+import org.apache.sling.distribution.transport.impl.RemoteDistributionPackage;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
-import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Default implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
+ * Remote implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
  */
 public class RemoteDistributionPackageExporter implements DistributionPackageExporter {
 
-
     private final DistributionPackageBuilder packageBuilder;
-    private final DistributionTransportSecretProvider secretProvider;
-    private final DefaultDistributionLog log;
+    private final int maxPullItems;
+    private final DistributionTransportContext distributionContext = new DistributionTransportContext();
 
-    private DistributionTransport transportHandler;
+
+    private final List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
     public RemoteDistributionPackageExporter(DefaultDistributionLog log, DistributionPackageBuilder packageBuilder,
                                              DistributionTransportSecretProvider secretProvider,
                                              String[] endpoints,
-                                             TransportEndpointStrategyType transportEndpointStrategyType,
-                                             int pullItems) {
-        this.log = log;
+                                             int maxPullItems) {
+        this.maxPullItems = maxPullItems;
         if (packageBuilder == null) {
             throw new IllegalArgumentException("packageBuilder is required");
         }
@@ -64,36 +64,40 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
             throw new IllegalArgumentException("distributionTransportSecretProvider is required");
         }
 
-
         this.packageBuilder = packageBuilder;
-        this.secretProvider = secretProvider;
-
-        List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), packageBuilder, secretProvider, pullItems));
+                transportHandlers.add(new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), packageBuilder, secretProvider));
             }
-        }
-        transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
-                transportEndpointStrategyType);
-    }
-
-    @Nonnull
-    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
-        try {
-            List<DistributionPackage> packages = new ArrayList<DistributionPackage>();
-            for (DistributionPackage distributionPackage : transportHandler.retrievePackages(resourceResolver, distributionRequest)) {
-                packages.add(distributionPackage);
-            }
-            return packages;
-        } catch (Exception e) {
-            log.error("cannot export packages", e);
-            throw new DistributionPackageExportException(e);
         }
     }
 
-    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) {
+    public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {
+        int maxNumberOfPackages = DistributionRequestType.PULL.equals(distributionRequest.getRequestType()) ? maxPullItems : 1;
+        for (DistributionTransport distributionTransport : transportHandlers) {
+            int noPackages = 0;
+
+            RemoteDistributionPackage retrievedPackage;
+            while (noPackages < maxNumberOfPackages && ((retrievedPackage = distributionTransport.retrievePackage(resourceResolver, distributionRequest, distributionContext)) != null)) {
+
+                DistributionPackage distributionPackage = retrievedPackage.getPackage();
+
+                try {
+                    packageProcessor.process(distributionPackage);
+
+                    retrievedPackage.deleteRemotePackage();
+
+                } finally {
+                    DistributionPackageUtils.closeSafely(distributionPackage);
+                }
+
+                noPackages++;
+            }
+        }
+    }
+
+    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException {
         return packageBuilder.getPackage(resourceResolver, distributionPackageId);
     }
 }

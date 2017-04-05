@@ -23,6 +23,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.util.ContextUtil;
 import org.apache.sling.commons.log.logback.internal.util.Util;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -38,9 +39,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FilterTracker extends ServiceTracker implements LogbackResetListener{
+    private static final String ALL_APPENDERS = "*";
     private static final String PROP_APPENDER = "appenders";
 
     private final LoggerContext loggerContext;
+    private final ContextUtil contextUtil;
     private final LogbackManager logbackManager;
     private Map<ServiceReference, FilterInfo> filters = new ConcurrentHashMap<ServiceReference, FilterInfo>();
 
@@ -48,6 +51,7 @@ public class FilterTracker extends ServiceTracker implements LogbackResetListene
         super(context, createFilter(), null);
         this.logbackManager = logbackManager;
         this.loggerContext = logbackManager.getLoggerContext();
+        this.contextUtil =  new ContextUtil(loggerContext);
         super.open();
     }
 
@@ -61,7 +65,7 @@ public class FilterTracker extends ServiceTracker implements LogbackResetListene
         FilterInfo fi = new FilterInfo(reference, f);
         filters.put(reference, fi);
         attachFilter(fi, getAppenderMap());
-        return fi;
+        return f;
     }
 
     @SuppressWarnings("unchecked")
@@ -106,25 +110,36 @@ public class FilterTracker extends ServiceTracker implements LogbackResetListene
 
     //~-----------------------------------Internal Methods
 
-    private void attachFilter(FilterInfo fi, Map<String,Appender<ILoggingEvent>> appenderMap) {
-        //TODO Support attaching a filter to all appender if the appenerName list contains '*'
-        for(String appenderName : fi.appenderNames){
+    private void attachFilter(FilterInfo fi, Map<String, Appender<ILoggingEvent>> appenderMap) {
+        if (fi.registerAgainstAllAppenders){
+            for (Appender<ILoggingEvent> appender : appenderMap.values()){
+                attachFilter(appender, fi);
+            }
+            return;
+        }
+        for (String appenderName : fi.appenderNames) {
             Appender<ILoggingEvent> appender = appenderMap.get(appenderName);
-            if(appender != null){
-                attachFilter(appender,fi);
-            }else{
-                //TODO Log warning
+            if (appender != null) {
+                attachFilter(appender, fi);
+            } else {
+                contextUtil.addWarn("No appender with name [" + appenderName + "] found " +
+                        "to which " + fi.filter + " can be attached");
             }
         }
     }
 
-    private void detachFilter(FilterInfo fi,Map<String,Appender<ILoggingEvent>> appenderMap) {
-        for(String appenderName : fi.appenderNames){
-            Appender<ILoggingEvent> appender = appenderMap.get(appenderName);
-            if(appender != null){
+    private void detachFilter(FilterInfo fi, Map<String, Appender<ILoggingEvent>> appenderMap) {
+        if (fi.registerAgainstAllAppenders){
+            for (Appender<ILoggingEvent> appender : appenderMap.values()){
                 detachFilter(appender, fi);
-            }else{
-                //TODO Log warning
+            }
+            return;
+        }
+
+        for (String appenderName : fi.appenderNames) {
+            Appender<ILoggingEvent> appender = appenderMap.get(appenderName);
+            if (appender != null) {
+                detachFilter(appender, fi);
             }
         }
     }
@@ -168,6 +183,7 @@ public class FilterTracker extends ServiceTracker implements LogbackResetListene
         final ServiceReference reference;
         final Filter<ILoggingEvent> filter;
         final Set<String> appenderNames;
+        final boolean registerAgainstAllAppenders;
 
         FilterInfo(ServiceReference reference, Filter<ILoggingEvent> filter) {
             this.reference = reference;
@@ -175,6 +191,7 @@ public class FilterTracker extends ServiceTracker implements LogbackResetListene
 
             this.appenderNames = Collections.unmodifiableSet(
                     new HashSet<String>(Util.toList(reference.getProperty(PROP_APPENDER))));
+            this.registerAgainstAllAppenders = appenderNames.contains(ALL_APPENDERS);
         }
 
         public void stop(){

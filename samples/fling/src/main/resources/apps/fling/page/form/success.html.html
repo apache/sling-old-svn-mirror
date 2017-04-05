@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html data-th-with="page=${request.adaptTo(@org.apache.sling.samples.fling.page.FormPage@class)}">
+<head data-th-replace="/apps/fling/page/fragments/head.html::default"></head>
+<body>
+<div class="container">
+  <nav class="nav-main">
+    <div class="pull-left">
+      <ul class="breadcrumb" style="direction: rtl" data-th-replace="/apps/fling/page/fragments/navigation.html::breadcrumb"></ul>
+    </div>
+    <ul class="nav nav-pills" role="tablist" data-th-replace="/apps/fling/page/fragments/navigation.html::children"></ul>
+  </nav>
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <span data-th-text="${page.title}">FORM PAGE</span>
+    </div>
+    <div class="panel-body" data-th-with="form=${page.form}">
+      <p>Your form submission was successful!</p>
+      <span data-th-text="${form.name}"></span><span> says: </span><span data-th-text="${form.comment}"></span>
+    </div>
+    <div class="panel-footer" data-th-replace="/apps/fling/page/fragments/panel.html::footer"></div>
+  </div>
+</div>
+</body>
+</html>

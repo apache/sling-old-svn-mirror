@@ -19,7 +19,6 @@
 package org.apache.sling.testing.mock.osgi;
 
 import java.util.Dictionary;
-import java.util.Hashtable;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -34,14 +33,13 @@ class MockComponentContext implements ComponentContext {
 
     private final MockBundleContext bundleContext;
     private final Dictionary<String, Object> properties;
+    private final Bundle usingBundle;
 
-    public MockComponentContext(final MockBundleContext mockBundleContext) {
-        this(mockBundleContext, null);
-    }
-
-    public MockComponentContext(final MockBundleContext mockBundleContext, final Dictionary<String, Object> properties) {
+    public MockComponentContext(final MockBundleContext mockBundleContext, 
+            final Dictionary<String, Object> properties, final Bundle usingBundle) {
         this.bundleContext = mockBundleContext;
-        this.properties = properties != null ? properties : new Hashtable<String, Object>();
+        this.properties = properties;
+        this.usingBundle = usingBundle;
     }
 
     @Override
@@ -50,7 +48,7 @@ class MockComponentContext implements ComponentContext {
     }
 
     @Override
-    public Object locateService(final String name, final ServiceReference reference) {
+    public <S> S locateService(final String name, final ServiceReference<S> reference) {
         return this.bundleContext.locateService(name, reference);
     }
 
@@ -69,6 +67,11 @@ class MockComponentContext implements ComponentContext {
         // allow calling, but ignore
     }
 
+    @Override
+    public Bundle getUsingBundle() {
+        return usingBundle;
+    }
+
     // --- unsupported operations ---
     @Override
     public ComponentInstance getComponentInstance() {
@@ -76,12 +79,7 @@ class MockComponentContext implements ComponentContext {
     }
 
     @Override
-    public ServiceReference getServiceReference() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Bundle getUsingBundle() {
+    public ServiceReference<?> getServiceReference() {
         throw new UnsupportedOperationException();
     }
 

@@ -36,33 +36,33 @@ public final class AuthConstants {
      * and password should just be checked and a status code be set for success
      * (200/OK) or failure (403/FORBIDDEN).
      *
-     * @see #isValidateRequest(HttpServletRequest)
-     * @see #sendValid(HttpServletResponse)
-     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
+     * @see AuthUtil#isValidateRequest(HttpServletRequest)
+     * @see AuthUtil#sendValid(HttpServletResponse)
+     * @see AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)
      */
     public static final String PAR_J_VALIDATE = "j_validate";
 
     /**
      * The name of the request header set by the
-     * {@link #sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
+     * {@link AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
      * credentials cannot be used for login.
      * <p>
      * This header may be inspected by clients for a reason why the request
      * failed.
      *
-     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
+     * @see AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)
      */
     public static final String X_REASON = "X-Reason";
 
     /**
      * The name of the request header set by the
-     * {@link #sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
+     * {@link AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
      * credentials cannot be used for login.
      * <p>
      * This header may be inspected by clients for a a detailed reason code why the request
      * failed.
      *
-     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
+     * @see AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)
      */
     public static final String X_REASON_CODE = "X-Reason-Code";
 
@@ -115,12 +115,14 @@ public final class AuthConstants {
     public static final String TOPIC_LOGIN = "org/apache/sling/auth/core/Authenticator/LOGIN";
 
     /**
-     * Any OSGi service may provide a sling.auth.requirements registration property which is used
-     * to dynamically extend the authentication requirements from the Authentication Requirements
-     * configuration. This may for example be set by AuthenticationHandler implementations providing
+     * Any OSGi service may provide a {@code sling.auth.requirements} registration property which is used
+     * to dynamically extend the authentication requirements for the {@code AuthenticationSupport}.
+     * This may for example be set by AuthenticationHandler implementations providing
      * a login form to ensure access to the login form does not require authentication. The value
-     * of this property is a single string, an array of strings or a Collection of strings and is
-     * formatted in the same way as the Authentication Requirements configuration property.
+     * of this property is a single string, an array of strings or a Collection of strings.
+     * Each string can be an absolute path (such as /content) or and absolute URI (such as
+     * http://thehost/content). Optionally each entry may be prefixed by a plus (+) or minus (-) sign
+     * indicating that authentication is required (plus) or not required (minus).
      */
     public static final String AUTH_REQUIREMENTS = "sling.auth.requirements";
 

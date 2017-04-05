@@ -1,0 +1,4 @@
+CreatePath [var(sling:Folder), discovery(nt:unstructured), somefolder(sling:Folder)]
+CreatePath [one, two, three]
+CreatePath [three, four(nt:folk), five(nt:jazz), six]
+CreatePath [seven(nt:x), eight(nt:x), nine(nt:x)]

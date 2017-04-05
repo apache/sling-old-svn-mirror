@@ -1,0 +1,10 @@
+{
+   "title": "The parent node",
+   "SLING:ordered": [{
+       "SLING:name": "first",
+       "title": "This comes first"
+   }, {
+       "SLING:name": "second",
+       "title": "This comes second"
+   }]
+}

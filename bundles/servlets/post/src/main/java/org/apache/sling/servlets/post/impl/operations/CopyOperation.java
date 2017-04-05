@@ -26,6 +26,8 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 
@@ -42,16 +44,28 @@ public class CopyOperation extends AbstractCopyMoveOperation {
     }
 
     @Override
-    protected Item execute(List<Modification> changes, Item source,
-            String destParent, String destName,
-            VersioningConfiguration versioningConfiguration) throws RepositoryException {
+    protected Resource execute(final List<Modification> changes,
+            final Resource source,
+            final String destParent,
+            final String destName,
+            final VersioningConfiguration versioningConfiguration)
+    throws PersistenceException {
+        try {
+            // ensure we have an item underlying the request's resource
+            Item item = source.adaptTo(Item.class);
+            if (item == null) {
+                return null;
+            }
 
-        Item destItem = copy(source, (Node) source.getSession().getItem(destParent), destName);
+            Item destItem = copy(item, (Node) item.getSession().getItem(destParent), destName);
 
-        String dest = destParent + "/" + destName;
-        changes.add(Modification.onCopied(source.getPath(), dest));
-        log.debug("copy {} to {}", source, dest);
-        return destItem;
+            String dest = destParent + "/" + destName;
+            changes.add(Modification.onCopied(source.getPath(), dest));
+            log.debug("copy {} to {}", source, dest);
+            return source.getResourceResolver().getResource(destItem.getPath());
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re, source.getPath(), null);
+        }
     }
 
     /**
@@ -101,7 +115,7 @@ public class CopyOperation extends AbstractCopyMoveOperation {
             throw new RepositoryException(
                     "Cannot copy ancestor " + src.getPath() + " to descendant " + dstParent.getPath());
         }
-        
+
         // ensure destination name
         if (name == null) {
             name = src.getName();
@@ -132,7 +146,7 @@ public class CopyOperation extends AbstractCopyMoveOperation {
         }
         return dst;
     }
-    
+
     /** @return true if src is an ancestor node of dest, or if
      *  both are the same node */
     static boolean isAncestorOrSameNode(Node src, Node dest) throws RepositoryException {

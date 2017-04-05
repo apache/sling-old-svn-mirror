@@ -81,6 +81,7 @@ import org.apache.sling.commons.json.io.JSONRenderer;
  * @author JSON.org
  * @version 2
  */
+@Deprecated
 public class JSONArray {
 
     /** Default renderer */
@@ -804,7 +805,7 @@ public class JSONArray {
 
     /**
      * Write the contents of the JSONObject as JSON text to a writer
-     * using {@link JSONRenderer#write(JSONArray)}
+     * using {@link JSONRenderer#write(Writer, JSONArray)}
      */
     public Writer write(Writer writer) throws JSONException {
         return renderer.write(writer, this);

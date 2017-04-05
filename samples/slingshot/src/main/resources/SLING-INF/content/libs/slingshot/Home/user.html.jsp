@@ -23,6 +23,6 @@
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 
-    response.sendRedirect(request.getContextPath() + SlingshotConstants.APP_ROOT_PATH + "/public/" + request.getRemoteUser() + ".html");
+    response.sendRedirect(request.getContextPath() + SlingshotConstants.APP_ROOT_PATH + "/users/" + request.getRemoteUser() + ".html");
     return;
 %>

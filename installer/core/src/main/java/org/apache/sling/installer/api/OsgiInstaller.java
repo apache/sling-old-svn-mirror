@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Service for installing/updating/removing installable resources
@@ -80,7 +80,7 @@ public interface OsgiInstaller {
 	 * - installed resources should be uninstalled
 	 * Invalid resources are ignored.
      * @param urlScheme identifies the client.
-     * @param resource An array of updated/new resources - might be null
+     * @param resources An array of updated/new resources - might be null
      * @param ids An array of identifiers for removed resources - might be null
 	 */
 	void updateResources(String urlScheme, InstallableResource[] resources,

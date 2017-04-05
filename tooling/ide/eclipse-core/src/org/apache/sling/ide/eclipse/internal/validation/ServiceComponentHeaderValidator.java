@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.jar.Manifest;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.apache.sling.ide.log.Logger;
@@ -64,10 +63,9 @@ public class ServiceComponentHeaderValidator {
             return Collections.emptyList();
         }
 
-        List<IFile> missingDescriptors = new ArrayList<IFile>();
+        List<IFile> missingDescriptors = new ArrayList<>();
 
-        InputStream contents = manifest.getContents();
-        try {
+        try (InputStream contents = manifest.getContents();) {
             Manifest mf = new Manifest(contents);
             String serviceComponentHeader = mf.getMainAttributes().getValue("Service-Component");
             if (serviceComponentHeader != null) {
@@ -95,8 +93,6 @@ public class ServiceComponentHeaderValidator {
         } catch (IOException e) {
             throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Unable to access "
                     + manifest.getFullPath(), e));
-        } finally {
-            IOUtils.closeQuietly(contents);
         }
 
         return missingDescriptors;

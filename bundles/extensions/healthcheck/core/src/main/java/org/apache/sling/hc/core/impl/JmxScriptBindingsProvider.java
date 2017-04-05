@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 /** The JmxBinding is meant to be bound as "jmx" global variables
  *  in scripted rules, to allow for writing scripted expressions
- *  like jmx.attribute("java.lang:type=ClassLoading", "LoadedClassCount") > 100
+ *  like jmx.attribute("java.lang:type=ClassLoading", "LoadedClassCount") &gt; 100
  */
 @Component
 @Service

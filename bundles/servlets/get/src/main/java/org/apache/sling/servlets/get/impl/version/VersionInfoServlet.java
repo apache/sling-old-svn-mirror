@@ -21,7 +21,6 @@ package org.apache.sling.servlets.get.impl.version;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -30,23 +29,25 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.io.JSONRenderer;
-import org.apache.sling.commons.json.jcr.JsonItemWriter;
+import org.apache.sling.servlets.get.impl.util.JsonObjectCreator;
+import org.apache.sling.servlets.get.impl.util.JsonRenderer;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
  * The <code>VersionInfoServlet</code> renders list of versions available for
@@ -54,19 +55,27 @@ import org.apache.sling.commons.json.jcr.JsonItemWriter;
  *
  * At the moment only JCR nodes are supported.
  */
-@Component(immediate=true, metatype=true, name="org.apache.sling.servlets.get.impl.version.VersionInfoServlet", label="%servlet.version.name", description="%servlet.version.description", policy=ConfigurationPolicy.REQUIRE)
-@Service(Servlet.class)
-@Properties({
-    @Property(name="service.description", value="Version info servlet"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-
-    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default", propertyPrivate=true),
-    @Property(name="sling.servlet.selectors", value="V"),
-    @Property(name="sling.servlet.methods", value="GET", propertyPrivate=true),
-    @Property(name="sling.servlet.extensions", value="json", propertyPrivate=true),
-})
+@Component(name="org.apache.sling.servlets.get.impl.version.VersionInfoServlet",
+           configurationPolicy=ConfigurationPolicy.REQUIRE,
+           service = Servlet.class,
+           property = {
+                    "service.description=Version info servlet",
+                    "service.vendor=The Apache Software Foundation",
+                    "sling.servlet.resourceTypes=sling/servlet/default",
+                    "sling.servlet.methods=GET",
+                    "sling.servlet.selectors=V",
+                    "sling.servlet.extensions=json"
+           })
+@Designate(ocd = VersionInfoServlet.Config.class)
 public class VersionInfoServlet extends SlingSafeMethodsServlet {
 
+    @ObjectClassDefinition(name = "Apache Sling Version Info Servlet",
+            description = "The Sling Version Info Servlet renders list of versions available for the current resource")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Selector", description="List of selectors this servlet handles to display the versions")
+        String[] sling_servlet_selectors() default "V";
+    }
     private static final long serialVersionUID = 1656887064561951302L;
 
     /** Selector that means "pretty-print the output */
@@ -80,9 +89,10 @@ public class VersionInfoServlet extends SlingSafeMethodsServlet {
 
     /** How much to indent in tidy mode */
     public static final int INDENT_SPACES = 2;
+    
+    private final JsonRenderer renderer = new JsonRenderer();
 
-    private final JSONRenderer renderer = new JSONRenderer();
-
+    @Override
     public void doGet(SlingHttpServletRequest req, SlingHttpServletResponse resp) throws ServletException,
             IOException {
         resp.setContentType(req.getResponseContentType());
@@ -90,44 +100,62 @@ public class VersionInfoServlet extends SlingSafeMethodsServlet {
         final boolean tidy = hasSelector(req, TIDY);
         final boolean harray = hasSelector(req, HARRAY);
 
-        final JSONRenderer.Options opt = renderer.options().withIndent(tidy ? INDENT_SPACES : 0)
-                .withArraysForChildren(harray);
+        final JsonRenderer.Options opt = renderer.options().withIndent(tidy ? INDENT_SPACES : 0)
+                    .withArraysForChildren(harray);
+        
         try {
             resp.getWriter().write(renderer.prettyPrint(getJsonObject(req.getResource()), opt));
-        } catch (RepositoryException e) {
-            throw new ServletException(e);
-        } catch (JSONException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }
 
-    private JSONObject getJsonObject(Resource resource) throws RepositoryException, JSONException {
-        final JSONObject result = new JSONObject();
+    private JsonObject getJsonObject(Resource resource) throws RepositoryException {
+        final JsonObjectBuilder result = Json.createObjectBuilder();
         final Node node = resource.adaptTo(Node.class);
         if (node == null || !node.isNodeType(JcrConstants.MIX_VERSIONABLE)) {
-            return result;
+            return result.build();
         }
 
         final VersionHistory history = node.getVersionHistory();
         final Version baseVersion = node.getBaseVersion();
         for (final VersionIterator it = history.getAllVersions(); it.hasNext();) {
             final Version v = it.nextVersion();
-            final JSONObject obj = new JSONObject();
-            obj.put("created", createdDate(v));
-            obj.put("successors", getNames(v.getSuccessors()));
-            obj.put("predecessors", getNames(v.getPredecessors()));
-            obj.put("labels", Arrays.asList(history.getVersionLabels(v)));
-            obj.put("baseVersion", baseVersion.isSame(v));
-            result.put(v.getName(), obj);
+            final JsonObjectBuilder obj = Json.createObjectBuilder();
+            obj.add("created", createdDate(v));
+            obj.add("successors", getArrayBuilder(getNames(v.getSuccessors())));
+            obj.add("predecessors", getArrayBuilder(getNames(v.getPredecessors())));
+            
+            obj.add("labels", getArrayBuilder(history.getVersionLabels(v)));
+            obj.add("baseVersion", baseVersion.isSame(v));
+            result.add(v.getName(), obj);
         }
 
-        final JSONObject wrapper = new JSONObject();
-        wrapper.put("versions", result);
-        return wrapper;
+        return Json.createObjectBuilder().add("versions", result).build();
+    }
+    
+    private JsonArrayBuilder getArrayBuilder(String[] values) {
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        
+        for (String value : values) {
+            builder.add(value);
+        }
+        
+        return builder;
+    }
+    
+    private JsonArrayBuilder getArrayBuilder(Collection<String> values) {
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        
+        for (String value : values) {
+            builder.add(value);
+        }
+        
+        return builder;
     }
 
     private static Collection<String> getNames(Version[] versions) throws RepositoryException {
-        final List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<>();
         for (Version s : versions) {
             result.add(s.getName());
         }
@@ -145,7 +173,7 @@ public class VersionInfoServlet extends SlingSafeMethodsServlet {
     }
 
     private static String createdDate(Node node) throws RepositoryException {
-        return JsonItemWriter.format(node.getProperty(JcrConstants.JCR_CREATED).getDate());
+        return JsonObjectCreator.format(node.getProperty(JcrConstants.JCR_CREATED).getDate());
     }
 
 }

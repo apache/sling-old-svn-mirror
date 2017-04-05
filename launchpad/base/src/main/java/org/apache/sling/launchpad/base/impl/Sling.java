@@ -30,11 +30,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -46,6 +44,7 @@ import org.apache.felix.framework.util.FelixConstants;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
+import org.apache.sling.launchpad.base.shared.Util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -154,6 +153,8 @@ public class Sling {
 
     public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.launcher.system.packages";
 
+    public static final String PROP_EXTRA_CAPS = "org.apache.sling.launcher.system.capabilities.extra";
+
     /**
      * Timeout to wait for the initialized framework to actually stop for it to
      * be reinitialized. This is set to a second, which should be ample time to
@@ -192,6 +193,7 @@ public class Sling {
         this.logger = logger;
         this.resourceProvider = resourceProvider;
 
+        final long startedAt = System.currentTimeMillis();
         this.logger.log(Logger.LOG_INFO, "Starting Apache Sling");
 
         // read the default parameters
@@ -199,9 +201,6 @@ public class Sling {
 
         // check for bootstrap command file
         copyBootstrapCommandFile(props);
-
-        // check for auto-start bundles
-        this.setInstallBundles(props);
 
         // create the framework and start it
         try {
@@ -222,7 +221,7 @@ public class Sling {
                 init(tmpFramework);
             }
 
-            new DefaultStartupHandler(tmpFramework.getBundleContext(), logger, startupManager);
+            new DefaultStartupHandler(tmpFramework.getBundleContext(), logger, startupManager, startedAt);
 
             // finally start
             tmpFramework.start();
@@ -410,7 +409,7 @@ public class Sling {
         }
 
         // resolve variables and ensure sling.home is an absolute path
-        slingHome = substVars(slingHome, SharedConstants.SLING_HOME, null, staticProps);
+        slingHome = Util.substVars(slingHome, SharedConstants.SLING_HOME, null, staticProps);
         File slingHomeFile = new File(slingHome).getAbsoluteFile();
         slingHome = slingHomeFile.getAbsolutePath();
 
@@ -473,7 +472,7 @@ public class Sling {
 
         // Perform variable substitution for system properties.
         for (Entry<String, String> entry : runtimeProps.entrySet()) {
-            entry.setValue(substVars(entry.getValue(), entry.getKey(), null,
+            entry.setValue(Util.substVars(entry.getValue(), entry.getKey(), null,
                 runtimeProps));
         }
 
@@ -653,26 +652,6 @@ public class Sling {
         }
     }
 
-    private void setInstallBundles(Map<String, String> props) {
-        String prefix = "sling.install.";
-        Set<String> levels = new TreeSet<String>();
-        for (String key : props.keySet()) {
-            if (key.startsWith(prefix)) {
-                levels.add(key.substring(prefix.length()));
-            }
-        }
-
-        StringBuffer buf = new StringBuffer();
-        for (String level : levels) {
-            if (buf.length() > 0) {
-                buf.append(',');
-            }
-            buf.append(level);
-        }
-
-        props.put(prefix + "bundles", buf.toString());
-    }
-
     // ---------- Extension support --------------------------------------------
 
     /**
@@ -777,7 +756,7 @@ public class Sling {
             String include = entry.getValue();
 
             // ensure variable resolution on this property
-            include = substVars(include, key, null, props);
+            include = Util.substVars(include, key, null, props);
 
             StringTokenizer tokener = new StringTokenizer(include, ",");
             while (tokener.hasMoreTokens()) {
@@ -876,131 +855,6 @@ public class Sling {
                 // ignore
             }
         }
-    }
-
-    // ---------- Property file variable substition support --------------------
-
-    /**
-     * The starting delimiter of variable names (value is "${").
-     */
-    private static final String DELIM_START = "${";
-
-    /**
-     * The ending delimiter of variable names (value is "}").
-     */
-    private static final String DELIM_STOP = "}";
-
-    /**
-     * This method performs property variable substitution on the specified
-     * value. If the specified value contains the syntax
-     * <tt>${&lt;prop-name&gt;}</tt>, where <tt>&lt;prop-name&gt;</tt>
-     * refers to either a configuration property or a system property, then the
-     * corresponding property value is substituted for the variable placeholder.
-     * Multiple variable placeholders may exist in the specified value as well
-     * as nested variable placeholders, which are substituted from inner most to
-     * outer most. Configuration properties override system properties.
-     *
-     * NOTE - this is a verbatim copy of the same-named method
-     * in o.a.s.launchpad.webapp.SlingServlet. Please keep them in sync.
-     *
-     * @param val The string on which to perform property substitution.
-     * @param currentKey The key of the property being evaluated used to detect
-     *            cycles.
-     * @param cycleMap Map of variable references used to detect nested cycles.
-     * @param configProps Set of configuration properties.
-     * @return The value of the specified string after system property
-     *         substitution.
-     * @throws IllegalArgumentException If there was a syntax error in the
-     *             property placeholder syntax or a recursive variable
-     *             reference.
-     */
-    private static String substVars(String val, String currentKey,
-            Map<String, String> cycleMap, Map<String, String> configProps)
-            throws IllegalArgumentException {
-        // If there is currently no cycle map, then create
-        // one for detecting cycles for this invocation.
-        if (cycleMap == null) {
-            cycleMap = new HashMap<String, String>();
-        }
-
-        // Put the current key in the cycle map.
-        cycleMap.put(currentKey, currentKey);
-
-        // Assume we have a value that is something like:
-        // "leading ${foo.${bar}} middle ${baz} trailing"
-
-        // Find the first ending '}' variable delimiter, which
-        // will correspond to the first deepest nested variable
-        // placeholder.
-        int stopDelim = val.indexOf(DELIM_STOP);
-
-        // Find the matching starting "${" variable delimiter
-        // by looping until we find a start delimiter that is
-        // greater than the stop delimiter we have found.
-        int startDelim = val.indexOf(DELIM_START);
-        while (stopDelim >= 0) {
-            int idx = val.indexOf(DELIM_START, startDelim
-                + DELIM_START.length());
-            if ((idx < 0) || (idx > stopDelim)) {
-                break;
-            } else if (idx < stopDelim) {
-                startDelim = idx;
-            }
-        }
-
-        // If we do not have a start or stop delimiter, then just
-        // return the existing value.
-        if ((startDelim < 0) && (stopDelim < 0)) {
-            return val;
-        }
-        // At this point, we found a stop delimiter without a start,
-        // so throw an exception.
-        else if (((startDelim < 0) || (startDelim > stopDelim))
-            && (stopDelim >= 0)) {
-            throw new IllegalArgumentException(
-                "stop delimiter with no start delimiter: " + val);
-        }
-
-        // At this point, we have found a variable placeholder so
-        // we must perform a variable substitution on it.
-        // Using the start and stop delimiter indices, extract
-        // the first, deepest nested variable placeholder.
-        String variable = val.substring(startDelim + DELIM_START.length(),
-            stopDelim);
-
-        // Verify that this is not a recursive variable reference.
-        if (cycleMap.get(variable) != null) {
-            throw new IllegalArgumentException("recursive variable reference: "
-                + variable);
-        }
-
-        // Get the value of the deepest nested variable placeholder.
-        // Try to configuration properties first.
-        String substValue = (configProps != null)
-                ? configProps.get(variable)
-                : null;
-        if (substValue == null) {
-            // Ignore unknown property values.
-            substValue = System.getProperty(variable, "");
-        }
-
-        // Remove the found variable from the cycle map, since
-        // it may appear more than once in the value and we don't
-        // want such situations to appear as a recursive reference.
-        cycleMap.remove(variable);
-
-        // Append the leading characters, the substituted value of
-        // the variable, and the trailing characters to get the new
-        // value.
-        val = val.substring(0, startDelim) + substValue
-            + val.substring(stopDelim + DELIM_STOP.length(), val.length());
-
-        // Now perform substitution again, since there could still
-        // be substitutions to make.
-        val = substVars(val, currentKey, cycleMap, configProps);
-
-        // Return the value.
-        return val;
     }
 
     private void copyBootstrapCommandFile(final Map<String, String> props) {

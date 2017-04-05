@@ -17,8 +17,7 @@
  * under the License.
  */
 
-@Version("2.5")
+@Version("2.6.1")
 package org.apache.sling.api.wrappers;
 
-import aQute.bnd.annotation.Version;
-
+import org.osgi.annotation.versioning.Version;

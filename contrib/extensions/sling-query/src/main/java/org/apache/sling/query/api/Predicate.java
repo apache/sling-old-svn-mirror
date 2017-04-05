@@ -24,8 +24,6 @@ import aQute.bnd.annotation.ConsumerType;
 /**
  * ResourcePredicate determine true or false value for a given T.
  * 
- * @author Tomasz Rękawek
- * 
  */
 @ConsumerType
 public interface Predicate<T> {

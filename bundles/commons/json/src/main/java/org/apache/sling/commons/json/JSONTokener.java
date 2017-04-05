@@ -31,6 +31,7 @@ SOFTWARE.
  * @author JSON.org
  * @version 2
  */
+@Deprecated
 public class JSONTokener {
 
     /**

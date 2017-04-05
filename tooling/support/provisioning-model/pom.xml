@@ -17,22 +17,18 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../parent/pom.xml</relativePath>
+        <version>30</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.provisioning.model</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.8.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Provisioning Model</name>
     <description>
         The provisioning model for Apache Sling
     </description>
-
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/support/provisioning-model</connection>
@@ -61,7 +57,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.2.8</version>
+            <version>1.8.10</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

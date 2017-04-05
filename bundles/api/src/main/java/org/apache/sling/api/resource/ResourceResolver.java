@@ -18,6 +18,7 @@
  */
 package org.apache.sling.api.resource;
 
+import java.io.Closeable;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -27,11 +28,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.adapter.Adaptable;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>ResourceResolver</code> defines the service API which may be used
- * to resolve {@link Resource} objects. The resource resolver is available to
+ * to resolve {@link org.apache.sling.api.resource.Resource} objects. The resource resolver is available to
  * the request processing servlet through the
  * {@link org.apache.sling.api.SlingHttpServletRequest#getResourceResolver()}
  * method.
@@ -54,7 +55,7 @@ import aQute.bnd.annotation.ProviderType;
  * <code>resolve</code> methods and the <code>getResource</code> methods. The
  * difference lies in the algorithm applied to find the requested resource and
  * in the behavior in case a resource cannot be found:
- * <table>
+ * <table summary="">
  * <tr>
  * <th>Method Kind</th>
  * <th>Access Algorithm</th>
@@ -84,6 +85,9 @@ import aQute.bnd.annotation.ProviderType;
  * {@link #close()} method. It is very important to call the {@link #close()}
  * method once the resource resolver is not used any more to ensure any system
  * resources are properly cleaned up.
+ *
+ * A Resource Resolver may also be closed implicitly if the {@link ResourceResolverFactory}
+ * which was used to create this resolver is no longer active.
  * <p>
  * To check whether a Resource Resolver can still be used, the {@link #isLive()}
  * method can be called.
@@ -105,7 +109,7 @@ import aQute.bnd.annotation.ProviderType;
  * not exposed.
  */
 @ProviderType
-public interface ResourceResolver extends Adaptable {
+public interface ResourceResolver extends Adaptable, Closeable {
 
     /**
      * A request attribute containing the workspace to use for
@@ -356,6 +360,7 @@ public interface ResourceResolver extends Adaptable {
      * relative path, the search path entry and relative path may just be
      * concatenated.
      *
+     * @return The array of search paths
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
@@ -380,6 +385,24 @@ public interface ResourceResolver extends Adaptable {
      *             {@link #close() closed}.
      */
     @Nonnull Iterator<Resource> listChildren(@Nonnull Resource parent);
+
+    /**
+     * Returns the parent resource of this resource.
+     * <p>
+     * This method is implemented by getting the parent resource path first
+     * calling the {@link ResourceUtil#getParent(String)} method and then to
+     * retrieve that resource.
+     *
+     * @param child The {@link Resource Resource} whose parent is requested.
+     * @return The parent resource or {@code null}.
+     * @throws NullPointerException If <code>child</code> is <code>null</code>.
+     * @throws org.apache.sling.api.SlingException If any error occurs acquiring
+     *             the parent resource.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
+     * @since 2.9 (Sling API Bundle 2.11.0)
+     */
+    @CheckForNull Resource getParent(@Nonnull Resource child);
 
     /**
      * Returns an <code>Iterable</code> of {@link Resource} objects loaded from
@@ -465,6 +488,8 @@ public interface ResourceResolver extends Adaptable {
      * @param resource
      *            the resource to check for direct children
      * @return <code>true</code> if the resource has any child resources
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.4.4 (Sling API Bundle 2.5.0)
      */
     boolean hasChildren(@Nonnull Resource resource);
@@ -501,16 +526,17 @@ public interface ResourceResolver extends Adaptable {
             throws LoginException;
 
     /**
-     * Returns <code>true</code> if this resource resolver has not been closed
-     * yet.
+     * Returns <code>true</code> if this resource resolver is still usable.
+     * This method tests different things like if it has not been closed
+     * yet or if any of the used resource providers is not usable anymore.
      * <p>
      * Unlike the other methods defined in this interface, this method will
      * never throw an exception even after the resource resolver has been
      * {@link #close() closed}.
      *
-     * @return <code>true</code> if the resource resolver has not been closed
-     *         yet. Once the resource resolver has been closed, this method
-     *         returns <code>false</code>.
+     * @return <code>true</code> if the resource resolver is still usable.
+     *      Once the resource resolver has been closed or a used resource
+     *      provider has been unregistered, this method returns <code>false</code>.
      * @since 2.1 (Sling API Bundle 2.1.0)
      */
     boolean isLive();
@@ -522,8 +548,14 @@ public interface ResourceResolver extends Adaptable {
      * exceptions if still used - with the exception of this method, which
      * can be called several times with no ill effects.
      *
+     * A resolver may also be closed implicitly in case when the {@link ResourceResolverFactory}
+     * which was used to create this resolver is no longer active or
+     * any of the used resource providers is no longer active.
+     *
      * @since 2.1 (Sling API Bundle 2.1.0)
+     * @see ResourceResolver Resource Resolver (section lifecycle)
      */
+    @Override
     void close();
 
     /**
@@ -575,6 +607,8 @@ public interface ResourceResolver extends Adaptable {
      * @throws UnsupportedOperationException If the resource provider does not allow to
      *                                       delete this resource.
      * @throws PersistenceException If the operation fails.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
     void delete(@Nonnull Resource resource)
@@ -592,6 +626,8 @@ public interface ResourceResolver extends Adaptable {
      * @throws UnsupportedOperationException If the resource provider does not allow to
      *                                       create a resource at that location.
      * @throws PersistenceException If the operation fails.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
     @Nonnull Resource create(@Nonnull Resource parent, @Nonnull String name, Map<String, Object> properties)
@@ -599,6 +635,8 @@ public interface ResourceResolver extends Adaptable {
 
     /**
      * Revert all pending changes.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
     void revert();
@@ -606,13 +644,18 @@ public interface ResourceResolver extends Adaptable {
     /**
      * Persist all pending changes.
      *
-     * @throws PersistenceException
+     * @throws PersistenceException If persisting the changes fails.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
     void commit() throws PersistenceException;
 
     /**
      * Are there any pending changes?
+     * @return {@code true} if there are pending changes.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.2 (Sling API Bundle 2.2.0)
      */
     boolean hasChanges();
@@ -628,21 +671,26 @@ public interface ResourceResolver extends Adaptable {
      * @return The resource super type or <code>null</code>. This
      *         method also returns <code>null</code> if the
      *         provided resource is <code>null</code>
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.3 (Sling API Bundle 2.4.0)
      */
     @CheckForNull String getParentResourceType(final Resource resource);
 
     /**
      * Returns the super type of the given resource type. This method converts
-     * the resource type to a resource path and checks the corresponding resource.
+     * the resource type to a resource path and checks the corresponding resource
+     * (considering the search path).
      * If the resource exists, the {@link Resource#getResourceSuperType()} method
      * is called.
      *
      * @param resourceType The resource type whose super type is to be returned.
-     * @return the super type of the <code>resourceType</code> or
-     *         <code>null</code> if the resource type does not exist or returns
-     *         <code>null</code> for its super type. It also returns
-     *         <code>null</code> if <code>resourceType> is null.
+     * @return the super type of the {@code resourceType} or
+     *         {@code null} if the resource given by the resource type does not exist or
+     *         if it returns {@code null} for its super type. It also returns
+     *         {@code null} if {@code resourceType} is null.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.3 (Sling API Bundle 2.4.0)
      */
     public @CheckForNull String getParentResourceType(final String resourceType);
@@ -650,6 +698,10 @@ public interface ResourceResolver extends Adaptable {
     /**
      * Returns <code>true</code> if the resource type or any of the resource's
      * super type(s) equals the given resource type.
+     * 
+     * In case the type of the given resource or the given resource type starts with one of the resource resolver's search paths
+     * it is converted to a relative resource type by stripping off the resource resolver's search path 
+     * before doing the comparison.
      *
      * @param resource The resource to check
      * @param resourceType The resource type to check this resource against.
@@ -657,6 +709,8 @@ public interface ResourceResolver extends Adaptable {
      *         super type(s) equals the given resource type. <code>false</code>
      *         is also returned if <code>resource</code> or<code>resourceType</code>
      *         are <code>null</code>.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.3 (Sling API Bundle 2.4.0)
      */
     boolean isResourceType(final Resource resource, final String resourceType);
@@ -664,8 +718,65 @@ public interface ResourceResolver extends Adaptable {
     /**
      * The resolver is updated to reflect the latest state.
      * Resources which have changes pending are not discarded.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
      * @since 2.3 (Sling API Bundle 2.4.0)
      */
     void refresh();
 
+    /**
+     * This method copies the subgraph rooted at, and including, the resource at
+     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code> and
+     * adds it as a child node of the resource at <code>destAbsPath</code>.
+     *
+     * If the copy operation is within a single resource provider, the resource provider
+     * can use an optimized copy operation. Otherwise the resource resolver copies resources
+     * from one provider to another.
+     *
+     * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
+     * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
+     * a {@code PersistenceException} is thrown. If the resource at {@code srcAbsPath} does not exist,
+     * a {@code PersistenceException} is thrown.
+     *
+     * @param srcAbsPath  the path of the resource to be copied.
+     * @param destAbsPath the location to which the resource at
+     *                    <code>srcAbsPath</code> is to be copied.
+     * @return The destination resource.
+     * @throws PersistenceException If an error occurs.
+     * @throws UnsupportedOperationException If one of the destination resource providers does
+     *                                       not allow to create a resource at that location.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
+     * @since 2.9 (Sling API Bundle 2.11.0)
+     */
+    Resource copy(final String srcAbsPath,
+              final String destAbsPath) throws PersistenceException;
+
+    /**
+     * This method moves the subgraph rooted at, and including, the resource at
+     * <code>srcAbsPath</code> to the new location at <code>destAbsPath</code> and
+     * adds it as a child node of the resource at <code>destAbsPath</code>.
+     *
+     * If the move operation is within a single resource provider, the resource provider
+     * can use an optimized move operation. Otherwise the resource resolver moves resources
+     * from one provider to another.
+     *
+     * The resource at <code>destAbsPath</code> needs to exist, if not a {@code PersistenceException}
+     * is thrown. If a child resource with the same name already exists at <code>destAbsPath</code>
+     * a {@code PersistenceException} is thrown. If the resource at {@code srcAbsPath} does not exist,
+     * a {@code PersistenceException} is thrown.
+     *
+     * @param srcAbsPath  the path of the resource to be copied.
+     * @param destAbsPath the location to which the resource at
+     *                    <code>srcAbsPath</code> is to be moved.
+     * @return The destination resource.
+     * @throws PersistenceException If an error occurs.
+     * @throws UnsupportedOperationException If one of the destination resource providers does
+     *                                       not allow to create a resource at that location.
+     * @throws IllegalStateException if this resource resolver has already been
+     *             {@link #close() closed}.
+     * @since 2.9 (Sling API Bundle 2.11.0)
+     */
+    Resource move(final String srcAbsPath,
+              final String destAbsPath) throws PersistenceException;
 }

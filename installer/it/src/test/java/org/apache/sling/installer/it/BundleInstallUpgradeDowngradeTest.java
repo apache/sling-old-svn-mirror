@@ -19,6 +19,8 @@ package org.apache.sling.installer.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.it.OsgiInstallerTestBase.BundleEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -206,5 +208,45 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
             assertBundle("After installing", symbolicName, "1.1", Bundle.ACTIVE);
         }
 
+    }
+
+    /**
+     * This test class assures that whenever a new bundle is 
+     * provided with the same url as an already installed bundle,
+     * the already installed bundle is uninstalled and the new one installed.
+     * @see <a href="https://issues.apache.org/jira/browse/SLING-6392">SLING-6392</a>
+     */
+    @Test
+    public void testReplaceBundleWithSameUrlButDifferentSymbolicName() throws Exception {
+        final String symbolicName = "osgi-installer-testbundle";
+        final String symbolicName2 = "osgi-installer-testA";
+        final String installableResourceId = "stable-id";
+        
+        assertNull("Test bundle must not be present before test", findBundle(symbolicName));
+        assertNull("Test A bundle must not be present before test", findBundle(symbolicName2));
+        {
+            //assertNull("Test bundle must be absent before installing", findBundle(symbolicName));
+            final Object listener = this.startObservingBundleEvents();
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testbundle-1.0.jar"), installableResourceId, "1", InstallableResource.DEFAULT_PRIORITY), null);
+            this.waitForBundleEvents(symbolicName + " must be installed", listener,
+                    new BundleEvent(symbolicName, "1.0", org.osgi.framework.BundleEvent.INSTALLED),
+                    new BundleEvent(symbolicName, "1.0", org.osgi.framework.BundleEvent.STARTED));
+            assertBundle("After installing", symbolicName, "1.0", Bundle.ACTIVE);
+        }
+
+        // now modify the bundle (having the same url but a different symbolic name and different digest)
+        {
+            final Object listener = this.startObservingBundleEvents();
+            installer.updateResources(URL_SCHEME, getInstallableResource(
+                    getTestBundle(BUNDLE_BASE_NAME + "-testA-1.0.jar"), installableResourceId, "2", InstallableResource.DEFAULT_PRIORITY), null);
+            this.waitForBundleEvents(symbolicName2 + " must be installed and " + symbolicName + " uninstalled", listener,
+                    new BundleEvent(symbolicName, "1.0", org.osgi.framework.BundleEvent.STOPPED),
+                    new BundleEvent(symbolicName, "1.0", org.osgi.framework.BundleEvent.UNINSTALLED),
+                    new BundleEvent(symbolicName2, "1.0", org.osgi.framework.BundleEvent.INSTALLED),
+                    new BundleEvent(symbolicName2, "1.0", org.osgi.framework.BundleEvent.STARTED));
+            assertBundle("After installing a different bundle with same id " + installableResourceId, symbolicName2, "1.0", Bundle.ACTIVE);
+            assertNull("Test bundle must not be present after removing it", findBundle(symbolicName));
+        }
     }
 }

@@ -18,10 +18,13 @@
  */
 package org.apache.sling.models.spi;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Marker interface for an injector to declare that it ignores the name
  * parameter.
  *
  */
+@ConsumerType
 public interface AcceptsNullName {
 }

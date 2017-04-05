@@ -24,6 +24,7 @@ import static org.apache.sling.api.scripting.SlingBindings.OUT;
 import static org.apache.sling.api.scripting.SlingBindings.READER;
 import static org.apache.sling.api.scripting.SlingBindings.REQUEST;
 import static org.apache.sling.api.scripting.SlingBindings.RESOURCE;
+import static org.apache.sling.api.scripting.SlingBindings.RESOLVER;
 import static org.apache.sling.api.scripting.SlingBindings.RESPONSE;
 import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
@@ -46,6 +47,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -72,6 +75,10 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.apache.sling.scripting.api.CachedScript;
+import org.apache.sling.scripting.api.ScriptCache;
+import org.apache.sling.scripting.core.ScriptNameAwareReader;
+import org.apache.sling.scripting.core.impl.helper.CachedScriptImpl;
 import org.apache.sling.scripting.core.impl.helper.ProtectedBindings;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -87,9 +94,10 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
     /** The set of protected keys. */
     private static final Set<String> PROTECTED_KEYS =
-        new HashSet<String>(Arrays.asList(REQUEST, RESPONSE, READER, SLING, RESOURCE, OUT, LOG));
+        new HashSet<String>(Arrays.asList(REQUEST, RESPONSE, READER, SLING, RESOURCE, RESOLVER, OUT, LOG));
 
     /** The resource pointing to the script. */
+
     private final Resource scriptResource;
 
     /** The name of the script (the resource path) */
@@ -116,6 +124,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     /** The cache for services. */
     private final ServiceCache cache;
 
+    /* The cache for compiled scripts. */
+    private final ScriptCache scriptCache;
+
     /**
      * Constructor
      * @param bundleContext The bundle context
@@ -128,12 +139,14 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             final Resource scriptResource,
             final ScriptEngine scriptEngine,
             final Collection<BindingsValuesProvider> bindingsValuesProviders,
-            final ServiceCache cache) {
+            final ServiceCache cache,
+            final ScriptCache scriptCache) {
         this.scriptResource = scriptResource;
         this.scriptEngine = scriptEngine;
         this.bundleContext = bundleContext;
         this.bindingsValuesProviders = bindingsValuesProviders;
         this.cache = cache;
+        this.scriptCache = scriptCache;
         this.scriptName = this.scriptResource.getPath();
         // Now know how to get the input stream, we still have to decide
         // on the encoding of the stream's data. Primarily we assume it is
@@ -211,7 +224,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                                   break;
                         case 200: this.globalScope = bindings;
                                   break;
-                        default: throw new IllegalArgumentException("Invaild scope");
+                        default: throw new IllegalArgumentException("Invalid scope");
                     }
                 }
 
@@ -224,7 +237,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                         case 100: return this.engineScope;
                         case 200: return this.globalScope;
                     }
-                    throw new IllegalArgumentException("Invaild scope");
+                    throw new IllegalArgumentException("Invalid scope");
                 }
 
                 /**
@@ -358,7 +371,22 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             }
 
             // evaluate the script
-            final Object result = scriptEngine.eval(reader, ctx);
+            final Object result;
+            if (method == null && this.scriptEngine instanceof Compilable) {
+                CachedScript cachedScript = scriptCache.getScript(scriptName);
+                if (cachedScript == null) {
+                    ScriptNameAwareReader snReader = new ScriptNameAwareReader(reader, scriptName);
+                    CompiledScript compiledScript = ((Compilable) scriptEngine).compile(snReader);
+                    cachedScript = new CachedScriptImpl(scriptName, compiledScript);
+                    scriptCache.putScript(cachedScript);
+                    LOGGER.debug("Adding {} to the script cache.", scriptName);
+                } else {
+                    LOGGER.debug("Script {} was already cached.", scriptName);
+                }
+                result = cachedScript.getCompiledScript().eval(ctx);
+            } else {
+                result = scriptEngine.eval(reader, ctx);
+            }
 
             // call method - if supplied and script engine supports direct invocation
             if ( method != null && (this.scriptEngine instanceof Invocable)) {
@@ -601,7 +629,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         };
     }
 
-    private Bindings verifySlingBindings(final SlingBindings slingBindings) throws IOException {
+    Bindings verifySlingBindings(final SlingBindings slingBindings) throws IOException {
 
     	final Bindings bindings = new SimpleBindings();
 
@@ -633,6 +661,11 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                 throw fail(RESOURCE, "Wrong type");
             }
 
+            Object resolverObject = slingBindings.get(RESOLVER);
+            if (resolverObject != null && !(resolverObject instanceof ResourceResolver)) {
+                throw fail(RESOLVER, "Wrong type");
+            }
+
             Object writerObject = slingBindings.get(OUT);
             if (writerObject != null && !(writerObject instanceof PrintWriter)) {
                 throw fail(OUT, "Wrong type");
@@ -657,6 +690,11 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                         "Not the same as resource of the SlingScriptHelper request");
                 }
 
+                if (resolverObject != null && sling.getRequest().getResourceResolver() != resolverObject) {
+                    throw fail(RESOLVER,
+                        "Not the same as the resource resolver of the SlingScriptHelper request's resolver");
+                }
+
                 if (writerObject != null
                     && sling.getResponse().getWriter() != writerObject) {
                     throw fail(OUT,
@@ -669,6 +707,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             bindings.put(READER, sling.getRequest().getReader());
             bindings.put(RESPONSE, sling.getResponse());
             bindings.put(RESOURCE, sling.getRequest().getResource());
+            bindings.put(RESOLVER, sling.getRequest().getResourceResolver());
             bindings.put(OUT, sling.getResponse().getWriter());
         }
 

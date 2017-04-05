@@ -19,6 +19,7 @@ package org.apache.sling.models.impl.injectors;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletRequest;
 
 import org.apache.felix.scr.annotations.Component;
@@ -39,13 +40,13 @@ import org.osgi.framework.Constants;
 public class RequestAttributeInjector implements Injector, StaticInjectAnnotationProcessorFactory {
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return "request-attributes";
     }
 
     @Override
-    public Object getValue(Object adaptable, String name, Type declaredType, AnnotatedElement element,
-            DisposalCallbackRegistry callbackRegistry) {
+    public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type declaredType, @Nonnull AnnotatedElement element,
+            @Nonnull DisposalCallbackRegistry callbackRegistry) {
         if (!(adaptable instanceof ServletRequest)) {
             return null;
         } else {
@@ -73,7 +74,7 @@ public class RequestAttributeInjector implements Injector, StaticInjectAnnotatio
 
         @Override
         public InjectionStrategy getInjectionStrategy() {
-            return annotation.injectonStrategy();
+            return annotation.injectionStrategy();
         }
         
         @Override

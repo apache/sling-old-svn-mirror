@@ -16,10 +16,13 @@
  */
 package org.apache.sling.commons.compiler;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * The <code>JavaCompiler</code> provides platform independant Java
  * compilation support.
  */
+@ProviderType
 public interface JavaCompiler {
 
     /**

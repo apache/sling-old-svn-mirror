@@ -26,9 +26,6 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
@@ -47,27 +44,6 @@ import org.apache.jackrabbit.api.security.user.UserManager;
  * only registered as a security provider service once such a JCR Repository is
  * available.
  */
-@Component(ds=false, metatype=true,
-           label="Apache Sling Web Console Security Provider",
-           description="Configuration for the security provider used to verfiy user " +
-                       "credentials and grant access to the Apache Felix Web Console " +
-                       "based on registered JCR Repository users.")
-@Properties({
-    @Property(name = "users", value=AbstractWebConsoleSecurityProvider.PROP_GROUPS_DEFAULT_USER, cardinality=20,
-              label="User Names",
-              description="Names of users granted full access to the Apache Felix " +
-                          "Web Console. By default this lists the \"admin\" user. A maximum of 20 users" +
-                          " may be configured. Administrators are encouraged to create a group whose" +
-                          " members are to be granted access to Web Console instead of allowing access" +
-                          " to individual users."),
-    @Property(name = "groups", cardinality=20,
-             label="Group Names",
-             description="Names of groups whose members are granted full access to the Apache Felix " +
-                         "Web Console. The default lists no groups. Administrators are encouraged to " +
-                         "create a group whose members are to be granted access to the Web Console." +
-                         " A maximum of 20 groups may be configured. Using groups to control" +
-                         " access requires a Jackrabbit based repository.")
-})
 public class SlingWebConsoleSecurityProvider extends AbstractWebConsoleSecurityProvider {
 
     private Repository repository;
@@ -105,6 +81,7 @@ public class SlingWebConsoleSecurityProvider extends AbstractWebConsoleSecurityP
      * @throws NullPointerException if <code>userName</code> is
      *             <code>null</code>.
      */
+    @Override
     public Object authenticate(String userName, String password) {
         final Credentials creds = new SimpleCredentials(userName,
             (password == null) ? new char[0] : password.toCharArray());
@@ -123,7 +100,6 @@ public class SlingWebConsoleSecurityProvider extends AbstractWebConsoleSecurityP
                     }
 
                     // check groups
-                    @SuppressWarnings("unchecked")
                     Iterator<Group> gi = a.memberOf();
                     while (gi.hasNext()) {
                         if (groups.contains(gi.next().getID())) {
@@ -167,6 +143,7 @@ public class SlingWebConsoleSecurityProvider extends AbstractWebConsoleSecurityP
      * All users authenticated with the repository and being a member of the
      * authorized groups are granted access for all roles in the Web Console.
      */
+    @Override
     public boolean authorize(Object user, String role) {
         logger.debug("authorize: Grant user {} access for role {}", user, role);
         return true;

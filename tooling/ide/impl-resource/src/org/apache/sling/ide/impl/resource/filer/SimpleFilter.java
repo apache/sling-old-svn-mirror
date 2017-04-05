@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.impl.resource.filer;
 
-import java.io.File;
 import java.util.List;
 
 import org.apache.sling.ide.filter.Filter;
@@ -31,26 +30,21 @@ public class SimpleFilter implements Filter {
     }
 
     @Override
-    public FilterResult filter(File contentSyncRoot, String relativeFilePath) {
+    public FilterResult filter(String relativeFilePath) {
         if (relativeFilePath.isEmpty() || relativeFilePath.charAt(0) != '/') {
             relativeFilePath = '/' + relativeFilePath;
         }
-        System.out.println("SimpleFilter.filter(" + relativeFilePath + ")");
 
         if (includedPathPrefixes.isEmpty()) {
-            System.out.println(" -- no path prefixes -> " + FilterResult.ALLOW);
             return FilterResult.ALLOW;
         }
 
         for (String includePath : includedPathPrefixes) {
-            System.out.println(" -- checking with " + includePath);
             if (relativeFilePath.startsWith(includePath)) {
-                System.out.println(" --- found match -> " + FilterResult.ALLOW);
                 return FilterResult.ALLOW;
             }
         }
 
-        System.out.println(" -- no match " + FilterResult.DENY);
         return FilterResult.DENY;
     }
 }

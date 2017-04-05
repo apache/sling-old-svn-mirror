@@ -19,20 +19,19 @@
 package org.apache.sling.distribution.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 
 /**
- * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a FileVault based
- * {@link org.apache.sling.distribution.packaging.DistributionPackage} locally.
+ * {@link org.apache.sling.distribution.packaging.DistributionPackageExporter} implementation which creates a
+ * {@link DistributionPackage} locally.
  */
 public class LocalDistributionPackageExporter implements DistributionPackageExporter {
 
@@ -42,23 +41,17 @@ public class LocalDistributionPackageExporter implements DistributionPackageExpo
         this.packageBuilder = packageBuilder;
     }
 
-    @Nonnull
-    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
-        List<DistributionPackage> result = new ArrayList<DistributionPackage>();
+    public void exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest, @Nonnull DistributionPackageProcessor packageProcessor) throws DistributionException {
+        DistributionPackage createdPackage = packageBuilder.createPackage(resourceResolver, distributionRequest);
 
-        DistributionPackage createdPackage;
         try {
-            createdPackage = packageBuilder.createPackage(resourceResolver, distributionRequest);
-        } catch (DistributionPackageBuildingException e) {
-            throw new DistributionPackageExportException(e);
+            packageProcessor.process(createdPackage);
+        } finally {
+            DistributionPackageUtils.closeSafely(createdPackage);
         }
-        if (createdPackage != null) {
-            result.add(createdPackage);
-        }
-        return result;
     }
 
-    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) {
+    public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) throws DistributionException {
         return packageBuilder.getPackage(resourceResolver, distributionPackageId);
     }
 }

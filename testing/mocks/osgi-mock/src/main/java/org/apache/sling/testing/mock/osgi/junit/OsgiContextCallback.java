@@ -18,19 +18,16 @@
  */
 package org.apache.sling.testing.mock.osgi.junit;
 
-import java.io.IOException;
+import org.apache.sling.testing.mock.osgi.context.ContextCallback;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Callback-interface for application-specific setup and teardown operations to
+ * Callback interface for application-specific setup and teardown operations to
  * customize the {@link OsgiContext} JUnit rule.
  */
-public interface OsgiContextCallback {
+@ConsumerType
+public interface OsgiContextCallback extends ContextCallback<OsgiContext> {
 
-    /**
-     * Execute callback action
-     * @param context OSGi context
-     * @throws IOException I/O exception
-     */
-    void execute(OsgiContext context) throws IOException;
-
+    // specialized version of ContextCallback
+    
 }

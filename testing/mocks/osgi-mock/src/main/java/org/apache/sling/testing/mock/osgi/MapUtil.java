@@ -18,73 +18,102 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.OsgiMetadata;
-
 /**
  * Map util methods.
  */
-final class MapUtil {
+public final class MapUtil {
+    
+    private MapUtil() {
+        // static methods only
+    }
 
-    public static Dictionary<String, Object> toDictionary(Map<String, Object> map) {
+    /**
+     * Convert map to dictionary.
+     * @param <T> Key
+     * @param <U> Value
+     * @param map Map
+     * @return Dictionary
+     */
+    public static <T, U> Dictionary<T, U> toDictionary(Map<T, U> map) {
         if (map == null) {
             return null;
         }
-        return new Hashtable<String, Object>(map);
+        Hashtable<T, U> hashtable = new Hashtable<>();
+        for (Map.Entry<T, U> entry : map.entrySet()) {
+            if (entry.getKey() != null && entry.getValue() != null) {
+                hashtable.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return hashtable;
     }
 
-    public static Map<String, Object> toMap(Dictionary<String, Object> dictionary) {
+    /**
+     * Convert Dictionary to map
+     * @param <T> Key
+     * @param <U> Value
+     * @param dictionary Dictionary
+     * @return Map
+     */
+    public static <T, U> Map<T, U> toMap(Dictionary<T, U> dictionary) {
         if (dictionary == null) {
             return null;
         }
-        Map<String,Object> map = new HashMap<String, Object>();
-        Enumeration<String> keys = dictionary.keys();
+        Map<T, U> map = new HashMap<T, U>();
+        Enumeration<T> keys = dictionary.keys();
         while (keys.hasMoreElements()) {
-            String key = keys.nextElement();
+            T key = keys.nextElement();
             map.put(key, dictionary.get(key));
         }
         return map;
     }
 
-    public static Dictionary<String, Object> propertiesMergeWithOsgiMetadata(Object target, Dictionary<String, Object> properties) {
-        Dictionary<String, Object> mergedProperties = new Hashtable<String, Object>();
-        
-        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(target.getClass());
-        if (metadata != null && metadata.getProperties() != null) {
-            for (Map.Entry<String, Object> entry : metadata.getProperties().entrySet()) {
-                mergedProperties.put(entry.getKey(), entry.getValue());
-            }
-        }
-        
-        if (properties != null) {
-            Enumeration<String> keys = properties.keys();
-            while (keys.hasMoreElements()) {
-                String key = keys.nextElement();
-                mergedProperties.put(key, properties.get(key));
-            }
-        }
-        
-        return mergedProperties;
+    /**
+     * Convert key/value pairs to dictionary
+     * @param args Key/value pairs
+     * @return Dictionary
+     */
+    public static Dictionary<String, Object> toDictionary(Object... args) {
+        return toDictionary(toMap(args));
     }
     
-    public static Map<String, Object> propertiesMergeWithOsgiMetadata(Object target, Map<String, Object> properties) {
-        Map<String, Object> mergedProperties = new HashMap<String, Object>();
-        
-        OsgiMetadata metadata = OsgiMetadataUtil.getMetadata(target.getClass());
-        if (metadata != null && metadata.getProperties() != null) {
-            mergedProperties.putAll(metadata.getProperties());
+    /**
+     * Convert key/value pairs to map
+     * @param args Key/value pairs
+     * @return Map
+     */
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> toMap(Object... args) {
+        if (args == null || args.length == 0) {
+            return Collections.emptyMap();
         }
-        
-        if (properties != null) {
-            mergedProperties.putAll(properties);
+        if (args.length == 1) {
+            if (args[0] instanceof Map) {
+                return (Map)args[0];
+            }
+            else if (args[0] instanceof Dictionary) {
+                return toMap((Dictionary)args[0]);
+            }
         }
-        
-        return mergedProperties;
+        if (args.length % 2 != 0) {
+            throw new IllegalArgumentException("args must be an even number of name/values:" + Arrays.asList(args));
+        }
+        final Map<String, Object> result = new HashMap<>();
+        for (int i=0 ; i < args.length; i+=2) {
+            Object key = args[i];
+            Object value = args[i+1];
+            if (key != null && value != null) {
+                result.put(key.toString(), value);
+            }
+        }
+        return result;
     }
     
 }

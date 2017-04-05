@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -36,6 +37,7 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.Part;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
@@ -82,6 +84,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
 
     //---------- Adaptable interface
 
+    @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         return getRequestData().adaptTo(this, type);
     }
@@ -92,15 +95,18 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
         return this.getRequestData().getParameterSupport();
     }
 
+    @Override
     public Resource getResource() {
         final ContentData cd = getRequestData().getContentData();
         return (cd == null) ? null : cd.getResource();
     }
 
+    @Override
     public ResourceResolver getResourceResolver() {
         return getRequestData().getResourceResolver();
     }
 
+    @Override
     public RequestProgressTracker getRequestProgressTracker() {
         return getRequestData().getRequestProgressTracker();
     }
@@ -108,6 +114,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * Returns <code>null</code> if <code>resource</code> is <code>null</code>.
      */
+    @Override
     public RequestDispatcher getRequestDispatcher(Resource resource) {
         return getRequestDispatcher(resource, null);
     }
@@ -115,6 +122,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * Returns <code>null</code> if <code>resource</code> is <code>null</code>.
      */
+    @Override
     public RequestDispatcher getRequestDispatcher(Resource resource,
             RequestDispatcherOptions options) {
         return (resource != null) ? new SlingRequestDispatcher(resource, options) : null;
@@ -123,6 +131,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * Returns <code>null</code> if <code>path</code> is <code>null</code>.
      */
+    @Override
     public RequestDispatcher getRequestDispatcher(String path) {
         return getRequestDispatcher(path, null);
     }
@@ -130,6 +139,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * Returns <code>null</code> if <code>path</code> is <code>null</code>.
      */
+    @Override
     public RequestDispatcher getRequestDispatcher(String path,
             RequestDispatcherOptions options) {
         return (path != null) ? new SlingRequestDispatcher(path, options) : null;
@@ -138,6 +148,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see javax.servlet.ServletRequestWrapper#getParameter(java.lang.String)
      */
+    @Override
     public String getParameter(String name) {
         return this.getParameterSupport().getParameter(name);
     }
@@ -145,6 +156,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see javax.servlet.ServletRequestWrapper#getParameterMap()
      */
+    @Override
     public Map<String, String[]> getParameterMap() {
         return this.getParameterSupport().getParameterMap();
     }
@@ -152,6 +164,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see javax.servlet.ServletRequestWrapper#getParameterNames()
      */
+    @Override
     public Enumeration<String> getParameterNames() {
         return this.getParameterSupport().getParameterNames();
     }
@@ -159,6 +172,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see javax.servlet.ServletRequestWrapper#getParameterValues(java.lang.String)
      */
+    @Override
     public String[] getParameterValues(String name) {
         return this.getParameterSupport().getParameterValues(name);
     }
@@ -166,6 +180,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getRequestParameter(java.lang.String)
      */
+    @Override
     public RequestParameter getRequestParameter(String name) {
         return this.getParameterSupport().getRequestParameter(name);
     }
@@ -173,6 +188,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getRequestParameters(java.lang.String)
      */
+    @Override
     public RequestParameter[] getRequestParameters(String name) {
         return this.getParameterSupport().getRequestParameters(name);
     }
@@ -180,6 +196,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getRequestParameterMap()
      */
+    @Override
     public RequestParameterMap getRequestParameterMap() {
         return this.getParameterSupport().getRequestParameterMap();
     }
@@ -187,6 +204,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getRequestParameterList()
      */
+    @Override
     public List<RequestParameter> getRequestParameterList() {
         return this.getParameterSupport().getRequestParameterList();
     }
@@ -194,6 +212,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getCookie(java.lang.String)
      */
+    @Override
     public Cookie getCookie(String name) {
         Cookie[] cookies = getCookies();
 
@@ -211,6 +230,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getRequestPathInfo()
      */
+    @Override
     public RequestPathInfo getRequestPathInfo() {
         final ContentData cd = getRequestData().getContentData();
         return (cd == null) ? null : cd.getRequestPathInfo();
@@ -219,6 +239,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getResourceBundle(java.util.Locale)
      */
+    @Override
     public ResourceBundle getResourceBundle(Locale locale) {
         return getResourceBundle(null, locale);
     }
@@ -226,6 +247,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getResourceBundle(String, Locale)
      */
+    @Override
     public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         if (locale == null) {
             locale = getLocale();
@@ -237,6 +259,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getResponseContentType()
      */
+    @Override
     public String getResponseContentType() {
         if(responseContentType == null) {
             final String ext = getRequestPathInfo().getExtension();
@@ -248,6 +271,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getResponseContentTypes()
      */
+    @Override
     public Enumeration<String> getResponseContentTypes() {
         List<String> result = new ArrayList<String>();
 
@@ -263,6 +287,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see javax.servlet.ServletRequestWrapper#getInputStream()
      */
+    @Override
     public ServletInputStream getInputStream() throws IOException {
         return this.getRequestData().getInputStream();
     }
@@ -270,6 +295,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see javax.servlet.ServletRequestWrapper#getReader()
      */
+    @Override
     public BufferedReader getReader() throws UnsupportedEncodingException,
             IOException {
         return this.getRequestData().getReader();
@@ -319,6 +345,15 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
         return pathInfo;
     }
 
+    public Part getPart(String name) {
+        return (Part) this.getParameterSupport().getPart(name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<Part> getParts() {
+        return (Collection<Part>) this.getParameterSupport().getParts();
+    }
+
     /**
      * A <code>UserPrincipal</code> ...
      */
@@ -339,10 +374,12 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
             this.name = name;
         }
 
+        @Override
         public String toString() {
             return ("UserPrincipal: " + name);
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
@@ -354,6 +391,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
             return false;
         }
 
+        @Override
         public int hashCode() {
             return name.hashCode();
         }
@@ -362,6 +400,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
         /**
          * {@inheritDoc}
          */
+        @Override
         public String getName() {
             return name;
         }

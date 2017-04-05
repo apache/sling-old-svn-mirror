@@ -18,7 +18,7 @@
  */
 package org.apache.sling.featureflags;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A feature is defined by its name. Features are registered as OSGi services.

@@ -1,0 +1,45 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+    "jcr:mixinTypes" : ["mix:language"],
+    "jcr:language" : "de",
+    "hello" : {
+        "jcr:primaryType" : "sling:MessageEntry",
+        "sling:key" : "hello",
+        "sling:message" : "Hallo"
+    },
+    "hello_some_hint" : {
+        "jcr:primaryType" : "sling:MessageEntry",
+        "sling:key" : "hello ((some-hint))",
+        "sling:message" : "Hallo mit einem Hauch"
+    },
+    "world" : {
+        "jcr:primaryType" : "sling:MessageEntry",
+        "sling:key" : "world",
+        "sling:message" : "Welt"
+    },
+    "bun" : {
+        "jcr:primaryType" : "sling:MessageEntry",
+        "sling:key" : "bun",
+        "sling:message" : "Brötchen"
+    },
+    "bank"          : {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key"      : "the bank",
+        "sling:message"  : "das Ufer"
+    },
+    "dayofweek"         : {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key"      : "'Day of week': EEEE",
+        "sling:message"  : "'Wochentag': EEEE"
+    },
+    "total"              : {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key"      : "Total: {0}",
+        "sling:message"  : "Gesamtbetrag: {0}"
+    },
+    "number"        : {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key"      : "##",
+        "sling:message"  : "##.###"
+    }
+}

@@ -4,6 +4,8 @@
 # usage:
 #  sh check_release_matches_tag.sh 004 /tmp/sling-staging
 #
+# Note that differences in line endings are not ignored by default.
+# doing "EXPORT DIFFOPT=-b" before calling this ignores them.
 BASE=$2/$1/org/apache/sling
 TAGBASE=http://svn.apache.org/repos/asf/sling/tags/
 
@@ -25,7 +27,7 @@ function check() {
        ZIPDIR=$PWD/$(ls)
        svn export $TAG svnexport > /dev/null
        cd svnexport > /dev/null
-       diff -r . $ZIPDIR
+       diff $DIFFOPT -r . $ZIPDIR
        cd $CUR
 
 }

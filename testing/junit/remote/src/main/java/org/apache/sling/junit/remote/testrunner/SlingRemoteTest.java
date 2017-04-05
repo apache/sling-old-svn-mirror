@@ -16,6 +16,8 @@
  */
 package org.apache.sling.junit.remote.testrunner;
 
+import java.io.IOException;
+
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.runner.Description;
@@ -25,14 +27,21 @@ class SlingRemoteTest {
     private final Class<?> testClass;
     private final String description;
     private final String failure;
+    private final String trace;
     
     public static final String DESCRIPTION = "description";
     public static final String FAILURE = "failure";
+    public static final String TRACE = "trace";
     
     SlingRemoteTest(Class<?> testClass, JSONObject json) throws JSONException {
         this.testClass = testClass;
         description = json.getString(DESCRIPTION);
         failure = json.has(FAILURE) ? json.getString(FAILURE) : null;
+        if (failure != null) {
+            trace = json.has(TRACE) ? json.getString(TRACE) : null;
+        } else {
+            trace = null;
+        }
     }
     
     Description describe() {
@@ -41,7 +50,14 @@ class SlingRemoteTest {
     
     void run() {
         if(failure != null && failure.trim().length() > 0) {
-            throw new AssertionError(failure);
+            try {
+                throw new RemoteExecutionException(failure, trace);
+            } catch (NumberFormatException e) {
+                // error reading stack
+            } catch (IOException e) {
+                // error reading stack
+            }
+            // TODO: distinguish between assumption failures and regular exceptions
         }
     }
 }

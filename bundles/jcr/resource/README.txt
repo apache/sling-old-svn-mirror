@@ -6,7 +6,7 @@ Getting Started
 ===============
 
 This component uses a Maven 3 (http://maven.apache.org/) build
-environment. It requires a Java 5 JDK (or higher) and Maven (http://maven.apache.org/)
+environment. It requires a Java 6 JDK (or higher) and Maven (http://maven.apache.org/)
 3.0.3 or later. We recommend to use the latest Maven version.
 
 If you have Maven 3 installed, you can compile and

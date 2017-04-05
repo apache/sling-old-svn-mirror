@@ -27,8 +27,8 @@ import javax.jcr.version.VersionManager;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -37,39 +37,44 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * The <code>RestoreOperation</code> class implements the
  * {@link org.apache.sling.servlets.post.SlingPostConstants#OPERATION_RESTORE restore}
  * operation for the Sling default POST servlet.
+ * The restore operation depends on the resources being backed up by a JCR node.
  */
 public class RestoreOperation extends AbstractPostOperation {
 
     @Override
     protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes)
-            throws RepositoryException {
-        final String version = request.getParameter(SlingPostConstants.RP_VERSION);
-        if (version == null || version.length() == 0) {
-            throw new IllegalArgumentException("Unable to process restore. Missing version");
-        }
-        final String removeString = request.getParameter(SlingPostConstants.RP_REMOVE_EXISTING);
-        final boolean removeExisting = Boolean.parseBoolean(removeString);
-
-        Iterator<Resource> res = getApplyToResources(request);
-        if (res == null) {
-            Resource resource = request.getResource();
-            Node node = resource.adaptTo(Node.class);
-            if (node == null) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND,
-                    "Missing source " + resource + " for restore");
-                return;
+            throws PersistenceException {
+        try {
+            final String version = request.getParameter(SlingPostConstants.RP_VERSION);
+            if (version == null || version.length() == 0) {
+                throw new IllegalArgumentException("Unable to process restore. Missing version");
             }
-            restore(node, version, removeExisting);
-            changes.add(Modification.onRestore(resource.getPath(), version));
-        } else {
-            while (res.hasNext()) {
-                Resource resource = res.next();
+            final String removeString = request.getParameter(SlingPostConstants.RP_REMOVE_EXISTING);
+            final boolean removeExisting = Boolean.parseBoolean(removeString);
+
+            Iterator<Resource> res = getApplyToResources(request);
+            if (res == null) {
+                Resource resource = request.getResource();
                 Node node = resource.adaptTo(Node.class);
-                if (node != null) {
-                    restore(node, version, removeExisting);
-                    changes.add(Modification.onRestore(resource.getPath(), version));
+                if (node == null) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND,
+                        "Missing source " + resource + " for restore");
+                    return;
+                }
+                restore(node, version, removeExisting);
+                changes.add(Modification.onRestore(resource.getPath(), version));
+            } else {
+                while (res.hasNext()) {
+                    Resource resource = res.next();
+                    Node node = resource.adaptTo(Node.class);
+                    if (node != null) {
+                        restore(node, version, removeExisting);
+                        changes.add(Modification.onRestore(resource.getPath(), version));
+                    }
                 }
             }
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
         }
     }
 

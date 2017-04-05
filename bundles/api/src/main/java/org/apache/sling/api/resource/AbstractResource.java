@@ -56,16 +56,10 @@ public abstract class AbstractResource
     /**
      * Returns the parent resource of this resource.
      * <p>
-     * This method is implemented by getting the parent resource path first
-     * calling the {@link ResourceUtil#getParent(String)} method and then to
-     * retrieve that resource from the resource resolver.
+     * This method is implemented calling the {@link ResourceResolver#getParent(Resource)} method.
      */
     public Resource getParent() {
-        final String parentPath = ResourceUtil.getParent(getPath());
-        if (parentPath == null) {
-            return null;
-        }
-        return getResourceResolver().getResource(parentPath);
+        return getResourceResolver().getParent(this);
     }
 
     /**

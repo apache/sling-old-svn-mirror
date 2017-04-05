@@ -20,9 +20,7 @@ package org.apache.sling.jcr.jackrabbit.accessmanager;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.JsonObject;
 
 /**
  * The <code>GetAcl</code> service api.
@@ -41,8 +39,8 @@ public interface GetAcl {
      * @return the ACL as a JSON object 
 	 * @throws RepositoryException
 	 */
-	public JSONObject getAcl(Session jcrSession,
+	JsonObject getAcl(Session jcrSession,
 							String resourcePath
-				) throws RepositoryException, JSONException;
+				) throws RepositoryException;
 	
 }

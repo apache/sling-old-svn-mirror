@@ -60,15 +60,14 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
     @SuppressWarnings("unchecked")
     @Override
     public Object addingService(final ServiceReference reference) {
-        final Appender<ILoggingEvent> a = (Appender<ILoggingEvent>) super.addingService(reference);
-        a.setContext(loggerContext);
-        a.start();
+        final Appender<ILoggingEvent> appender = (Appender<ILoggingEvent>) super.addingService(reference);
+        appender.setContext(loggerContext);
 
-        final AppenderInfo ai = new AppenderInfo(reference, a);
+        final AppenderInfo ai = new AppenderInfo(reference, appender);
         appenders.put(reference, ai);
         attachAppender(ai);
 
-        return ai;
+        return appender;
     }
 
     @SuppressWarnings("unchecked")
@@ -84,11 +83,6 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
     public void removedService(final ServiceReference reference, final Object service) {
         final AppenderInfo ai = appenders.remove(reference);
         this.detachAppender(ai);
-        if ( ai != null ) {
-            ai.appender.stop();
-            // context can't be unset
-        }
-
         super.removedService(reference, service);
     }
 
@@ -103,22 +97,27 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
 
                 logger.detachAppender(ai.appender);
             }
+            ai.appender.stop();
         }
     }
 
     private void attachAppender(final AppenderInfo ai) {
         if (ai != null) {
+
+            ai.appender.start();
+
             for (final String name : ai.getLoggers()) {
                 final Logger logger = loggerContext.getLogger(name);
-
-                logger.addAppender(ai.appender);
+                if (!logger.isAttached(ai.appender)) {
+                    logger.addAppender(ai.appender);
+                }
             }
         }
     }
 
     @Override
     public void onResetStart(final LoggerContext context) {
-        attachAppenders();
+
     }
 
     @Override

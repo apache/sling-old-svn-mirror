@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  */
 public class IgnoredResources {
 
-    private List<Pattern> patterns = new ArrayList<Pattern>();
+    private List<Pattern> patterns = new ArrayList<>();
 
     public void registerRegExpIgnoreRule(String root, String pattern) {
 

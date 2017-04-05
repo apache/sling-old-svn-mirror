@@ -21,7 +21,7 @@ import org.junit.Test;
 
 /** Run the server-side ResourceResolverTest */
 public class ResourceResolverProxyTest {
-    @Test
+    @Test(timeout = 120 * 1000)
     public void runWriteableResourcesTest() throws Exception {
         new ServerSideTestClient().assertTestsPass("org.apache.sling.launchpad.testservices.serversidetests.ResourceResolverTest", -50);
     }

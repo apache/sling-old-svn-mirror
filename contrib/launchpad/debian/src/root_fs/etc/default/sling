@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+set -a
+
+# Identification
+SLING_USER=sling
+SLING_GROUP=sling
+
+# sling defaults
+# Note, init script uses :
+# $JAVA_ARGS $JAVA_DEBUG_ARGS -jar $SLING_JAR $SLING_ARGS
+
+#
+# All configuration items are setup in /etc/sling/*
+# The files are processed aggregated using /etc/sling/Makefile to generate
+# the configuration specific start modes.
+# The final mode of execution is determined by the RUNMODE setting below.
+#
+
+##########################################################################
+#
+#                       SET RUNMODE HERE
+#
+# This must be set before sling will run as one needs to make the choice
+# of storage configurations before running for the first time
+#
+# Runtime startup mode options:
+#
+# - jackrabbit:    configures and starts up an Apache Jackrabbit 2.x
+#                  JCR repository implementation
+# - oak:           configures and starts up an Apache Jackrabbit Oak
+#                  repository implementation with a SegmentNodeStore
+#                  (TarMK) implementation
+# - oak,oak_mongo: configures and starts up an Apache Jackrabbit Oak
+#                  repository implementation with a DocumentNodeStore
+#                  implementation connected to a MongoDB database. The
+#                  default configuration points to a MongoDB instance
+#                  at mongodb://localhost:27017 and a database named
+#                  sling.
+#
+RUNMODE="oak"
+#
+##########################################################################
+
+#
+# Base locations
+#
+SLING_EXEC=/opt/sling
+SLING_DEFAULTS=/etc/default/sling
+SLING_DATA=/var/lib/sling
+SLING_LOG_DIR=/var/log/sling
+
+START_LOG_FILE=$SLING_LOG_DIR/startup.log
+SLING_SCRIPTS=${SLING_EXEC}/scripts
+
+# Bump RAM allowance
+JAVA_ARGS="-Xmx384M "
+
+# Uncomment for debugging:
+# JAVA_ARGS+=" -agentlib:jdwp=transport=dt_socket,address=30303,server=y,suspend=n"
+
+# Sling arguments, description on https://sling.apache.org/documentation/the-sling-engine/the-sling-launchpad.html
+
+SLING_ARGS=" -p 8090"
+SLING_ARGS+=" -c ${SLING_DATA}"
+SLING_ARGS+=" -f /var/log/sling/sling.log"
+SLING_ARGS+=" -Dsling.run.modes=$RUNMODE"
+SLING_ARGS+=" -Dsling.fileinstall.dir=$SLING_DATA/install"
+
+# Allow gogo shell to run in noninteractive env:
+# From: http://apache-felix.18485.x6.nabble.com/Gogo-shell-on-standard-input-output-streams-td4845969.html#a4845970
+JAVA_ARGS+=" -Dgosh.args=--nointeractive"
+
+set +a

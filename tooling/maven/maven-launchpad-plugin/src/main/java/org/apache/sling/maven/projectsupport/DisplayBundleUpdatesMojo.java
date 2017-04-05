@@ -35,6 +35,9 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.path.PathTranslator;
 import org.apache.maven.settings.Settings;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
@@ -53,9 +56,9 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
  * display-dependency-updates goal from the Versions plugin.
  *
  * @since 2.0.8
- * @goal display-bundle-updates
  *
  */
+@Mojo(name = "display-bundle-updates")
 public class DisplayBundleUpdatesMojo extends AbstractMojo {
 
     /**
@@ -63,91 +66,61 @@ public class DisplayBundleUpdatesMojo extends AbstractMojo {
      */
     private static final int INFO_PAD_SIZE = 72;
 
-    /**
-     * @component
-     */
+    @Component
     private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
     /**
      * The artifact metadata source to use.
-     *
-     * @component
-     * @required
-     * @readonly
      */
+    @Component
     private ArtifactMetadataSource artifactMetadataSource;
 
-    /**
-     * @parameter expression="${project.remoteArtifactRepositories}"
-     * @readonly
-     */
+    @Parameter( defaultValue = "${project.remoteArtifactRepositories}", readonly = true)
     private List<ArtifactRepository> remoteArtifactRepositories;
 
-    /**
-     * @parameter expression="${project.pluginArtifactRepositories}"
-     * @readonly
-     */
+    @Parameter( defaultValue = "${project.pluginArtifactRepositories}", readonly = true)
     private List<ArtifactRepository> remotePluginRepositories;
 
-    /**
-     * @parameter expression="${localRepository}"
-     * @readonly
-     */
+    @Parameter( defaultValue = "${localRepository}", readonly = true)
     private ArtifactRepository localRepository;
 
-    /**
-     * @component
-     */
+    @Component
     private WagonManager wagonManager;
 
-    /**
-     * @parameter expression="${settings}"
-     * @readonly
-     */
+    @Parameter(defaultValue = "${settings}", readonly = true)
     private Settings settings;
 
     /**
      * settings.xml's server id for the URL. This is used when wagon needs extra
      * authentication information.
-     *
-     * @parameter expression="${maven.version.rules.serverId}"
-     *            default-value="serverId";
      */
+    @Parameter(property = "maven.version.rules.serverId", defaultValue = "serverId")
     private String serverId;
 
     /**
      * The Wagon URI of a ruleSet file containing the rules that control how to
      * compare version numbers.
-     *
-     * @parameter expression="${maven.version.rules}"
      */
+    @Parameter(defaultValue = "maven.version.rules")
     private String rulesUri;
 
     /**
      * The Maven Session.
-     *
-     * @parameter expression="${session}"
-     * @required
-     * @readonly
      */
+    @Parameter(defaultValue = "${session}", required = true)
     private MavenSession session;
 
-    /**
-     * @component
-     */
+    @Component
     private PathTranslator pathTranslator;
 
-    /**
-     * @parameter default-value="${basedir}/src/main/bundles/list.xml"
-     */
+    @Parameter(defaultValue = "${basedir}/src/main/bundles/list.xml")
     private File bundleListFile;
 
     /**
      * Whether to allow snapshots when searching for the latest version of an
      * artifact.
-     *
-     * @parameter expression="${allowSnapshots}" default-value="false"
      */
+    @Parameter(property = "allowSnapshots", defaultValue = "false")
     private boolean allowSnapshots;
 
     /**

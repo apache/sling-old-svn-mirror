@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.transport;
 
 import javax.annotation.CheckForNull;
-import java.io.InputStream;
 import java.util.Map;
 
 import aQute.bnd.annotation.ConsumerType;

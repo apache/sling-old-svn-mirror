@@ -21,14 +21,15 @@ package org.apache.sling.distribution.packaging.impl.importer;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link RemoteDistributionPackageImporter}
@@ -39,12 +40,13 @@ public class RemoteDistributionPackageImporterTest {
     public void testDummyImport() throws Exception {
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         Map<String, String> endpoints = new HashMap<String, String>();
-        for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
-            RemoteDistributionPackageImporter remotedistributionPackageImporter = new RemoteDistributionPackageImporter(mock(DefaultDistributionLog.class),
-                    distributionTransportSecretProvider, endpoints, strategy);
-            ResourceResolver resourceResolver = mock(ResourceResolver.class);
-            DistributionPackage distributionPackage = mock(DistributionPackage.class);
-            remotedistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
-        }
+        RemoteDistributionPackageImporter remotedistributionPackageImporter = new RemoteDistributionPackageImporter(mock(DefaultDistributionLog.class),
+                distributionTransportSecretProvider, endpoints);
+        endpoints.put("default","http://endpoint");
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        DistributionPackage distributionPackage = mock(DistributionPackage.class);
+        DistributionPackageInfo info = new DistributionPackageInfo("/foo");
+        when(distributionPackage.getInfo()).thenReturn(info);
+        remotedistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
     }
 }

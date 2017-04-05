@@ -29,4 +29,6 @@ public interface ISlingLaunchpadConfiguration {
     String getPassword();
 
     boolean bundleInstallLocally();
+    
+    boolean resolveSourcesInDebugMode();
 }

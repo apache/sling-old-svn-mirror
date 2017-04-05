@@ -21,14 +21,14 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>14</version>
+        <version>18</version>
         <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>23-SNAPSHOT</version>
+    <version>31-SNAPSHOT</version>
 
     <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
@@ -37,7 +37,12 @@
     <url>http://sling.apache.org</url>
 
     <prerequisites>
-        <maven>3.0.4</maven>
+        <!-- This defines only the minimum version for plugins, but not for the build
+             See http://maven.apache.org/ref/3.3.9/maven-model/maven.html#class_prerequisites.
+             Therefore the enforcer plugin needs to verify the maven version. See configuration
+             of the plugin further below
+        -->
+        <maven>3.3.9</maven>
     </prerequisites>
 
 
@@ -54,13 +59,13 @@
         <!--
             Java API and class file compliance. This property supports
             one of three values:
-              - 5: Java 1.5 (default)
               - 6: Java 6
-              - 7: Java 7
+              - 7: Java 7 (default)
+              - 8: Java 8
             Using anything else causes the set-bundle-required-execution-environment
             to fail the build with an exception
         -->
-        <sling.java.version>5</sling.java.version>
+        <sling.java.version>7</sling.java.version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
@@ -77,7 +82,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
+                <version>2.10.4</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -93,12 +98,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>2.15</version>
+                <version>2.18.1</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-changes-plugin</artifactId>
-                <version>2.9</version>
+                <version>2.11</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -117,7 +122,7 @@
     <build>
         <plugins>
 
-            <!-- Require Java 5 or higher for building -->
+            <!-- Require Java 7 or higher for building (as bnd since version 3.0 is built with Java 7) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -132,10 +137,29 @@
                                 <requireJavaVersion>
                                     <message>
                                         Apache Sling must be compiled with Java
-                                        5 or higher
+                                        7 or higher
                                     </message>
-                                    <version>1.5.0</version>
+                                    <version>1.7.0</version>
                                 </requireJavaVersion>
+                                <requireMavenVersion>
+                                    <version>3.3.9</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>ban-maven-scr-plugin</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedPlugins>
+                                    <excludes>
+                                        <exclude>org.apache.felix:maven-scr-plugin</exclude>
+                                    </excludes>
+                                    <message>Felix SCR annotations and the maven-scr-plugin are no longer supported - please migrate to OSGi annotations or stick with Sling Parent 29.</message>
+                                </bannedPlugins>
                             </rules>
                         </configuration>
                     </execution>
@@ -163,24 +187,6 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>check-memory-task</id>
-                        <phase>process-resources</phase>
-                        <configuration>
-                            <target>
-                                <echo>
-**************** WARNING (SLING-443/SLING-1782) ******************************
-On most platforms, you'll get OutOfMemoryErrors when building unless you set
-on 32bit platforms: MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=256M", see SLING-443
-on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
-******************************************************************************
-                                </echo>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
                         <id>set-bundle-required-execution-environment</id>
                         <goals>
                             <goal>run</goal>
@@ -191,22 +197,26 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                             <target>
                                 <script language="javascript"> <![CDATA[
                                     var System = java.lang.System;
-                                    var bree = "J2SE-1.5";
+                                    var bree = "JavaSE-1.6";
+                                    var animalSnifferSignaturesVersion = "6";
                                     var slingJavaVersion = System.getProperty("sling.java.version");
                                     if (!slingJavaVersion) {
                                         slingJavaVersion = project.getProperty("sling.java.version");
                                     }
-                                    if (slingJavaVersion == "6") {
-                                        bree = "JavaSE-1.6";
-	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from sling.java.version=" + slingJavaVersion);
-                                    } else if (slingJavaVersion == "7") {
+                                    if (slingJavaVersion == "7") {
+										animalSnifferSignaturesVersion = "7";
                                         bree = "JavaSE-1.7";
 	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from sling.java.version=" + slingJavaVersion);
-                                    } else if (slingJavaVersion != "5") {
-                                        System.out.println("Unsupported sling.java.version=" + slingJavaVersion + "; must be 5, 6 or 7.");
-                                        throw "sling.java.version must be 5, 6 or 7";
+	                                } else if ( slingJavaVersion == "8") {
+                                        animalSnifferSignaturesVersion = "8";
+                                        bree = "JavaSE-1.8";
+	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from sling.java.version=" + slingJavaVersion);
+	                                } else if (slingJavaVersion != "6") {
+                                        System.out.println("Unsupported sling.java.version=" + slingJavaVersion + "; must be 6, 7 or 8.");
+                                        throw "sling.java.version must be 6, 7 or 8";
                                     }
                                     project.setProperty("sling.bree", bree);
+                                    project.setProperty("sling.animalSignatures.version", animalSnifferSignaturesVersion);
                                 ]]></script>
                             </target>
                         </configuration>
@@ -263,7 +273,6 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                     </execution>
                 </executions>
             </plugin>
-            <!-- Compile for Java 5 and higher -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -276,11 +285,55 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.release</groupId>
+                        <artifactId>maven-release-oddeven-policy</artifactId>
+                        <version>2.5.3</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
-                    <tagBase>
-                        https://svn.apache.org/repos/asf/sling/tags
-                    </tagBase>
+                    <projectVersionPolicyId>OddEvenVersionPolicy</projectVersionPolicyId>
+                    <tagBase>https://svn.apache.org/repos/asf/sling/tags</tagBase>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes combine.children="append">
+                        <!--  Used by maven-remote-resources-plugin -->
+                        <exclude>src/main/appended-resources/META-INF/*</exclude>
+                        <!--  Generated by maven-remote-resources-plugin -->
+                        <exclude>velocity.log</exclude>
+                        <!-- don't check anything in target -->
+                        <exclude>target/*</exclude>
+                        <!-- README files in markdown format -->
+                        <exclude>README.md</exclude>
+                        <!-- Ignore files generated bei IDE plugins e.g. maven-eclipse-plugin -->
+                        <exclude>maven-eclipse.xml</exclude>
+                        <exclude>.*</exclude>
+                        <exclude>.*/**</exclude>
+                        <!-- Exclude all JSON files -->
+                        <exclude>**/*.json</exclude>
+                        <!-- Generated for release source archives -->
+                        <exclude>DEPENDENCIES</exclude>
+                        <!-- .rej files from svn/patch -->
+                        <exclude>**/*.rej</exclude>
+                        <!-- Exclude Java crash log files -->
+                        <exclude>hs_err_*.log</exclude>
+                        <!-- Lucene index details (Oak 1.6) -->
+                        <exclude>**/repository/index/*/index-details.txt</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
 
@@ -289,12 +342,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>maven-sling-plugin</artifactId>
-                    <version>2.1.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.sling</groupId>
-                    <artifactId>maven-launchpad-plugin</artifactId>
-                    <version>2.3.0</version>
+                    <version>2.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.sling</groupId>
@@ -307,44 +355,33 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                     <version>2.0.4-incubator</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>maven-scr-plugin</artifactId>
-                    <version>1.20.0</version>
-                    <!-- As QDox is trying to inspect/load the classes
-                         we have to add a slf4j implementation to the
-                         class path of the plugin - we usually use
-                         a static field for the logger and during class
-                         loading this field requires an slf4j implementation!
-                     -->
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-simple</artifactId>
-                            <version>1.5.2</version>
-                        </dependency>
-                    </dependencies>
-                    <executions>
-                        <execution>
-                            <id>generate-scr-scrdescriptor</id>
-                            <goals>
-                                <goal>scr</goal>
-                            </goals>
-                            <configuration>
-                                <properties>
-                                    <service.vendor>The Apache Software Foundation</service.vendor>
-                                </properties>
-                            </configuration>
-                        </execution>
-                    </executions>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.0.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.0.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.8.2</version>
+                    <configuration>
+                        <retryFailedDeploymentCount>10</retryFailedDeploymentCount>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>2.5.3</version>
+                    <version>3.3.0</version>
                     <inherited>true</inherited>
                     <configuration>
                         <outputDirectory>${basedir}/target/classes</outputDirectory>
                         <obrRepository>NONE</obrRepository>
+                        <!-- Export SCR metadata to classpath to have them available in unit tests -->
+                        <exportScr>true</exportScr>
                         <instructions>
                             <Bundle-Category>sling</Bundle-Category>
                             <Bundle-DocURL>
@@ -353,8 +390,6 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-RequiredExecutionEnvironment>${sling.bree}</Bundle-RequiredExecutionEnvironment>
-                            <!-- Disable the new ScrPlugin for now -->
-                            <_plugin>org.apache.felix.bundleplugin.BlueprintPlugin,aQute.lib.spring.SpringXMLType</_plugin>
                         </instructions>
                     </configuration>
                     <executions>
@@ -364,27 +399,42 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                 <goal>baseline</goal>
                             </goals>
                         </execution>
+                        <!-- Configure extra execution of 'manifest' in process-classes phase to make sure SCR metadata is generated before unit test runs -->
+                        <execution>
+                            <id>scr-metadata</id>
+                            <goals>
+                                <goal>manifest</goal>
+                            </goals>
+                            <configuration>
+                                <supportIncrementalBuild>true</supportIncrementalBuild>
+                            </configuration>
+                        </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>biz.aQute.bnd</groupId>
+                    <artifactId>bnd-maven-plugin</artifactId>
+                    <version>3.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
-                    <version>2.8</version>
+                    <version>2.10</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>2.4</version>
+                    <version>2.6</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>maven-jetty-plugin</artifactId>
-                    <version>6.1.26</version>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>slingstart-maven-plugin</artifactId>
+                    <version>1.7.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.cargo</groupId>
                     <artifactId>cargo-maven2-plugin</artifactId>
-                    <version>1.4.7</version>
+                    <version>1.4.13</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -399,11 +449,11 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>animal-sniffer-maven-plugin</artifactId>
-                    <version>1.11</version>
+                    <version>1.15</version>
                     <configuration>
                         <signature>
                             <groupId>org.codehaus.mojo.signature</groupId>
-                            <artifactId>java1${sling.java.version}</artifactId>
+                            <artifactId>java1${sling.animalSignatures.version}</artifactId>
                             <version>1.0</version>
                         </signature>
                     </configuration>
@@ -411,7 +461,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-antrun-plugin</artifactId>
-                    <version>1.7</version>
+                    <version>1.8</version>
                     <dependencies>
                         <!-- declare dependencies here rather than where needed to
                              circumvent http://jira.codehaus.org/browse/MANTRUN-51
@@ -432,7 +482,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>1.8</version>
+                    <version>1.9.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -442,12 +492,22 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.7.0.201403182114</version>
+                    <version>0.7.5.201505241946</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.17</version>
+                    <version>2.18.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.18.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.servicemix.tooling</groupId>
+                    <artifactId>depends-maven-plugin</artifactId>
+                    <version>1.3.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -473,43 +533,6 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                 <id>install-bundle</id>
                                 <goals>
                                     <goal>install</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-	    <!--
-	    We should execute this profile manually to make sure that all files in our source code contain proper licenses.
-	    This is very important and should not be skipped in any scenario.  It is very importnt for us to follow ASF policy.
-	    Example:  mvn -Prat prepare-release install
-	    -->
-        <profile>
-            <id>rat</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.rat</groupId>
-                        <artifactId>apache-rat-plugin</artifactId>
-                        <version>0.10</version>
-                        <configuration>
-                            <excludes>
-                                <!--  Used by maven-remote-resources-plugin -->
-                                <exclude>src/main/appended-resources/META-INF/*</exclude>
-                                <!--  Generated by maven-remote-resources-plugin -->
-                                <exclude>velocity.log</exclude>
-                                <!-- don't check anything in target -->
-                                <exclude>target/*</exclude>
-                                <!-- README files in markdown format -->
-                                <exclude>README.md</exclude>
-                            </excludes>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>check</goal>
                                 </goals>
                             </execution>
                         </executions>
@@ -601,13 +624,68 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                 <goals>
                                     <goal>prepare-agent</goal>
                                 </goals>
+                                <configuration>
+                                    <destFile>${project.build.directory}/jacoco-unit.exec</destFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>prepare-agent-integration</id>
+                                <goals>
+                                    <goal>prepare-agent-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <destFile>${project.build.directory}/jacoco-it.exec</destFile>
+                                </configuration>
                             </execution>
                             <execution>
                                 <id>report</id>
-                                <phase>prepare-package</phase>
                                 <goals>
                                     <goal>report</goal>
                                 </goals>
+                                <configuration>
+                                    <dataFile>${project.build.directory}/jacoco-unit.exec</dataFile>
+                                    <outputDirectory> ${project.reporting.outputDirectory}/jacoco-unit</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>report-integration</id>
+                                <goals>
+                                    <goal>report-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <dataFile>${project.build.directory}/jacoco-it.exec</dataFile>
+                                    <outputDirectory> ${project.reporting.outputDirectory}/jacoco-it</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>merge-unit-and-it</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>merge</goal>
+                                </goals>
+                                <configuration>
+                                    <destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+                                    <fileSets>
+                                        <fileSet>
+                                            <directory>${project.build.directory}</directory>
+                                            <includes>
+                                                <include>jacoco-unit.exec</include>
+                                                <include>jacoco-it.exec</include>
+                                            </includes>
+                                        </fileSet>
+                                    </fileSets>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>report-merged</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+                                    <outputDirectory> ${project.reporting.outputDirectory}/jacoco-merged</outputDirectory>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -879,6 +957,67 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                                 <ignore />
                                             </action>
                                         </pluginExecution>
+                                        <pluginExecution>
+                                            <pluginExecutionFilter>
+                                                <groupId>
+                                                    org.apache.maven.plugins
+                                                </groupId>
+                                                <artifactId>
+                                                    maven-enforcer-plugin
+                                                </artifactId>
+                                                <versionRange>
+                                                    [1.3.1,)
+                                                </versionRange>
+                                                <goals>
+                                                    <goal>
+                                                        enforce
+                                                    </goal>
+                                                </goals>
+                                            </pluginExecutionFilter>
+                                            <action>
+                                                <ignore />
+                                            </action>
+                                        </pluginExecution>
+                                        <pluginExecution>
+                                            <pluginExecutionFilter>
+                                                <groupId>
+                                                    org.apache.maven.plugins
+                                                </groupId>
+                                                <artifactId>
+                                                    maven-remote-resources-plugin
+                                                </artifactId>
+                                                <versionRange>
+                                                    [1.5,)
+                                                </versionRange>
+                                                <goals>
+                                                    <goal>
+                                                        process
+                                                    </goal>
+                                                </goals>
+                                            </pluginExecutionFilter>
+                                            <action>
+                                                <ignore />
+                                            </action>
+                                        </pluginExecution>
+                                        <pluginExecution>
+                                            <pluginExecutionFilter>
+                                                <groupId>
+                                                    org.apache.avro
+                                                </groupId>
+                                                <artifactId>
+                                                    avro-maven-plugin
+                                                </artifactId>
+                                                <versionRange>
+                                                    [1.7.7,)
+                                                </versionRange>
+                                                <goals>
+                                                    <goal>schema</goal>
+                                                </goals>
+                                            </pluginExecutionFilter>
+                                            <action>
+                                                <ignore />
+                                            </action>
+                                        </pluginExecution>
                                     </pluginExecutions>
                                 </lifecycleMappingMetadata>
                             </configuration>
@@ -950,22 +1089,30 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
         <dependencies>
             <dependency>
                 <groupId>org.osgi</groupId>
-                <artifactId>org.osgi.core</artifactId>
-                <version>4.1.0</version>
+                <artifactId>osgi.core</artifactId>
+                <version>6.0.0</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.osgi</groupId>
-                <artifactId>org.osgi.compendium</artifactId>
-                <version>4.1.0</version>
+                <artifactId>osgi.cmpn</artifactId>
+                <version>6.0.0</version>
                 <scope>provided</scope>
             </dependency>
 
             <!-- Web Application API -->
             <dependency>
                 <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
-                <version>2.4</version>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>3.1.0</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- dependency injection annotations -->
+            <dependency>
+                <groupId>javax.inject</groupId>
+                <artifactId>javax.inject</artifactId>
+                <version>1</version>
                 <scope>provided</scope>
             </dependency>
 
@@ -973,7 +1120,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             <dependency>
                 <groupId>javax.jcr</groupId>
                 <artifactId>jcr</artifactId>
-                <version>1.0</version>
+                <version>2.0</version>
                 <scope>provided</scope>
             </dependency>
 
@@ -981,21 +1128,37 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.5.2</version>
+                <version>1.7.6</version>
                 <scope>provided</scope>
             </dependency>
 
-            <!-- OSGi support annotations -->
+            <!-- OSGi annotations: @Version, @ProviderType, @ConsumerType -->
+           <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>osgi.annotation</artifactId>
+                <version>6.0.1</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- OSGi annotations for DS and metatype -->
             <dependency>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.scr.annotations</artifactId>
-                <version>1.9.10</version>
+                <groupId>org.osgi</groupId>
+                <artifactId>org.osgi.service.component.annotations</artifactId>
+                <version>1.3.0</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>biz.aQute</groupId>
-                <artifactId>bndlib</artifactId>
-                <version>1.50.0</version>
+                <groupId>org.osgi</groupId>
+                <artifactId>org.osgi.service.metatype.annotations</artifactId>
+                <version>1.3.0</version>
+                <scope>provided</scope>
+            </dependency>
+
+
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>3.0.0</version>
                 <scope>provided</scope>
             </dependency>
 
@@ -1003,35 +1166,55 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.11</version>
+                <version>4.12</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.jmock</groupId>
                 <artifactId>jmock-junit4</artifactId>
-                <version>2.5.1</version>
+                <version>2.8.2</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
-                <version>1.5.2</version>
+                <version>1.7.6</version>
                 <scope>test</scope>
             </dependency>
 
+
+            <!-- DEPRECATED: Use official OSGi annotations -->
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.scr.annotations</artifactId>
+                <version>1.12.0</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- DEPRECATED : Use the osgi.annotation instead -->
+            <!-- this version must match the version being used by the maven-bundle-plugin -->
+            <dependency>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>biz.aQute.bndlib</artifactId>
+                <version>3.2.0</version>
+                <scope>provided</scope>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <!-- OSGi support annotations -->
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.annotation</artifactId>
         </dependency>
         <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bndlib</artifactId>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.metatype.annotations</artifactId>
         </dependency>
     </dependencies>
 

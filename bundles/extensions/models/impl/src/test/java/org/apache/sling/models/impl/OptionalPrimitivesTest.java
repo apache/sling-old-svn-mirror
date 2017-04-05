@@ -59,6 +59,7 @@ public class OptionalPrimitivesTest {
         factory.activate(componentCtx);
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(2, 2));
         factory.bindInjector(new ChildResourceInjector(), new ServicePropertiesMap(1, 1));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(org.apache.sling.models.testmodels.classes.OptionalPrimitivesModel.class, org.apache.sling.models.testmodels.interfaces.OptionalPrimitivesModel.class, org.apache.sling.models.testmodels.classes.constructorinjection.OptionalPrimitivesModel.class);
     }
 
     @Test

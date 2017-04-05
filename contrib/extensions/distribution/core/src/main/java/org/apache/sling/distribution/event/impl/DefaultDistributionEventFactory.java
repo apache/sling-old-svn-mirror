@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link DistributionEventFactory} OSGi service
  */
-@Component(immediate = true, label = "Event Factory for Distribution Events")
+@Component(immediate = true)
 @Service(value = DistributionEventFactory.class)
 public class DefaultDistributionEventFactory implements DistributionEventFactory {
 
@@ -50,13 +50,18 @@ public class DefaultDistributionEventFactory implements DistributionEventFactory
         log.debug("distribution event {} posted", distributionEventTopic);
     }
 
-    public void generatePackageEvent(@Nonnull String distributionEventTopic, DistributionComponentKind kind, @Nonnull String name, @Nonnull DistributionPackageInfo info) {
+    public void generatePackageEvent(@Nonnull String distributionEventTopic, @Nonnull DistributionComponentKind kind,
+                                     @Nonnull String name, @Nonnull DistributionPackageInfo info) {
         try {
             Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
             dictionary.put(DistributionEventProperties.DISTRIBUTION_COMPONENT_NAME, name);
             dictionary.put(DistributionEventProperties.DISTRIBUTION_COMPONENT_KIND, kind.name());
-            dictionary.put(DistributionEventProperties.DISTRIBUTION_TYPE, info.getRequestType());
-            dictionary.put(DistributionEventProperties.DISTRIBUTION_PATHS, info.getPaths());
+            if (info.getRequestType() != null) {
+                dictionary.put(DistributionEventProperties.DISTRIBUTION_TYPE, info.getRequestType());
+            }
+            if (info.getPaths() != null) {
+                dictionary.put(DistributionEventProperties.DISTRIBUTION_PATHS, info.getPaths());
+            }
             generateEvent(distributionEventTopic, dictionary);
 
         } catch (Throwable e) {

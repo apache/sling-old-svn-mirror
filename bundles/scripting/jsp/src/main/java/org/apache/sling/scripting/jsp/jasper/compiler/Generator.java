@@ -195,6 +195,7 @@ class Generator {
              * contains more than one page directive with an 'info' attribute,
              * their values match.
              */
+            @Override
             public void visit(Node.PageDirective n) throws JasperException {
 
                 if (getServletInfoGenerated) {
@@ -217,6 +218,7 @@ class Generator {
                 out.println();
             }
 
+            @Override
             public void visit(Node.Declaration n) throws JasperException {
                 n.setBeginJavaLine(out.getJavaLine());
                 out.printMultiLn(new String(n.getText()));
@@ -225,6 +227,7 @@ class Generator {
             }
 
             // Custom Tags may contain declarations from tag plugins.
+            @Override
             public void visit(Node.CustomTag n) throws JasperException {
                 if (n.useTagPlugin()) {
                     if (n.getAtSTag() != null) {
@@ -268,6 +271,7 @@ class Generator {
              * and adds it to the list of tag handler pool names unless it is
              * already contained in it.
              */
+            @Override
             public void visit(Node.CustomTag n) throws JasperException {
 
                 if (!n.implementsSimpleTag()) {
@@ -324,6 +328,7 @@ class Generator {
                 vars = new Vector();
             }
 
+            @Override
             public void visit(Node.CustomTag n) throws JasperException {
 
                 if (n.getCustomNestingLevel() > 0) {
@@ -853,6 +858,7 @@ class Generator {
                     this.separator = separator;
                 }
 
+                @Override
                 public void visit(Node.ParamAction n) throws JasperException {
 
                     out.print(" + ");
@@ -880,6 +886,7 @@ class Generator {
             }
         }
 
+        @Override
         public void visit(Node.Expression n) throws JasperException {
             n.setBeginJavaLine(out.getJavaLine());
             out.printin("out.print(");
@@ -888,6 +895,7 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
+        @Override
         public void visit(Node.Scriptlet n) throws JasperException {
             n.setBeginJavaLine(out.getJavaLine());
             out.printMultiLn(n.getText());
@@ -895,6 +903,7 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
+        @Override
         public void visit(Node.ELExpression n) throws JasperException {
             n.setBeginJavaLine(out.getJavaLine());
             if (!pageInfo.isELIgnored() && (n.getEL() != null)) {
@@ -909,6 +918,7 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
+        @Override
         public void visit(Node.IncludeAction n) throws JasperException {
 
             String flush = n.getTextAttribute("flush");
@@ -1000,6 +1010,7 @@ class Generator {
             return result;
         }
 
+        @Override
         public void visit(Node.ForwardAction n) throws JasperException {
             Node.JspAttribute page = n.getPage();
 
@@ -1044,6 +1055,7 @@ class Generator {
             // XXX Not sure if we can eliminate dead codes after this.
         }
 
+        @Override
         public void visit(Node.GetProperty n) throws JasperException {
             String name = n.getTextAttribute("name");
             String property = n.getTextAttribute("property");
@@ -1081,6 +1093,7 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
+        @Override
         public void visit(Node.SetProperty n) throws JasperException {
             String name = n.getTextAttribute("name");
             String property = n.getTextAttribute("property");
@@ -1172,6 +1185,7 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
+        @Override
         public void visit(Node.UseBean n) throws JasperException {
 
             String name = n.getTextAttribute("id");
@@ -1370,6 +1384,7 @@ class Generator {
             return " " + attr + "=\"" + value + '\"';
         }
 
+        @Override
         public void visit(Node.PlugIn n) throws JasperException {
 
             /**
@@ -1383,6 +1398,7 @@ class Generator {
                     this.ie = ie;
                 }
 
+                @Override
                 public void visit(Node.ParamAction n) throws JasperException {
 
                     String name = n.getTextAttribute("name");
@@ -1605,10 +1621,12 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
+        @Override
         public void visit(Node.NamedAttribute n) throws JasperException {
             // Don't visit body of this tag - we already did earlier.
         }
 
+        @Override
         public void visit(Node.CustomTag n) throws JasperException {
 
             // Use plugin to generate more efficient code if there is one.
@@ -1754,6 +1772,7 @@ class Generator {
 
         private static final String DOUBLE_QUOTE = "\\\"";
 
+        @Override
         public void visit(Node.UninterpretedTag n) throws JasperException {
 
             n.setBeginJavaLine(out.getJavaLine());
@@ -1822,6 +1841,7 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
+        @Override
         public void visit(Node.JspElement n) throws JasperException {
 
             n.setBeginJavaLine(out.getJavaLine());
@@ -1889,6 +1909,7 @@ class Generator {
             }
         }
 
+        @Override
         public void visit(Node.TemplateText n) throws JasperException {
 
             String text = n.getText();
@@ -1997,6 +2018,7 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
+        @Override
         public void visit(Node.JspBody n) throws JasperException {
             if (n.getBody() != null) {
                 if (isSimpleTagHandler) {
@@ -2010,6 +2032,7 @@ class Generator {
             }
         }
 
+        @Override
         public void visit(Node.InvokeAction n) throws JasperException {
 
             n.setBeginJavaLine(out.getJavaLine());
@@ -2059,6 +2082,7 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
+        @Override
         public void visit(Node.DoBodyAction n) throws JasperException {
 
             n.setBeginJavaLine(out.getJavaLine());
@@ -2105,6 +2129,7 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
+        @Override
         public void visit(Node.AttributeGenerator n) throws JasperException {
             Node.CustomTag tag = n.getTag();
             Node.JspAttribute[] attrs = tag.getJspAttributes();
@@ -2128,7 +2153,7 @@ class Generator {
             TagHandlerInfo handlerInfo = (TagHandlerInfo) handlerInfosByShortName
                     .get(n.getLocalName());
             if (handlerInfo == null) {
-                handlerInfo = new TagHandlerInfo(n, n.getTagHandlerClass(), err);
+                handlerInfo = new TagHandlerInfo(n, n.getTagHandlerClass(), err, n.getTagHandlerClassName());
                 handlerInfosByShortName.put(n.getLocalName(), handlerInfo);
             }
             return handlerInfo;
@@ -2149,7 +2174,7 @@ class Generator {
                 String tagEvalVar, String tagPushBodyCountVar)
                 throws JasperException {
 
-            Class tagHandlerClass = handlerInfo.getTagHandlerClass();
+//            Class tagHandlerClass = handlerInfo.getTagHandlerClass();
 
             out.printin("//  ");
             out.println(n.getQName());
@@ -2159,8 +2184,7 @@ class Generator {
             declareScriptingVars(n, VariableInfo.AT_BEGIN);
             saveScriptingVars(n, VariableInfo.AT_BEGIN);
 
-            String tagHandlerClassName = JspUtil
-                    .getCanonicalName(tagHandlerClass);
+            String tagHandlerClassName = handlerInfo.getTagHandlerClassName();
             out.printin(tagHandlerClassName);
             out.print(" ");
             out.print(tagHandlerVar);
@@ -2398,7 +2422,7 @@ class Generator {
                 TagHandlerInfo handlerInfo, String tagHandlerVar)
                 throws JasperException {
 
-            Class tagHandlerClass = handlerInfo.getTagHandlerClass();
+//            Class tagHandlerClass = handlerInfo.getTagHandlerClass();
 
             n.setBeginJavaLine(out.getJavaLine());
             out.printin("//  ");
@@ -2408,8 +2432,7 @@ class Generator {
             declareScriptingVars(n, VariableInfo.AT_BEGIN);
             saveScriptingVars(n, VariableInfo.AT_BEGIN);
 
-            String tagHandlerClassName = JspUtil
-                    .getCanonicalName(tagHandlerClass);
+            String tagHandlerClassName = handlerInfo.getTagHandlerClassName();
             out.printin(tagHandlerClassName);
             out.print(" ");
             out.print(tagHandlerVar);
@@ -3828,7 +3851,7 @@ class Generator {
 
         private Hashtable propertyEditorMaps;
 
-        private Class tagHandlerClass;
+        private String tagHandlerClassName;
 
         /**
          * Constructor.
@@ -3841,9 +3864,9 @@ class Generator {
          * @param err
          *            Error dispatcher
          */
-        TagHandlerInfo(Node n, Class tagHandlerClass, ErrorDispatcher err)
+        TagHandlerInfo(Node n, Class tagHandlerClass, ErrorDispatcher err, String tagHandlerClassName)
                 throws JasperException {
-            this.tagHandlerClass = tagHandlerClass;
+            this.tagHandlerClassName = tagHandlerClassName;
             this.methodMaps = new Hashtable();
             this.propertyEditorMaps = new Hashtable();
 
@@ -3887,8 +3910,8 @@ class Generator {
         /**
          * XXX
          */
-        public Class getTagHandlerClass() {
-            return tagHandlerClass;
+        public String getTagHandlerClassName() {
+            return tagHandlerClassName;
         }
     }
 
@@ -3930,6 +3953,7 @@ class Generator {
             return out;
         }
 
+        @Override
         public String toString() {
             return charWriter.toString();
         }
@@ -3949,10 +3973,12 @@ class Generator {
                 try {
                     body.visit(new Node.Visitor() {
 
+                        @Override
                         public void doVisit(Node n) {
                             adjustJavaLine(n, offset);
                         }
 
+                        @Override
                         public void visit(Node.CustomTag n)
                                 throws JasperException {
                             Node.Nodes b = n.getBody();
@@ -4163,6 +4189,7 @@ class Generator {
             out.popIndent();
         }
 
+        @Override
         public String toString() {
             return classBuffer.toString();
         }

@@ -75,7 +75,18 @@ public class OsgiContextImplTest {
         Set<String> myService = new HashSet<String>();
         context.registerService(Set.class, myService, props);
 
-        ServiceReference serviceReference = context.bundleContext().getServiceReference(Set.class.getName());
+        ServiceReference<?> serviceReference = context.bundleContext().getServiceReference(Set.class.getName());
+        Object serviceResult = context.bundleContext().getService(serviceReference);
+        assertSame(myService, serviceResult);
+        assertEquals("value1", serviceReference.getProperty("prop1"));
+    }
+
+    @Test
+    public void testRegisterServiceWithPropertiesVarargs() {
+        Set<String> myService = new HashSet<String>();
+        context.registerService(Set.class, myService, "prop1", "value1");
+
+        ServiceReference<?> serviceReference = context.bundleContext().getServiceReference(Set.class.getName());
         Object serviceResult = context.bundleContext().getService(serviceReference);
         assertSame(myService, serviceResult);
         assertEquals("value1", serviceReference.getProperty("prop1"));
@@ -83,12 +94,19 @@ public class OsgiContextImplTest {
 
     @Test
     public void testRegisterMultipleServices() {
+        Set[] serviceResults = context.getServices(Set.class, null);
+        assertEquals(0, serviceResults.length);
+
         Set<String> myService1 = new HashSet<String>();
         context.registerService(Set.class, myService1);
         Set<String> myService2 = new HashSet<String>();
         context.registerService(Set.class, myService2);
+        
+        assertSame(myService1, context.getService(Set.class));
 
-        Set[] serviceResults = context.getServices(Set.class, null);
+        // expected: ascending order because ordering ascending by service ID
+        serviceResults = context.getServices(Set.class, null);
+        assertEquals(2, serviceResults.length);
         assertSame(myService1, serviceResults[0]);
         assertSame(myService2, serviceResults[1]);
     }
@@ -98,6 +116,39 @@ public class OsgiContextImplTest {
         context.registerService(ServiceInterface1.class, mock(ServiceInterface1.class));
         context.registerService(ServiceInterface2.class, mock(ServiceInterface2.class));
         context.registerInjectActivateService(new OsgiServiceUtilTest.Service3());
+    }
+
+    @Test
+    public void testRegisterInjectActivateWithProperties() {
+        context.registerService(ServiceInterface1.class, mock(ServiceInterface1.class));
+        context.registerService(ServiceInterface2.class, mock(ServiceInterface2.class));
+        OsgiServiceUtilTest.Service3 service = context.registerInjectActivateService(new OsgiServiceUtilTest.Service3(), "prop1", "value3");
+        assertEquals("value3", service.getConfig().get("prop1"));
+    }
+
+    @Test
+    public void testRegisterInjectActivateWithPropertiesWithNulls() {
+        context.registerService(ServiceInterface1.class, mock(ServiceInterface1.class));
+        context.registerService(ServiceInterface2.class, mock(ServiceInterface2.class));
+        OsgiServiceUtilTest.Service3 service = context.registerInjectActivateService(new OsgiServiceUtilTest.Service3(),
+                "prop1", "value3",
+                "prop2", null,
+                null, "value4",
+                null, null);
+        assertEquals("value3", service.getConfig().get("prop1"));
+    }
+
+    @Test
+    public void testRegisterInjectActivateWithPropertyMapNulls() {
+        context.registerService(ServiceInterface1.class, mock(ServiceInterface1.class));
+        context.registerService(ServiceInterface2.class, mock(ServiceInterface2.class));
+        Map<String,Object> props = new HashMap<>();
+        props.put("prop1", "value3");
+        props.put("prop2", null);
+        props.put(null, "value4");
+        props.put(null, null);
+        OsgiServiceUtilTest.Service3 service = context.registerInjectActivateService(new OsgiServiceUtilTest.Service3(), props);
+        assertEquals("value3", service.getConfig().get("prop1"));
     }
 
     @Test(expected=RuntimeException.class)

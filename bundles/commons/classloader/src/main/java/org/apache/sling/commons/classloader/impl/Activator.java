@@ -29,6 +29,8 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This activator registers the dynamic class loader manager.
@@ -39,6 +41,9 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
 
     /** Package admin service name */
     private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
+    
+    /** The logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** A service tracker for the package admin. */
     private ServiceTracker packageAdminTracker;
@@ -115,8 +120,14 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
             if ( ( event.getType() == BundleEvent.STARTED && !lazyBundle)
                  || (event.getType() == BundleEvent.STARTING && lazyBundle) ) {
                 reload = this.service.hasUnresolvedPackages(event.getBundle());
+                if (reload) {
+                    logger.debug("Dynamic Class Loader is reloaded because the new bundle '{}' provides previously unresolved packages", event.getBundle());
+                }
             } else if ( event.getType() == BundleEvent.UNRESOLVED || event.getType() == BundleEvent.RESOLVED ) {
                 reload = this.service.isBundleUsed(event.getBundle().getBundleId());
+                if (reload) {
+                    logger.debug("Dynamic Class Loader is reloaded because it has previously loaded classes from bundle '{}' which is no longer active", event.getBundle());
+                }
             } else {
                 reload = false;
             }

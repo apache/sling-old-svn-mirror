@@ -23,9 +23,15 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
+import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.codehaus.plexus.util.DirectoryScanner;
@@ -33,41 +39,32 @@ import org.codehaus.plexus.util.DirectoryScanner;
 /**
  * Create and attach a JAR file containing the resolved artifacts from the
  * bundle list.
- *
- * @goal create-bundle-jar
- * @requiresDependencyResolution test
- * @phase package
- *
  */
+@Mojo( name = "create-bundle-jar", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.TEST)
 public class CreateBundleJarMojo extends AbstractLaunchpadFrameworkMojo {
 
     /**
      * The list of resources we want to add to the bundle JAR file.
-     *
-     * @parameter
      */
+    @Parameter
     private Resource[] resources;
 
     /**
      * The output directory.
-     *
-     * @parameter default-value="${project.build.directory}"
      */
+    @Parameter( defaultValue = "${project.build.directory}")
     private File outputDirectory;
 
     /**
      * Name of the generated JAR.
-     *
-     * @parameter default-value="${project.artifactId}-${project.version}"
-     * @required
      */
+    @Parameter( defaultValue = "${project.artifactId}-${project.version}", required = true)
     private String jarName;
 
     /**
      * The Jar archiver.
-     *
-     * @component role="org.codehaus.plexus.archiver.Archiver" roleHint="jar"
      */
+    @Component( role = Archiver.class, hint = "jar")
     private JarArchiver jarArchiver;
 
     private static final String CLASSIFIER = "bundles";

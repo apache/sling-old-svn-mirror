@@ -36,7 +36,10 @@ import java.io.InputStream;
 public class SlingWebDavServletTest extends RenderingTestBase {
 
     private final String testDir = "/sling-test/" + getClass().getSimpleName() + System.currentTimeMillis();
-    private final String testDirUrl = HTTP_BASE_URL + "/dav/" + testDir;
+    
+    // TODO there was previously no /default and the test passed, with a // before the testDir path
+    // - need to clarify if this was by design
+    private final String testDirUrl = HTTP_BASE_URL + "/dav/default" + testDir;
 
     private final String HANDLER     = "test-io-handler-";
     private final String HANDLER_1   = "test-io-handler-1";

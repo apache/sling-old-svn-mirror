@@ -27,6 +27,7 @@ import static org.junit.Assert.fail;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -39,15 +40,36 @@ public class U {
             new String[] {"boot.txt", "example.txt", "main.txt", "oak.txt"};
 
     public static void assertArtifact(ArtifactGroup g, String mvnUrl) {
+        assertArtifact(g, mvnUrl, Collections.<String,String>emptyMap());
+    }
+
+    public static void assertArtifact(ArtifactGroup g, String mvnUrl, Map<String, String> metadata) {
         final Artifact a = Artifact.fromMvnUrl(mvnUrl);
-        if(!g.items.contains(a)) {
+        int idx = g.items.indexOf(a);
+        if(idx < 0) {
             fail("Expecting ArtifactGroup to contain '" + mvnUrl + "': " + g);
         }
+        assertEquals("Incorrect metadata", metadata, g.items.get(idx).getMetadata());
     }
 
     /** Read our test model by merging our TEST_MODEL_FILENAMES */
     public static Model readCompleteTestModel() throws Exception {
         return readCompleteTestModel(TEST_MODEL_FILENAMES);
+    }
+
+    /** Read the  model from that name */
+    public static Model readTestModel(final String name) throws Exception {
+        final Reader reader = new InputStreamReader(U.class.getResourceAsStream("/" + name), "UTF-8");
+        try {
+            final Model current = ModelReader.read(reader, name);
+            final Map<Traceable, String> errors = ModelUtility.validate(current);
+            if (errors != null ) {
+                throw new Exception("Invalid model at " + name + " : " + errors);
+            }
+            return current;
+        } finally {
+            reader.close();
+        }
     }
 
     /** Read the complete model from that names */
@@ -62,7 +84,7 @@ public class U {
                 if (errors != null ) {
                     throw new Exception("Invalid model at " + name + " : " + errors);
                 }
-                ModelUtility.merge(result, current);
+                MergeUtility.merge(result, current);
             } finally {
                 reader.close();
             }
@@ -96,7 +118,8 @@ public class U {
 
         {
             final ArtifactGroup g = getGroup(m, "example", DEFAULT_RUN_MODE, DEFAULT_START_LEVEL);
-            U.assertArtifact(g, "mvn:commons-collections/commons-collections/3.2.1/jar");
+            U.assertArtifact(g, "mvn:commons-collections/commons-collections/3.2.1/jar",
+                    Collections.singletonMap("private-packages", "*"));
             U.assertArtifact(g, "mvn:org.example/jar-is-default/1.2/jar");
         }
 
@@ -117,6 +140,21 @@ public class U {
                 U.assertArtifact(g, "mvn:org.apache.sling/org.apache.sling.fragment.ws/${ws.version}/jar");
             }
         }
+        final Feature exampleFeature = m.getFeature("example");
+        final RunMode defaultExampleRM = exampleFeature.getRunMode();
+        final List<Configuration> configs = assertConfigurationsInRunMode(defaultExampleRM, 3);
+        assertEquals(FeatureTypes.SUBSYSTEM_COMPOSITE, exampleFeature.getType());
+        assertConfiguration(configs, "org.apache.sling.another.config");
+    }
+
+    public static Configuration assertConfiguration(final List<Configuration> configs, final String pid) {
+        for(final Configuration c : configs) {
+            if ( c.getPid().equals(pid) && c.getFactoryPid() == null ) {
+                return c;
+            }
+        }
+        fail("Configuration with PID " + pid + " not found in " + configs);
+        return null;
     }
 
     public static void assertArtifact(final Artifact artifact,

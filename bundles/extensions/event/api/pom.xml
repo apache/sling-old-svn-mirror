@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>29</version>
+        <relativePath />
+    </parent>
+
+    <artifactId>org.apache.sling.event.api</artifactId>
+    <packaging>bundle</packaging>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <name>Apache Sling Event API</name>
+    <description>
+        Support API for eventing.
+    </description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event/api</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event/api</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/event/api</url>
+    </scm>
+
+    <properties>
+        <site.jira.version.id>12315369</site.jira.version.id>
+        <exam.version>4.4.0</exam.version>
+        <url.version>2.4.5</url.version>
+        <bundle.build.dir>${basedir}/target</bundle.build.dir>
+        <bundle.file.name>${bundle.build.dir}/${project.build.finalName}.jar</bundle.file.name>
+        <min.port>37000</min.port>
+        <max.port>37999</max.port>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <_plugin>org.apache.felix.scrplugin.bnd.SCRDescriptorBndPlugin;destdir=${project.build.outputDirectory};</_plugin>
+                    </instructions>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>org.apache.felix.scr.bnd</artifactId>
+                        <version>1.7.2</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+           <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+            </plugin>
+            <!-- plain unit tests -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/it/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+    <profiles>
+        <profile>
+            <id>port-java8</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <min.port>38000</min.port>
+                <max.port>38999</max.port>
+            </properties>
+        </profile>
+    </profiles>
+</project>

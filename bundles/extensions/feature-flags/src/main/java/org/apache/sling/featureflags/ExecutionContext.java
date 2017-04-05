@@ -21,8 +21,7 @@ package org.apache.sling.featureflags;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.ResourceResolver;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The {@code ExecutionContext} interface provides access to the context for
@@ -61,4 +60,11 @@ public interface ExecutionContext {
      * @return the resource resolver or {@code null}
      */
     ResourceResolver getResourceResolver();
+
+    /**
+     * Return the {@link Features} manager. This allows a feature to find out
+     * about other features.
+     * @since 1.1.0
+     */
+    Features getFeatures();
 }

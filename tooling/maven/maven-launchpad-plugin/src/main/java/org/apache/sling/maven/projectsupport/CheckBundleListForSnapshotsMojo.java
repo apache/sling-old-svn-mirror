@@ -21,6 +21,9 @@ import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
@@ -28,18 +31,14 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 /**
  * Validate that the bundle list file (if it exists) does not contain references
  * to SNAPSHOT versions.
- *
- * @goal check-bundle-list-for-snapshots
- * @requiresDependencyResolution test
- *
  */
+@Mojo(name = "check-bundle-list-for-snapshots", requiresDependencyResolution = ResolutionScope.TEST)
 public class CheckBundleListForSnapshotsMojo extends AbstractUsingBundleListMojo {
 
     /**
      * True if the build should be failed if a snapshot is found.
-     *
-     * @parameter default-value="true"
      */
+    @Parameter( defaultValue = "true")
     private boolean failOnSnapshot;
 
     @Override

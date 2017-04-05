@@ -1,0 +1,2 @@
+The org.apache.sling.scripting.sightly.testing-content-crlf provides testing content for SLING-5543 which can not be easily saved into
+SCM in a reliable way so that line endings are maintained without alteration.

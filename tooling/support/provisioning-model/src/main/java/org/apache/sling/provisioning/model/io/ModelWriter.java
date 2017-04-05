@@ -30,9 +30,11 @@ import org.apache.sling.provisioning.model.ArtifactGroup;
 import org.apache.sling.provisioning.model.Commentable;
 import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.Feature;
+import org.apache.sling.provisioning.model.FeatureTypes;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.RunMode;
+import org.apache.sling.provisioning.model.Section;
 
 /**
  * Simple writer for the a model
@@ -74,24 +76,39 @@ public class ModelWriter {
     /**
      * Writes the model to the writer.
      * The writer is not closed.
-     * @param writer
-     * @param subystem
+     * @param writer Writer
+     * @param model Model
      * @throws IOException
      */
     public static void write(final Writer writer, final Model model)
     throws IOException {
         final PrintWriter pw = new PrintWriter(writer);
 
+        boolean firstFeature = true;
+
         // features
         for(final Feature feature : model.getFeatures()) {
+            if ( firstFeature ) {
+                firstFeature = false;
+            } else {
+                pw.println();
+            }
             writeComment(pw, feature);
             pw.print("[feature name=");
             pw.print(feature.getName());
+            if (! FeatureTypes.PLAIN.equals(feature.getType()) ) {
+                pw.print(" type=");
+                pw.print(feature.getType());
+            }
+            if ( feature.getVersion() != null ) {
+                pw.print(" version=");
+                pw.print(feature.getVersion());
+            }
             pw.println("]");
-            pw.println();
 
             // variables
             if ( !feature.getVariables().isEmpty() ) {
+                pw.println();
                 writeComment(pw, feature.getVariables());
                 pw.println("[variables]");
                 for(final Map.Entry<String, String> entry : feature.getVariables()) {
@@ -100,13 +117,13 @@ public class ModelWriter {
                     pw.print("=");
                     pw.println(entry.getValue());
                 }
-                pw.println();
             }
 
             // run modes
             for(final RunMode runMode : feature.getRunModes()) {
                 // settings
                 if ( !runMode.getSettings().isEmpty() ) {
+                    pw.println();
                     writeComment(pw, runMode.getSettings());
                     pw.print("[settings");
                     writeRunMode(pw, runMode);
@@ -118,7 +135,6 @@ public class ModelWriter {
                         pw.print("=");
                         pw.println(entry.getValue());
                     }
-                    pw.println();
                 }
 
                 // artifact groups
@@ -127,6 +143,7 @@ public class ModelWriter {
                     if ( group.isEmpty() ) {
                         continue;
                     }
+                    pw.println();
                     writeComment(pw, group);
                     pw.print("[artifacts");
                     if ( group.getStartLevel() > 0 ) {
@@ -135,7 +152,6 @@ public class ModelWriter {
                     }
                     writeRunMode(pw, runMode);
                     pw.println("]");
-                    pw.println();
 
                     // artifacts
                     for(final Artifact ad : group) {
@@ -147,7 +163,7 @@ public class ModelWriter {
                             for(final Map.Entry<String, String> entry : ad.getMetadata().entrySet()) {
                                 if ( first ) {
                                     first = false;
-                                    pw.print(" { ");
+                                    pw.print(" [");
                                 } else {
                                     pw.print(", ");
                                 }
@@ -155,25 +171,35 @@ public class ModelWriter {
                                 pw.print("=");
                                 pw.print(entry.getValue());
                             }
-                            pw.print("}");
+                            pw.print("]");
                         }
                         pw.println();
                     }
-                    pw.println();
                 }
 
                 // configurations
                 if ( !runMode.getConfigurations().isEmpty() ) {
+                    pw.println();
                     writeComment(pw, runMode.getConfigurations());
                     pw.print("[configurations");
                     writeRunMode(pw, runMode);
                     pw.println("]");
+                    boolean firstConfig = true;
                     for(final Configuration config : runMode.getConfigurations()) {
+                        if ( firstConfig ) {
+                            firstConfig = false;
+                        } else{
+                            pw.println();
+                        }
                         writeComment(pw, config);
                         final String raw = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);
                         String format = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED_FORMAT);
                         if ( format == null ) {
                             format = ModelConstants.CFG_FORMAT_FELIX_CA;
+                        }
+                        String cfgMode = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED_MODE);
+                        if ( cfgMode == null ) {
+                            cfgMode = ModelConstants.CFG_MODE_OVERWRITE;
                         }
                         pw.print("  ");
                         if ( config.getFactoryPid() != null ) {
@@ -181,10 +207,22 @@ public class ModelWriter {
                             pw.print("-");
                         }
                         pw.print(config.getPid());
-                        if ( !ModelConstants.CFG_FORMAT_FELIX_CA.equals(format) ) {
-                            pw.print(" { format=}");
-                            pw.print(format);
-                            pw.print(" }");
+                        final boolean isDefaultFormat = ModelConstants.CFG_FORMAT_FELIX_CA.equals(format);
+                        final boolean isDefaultMode = ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode);
+                        if ( !isDefaultFormat || !isDefaultMode ) {
+                            pw.print(" [");
+                            if ( !isDefaultFormat ) {
+                                pw.print("format=");
+                                pw.print(format);
+                                if ( !isDefaultMode ) {
+                                    pw.print(",");
+                                }
+                            }
+                            if ( !isDefaultMode) {
+                                pw.print("mode=");
+                                pw.print(cfgMode);
+                            }
+                            pw.print("]");
                         }
                         pw.println();
 
@@ -212,8 +250,24 @@ public class ModelWriter {
                             pw.print("    ");
                             pw.println(line.trim());
                         }
-                        pw.println();
                     }
+                }
+            }
+
+            // additional sections
+            for(final Section section : feature.getAdditionalSections()) {
+                pw.println();
+                pw.print("  [:");
+                pw.print(section.getName());
+                for(final Map.Entry<String, String> entry : section.getAttributes().entrySet()) {
+                    pw.print(' ');
+                    pw.print(entry.getKey());
+                    pw.print('=');
+                    pw.print(entry.getValue());
+                }
+                pw.println("]");
+                if ( section.getContents() != null ) {
+                    pw.println(section.getContents());
                 }
             }
         }

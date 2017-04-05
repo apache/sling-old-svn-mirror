@@ -33,7 +33,7 @@ import org.osgi.service.cm.ConfigurationListener;
 class EventsDetector implements FrameworkListener, BundleListener, ConfigurationListener, ServiceListener {
 
     private long lastEvent;
-    private final ServiceRegistration configReg;
+    private final ServiceRegistration<ConfigurationListener> configReg;
     private final BundleContext ctx;
 
     EventsDetector(BundleContext ctx) {
@@ -41,7 +41,7 @@ class EventsDetector implements FrameworkListener, BundleListener, Configuration
         ctx.addBundleListener(this);
         ctx.addFrameworkListener(this);
         ctx.addServiceListener(this);
-        configReg = ctx.registerService(ConfigurationListener.class.getName(), this, null);
+        configReg = ctx.registerService(ConfigurationListener.class, this, null);
     }
 
     void close() {

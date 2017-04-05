@@ -145,19 +145,20 @@ public class BundleTestsProvider implements TestsProvider, BundleListener {
     private List<String> getTestClasses(Bundle b) {
         final List<String> result = new ArrayList<String>();
         Pattern testClassRegexp = null;
-        final String headerValue = getSlingTestRegexp(b); 
-        try {
-            testClassRegexp = Pattern.compile(headerValue);
-        } catch(PatternSyntaxException pse) {
-            log.warn(
-                    "Invalid pattern '" + headerValue 
-                    + "' for bundle " + b.getSymbolicName() + ", ignored", 
-                    pse);
+        final String headerValue = getSlingTestRegexp(b);
+        if (headerValue != null) {
+            try {
+                testClassRegexp = Pattern.compile(headerValue);
+            }
+            catch (PatternSyntaxException pse) {
+                log.warn("Invalid pattern '" + headerValue + "' for bundle "
+                                + b.getSymbolicName() + ", ignored", pse);
+            }
         }
         
-        if(testClassRegexp == null) {
+        if (testClassRegexp == null) {
             log.info("Bundle {} does not have {} header, not looking for test classes", SLING_TEST_REGEXP);
-        } else if(Bundle.ACTIVE != b.getState()) {
+        } else if (Bundle.ACTIVE != b.getState()) {
             log.info("Bundle {} is not active, no test classes considered", b.getSymbolicName());
         } else {
             @SuppressWarnings("unchecked")
@@ -195,7 +196,6 @@ public class BundleTestsProvider implements TestsProvider, BundleListener {
         return null;
     }
     
-    /** @inheritDoc */
     public Class<?> createTestClass(String testName) throws ClassNotFoundException {
         // Find the bundle to which the class belongs
         Bundle b = null;
@@ -212,17 +212,14 @@ public class BundleTestsProvider implements TestsProvider, BundleListener {
         return b.loadClass(testName);
     }
 
-    /** @inheritDoc */
     public long lastModified() {
         return lastModified;
     }
 
-    /** @inheritDoc */
     public String getServicePid() {
         return pid;
     }
 
-    /** @inheritDoc */
     public List<String> getTestNames() {
         maybeUpdateTestClasses();
         final List<String> result = new ArrayList<String>();

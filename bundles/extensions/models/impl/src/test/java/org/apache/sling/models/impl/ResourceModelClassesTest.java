@@ -78,6 +78,7 @@ public class ResourceModelClassesTest {
         
         factory.bindInjectAnnotationProcessorFactory(valueMapInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SimplePropertyModel.class, ArrayWrappersModel.class, ResourceModelWithRequiredField.class, ChildValueMapModel.class, ArrayPrimitivesModel.class, ChildResourceModel.class, ResourceModelWithRequiredFieldOptionalStrategy.class, ParentModel.class, ChildModel.class, ListModel.class);
     }
 
     @Test
@@ -104,6 +105,8 @@ public class ResourceModelClassesTest {
         assertEquals("three", array[0]);
 
         assertTrue(model.isPostConstructCalled());
+
+        verify(res, times(1)).adaptTo(ValueMap.class);
     }
 
     @Test
@@ -200,8 +203,7 @@ public class ResourceModelClassesTest {
         try {
             factory.createModel(res, ResourceModelWithRequiredField.class);
         } catch (MissingElementsException e) {
-            assertEquals(ResourceModelWithRequiredField.class, e.getType());
-            assertEquals("required", ((Field) e.getMissingElements().iterator().next()).getName());
+            assertEquals("required", ((Field) e.getMissingElements().iterator().next().getElement()).getName());
             thrown = true;
         }
         assertTrue(thrown);

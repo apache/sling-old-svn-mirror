@@ -17,8 +17,8 @@
  * under the License.
  */
 
-@Version("1.0.1")
+@Version("1.0.2")
 package org.apache.sling.api.auth;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;
 

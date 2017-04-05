@@ -113,6 +113,7 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
     /**
      * Sets the {@link #OPT_FORCE_RESOURCE_TYPE} option to the given
      * <code>resourceType</code> if not <code>null</code>.
+     * @param resourceType the resource type
      */
     public void setForceResourceType(String resourceType) {
         if (resourceType != null) {
@@ -123,6 +124,7 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
     /**
      * Returns the {@link #OPT_FORCE_RESOURCE_TYPE} option or <code>null</code>
      * if not set.
+     * @return The resource type.
      */
     public String getForceResourceType() {
         return get(OPT_FORCE_RESOURCE_TYPE);
@@ -131,6 +133,7 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
     /**
      * Sets the {@link #OPT_ADD_SELECTORS} option to the given
      * <code>additionalSelectors</code> if not <code>null</code>.
+     * @param additionalSelectors The add selectors
      */
     public void setAddSelectors(String additionalSelectors) {
         if (additionalSelectors != null) {
@@ -141,6 +144,7 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
     /**
      * Returns the {@link #OPT_ADD_SELECTORS} option or <code>null</code> if
      * not set.
+     * @return The add selectors.
      */
     public String getAddSelectors() {
         return get(OPT_ADD_SELECTORS);
@@ -151,6 +155,7 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
      * <code>replaceSelectors</code> if not <code>null</code>.
      * If this value contains an empty string, all
      * original selectors are removed.
+     * @param replaceSelectors The replace selectors.
      */
     public void setReplaceSelectors(String replaceSelectors) {
         if (replaceSelectors != null) {
@@ -161,6 +166,7 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
     /**
      * Returns the {@link #OPT_REPLACE_SELECTORS} option or <code>null</code>
      * if not set.
+     * @return The replace selectors.
      */
     public String getReplaceSelectors() {
         return get(OPT_REPLACE_SELECTORS);
@@ -169,6 +175,7 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
     /**
      * Sets the {@link #OPT_REPLACE_SUFFIX} option to the given
      * <code>replaceSuffix</code> if not <code>null</code>.
+     * @param replaceSuffix The replace suffix
      */
     public void setReplaceSuffix(String replaceSuffix) {
         if (replaceSuffix != null) {
@@ -179,6 +186,7 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
     /**
      * Returns the {@link #OPT_REPLACE_SUFFIX} option or <code>null</code> if
      * not set.
+     * @return The replace suffix
      */
     public String getReplaceSuffix() {
         return get(OPT_REPLACE_SUFFIX);

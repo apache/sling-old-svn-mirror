@@ -27,6 +27,7 @@ import javax.servlet.http.HttpSessionListener;
 
 import org.apache.felix.http.proxy.ProxyListener;
 
+@Deprecated
 public class SlingHttpSessionListenerDelegate implements
         HttpSessionAttributeListener, HttpSessionListener,
         ServletContextListener {
@@ -35,34 +36,41 @@ public class SlingHttpSessionListenerDelegate implements
 
     // ---------- ServletContextListener
 
+    @Override
     public void contextInitialized(final ServletContextEvent sce) {
         this.proxyListener.contextInitialized(sce);
     }
 
+    @Override
     public void contextDestroyed(final ServletContextEvent sce) {
         this.proxyListener.contextDestroyed(sce);
     }
 
     // ---------- HttpSessionListener
 
+    @Override
     public void sessionCreated(HttpSessionEvent se) {
         proxyListener.sessionCreated(se);
     }
 
+    @Override
     public void sessionDestroyed(HttpSessionEvent se) {
         proxyListener.sessionDestroyed(se);
     }
 
     // ---------- HttpSessionAttributeListener
 
+    @Override
     public void attributeAdded(HttpSessionBindingEvent se) {
         proxyListener.attributeAdded(se);
     }
 
+    @Override
     public void attributeRemoved(HttpSessionBindingEvent se) {
         proxyListener.attributeRemoved(se);
     }
 
+    @Override
     public void attributeReplaced(HttpSessionBindingEvent se) {
         proxyListener.attributeReplaced(se);
     }

@@ -19,6 +19,8 @@ package org.apache.sling.commons.mime;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * The <code>MimeTypeService</code> defines the service applications can call to
  * resolve file names to MIME types and derive default file name extensions from
@@ -27,6 +29,7 @@ import java.io.InputStream;
  * This interface is not intended to be implemented by bundles. It is
  * implemented by this bundle and may be used by client bundles.
  */
+@ProviderType
 public interface MimeTypeService {
 
     /**

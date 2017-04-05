@@ -48,7 +48,7 @@ public @interface RequestAttribute {
      * If set to true, the model can be instantiated even if there is no request attribute
      * with the given name found.
      * Default = false.
-     * @deprecated Use {@link InjectionStrategy} instead.
+     * @deprecated Use {@link #injectionStrategy} instead.
      */
     @Deprecated
     public boolean optional() default false;
@@ -59,5 +59,5 @@ public @interface RequestAttribute {
      * If even those are not available the default injection strategy defined on the {@link org.apache.sling.models.annotations.Model} applies.
      * Default value = DEFAULT.
      */
-    public InjectionStrategy injectonStrategy() default InjectionStrategy.DEFAULT;
+    public InjectionStrategy injectionStrategy() default InjectionStrategy.DEFAULT;
 }

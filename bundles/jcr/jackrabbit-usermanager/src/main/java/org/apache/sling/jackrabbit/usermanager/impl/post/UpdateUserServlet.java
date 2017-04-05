@@ -16,6 +16,7 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -23,10 +24,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.Servlet;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -34,12 +31,13 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.jackrabbit.usermanager.UpdateUser;
-import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * <p>
@@ -52,18 +50,18 @@ import org.osgi.service.component.ComponentContext;
  * <code>/system/userManager/user/ieb</code>. This servlet responds at
  * <code>/system/userManager/user/ieb.update.html</code>
  * </p>
- * <h4>Methods</h4>
+ * <h3>Methods</h3>
  * <ul>
  * <li>POST</li>
  * </ul>
- * <h4>Post Parameters</h4>
+ * <h3>Post Parameters</h3>
  * <dl>
  * <dt>*</dt>
  * <dd>Any additional parameters become properties of the user node (optional)</dd>
  * <dt>*@Delete</dt>
  * <dd>Delete the property eg prop3@Delete means prop3 will be deleted (optional)</dd>
  * </dl>
- * <h4>Response</h4>
+ * <h3>Response</h3>
  * <dl>
  * <dt>200</dt>
  * <dd>Success, a redirect is sent to the users resource locator. The redirect comes with
@@ -73,48 +71,40 @@ import org.osgi.service.component.ComponentContext;
  * <dt>500</dt>
  * <dd>Failure</dd>
  * </dl>
- * <h4>Example</h4>
+ * <h3>Example</h3>
  *
  * <code>
  * curl -Fprop1=value2 -Fproperty1=value1 http://localhost:8080/system/userManager/user/ieb.update.html
  * </code>
  */
-@Component (metatype=true,
-		label="%updateUser.post.operation.name",
-		description="%updateUser.post.operation.description")
-@Service (value={
-	Servlet.class,
-	UpdateUser.class
+
+@Component(service = {Servlet.class, UpdateUser.class},
+property = {
+		   "sling.servlet.resourceTypes=sling/user",
+		   "sling.servlet.methods=POST",
+		   "sling.servlet.selectors=update",
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=EEE MMM dd yyyy HH:mm:ss 'GMT'Z", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd'T'HH:mm:ss.SSSZ", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd'T'HH:mm:ss", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=dd.MM.yyyy HH:mm:ss", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=dd.MM.yyyy"
 })
-@Properties ({
-	@Property (name="sling.servlet.resourceTypes",
-			value="sling/user"),
-	@Property (name="sling.servlet.methods",
-			value="POST"),
-	@Property (name="sling.servlet.selectors",
-			value="update"),
-    @Property (name=AbstractAuthorizablePostServlet.PROP_DATE_FORMAT,
-            value={
-            "EEE MMM dd yyyy HH:mm:ss 'GMT'Z",
-            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
-            "yyyy-MM-dd'T'HH:mm:ss",
-            "yyyy-MM-dd",
-            "dd.MM.yyyy HH:mm:ss",
-            "dd.MM.yyyy"
-            })
-})
-public class UpdateUserServlet extends AbstractUserPostServlet
+public class UpdateUserServlet extends AbstractAuthorizablePostServlet
         implements UpdateUser {
-    private static final long serialVersionUID = 5874621724096106496L;
+    
+	private static final long serialVersionUID = 5874621724096106496L;
 
     @Override
-    protected void activate(ComponentContext context) {
-        super.activate(context);
+    @Activate
+    protected void activate(final Map<String, Object> props) {
+        super.activate(props);
     }
 
     @Override
-    protected void deactivate(ComponentContext context) {
-        super.deactivate(context);
+    @Deactivate
+    protected void deactivate( ) {
+        super.deactivate();
     }
 
     /*
@@ -153,10 +143,7 @@ public class UpdateUserServlet extends AbstractUserPostServlet
                 "User to update could not be determined");
         }
 
-        String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
-            + user.getID();
-
-        Map<String, RequestProperty> reqProperties = collectContent(properties, userPath);
+        Collection<RequestProperty> reqProperties = collectContent(properties);
         try {
             // cleanup any old content (@Delete parameters)
             processDeletes(user, reqProperties, changes);

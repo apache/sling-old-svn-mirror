@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html data-th-with="page=${request.adaptTo(@org.apache.sling.samples.fling.page.FormPage@class)}">
+<head data-th-replace="/apps/fling/page/fragments/head.html::default"></head>
+<body>
+<div class="container">
+  <nav class="nav-main">
+    <div class="pull-left">
+      <ul class="breadcrumb" style="direction: rtl" data-th-replace="/apps/fling/page/fragments/navigation.html::breadcrumb"></ul>
+    </div>
+    <ul class="nav nav-pills" role="tablist" data-th-replace="/apps/fling/page/fragments/navigation.html::children"></ul>
+  </nav>
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <span data-th-text="${page.title}">FORM PAGE</span>
+    </div>
+    <div class="panel-body" data-th-with="i18n=${request.getResourceBundle(request.getLocale())}">
+      <form data-th-action="${page.formAction}" data-th-with="form=${page.form}" method="post">
+        <input type="hidden" name="formType" value="comment">
+        <div class="form-group" data-th-classappend="${form.hasFailure('name')} ? 'has-error' : ''">
+          <label for="name">Your Name</label>
+          <input type="text" class="form-control" id="name" name="name" placeholder="Name" data-th-value="${form.name}">
+          <ul data-th-each="failure : ${form.getFailures('name')}">
+            <span class="help-block" data-th-text="${failure.getMessage(i18n)}"></span>
+          </ul>
+        </div>
+        <div class="form-group" data-th-classappend="${form.hasFailure('comment')} ? 'has-error' : ''">
+          <label for="comment">Your Comment</label>
+          <textarea class="form-control" rows="3" id="comment" name="comment" placeholder="Comment" data-th-text="${form.comment}"></textarea>
+          <ul data-th-each="failure : ${form.getFailures('comment')}">
+            <span class="help-block" data-th-text="${failure.getMessage(i18n)}"></span>
+          </ul>
+        </div>
+        <button type="submit" class="btn btn-default">Submit</button>
+      </form>
+    </div>
+    <div class="panel-footer" data-th-replace="/apps/fling/page/fragments/panel.html::footer"></div>
+  </div>
+</div>
+</body>
+</html>

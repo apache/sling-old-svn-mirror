@@ -16,11 +16,14 @@
  */
 package org.apache.sling.models.spi.injectorspecific;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Processor for injector-specific annotations.
- * @deprecated Use {@link InjectAnntoationProcessor2} instead
+ * @deprecated Use {@link InjectAnnotationProcessor2} instead
  */
 @Deprecated
+@ConsumerType
 public interface InjectAnnotationProcessor {
 
     /**
@@ -58,10 +61,8 @@ public interface InjectAnnotationProcessor {
      * 
      * @return the value to be used for the default or null, in
      *         which case the standard annotation should be used.
-     * @deprecated use {@link InjectAnntoationProcessor2.getInjectionStrategy} instead
+     * @deprecated use {@link InjectAnnotationProcessor2#getInjectionStrategy()} instead
      */
     Boolean isOptional();
-
-   
 
 }

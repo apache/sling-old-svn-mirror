@@ -22,6 +22,7 @@ import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
+import static org.ops4j.pax.exam.CoreOptions.repository;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.when;
 
@@ -67,6 +68,8 @@ public class U {
         final boolean felixShell = "true".equals(System.getProperty("felix.shell", "false"));
 
         return options(
+            repository("https://repo.maven.apache.org/maven2/").id("central"),
+            repository("https://repository.apache.org/snapshots/").id("apache-snapshots").allowSnapshots(),
             when(localRepo.length() > 0).useOptions(
                     systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
             ),                    
@@ -75,14 +78,18 @@ public class U {
                     provision(
                             mavenBundle("org.apache.felix", "org.apache.felix.gogo.shell", "0.10.0"),
                             mavenBundle("org.apache.felix", "org.apache.felix.gogo.runtime", "0.10.0"),
-                            mavenBundle("org.apache.felix", "org.apache.felix.gogo.command", "0.12.0")
+                            mavenBundle("org.apache.felix", "org.apache.felix.gogo.command", "0.12.0"),
+                            mavenBundle("org.apache.felix", "org.apache.felix.shell.remote", "1.1.2")
                     )
             ),
             provision(
                     mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
+                    mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
+                    mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
                     mavenBundle("org.apache.sling", "org.apache.sling.hc.samples", samplesVersion),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.10"),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.1.0"),

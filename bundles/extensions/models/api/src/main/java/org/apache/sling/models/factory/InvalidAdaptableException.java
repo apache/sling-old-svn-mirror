@@ -18,6 +18,8 @@
  */
 package org.apache.sling.models.factory;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Exception which is triggered whenever a Sling Model could not be
  * instantiated because it could not be adapted from the given adaptable.
@@ -25,6 +27,7 @@ package org.apache.sling.models.factory;
  * @see ModelFactory
  *
  */
+@ProviderType
 public final class InvalidAdaptableException extends RuntimeException {
     private static final long serialVersionUID = -1209301268928038702L;
 

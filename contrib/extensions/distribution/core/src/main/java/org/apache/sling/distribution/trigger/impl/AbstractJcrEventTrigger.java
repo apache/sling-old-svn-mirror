@@ -24,14 +24,28 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
+import org.apache.sling.distribution.util.impl.DistributionUtils;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,23 +61,29 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     private final Map<String, JcrEventDistributionTriggerListener> registeredListeners = new ConcurrentHashMap<String, JcrEventDistributionTriggerListener>();
 
     private final String path;
+
     private final String serviceUser;
 
     private final SlingRepository repository;
+    private final ResourceResolverFactory resolverFactory;
 
     private Session cachedSession;
 
-    AbstractJcrEventTrigger(SlingRepository repository, String path, String serviceUser) {
+    private final Scheduler scheduler;
+
+    AbstractJcrEventTrigger(SlingRepository repository, Scheduler scheduler, ResourceResolverFactory resolverFactory,
+                            String path, String serviceUser) {
+        this.resolverFactory = resolverFactory;
         if (path == null || serviceUser == null) {
             throw new IllegalArgumentException("path and service are required");
         }
         this.repository = repository;
         this.path = path;
         this.serviceUser = serviceUser;
-
+        this.scheduler = scheduler;
     }
 
-    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         Session session;
         try {
             session = getSession();
@@ -72,11 +92,11 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
             session.getWorkspace().getObservationManager().addEventListener(
                     listener, getEventTypes(), path, true, null, null, false);
         } catch (RepositoryException e) {
-            throw new DistributionTriggerException("unable to register handler " + requestHandler, e);
+            throw new DistributionException("unable to register handler " + requestHandler, e);
         }
     }
 
-    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         JcrEventDistributionTriggerListener listener = registeredListeners.get(requestHandler.toString());
         if (listener != null) {
             Session session;
@@ -84,12 +104,12 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
                 session = getSession();
                 session.getWorkspace().getObservationManager().removeEventListener(listener);
             } catch (RepositoryException e) {
-                throw new DistributionTriggerException("unable to unregister handler " + requestHandler, e);
+                throw new DistributionException("unable to unregister handler " + requestHandler, e);
             }
         }
     }
 
-    private class JcrEventDistributionTriggerListener implements EventListener {
+    class JcrEventDistributionTriggerListener implements EventListener {
         private final DistributionRequestHandler requestHandler;
 
         public JcrEventDistributionTriggerListener(DistributionRequestHandler requestHandler) {
@@ -97,29 +117,99 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         }
 
         public void onEvent(EventIterator eventIterator) {
-            log.info("handling event {}");
+            log.debug("jcr trigger on event");
+
+            List<DistributionRequest> requestList = new ArrayList<DistributionRequest>();
+
             while (eventIterator.hasNext()) {
                 Event event = eventIterator.nextEvent();
+                log.info("handling event {}", event);
                 try {
                     if (DistributionJcrUtils.isSafe(event)) {
                         DistributionRequest request = processEvent(event);
                         if (request != null) {
-                            requestHandler.handle(request);
+                            addToList(request, requestList);
                         }
+                    } else {
+                        log.debug("skip unsafe event {}", event);
                     }
                 } catch (RepositoryException e) {
                     log.error("Error while handling event {}", event, e);
                 }
             }
+
+            if (requestList.size() > 0) {
+                boolean scheduled = scheduler.schedule(new DistributionExecutor(requestList, requestHandler), scheduler.NOW());
+
+                log.info("scheduled {} distributions {}", scheduled, requestList.size());
+            }
+
         }
     }
+
+    void addToList(DistributionRequest request, List<DistributionRequest> requestList) {
+        DistributionRequest lastRequest = requestList.isEmpty() ? null : requestList.get(requestList.size() - 1);
+
+        log.debug("adding request {} to {}", request, requestList);
+        if (lastRequest == null || !lastRequest.getRequestType().equals(request.getRequestType())) {
+            requestList.add(request);
+        } else if (hasDeepPaths(request) || hasDeepPaths(lastRequest)) {
+            requestList.add(request);
+        } else {
+            Set<String> allPaths = new TreeSet<String>();
+            allPaths.addAll(Arrays.asList(lastRequest.getPaths()));
+            allPaths.addAll(Arrays.asList(request.getPaths()));
+
+            addMissingPaths(allPaths);
+
+            lastRequest = new SimpleDistributionRequest(lastRequest.getRequestType(), allPaths.toArray(new String[allPaths.size()]));
+            requestList.set(requestList.size() - 1, lastRequest);
+        }
+        log.debug("current requests {}", requestList);
+    }
+
+    private void addMissingPaths(Set<String> allPaths) {
+        Set<String> newPaths = new HashSet<String>();
+
+        for (String path : allPaths) {
+            for (String existingPath : allPaths) {
+                // in case a requested path is descendant of an existing path, also add its siblings
+                if (path.length() > existingPath.length() && path.startsWith(existingPath)) {
+                    ResourceResolver resourceResolver = null;
+                    try {
+                        resourceResolver = DistributionUtils.loginService(resolverFactory, serviceUser);
+                        Resource resource = resourceResolver.getResource(path);
+                        if (resource != null) {
+                            for (Resource child : resource.getParent().getChildren()) {
+                                String childPath = child.getPath();
+                                if (!childPath.equals(path)) {
+                                    newPaths.add(childPath);
+                                }
+                            }
+                        } else {
+                            throw new RuntimeException("resource at path " + path + " is null");
+                        }
+                    } catch (LoginException le) {
+                        log.error("cannot obtain resource resolver for {}", serviceUser);
+                    } finally {
+                        DistributionUtils.safelyLogout(resourceResolver);
+                    }
+                }
+            }
+        }
+
+        if (!newPaths.isEmpty()) {
+            allPaths.addAll(newPaths);
+        }
+    }
+
 
     public void enable() {
 
     }
 
     public void disable() {
-        for (JcrEventDistributionTriggerListener listener: registeredListeners.values()) {
+        for (JcrEventDistributionTriggerListener listener : registeredListeners.values()) {
             Session session;
             try {
                 session = getSession();
@@ -151,7 +241,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
      *
      * @return a <code>int</code> as generated by e.g. <code>Event.NODE_ADDED | Event.NODE_REMOVED</code>
      */
-    int getEventTypes() {
+    private int getEventTypes() {
         return Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_CHANGED |
                 Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED;
     }
@@ -164,8 +254,68 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
      */
     Session getSession() throws RepositoryException {
         return cachedSession != null ? cachedSession
-                : (cachedSession = repository.loginAdministrative(null)); // TODO: change after SLING-4312
-                // : (cachedSession = repository.loginService(serviceUser, null));
+                : (cachedSession = repository.loginService(serviceUser, null));
+    }
+
+
+    String getNodePathFromEvent(Event event) throws RepositoryException {
+        String eventPath = event.getPath();
+        int type = event.getType();
+
+        if (eventPath == null) {
+            return null;
+        }
+
+        if (Event.PROPERTY_REMOVED == type || Event.PROPERTY_CHANGED == type || Event.PROPERTY_ADDED == type) {
+            eventPath = eventPath.substring(0, eventPath.lastIndexOf('/'));
+        }
+
+        return eventPath;
+    }
+
+
+    private static boolean hasDeepPaths(DistributionRequest distributionRequest) {
+        if (!DistributionRequestType.ADD.equals(distributionRequest.getRequestType())) {
+            return false;
+        }
+
+        for (String path : distributionRequest.getPaths()) {
+            if (distributionRequest.isDeep(path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    class DistributionExecutor implements Runnable {
+
+        private final List<DistributionRequest> requestList;
+        private final DistributionRequestHandler requestHandler;
+
+        public DistributionExecutor(List<DistributionRequest> requestList, DistributionRequestHandler requestHandler) {
+
+            this.requestList = requestList;
+            this.requestHandler = requestHandler;
+        }
+
+        public void run() {
+            for (DistributionRequest request : requestList) {
+                if (serviceUser == null) {
+                    requestHandler.handle(null, request);
+                } else {
+                    ResourceResolver resourceResolver = null;
+                    try {
+                        resourceResolver = DistributionUtils.loginService(resolverFactory, serviceUser);
+                        requestHandler.handle(resourceResolver, request);
+                    } catch (LoginException le) {
+                        log.error("cannot obtain resource resolver for {}", serviceUser);
+                    } finally {
+                        DistributionUtils.safelyLogout(resourceResolver);
+                    }
+                }
+            }
+        }
     }
 
 

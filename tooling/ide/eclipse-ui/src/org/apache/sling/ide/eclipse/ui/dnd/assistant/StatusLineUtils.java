@@ -61,8 +61,7 @@ public class StatusLineUtils {
         }
         IViewReference[] viewRefs = activePage.getViewReferences();
         if (viewRefs!=null) {
-            for (int i = 0; i < viewRefs.length; i++) {
-                IViewReference aViewRef = viewRefs[i];
+            for (IViewReference aViewRef : viewRefs) {
                 IViewPart view = aViewRef.getView(false);
                 if (view!=null) {
                     return view.getViewSite().getActionBars().getStatusLineManager();
@@ -71,8 +70,7 @@ public class StatusLineUtils {
         }
         IEditorReference[] editorRefs = activePage.getEditorReferences();
         if (editorRefs!=null) {
-            for (int i = 0; i < editorRefs.length; i++) {
-                IEditorReference anEditorRef = editorRefs[i];
+            for (IEditorReference anEditorRef : editorRefs) {
                 IEditorPart editor = anEditorRef.getEditor(false);
                 if (editor!=null) {
                     return editor.getEditorSite().getActionBars().getStatusLineManager();

@@ -46,15 +46,16 @@ public class PostRedirectTest extends HttpTestBase {
 
     public void testForcedRedirect() throws IOException {
         final Map<String, String> params = new HashMap<String, String>();
-        params.put(":redirect", "http://forced");
+        params.put(":redirect", "/forced");
         final Map<String, String> headers = new HashMap<String, String>();
         headers.put("Referer", "http://referer/");
 
         final String location = testClient.createNode(postUrl, params, headers,
             false);
+        // the servlet container prepends the host information to the redirect location
         assertEquals(
             "With forced redirect and Referer, redirect must be forced",
-            "http://forced", location);
+            HTTP_BASE_URL + "/forced", location);
     }
 
     public void testDefaultRedirect() throws IOException {

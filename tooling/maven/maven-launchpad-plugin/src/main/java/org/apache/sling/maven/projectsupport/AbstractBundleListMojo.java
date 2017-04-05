@@ -35,6 +35,8 @@ import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.SelectorUtils;
@@ -47,117 +49,67 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
      */
     protected static final String PARTIAL = "partialbundlelist";
 
-    /**
-     * @parameter default-value="${basedir}/src/main/bundles/list.xml"
-     */
+    @Parameter(defaultValue = "${basedir}/src/main/bundles/list.xml")
     protected File bundleListFile;
 
     /**
      * The Maven project.
-     *
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
      */
+    @Parameter(defaultValue = "${project}", readonly = true)
     protected MavenProject project;
 
-    /**
-     * @component
-     */
+    @Component
     protected MavenProjectHelper projectHelper;
 
-    /**
-     * @parameter expression="${configDirectory}"
-     *            default-value="src/main/config"
-     */
+    @Parameter(property = "configDirectory", defaultValue = "src/main/config")
     private File configDirectory;
 
-    /**
-     * @parameter expression="${commonSlingProps}"
-     *            default-value="src/main/sling/common.properties"
-     */
+    @Parameter(property = "commonSlingProps", defaultValue = "src/main/sling/common.properties")
     protected File commonSlingProps;
 
-    /**
-     * @parameter expression="${commonSlingBootstrap}"
-     *            default-value="src/main/sling/common.bootstrap.txt"
-     */
+    @Parameter(property = "commonSlingBootstrap", defaultValue = "src/main/sling/common.bootstrap.txt")
     protected File commonSlingBootstrap;
 
-    /**
-     * @parameter expression="${webappSlingProps}"
-     *            default-value="src/main/sling/webapp.properties"
-     */
+    @Parameter(property = "webappSlingProps", defaultValue = "src/main/sling/webapp.properties")
     protected File webappSlingProps;
 
-    /**
-     * @parameter expression="${webappSlingBootstrap}"
-     *            default-value="src/main/sling/webapp.bootstrap.txt"
-     */
+    @Parameter(property = "webappSlingBootstrap", defaultValue = "src/main/sling/webapp.bootstrap.txt")
     protected File webappSlingBootstrap;
 
-    /**
-     * @parameter expression="${standaloneSlingProps}"
-     *            default-value="src/main/sling/standalone.properties"
-     */
+    @Parameter(property = "standaloneSlingProps", defaultValue = "src/main/sling/standalone.properties")    
     protected File standaloneSlingProps;
 
-    /**
-     * @parameter expression="${standaloneSlingBootstrap}"
-     *            default-value="src/main/sling/standalone.bootstrap.txt"
-     */
+    @Parameter(property = "standaloneSlingBootstrap", defaultValue = "src/main/sling/standalone.bootstrap.txt")
     protected File standaloneSlingBootstrap;
 
-    /**
-     * @parameter expression="${ignoreBundleListConfig}"
-     *            default-value="false"
-     */
+    @Parameter(property="ignoreBundleListConfig", defaultValue = "false")
     protected boolean ignoreBundleListConfig;
 
-    /**
-     * @parameter expression="${session}
-     * @required
-     * @readonly
-     */
+    @Parameter(defaultValue = "${session}", readonly = true)
     protected MavenSession mavenSession;
 
     /**
      * Used to look up Artifacts in the remote repository.
-     *
-     * @component
      */
+    @Component
     private ArtifactFactory factory;
 
     /**
      * Used to look up Artifacts in the remote repository.
-     *
-     * @component hint="maven"
      */
+    @Component(hint = "maven")
     private ArtifactMetadataSource metadataSource;
 
     /**
      * Location of the local repository.
-     *
-     * @parameter expression="${localRepository}"
-     * @readonly
-     * @required
      */
+    @Parameter( defaultValue = "${localRepository}", readonly = true, required = true)
     private ArtifactRepository local;
 
-    /**
-     * List of Remote Repositories used by the resolver.
-     *
-     * @parameter expression="${project.remoteArtifactRepositories}"
-     * @readonly
-     * @required
-     */
+    @Parameter( defaultValue = "${project.remoteArtifactRepositories}", readonly = true, required = true)
     private List<ArtifactRepository> remoteRepos;
 
-    /**
-     * Used to look up Artifacts in the remote repository.
-     *
-     * @component
-     */
+    @Component
     private ArtifactResolver resolver;
 
     protected File getConfigDirectory() {

@@ -18,7 +18,7 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
-import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
@@ -40,13 +40,17 @@ class DistributionAgentJobConsumer implements JobConsumer {
 
     public JobResult process(Job job) {
         log.debug("processing job {}", job.getId());
-        String queueName = JobHandlingUtils.getQueueName(job);
-        DistributionQueueItem info = JobHandlingUtils.getItem(job);
-        log.info("processing item {} in queue {}", info.getId(), queueName);
-        boolean processingResult = queueProcessor.process(queueName, info);
-        JobResult jobResult = processingResult ? JobResult.OK : JobResult.FAILED;
-        log.info("item {} processed {} with result {}", new Object[]{info.getId(), jobResult, jobResult});
-        return jobResult;
+        DistributionQueueEntry entry = JobHandlingUtils.getEntry(job);
+        boolean processingResult = false;
+        if (entry != null) {
+            String queueName = entry.getStatus().getQueueName();
+            log.debug("processing item {} in queue {}", entry.getId(), queueName);
+            processingResult = queueProcessor.process(queueName, entry);
+            log.debug("item {} processed {}", entry.getId());
+        } else {
+            log.warn("no entry for job {}", job.getId());
+        }
+        return processingResult ? JobResult.OK : JobResult.FAILED;
     }
 
 }

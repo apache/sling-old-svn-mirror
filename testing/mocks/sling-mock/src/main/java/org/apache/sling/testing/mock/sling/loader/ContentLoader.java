@@ -18,31 +18,24 @@
  */
 package org.apache.sling.testing.mock.sling.loader;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.jcr.JsonItemWriter;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.jcr.contentparser.ContentParser;
+import org.apache.sling.jcr.contentparser.ContentParserFactory;
+import org.apache.sling.jcr.contentparser.ContentType;
+import org.apache.sling.jcr.contentparser.ParseException;
+import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
@@ -51,16 +44,13 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * Imports JSON data and binary data into Sling resource hierarchy.
+ * After all import operations from json or binaries {@link ResourceResolver#commit()} is called (when autocommit mode is active).
  */
 public final class ContentLoader {
 
-    private static final String REFERENCE = "jcr:reference:";
-    private static final String PATH = "jcr:path:";
     private static final String CONTENTTYPE_OCTET_STREAM = "application/octet-stream";
-    private static final String JCR_DATA_PLACEHOLDER = ":jcr:data";
 
     private static final Set<String> IGNORED_NAMES = ImmutableSet.of(
-            JcrConstants.JCR_PRIMARYTYPE,
             JcrConstants.JCR_MIXINTYPES,
             JcrConstants.JCR_UUID,
             JcrConstants.JCR_BASEVERSION,
@@ -71,10 +61,15 @@ public final class ContentLoader {
             "jcr:checkedOut",
             "jcr:isCheckedOut",
             "rep:policy");
+    
+    private static ContentParser JSON_PARSER = ContentParserFactory.create(ContentType.JSON, new ParserOptions()
+            .detectCalendarValues(true)
+            .ignorePropertyNames(IGNORED_NAMES)
+            .ignoreResourceNames(IGNORED_NAMES));
 
     private final ResourceResolver resourceResolver;
     private final BundleContext bundleContext;
-    private final DateFormat calendarFormat;
+    private final boolean autoCommit;
 
     /**
      * @param resourceResolver Resource resolver
@@ -88,9 +83,18 @@ public final class ContentLoader {
      * @param bundleContext Bundle context
      */
     public ContentLoader(ResourceResolver resourceResolver, BundleContext bundleContext) {
+        this (resourceResolver, bundleContext, true);
+    }
+
+    /**
+     * @param resourceResolver Resource resolver
+     * @param bundleContext Bundle context
+     * @param autoCommit Automatically commit changes after loading content (default: true)
+     */
+    public ContentLoader(ResourceResolver resourceResolver, BundleContext bundleContext, boolean autoCommit) {
         this.resourceResolver = resourceResolver;
         this.bundleContext = bundleContext;
-        this.calendarFormat = new SimpleDateFormat(JsonItemWriter.ECMA_DATE_FORMAT, JsonItemWriter.DATE_FORMAT_LOCALE);
+        this.autoCommit = autoCommit;
     }
 
     /**
@@ -170,10 +174,13 @@ public final class ContentLoader {
                 throw new IllegalArgumentException("Resource does already exist: " + destPath);
             }
 
-            String jsonString = convertToJsonString(inputStream).trim();
-            JSONObject json = new JSONObject(jsonString);
-            return this.createResource(parentResource, childName, json);
-        } catch (JSONException ex) {
+            LoaderContentHandler contentHandler = new LoaderContentHandler(destPath, resourceResolver);
+            JSON_PARSER.parse(contentHandler, inputStream);
+            if (autoCommit) {
+                resourceResolver.commit();
+            }
+            return resourceResolver.getResource(destPath);
+        } catch (ParseException ex) {
             throw new RuntimeException(ex);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
@@ -196,162 +203,6 @@ public final class ContentLoader {
         } catch (PersistenceException ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    private Resource createResource(Resource parentResource, String childName, JSONObject jsonObject)
-            throws IOException, JSONException {
-
-        // collect all properties first
-        boolean hasJcrData = false;
-        Map<String, Object> props = new HashMap<String, Object>();
-        JSONArray names = jsonObject.names();
-        for (int i = 0; names != null && i < names.length(); i++) {
-            final String name = names.getString(i);
-            if (StringUtils.equals(name, JCR_DATA_PLACEHOLDER)) {
-                hasJcrData = true;
-            }
-            else if (!IGNORED_NAMES.contains(name)) {
-                Object obj = jsonObject.get(name);
-                if (!(obj instanceof JSONObject)) {
-                    this.setProperty(props, name, obj);
-                }
-            }
-        }
-
-        // validate JCR primary type
-        Object primaryTypeObj = jsonObject.opt(JcrConstants.JCR_PRIMARYTYPE);
-        String primaryType = null;
-        if (primaryTypeObj != null) {
-            primaryType = String.valueOf(primaryTypeObj);
-        }
-        if (primaryType == null) {
-            primaryType = JcrConstants.NT_UNSTRUCTURED;
-        }
-        props.put(JcrConstants.JCR_PRIMARYTYPE, primaryType);
-
-        // create resource
-        Resource resource = resourceResolver.create(parentResource, childName, props);
-        
-        if (hasJcrData) {
-            ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
-            // we cannot import binary data here - but to avoid complaints by JCR we create it with empty binary data
-            valueMap.put(JcrConstants.JCR_DATA, new ByteArrayInputStream(new byte[0]));
-        }
-
-        // add child resources
-        for (int i = 0; names != null && i < names.length(); i++) {
-            final String name = names.getString(i);
-            if (!IGNORED_NAMES.contains(name)) {
-                Object obj = jsonObject.get(name);
-                if (obj instanceof JSONObject) {
-                    createResource(resource, name, (JSONObject) obj);
-                }
-            }
-        }
-
-        return resource;
-    }
-
-    private void setProperty(Map<String, Object> props, String name, Object value) throws JSONException {
-        if (value instanceof JSONArray) {
-            // multivalue
-            final JSONArray array = (JSONArray) value;
-            if (array.length() > 0) {
-                final Object[] values = new Object[array.length()];
-                for (int i = 0; i < array.length(); i++) {
-                    values[i] = array.get(i);
-                }
-
-                if (values[0] instanceof Double || values[0] instanceof Float) {
-                    Double[] arrayValues = new Double[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        arrayValues[i] = (Double) values[i];
-                    }
-                    props.put(cleanupJsonName(name), arrayValues);
-                } else if (values[0] instanceof Number) {
-                    Long[] arrayValues = new Long[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        arrayValues[i] = ((Number) values[i]).longValue();
-                    }
-                    props.put(cleanupJsonName(name), arrayValues);
-                } else if (values[0] instanceof Boolean) {
-                    Boolean[] arrayValues = new Boolean[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        arrayValues[i] = (Boolean) values[i];
-                    }
-                    props.put(cleanupJsonName(name), arrayValues);
-                } else {
-                    String[] arrayValues = new String[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        arrayValues[i] = values[i].toString();
-                    }
-                    props.put(cleanupJsonName(name), arrayValues);
-                }
-            } else {
-                props.put(cleanupJsonName(name), new String[0]);
-            }
-
-        } else {
-            // single value
-            if (value instanceof Double || value instanceof Float) {
-                props.put(cleanupJsonName(name), value);
-            } else if (value instanceof Number) {
-                props.put(cleanupJsonName(name), ((Number) value).longValue());
-            } else if (value instanceof Boolean) {
-                props.put(cleanupJsonName(name), value);
-            } else {
-                String stringValue = value.toString();
-
-                // check if value is a Calendar object
-                Calendar calendar = tryParseCalendarValue(stringValue);
-                if (calendar != null) {
-                    props.put(cleanupJsonName(name), calendar);
-                } else {
-                    props.put(cleanupJsonName(name), stringValue);
-                }
-
-            }
-        }
-    }
-
-    private String cleanupJsonName(String name) {
-        if (name.startsWith(REFERENCE)) {
-            return name.substring(REFERENCE.length());
-        }
-        if (name.startsWith(PATH)) {
-            return name.substring(PATH.length());
-        }
-        return name;
-    }
-
-    private String convertToJsonString(InputStream inputStream) {
-        try {
-            return IOUtils.toString(inputStream);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException ex) {
-                // ignore
-            }
-        }
-    }
-
-    private Calendar tryParseCalendarValue(String value) {
-        if (StringUtils.isNotBlank(value)) {
-            synchronized (calendarFormat) {
-                try {
-                    Date date = calendarFormat.parse(value);
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTime(date);
-                    return calendar;
-                } catch (ParseException ex) {
-                    // ignore
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -466,6 +317,9 @@ public final class ContentLoader {
             resourceResolver.create(file, JcrConstants.JCR_CONTENT,
                     ImmutableMap.<String, Object> builder().put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_RESOURCE)
                             .put(JcrConstants.JCR_DATA, inputStream).put(JcrConstants.JCR_MIMETYPE, mimeType).build());
+            if (autoCommit) {
+                resourceResolver.commit();
+            }
             return file;
         } catch (PersistenceException ex) {
             throw new RuntimeException("Unable to create resource at " + parentResource.getPath() + "/" + name, ex);
@@ -578,9 +432,13 @@ public final class ContentLoader {
      */
     public Resource binaryResource(InputStream inputStream, Resource parentResource, String name, String mimeType) {
         try {
-            return resourceResolver.create(parentResource, name,
+            Resource resource = resourceResolver.create(parentResource, name,
                     ImmutableMap.<String, Object> builder().put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_RESOURCE)
                             .put(JcrConstants.JCR_DATA, inputStream).put(JcrConstants.JCR_MIMETYPE, mimeType).build());
+            if (autoCommit) {
+                resourceResolver.commit();
+            }
+            return resource;
         } catch (PersistenceException ex) {
             throw new RuntimeException("Unable to create resource at " + parentResource.getPath() + "/" + name, ex);
         }
@@ -596,9 +454,9 @@ public final class ContentLoader {
         String mimeType = null;
         String fileExtension = StringUtils.substringAfterLast(name, ".");
         if (bundleContext != null && StringUtils.isNotEmpty(fileExtension)) {
-            ServiceReference ref = bundleContext.getServiceReference(MimeTypeService.class.getName());
+            ServiceReference<MimeTypeService> ref = bundleContext.getServiceReference(MimeTypeService.class);
             if (ref != null) {
-                MimeTypeService mimeTypeService = (MimeTypeService) bundleContext.getService(ref);
+                MimeTypeService mimeTypeService = (MimeTypeService)bundleContext.getService(ref);
                 mimeType = mimeTypeService.getMimeType(fileExtension);
             }
         }

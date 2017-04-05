@@ -21,8 +21,7 @@ package org.apache.sling.installer.api.info;
 import java.util.List;
 
 import org.apache.sling.installer.api.tasks.RegisteredResource;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The state of the OSGi installer at a given time.

@@ -18,7 +18,6 @@
  */
 package org.apache.sling.launchpad.webapp;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpSessionAttributeListener;
@@ -26,103 +25,37 @@ import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 
-import org.apache.sling.launchpad.base.shared.SharedConstants;
-
+@Deprecated
 public class SlingSessionListener implements HttpSessionAttributeListener,
         HttpSessionListener, ServletContextListener {
 
-    private static ServletContext servletContext;
-
-    private static ServletContextListener delegateeContextListener;
-
-    private static HttpSessionListener delegateeSessionListener;
-
-    private static HttpSessionAttributeListener delegateeSessionAttributeListener;
-
-    static void startDelegate(final ClassLoader classLoader) {
-
-        // if the listener has not been configured, do nothing because
-        // there is no servlet context to forward and there are no
-        // events ever sent to this listener
-        if (servletContext == null) {
-            return;
-        }
-
-        Object delegatee = null;
-        try {
-            Class<?> delegateeClass = classLoader.loadClass(SharedConstants.DEFAULT_SLING_LISTENER);
-            delegatee = delegateeClass.newInstance();
-        } catch (Exception e) {
-            servletContext.log(
-                "Delegatee Event Listener class "
-                    + SharedConstants.DEFAULT_SLING_LISTENER
-                    + " cannot be loaded or instantiated; Http Session Event forwarding is disabled",
-                e);
-        }
-
-        if (delegatee instanceof ServletContextListener) {
-            delegateeContextListener = (ServletContextListener) delegatee;
-            delegateeContextListener.contextInitialized(new ServletContextEvent(
-                servletContext));
-
-            delegateeSessionListener = (HttpSessionListener) delegatee;
-            delegateeSessionAttributeListener = (HttpSessionAttributeListener) delegatee;
-        }
-    }
-
-    static void stopDelegatee() {
-        if (delegateeContextListener != null) {
-            delegateeContextListener.contextDestroyed(new ServletContextEvent(
-                servletContext));
-        }
-
-        delegateeContextListener = null;
-        delegateeSessionListener = null;
-        delegateeSessionAttributeListener = null;
-    }
-
+    @Override
     public void contextInitialized(ServletContextEvent sce) {
-        SlingSessionListener.servletContext = sce.getServletContext();
+        sce.getServletContext().log("Deprecated SlingSessionListener is used. Please remove it from your web.xml");
     }
 
+    @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        stopDelegatee();
-        SlingSessionListener.servletContext = null;
     }
 
+    @Override
     public void sessionCreated(HttpSessionEvent se) {
-        final HttpSessionListener delegateeSessionListener = SlingSessionListener.delegateeSessionListener;
-        if (delegateeSessionListener != null) {
-            delegateeSessionListener.sessionCreated(se);
-        }
     }
 
+    @Override
     public void sessionDestroyed(HttpSessionEvent se) {
-        final HttpSessionListener delegateeSessionListener = SlingSessionListener.delegateeSessionListener;
-        if (delegateeSessionListener != null) {
-            delegateeSessionListener.sessionDestroyed(se);
-        }
     }
 
+    @Override
     public void attributeAdded(HttpSessionBindingEvent se) {
-        final HttpSessionAttributeListener delegateeSessionAttributeListener = SlingSessionListener.delegateeSessionAttributeListener;
-        if (delegateeSessionAttributeListener != null) {
-            delegateeSessionAttributeListener.attributeAdded(se);
-        }
     }
 
+    @Override
     public void attributeRemoved(HttpSessionBindingEvent se) {
-        final HttpSessionAttributeListener delegateeSessionAttributeListener = SlingSessionListener.delegateeSessionAttributeListener;
-        if (delegateeSessionAttributeListener != null) {
-            delegateeSessionAttributeListener.attributeRemoved(se);
-        }
     }
 
+    @Override
     public void attributeReplaced(HttpSessionBindingEvent se) {
-        final HttpSessionAttributeListener delegateeSessionAttributeListener = SlingSessionListener.delegateeSessionAttributeListener;
-        if (delegateeSessionAttributeListener != null) {
-            delegateeSessionAttributeListener.attributeReplaced(se);
-        }
     }
 
 }

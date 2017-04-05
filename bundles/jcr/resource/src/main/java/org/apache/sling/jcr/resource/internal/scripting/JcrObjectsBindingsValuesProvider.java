@@ -20,22 +20,19 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.script.Bindings;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * BindingsValuesProvider for currentNode and currentSession object.
  */
-@Component
-@Service
-@Properties({
-        @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling CurrentNode BindingsValuesProvider"),
-        @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
+@Component(service = BindingsValuesProvider.class,
+           property = {
+                   Constants.SERVICE_DESCRIPTION + "=Apache Sling CurrentNode BindingsValuesProvider",
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+           })
 public class JcrObjectsBindingsValuesProvider implements BindingsValuesProvider {
 
     private static final String PROP_CURRENT_NODE = "currentNode";
@@ -44,6 +41,7 @@ public class JcrObjectsBindingsValuesProvider implements BindingsValuesProvider 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addBindings(final Bindings bindings) {
         final Resource resource = (Resource) bindings.get("resource");
         if (resource != null) {

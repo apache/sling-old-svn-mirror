@@ -18,28 +18,36 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.EventHelper;
-import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
 
 /** Base test class with common utilities */
-abstract class JcrInstallTestBase extends RepositoryTestBase {
+public abstract class JcrInstallTestBase  {
     public static final long TIMEOUT = 5000L;
+    
+    @Rule
+    public final SlingContext context = new SlingContext(ResourceResolverType.JCR_JACKRABBIT);
 
-    SlingRepository repo;
-    Session session;
+    protected Session session;
     protected EventHelper eventHelper;
     protected ContentHelper contentHelper;
     protected JcrInstaller installer;
     protected MockOsgiInstaller osgiInstaller;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        repo = getRepository();
-        session = repo.loginAdministrative(repo.getDefaultWorkspace());
+    @Before
+    public void setUp() throws Exception {
+
+        session = context.resourceResolver().adaptTo(Session.class);
         eventHelper = new EventHelper(session);
         contentHelper = new ContentHelper(session);
         contentHelper.cleanupContent();
@@ -47,21 +55,27 @@ abstract class JcrInstallTestBase extends RepositoryTestBase {
             contentHelper.setupContent();
         }
         osgiInstaller = new MockOsgiInstaller();
-        installer = MiscUtil.getJcrInstaller(repo, osgiInstaller);
+        context.registerService(OsgiInstaller.class, osgiInstaller);
+        context.runMode(MiscUtil.RUN_MODES);
+        
+        installer = new JcrInstaller();
+        context.registerInjectActivateService(installer);
+        Thread.sleep(1000);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
+
         contentHelper.cleanupContent();
-        session.logout();
         eventHelper = null;
         contentHelper = null;
-        installer.deactivate(MiscUtil.getMockComponentContext());
+        installer.deactivate(context.componentContext());
         MiscUtil.waitForInstallerThread(installer, TIMEOUT);
     }
 
-    protected abstract boolean needsTestContent();
+    protected boolean needsTestContent() {
+        return true;
+    }
 
     protected void assertRegisteredPaths(String [] paths) {
         for(String path : paths) {

@@ -156,7 +156,7 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
     private SerializationKind getSerializationKind(Aggregate aggregate) throws RepositoryException {
 
         NodeType[] mixinNodeTypes = aggregate.getNode().getMixinNodeTypes();
-        List<String> mixinNodeTypeNames = new ArrayList<String>(mixinNodeTypes.length);
+        List<String> mixinNodeTypeNames = new ArrayList<>(mixinNodeTypes.length);
         for (NodeType nodeType : mixinNodeTypes)
             mixinNodeTypeNames.add(nodeType.getName());
 
@@ -280,7 +280,7 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
 
                 if (parentFile != null) {
                     Aggregate parentAggregate = parentFile.getAggregate();
-                    ArrayList<Aggregate> parents = new ArrayList<Aggregate>();
+                    ArrayList<Aggregate> parents = new ArrayList<>();
                     parents.add(parentAggregate);
                     List<Aggregate> chain = lookForAggregateInLeaves(resource, parentAggregate, parents);
                     if (chain != null) {

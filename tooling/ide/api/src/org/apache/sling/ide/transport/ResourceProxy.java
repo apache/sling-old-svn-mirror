@@ -27,6 +27,7 @@ import java.util.Map;
  * <p>
  * The resource usually has properties, as returned from <tt>{@link #getProperties()}</tt>. If no properties are found,
  * it means that the resource is only a reference and not that it is an empty resource.
+ * If a property contains multiple values it is being represented by an array type.
  * </p>
  * 
  * <p>
@@ -43,8 +44,8 @@ public class ResourceProxy {
 
     private final String path;
     private final Map<String, Object> properties;
-    private final List<ResourceProxy> children = new ArrayList<ResourceProxy>();
-    private final Map<Class<?>, Object> adapted = new HashMap<Class<?>, Object>(1);
+    private final List<ResourceProxy> children = new ArrayList<>();
+    private final Map<Class<?>, Object> adapted = new HashMap<>(1);
 
     public ResourceProxy(String path) {
         this(path, new HashMap<String, Object>());
@@ -99,7 +100,7 @@ public class ResourceProxy {
 
     public List<ResourceProxy> getCoveredChildren() {
 
-        List<ResourceProxy> coveredChildren = new ArrayList<ResourceProxy>();
+        List<ResourceProxy> coveredChildren = new ArrayList<>();
         for (ResourceProxy child : getChildren()) {
             if (child.getProperties().isEmpty()) {
                 continue;

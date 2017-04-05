@@ -1,6 +1,4 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
-    "name": "default",
-
-    "packageBuilder.target" : "(name=vlt)"
+    "name": "default"
 }

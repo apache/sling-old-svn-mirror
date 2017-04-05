@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <title>HApi sample content</title>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="header">
+        <h3 class="text-muted">Hypermedia API sample content</h3>
+    </div>
+    <div class="row"></div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div data-sly-use.card="${'org.apache.sling.hapi.sightly.HApiUse' @type='/apps/sling/hapi_sample/types/album_card'}"
+                 data-sly-attribute="${card.itemtype}" class="card-asset">
+                <a rel="self" href="details.html">
+                    <img data-sly-attribute="${card.itemprop.thumbnail}" class="show-grid" src="assets/preview-small-album.png" alt="">
+
+                    <div>
+                        <h4 data-sly-attribute="${card.itemprop['title']}">Christmas Eve 2014</h4>
+
+                        <p class="type">album</p>
+
+                        <p>Pictures: <span data-sly-attribute="${card.itemprop.cards}" class="size">5</span></p>
+                        <meta data-sly-attribute="${card.itemprop.disabled}" content="false"/>
+                        <div class="myinfo">
+                            <p class="mymodified">
+                                <i>Modified</i>
+                                <span data-sly-attribute="${card.itemprop.modified}" class="date">2 days ago</span>
+                                <span>Admin</span>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div data-sly-use.card="${'org.apache.sling.hapi.sightly.HApiUse' @type='/apps/sling/hapi_sample/types/pic_card'}"
+                 data-sly-attribute="${card.itemtype}" class="card-asset">
+                <a rel="self" href="details.html">
+                    <img data-sly-attribute="${card.itemprop.thumbnail}" class="show-grid" src="assets/preview-small.png" alt="">
+
+                    <div>
+                        <h4 data-sly-attribute="${card.itemprop['title']}">PIC 002</h4>
+
+                        <p class="type">PSD</p>
+
+                        <p data-sly-attribute="${card.itemprop.resolution}"
+                           data-sly-use.resolution="${'org.apache.sling.hapi.sightly.HApiUse' @type=card.proptype.resolution}" class="resolution">
+                            <span data-sly-attribute="${resolution.itemprop.width}">1220</span> x <span
+                                data-sly-attribute="${resolution.itemprop.height}">400</span>
+                        </p>
+
+                        <p data-sly-attribute="${card.itemprop.size}" class="size">149KB</p>
+                        <meta data-sly-attribute="${card.itemprop.disabled}" content="false"/>
+                        <div class="myinfo">
+                            <p class="mymodified">
+                                <i>Modified</i>
+                                <span data-sly-attribute="${card.itemprop.modified}" class="date">10 minutes ago</span>
+                                <span>John Doe</span>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div data-sly-use.card="${'org.apache.sling.hapi.sightly.HApiUse' @type='/apps/sling/hapi_sample/types/pic_card'}"
+                 data-sly-attribute="${card.itemtype}" class="card-asset">
+                <a rel="self" href="details.html">
+                    <img data-sly-attribute="${card.itemprop.thumbnail}" class="show-grid" src="assets/preview-small.png" alt="">
+
+                    <div>
+                        <h4 data-sly-attribute="${card.itemprop['title']}">PIC 003</h4>
+
+                        <p class="type">JPG</p>
+
+                        <p data-sly-attribute="${card.itemprop.resolution}"
+                           data-sly-use.resolution="${'org.apache.sling.hapi.sightly.HApiUse' @type=card.proptype.resolution}" class="resolution">
+                            <span data-sly-attribute="${resolution.itemprop.width}">1520</span> x <span
+                                data-sly-attribute="${resolution.itemprop.height}">450</span>
+                        </p>
+
+                        <p data-sly-attribute="${card.itemprop.size}" class="size">249KB</p>
+                        <meta data-sly-attribute="${card.itemprop.disabled}" content="false"/>
+                        <div class="myinfo">
+                            <p class="mymodified">
+                                <i>Modified</i>
+                                <span data-sly-attribute="${card.itemprop.modified}" class="date">3 weeks ago</span>
+                                <span>Jane Austen</span>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div data-sly-use.card="${'org.apache.sling.hapi.sightly.HApiUse' @type='/apps/sling/hapi_sample/types/pic_card'}"
+                 data-sly-attribute="${card.itemtype}" class="card-asset">
+                <a rel="self" href="details.html">
+                    <img data-sly-attribute="${card.itemprop.thumbnail}" src="assets/preview-small.png" alt="">
+
+                    <div>
+                        <h4 data-sly-attribute="${card.itemprop['title']}">PIC 004</h4>
+
+                        <p class="type">PSD</p>
+
+                        <p data-sly-attribute="${card.itemprop.resolution}"
+                           data-sly-use.resolution="${'org.apache.sling.hapi.sightly.HApiUse' @type=card.proptype.resolution}" class="resolution">
+                            <span data-sly-attribute="${resolution.itemprop.width}">1520</span> x <span
+                                data-sly-attribute="${resolution.itemprop.height}">600</span>
+                        </p>
+
+                        <p data-sly-attribute="${card.itemprop.size}" class="size">349KB</p>
+                        <meta data-sly-attribute="${card.itemprop.disabled}" content="false"/>
+                        <div class="myinfo">
+                            <p class="mymodified">
+                                <i>Modified</i>
+                                <span data-sly-attribute="${card.itemprop.modified}" class="date">2 days ago</span>
+                                <span>John Doe</span>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div data-sly-use.card="${'org.apache.sling.hapi.sightly.HApiUse' @type='/apps/sling/hapi_sample/types/pic_card'}"
+                 data-sly-attribute="${card.itemtype}" class="card-asset">
+                <a rel="self" href="details.html">
+                    <img data-sly-attribute="${card.itemprop.thumbnail}" src="assets/preview-small.png" alt="">
+
+                    <div>
+                        <h4 data-sly-attribute="${card.itemprop['title']}">PIC 005</h4>
+
+                        <p class="type">PNG</p>
+
+                        <p data-sly-attribute="${card.itemprop.resolution}"
+                           data-sly-use.resolution="${'org.apache.sling.hapi.sightly.HApiUse' @type=card.proptype.resolution}" class="resolution">
+                            <span data-sly-attribute="${resolution.itemprop.width}">1220</span> x <span
+                                data-sly-attribute="${resolution.itemprop.height}">400</span>
+                        </p>
+
+                        <p data-sly-attribute="${card.itemprop.size}" class="size">179KB</p>
+                        <meta data-sly-attribute="${card.itemprop.disabled}" content="false"/>
+                        <div class="myinfo">
+                            <p class="mymodified">
+                                <i>Modified</i>
+                                <span data-sly-attribute="${card.itemprop.modified}" class="date">1 day ago</span>
+                                <span>Admin</span>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div data-sly-use.card="${'org.apache.sling.hapi.sightly.HApiUse' @type='/apps/sling/hapi_sample/types/pic_card'}"
+                 data-sly-attribute="${card.itemtype}" class="card-asset">
+                <a rel="self" href="details.html">
+                    <img data-sly-attribute="${card.itemprop.thumbnail}" src="assets/preview-small.png" alt="">
+
+                    <div>
+                        <h4 data-sly-attribute="${card.itemprop['title']}">PIC 006</h4>
+
+                        <p class="type">PSD</p>
+
+                        <p data-sly-attribute="${card.itemprop.resolution}"
+                           data-sly-use.resolution="${'org.apache.sling.hapi.sightly.HApiUse' @type=card.proptype.resolution}" class="resolution">
+                            <span data-sly-attribute="${resolution.itemprop.width}">1220</span> x <span
+                                data-sly-attribute="${resolution.itemprop.height}">400</span>
+                        </p>
+
+                        <p data-sly-attribute="${card.itemprop.size}" class="size">329KB</p>
+                        <meta data-sly-attribute="${card.itemprop.disabled}" content="false"/>
+                        <div class="myinfo">
+                            <p class="mymodified">
+                                <i>Modified</i>
+                                <span data-sly-attribute="${card.itemprop.modified}" class="date">5 minutes ago</span>
+                                <span>Jane Austen</span>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- /container -->
+    <footer class="footer">
+        <p>HApi sample</p>
+    </footer>
+</div>
+
+</body>
+</html>

@@ -71,6 +71,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         serviceRegistrations.add(bundleContext.registerService(ConfigurationListener.class.getName(), this, null));
 
         final InstallationListener il = new InstallationListener() {
+            @Override
             public void onEvent(InstallationEvent event) {
                 installationEvents++;
             }
@@ -95,6 +96,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     /**
      * @see org.osgi.service.cm.ConfigurationListener#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
      */
+    @Override
     public void configurationEvent(final ConfigurationEvent e) {
         if ( e.getType() == ConfigurationEvent.CM_DELETED || e.getType() == ConfigurationEvent.CM_UPDATED) {
             synchronized ( events ) {
@@ -449,18 +451,21 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     public void testDeferredConfigRemove() throws Exception {
         final AtomicInteger transformerCount = new AtomicInteger();
 
-        final ServiceTracker st = new ServiceTracker(bundleContext,
-                ResourceTransformer.class.getName(), new ServiceTrackerCustomizer() {
+        final ServiceTracker<ResourceTransformer, ResourceTransformer> st = new ServiceTracker<ResourceTransformer, ResourceTransformer>(bundleContext,
+                ResourceTransformer.class, new ServiceTrackerCustomizer<ResourceTransformer, ResourceTransformer>() {
 
-            public void removedService(ServiceReference reference, Object service) {
+            @Override
+            public void removedService(ServiceReference<ResourceTransformer> reference, ResourceTransformer service) {
                 bundleContext.ungetService(reference);
                 transformerCount.decrementAndGet();
             }
 
-            public void modifiedService(ServiceReference reference, Object service) {
+            @Override
+            public void modifiedService(ServiceReference<ResourceTransformer> reference, ResourceTransformer service) {
             }
 
-            public Object addingService(ServiceReference reference) {
+            @Override
+            public ResourceTransformer addingService(ServiceReference<ResourceTransformer> reference) {
                 transformerCount.incrementAndGet();
                 return bundleContext.getService(reference);
             }

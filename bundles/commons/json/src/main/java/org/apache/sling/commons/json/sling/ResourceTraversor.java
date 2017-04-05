@@ -26,6 +26,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
+@Deprecated
 public class ResourceTraversor {
 
     public static final class Entry {
@@ -52,6 +53,13 @@ public class ResourceTraversor {
 
     private final Resource startResource;
 
+    /** Create a ResourceTraversor, optionally limiting recursion and total number of resources
+     * @param levels recursion levels limit, -1 means no limit
+     * @param maxResources maximum number of resources to collect, ignored if levels == 1
+     * @param resource the root resource to traverse
+     * @param tidy not used
+     * @throws JSONException
+     */
     public ResourceTraversor(final int levels, final long maxResources, final Resource resource, final boolean tidy)
     throws JSONException {
         this.maxResources = maxResources;
@@ -99,6 +107,11 @@ public class ResourceTraversor {
                 final JSONObject json = collectResource(res, jsonObj);
                 nextQueue.addLast(new Entry(res, json));
             }
+        }
+
+        // do processing only at first level to avoid unnecessary recursion
+        if (currentLevel > 0) {
+            return -1;
         }
 
         while (!currentQueue.isEmpty() || !nextQueue.isEmpty()) {

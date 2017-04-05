@@ -32,6 +32,8 @@ import javax.servlet.jsp.tagext.VariableInfo;
  */
 public abstract class AbstractVarTEI extends TagExtraInfo {
 
+    static final String OBJECT_CLASS_NAME = Object.class.getName();
+
     protected static final String ATTR_VAR = "var";
 
     private final String variableNameAttribute;
@@ -68,6 +70,19 @@ public abstract class AbstractVarTEI extends TagExtraInfo {
      * @return The class name of the variable's type.
      */
     protected abstract String getClassName(TagData data);
+
+    static String safeGetStringAttribute(TagData data, String attributeName) {
+        final Object attribute = data.getAttribute(attributeName);
+        if (attribute == TagData.REQUEST_TIME_VALUE) {
+            return null;
+        }
+        return data.getAttributeString(attributeName);
+    }
+
+    static String safeGetStringAttribute(TagData data, String attributeName, String defaultValue) {
+        final String attribute = safeGetStringAttribute(data, attributeName);
+        return attribute == null ? defaultValue : attribute;
+    }
 
     @Override
     public VariableInfo[] getVariableInfo(TagData data) {

@@ -18,69 +18,11 @@
  */
 package org.apache.sling.testing.mock.sling.servlet;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.api.request.RequestPathInfo;
-import org.apache.sling.api.resource.Resource;
-
 /**
- * Mock {@link RequestPathInfo} implementation.
+ * Mock {@link org.apache.sling.api.request.RequestPathInfo} implementation.
  */
-public final class MockRequestPathInfo implements RequestPathInfo {
+public final class MockRequestPathInfo extends org.apache.sling.servlethelpers.MockRequestPathInfo {
 
-    private String extension;
-    private String resourcePath;
-    private String selectorString;
-    private String suffix;
-
-    @Override
-    public String getExtension() {
-        return this.extension;
-    }
-
-    @Override
-    public String getResourcePath() {
-        return this.resourcePath;
-    }
-
-    @Override
-    public String[] getSelectors() {
-        if (StringUtils.isEmpty(this.selectorString)) {
-            return new String[0];
-        } else {
-            return StringUtils.split(this.selectorString, ".");
-        }
-    }
-
-    @Override
-    public String getSelectorString() {
-        return this.selectorString;
-    }
-
-    @Override
-    public String getSuffix() {
-        return this.suffix;
-    }
-
-    public void setExtension(final String extension) {
-        this.extension = extension;
-    }
-
-    public void setResourcePath(final String resourcePath) {
-        this.resourcePath = resourcePath;
-    }
-
-    public void setSelectorString(final String selectorString) {
-        this.selectorString = selectorString;
-    }
-
-    public void setSuffix(final String suffix) {
-        this.suffix = suffix;
-    }
-
-    // --- unsupported operations ---
-    @Override
-    public Resource getSuffixResource() {
-        throw new UnsupportedOperationException();
-    }
+    // inherit from superclass
 
 }

@@ -111,22 +111,18 @@ public class XmlRenderer extends RunListener implements Renderer, RendererFactor
 	 */
 	private int testSuiteCount = 0;
 
-    /** @inheritDoc */
     public Renderer createRenderer() { 
         return new XmlRenderer();
     }
 
-    /** @inheritDoc */
     public boolean appliesTo(TestSelector selector) {
         return EXTENSION.equals(selector.getExtension());
     }
 
-    /** @inheritDoc */
     public String getExtension() {
         return EXTENSION;
     }
 
-    /** @inheritDoc */
 	public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
         if(output != null) {
             throw new IllegalStateException("Output Writer already set");
@@ -143,25 +139,20 @@ public class XmlRenderer extends RunListener implements Renderer, RendererFactor
 
 	}   
 
-    /** @inheritDoc */
 	public void info(String cssClass, String str) {
 	}
 
-    /** @inheritDoc */
 	public void list(String cssClass, Collection<String> data) {
 	}
 
-    /** @inheritDoc */
 	public void title(int level, String title) {
 		if (level == 3)
 			name = title;
 	}
 	
-    /** @inheritDoc */
     public void link(String info, String url, String method) {
     }
 
-    /** @inheritDoc */
 	public void cleanup() {
 		if (testSuiteCount > 1) {
 			output.println(getStringFromElement(suitesElement));
@@ -171,7 +162,6 @@ public class XmlRenderer extends RunListener implements Renderer, RendererFactor
 		output = null;
 	}
 	
-    /** @inheritDoc */
     public RunListener getRunListener() {
         return this;
     }

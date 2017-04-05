@@ -33,7 +33,7 @@ import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.Constants;
 
 /**
- * The <code>StartupHandler</code> tries to detect the startup mode:
+ * The <code>StartupManager</code> tries to detect the startup mode:
  * It distinguishes between an initial startup (INSTALL), an update (UPDATE)
  * and a restart without a change (RESTART).
  * @since 2.4.0
@@ -176,6 +176,7 @@ public class StartupManager {
         long timeStamp = selfStamp;
         final ClassLoader loader = clazz.getClassLoader();
         if (loader instanceof URLClassLoader) {
+            @SuppressWarnings("resource")
             final URLClassLoader urlLoader = (URLClassLoader) loader;
             final URL[] urls = urlLoader.getURLs();
             if (urls.length > 0) {

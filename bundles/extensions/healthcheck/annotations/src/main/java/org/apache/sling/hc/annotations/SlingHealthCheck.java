@@ -47,6 +47,14 @@ public @interface SlingHealthCheck {
      * This attribute is converted to values for the <code>hc.async.cronExpression</code> property. */
     String asyncCronExpression() default "";       
     
+    /**
+     * Overrides the global result TTL as configured in 
+     * {@link org.apache.sling.hc.core.impl.executor.HealthCheckExecutorImpl} for this individual check.
+     * <p>
+     * The value of this property must be of type {@link Long} and is configured in ms.
+     */
+    long resultCacheTtlInMs() default -1;
+    
     // handling of service and component properties (optional)
 
     /** Whether to generate a default SCR component tag. If set to false, a {@link org.apache.felix.scr.annotations.Component} annotation can be added manually
@@ -64,6 +72,9 @@ public @interface SlingHealthCheck {
      * file for this component. Otherwise no Metatype Service data is generated for this component. */
     boolean metatype() default true;
 
+    /** Whether immediate is set on the SCR component.  */
+    boolean immediate() default false;
+
     /** Set the metatype factory pid property (only for non factory components). */
     boolean configurationFactory() default false;
 
@@ -77,4 +88,6 @@ public @interface SlingHealthCheck {
     /** This is generally used as a description for the object described by the meta type. This name may be localized by prepending a % sign to the name. Default
      * value: %&lt;name&gt;.description */
     String description() default "";
+
+
 }

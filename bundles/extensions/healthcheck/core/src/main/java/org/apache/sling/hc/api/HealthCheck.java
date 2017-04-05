@@ -66,7 +66,14 @@ public interface HealthCheck {
      * will be executed asynchronously using the cron expression provided.
      */
     String ASYNC_CRON_EXPRESSION = "hc.async.cronExpression";
-    
+
+    /**
+     * Optional service property: TTL for health check {@link Result}.
+     * The value of this property must be of type {@link Long} and is 
+     * specified in ms.
+     */
+    String RESULT_CACHE_TTL_IN_MS = "hc.resultCacheTtlInMs";
+
     /**
      * Execute this health check and return a {@link Result}
      * This is meant to execute quickly, access to external

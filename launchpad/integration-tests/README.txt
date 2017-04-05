@@ -6,7 +6,7 @@ separated in their own jar to be reusable.
 To run a single test or a specific set of tests against a running Sling
 instance, use for example:
 
-    mvn test -Dtest=UploadFileTest
+    mvn test -Dtest=UploadFileTest -Dhttp.port=1234
     
 Where UploadFileTest is the test to run. Wildcards are allowed, and test
 classes are found in the src/main folder (not a typo - that's not src/test
@@ -23,25 +23,24 @@ on host xyzzy, port 1234, with the Sling main servlet mounted under /foo:
     -Dtest.host=xyzzy \
     -Dhttp.base.path=foo \
     -Dwebdav.workspace.path=foo \
+    -Dlaunchpad.readiness.mediatype=.json:application/json \ 
     -Dtest=**/integrationtest/**/*Test.java
-
-JUnit OakOnly and JackrabbitOnly categories are used to select some tests
-which are specific to one of these implementations. By default, OakOnly tests
-are excluded, to switch to them use -Dsling.run.modes=oak
 
 To run the tests against the same instance that is used in the full build,
 start an instance by running
 
-  mvn launchpad:run
+   mvn clean install -Dlaunchpad.keep.running=true -Dhttp.port=8080 -Ddebug=true
 
-in the launchpad/testing folder, optionally using -Dsling.run.modes=oak to
-use Oak instead of Jackrabbit.
+in the launchpad/testing folder (-Ddebug is optional). 
+
+And use the same -Dhttp.port option to run tests here.
 
 The standard -Dmaven.surefire.debug option can be used to debug the tests
-themselves. To debug the server-side Sling code, set the appropriate JVM
-options on the VM that runs it.
+themselves. Have a look at the README.txt in the launchpad.testing module on how
+to debug the server-side Sling code.
 
-Note that, for all tests to pass, the Sling instance under test needs the 
-org.apache.sling.launchpad.test-services bundle, and the war file of the
-launchpad/test-services-war project which should be copied to the
+If using a Sling instance that's not setup by the launchpad/testing module,
+note that for all tests to pass that instance needs the
+org.apache.sling.launchpad.test-services bundle to be active and the war 
+file of the launchpad/test-services-war project to be be copied to the
 sling/startup/0 folder before starting Sling.

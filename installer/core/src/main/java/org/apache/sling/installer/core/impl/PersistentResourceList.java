@@ -29,10 +29,12 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.event.InstallationListener;
@@ -142,15 +144,15 @@ public class PersistentResourceList {
      */
     private void updateCache() {
         for(final EntityResourceList group : this.data.values()) {
-            for(final RegisteredResource rr : group.getResources()) {
+            for(final RegisteredResource rr : group.listResources()) {
                 if ( ((RegisteredResourceImpl)rr).hasDataFile() ) {
-                    FileDataStore.SHARED.updateDigestCache(rr.getURL(), rr.getDigest());
+                    FileDataStore.SHARED.updateDigestCache(rr.getURL(), ((RegisteredResourceImpl)rr).getDataFile(), rr.getDigest());
                 }
             }
         }
         for(final RegisteredResource rr : this.untransformedResources ) {
             if ( ((RegisteredResourceImpl)rr).hasDataFile() ) {
-                FileDataStore.SHARED.updateDigestCache(rr.getURL(), rr.getDigest());
+                FileDataStore.SHARED.updateDigestCache(rr.getURL(), ((RegisteredResourceImpl)rr).getDataFile(), rr.getDigest());
             }
         }
     }
@@ -193,7 +195,7 @@ public class PersistentResourceList {
         }
         // installed resources are next
         for(final EntityResourceList group : this.data.values()) {
-            for(final RegisteredResource rr : group.getResources()) {
+            for(final RegisteredResource rr : group.listResources()) {
                 if ( rr.getURL().equals(input.getURL()) && ( rr.getDigest().equals(input.getDigest()))) {
                     // if we found the resource we can return after updating
                     ((RegisteredResourceImpl)rr).update(input);
@@ -308,6 +310,7 @@ public class PersistentResourceList {
         // remove resource from unknown list
         this.untransformedResources.remove(resource);
         try {
+            Set<String> entityIds = new HashSet<String>();
             for(int i=0; i<result.length; i++) {
                 // check the result
                 final TransformationResult tr = result[i];
@@ -322,6 +325,14 @@ public class PersistentResourceList {
                 }
                 final RegisteredResourceImpl clone =  (RegisteredResourceImpl)((RegisteredResourceImpl)resource).clone(result[i]);
                 this.checkInstallable(clone);
+                entityIds.add(clone.getEntityId());
+            }
+            for (EntityResourceList group : this.data.values()) {
+                if (!entityIds.contains(group.getResourceId())) {
+                    if (group.removeInternal(resource.getURL())) {
+                        logger.debug("Removed stale resources from group with entityid: {} because after transforming {} the entityids have changed.", group.getResourceId(), resource);
+                    }
+                }
             }
         } catch (final IOException ioe) {
             logger.warn("Ignoring resource. Error during processing of " + resource, ioe);

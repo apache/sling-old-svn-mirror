@@ -19,13 +19,11 @@
 
 package org.apache.sling.distribution.resources.impl.common;
 
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -34,15 +32,23 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 
+/**
+ * a readable {@link ResourceProvider} for distribution.
+ */
 public abstract class AbstractReadableResourceProvider implements ResourceProvider {
 
-    protected static final String ADAPTABLE_PROPERTY_NAME = "adaptable";
+    protected static final String INTERNAL_ADAPTABLE = "internal:adaptable";
+
+    public static final String INTERNAL_NAME = "internal:adaptable";
+
+    protected static final String INTERNAL_ITEMS_ITERATOR = "internal:itemsIterator";
 
     protected static final String ITEMS = "items";
 
+
     protected static final String SLING_RESOURCE_TYPE = "sling:resourceType";
 
-    protected final String resourceRoot;
+    final String resourceRoot;
 
     protected AbstractReadableResourceProvider(String resourceRoot) {
 
@@ -70,10 +76,12 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
         Resource resource = null;
 
-        Map<String, Object> properties = getResourceProperties(pathInfo);
+        Map<String, Object> properties = getResourceProperties(resourceResolver,  pathInfo);
+
 
         if (properties != null) {
-            Object adaptable = properties.remove(ADAPTABLE_PROPERTY_NAME);
+            Object adaptable = properties.remove(INTERNAL_ADAPTABLE);
+            properties.remove(INTERNAL_ITEMS_ITERATOR);
 
             resource = buildMainResource(resourceResolver, pathInfo, properties, adaptable);
         }
@@ -88,8 +96,6 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
                                Object... adapters) {
         return new SimpleReadableResource(resourceResolver, pathInfo.getResourcePath(), properties, adapters);
     }
-
-
 
 
     SimplePathInfo extractPathInfo(String path) {
@@ -113,6 +119,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     }
 
 
+    @SuppressWarnings( "unchecked" )
     public Iterator<Resource> listChildren(Resource parent) {
         String path = parent.getPath();
         ResourceResolver resourceResolver = parent.getResourceResolver();
@@ -132,31 +139,51 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         }
 
         List<Resource> resourceList = new ArrayList<Resource>();
-        Iterable<String> childrenList = getResourceChildren(pathInfo);
+        Iterable<String> childrenList = getResourceChildren(resourceResolver, pathInfo);
+        Iterator<Map<String,Object>> childrenProperties = null;
 
         if (childrenList == null) {
-            Map<String, Object> properties = getResourceProperties(pathInfo);
+            Map<String, Object> properties = getResourceProperties(resourceResolver, pathInfo);
 
             if (properties != null && properties.containsKey(ITEMS)
                     && properties.get(ITEMS) instanceof String[]) {
                 String[] itemsArray = (String[]) properties.get(ITEMS);
                 childrenList = Arrays.asList(itemsArray);
             }
+
+            if (properties != null && properties.containsKey(INTERNAL_ITEMS_ITERATOR)) {
+                childrenProperties = (Iterator<Map<String,Object>>) properties.get(INTERNAL_ITEMS_ITERATOR);
+            }
         }
 
-        if (childrenList != null) {
+        if (childrenProperties != null) {
+            return new SimpleReadableResourceIterator(childrenProperties, resourceResolver, path);
+        } else if (childrenList != null) {
             for (String childResourceName : childrenList) {
                 Resource childResource = getResource(resourceResolver, path + "/" + childResourceName);
-
                 resourceList.add(childResource);
             }
         }
+
+
 
         return resourceList.listIterator();
     }
 
 
-    protected abstract Map<String, Object> getResourceProperties(SimplePathInfo pathInfo);
-    protected abstract Iterable<String> getResourceChildren(SimplePathInfo pathInfo);
+    Map<String, Object> getResourceProperties(ResourceResolver resolver, SimplePathInfo pathInfo) {
+        return getInternalResourceProperties(resolver, pathInfo);
+    }
+
+    private Iterable<String> getResourceChildren(ResourceResolver resolver, SimplePathInfo pathInfo) {
+        return getInternalResourceChildren(resolver, pathInfo);
+    }
+
+
+
+
+    protected abstract Map<String, Object> getInternalResourceProperties(ResourceResolver resolver, SimplePathInfo pathInfo);
+
+    protected abstract Iterable<String> getInternalResourceChildren(ResourceResolver resolver, SimplePathInfo pathInfo);
 
 }

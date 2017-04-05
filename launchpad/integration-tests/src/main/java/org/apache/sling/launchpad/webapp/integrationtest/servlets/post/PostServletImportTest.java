@@ -208,14 +208,12 @@ public class PostServletImportTest extends HttpTestBase {
 
         props.put(SlingPostConstants.RP_CONTENT, jsonContent2);
         props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
-        props.put(SlingPostConstants.RP_REDIRECT_TO, importedNodeUrl);
         props.put(SlingPostConstants.RP_REPLACE, "false");
         props.put(SlingPostConstants.RP_REPLACE_PROPERTIES, "true");
-        String importedNodeUrl2 = testClient.createNode(importedNodeUrl, props);
-        assertEquals(importedNodeUrl, importedNodeUrl2);
+        testClient.createNode(importedNodeUrl, props);
 
         // assert content at new location
-        String content2 = getContent(importedNodeUrl2 + ".3.json", CONTENT_TYPE_JSON);
+        String content2 = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
 		JSONObject jsonObj2 = new JSONObject(content2);
 		assertNotNull(jsonObj2);

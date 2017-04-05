@@ -1,13 +1,25 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *	  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 $( document ).ready(function() {
 	$(".ui-slingshot-clickable").click(function() { 
 	    var $input = $( this );
 	    window.location.href=$input.attr("data-link");
     });
-	$("#breadcrumbs").breadcrumbs("home");
-	$(".breadcrumb_icon_home").click(function() {
-		window.location.href=$("#breadcrumbs").attr("data-home");
-	});
-	$(".ui-form-form").submit(function(event) {
+	$(".form-signin").submit(function(event) {
         event.preventDefault();
         var form = this;
 	    var path = form.action;
@@ -46,10 +58,10 @@ $( document ).ready(function() {
         });
         return true;
 	});
-	$(".ui-form-button-new").click(function() {
+	$(".form-button-new").click(function() {
 		alert("Self registration is not implemented yet. Try username slingshot1 or slingshot2 with the password being the same as the username.");
 	});
-	$(".ui-form-button-help").click(function() {
+	$(".form-button-help").click(function() {
 		alert("Help function is not implemented yet. Try username slingshot1 or slingshot2 with the password being the same as the username.");
 	});
 });

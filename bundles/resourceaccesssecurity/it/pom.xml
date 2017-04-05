@@ -23,8 +23,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>26</version>
+        <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.resourceaccesssecurity.it</artifactId>
@@ -117,6 +117,16 @@
                             org.apache.sling.resourceaccesssecurity.it
                         </Export-Package>
                     </instructions>
+                </configuration>
+            </plugin>
+           <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>sling/**</exclude>
+                        <exclude>derby.log</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -267,7 +277,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
+            <version>1.0.12</version>
             <scope>provided</scope>
         </dependency>
         
@@ -286,11 +296,6 @@
         </dependency>
         
         <!-- actual dependencies -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.8</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
@@ -351,7 +356,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.resourceaccesssecurity</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
 
     </dependencies>

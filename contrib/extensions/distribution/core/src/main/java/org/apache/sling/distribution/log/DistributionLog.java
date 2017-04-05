@@ -19,11 +19,18 @@
 
 package org.apache.sling.distribution.log;
 
-
-
+import java.util.Collection;
 import java.util.List;
 
+/**
+ * The log of a distribution component activity (e.g. a {@link org.apache.sling.distribution.agent.DistributionAgent})
+ */
 public interface DistributionLog {
 
+    /**
+     * get the text log lines
+     *
+     * @return a {@link Collection} of the log lines
+     */
     List<String> getLines();
 }

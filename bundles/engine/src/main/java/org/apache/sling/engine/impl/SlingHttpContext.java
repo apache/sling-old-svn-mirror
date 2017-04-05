@@ -24,10 +24,12 @@ import java.net.URL;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
-import org.osgi.service.http.HttpContext;
+import org.apache.sling.engine.impl.request.SlingRequestProgressTracker;
+import org.osgi.service.http.context.ServletContextHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +37,10 @@ import org.slf4j.LoggerFactory;
  * The <code>SlingHttpContext</code> implements the OSGi HttpContext used to
  * register the {@link SlingMainServlet} with the OSGi HttpService.
  */
-class SlingHttpContext implements HttpContext {
+class SlingHttpContext extends ServletContextHelper {
 
-    /** default log */
-    private static final Logger log = LoggerFactory.getLogger(SlingHttpContext.class);
+    /** Logger */
+    private final Logger log = LoggerFactory.getLogger(SlingHttpContext.class);
 
     /**
      * Resolves MIME types
@@ -82,6 +84,7 @@ class SlingHttpContext implements HttpContext {
      * Returns the MIME type as resolved by the <code>MimeTypeService</code> or
      * <code>null</code> if the service is not available.
      */
+    @Override
     public String getMimeType(String name) {
         MimeTypeService mtservice = mimeTypeService;
         if (mtservice != null) {
@@ -98,6 +101,7 @@ class SlingHttpContext implements HttpContext {
      * Always returns <code>null</code> because resources are all provided
      * through the {@link SlingMainServlet}.
      */
+    @Override
     public URL getResource(String name) {
         return null;
     }
@@ -108,8 +112,14 @@ class SlingHttpContext implements HttpContext {
      * is missing this method returns <code>false</code> and sends a 503/SERVICE
      * UNAVAILABLE status back to the client.
      */
+    @Override
     public boolean handleSecurity(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
+
+        final SlingRequestProgressTracker t = new SlingRequestProgressTracker(request);
+        request.setAttribute(RequestProgressTracker.class.getName(), t);
+        final String timerName = "handleSecurity";
+        t.startTimer(timerName);
 
         final AuthenticationSupport authenticator = this.authenticationSupport;
         if (authenticator != null) {
@@ -118,8 +128,9 @@ class SlingHttpContext implements HttpContext {
             // ParameterSupport
             request = ParameterSupport.getParameterSupportRequestWrapper(request);
 
-            return authenticator.handleSecurity(request, response);
-
+            final boolean result = authenticator.handleSecurity(request, response);
+            t.logTimer(timerName, "authenticator {0} returns {1}", authenticator, result);
+            return result;
         }
 
         log.error("handleSecurity: AuthenticationSupport service missing. Cannot authenticate request.");

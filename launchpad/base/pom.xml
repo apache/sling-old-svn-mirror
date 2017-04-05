@@ -23,8 +23,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../parent/pom.xml</relativePath>
+        <version>30</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.launchpad.base</artifactId>
@@ -32,7 +32,7 @@
        This version is a concatenation of the framework version and a version for the launchpad base itself.
        For a release only the qualifier (launchpad base version) is increased.
      -->
-    <version>4.6.1-2.5.9-SNAPSHOT</version>
+    <version>5.6.1-2.6.17-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Launchpad Base</name>
@@ -41,16 +41,15 @@
         by the various launchpad modules..
     </description>
 
-    <properties>
-        <felix.httpservice.version>2.2.0</felix.httpservice.version>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/base</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/base</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/base</url>
     </scm>
+
+    <properties>
+        <sling.java.version>8</sling.java.version>
+    </properties>
 
     <build>
         <plugins>
@@ -106,7 +105,7 @@
                         <Export-Package>!*</Export-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Embed-Dependency>
-                            org.apache.felix.framework;inline=org/**|META-INF/**,
+                            org.apache.felix.framework;inline=org/**|META-INF/**|default.properties,
                             org.apache.felix.http.proxy;inline=org/apache/**,
                             org.apache.sling.launchpad.api;inline=org/apache/sling/launchpad/api/**
                         </Embed-Dependency>
@@ -237,10 +236,6 @@
                     </execution>
                 </executions>
             </plugin>
-        </plugins>
-    </build>
-    <reporting>
-        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -252,13 +247,13 @@
                 </configuration>
             </plugin>
         </plugins>
-    </reporting>
+    </build>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.6.1</version>
+            <version>5.6.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -269,26 +264,26 @@
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.5</version>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.proxy</artifactId>
-            <version>${felix.httpservice.version}</version>
+            <version>3.0.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.bridge</artifactId>
-            <version>${felix.httpservice.version}</version>
+            <version>3.0.18</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.api</artifactId>
-            <version>1.1.0</version>
+            <version>1.2.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -312,6 +307,12 @@
             <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>junit-addons</groupId>
+            <artifactId>junit-addons</artifactId>
+            <version>1.4</version>
+            <scope>test</scope>
+        </dependency> 
     </dependencies>
 </project>
 

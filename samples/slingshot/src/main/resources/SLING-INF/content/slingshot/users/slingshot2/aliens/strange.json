@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Streamentry",
+    "title":"Strange",
+    "description":"This guy looks really strange..."
+}

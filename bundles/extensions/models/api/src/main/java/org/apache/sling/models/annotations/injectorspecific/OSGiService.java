@@ -39,7 +39,7 @@ public @interface OSGiService {
     /**
      * specifies the RFC 1960-based filter string, which is evaluated when retrieving the service. If empty string or left out, then no filtering is being performed.
      * 
-     * @see "Core Specification, section 5.5, for a description of the filter string
+     * @see "Core Specification, section 5.5, for a description of the filter string"
      * @see <a href="http://www.ietf.org/rfc/rfc1960.txt">RFC 1960</a>
      */
     public String filter() default "";
@@ -47,7 +47,7 @@ public @interface OSGiService {
     /**
      * If set to true, the model can be instantiated even if there is no OSGi service implementation available. Default
      * = false.
-     * @deprecated Use {@link InjectionStrategy} instead.
+     * @deprecated Use {@link #injectionStrategy} instead.
      */
     @Deprecated
     public boolean optional() default false;

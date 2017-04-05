@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.HealthCheck;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -41,10 +42,12 @@ public class HealthCheckMetadata {
     private final long serviceId;
 
     private final List<String> tags;
-    
+
     private final String asyncCronExpression;
 
     private final transient ServiceReference serviceReference;
+
+    private final Long resultCacheTtlInMs;
 
     public HealthCheckMetadata(final ServiceReference ref) {
         this.serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
@@ -53,6 +56,7 @@ public class HealthCheckMetadata {
         this.title = getHealthCheckTitle(ref);
         this.tags = arrayPropertyToListOfStr(ref.getProperty(HealthCheck.TAGS));
         this.asyncCronExpression = (String) ref.getProperty(HealthCheck.ASYNC_CRON_EXPRESSION);
+        this.resultCacheTtlInMs = (Long)ref.getProperty(HealthCheck.RESULT_CACHE_TTL_IN_MS);
         this.serviceReference = ref;
     }
 
@@ -92,8 +96,8 @@ public class HealthCheckMetadata {
     public List<String> getTags() {
         return tags;
     }
-    
-    
+
+
     /**
      * Return the cron expression used for asynchronous execution.
      */
@@ -113,6 +117,15 @@ public class HealthCheckMetadata {
      */
     public ServiceReference getServiceReference() {
         return this.serviceReference;
+    }
+
+    /**
+     * TTL for the result cache in ms. 
+     * 
+     * @return TTL for the result cache or <code>null</code> if not configured.
+     */
+    public Long getResultCacheTtlInMs() {
+        return resultCacheTtlInMs;
     }
 
     @Override
@@ -140,13 +153,14 @@ public class HealthCheckMetadata {
     private String getHealthCheckTitle(final ServiceReference ref) {
         String name = (String) ref.getProperty(HealthCheck.NAME);
         if (StringUtils.isBlank(name)) {
-            name = (String) ref.getProperty(Constants.SERVICE_DESCRIPTION);
-        }
-        if (StringUtils.isBlank(name)) {
-            name = (String) ref.getProperty(Constants.SERVICE_PID);
+            name = PropertiesUtil.toString(ref.getProperty(Constants.SERVICE_DESCRIPTION), null);
         }
         if (StringUtils.isBlank(name)) {
             name = "HealthCheck:" + ref.getProperty(Constants.SERVICE_ID);
+            final String pid = PropertiesUtil.toString(ref.getProperty(Constants.SERVICE_PID), null);
+            if ( !StringUtils.isBlank(pid) ) {
+                name = name + " (" + pid + ")";
+            }
         }
         return name;
     }

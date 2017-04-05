@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.osgi.annotation.versioning.ProviderType;
+
+
 /**
  * A class loader writer is a service allowing to dynamically generate
  * classes and resources.
@@ -31,6 +34,7 @@ import java.io.OutputStream;
  * For example a class loader writer could write generated class files
  * into the repository or the temporary file system.
  */
+@ProviderType
 public interface ClassLoaderWriter {
 
     /**

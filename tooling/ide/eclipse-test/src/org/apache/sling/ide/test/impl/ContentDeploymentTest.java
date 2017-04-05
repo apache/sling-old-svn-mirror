@@ -95,6 +95,8 @@ public class ContentDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        // create filter.xml
+        project.createVltFilterWithRoots("/test");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
                 "hello, world".getBytes()));
 
@@ -152,6 +154,8 @@ public class ContentDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        // create filter.xml
+        project.createVltFilterWithRoots("/test");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
                 "hello, world".getBytes()));
 
@@ -186,6 +190,8 @@ public class ContentDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        // create filter.xml
+        project.createVltFilterWithRoots("/test");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.esp"), new ByteArrayInputStream(
                 "// not really javascript".getBytes()));
 
@@ -211,6 +217,8 @@ public class ContentDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
 
+        // create filter.xml
+        project.createVltFilterWithRoots("/test");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
                 "hello, world".getBytes()));
 
@@ -289,6 +297,8 @@ public class ContentDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        // create filter.xml
+        project.createVltFilterWithRoots("/test");
         // create sling:Folder at /test/folder
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/folder/.content.xml"), getClass()
                 .getResourceAsStream("sling-folder-nodetype.xml"));

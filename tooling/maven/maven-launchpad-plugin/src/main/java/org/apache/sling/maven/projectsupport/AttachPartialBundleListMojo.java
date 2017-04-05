@@ -25,21 +25,23 @@ import java.io.IOException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Writer;
 import org.codehaus.plexus.archiver.ArchiverException;
+import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.zip.ZipArchiver;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
  * Attaches the bundle list as a project artifact.
- *
- * @goal attach-partial-bundle-list
- * @phase package
- * @requiresDependencyResolution test
- * @description attach the partial bundle list as a project artifact
  */
+@Mojo( name = "attach-partial-bundle-list", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.TEST)
 public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
 
     public static final String CONFIG_CLASSIFIER = "bundlelistconfig";
@@ -62,14 +64,10 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
 
     public static final String SLING_STANDALONE_BOOTSTRAP = "standalone.bootstrap.txt";
 
-    /**
-     * @parameter default-value="${project.build.directory}/bundleListconfig"
-     */
+    @Parameter( defaultValue = "${project.build.directory}/bundleListconfig")
     private File configOutputDir;
 
-    /**
-     * @parameter default-value="${project.build.directory}/list.xml"
-     */
+    @Parameter( defaultValue = "${project.build.directory}/list.xml")
     private File bundleListOutput;
 
     /**
@@ -77,6 +75,7 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
      *
      * @component role="org.codehaus.plexus.archiver.Archiver" roleHint="zip"
      */
+    @Component(role = UnArchiver.class, hint = "zip")
     private ZipArchiver zipArchiver;
 
     public void execute() throws MojoExecutionException, MojoFailureException {

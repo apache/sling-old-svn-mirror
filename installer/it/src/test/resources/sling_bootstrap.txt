@@ -1,0 +1,1 @@
+uninstall osgi-installer-testbundle [1.1,1.2)

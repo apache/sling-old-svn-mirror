@@ -23,9 +23,6 @@ import java.util.Hashtable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.PostOperation;
@@ -40,6 +37,9 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,11 +48,11 @@ import org.slf4j.LoggerFactory;
  * {@link SlingPostOperation} services being registered and wraps them with a
  * proxy for the new {@link PostOperation} API and registers the procies.
  */
-@Component(specVersion = "1.1", metatype = false)
+@Component(service = {})
 public class PostOperationProxyProvider implements ServiceListener {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     /**
      * The service listener filter to listen for SlingPostOperation services
      */
@@ -61,7 +61,7 @@ public class PostOperationProxyProvider implements ServiceListener {
 
     // maps references to the SlingPostOperation services to the registrations
     // of the PostOperation proxies for unregistration purposes
-    private final Map<ServiceReference, ServiceRegistration> proxies = new IdentityHashMap<ServiceReference, ServiceRegistration>();
+    private final Map<ServiceReference, ServiceRegistration> proxies = new IdentityHashMap<>();
 
     // The DS component context to access the services to proxy
     private BundleContext bundleContext;
@@ -125,6 +125,7 @@ public class PostOperationProxyProvider implements ServiceListener {
 
     // ServiceEvent handling
 
+    @Override
     public void serviceChanged(ServiceEvent event) {
 
         /*
@@ -214,7 +215,7 @@ public class PostOperationProxyProvider implements ServiceListener {
      */
     private Dictionary<String, Object> copyServiceProperties(
             final ServiceReference serviceReference) {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         for (String key : serviceReference.getPropertyKeys()) {
             props.put(key, serviceReference.getProperty(key));
         }
@@ -237,11 +238,13 @@ public class PostOperationProxyProvider implements ServiceListener {
         PostOperationProxy(final SlingPostOperation delegatee) {
             this.delegatee = delegatee;
         }
-        
+
+        @Override
         public String toString() {
             return getClass().getSimpleName() + " for " + delegatee.getClass().getName();
         }
 
+        @Override
         public void run(SlingHttpServletRequest request, PostResponse response,
                 SlingPostProcessor[] processors) {
             HtmlResponse apiResponse = new HtmlResponseProxy(response);

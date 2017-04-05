@@ -17,20 +17,20 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
     -->
-<project 
-    xmlns="http://maven.apache.org/POM/4.0.0" 
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>26</version>
+        <relativePath/>
     </parent>
-    <artifactId>sling-lauchpad</artifactId>
+    <artifactId>sling-server</artifactId>
     <packaging>jar</packaging>
-    <version>8-SNAPSHOT</version>
+    <version>9-SNAPSHOT</version>
     <name>Apache Sling Launchpad Debian Package Builder</name>
     <description>
         Simple packaged installation for sling launchpad standalone jar
@@ -45,10 +45,10 @@ under the License.
         <!--
             jdeb plugin version for debian package
         -->
-        <jdeb.version>1.0.1</jdeb.version>
-        <launchpad.artifact>org.apache.sling.launchpad</launchpad.artifact>
-        <launchpad.version>8-SNAPSHOT</launchpad.version>
-        <launchpad.classifier>standalone</launchpad.classifier>
+        <jdeb.version>1.4</jdeb.version>
+        <launchpad.version>8</launchpad.version>
+        <slingInstallDir>/opt/sling</slingInstallDir>
+        <slingConfigDir>/etc/sling</slingConfigDir>
     </properties>
     <build>
         <plugins>
@@ -63,20 +63,38 @@ under the License.
                             <goal>jdeb</goal>
                         </goals>
                         <configuration>
+                            <snapshotExpand>true</snapshotExpand>
+                            <snapshotEnv>BUILD_NUMBER</snapshotEnv>
+                            <classifier>all</classifier>
                             <dataSet>
+                                <!-- etc/{default,logrotate.d}/sling - conf files -->
                                 <data>
-                                    <src>${project.build.directory}/${launchpad.artifact}-${project.version}-${launchpad.classifier}.jar</src>
-                                    <type>file</type>
+                                    <src>${project.basedir}/src/root_fs/etc</src>
+                                    <type>directory</type>
+                                    <excludes>**/.svn/,**/init.d/</excludes>
+                                    <conffile>true</conffile>
                                     <mapper>
                                         <type>perm</type>
-                                        <prefix>/opt/sling/${project.parent.artifactId}</prefix>
+                                        <prefix>/etc</prefix>
                                     </mapper>
                                 </data>
+                                <!-- opt/sling - jar files -->
+                                <data>
+                                    <src>${project.build.directory}/opt/sling</src>
+                                    <type>directory</type>
+                                    <conffile>false</conffile>
+                                    <mapper>
+                                        <type>perm</type>
+                                        <prefix>/opt/sling</prefix>
+                                    </mapper>
+                                </data>
+                                <!-- all other root_fs -->
                                 <data>
                                     <src>${project.basedir}/src/root_fs/</src>
                                     <type>directory</type>
-                                    <excludes>**/.svn/</excludes>
+                                    <excludes>**/.svn/,**/etc/default/,**/etc/logrotate.d/</excludes>
                                     <mapper>
+                                        <filemode>775</filemode>
                                         <type>perm</type>
                                         <prefix>/</prefix>
                                     </mapper>
@@ -91,14 +109,21 @@ under the License.
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-dependencies</id>
+                        <id>copy</id>
                         <goals>
-                            <goal>copy-dependencies</goal>
+                            <goal>copy</goal>
                         </goals>
                         <phase>process-resources</phase>
                         <configuration>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
-                            <includeArtifactIds>${launchpad.artifact}</includeArtifactIds>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.launchpad</artifactId>
+                                    <version>${launchpad.version}</version>
+                                    <destFileName>org.apache.sling.launchpad.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}/opt/sling</outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>
@@ -108,14 +133,6 @@ under the License.
             </plugin>
         </plugins>
     </build>
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>${launchpad.artifact}</artifactId>
-            <version>${launchpad.version}</version>
-            <classifier>${launchpad.classifier}</classifier>
-        </dependency>
-    </dependencies>
     <reporting>
         <plugins>
             <plugin>

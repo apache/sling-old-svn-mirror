@@ -33,7 +33,7 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
 
     public static final String CLASSNAME = "Property";
 
-    public static final Class<?>[] WRAPPED_CLASSES = { Property.class };
+    private static final Class<?>[] WRAPPED_CLASSES = { Property.class };
 
     /**
      * The wrapped JCR Property instance. Will be {@code null} if the

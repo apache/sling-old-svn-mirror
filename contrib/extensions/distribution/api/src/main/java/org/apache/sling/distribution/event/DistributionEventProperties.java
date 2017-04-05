@@ -19,9 +19,12 @@
 package org.apache.sling.distribution.event;
 
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * an interface containing of the possible properties of events related to distribution
  */
+@ProviderType
 public interface DistributionEventProperties {
 
     /**

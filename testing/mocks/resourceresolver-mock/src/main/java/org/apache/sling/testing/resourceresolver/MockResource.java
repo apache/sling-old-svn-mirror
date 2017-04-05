@@ -28,7 +28,6 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.wrappers.ModifiableValueMapDecorator;
 
 public class MockResource extends AbstractResource {
 
@@ -49,9 +48,17 @@ public class MockResource extends AbstractResource {
     public MockResource(final String path,
             final Map<String, Object> props,
             final ResourceResolver resolver) {
-        this.path = path;
-        this.props = (props instanceof MockValueMap) ? (MockValueMap)props : new MockValueMap(this, props);
         this.resolver = resolver;
+        this.path = path;
+        if (props instanceof MockValueMap) {
+            this.props = (MockValueMap)props;
+        }
+        else if (props instanceof ReadonlyValueMapDecorator &&  ((ReadonlyValueMapDecorator)props).getDelegate() instanceof MockValueMap) {
+            this.props = ((ReadonlyValueMapDecorator)props).getDelegate();
+        }
+        else {
+            this.props = new MockValueMap(this, props);
+        }
     }
 
     @Override
@@ -87,12 +94,12 @@ public class MockResource extends AbstractResource {
     @SuppressWarnings("unchecked")
     @Override
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
-        if ( type == ValueMap.class ) {
-            return (AdapterType)this.props;
+        if ( type == ValueMap.class || type == Map.class ) {
+            return (AdapterType)new ReadonlyValueMapDecorator(this.props);
         }
         else if ( type == ModifiableValueMap.class ) {
             ((MockResourceResolver)this.resolver).addChanged(this.path, this.props);
-            return (AdapterType)new ModifiableValueMapDecorator(this.props);
+            return (AdapterType)this.props;
         }
         else if ( type == InputStream.class ) {
             InputStream is = getFileResourceInputStream();
@@ -123,7 +130,7 @@ public class MockResource extends AbstractResource {
 
     // part of Resource API 2.7.0
     public ValueMap getValueMap() {
-        return this.props;
+        return this.adaptTo(ValueMap.class);
     }
 
     @Override

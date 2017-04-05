@@ -1,0 +1,73 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "conf": {
+    "weather": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "slingPipes/container",
+      "conf": {
+        "jcr:primaryType": "sling:Folder",
+        "selector": {
+          "sling:resourceType": "slingPipes/dummySearch",
+          "conf": {
+            "jcr:primaryType": "nt:unstructured",
+            "paris": {
+              "jcr:primaryType": "nt:unstructured",
+              "city": "paris",
+              "country": "fr"
+            },
+            "bucharest": {
+              "jcr:primaryType": "nt:unstructured",
+              "city": "bucharest",
+              "country": "ro"
+            }
+          }
+        },
+        "yahoo": {
+          "jcr:primaryType": "nt:unstructured",
+          "sling:resourceType": "slingPipes/json",
+          "expr": "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22${selector.city }%2C%20${selector.country}%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys"
+        },
+        "write": {
+          "jcr:primaryType": "nt:unstructured",
+          "sling:resourceType": "slingPipes/write",
+          "path":"/content/json/windSpeed",
+          "conf": {
+            "${yahoo.get('query').get('results').get('channel').get('location').get('city')}":"${yahoo.get('query').get('results').get('channel').get('wind').get('speed')}"
+          }
+        }
+      }
+    },
+    "array": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "slingPipes/container",
+      "conf": {
+        "jcr:primaryType": "sling:Folder",
+        "json": {
+          "sling:resourceType": "slingPipes/json",
+          "expr": "[{\"path\":\"one\"},{\"path\":\"two\"},{\"path\":\"three\"}]"
+        },
+        "user": {
+          "sling:resourceType": "slingPipes/base",
+          "path":"/content/json/array/${json.get('path')}"
+        }
+      }
+
+
+    }
+  },
+  "windSpeed":{
+    "jcr:primaryType": "nt:unstructured"
+  },
+  "array": {
+    "jcr:primaryType": "nt:unstructured",
+    "one": {
+      "jcr:primaryType": "nt:unstructured"
+    },
+    "two": {
+      "jcr:primaryType": "nt:unstructured"
+    },
+    "three": {
+      "jcr:primaryType": "nt:unstructured"
+    }
+  }
+}

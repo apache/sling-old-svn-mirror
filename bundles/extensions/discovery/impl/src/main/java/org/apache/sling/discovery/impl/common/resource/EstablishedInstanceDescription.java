@@ -24,17 +24,17 @@ import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
-import org.apache.sling.discovery.impl.common.DefaultInstanceDescriptionImpl;
+import org.apache.sling.discovery.commons.providers.DefaultClusterView;
+import org.apache.sling.discovery.commons.providers.DefaultInstanceDescription;
 
 /**
  * An InstanceDescription which reads the properties from the according location
  * in the repository
  */
 public class EstablishedInstanceDescription extends
-        DefaultInstanceDescriptionImpl {
+        DefaultInstanceDescription {
 
-    public EstablishedInstanceDescription(final DefaultClusterViewImpl clusterView,
+    public EstablishedInstanceDescription(final DefaultClusterView clusterView,
             final Resource res, final String slingId, final boolean isLeader, final boolean isOwn) {
         super(clusterView, isLeader, isOwn, slingId, null);
 

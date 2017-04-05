@@ -136,7 +136,7 @@ public class DistributedEventReceiver
                 DistributedEventReceiver.this.serviceRegistration = reg;
 
                 try {
-                    writerResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+                    writerResolver = resourceResolverFactory.getServiceResourceResolver(null);
                     ResourceUtil.getOrCreateResource(writerResolver,
                             ownRootPath,
                             DistributedEventAdminImpl.RESOURCE_TYPE_FOLDER,
@@ -296,12 +296,12 @@ public class DistributedEventReceiver
             this.logger.debug("Checking for old instance trees for distributed events.");
             ResourceResolver resolver = null;
             try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+                resolver = this.resourceResolverFactory.getServiceResourceResolver(null);
 
                 final Resource baseResource = resolver.getResource(this.rootPath);
                 // sanity check - should never be null
                 if ( baseResource != null ) {
-                    final ResourceUtil.BatchResourceRemover brr = ResourceUtil.getBatchResourceRemover(50);
+                    final ResourceHelper.BatchResourceRemover brr = ResourceHelper.getBatchResourceRemover(50);
                     final Iterator<Resource> iter = baseResource.listChildren();
                     while ( iter.hasNext() ) {
                         final Resource rootResource = iter.next();
@@ -332,8 +332,8 @@ public class DistributedEventReceiver
 
             ResourceResolver resolver = null;
             try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-                final ResourceUtil.BatchResourceRemover brr = ResourceUtil.getBatchResourceRemover(50);
+                resolver = this.resourceResolverFactory.getServiceResourceResolver(null);
+                final ResourceHelper.BatchResourceRemover brr = ResourceHelper.getBatchResourceRemover(50);
 
                 final Resource baseResource = resolver.getResource(this.ownRootPath);
                 // sanity check - should never be null

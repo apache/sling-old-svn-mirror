@@ -16,26 +16,37 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * Optional service - if the Sling discovery service is running, additional features
  *                    are available
  */
-@Component
-@Service(value=TopologyEventListener.class)
+@Component(
+    service = TopologyEventListener.class
+)
 public class TopologyHandler implements TopologyEventListener {
+
+    @Activate
+    public void activate() {
+        QuartzJobExecutor.DISCOVERY_AVAILABLE.set(true);
+    }
+
+    @Deactivate
+    public void deactivate() {
+        QuartzJobExecutor.DISCOVERY_AVAILABLE.set(false);
+    }
 
     /**
      * @see org.apache.sling.discovery.TopologyEventListener#handleTopologyEvent(org.apache.sling.discovery.TopologyEvent)
      */
     public void handleTopologyEvent(final TopologyEvent event) {
         if ( event.getType() == Type.TOPOLOGY_INIT || event.getType() == Type.TOPOLOGY_CHANGED ) {
-            QuartzJobExecutor.SLING_ID = event.getNewView().getLocalInstance().getSlingId();
             QuartzJobExecutor.IS_LEADER.set(event.getNewView().getLocalInstance().isLeader());
             QuartzJobExecutor.DISCOVERY_INFO_AVAILABLE.set(true);
         } else if ( event.getType() == Type.TOPOLOGY_CHANGING ) {

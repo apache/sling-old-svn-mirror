@@ -70,6 +70,15 @@ public class ParameterSupport {
     /** Content type signaling parameters in request body */
     private static final String WWW_FORM_URL_ENC = "application/x-www-form-urlencoded";
 
+    /** name of the header used to identify an upload mode */
+    public static final String SLING_UPLOADMODE_HEADER = "Sling-uploadmode";
+    /** name of the parameter used to identify upload mode */
+    public static final String UPLOADMODE_PARAM = "uploadmode";
+    /** request attribute that stores the parts iterator when streaming */
+    public static final String REQUEST_PARTS_ITERATOR_ATTRIBUTE = "request-parts-iterator";
+    /** value of upload mode header/parameter indicating streaming is requested */
+    public static final String STREAM_UPLOAD = "stream";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -97,6 +106,12 @@ public class ParameterSupport {
      * The size threshold after which the file will be written to disk
      */
     private static int fileSizeThreshold = 256000;
+
+    /**
+     * Check for additional parameters from the container.
+     * TODO - We can remove this once we move engine to Servlet 3.1
+     */
+    private static boolean checkForAdditionalParameters = false;
 
     private final HttpServletRequest servletRequest;
 
@@ -129,32 +144,23 @@ public class ParameterSupport {
      * parameter access backed by an instance of the {@code ParameterSupport}
      * class.
      * <p>
-     * If used in a Servlet API 3 context, this method supports the additional
-     * {@code Part} API introduced with Servlet API 3.
      *
      * @param request The {@code HttpServletRequest} to wrap
      * @return The wrapped {@code request}
      */
     public static HttpServletRequestWrapper getParameterSupportRequestWrapper(final HttpServletRequest request) {
 
-        try {
-            if (request.getClass().getMethod("getServletContext") != null) {
-                return new ParameterSupportHttpServletRequestWrapper3(request);
-            }
-        } catch (Exception e) {
-            // If the getServletContext method does not exist or
-            // is not visible, fall back to a Servlet API 2.x wrapper
-        }
-
-        return new ParameterSupportHttpServletRequestWrapper2x(request);
+        return new ParameterSupportHttpServletRequestWrapper(request);
     }
 
     static void configure(final long maxRequestSize, final String location, final long maxFileSize,
-            final int fileSizeThreshold) {
+            final int fileSizeThreshold,
+            final boolean checkForAdditionalParameters) {
         ParameterSupport.maxRequestSize = (maxRequestSize > 0) ? maxRequestSize : -1;
         ParameterSupport.location = (location != null) ? new File(location) : null;
         ParameterSupport.maxFileSize = (maxFileSize > 0) ? maxFileSize : -1;
         ParameterSupport.fileSizeThreshold = (fileSizeThreshold > 0) ? fileSizeThreshold : 256000;
+        ParameterSupport.checkForAdditionalParameters = checkForAdditionalParameters;
     }
 
     private ParameterSupport(HttpServletRequest servletRequest) {
@@ -185,10 +191,12 @@ public class ParameterSupport {
         return new Enumeration<String>() {
             private final Iterator<String> base = ParameterSupport.this.getRequestParameterMapInternal().keySet().iterator();
 
+            @Override
             public boolean hasMoreElements() {
                 return this.base.hasNext();
             }
 
+            @Override
             public String nextElement() {
                 return this.base.next();
             }
@@ -239,12 +247,14 @@ public class ParameterSupport {
 
             // fallback is only used if this request has been started by a service call
             boolean useFallback = getServletRequest().getAttribute(MARKER_IS_SERVICE_PROCESSING) != null;
+            boolean addContainerParameters = false;
             // Query String
             final String query = getServletRequest().getQueryString();
             if (query != null) {
                 try {
                     InputStream input = Util.toInputStream(query);
                     Util.parseQueryString(input, encoding, parameters, false);
+                    addContainerParameters = checkForAdditionalParameters;
                 } catch (IllegalArgumentException e) {
                     this.log.error("getRequestParameterMapInternal: Error parsing request", e);
                 } catch (UnsupportedEncodingException e) {
@@ -253,6 +263,9 @@ public class ParameterSupport {
                     this.log.error("getRequestParameterMapInternal: Error parsing request", e);
                 }
                 useFallback = false;
+            } else {
+                addContainerParameters = checkForAdditionalParameters;
+                useFallback = true;
             }
 
             // POST requests
@@ -263,6 +276,7 @@ public class ParameterSupport {
                     try {
                         InputStream input = this.getServletRequest().getInputStream();
                         Util.parseQueryString(input, encoding, parameters, false);
+                        addContainerParameters = checkForAdditionalParameters;
                     } catch (IllegalArgumentException e) {
                         this.log.error("getRequestParameterMapInternal: Error parsing request", e);
                     } catch (UnsupportedEncodingException e) {
@@ -276,15 +290,34 @@ public class ParameterSupport {
 
                 // Multipart POST
                 if (ServletFileUpload.isMultipartContent(new ServletRequestContext(this.getServletRequest()))) {
-                    this.parseMultiPartPost(parameters);
-                    this.requestDataUsed = true;
-                    useFallback = false;
+                    if (isStreamed(parameters, this.getServletRequest())) {
+                        // special case, the request is Multipart and streamed processing has been requested
+                        try {
+                            this.getServletRequest().setAttribute(REQUEST_PARTS_ITERATOR_ATTRIBUTE, new RequestPartsIterator(this.getServletRequest()));
+                            this.log.debug("getRequestParameterMapInternal: Iterator<javax.servlet.http.Part> available as request attribute named request-parts-iterator");
+                        } catch (IOException e) {
+                            this.log.error("getRequestParameterMapInternal: Error parsing multipart streamed request", e);
+                        } catch (FileUploadException e) {
+                            this.log.error("getRequestParameterMapInternal: Error parsing multipart streamed request", e);
+                        }
+                        // The request data has been passed to the RequestPartsIterator, hence from a RequestParameter pov its been used, and must not be used again.
+                        this.requestDataUsed = true;
+                        // must not try and get anything from the request at this point so avoid jumping through the stream.
+                        addContainerParameters = false;
+                        useFallback = false;
+                    } else {
+                        this.parseMultiPartPost(parameters);
+                        this.requestDataUsed = true;
+                        addContainerParameters = checkForAdditionalParameters;
+                        useFallback = false;
+                    }
                 }
             }
             if ( useFallback ) {
-                getContainerParameters(parameters, encoding);
+                getContainerParameters(parameters, encoding, true);
+            } else  if ( addContainerParameters ) {
+                getContainerParameters(parameters, encoding, false);
             }
-
             // apply any form encoding (from '_charset_') in the parameter map
             Util.fixEncoding(parameters);
 
@@ -293,18 +326,35 @@ public class ParameterSupport {
         return this.postParameterMap;
     }
 
-    private void getContainerParameters(final ParameterMap parameters, final String encoding) {
+
+    /**
+     * Checks to see if there is an upload mode header or uploadmode parameter indicating the request is
+     * to be streamed from the client to the server.
+     * @param parameters parameters processed from the query string only.
+     * @param servletRequest the servlet request, where the body has not been processed.
+     * @return true if the request was made with streaming in mind.
+     */
+    private boolean isStreamed(ParameterMap parameters, HttpServletRequest servletRequest) {
+        if ( STREAM_UPLOAD.equals(servletRequest.getHeader(SLING_UPLOADMODE_HEADER)) ) {
+            return true;
+        }
+        RequestParameter[] rp = parameters.get(UPLOADMODE_PARAM);
+        return ( rp != null && rp.length == 1 && STREAM_UPLOAD.equals(rp[0].getString()));
+    }
+
+    private void getContainerParameters(final ParameterMap parameters, final String encoding, final boolean alwaysAdd) {
         final Map<?, ?> pMap = getServletRequest().getParameterMap();
         for (Map.Entry<?, ?> entry : pMap.entrySet()) {
 
             final String name = (String) entry.getKey();
-            final String[] values = (String[]) entry.getValue();
+            if ( alwaysAdd || !parameters.containsKey(name) ) {
+                final String[] values = (String[]) entry.getValue();
 
-            for (int i = 0; i < values.length; i++) {
-                parameters.addParameter(new ContainerRequestParameter(
-                    name, values[i], encoding), false);
+                for (int i = 0; i < values.length; i++) {
+                    parameters.addParameter(new ContainerRequestParameter(
+                        name, values[i], encoding), false);
+                }
             }
-
         }
     }
 

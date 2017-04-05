@@ -28,12 +28,6 @@ public class NewSlingBundleWizard extends AbstractNewMavenBasedSlingApplicationW
 	}
 
 	@Override
-	public void installArchetypes() {
-
-        // rely on public archetypes only
-	}
-
-	@Override
 	public boolean acceptsArchetype(Archetype archetype) {
 
 		boolean isSlingBundleArchetype = archetype.getGroupId().equals("org.apache.sling") &&

@@ -96,6 +96,7 @@ public class Loader {
      *             instantiated. The cause of the failure is contained as the
      *             cause of the exception.
      */
+    @SuppressWarnings("resource")
     public Object loadLauncher(String launcherClassName) {
 
         final File launcherJarFile = getLauncherJarFile();
@@ -332,6 +333,7 @@ public class Loader {
     private File[] getLauncherJarFiles() {
         // Get list of files with names starting with our prefix
         final File[] rawList = launchpadHome.listFiles(new FileFilter() {
+            @Override
             public boolean accept(File pathname) {
                 return pathname.isFile()
                     && pathname.getName().startsWith(
@@ -431,6 +433,7 @@ public class Loader {
             return new File[]{};
         }
         File[] libs = extLibHome.listFiles(new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String name) {
                 return (name.endsWith(".jar"));
             }

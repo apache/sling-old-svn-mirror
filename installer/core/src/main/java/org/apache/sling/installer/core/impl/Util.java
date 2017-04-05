@@ -91,6 +91,8 @@ public class Util {
                     }
                 }
             }
+        } else {
+            logger.debug("Unable to get input stream from {}", rsrc);
         }
         return result;
     }
@@ -99,6 +101,12 @@ public class Util {
         public String symbolicName;
         public String version;
         public String activationPolicy; // optional
+
+        @Override
+        public String toString() {
+            return "BundleHeaders [symbolicName=" + symbolicName + ", version=" + version + ", activationPolicy="
+                    + activationPolicy + "]";
+        }
     }
 
     /**
@@ -125,10 +133,17 @@ public class Util {
                         }
 
                         return headers;
+                    } else {
+                        logger.debug("Unable to get version from manifest : {}", resource);
                     }
+                } else {
+                    logger.debug("Unable to get symbolic name from manifest : {}", resource);
                 }
+            } else {
+                logger.debug("Unable to read manifest from : {}", resource);
             }
         } catch (final IOException ignore) {
+            logger.debug("Exception occured during processing of " + resource, ignore);
             // ignore
         }
         return null;

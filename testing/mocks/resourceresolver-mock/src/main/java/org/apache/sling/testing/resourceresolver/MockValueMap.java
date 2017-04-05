@@ -27,10 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.util.ISO8601;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 /**
  * ValueMap for mocked resources to mimick JCR-like behavior.
@@ -40,52 +38,21 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
  * <li>Converts InputStream to byte array and vice versa.</li>
  * </ul>
  */
-public class MockValueMap extends ValueMapDecorator {
-    
-    private final Resource resource;
+public class MockValueMap extends DeepReadModifiableValueMapDecorator implements ModifiableValueMap {
     
     public MockValueMap(Resource resource) {
         this(resource, new HashMap<String, Object>());
     }
 
     public MockValueMap(Resource resource, Map<String,Object> map) {
-        super(convertForWrite(map));
-        this.resource = resource;
+        super(resource, new ValueMapDecorator(convertForWriteAll(map)));
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(String name, Class<T> type) {
         
-        // check for deep path access
-        int slashPos = name.lastIndexOf('/');
-        if (slashPos >= 0) {
-            String resourcePath = "./" + name.substring(0, slashPos);
-            String propertyName = name.substring(slashPos + 1);
-            Resource childResource = resource.getChild(resourcePath);
-            if (childResource!=null) {
-                return ResourceUtil.getValueMap(childResource).get(propertyName, type);
-            }
-        }
-        
-        if (type == Calendar.class) {
-            // Support conversion of String to Calendar if value conforms to ISO8601 date format
-            Object value = get(name);
-            if (value instanceof String) {
-                return (T)ISO8601.parse((String)value);
-            }
-        }
-        else if (type == Date.class) {
-            // Support conversion from Calendar to Date
-            Calendar calendar = get(name, Calendar.class);
-            if (calendar != null) {
-                return (T)calendar.getTime();
-            }
-            else {
-                return null;
-            }
-        }
-        else if (type == InputStream.class) {
+        if (type == InputStream.class) {
             // Support conversion from byte array to InputStream
             byte[] data = get(name, byte[].class);
             if (data!=null) {
@@ -109,7 +76,7 @@ public class MockValueMap extends ValueMapDecorator {
     @SuppressWarnings("unchecked")
     @Override
     public void putAll(Map<? extends String, ?> map) {
-        super.putAll((Map<? extends String, ?>)convertForWrite(map));
+        super.putAll((Map<? extends String, ?>)convertForWriteAll((Map<String, Object>)map));
     }
     
     private static Object convertForWrite(Object value) {
@@ -130,10 +97,12 @@ public class MockValueMap extends ValueMapDecorator {
         return value;
     }
     
-    private static Map<String, Object> convertForWrite(Map<String, Object> map) {
+    private static Map<String, Object> convertForWriteAll(Map<String, Object> map) {
         Map<String,Object> newMap = new HashMap<String, Object>();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            newMap.put(entry.getKey(), convertForWrite(entry.getValue()));
+        if (map != null) {
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                newMap.put(entry.getKey(), convertForWrite(entry.getValue()));
+            }
         }
         return newMap;
     }

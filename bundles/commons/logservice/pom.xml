@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>30</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.commons.logservice</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.7-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling OSGi LogService Implementation</name>
@@ -98,7 +98,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.0.0</version>
+            <version>4.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -110,6 +110,17 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.10.19</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

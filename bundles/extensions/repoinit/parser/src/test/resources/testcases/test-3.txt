@@ -1,0 +1,10 @@
+#
+# single-word
+# We're testing the comments now
+# This is A COMMENT with other things like 12, 34
+# And now for a tag, <ok> ?
+# And some punctuation: .,;-_[]+"*ç%&/()=?^`"
+   # Also with leading whitespace.
+
+# blank lines work, of course   
+create service user comments_test_passed

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("1.0.8")
+@Version("1.1.0")
 package org.apache.sling.testing.tools.sling;
 
 import aQute.bnd.annotation.Version;

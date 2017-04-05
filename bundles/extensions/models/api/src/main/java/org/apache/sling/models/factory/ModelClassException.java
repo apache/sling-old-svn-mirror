@@ -18,6 +18,8 @@
  */
 package org.apache.sling.models.factory;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Exception which is triggered when the Model class could not be instantiated due to
  * not having a model annotation, some reflection error, invalid constructors or 
@@ -25,11 +27,16 @@ package org.apache.sling.models.factory;
  * 
  * @see ModelFactory
  */
-public final class ModelClassException extends RuntimeException {
+@ProviderType
+public class ModelClassException extends RuntimeException {
 
     private static final long serialVersionUID = 4323592065808565135L;
 
     public ModelClassException(String message) {
         super(message);
+    }
+    
+    public ModelClassException(String message, Throwable e) {
+        super(message, e);
     }
 }

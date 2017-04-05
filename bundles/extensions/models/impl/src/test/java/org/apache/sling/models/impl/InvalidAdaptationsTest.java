@@ -60,6 +60,7 @@ public class InvalidAdaptationsTest {
         factory.activate(componentCtx);
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(1, 1));
         factory.bindInjector(new ChildResourceInjector(), new ServicePropertiesMap(2, 0));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(NonModel.class, RequestModel.class);
     }
 
     @Test

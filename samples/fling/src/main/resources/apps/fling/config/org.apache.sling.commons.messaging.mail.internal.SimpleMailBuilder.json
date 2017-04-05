@@ -1,0 +1,9 @@
+{
+  "jcr:primaryType": "sling:OsgiConfig",
+  "subject": "message from fling",
+  "from": "fling@sling.apache.org",
+  "smtpHostname": "localhost",
+  "smtpPort": 8025,
+  "smtpUsername": "sling",
+  "smtpPassword": "fling"
+}

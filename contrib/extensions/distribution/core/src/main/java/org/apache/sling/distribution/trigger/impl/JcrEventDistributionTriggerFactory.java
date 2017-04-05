@@ -18,6 +18,10 @@
  */
 package org.apache.sling.distribution.trigger.impl;
 
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -25,16 +29,15 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.osgi.framework.BundleContext;
-
-import javax.annotation.Nonnull;
-import java.util.Map;
 
 @Component(metatype = true,
         label = "Apache Sling Distribution Trigger - Jcr Event Triggers Factory",
@@ -43,6 +46,7 @@ import java.util.Map;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionTrigger.class)
+@Property(name="webconsole.configurationFactory.nameHint", value="Trigger name: {name} on path {path}")
 public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
 
 
@@ -52,29 +56,49 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
     /**
      * jcr event trigger path property
      */
-    @Property(label = "Path", description = "The path for whcih changes are distributed.")
-    public static final String PATH = "path";
+    @Property(label = "Path", description = "The path for which changes are distributed.")
+    private static final String PATH = "path";
+
+    /**
+     * jcr event trigger path property
+     */
+    @Property(cardinality = 100, label = "Ignored Paths Patterns", description = "The paths matching one of these patterns will be ignored.")
+    private static final String IGNORED_PATHS_PATTERNS = "ignoredPathsPatterns";
 
     /**
      * jcr event trigger service user property
      */
     @Property(label = "Service Name", description = "The service used to listen for jcr events")
-    public static final String SERVICE_NAME = "serviceName";
+    private static final String SERVICE_NAME = "serviceName";
+
+    /**
+     * use deep distribution
+     */
+    @Property(label = "Use deep distribution", description = "Distribute entire subtree of the event node path", boolValue = false)
+    private static final String DEEP = "deep";
 
 
-
-    JcrEventDistributionTrigger trigger;
+    private JcrEventDistributionTrigger trigger;
 
     @Reference
     private SlingRepository repository;
 
+    @Reference
+    private Scheduler scheduler;
+
+    @Reference
+    private ResourceResolverFactory resolverFactory;
+
 
     @Activate
-    public void activate(BundleContext bundleContext, Map<String, Object> config) {
+    public void activate(Map<String, Object> config) {
         String path = PropertiesUtil.toString(config.get(PATH), null);
-        String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
+        String[] ignoredPathsPatterns = PropertiesUtil.toStringArray(config.get(IGNORED_PATHS_PATTERNS), null);
+        ignoredPathsPatterns = SettingsUtils.removeEmptyEntries(ignoredPathsPatterns);
+        boolean deep = PropertiesUtil.toBoolean(config.get(DEEP), false);
 
-        trigger =  new JcrEventDistributionTrigger(repository, path, serviceName);
+        trigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, deep, serviceName, ignoredPathsPatterns);
         trigger.enable();
     }
 
@@ -83,11 +107,11 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
         trigger.disable();
     }
 
-    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         trigger.register(requestHandler);
     }
 
-    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         trigger.unregister(requestHandler);
     }
 }

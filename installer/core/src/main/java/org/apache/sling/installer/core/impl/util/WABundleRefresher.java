@@ -61,13 +61,17 @@ public class WABundleRefresher implements BundleRefresher, FrameworkListener {
     public void refreshBundles(final InstallationContext ctx,
             final List<Bundle> bundles,
             final boolean wait) {
-        if ( bundles.size() > 0 ) {
-            ctx.log("Refreshing {} bundles: {}", bundles.size(), bundles);
+        if ( bundles == null || bundles.size() > 0 ) {
+            if ( bundles == null ) {
+                ctx.log("Full package refreshing");
+            } else {
+                ctx.log("Refreshing {} bundles: {}", bundles.size(), bundles);
+            }
             if ( !wait ) {
-                this.frameworkWiring.refreshBundles(bundles);
+                this.frameworkWiring.refreshBundles(bundles == null ? null : bundles);
             } else {
                 this.refreshEventCount = 0;
-                this.frameworkWiring.refreshBundles(bundles, this);
+                this.frameworkWiring.refreshBundles(bundles == null ? null : bundles, this);
                 final long end = System.currentTimeMillis() + (MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000);
                 do {
                     synchronized ( this.lock ) {
@@ -89,7 +93,11 @@ public class WABundleRefresher implements BundleRefresher, FrameworkListener {
                     }
                 } while ( this.refreshEventCount < 1);
             }
-            ctx.log("Done refreshing {} bundles", bundles.size());
+            if ( bundles == null ) {
+                ctx.log("Done full package refresh");
+            } else {
+                ctx.log("Done refreshing {} bundles", bundles.size());
+            }
         }
     }
 

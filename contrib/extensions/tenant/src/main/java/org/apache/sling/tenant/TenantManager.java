@@ -47,7 +47,7 @@ public interface TenantManager {
      * properties.
      * <p>
      * After creating the tenant, the
-     * {@link org.apache.sling.tenant.spi.TenantCustomizer#setup(Tenant, org.apache.sling.api.resource.ResourceResolver)}
+     * {@link org.apache.sling.tenant.spi.TenantManagerHook#setup(Tenant)}
      * method is called to allow customizers to configure additional properties.
      * <p>
      * Before returning the newly created tenant object the data is persisted.
@@ -60,10 +60,9 @@ public interface TenantManager {
      *            though, that this map contain at least the
      *            {@link Tenant#PROP_NAME} and {@link Tenant#PROP_DESCRIPTION}
      *            properties.
-     * @return The newly created {@link Tenant} instance.
+     * @return The newly created {@link Tenant} instance or {@code null} if a tenant
+     *         with the id already exists.
      * @throws NullPointerException if {@code tenantId} is {@code null}.
-     * @throws IllegalArgumentException if a tenant with the same
-     *             {@code tentantId} already exists.
      */
     Tenant create(String tenantId, Map<String, Object> properties);
 
@@ -72,7 +71,7 @@ public interface TenantManager {
      * property if the value is {@code null}.
      * <p>
      * Before returning the
-     * {@link org.apache.sling.tenant.spi.TenantCustomizer#setup(Tenant, org.apache.sling.api.resource.ResourceResolver)}
+     * {@link org.apache.sling.tenant.spi.TenantManagerHook#change(Tenant)}
      * method is called to allow customizers to configure additional properties.
      *
      * @param tenant The tenant whose property is to be set or remove.
@@ -88,7 +87,7 @@ public interface TenantManager {
      * Sets or removes multiple properties on the tenant.
      * <p>
      * Before returning the
-     * {@link org.apache.sling.tenant.spi.TenantCustomizer#setup(Tenant, org.apache.sling.api.resource.ResourceResolver)}
+     * {@link org.apache.sling.tenant.spi.TenantManagerHook#change(Tenant)}
      * method is called to allow customizers to configure additional properties.
      *
      * @param tenant The tenant whose properties are to be modified.
@@ -103,7 +102,7 @@ public interface TenantManager {
      * Removes one or more properties from the tenant.
      * <p>
      * Before returning the
-     * {@link org.apache.sling.tenant.spi.TenantCustomizer#setup(Tenant, org.apache.sling.api.resource.ResourceResolver)}
+     * {@link org.apache.sling.tenant.spi.TenantManagerHook#change(Tenant)}
      * method is called to allow customizers to configure additional properties
      * unless the {@code properties} parameter is {@code null} or empty.
      *
@@ -120,7 +119,7 @@ public interface TenantManager {
      * Removes the given tenant.
      * <p>
      * Before returning the
-     * {@link org.apache.sling.tenant.spi.TenantCustomizer#remove(Tenant, org.apache.sling.api.resource.ResourceResolver)}
+     * {@link org.apache.sling.tenant.spi.TenantManagerHook#remove(Tenant)}
      * method is called to allow customizers to implement further cleanup upon
      * tenant removal.
      *

@@ -33,7 +33,7 @@ public class VltRepositoryFactory implements RepositoryFactory {
 
     private EventAdmin eventAdmin;
 
-    private Map<String,VltRepository> repositoryMap = new HashMap<String,VltRepository>();
+    private Map<String,VltRepository> repositoryMap = new HashMap<>();
 
     @Override
     public Repository getRepository(RepositoryInfo repositoryInfo,
@@ -81,7 +81,9 @@ public class VltRepositoryFactory implements RepositoryFactory {
             // marking the repository as disconnected allows us to keep using it
             // (eg for node type registry lookups) although the server is stopped
             //TODO we might come up with a proper online/offline handling here
-            r.disconnected();
+            if ( r != null ) {
+            	r.disconnected();
+            }
         }
     }
 

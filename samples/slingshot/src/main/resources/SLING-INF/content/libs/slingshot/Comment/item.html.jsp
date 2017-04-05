@@ -19,18 +19,18 @@
 %><%@page import="org.apache.sling.api.resource.Resource,
                 org.apache.sling.api.resource.ResourceUtil,
                 org.apache.sling.api.resource.ValueMap,
-                org.apache.sling.sample.slingshot.SlingshotConstants,
+                org.apache.sling.sample.slingshot.comments.CommentsUtil,
                 org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><div class="comment">
 <%
     final ValueMap attr = resource.getValueMap();
-    final String title = attr.get(SlingshotConstants.PROPERTY_TITLE, resource.getName());
-    final String description = attr.get(SlingshotConstants.PROPERTY_DESCRIPTION, "");
-    final String userId = attr.get(SlingshotConstants.PROPERTY_USER, "");
+    final String title = attr.get(CommentsUtil.PROPERTY_TITLE, resource.getName());
+    final String text = attr.get(CommentsUtil.PROPERTY_TEXT, "");
+    final String userId = attr.get(CommentsUtil.PROPERTY_USER, "");
 %>
     <h4><%= ResponseUtil.escapeXml(userId) %> : <%= ResponseUtil.escapeXml(title) %></h4>
-    <p><%= ResponseUtil.escapeXml(description) %></p>
-    <p><%= ResponseUtil.escapeXml(attr.get(SlingshotConstants.PROPERTY_CREATED, "")) %></p>
+    <p><%= ResponseUtil.escapeXml(text) %></p>
+    <p><%= ResponseUtil.escapeXml(attr.get(CommentsUtil.PROPERTY_CREATED, "")) %></p>
 </div>

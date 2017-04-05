@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api.tasks;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Context for the installation tasks.
@@ -37,6 +37,7 @@ public interface InstallationContext {
 
 	/**
 	 * Schedule a task for execution in the current cycle.
+	 * @param t The install task.
 	 */
 	void addTaskToCurrentCycle(InstallTask t);
 
@@ -45,6 +46,7 @@ public interface InstallationContext {
 	 * usually to indicate that a task must be retried
 	 * or the current task is finished and another task
 	 * has to be run.
+     * @param t The install task.
 	 * @deprecated
 	 */
 	@Deprecated
@@ -53,12 +55,15 @@ public interface InstallationContext {
 	/**
 	 * Make an entry into the audit log - this should be invoked
 	 * by the tasks whenever something has been installed/uninstalled etc.
+	 * @param message The message to log
+	 * @param args Arguments for the message.
 	 */
 	void log(String message, Object... args);
 
     /**
      * Add an async task.
      * This adds a task for asynchronous execution.
+     * @param t The install task.
      * @since 1.2.0
      * @deprecated A async task should return <code>true</code> for {@link InstallTask#isAsynchronousTask()}
      *             and be add with {@link #addTaskToCurrentCycle(InstallTask)}
@@ -73,6 +78,7 @@ public interface InstallationContext {
      * This will also remove the {@link InstallTask#ASYNC_ATTR_NAME}
      * attribute from the resource.
      *
+     * @param t The install task.
      * @since 1.3.0
      */
     void asyncTaskFailed(InstallTask t);

@@ -1,0 +1,26 @@
+{
+  "jcr:primaryType": "nt:unstructured",
+  "simple": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/rm"
+  },
+  "complex": {
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:description": "configured here to remove the color property of ./isnota/pea and ./isnota/carrot subtree",
+    "path": "/content/fruits/apple",
+    "sling:resourceType": "slingPipes/rm",
+    "conf": {
+      "jcr:primaryType": "nt:unstructured",
+      "isnota": {
+        "jcr:primaryType": "nt:unstructured",
+        "pea": {
+          "jcr:primaryType": "nt:unstructured",
+          "color": "green"
+        },
+        "carrot": {
+          "jcr:primaryType": "nt:unstructured"
+        }
+      }
+    }
+  }
+}

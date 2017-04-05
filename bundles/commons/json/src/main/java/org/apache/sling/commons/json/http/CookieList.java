@@ -35,6 +35,7 @@ import org.apache.sling.commons.json.JSONTokener;
  * @author JSON.org
  * @version 2
  */
+@Deprecated
 public class CookieList {
 
     /**

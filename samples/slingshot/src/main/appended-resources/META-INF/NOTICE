@@ -1,12 +1,2 @@
-Includes and uses Metro UI CSS
-MIT License
-Copyright (c) 2012-2014 Sergey Pimenov
-http://metroui.org.ua
-----------------------------------------------------------------------
-Includes and uses jquery-breadcrumb from http://phonicuk.com
-jquery-breadcrumb 1.0
-http://code.google.com/p/jquery-breadcrumb/
-
-Copyright 2011 Michael Biggins
-Licenced under Creative Commons Attribution 3.0 Unported (CC BY 3.0)
-http://creativecommons.org/licenses/by/3.0/
+Includes and uses Glyphicons
+http://glyphicons.com/

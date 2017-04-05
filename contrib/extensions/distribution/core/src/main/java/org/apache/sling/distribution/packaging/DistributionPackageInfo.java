@@ -19,21 +19,73 @@
 package org.apache.sling.distribution.packaging;
 
 import javax.annotation.CheckForNull;
-import java.net.URI;
+import javax.annotation.Nonnull;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+import aQute.bnd.annotation.ProviderType;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.distribution.DistributionRequestType;
 
 /**
  * Additional information about a package.
  * Additional information is optional and components should expect every piece of it to be null.
  */
-public final class DistributionPackageInfo {
+@ProviderType
+public final class DistributionPackageInfo extends ValueMapDecorator implements ValueMap {
 
-    private URI origin;
-    private String queue;
-    private DistributionRequestType requestType;
-    private String[] paths;
+    /**
+     * distribution package type
+     */
+    public static final String PROPERTY_PACKAGE_TYPE = "package.type";
+
+    /**
+     * distribution request paths
+     */
+    public static final String PROPERTY_REQUEST_PATHS = "request.paths";
+
+    /**
+     * distribution request deep paths
+     */
+    public static final String PROPERTY_REQUEST_DEEP_PATHS = "request.deepPaths";
+
+
+    /**
+     * distribution request type
+     */
+    public static final String PROPERTY_REQUEST_TYPE = "request.type";
+
+
+    /**
+     * Creates a new wrapper around a given map.
+     *
+     * @param base wrapped object
+     */
+    public DistributionPackageInfo(String packageType, Map<String, Object> base) {
+        super(base);
+        if (packageType == null) {
+            throw new IllegalArgumentException("package type cannot be null");
+        }
+
+        put(PROPERTY_PACKAGE_TYPE, packageType);
+    }
+
+
+    /**
+     * Creates a new wrapper around an empty map.
+     *
+     */
+    public DistributionPackageInfo(String packageType) {
+        this(packageType, new HashMap<String, Object>());
+    }
+
+
+    @Nonnull
+    public String getType() {
+        return get(PROPERTY_PACKAGE_TYPE, String.class);
+    }
 
     /**
      * get the paths covered by the package holding this info
@@ -42,7 +94,7 @@ public final class DistributionPackageInfo {
      */
     @CheckForNull
     public String[] getPaths() {
-        return paths;
+        return get(PROPERTY_REQUEST_PATHS, String[].class);
     }
 
     /**
@@ -52,73 +104,14 @@ public final class DistributionPackageInfo {
      */
     @CheckForNull
     public DistributionRequestType getRequestType() {
-        return requestType;
-    }
-
-    /**
-     * retrieves the origin of the package holding this info
-     *
-     * @return the package origin
-     */
-    @CheckForNull
-    public URI getOrigin() {
-        return origin;
-    }
-
-    /**
-     * sets the origin of the package.
-     *
-     * @param origin the originating instance of this package
-     */
-    public void setOrigin(URI origin) {
-        this.origin = origin;
-    }
-
-    /**
-     * sets the request type for the package holding this info
-     *
-     * @param requestType the request type that originated this package
-     */
-    public void setRequestType(DistributionRequestType requestType) {
-        this.requestType = requestType;
-    }
-
-    /**
-     * sets the paths "covered" by the package holding this info
-     *
-     * @param paths the paths "covered" by this package
-     */
-    public void setPaths(String[] paths) {
-        this.paths = paths;
-    }
-
-    /**
-     * fills the current info object from the provided one.
-     *
-     * @param packageInfo package metadata
-     */
-    public void fillInfo(DistributionPackageInfo packageInfo) {
-        if (packageInfo != null) {
-            this.setOrigin(packageInfo.getOrigin());
-            this.setPaths(packageInfo.getPaths());
-            this.setRequestType(packageInfo.getRequestType());
-        }
+        return get(PROPERTY_REQUEST_TYPE, DistributionRequestType.class);
     }
 
     @Override
     public String toString() {
         return "DistributionPackageInfo{" +
-                "origin=" + origin +
-                ", requestType=" + requestType +
-                ", paths=" + Arrays.toString(paths) +
+                " request.type=" + get(PROPERTY_REQUEST_TYPE, DistributionRequestType.class) +
+                ", request.paths=" + Arrays.toString(get(PROPERTY_REQUEST_PATHS, String[].class)) +
                 '}';
-    }
-
-    public String getQueue() {
-        return queue;
-    }
-
-    public void setQueue(String queue) {
-        this.queue = queue;
     }
 }

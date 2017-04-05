@@ -16,10 +16,15 @@
  */
 package org.apache.sling.security.impl;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -28,7 +33,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
 
 public class ReferrerFilterTest {
 
@@ -36,18 +40,15 @@ public class ReferrerFilterTest {
 
     @Before public void setup() {
         filter = new ReferrerFilter();
-        final ComponentContext ctx = mock(ComponentContext.class);
         final BundleContext bundleCtx = mock(BundleContext.class);
         final ServiceRegistration reg = mock(ServiceRegistration.class);
-        final Dictionary<String, Object> props = new Hashtable<String, Object>(){{
+        final Map<String, Object> props = new HashMap<String, Object>(){{
             put("allow.hosts", new String[]{"relhost"});
             put("allow.hosts.regexp", new String[]{"http://([^.]*.)?abshost:80"});
         }};
-        doReturn(props).when(ctx).getProperties();
-        doReturn(bundleCtx).when(ctx).getBundleContext();
         doReturn(reg).when(bundleCtx).registerService(any(String[].class), any(), any(Dictionary.class));
         doNothing().when(reg).unregister();
-        filter.activate(ctx);
+        filter.activate(bundleCtx, props);
     }
 
     @Test public void testHostName() {

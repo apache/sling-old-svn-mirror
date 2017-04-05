@@ -24,6 +24,8 @@ import javax.jcr.Workspace;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
 
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -49,11 +51,13 @@ public class PersistingJcrEventDistributionTriggerTest {
         Session session = mock(Session.class);
         when(session.nodeExists("/var/nuggets")).thenReturn(true);
         SlingRepository repository = mock(SlingRepository.class);
+        Scheduler scheduler = mock(Scheduler.class);
+        ResourceResolverFactory resolverFactory  = mock(ResourceResolverFactory.class);
         when(repository.loginService(serviceName, null)).thenReturn(session);
         String path = "/some/path";
         String nuggetsPath = "/var/nuggets";
         PersistedJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistedJcrEventDistributionTrigger(
-                repository, path, serviceName, nuggetsPath);
+                repository, scheduler, resolverFactory, path, serviceName, nuggetsPath);
         Event event = mock(Event.class);
         DistributionRequest distributionRequest = persistingJcrEventdistributionTrigger.processEvent(event);
         assertNull(distributionRequest);
@@ -74,11 +78,14 @@ public class PersistingJcrEventDistributionTriggerTest {
         when(rootNode.addNode("var", "sling:Folder")).thenReturn(varNode);
         when(session.getRootNode()).thenReturn(rootNode);
         SlingRepository repository = mock(SlingRepository.class);
+        Scheduler scheduler = mock(Scheduler.class);
+        ResourceResolverFactory resolverFactory  = mock(ResourceResolverFactory.class);
+
         when(repository.loginService(serviceName, null)).thenReturn(session);
         String path = "/some/path";
         String nuggetsPath = "/var/nuggets";
         PersistedJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistedJcrEventDistributionTrigger(
-                repository, path, serviceName, nuggetsPath);
+                repository, scheduler, resolverFactory, path, serviceName, nuggetsPath);
         Event event = mock(Event.class);
         DistributionRequest distributionRequest = persistingJcrEventdistributionTrigger.processEvent(event);
         assertNull(distributionRequest);
@@ -97,11 +104,14 @@ public class PersistingJcrEventDistributionTriggerTest {
         when(session.hasPermission(nuggetsPath, Session.ACTION_ADD_NODE)).thenReturn(true);
 
         SlingRepository repository = mock(SlingRepository.class);
+        Scheduler scheduler = mock(Scheduler.class);
+        ResourceResolverFactory resolverFactory  = mock(ResourceResolverFactory.class);
+
         when(repository.loginService(serviceName, null)).thenReturn(session);
 
         String path = "/some/path";
         PersistedJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistedJcrEventDistributionTrigger(
-                repository, path, serviceName, nuggetsPath);
+                repository, scheduler, resolverFactory, path, serviceName, nuggetsPath);
         DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
         persistingJcrEventdistributionTrigger.register(handler);
 
@@ -135,11 +145,15 @@ public class PersistingJcrEventDistributionTriggerTest {
         when(session.hasPermission(any(String.class), eq(Session.ACTION_ADD_NODE))).thenReturn(true);
 
         SlingRepository repository = mock(SlingRepository.class);
+        Scheduler scheduler = mock(Scheduler.class);
+        ResourceResolverFactory resolverFactory  = mock(ResourceResolverFactory.class);
+
+
         when(repository.loginService(serviceName, null)).thenReturn(session);
 
         String path = "/some/path";
         PersistedJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistedJcrEventDistributionTrigger(
-                repository, path, serviceName, nuggetsPath);
+                repository, scheduler, resolverFactory, path, serviceName, nuggetsPath);
         DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
         persistingJcrEventdistributionTrigger.register(handler);
 

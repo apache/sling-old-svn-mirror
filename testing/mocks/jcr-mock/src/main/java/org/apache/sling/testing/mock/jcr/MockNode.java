@@ -40,6 +40,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
@@ -64,6 +65,14 @@ class MockNode extends AbstractItem implements Node {
         ItemData itemData = ItemData.newNode(path, new MockNodeType(primaryNodeTypeName));
         Node node = new MockNode(itemData, getSession());
         getMockedSession().addItem(itemData);
+        node.setProperty(JcrConstants.JCR_PRIMARYTYPE, primaryNodeTypeName);
+        
+        // special handling for some node types
+        if (StringUtils.equals(primaryNodeTypeName, JcrConstants.NT_FILE)) {
+            node.setProperty(JcrConstants.JCR_CREATED, Calendar.getInstance());
+            node.setProperty("jcr:createdBy", getMockedSession().getUserID());
+        }
+        
         return node;
     }
 
@@ -163,6 +172,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -172,6 +182,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(values);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -181,6 +192,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(values);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -190,6 +202,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -200,6 +213,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -209,6 +223,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -218,6 +233,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -227,6 +243,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -236,6 +253,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -245,6 +263,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -254,6 +273,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -263,6 +283,7 @@ class MockNode extends AbstractItem implements Node {
         Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
         getMockedSession().addItem(itemData);
+        this.itemData.setIsChanged(true);
         return property;
     }
 
@@ -306,6 +327,12 @@ class MockNode extends AbstractItem implements Node {
         return false;
     }
 
+    @Override
+    public NodeType[] getMixinNodeTypes() throws RepositoryException {
+        // we have no real mixin support - just assume no mixin nodetypes are set
+        return new NodeType[0];
+    }
+        
     // --- unsupported operations ---
     @Override
     public Property setProperty(final String name, final Value value, final int type) throws RepositoryException {
@@ -379,11 +406,6 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public Lock getLock() throws RepositoryException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public NodeType[] getMixinNodeTypes() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

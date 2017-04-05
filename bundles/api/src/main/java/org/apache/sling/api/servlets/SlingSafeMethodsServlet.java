@@ -32,6 +32,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -121,7 +122,6 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * @throws IOException If the error status cannot be reported back to the
      *             client.
      */
-    @SuppressWarnings("unused")
     protected void doGet(@Nonnull SlingHttpServletRequest request,
             @Nonnull SlingHttpServletResponse response) throws ServletException,
             IOException {
@@ -146,7 +146,6 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * @throws ServletException Not thrown by this implementation.
      * @throws IOException Not thrown by this implementation.
      */
-    @SuppressWarnings("unused")
     protected void doOptions(@Nonnull SlingHttpServletRequest request,
             @Nonnull SlingHttpServletResponse response) throws ServletException,
             IOException {
@@ -169,7 +168,6 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * @throws IOException May be thrown if there is an problem sending back the
      *             request headers in the response stream.
      */
-    @SuppressWarnings("unused")
     protected void doTrace(@Nonnull SlingHttpServletRequest request,
             @Nonnull SlingHttpServletResponse response) throws ServletException,
             IOException {
@@ -226,7 +224,6 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * @throws IOException If the error status cannot be reported back to the
      *             client.
      */
-    @SuppressWarnings("unused")
     protected void doGeneric(@Nonnull SlingHttpServletRequest request,
             @Nonnull SlingHttpServletResponse response) throws ServletException,
             IOException {
@@ -367,6 +364,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      *             {@link #service(SlingHttpServletRequest, SlingHttpServletResponse)}
      *             called.
      */
+    @Override
     public void service(@Nonnull ServletRequest req, @Nonnull ServletResponse res)
             throws ServletException, IOException {
 
@@ -387,6 +385,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * Returns the simple class name of this servlet class. Extensions of this
      * class may overwrite to return more specific information.
      */
+    @Override
     public @Nonnull String getServletInfo() {
         return getClass().getSimpleName();
     }
@@ -507,6 +506,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
          * Overwrite this to prevent setting the content length at the end of
          * the request through {@link #setContentLength()}
          */
+        @Override
         public void setContentLength(int len) {
             super.setContentLength(len);
             didSetContentLength = true;
@@ -516,6 +516,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
          * Just return the null output stream and don't check whether a writer
          * has already been acquired.
          */
+        @Override
         public ServletOutputStream getOutputStream() {
             return noBody;
         }
@@ -524,6 +525,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
          * Just return the writer to the null output stream and don't check
          * whether an output stram has already been acquired.
          */
+        @Override
         public PrintWriter getWriter() throws UnsupportedEncodingException {
             if (writer == null) {
                 OutputStreamWriter w;
@@ -550,16 +552,28 @@ public class SlingSafeMethodsServlet extends GenericServlet {
             return contentLength;
         }
 
+        @Override
         public void write(int b) {
             contentLength++;
         }
 
+        @Override
         public void write(byte buf[], int offset, int len) {
             if (len >= 0) {
                 contentLength += len;
             } else {
                 throw new IndexOutOfBoundsException();
             }
+        }
+
+        @Override
+        public boolean isReady() {
+            return true;
+        }
+
+        @Override
+        public void setWriteListener(WriteListener writeListener) {
+            // nothing to do
         }
     }
 

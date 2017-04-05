@@ -117,9 +117,6 @@ class Mapping implements Comparable<Mapping> {
         int result = compare(this.serviceName, o.serviceName);
         if (result == 0) {
             result = compare(this.subServiceName, o.subServiceName);
-            if (result == 0) {
-                result = compare(this.userName, o.userName);
-            }
         }
         return result;
     }

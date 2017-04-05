@@ -36,7 +36,7 @@ public class SortingServiceTracker<T> extends
         super(context, clazz);
         this.listener = listener;
     }
-    
+
     /**
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
      */
@@ -50,5 +50,23 @@ public class SortingServiceTracker<T> extends
         return returnValue;
     }
 
-    
+    /**
+     * Check if a service with the given name is registered.
+     * @param name Name
+     * @return {@code true} if it exists, {@code false} otherwise.
+     */
+    public boolean check(final String key, final String name) {
+        final ServiceReference[] refs = this.getServiceReferences();
+        if ( refs != null ) {
+            for(final ServiceReference ref : refs) {
+                final Object val = ref.getProperty(key);
+                if ( name.equals(val) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
 }

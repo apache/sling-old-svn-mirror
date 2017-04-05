@@ -23,12 +23,12 @@ public class AbstractResult<T> implements Result<T> {
 
 	public static <T> Result<T> success(T payload) {
 		
-		return new AbstractResult<T>(true, payload, null);
+		return new AbstractResult<>(true, payload, null);
 	}
 
 	public static <T> Result<T> failure(RepositoryException e) {
 		
-		return new AbstractResult<T>(false, null, e);
+		return new AbstractResult<>(false, null, e);
 	}
 	
 	private final boolean success;

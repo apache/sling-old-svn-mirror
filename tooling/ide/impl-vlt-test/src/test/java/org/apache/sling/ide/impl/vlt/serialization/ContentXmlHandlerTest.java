@@ -180,12 +180,40 @@ public class ContentXmlHandlerTest {
     }
 
     @Test
+    public void parseContentXmlWithEscapedValues() throws ParserConfigurationException, SAXException, IOException {
+        ResourceProxy root = parseContentXmlFile("escaped-value-in-property.xml", "/");
+
+        assertThat(root.getProperties(), hasEntry("property", 
+                (Object) "{\"template\":\"<p class=\\\"contexthub-module-line1\\\">\"}"));
+    }
+
+    @Test
     public void escapedBraceAtStartOfPropertyValue() throws Exception {
 
         ResourceProxy root = parseContentXmlFile("escaped-braces-at-start-of-property.xml", "/");
         assertThat("properties[org.apache.sling.commons.log.pattern]",
                 root.getProperties(), hasEntry("org.apache.sling.commons.log.pattern",
                         (Object) "{0,date,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}"));
+    }
+
+    @Test
+    public void escapedCommaInMultiValuedProperty() throws Exception {
+        
+        ResourceProxy root = parseContentXmlFile("escaped-comma-in-multi-valued-property.xml", "/");
+        assertThat("properties[someProp]", (String[]) root.getProperties().get("someProp"),
+                Matchers.is(new String[] { "first,first", "second" }));
+    }
+    
+    @Test
+    public void emptyMultivaluedProperties() throws Exception {
+        
+        ResourceProxy root = parseContentXmlFile("empty-multivalued-property.xml", "/");
+        
+        assertThat("properties[labels]", (String[]) root.getProperties().get("labels"),
+                Matchers.arrayWithSize(0));
+        assertThat("properties[values]", (Long[]) root.getProperties().get("values"),
+                Matchers.arrayWithSize(0));
+        
     }
 
     private static Matcher<Calendar> millis(long millis) {

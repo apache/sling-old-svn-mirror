@@ -1,0 +1,4 @@
+{
+    "jcr:primaryType":"some:NodeType",
+    "sling:resourceType":"its/resource/type"
+}

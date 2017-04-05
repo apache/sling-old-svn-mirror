@@ -1,0 +1,55 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+[feature name=launchpad-testing]
+# Dependencies
+[artifacts]
+  org.apache.sling/org.apache.sling.launchpad/8/slingstart
+  org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/slingfeature
+
+# SLING-2760 Do not include auth/selector in contrib build to avoid missing artifact dependency on http://dyuproject.googlecode.com/svn/repos/maven2
+# Auth 
+#  org.apache.sling/org.apache.sling.auth.selector/1.0.7-SNAPSHOT
+#  org.apache.sling/org.apache.sling.auth.openid/1.0.5-SNAPSHOT
+
+# Scala
+  org.apache.servicemix.bundles/org.apache.servicemix.bundles.scala-library/2.8.1_1
+  org.apache.servicemix.bundles/org.apache.servicemix.bundles.scala-compiler/2.8.1_1
+  org.apache.sling/org.apache.sling.scripting.scala.script/0.9.0-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.scala.config/0.9.0-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.scala.hello-world/0.9.0-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.scala.forum/0.9.0-SNAPSHOT
+  
+# Python
+  org.apache.sling/org.apache.sling.scripting.python/2.0.3-SNAPSHOT
+
+# xproc
+  org.apache.sling/org.apache.sling.scripting.xproc/2.0.0-SNAPSHOT
+
+# apt parser
+  org.apache.sling/org.apache.sling.extensions.apt.servlet/2.0.3-SNAPSHOT
+  org.apache.sling/org.apache.sling.extensions.apt.parser/2.0.3-SNAPSHOT
+
+# path based rtp
+  org.apache.sling.samples/org.apache.sling.samples.path-based.rtp/2.0.5-SNAPSHOT
+
+# groovy
+  org.codehaus.groovy/groovy-all/2.4.5
+  org.codehaus.groovy/groovy-json/2.4.5
+  org.codehaus.groovy/groovy-templates/2.4.5
+  org.apache.sling/org.apache.sling.scripting.groovy/1.0.1-SNAPSHOT

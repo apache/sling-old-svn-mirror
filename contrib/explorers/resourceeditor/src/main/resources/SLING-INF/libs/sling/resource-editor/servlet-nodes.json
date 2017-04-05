@@ -1,7 +1,0 @@
-{
-	"primaryNodeType": "nt:unstructured",
-	"resource-types" : {
-		"primaryNodeType": "nt:unstructured",
-		"sling:resourceType" : "resource-editor/resource-type-list"
-	}
-}

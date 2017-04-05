@@ -25,7 +25,7 @@ class AuthenticationRequirementHolder extends PathBasedHolder {
     private final boolean requiresAuthentication;
 
     static AuthenticationRequirementHolder fromConfig(final String config,
-            final ServiceReference serviceReference) {
+            final ServiceReference<?> serviceReference) {
         if (config == null || config.length() == 0) {
             throw new IllegalArgumentException(
                 "Configuration must not be null or empty");
@@ -50,7 +50,7 @@ class AuthenticationRequirementHolder extends PathBasedHolder {
 
     AuthenticationRequirementHolder(final String fullPath,
             final boolean requiresAuthentication,
-            final ServiceReference serviceReference) {
+            final ServiceReference<?> serviceReference) {
         super(fullPath, serviceReference);
         this.requiresAuthentication = requiresAuthentication;
     }

@@ -30,7 +30,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -73,7 +72,7 @@ public class JcrPropertyResourceTest {
                 allowing(property).getType(); will(returnValue(data.getValue()));
                 allowing(property).getString(); will(returnValue(stringValue));
             }});
-            final JcrPropertyResource propResource = new JcrPropertyResource(resolver, "/path/to/string-property", null, property, new PathMapperImpl());
+            final JcrPropertyResource propResource = new JcrPropertyResource(resolver, "/path/to/string-property", null, property);
             assertEquals("Byte length of " +  stringValue, stringByteLength, propResource.getResourceMetadata().getContentLength());
         }
     }

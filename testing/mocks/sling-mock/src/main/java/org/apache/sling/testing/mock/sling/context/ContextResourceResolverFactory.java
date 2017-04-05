@@ -18,12 +18,9 @@
  */
 package org.apache.sling.testing.mock.sling.context;
 
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
@@ -51,11 +48,14 @@ final class ContextResourceResolverFactory {
             case JCR_MOCK:
                 initializeJcrMock(factory);
                 break;
-            case JCR_JACKRABBIT:
-                initializeJcrJackrabbit(factory);
+            case JCR_OAK:
+                initializeJcrOak(factory);
                 break;
             case RESOURCERESOLVER_MOCK:
                 initializeResourceResolverMock(factory);
+                break;
+            case NONE:
+                initializeResourceResolverNone(factory);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid resource resolver type: " + type);
@@ -63,24 +63,23 @@ final class ContextResourceResolverFactory {
 
             return factory;
         } catch (Throwable ex) {
-            throw new RuntimeException("Unable to initialize " + type + " resource resolver factory.", ex);
+            throw new RuntimeException("Unable to initialize " + type + " resource resolver factory: " + ex.getMessage(), ex);
         }
     }
 
     private static void initializeJcrMock(ResourceResolverFactory factory) throws RepositoryException, LoginException {
-        // register default namespaces
-        ResourceResolver resolver = factory.getResourceResolver(null);
-        Session session = resolver.adaptTo(Session.class);
-        NamespaceRegistry namespaceRegistry = session.getWorkspace().getNamespaceRegistry();
-        namespaceRegistry.registerNamespace("sling", "http://sling.apache.org/jcr/sling/1.0");
-        resolver.close();
+        // nothing to do
     }
 
-    private static void initializeJcrJackrabbit(ResourceResolverFactory factory) {
+    private static void initializeJcrOak(ResourceResolverFactory factory) {
         // register sling node types?
     }
 
     private static void initializeResourceResolverMock(ResourceResolverFactory factory) {
+        // nothing to do
+    }
+
+    private static void initializeResourceResolverNone(ResourceResolverFactory factory) {
         // nothing to do
     }
 

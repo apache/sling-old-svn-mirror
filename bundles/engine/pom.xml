@@ -23,17 +23,17 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../parent/pom.xml</relativePath>
+        <version>30</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.engine</artifactId>
     <packaging>bundle</packaging>
-    <version>2.4.1-SNAPSHOT</version>
+    <version>2.6.7-SNAPSHOT</version>
 
     <name>Apache Sling Engine Implementation</name>
     <description>
-        Bundle implementing the core of Sling.
+        Bundle implementing the core of Apache Sling.
     </description>
 
     <scm>
@@ -45,59 +45,10 @@
     <properties>
         <site.jira.version.id>12314287</site.jira.version.id>
         <site.javadoc.exclude>**.impl.**</site.javadoc.exclude>
-        <sling.java.version>6</sling.java.version>
     </properties>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
-                        <configuration>
-                            <target>
-                                <property name="maven_compile_classpath" refid="maven.compile.classpath" />
-
-                                <delete file="${project.build.outputDirectory}/org/apache/sling/engine/impl/SlingHttpServletRequestImpl3.class" />
-                                <delete file="${project.build.outputDirectory}/org/apache/sling/engine/impl/helper/ExternalServletContextWrapper3.class" />
-                                <delete file="${project.build.outputDirectory}/org/apache/sling/engine/impl/helper/SlingServletContext3.class" />
-                                <delete file="${project.build.outputDirectory}/org/apache/sling/engine/impl/parameters/ParameterSupportHttpServletRequestWrapper3.class" />
-
-                                <javac srcdir="${basedir}/src/main/java-servlet3" destdir="${project.build.outputDirectory}" encoding="${project.build.sourceEncoding}" target="1.${sling.java.version}" source="1.${sling.java.version}" includeantruntime="false">
-                                    <classpath path="${javax.servlet:javax.servlet-api:jar}:${maven_compile_classpath}" />
-                                </javac>
-
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <!--
-                        SLING-3403: Need tools.jar for compilation. See
-                        non-mac-tools-jar and mac-tools-jar profiles for
-                        definition of the toolsjar property.
-                        See http://stackoverflow.com/questions/3080437/jdk-tools-jar-as-maven-dependency#answer-3080695
-                        for background of the trick.
-                    -->
-                    <dependency>
-                        <groupId>com.sun</groupId>
-                        <artifactId>tools</artifactId>
-                        <version>1.5.0</version>
-                        <scope>system</scope>
-                        <systemPath>${toolsjar}</systemPath>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -105,19 +56,17 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
-                            javax.servlet;javax.servlet.http;version="[2.3,4)",
-                            javax.servlet.descriptor;version="[2.6,4)";resolution:=optional,
-                            org.osgi.service.useradmin;
-                            org.apache.commons.math.*;resolution:=optional,
+                            javax.servlet;javax.servlet.http;version="[2.6,4)",
+                            javax.servlet.descriptor;version="[2.6,4)",
+                            org.osgi.service.useradmin;resolution:=optional,
                             *
                         </Import-Package>
+                        <Require-Capability>
+                            osgi.implementation;filter:="(&amp;(osgi.implementation=osgi.http)(version=1.0))"
+                        </Require-Capability>
                     </instructions>
                 </configuration>
             </plugin>
-        </plugins>
-    </build>
-    <reporting>
-        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -128,8 +77,36 @@
                 </configuration>
             </plugin>
         </plugins>
-    </reporting>
+    </build>
     <dependencies>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.http.whiteboard</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.http</artifactId>
+            <version>1.2.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.useradmin</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component</artifactId>
+            <version>1.3.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
@@ -151,7 +128,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.mime</artifactId>
-            <version>2.0.2-incubator</version>
+            <version>2.1.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -167,17 +144,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.5</version>
-        </dependency>
-        <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -191,10 +159,6 @@
             <groupId>org.jmock</groupId>
             <artifactId>jmock-junit4</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>com.sun.japex</groupId>
@@ -211,7 +175,7 @@
         <dependency>
             <groupId>org.jmock</groupId>
             <artifactId>jmock-legacy</artifactId>
-            <version>2.5.1</version>
+            <version>2.8.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -225,14 +189,6 @@
             <artifactId>objenesis</artifactId>
             <version>1.0</version>
             <scope>test</scope>
-        </dependency>
-
-        <!-- Servlet API 3 dependency required for the ANT build and must 
-            remain at the end of the dependencies ! -->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.0.1</version>
         </dependency>
     </dependencies>
     <profiles>
@@ -278,30 +234,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <id>non-mac-tools-jar</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <file>
-                    <exists>${java.home}/../lib/tools.jar</exists>
-                </file>
-            </activation>
-            <properties>
-                <toolsjar>${java.home}/../lib/tools.jar</toolsjar>
-            </properties>
-        </profile>
-        <profile>
-            <id>mac-tools-jar</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-                <file>
-                    <exists>${java.home}/../Classes/classes.jar</exists>
-                </file>
-            </activation>
-            <properties>
-                <toolsjar>${java.home}/../Classes/classes.jar</toolsjar>
-            </properties>
         </profile>
     </profiles>
 </project>

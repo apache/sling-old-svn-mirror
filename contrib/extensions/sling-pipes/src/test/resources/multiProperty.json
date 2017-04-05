@@ -1,0 +1,23 @@
+{
+  "jcr:primaryType": "nt:unstructured",
+  "working": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/multiProperty",
+    "path":"/content/fruits/index"
+  },
+  "typo": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/multiProperty",
+    "path":"/content/fruits/indexWithTypo"
+  },
+  "notProperty": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/multiProperty",
+    "path":"/content/fruits"
+  },
+  "notMultiple": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/multiProperty",
+    "path":"/etc/pipe/notMultiple/path"
+  }
+}

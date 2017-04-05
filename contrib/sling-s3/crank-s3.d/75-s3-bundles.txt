@@ -1,3 +1,0 @@
-bundle mvn:commons-io/commons-io/2.4
-bundle mvn:org.apache.jackrabbit/jackrabbit-data/2.8.0
-bundle mvn:eu.rekawek/sling-s3-deps/1.0-SNAPSHOT

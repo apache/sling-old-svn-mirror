@@ -21,9 +21,12 @@ package org.apache.sling.models.impl.injectors;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.AnnotatedElement;
+
 import javax.servlet.ServletRequest;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +40,10 @@ public class RequestAttributeInjectorTest {
     
     @Mock
     private ServletRequest request;
+    @Mock
+    private AnnotatedElement element;
+    @Mock
+    private DisposalCallbackRegistry registry;
     
     private static final String STRING_PARAM = "param1";
     private static final String INTEGER_PARAM = "param2";
@@ -54,25 +61,25 @@ public class RequestAttributeInjectorTest {
 
     @Test
     public void testStringParam() {
-        Object result = injector.getValue(request, STRING_PARAM, String.class, null, null);
+        Object result = injector.getValue(request, STRING_PARAM, String.class, element, registry);
         assertEquals(STRING_VALUE, result);
     }
 
     @Test
     public void testIntegerParam() {
-        Object result = injector.getValue(request, INTEGER_PARAM, Integer.class, null, null);
+        Object result = injector.getValue(request, INTEGER_PARAM, Integer.class, element, registry);
         assertEquals(INTEGER_VALUE, result);
     }
 
     @Test
     public void testClassInstance() {
-        Object result = injector.getValue(request, CLASS_PARAM, ResourceResolver.class, null, null);
+        Object result = injector.getValue(request, CLASS_PARAM, ResourceResolver.class, element, registry);
         assertSame(CLASS_INSTANCE, result);
     }
 
     @Test
     public void testNonRequestAdaptable() {
-        Object result = injector.getValue(mock(ResourceResolver.class), STRING_PARAM, String.class, null, null);
+        Object result = injector.getValue(mock(ResourceResolver.class), STRING_PARAM, String.class, element, registry);
         assertNull(result);
     }
 }

@@ -21,13 +21,15 @@ package org.apache.sling.jcr.api;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * This interface is used to customize the namespace mapping of
  * a session.
  * @since 2.1
+ * @deprecated Per session namespace mapping is not supported anymore.
  */
+@Deprecated
 @ConsumerType
 public interface NamespaceMapper {
 

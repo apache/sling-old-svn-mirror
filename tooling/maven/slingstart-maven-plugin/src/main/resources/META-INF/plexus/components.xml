@@ -26,13 +26,11 @@
         <lifecycles>
           <lifecycle>
             <id>default</id>
-            <!-- START SNIPPET: bundle-lifecycle -->
             <phases>
               <package>org.apache.sling:slingstart-maven-plugin:attach-slingfeature</package>
               <install>org.apache.maven.plugins:maven-install-plugin:install</install>
               <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
             </phases>
-            <!-- END SNIPPET: bundle-lifecycle -->
           </lifecycle>
         </lifecycles>
       </configuration>
@@ -45,7 +43,6 @@
         <lifecycles>
           <lifecycle>
             <id>default</id>
-            <!-- START SNIPPET: bundle-lifecycle -->
             <phases>
               <process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</process-resources>
               <compile>org.apache.maven.plugins:maven-compiler-plugin:compile</compile>
@@ -62,7 +59,6 @@
               <install>org.apache.maven.plugins:maven-install-plugin:install</install>
               <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
             </phases>
-            <!-- END SNIPPET: bundle-lifecycle -->
           </lifecycle>
         </lifecycles>
       </configuration>
@@ -85,9 +81,21 @@
       <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
       <configuration>
         <type>slingstart</type>
-        <includesDependencies>true</includesDependencies>
+        <includesDependencies>false</includesDependencies>
         <language>java</language>
         <extension>jar</extension>
+        <addedToClasspath>false</addedToClasspath>
+      </configuration>
+    </component>
+    <component>
+      <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+      <role-hint>mar</role-hint>
+      <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
+      <configuration>
+        <type>mar</type>
+        <includesDependencies>false</includesDependencies>
+        <language>java</language>
+        <extension>mar</extension>
         <addedToClasspath>false</addedToClasspath>
       </configuration>
     </component>

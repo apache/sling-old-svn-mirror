@@ -31,18 +31,22 @@ import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.RunMode;
+import org.apache.sling.provisioning.model.Section;
 
-
+/**
+ * This class offers a method to read a model using a {@code Reader} instance.
+ */
 public class ModelReader {
 
     private enum CATEGORY {
         NONE(null, null),
-        FEATURE("feature", new String[] {"name"}),
+        FEATURE("feature", new String[] {"name", "type", "version"}),
         VARIABLES("variables", null),
         ARTIFACTS("artifacts", new String[] {"runModes", "startLevel"}),
         SETTINGS("settings", new String[] {"runModes"}),
         CONFIGURATIONS("configurations", new String[] {"runModes"}),
-        CONFIG(null, null);
+        CONFIG(null, null),
+        ADDITIONAL(null, null);
 
         public final String name;
 
@@ -56,8 +60,11 @@ public class ModelReader {
 
     /**
      * Reads the model file
-     * The reader is not closed.
-     * @throws IOException
+     * The reader is not closed. It is up to the caller to close the reader.
+     *
+     * @param reader The reader providing the model
+     * @param location Optional location string identifying the source of the model.
+     * @throws IOException If an error occurs
      */
     public static Model read(final Reader reader, final String location)
     throws IOException {
@@ -69,14 +76,16 @@ public class ModelReader {
 
     private final Model model = new Model();
 
-    private Feature feature = null;
-    private RunMode runMode = null;
-    private ArtifactGroup artifactGroup = null;
-    private Configuration config = null;
+    private Feature feature;
+    private RunMode runMode;
+    private ArtifactGroup artifactGroup;
+    private Configuration config;
 
-    private String comment = null;
+    private Section additionalSection;
 
-    private StringBuilder configBuilder = null;
+    private String comment;
+
+    private StringBuilder configBuilder;
 
     private LineNumberReader lineNumberReader;
 
@@ -104,6 +113,14 @@ public class ModelReader {
 
             // ignore empty line
             if ( line.isEmpty() ) {
+                if ( this.mode == CATEGORY.ADDITIONAL ) {
+                    if ( this.additionalSection.getContents() == null ) {
+                        this.additionalSection.setContents(line);
+                    } else {
+                        this.additionalSection.setContents(this.additionalSection.getContents() + '\n' + line);
+                    }
+                    continue;
+                }
                 checkConfig();
                 continue;
             }
@@ -114,6 +131,14 @@ public class ModelReader {
                     configBuilder.append(line);
                     configBuilder.append('\n');
 
+                    continue;
+                }
+                if ( this.mode == CATEGORY.ADDITIONAL ) {
+                    if ( this.additionalSection.getContents() == null ) {
+                        this.additionalSection.setContents(line);
+                    } else {
+                        this.additionalSection.setContents(this.additionalSection.getContents() + '\n' + line);
+                    }
                     continue;
                 }
                 final String c = line.substring(1).trim();
@@ -133,6 +158,7 @@ public class ModelReader {
             }
 
             if ( line.startsWith("[") ) {
+                additionalSection = null;
                 if ( !line.endsWith("]") ) {
                     throw new IOException(exceptionPrefix + "Illegal category definition in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                 }
@@ -149,7 +175,11 @@ public class ModelReader {
                     }
                 }
                 if ( found == null ) {
-                    throw new IOException(exceptionPrefix + "Unknown category in line " + this.lineNumberReader.getLineNumber() + ": " + line);
+                    // additional section
+                    if ( !category.startsWith(":") ) {
+                        throw new IOException(exceptionPrefix + "Unknown category in line " + this.lineNumberReader.getLineNumber() + ": " + category);
+                    }
+                    found = CATEGORY.ADDITIONAL;
                 }
                 this.mode = found;
                 Map<String, String> parameters = Collections.emptyMap();
@@ -169,6 +199,8 @@ public class ModelReader {
                                        throw new IOException(exceptionPrefix + "Duplicate feature in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                    }
                                    this.feature = model.getOrCreateFeature(name);
+                                   this.feature.setType(parameters.get("type"));
+                                   this.feature.setVersion(parameters.get("version"));
                                    this.init(this.feature);
                                    this.runMode = null;
                                    this.artifactGroup = null;
@@ -201,6 +233,13 @@ public class ModelReader {
                                          checkRunMode(parameters);
                                          this.init(this.runMode.getConfigurations());
                                          break;
+                    case ADDITIONAL: checkFeature();
+                                     this.runMode = null;
+                                     this.artifactGroup = null;
+                                     this.additionalSection = new Section(category.substring(1));
+                                     this.init(this.additionalSection);
+                                     this.feature.getAdditionalSections().add(this.additionalSection);
+                                     this.additionalSection.getAttributes().putAll(parameters);
                 }
             } else {
                 switch ( this.mode ) {
@@ -238,7 +277,7 @@ public class ModelReader {
                                               final int startPos = line.indexOf("[");
                                               if ( startPos != -1 ) {
                                                   configId = line.substring(0, startPos).trim();
-                                                  cfgPars = parseParameters(line.substring(startPos + 1, line.length() - 1).trim(), new String[] {"format"});
+                                                  cfgPars = parseParameters(line.substring(startPos + 1, line.length() - 1).trim(), new String[] {"format", "mode"});
                                               }
                                           }
                                           String format = cfgPars.get("format");
@@ -249,6 +288,15 @@ public class ModelReader {
                                               }
                                           } else {
                                               format = ModelConstants.CFG_FORMAT_FELIX_CA;
+                                          }
+                                          String cfgMode= cfgPars.get("mode");
+                                          if ( cfgMode != null ) {
+                                              if ( !ModelConstants.CFG_MODE_OVERWRITE.equals(cfgMode)
+                                                      && !ModelConstants.CFG_MODE_MERGE.equals(cfgMode) ) {
+                                                      throw new IOException(exceptionPrefix + "Unknown mode configuration parameter in line " + this.lineNumberReader.getLineNumber() + ": " + line);
+                                                  }
+                                          } else {
+                                              cfgMode = ModelConstants.CFG_MODE_OVERWRITE;
                                           }
                                           final String pid;
                                           final String factoryPid;
@@ -266,12 +314,19 @@ public class ModelReader {
                                           config = runMode.getOrCreateConfiguration(pid, factoryPid);
                                           this.init(config);
                                           config.getProperties().put(ModelConstants.CFG_UNPROCESSED_FORMAT, format);
+                                          config.getProperties().put(ModelConstants.CFG_UNPROCESSED_MODE, cfgMode);
                                           configBuilder = new StringBuilder();
                                           mode = CATEGORY.CONFIG;
                                           break;
                     case CONFIG : configBuilder.append(line);
                                   configBuilder.append('\n');
                                   break;
+                    case ADDITIONAL : if ( this.additionalSection.getContents() == null ) {
+                                          this.additionalSection.setContents(line);
+                                      } else {
+                                          this.additionalSection.setContents(this.additionalSection.getContents() + '\n' + line);
+                                      }
+                                      break;
                 }
             }
 

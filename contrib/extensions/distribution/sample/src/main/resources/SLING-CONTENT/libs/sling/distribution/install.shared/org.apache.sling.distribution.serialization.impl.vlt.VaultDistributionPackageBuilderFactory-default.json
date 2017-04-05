@@ -1,0 +1,9 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "default",
+    "type": "jcrvlt",
+    "cleanupDelay": 1,
+    "package.filters": ["/content|-.*/excluded"],
+    "useBinaryReferences": true,
+    "tempFsFolder" : "/var/sling/distribution/packages"
+}

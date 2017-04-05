@@ -42,10 +42,10 @@ public class SimpleModifiableResource extends SimpleReadableResource {
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
 
         if (type == ValueMap.class || type == Map.class) {
-            return (AdapterType) new SimpleModifiableValueMap(getResourceResolver(), resourceProvider, this);
+            return type.cast(new SimpleModifiableValueMap(getResourceResolver(), resourceProvider, this));
 
         } else if (type == ModifiableValueMap.class) {
-            return (AdapterType) new SimpleModifiableValueMap(getResourceResolver(), resourceProvider, this);
+            return type.cast(new SimpleModifiableValueMap(getResourceResolver(), resourceProvider, this));
         }
 
         return super.adaptTo(type);

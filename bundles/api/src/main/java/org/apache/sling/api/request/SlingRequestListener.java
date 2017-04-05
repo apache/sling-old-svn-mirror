@@ -19,7 +19,7 @@
 
 package org.apache.sling.api.request;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Implementations of this service interface receive notifications about

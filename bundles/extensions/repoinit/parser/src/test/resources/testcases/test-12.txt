@@ -1,0 +1,17 @@
+# Test Path centring Set Acl with options SLING-6423
+set ACL on /libs,/apps (ACLOptions=merge)
+    remove * for user1,user2
+    allow jcr:read for user1,user2
+
+    remove * for another
+    allow x:y for another
+end
+
+#multiple options test
+set ACL on /libs,/apps (ACLOptions=mergePreserve,someOtherOption,someOther123,namespaced:option)
+    remove * for user1,user2
+    allow jcr:read for user1,user2
+
+    remove * for another
+    allow x:y for another
+end

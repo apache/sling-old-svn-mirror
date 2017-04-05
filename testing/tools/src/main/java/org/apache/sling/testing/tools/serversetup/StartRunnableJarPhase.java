@@ -55,17 +55,14 @@ public class StartRunnableJarPhase implements SetupPhase {
         return getClass().getSimpleName() + " (" + id + ") " + description; 
     }
     
-    /** @inheritDoc */
     public void run(ServerSetup owner) throws Exception {
         executor.start();
     }
 
-    /** @inheritDoc */
     public boolean isStartupPhase() {
         return true;
     }
 
-    /** @inheritDoc */
     public String getId() {
         return id;
     }

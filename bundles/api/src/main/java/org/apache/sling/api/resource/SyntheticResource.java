@@ -18,6 +18,7 @@
  */
 package org.apache.sling.api.resource;
 
+import javax.annotation.Nonnull;
 
 /**
  * The <code>SyntheticResource</code> class is a simple implementation of the
@@ -41,6 +42,9 @@ public class SyntheticResource extends AbstractResource {
     /**
      * Creates a synthetic resource with the given <code>path</code> and
      * <code>resourceType</code>.
+     * @param resourceResolver The resource resolver
+     * @param path The resource path
+     * @param resourceType The type of the resource
      */
     public SyntheticResource(ResourceResolver resourceResolver, String path,
             String resourceType) {
@@ -54,6 +58,9 @@ public class SyntheticResource extends AbstractResource {
     /**
      * Creates a synthetic resource with the given <code>ResourceMetadata</code>
      * and <code>resourceType</code>.
+     * @param resourceResolver The resource resolver
+     * @param rm The resource meta data
+     * @param resourceType The type of the resource
      */
     public SyntheticResource(ResourceResolver resourceResolver, ResourceMetadata rm,
     		String resourceType) {
@@ -66,20 +73,23 @@ public class SyntheticResource extends AbstractResource {
     /**
      * @see org.apache.sling.api.resource.Resource#getPath()
      */
-    public String getPath() {
+    @Override
+    public @Nonnull String getPath() {
         return path;
     }
 
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceType()
      */
-    public String getResourceType() {
+    @Override
+    public @Nonnull String getResourceType() {
         return resourceType;
     }
 
     /**
      * Synthetic resources by default do not have a resource super type.
      */
+    @Override
     public String getResourceSuperType() {
         return null;
     }
@@ -88,7 +98,8 @@ public class SyntheticResource extends AbstractResource {
      * Returns a resource metadata object containing just the path of this
      * resource as the {@link ResourceMetadata#RESOLUTION_PATH} property.
      */
-    public ResourceMetadata getResourceMetadata() {
+    @Override
+    public @Nonnull ResourceMetadata getResourceMetadata() {
         return resourceMetadata;
     }
 
@@ -96,7 +107,8 @@ public class SyntheticResource extends AbstractResource {
      * Returns the {@link ResourceResolver} with which this synthetic resource
      * is related or <code>null</code> if none.
      */
-    public ResourceResolver getResourceResolver() {
+    @Override
+    public @Nonnull ResourceResolver getResourceResolver() {
         return resourceResolver;
     }
 

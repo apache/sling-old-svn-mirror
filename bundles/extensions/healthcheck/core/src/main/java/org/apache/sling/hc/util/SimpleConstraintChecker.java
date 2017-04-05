@@ -21,8 +21,8 @@ import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
 
 /** Simple check of numeric values against expressions
- *  like < N, > N, between two values etc.
- *  See  {@link SimpleConstraintCheckerTest} for examples.
+ *  like &lt; N, &gt; N, between two values etc.
+ *  See the SimpleConstraintCheckerTest for examples.
  */
 public class SimpleConstraintChecker {
 

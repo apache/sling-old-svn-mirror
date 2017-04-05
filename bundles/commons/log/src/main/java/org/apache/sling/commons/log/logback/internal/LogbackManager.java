@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.sling.commons.log.logback.internal;
 
 import java.io.File;
@@ -13,6 +31,21 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.sling.commons.log.logback.internal.AppenderTracker.AppenderInfo;
+import org.apache.sling.commons.log.logback.internal.util.SlingRollingFileAppender;
+import org.apache.sling.commons.log.logback.internal.util.SlingStatusPrinter;
+import org.apache.sling.commons.log.logback.webconsole.LogPanel;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -34,37 +67,9 @@ import ch.qos.logback.core.status.OnConsoleStatusListener;
 import ch.qos.logback.core.status.StatusListener;
 import ch.qos.logback.core.status.StatusListenerAsList;
 import ch.qos.logback.core.status.StatusUtil;
-import org.apache.sling.commons.log.logback.internal.AppenderTracker.AppenderInfo;
-import org.apache.sling.commons.log.logback.internal.util.SlingRollingFileAppender;
-import org.apache.sling.commons.log.logback.internal.util.SlingStatusPrinter;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class LogbackManager extends LoggerContextAwareBase {
     private static final String JUL_SUPPORT = "org.apache.sling.commons.log.julenabled";
-
-    //These properties should have been defined in SlingLogPanel
-    //But we need them while registering ServiceFactory and hence
-    //would not want to load SlingLogPanel class for registration
-    //purpose as we need to run in cases where Servlet classes
-    //are not available
-    static final String APP_ROOT = "slinglog";
-
-    static final String RES_LOC = APP_ROOT + "/res/ui";
-
-    public static final String[] CSS_REFS = {
-            RES_LOC + "/jquery.autocomplete.css",
-            RES_LOC + "/prettify.css",
-            RES_LOC + "/log.css",
-    };
 
     private static final String PREFIX = "org.apache.sling.commons.log";
 
@@ -162,8 +167,13 @@ public class LogbackManager extends LoggerContextAwareBase {
         registerWebConsoleSupport();
         registerEventHandler();
 
+        // initial configuration must be done synchronously (aka immediately)
+        addInfo("LogbackManager: BEGIN initial configuration");
+        failSafeConfigure();
+        addInfo("LogbackManager: END initialconfiguration");
+
+        // now open the gate for regular configuration
         started = true;
-        configChanged();
     }
 
     public void shutdown() {
@@ -253,11 +263,7 @@ public class LogbackManager extends LoggerContextAwareBase {
             public void run() {
                 // TODO Might be better to run a job to monitor refreshRequirement
                 try {
-                    addInfo("Performing configuration");
-                    configure();
-                } catch (Exception e) {
-                    log.warn("Error occurred while re-configuring logger", e);
-                    addError("Error occurred while re-configuring logger", e);
+                    failSafeConfigure();
                 } finally {
                     resetLock.release();
                     addInfo("Re configuration done");
@@ -265,6 +271,16 @@ public class LogbackManager extends LoggerContextAwareBase {
                 }
             }
         });
+    }
+
+    private void failSafeConfigure(){
+        try {
+            addInfo("Performing configuration");
+            configure();
+        } catch (Exception e) {
+            log.warn("Error occurred while re-configuring logger", e);
+            addError("Error occurred while re-configuring logger", e);
+        }
     }
 
     public void fireResetCompleteListeners(){
@@ -454,6 +470,7 @@ public class LogbackManager extends LoggerContextAwareBase {
 
     private class OsgiIntegrationListener implements LoggerContextListener {
 
+        @Override
         public boolean isResetResistant() {
             // The integration listener has to survive resets from other causes
             // like reset when Logback detects change in config file and reloads
@@ -462,9 +479,11 @@ public class LogbackManager extends LoggerContextAwareBase {
             return true;
         }
 
+        @Override
         public void onStart(LoggerContext context) {
         }
 
+        @Override
         public void onReset(LoggerContext context) {
             addInfo("OsgiIntegrationListener : context reset detected. Adding LogManager to context map and firing"
                 + " listeners");
@@ -491,9 +510,11 @@ public class LogbackManager extends LoggerContextAwareBase {
             }
         }
 
+        @Override
         public void onStop(LoggerContext context) {
         }
 
+        @Override
         public void onLevelChange(Logger logger, Level level) {
         }
 
@@ -556,7 +577,7 @@ public class LogbackManager extends LoggerContextAwareBase {
                         GenericConfigurator.informContextOfURLUsedForConfiguration(context, mainURL);
                         configurator.doConfigure(eventList);
                         addInfo("Re-registering previous fallback configuration once more as a fallback configuration point");
-                        configurator.registerSafeConfiguration();
+                        configurator.registerSafeConfiguration(eventList);
                     } catch (JoranException e) {
                         addError("Unexpected exception thrown by a configuration considered safe.", e);
                     }
@@ -578,6 +599,7 @@ public class LogbackManager extends LoggerContextAwareBase {
             this.configFile = configFile;
         }
 
+        @Override
         public void perform(JoranConfigurator configurator) throws JoranException {
             final String path = configFile.getAbsolutePath();
             addInfo("Configuring from " + path);
@@ -608,6 +630,7 @@ public class LogbackManager extends LoggerContextAwareBase {
     }
 
     private class DefaultCallback extends ConfiguratorCallback {
+        @Override
         public void perform(JoranConfigurator configurator) throws JoranException {
             configurator.doConfigure(getMainUrl());
         }
@@ -727,17 +750,11 @@ public class LogbackManager extends LoggerContextAwareBase {
     }
 
     private void registerWebConsoleSupport() {
-        final ServiceFactory serviceFactory = new PluginServiceFactory();
-
-        Properties pluginProps = new Properties();
-        pluginProps.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
-        pluginProps.put(Constants.SERVICE_DESCRIPTION, "Sling Log Support");
-        pluginProps.put("felix.webconsole.label", APP_ROOT);
-        pluginProps.put("felix.webconsole.title", "Log Support");
-        pluginProps.put("felix.webconsole.category", "Sling");
-        pluginProps.put("felix.webconsole.css", CSS_REFS);
-
-        registrations.add(bundleContext.registerService("javax.servlet.Servlet", serviceFactory, pluginProps));
+        Properties panelProps = new Properties();
+        panelProps.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
+        panelProps.put(Constants.SERVICE_DESCRIPTION, "Sling Log Panel Support");
+        registrations.add(bundleContext.registerService(LogPanel.class.getName(),
+                new SlingLogPanel(this, bundleContext), panelProps));
 
         Properties printerProps = new Properties();
         printerProps.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
@@ -749,22 +766,6 @@ public class LogbackManager extends LoggerContextAwareBase {
         // TODO need to see to add support for Inventory Feature
         registrations.add(bundleContext.registerService(SlingConfigurationPrinter.class.getName(),
             new SlingConfigurationPrinter(this), printerProps));
-    }
-
-    private class PluginServiceFactory implements ServiceFactory {
-        private Object instance;
-
-        public Object getService(Bundle bundle, ServiceRegistration registration) {
-            synchronized (this) {
-                if (this.instance == null) {
-                    this.instance = new SlingLogPanel(LogbackManager.this,bundleContext);
-                }
-                return instance;
-            }
-        }
-
-        public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
-        }
     }
 
     private void registerEventHandler() {

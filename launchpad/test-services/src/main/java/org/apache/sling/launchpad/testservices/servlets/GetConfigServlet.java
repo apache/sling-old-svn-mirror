@@ -38,6 +38,7 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 /** GET returns the contents of an OSGi config by PID */
+@SuppressWarnings("serial")
 @Component
 @Service
 @Properties({
@@ -64,11 +65,10 @@ public class GetConfigServlet extends SlingSafeMethodsServlet {
             pid = pid.substring(1);
         }
 
-        // Get config and properties
-        final Configuration cfg = configAdmin.getConfiguration(pid);
-        if(cfg == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Config with pid=" + pid + " not found");
-        }
+        // Get config and properties. Avoid using configAdmin.getConfiguration(...) 
+        // to avoid creating a config that does not exist yet, which might cause
+        // services to restart.
+        final Configuration cfg = getUniqueConfig(pid);
         final Dictionary<?, ?> props = cfg.getProperties();
         if(props == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Properties of config with pid=" + pid + " not found");
@@ -98,5 +98,22 @@ public class GetConfigServlet extends SlingSafeMethodsServlet {
         } catch(JSONException je) {
             throw (IOException)new IOException("JSONException in doGet").initCause(je);
         }
+    }
+    
+    private Configuration getUniqueConfig(String pid) throws ServletException {
+        final String filter = "(service.pid=" + pid + ")";
+        Configuration [] cfg = null;
+        try {
+            cfg = configAdmin.listConfigurations(filter);
+        } catch(Exception e) {
+            throw new ServletException("Error listing configs with filter " + filter, e);
+        }
+        if(cfg == null) {
+            throw new ServletException("No config found with filter " + filter);
+        }
+        if(cfg.length > 1) {
+            throw new ServletException("Expected 1 config, found " + cfg.length + " with filter " + filter);
+        }
+        return cfg[0];
     }
 }

@@ -18,14 +18,16 @@
  */
 package org.apache.sling.commons.testing.sling;
 
-import org.apache.sling.api.SlingHttpServletResponse;
-
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.Locale;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.Cookie;
+
+import org.apache.sling.api.SlingHttpServletResponse;
 
 public class MockSlingHttpServletResponse implements SlingHttpServletResponse {
 
@@ -38,140 +40,208 @@ public class MockSlingHttpServletResponse implements SlingHttpServletResponse {
 		return output;
 	}
 
-	public void addCookie(Cookie cookie) {
+	@Override
+    public void addCookie(Cookie cookie) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".addCookie");
 	}
 
-	public boolean containsHeader(String s) {
+	@Override
+    public boolean containsHeader(String s) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".containsHeader");
 	}
 
-	public String encodeURL(String s) {
+	@Override
+    public String encodeURL(String s) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".encodeURL");
 	}
 
-	public String encodeRedirectURL(String s) {
+	@Override
+    public String encodeRedirectURL(String s) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".encodeRedirectURL");
 	}
 
-	public String encodeUrl(String s) {
+	@Override
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    public String encodeUrl(String s) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".encodeUrl");
 	}
 
-	public String encodeRedirectUrl(String s) {
+	@Override
+    @SuppressWarnings("deprecation")
+    public String encodeRedirectUrl(String s) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".encodeRedirectUrl");
 	}
 
-	public void sendError(int i, String s) throws IOException {
+	@Override
+    public void sendError(int i, String s) throws IOException {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".sendError");
 	}
 
-	public void sendError(int i) throws IOException {
+	@Override
+    public void sendError(int i) throws IOException {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".sendError");
 	}
 
-	public void sendRedirect(String s) throws IOException {
+	@Override
+    public void sendRedirect(String s) throws IOException {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".sendRedirect");
 	}
 
-	public void setDateHeader(String s, long l) {
+	@Override
+    public void setDateHeader(String s, long l) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".setDateHeader");
 	}
 
-	public void addDateHeader(String s, long l) {
+	@Override
+    public void addDateHeader(String s, long l) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".addDateHeader");
 	}
 
-	public void setHeader(String s, String s1) {
+	@Override
+    public void setHeader(String s, String s1) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".setHeader");
 	}
 
-	public void addHeader(String s, String s1) {
+	@Override
+    public void addHeader(String s, String s1) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".addHeader");
 	}
 
-	public void setIntHeader(String s, int i) {
+	@Override
+    public void setIntHeader(String s, int i) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".setIntHeader");
 	}
 
-	public void addIntHeader(String s, int i) {
+	@Override
+    public void addIntHeader(String s, int i) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".addIntHeader");
 	}
 
-	public void setStatus(int i) {
+	@Override
+    public void setStatus(int i) {
 		this.status = i;
 	}
 
-	public void setStatus(int i, String s) {
+	@Override
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    public void setStatus(int i, String s) {
 		this.status = i;
 	}
 
-	public String getCharacterEncoding() {
+	@Override
+    public String getCharacterEncoding() {
 		return encoding;
 	}
 
-	public String getContentType() {
+	@Override
+    public String getContentType() {
 		return contentType;
 	}
 
-	public ServletOutputStream getOutputStream() throws IOException {
+	@Override
+    public ServletOutputStream getOutputStream() throws IOException {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".getOutputStream");
 	}
 
-	public PrintWriter getWriter() throws IOException {
+	@Override
+    public PrintWriter getWriter() throws IOException {
 		MockSlingHttpServletResponse.MockWriter writer = new MockWriter(output);
 		return new PrintWriter(writer);
 	}
 
-	public void setCharacterEncoding(String encoding) {
+	@Override
+    public void setCharacterEncoding(String encoding) {
 		this.encoding = encoding;
 	}
 
-	public void setContentLength(int i) {
+	@Override
+    public void setContentLength(int i) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".setContentLength");
 	}
 
-	public void setContentType(String contentType) {
+	@Override
+    public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
 
-	public void setBufferSize(int i) {
+	@Override
+    public void setBufferSize(int i) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".setBufferSize");
 	}
 
-	public int getBufferSize() {
+	@Override
+    public int getBufferSize() {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".getBufferSize");
 	}
 
-	public void flushBuffer() throws IOException {
+	@Override
+    public void flushBuffer() throws IOException {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".flushBuffer");
 	}
 
-	public void resetBuffer() {
+	@Override
+    public void resetBuffer() {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".resetBuffer");
 	}
 
-	public boolean isCommitted() {
+	@Override
+    public boolean isCommitted() {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".isCommitted");
 	}
 
-	public void reset() {
+	@Override
+    public void reset() {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".reset");
 	}
 
-	public void setLocale(Locale locale) {
+	@Override
+    public void setLocale(Locale locale) {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".setLocale");
 	}
 
-	public Locale getLocale() {
+	@Override
+    public Locale getLocale() {
 		throw new UnsupportedOperationException("Not implemented: " + getClass().getName() + ".getLocale");
 	}
 
-	public <AdapterType> AdapterType adaptTo(Class<AdapterType> adapterTypeClass) {
+	@Override
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> adapterTypeClass) {
 		return null;
 	}
 
-	private class MockWriter extends Writer {
+	@Override
+    public int getStatus() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public String getHeader(String name) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Collection<String> getHeaders(String name) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Collection<String> getHeaderNames() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setContentLengthLong(long len) {
+        // TODO Auto-generated method stub
+
+    }
+
+    private class MockWriter extends Writer {
 		private StringBuffer buf;
 
 		public MockWriter(StringBuffer output) {

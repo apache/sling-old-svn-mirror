@@ -16,20 +16,25 @@
  */
 package org.apache.sling.commons.json.jcr;
 
-import junit.framework.TestCase;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.testing.jcr.MockNode;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import javax.jcr.RepositoryException;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.jcr.RepositoryException;
+
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.testing.jcr.MockNode;
+import org.junit.Test;
 
 /**
  * @author vidar@idium.no
  * @since Apr 17, 2009 6:57:04 PM
  */
-public class JsonJcrNodeTest extends TestCase {
+public class JsonJcrNodeTest {
 
+    @Test
     public void testJcrJsonObject() throws RepositoryException, JSONException {
         MockNode node = new MockNode("/node1");
         node.setProperty("prop1", "value1");
@@ -42,6 +47,5 @@ public class JsonJcrNodeTest extends TestCase {
         assertTrue("Did not create jcr:name", json.has("jcr:name"));
         assertTrue("Did not create jcr:path", json.has("jcr:path"));
     }
-
 
 }

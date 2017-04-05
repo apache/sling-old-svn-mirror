@@ -42,6 +42,11 @@ public class TopologyEvent {
          * being discovered. Once the discovery is finished, a TOPOLOGY_CHANGED
          * is sent with the new topology view.
          * <p>
+         * After receiving a TOPOLOGY_CHANGING and before receiving a
+         * TOPOLOGY_CHANGED event a TopologyEventListener cannot make any
+         * assumptions wrt the topology whatsoever, including whether or not 
+         * the local instance is part of it at all (partitioning).
+         * <p>
          * An implementation must always send a TOPOLOGY_CHANGING before a
          * TOPOLOGY_CHANGED.
          */

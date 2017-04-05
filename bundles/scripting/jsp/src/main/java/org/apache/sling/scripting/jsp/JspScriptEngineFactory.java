@@ -22,42 +22,34 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.Reader;
-import java.util.Dictionary;
+import java.util.List;
+import java.util.Map;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.classloader.ClassLoaderWriterListener;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.compiler.JavaCompiler;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
@@ -66,10 +58,17 @@ import org.apache.sling.scripting.jsp.jasper.runtime.AnnotationProcessor;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
 import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,45 +76,106 @@ import org.slf4j.LoggerFactory;
  * The JSP engine (a.k.a Jasper).
  *
  */
-@Component(label="%jsphandler.name",
-           description="%jsphandler.description",
-           metatype=true)
-@Service(value={javax.script.ScriptEngineFactory.class, EventHandler.class, Servlet.class})
-@Properties({
-   @Property(name="service.description",value="JSP Script Handler"),
-   @Property(name="service.vendor",value="The Apache Software Foundation"),
-   @Property(name="jasper.compilerTargetVM", value=JspServletOptions.AUTOMATIC_VERSION),
-   @Property(name="jasper.compilerSourceVM", value=JspServletOptions.AUTOMATIC_VERSION),
-   @Property(name="jasper.classdebuginfo",boolValue=true),
-   @Property(name="jasper.enablePooling",boolValue=true),
-   @Property(name="jasper.ieClassId",value="clsid:8AD9C840-044E-11D1-B3E9-00805F499D93"),
-   @Property(name="jasper.genStringAsCharArray",boolValue=false),
-   @Property(name="jasper.keepgenerated",boolValue=true),
-   @Property(name="jasper.mappedfile",boolValue=true),
-   @Property(name="jasper.trimSpaces",boolValue=false),
-   @Property(name="jasper.displaySourceFragments",boolValue=false),
-   @Property(name=EventConstants.EVENT_TOPIC, value={"org/apache/sling/api/resource/*"}, propertyPrivate=true),
-   @Property(name="felix.webconsole.label", value="slingjsp", propertyPrivate=true),
-   @Property(name="felix.webconsole.title", value="JSP", propertyPrivate=true),
-   @Property(name="felix.webconsole.category", value="Sling", propertyPrivate=true)
-})
+@Component(service = {javax.script.ScriptEngineFactory.class,ResourceChangeListener.class,ClassLoaderWriterListener.class},
+           property = {
+                   "extensions=jsp",
+                   "extensions=jspf",
+                   "extensions=jspx",
+                   "names=jsp",
+                   "names=JSP",
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+                   Constants.SERVICE_DESCRIPTION + "=JSP Script Handler",
+                   ResourceChangeListener.CHANGES + "=CHANGED",
+                   ResourceChangeListener.CHANGES + "=REMOVED",
+                   ResourceChangeListener.PATHS + "=glob:**/*.jsp",
+                   ResourceChangeListener.PATHS + "=glob:**/*.jspf",
+                   ResourceChangeListener.PATHS + "=glob:**/*.jspx",
+                   ResourceChangeListener.PATHS + "=glob:**/*.tld",
+                   ResourceChangeListener.PATHS + "=glob:**/*.tag"
+           })
+@Designate(ocd = JspScriptEngineFactory.Config.class)
 public class JspScriptEngineFactory
     extends AbstractScriptEngineFactory
-    implements EventHandler, Servlet {
+    implements ResourceChangeListener,ExternalResourceChangeListener, ClassLoaderWriterListener {
 
-    @Property(boolValue = true)
-    private static final String PROP_DEFAULT_IS_SESSION = "default.is.session";
+    @ObjectClassDefinition(name = "Apache Sling JSP Script Handler",
+            description = "The JSP Script Handler supports development of JSP " +
+                 "scripts to render response content on behalf of ScriptComponents. Internally " +
+                 "Jasper 6.0.14 JSP Engine is used together with the Eclipse Java Compiler to " +
+                 "compile generated Java code into Java class files. Some settings of Jasper " +
+                 "may be configured as shown below. Note that JSP scripts are expected in the " +
+                 "JCR repository and generated Java source and class files will be written to " +
+                 "the JCR repository below the configured Compilation Location.")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Target Version",
+                description = "The target JVM version for the compiled classes. If " +
+                              "left empty, the default version, 1.6., is used. If the value \"auto\" is used, the " +
+                              "current vm version will be used.")
+        String jasper_compilerTargetVM() default JspServletOptions.AUTOMATIC_VERSION;
+
+        @AttributeDefinition(name = "Source Version",
+                description = "The JVM version for the java/JSP source. If " +
+                              "left empty, the default version, 1.6., is used. If the value \"auto\" is used, the " +
+                              "current vm version will be used.")
+        String jasper_compilerSourceVM() default JspServletOptions.AUTOMATIC_VERSION;
+
+        @AttributeDefinition(name = "Generate Debug Info",
+                description = "Should the class file be compiled with " +
+                         "debugging information? true or false, default true.")
+        boolean jasper_classdebuginfo() default true;
+
+        @AttributeDefinition(name = "Tag Pooling",
+                description = "Determines whether tag handler pooling is " +
+                        "enabled. true or false, default true.")
+        boolean jasper_enablePooling() default true;
+
+        @AttributeDefinition(name = "Plugin Class-ID",
+                description = "The class-id value to be sent to Internet " +
+                      "Explorer when using <jsp:plugin> tags. Default " +
+                      "clsid:8AD9C840-044E-11D1-B3E9-00805F499D93.")
+        String jasper_ieClassId() default "clsid:8AD9C840-044E-11D1-B3E9-00805F499D93";
+
+        @AttributeDefinition(name = "Char Array Strings",
+                description = "Should text strings be generated as " +
+                      "char arrays, to improve performance in some cases? Default false.")
+        boolean jasper_genStringAsCharArray() default false;
+
+        @AttributeDefinition(name = "Keep Generated Java",
+                description = "Should we keep the generated Java source " +
+                    "code for each page instead of deleting it? true or false, default true.")
+        boolean jasper_keepgenerated() default true;
+
+        @AttributeDefinition(name = "Mapped Content",
+                description = "Should we generate static content with one " +
+                   "print statement per input line, to ease debugging? true or false, default true.")
+        boolean jasper_mappedfile() default true;
+
+        @AttributeDefinition(name = "Trim Spaces",
+                description = "Should white spaces in template text between " +
+                       "actions or directives be trimmed ?, default false.")
+        boolean jasper_trimSpaces() default false;
+
+        @AttributeDefinition(name = "Display Source Fragments",
+                description = "Should we include a source fragment " +
+                        "in exception messages, which could be displayed to the developer")
+        boolean jasper_displaySourceFragments() default false;
+
+        @AttributeDefinition(name = "Default Session Value",
+                description = "Should a session be created by default for every " +
+                    "JSP page? Warning - this behavior may produce unintended results and changing " +
+                    "it will not impact previously-compiled pages.")
+        boolean default_is_session() default true;
+    }
 
     /** Default logger */
-    private final Logger logger = LoggerFactory.getLogger(JspScriptEngineFactory.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Reference(unbind="unbindSlingServletContext")
     private ServletContext slingServletContext;
 
     @Reference
     private ClassLoaderWriter classLoaderWriter;
 
-    @Reference
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     private ClassLoader dynamicClassLoader;
@@ -193,7 +253,6 @@ public class JspScriptEngineFactory
      * @param context The script context
      * @param scriptName The name of the script
      */
-    @SuppressWarnings("unchecked")
     private void callErrorPageJsp(final Bindings bindings,
                                   final SlingScriptHelper scriptHelper,
                                   final ScriptContext context,
@@ -253,7 +312,6 @@ public class JspScriptEngineFactory
      * @throws SlingServletException
      * @throws SlingIOException
      */
-    @SuppressWarnings("unchecked")
     private void callJsp(final Bindings bindings,
                          final SlingScriptHelper scriptHelper,
                          final ScriptContext context) {
@@ -329,9 +387,11 @@ public class JspScriptEngineFactory
     /**
      * Activate this component
      */
-    protected void activate(final ComponentContext componentContext) {
-        final Dictionary<?, ?> properties = componentContext.getProperties();
-        this.defaultIsSession = PropertiesUtil.toBoolean(properties.get(PROP_DEFAULT_IS_SESSION), true);
+    @Activate
+    protected void activate(final BundleContext bundleContext,
+            final Config config,
+            final Map<String, Object> properties) {
+        this.defaultIsSession = config.default_is_session();
 
         // set the current class loader as the thread context loader for
         // the setup of the JspRuntimeContext
@@ -341,14 +401,14 @@ public class JspScriptEngineFactory
         try {
             this.jspFactoryHandler = JspRuntimeContext.initFactoryHandler();
 
-            this.tldLocationsCache = new SlingTldLocationsCache(componentContext.getBundleContext());
+            this.tldLocationsCache = new SlingTldLocationsCache(bundleContext);
 
             // prepare some classes
             ioProvider = new SlingIOProvider(this.classLoaderWriter, this.javaCompiler);
 
             // return options which use the jspClassLoader
             options = new JspServletOptions(slingServletContext, ioProvider,
-                componentContext, tldLocationsCache);
+                    properties, tldLocationsCache);
 
             jspServletContext = new JspServletContext(ioProvider,
                 slingServletContext, tldLocationsCache);
@@ -371,11 +431,12 @@ public class JspScriptEngineFactory
     /**
      * Activate this component
      */
-    protected void deactivate(final ComponentContext componentContext) {
+    @Deactivate
+    protected void deactivate(final BundleContext bundleContext) {
         logger.info("Deactivating Apache Sling Script Engine for JSP");
 
         if ( this.tldLocationsCache != null ) {
-            this.tldLocationsCache.deactivate(componentContext.getBundleContext());
+            this.tldLocationsCache.deactivate(bundleContext);
             this.tldLocationsCache = null;
         }
         if (jspRuntimeContext != null) {
@@ -441,6 +502,11 @@ public class JspScriptEngineFactory
         }
     }
 
+    @Reference(target="(name=org.apache.sling)")
+    protected void bindSlingServletContext(final ServletContext context) {
+        this.slingServletContext = context;
+    }
+
     /**
      * Unbinds the Sling ServletContext and removes any known servlet context
      * attributes preventing the bundles's class loader from being collected.
@@ -479,6 +545,7 @@ public class JspScriptEngineFactory
      *
      * @param repositoryClassLoaderProvider the new provider
      */
+    @Reference(cardinality=ReferenceCardinality.MANDATORY, policy=ReferencePolicy.STATIC)
     protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
         if ( this.dynamicClassLoader != null ) {
             this.ungetClassLoader();
@@ -619,18 +686,14 @@ public class JspScriptEngineFactory
 
     }
 
-    /**
-     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
-     */
     @Override
-    public void handleEvent(final Event event) {
-        final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
-        if ( path != null ) {
+	public void onChange(final List<ResourceChange> changes) {
+    	for(final ResourceChange change : changes){
             final JspRuntimeContext rctxt = this.jspRuntimeContext;
-            if ( rctxt != null && rctxt.handleModification(path) ) {
+            if ( rctxt != null && rctxt.handleModification(change.getPath(), change.getType() == ChangeType.REMOVED) ) {
                 renewJspRuntimeContext();
             }
-        }
+    	}
     }
 
     /**
@@ -651,81 +714,12 @@ public class JspScriptEngineFactory
         };
         t.start();
     }
-
-    //
-    // Web Console Plugin
-    //
-    private ServletConfig config;
-
-    /* (non-Javadoc)
-     * @see javax.servlet.Servlet#destroy()
-     */
-    @Override
-    public void destroy() {
-        this.config = null;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.Servlet#getServletConfig()
-     */
-    @Override
-    public ServletConfig getServletConfig() {
-        return this.config;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.Servlet#getServletInfo()
-     */
-    @Override
-    public String getServletInfo() {
-        return "";
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
-     */
-    @Override
-    public void init(final ServletConfig config) throws ServletException {
-        this.config = config;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.Servlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
-     */
-    @Override
-    public void service(final ServletRequest request, final ServletResponse response)
-            throws ServletException, IOException {
-        if ( request instanceof HttpServletRequest ) {
-            final HttpServletRequest req = (HttpServletRequest) request;
-            final HttpServletResponse res = (HttpServletResponse) response;
-
-            final String path = req.getContextPath() + req.getServletPath() + req.getPathInfo();
-
-            if ( req.getMethod().equals("POST") ) {
-                final JspRuntimeContext rctxt = this.jspRuntimeContext;
-                this.classLoaderWriter.delete("/org/apache/jsp");
-                if ( rctxt != null ) {
-                    renewJspRuntimeContext();
-                }
-
-                res.sendRedirect(path + "?reset");
-                return;
-            } else if ( req.getMethod().equals("GET") ) {
-                final PrintWriter pw = res.getWriter();
-                pw.println("<h1>Apache Sling JSP Scripting</h1>");
-                pw.println("<br/>");
-                if ( req.getParameter("reset") != null ) {
-                    pw.println("<p>All compiled jsp files removed.");
-                    pw.println("<br/>");
-                }
-                pw.print("<form action='");
-                pw.print(path);
-                pw.println("' method='POST'>");
-                pw.println("<input type='submit' value='Recompile all JSPs'>");
-                pw.println("</form>");
-                return;
-            }
+    
+	@Override
+	public void onClassLoaderClear(String context) {
+        final JspRuntimeContext rctxt = this.jspRuntimeContext;
+		if ( rctxt != null ) {
+            renewJspRuntimeContext();
         }
-        throw new ServletException("Request not supported.");
-    }
+	}
 }

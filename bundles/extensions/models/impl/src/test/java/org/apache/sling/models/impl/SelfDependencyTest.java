@@ -28,6 +28,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.testmodels.classes.DirectCyclicSelfDependencyModel;
 import org.apache.sling.models.testmodels.classes.IndirectCyclicSelfDependencyModelA;
+import org.apache.sling.models.testmodels.classes.IndirectCyclicSelfDependencyModelB;
 import org.apache.sling.models.testmodels.classes.SelfDependencyModelA;
 import org.apache.sling.models.testmodels.classes.SelfDependencyModelB;
 import org.junit.Before;
@@ -71,6 +72,7 @@ public class SelfDependencyTest {
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
         factory.bindInjector(new SelfInjector(), new ServicePropertiesMap(1, 1));
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SelfDependencyModelA.class, SelfDependencyModelB.class, DirectCyclicSelfDependencyModel.class, IndirectCyclicSelfDependencyModelA.class, IndirectCyclicSelfDependencyModelB.class);
     }
 
     @Test

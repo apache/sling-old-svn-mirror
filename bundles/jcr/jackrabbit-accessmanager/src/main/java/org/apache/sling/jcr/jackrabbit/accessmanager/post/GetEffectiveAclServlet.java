@@ -25,16 +25,12 @@ import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
+import javax.json.JsonObject;
 import javax.servlet.Servlet;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * <p>
@@ -101,23 +97,13 @@ import org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl;
  * </pre>
  * </code>
  */
-@Component
-@Service (value={
-		Servlet.class,
-		GetEffectiveAcl.class
-})
-@Properties ({
-	@Property (name="sling.servlet.resourceTypes", 
-			value="sling/servlet/default"),
-	@Property (name="sling.servlet.methods", 
-			value="GET"),
-	@Property (name="sling.servlet.selectors", 
-			value={
-				"eacl",
-				"tidy.eacl"
-			}),
-	@Property (name="sling.servlet.extensions", 
-			value="json")
+
+@Component(service = {Servlet.class, GetEffectiveAcl.class},
+property= {
+		"sling.servlet.resourceTypes=sling/servlet/default",
+		"sling.servlet.methods=GET",
+		"sling.servlet.selectors=eacl",
+		"sling.servlet.selectors=tidy.eacl"
 })
 @SuppressWarnings("serial")
 public class GetEffectiveAclServlet extends AbstractGetAclServlet implements GetEffectiveAcl {
@@ -125,8 +111,8 @@ public class GetEffectiveAclServlet extends AbstractGetAclServlet implements Get
     /* (non-Javadoc)
 	 * @see org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl#getEffectiveAcl(javax.jcr.Session, java.lang.String)
 	 */
-	public JSONObject getEffectiveAcl(Session jcrSession, String resourcePath)
-			throws RepositoryException, JSONException {
+	public JsonObject getEffectiveAcl(Session jcrSession, String resourcePath)
+			throws RepositoryException {
 		return internalGetAcl(jcrSession, resourcePath);
 	}
 

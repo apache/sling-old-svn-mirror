@@ -21,6 +21,7 @@ package org.apache.sling.resourceresolver.impl;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,18 +31,23 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.collections.BidiMap;
+import javax.annotation.Nonnull;
+
+import org.apache.commons.collections4.BidiMap;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.resourceresolver.impl.console.ResourceResolverWebConsolePlugin;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
-import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.helper.ResourceResolverControl;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
+import org.apache.sling.resourceresolver.impl.mapping.MapEntriesHandler;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
-import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +59,10 @@ import org.slf4j.LoggerFactory;
  */
 public class CommonResourceResolverFactoryImpl implements ResourceResolverFactory, MapConfigurationProvider {
 
+    private static final Logger LOG = LoggerFactory.getLogger(CommonResourceResolverFactoryImpl.class);
+
     /** Helper for the resource resolver. */
-    private MapEntries mapEntries = MapEntries.EMPTY;
+    private MapEntriesHandler mapEntries = MapEntriesHandler.EMPTY;
 
     /** The web console plugin. */
     private ResourceResolverWebConsolePlugin plugin;
@@ -65,51 +73,58 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * Thread local holding the resource resolver stack
      */
-    private ThreadLocal<Stack<WeakReference<ResourceResolver>>> resolverStackHolder = new ThreadLocal<Stack<WeakReference<ResourceResolver>>>();
+    private ThreadLocal<Stack<WeakReference<ResourceResolver>>> resolverStackHolder = new ThreadLocal<>();
 
     /** Flag indicating whether this factory is still active. */
     private final AtomicBoolean isActive = new AtomicBoolean(true);
 
     /** The reference queue to handle disposing of resource resolver instances. */
-    private final ReferenceQueue<ResourceResolver> resolverReferenceQueue = new ReferenceQueue<ResourceResolver>();
+    private final ReferenceQueue<ResourceResolver> resolverReferenceQueue = new ReferenceQueue<>();
 
-    /** All weak references for the resource resolver instances. */
-    private final Map<Integer, ResolverWeakReference> refs = new ConcurrentHashMap<Integer, CommonResourceResolverFactoryImpl.ResolverWeakReference>();
+    /** Map of the ResourceResolverControl's hash code to the references to open resource resolver instances. */
+    private final Map<Integer, ResolverReference> refs = new ConcurrentHashMap<>();
 
     /** Background thread handling disposing of resource resolver instances. */
     private final Thread refQueueThread;
+
+    private boolean logUnclosedResolvers;
+
+    private final Object optionalNamespaceMangler;
+
 
     /**
      * Create a new common resource resolver factory.
      */
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
+        this.logUnclosedResolvers = activator.isLogUnclosedResourceResolvers();
         this.refQueueThread = new Thread("Apache Sling Resource Resolver Finalizer Thread") {
 
             @Override
             public void run() {
-                while ( isActive.get() ) {
+                while (isLive()) {
                     try {
-                        final ResolverWeakReference ref = (ResolverWeakReference) resolverReferenceQueue.remove();
-                        try {
-                            ref.close();
-                        } catch ( final Throwable t ) {
-                            // we ignore everything from there to not stop this thread
-                        }
-                        refs.remove(ref.context.hashCode());
+                        final ResolverReference ref = (ResolverReference) resolverReferenceQueue.remove();
+                        ref.close();
                     } catch ( final InterruptedException ie) {
                         Thread.currentThread().interrupt();
                     }
                 }
-                for(final ResolverWeakReference ref : refs.values()) {
-                    ref.close();
-                }
-                refs.clear();
             }
-
         };
         this.refQueueThread.setDaemon(true);
         this.refQueueThread.start();
+
+        // try create namespace mangler
+        Object mangler = null;
+        if ( this.isMangleNamespacePrefixes() ) {
+            try {
+                mangler = new JcrNamespaceMangler();
+            } catch ( final Throwable t) {
+                LOG.info("Unable to create JCR namespace mangler: {}", t.getMessage());
+            }
+        }
+        this.optionalNamespaceMangler = mangler;
     }
 
     // ---------- Resource Resolver Factory ------------------------------------
@@ -117,19 +132,19 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
      */
+    @Nonnull
     @Override
     public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
-        if ( !isActive.get() ) {
-            throw new LoginException("ResourceResolverFactory is deactivated.");
-        }
+        checkIsLive();
 
         // create a copy of the passed authentication info as we modify the map
-        final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+        final Map<String, Object> authenticationInfo = new HashMap<>();
+        authenticationInfo.put(ResourceProvider.AUTH_ADMIN, Boolean.TRUE);
         if ( passedAuthenticationInfo != null ) {
             authenticationInfo.putAll(passedAuthenticationInfo);
-            // make sure there is no leaking of service bundle and info props
-            authenticationInfo.remove(ResourceProviderFactory.SERVICE_BUNDLE);
+            // make sure there is no leaking of service info props
+            // (but the bundle info is passed on as we need it downstream)
             authenticationInfo.remove(SUBSERVICE);
         }
 
@@ -139,29 +154,28 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
      */
+    @Nonnull
     @Override
     public ResourceResolver getResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
-        if ( !isActive.get() ) {
-            throw new LoginException("ResourceResolverFactory is deactivated.");
-        }
+        checkIsLive();
 
         // create a copy of the passed authentication info as we modify the map
-        final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+        final Map<String, Object> authenticationInfo = new HashMap<>();
         if ( passedAuthenticationInfo != null ) {
             authenticationInfo.putAll(passedAuthenticationInfo);
             // make sure there is no leaking of service bundle and info props
-            authenticationInfo.remove(ResourceProviderFactory.SERVICE_BUNDLE);
+            authenticationInfo.remove(ResourceProvider.AUTH_SERVICE_BUNDLE);
             authenticationInfo.remove(SUBSERVICE);
         }
 
         final ResourceResolver result = getResourceResolverInternal(authenticationInfo, false);
         Stack<WeakReference<ResourceResolver>> resolverStack = resolverStackHolder.get();
         if ( resolverStack == null ) {
-            resolverStack = new Stack<WeakReference<ResourceResolver>>();
+            resolverStack = new Stack<>();
             resolverStackHolder.set(resolverStack);
         }
-        resolverStack.push(new WeakReference<ResourceResolver>(result));
+        resolverStack.push(new WeakReference<>(result));
         return result;
     }
 
@@ -171,7 +185,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      */
     @Override
     public ResourceResolver getThreadResourceResolver() {
-        if ( !isActive.get() ) {
+        if (!isLive()) {
             return null;
         }
 
@@ -195,26 +209,23 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * We create a weak reference to be able to close the resolver if close on the
      * resource resolver is never called.
      * @param resolver The resource resolver
-     * @param ctx The resource resolver context
+     * @param ctrl The resource resolver control
      */
     public void register(final ResourceResolver resolver,
-            final ResourceResolverContext ctx) {
+            final ResourceResolverControl ctrl) {
         // create new weak reference
-        refs.put(ctx.hashCode(), new ResolverWeakReference(resolver, this.resolverReferenceQueue, ctx));
+        refs.put(ctrl.hashCode(), new ResolverReference(resolver, this.resolverReferenceQueue, ctrl, this));
     }
 
     /**
      * Inform about a closed resource resolver.
      * Make sure to remove it from the current thread context.
-     * @param resolver The resource resolver
-     * @param ctx The resource resolver context
+     * @param resourceResolverImpl The resource resolver
+     * @param ctrl The resource resolver control
      */
     public void unregister(final ResourceResolver resourceResolverImpl,
-            final ResourceResolverContext ctx) {
-        // close the context
-        ctx.close();
-        // remove it from the set of weak references.
-        refs.remove(ctx.hashCode());
+            final ResourceResolverControl ctrl) {
+        unregisterControl(ctrl);
 
         // on shutdown, the factory might already be closed before the resolvers close
         // therefore we have to check for null
@@ -243,23 +254,41 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * @return A resource resolver
      * @throws LoginException if login to any of the required resource providers fails.
      */
-    public ResourceResolver getResourceResolverInternal(final Map<String, Object> authenticationInfo,
-                    final boolean isAdmin)
-    throws LoginException {
-        if ( !isActive.get() ) {
-            throw new LoginException("ResourceResolverFactory is deactivated.");
-        }
+    ResourceResolver getResourceResolverInternal(final Map<String, Object> authenticationInfo,
+                                                        final boolean isAdmin)
+            throws LoginException {
+        checkIsLive();
 
-        // create context
-        final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo, this.activator.getResourceAccessSecurityTracker());
-
-        // login
-        this.activator.getRootProviderEntry().loginToRequiredFactories(ctx);
-
-        return new ResourceResolverImpl(this, ctx);
+        return new ResourceResolverImpl(this, isAdmin, authenticationInfo);
     }
 
-    public MapEntries getMapEntries() {
+    /**
+     * Close a resource resolver control and remove its corresponding
+     * resolver reference from the map of weak references.
+     *
+     * @param ctrl The resource resolver control
+     * @return true if the control was closed, false it had been closed before.
+     */
+    private boolean unregisterControl(final ResourceResolverControl ctrl) {
+        // remove reference from the set of weak references and clear
+        final ResolverReference reference = refs.remove(ctrl.hashCode());
+        if (reference != null) {
+            reference.clear();
+        }
+        final boolean doCloseControl = !ctrl.isClosed();
+        if (doCloseControl) {
+            ctrl.close();
+        }
+        return doCloseControl;
+    }
+
+    private void checkIsLive() throws LoginException {
+        if ( !isLive() ) {
+            throw new LoginException("ResourceResolverFactory is deactivated.");
+        }
+    }
+
+    public MapEntriesHandler getMapEntries() {
         return mapEntries;
     }
 
@@ -267,7 +296,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     protected void activate(final BundleContext bundleContext) {
         final Logger logger = LoggerFactory.getLogger(getClass());
         try {
-            plugin = new ResourceResolverWebConsolePlugin(bundleContext, this);
+            plugin = new ResourceResolverWebConsolePlugin(bundleContext, this, this.activator.getRuntimeService());
         } catch (final Throwable ignore) {
             // an exception here probably means the web console plugin is not
             // available
@@ -285,18 +314,28 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * Deactivates this component
      */
     protected void deactivate() {
-        isActive.set(false);
+        if (!isActive.compareAndSet(true, false)) {
+            return;
+        }
         this.refQueueThread.interrupt();
+
         if (plugin != null) {
             plugin.dispose();
             plugin = null;
         }
 
-        if (mapEntries != null) {
-            mapEntries.dispose();
+        if (mapEntries instanceof MapEntries ) {
+            ((MapEntries)mapEntries).dispose();
             mapEntries = MapEntries.EMPTY;
         }
         resolverStackHolder = null;
+
+        // copy and clear map before closing the remaining references
+        final Collection<ResolverReference> references = new ArrayList<>(refs.values());
+        refs.clear();
+        for(final ResolverReference ref : references) {
+            ref.close();
+        }
     }
 
     public ResourceDecoratorTracker getResourceDecoratorTracker() {
@@ -311,9 +350,18 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.activator.isMangleNamespacePrefixes();
     }
 
+    public Object getNamespaceMangler() {
+        return this.optionalNamespaceMangler;
+    }
+
     @Override
     public String getMapRoot() {
         return this.activator.getMapRoot();
+    }
+
+    @Override
+    public boolean isMapConfiguration(String path) {
+        return this.activator.isMapConfiguration(path);
     }
 
     @Override
@@ -324,10 +372,6 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     @Override
     public BidiMap getVirtualURLMap() {
         return this.activator.getVirtualURLMap();
-    }
-
-    public RootResourceProviderEntry getRootProviderEntry() {
-        return this.activator.getRootProviderEntry();
     }
 
     @Override
@@ -342,10 +386,13 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.activator.getResourceAccessSecurityTracker();
     }
 
+    @Nonnull
     @Override
     public ResourceResolver getServiceResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
-        throw new IllegalStateException("This method is not implemented.");
+        checkIsLive();
+
+        return getResourceResolverInternal(authenticationInfo, false);
     }
 
     @Override
@@ -356,6 +403,11 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     @Override
     public long getMaxCachedVanityPathEntries() {
         return this.activator.getMaxCachedVanityPathEntries();
+    }
+
+    @Override
+    public boolean isMaxCachedVanityPathEntriesStartup() {
+        return this.activator.isMaxCachedVanityPathEntriesStartup();
     }
 
     @Override
@@ -374,13 +426,18 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     }
 
     @Override
+    public Path[] getObservationPaths() {
+        return this.activator.getObservationPaths();
+    }
+
+    @Override
     public List<VanityPathConfig> getVanityPathConfig() {
         final String[] includes = this.activator.getVanityPathWhiteList();
         final String[] excludes = this.activator.getVanityPathBlackList();
         if ( includes == null && excludes == null ) {
             return null;
         }
-        final List<VanityPathConfig> configs = new ArrayList<VanityPathConfig>();
+        final List<VanityPathConfig> configs = new ArrayList<>();
         if ( includes != null ) {
             for(final String val : includes) {
                 configs.add(new VanityPathConfig(val, false));
@@ -402,23 +459,74 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return this.isActive.get();
     }
 
+    public boolean shouldLogResourceResolverClosing() {
+        return activator.shouldLogResourceResolverClosing();
+    }
+
+    public ResourceProviderTracker getResourceProviderTracker() {
+        return activator.getResourceProviderTracker();
+    }
+
+    @Override
+    public Map<String, Object> getServiceUserAuthenticationInfo(final String subServiceName)
+    throws LoginException {
+        // get an administrative resource resolver
+        // Ensure a mapped user name: If no user is defined for a bundle
+        // acting as a service, the user may be null. We can decide whether
+        // this should yield guest access or no access at all. For now
+        // no access is granted if there is no service user defined for
+        // the bundle.
+    	final Bundle bundle = this.activator.getBundleContext().getBundle();
+        final String userName = this.activator.getServiceUserMapper().getServiceUserID(bundle, subServiceName);
+        if (userName == null) {
+            throw new LoginException("Cannot derive user name for bundle "
+                + bundle + " and sub service " + subServiceName);
+        }
+
+        final Map<String, Object> authenticationInfo = new HashMap<>();
+        // ensure proper user name and service bundle
+        authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
+        authenticationInfo.put(ResourceResolverFactory.USER, userName);
+        authenticationInfo.put(ResourceProvider.AUTH_SERVICE_BUNDLE, bundle);
+
+        return authenticationInfo;
+    }
+
     /**
-     * Extension of a weak reference to be able to get the context object
+     * Extension of a weak reference to be able to get the control object
      * that is used for cleaning up.
      */
-    private static final class ResolverWeakReference extends WeakReference<ResourceResolver> {
+    private static final class ResolverReference extends WeakReference<ResourceResolver> {
 
-        private final ResourceResolverContext context;
+        private final ResourceResolverControl control;
 
-        public ResolverWeakReference(final ResourceResolver referent,
-                final ReferenceQueue<? super ResourceResolver> q,
-                final ResourceResolverContext ctx) {
+        private final Exception openingException;
+
+        private final CommonResourceResolverFactoryImpl factory;
+
+        ResolverReference(final ResourceResolver referent,
+                          final ReferenceQueue<? super ResourceResolver> q,
+                          final ResourceResolverControl ctrl,
+                          final CommonResourceResolverFactoryImpl factory) {
             super(referent, q);
-            this.context = ctx;
+            this.control = ctrl;
+            this.factory = factory;
+            this.openingException = factory.logUnclosedResolvers && LOG.isInfoEnabled() ? new Exception("Opening Stacktrace") : null;
         }
 
         public void close() {
-            this.context.close();
+            try {
+                if (factory.unregisterControl(this.control) && factory.logUnclosedResolvers) {
+                    if (factory.isLive()) {
+                        LOG.warn("Closed unclosed ResourceResolver. The creation stacktrace is available on info log level.");
+                    } else {
+                        LOG.warn("Forced close of ResourceResolver because the ResourceResolverFactory is shutting down.");
+                    }
+                    LOG.info("Unclosed ResourceResolver was created here: ", openingException);
+                }
+            } catch (Throwable t) {
+                LOG.warn("Exception while closing ResolverReference", t);
+            }
         }
     }
 }

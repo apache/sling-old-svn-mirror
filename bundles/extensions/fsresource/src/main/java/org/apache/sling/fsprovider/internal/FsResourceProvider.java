@@ -18,100 +18,144 @@
  */
 package org.apache.sling.fsprovider.internal;
 
+import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
+
 import java.io.File;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.List;
+import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.fsprovider.internal.mapper.ContentFileResourceMapper;
+import org.apache.sling.fsprovider.internal.mapper.FileResourceMapper;
+import org.apache.sling.fsprovider.internal.mapper.FileVaultResourceMapper;
+import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
+import org.apache.sling.fsprovider.internal.parser.ContentFileTypes;
+import org.apache.sling.spi.resource.provider.ObservationReporter;
+import org.apache.sling.spi.resource.provider.ProviderContext;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.event.EventAdmin;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.osgi.service.metatype.annotations.Option;
 
 /**
  * The <code>FsResourceProvider</code> is a resource provider which maps
- * filesystem files and folders into the virtual resource tree. The provider is
+ * file system files and folders into the virtual resource tree. The provider is
  * implemented in terms of a component factory, that is multiple instances of
  * this provider may be created by creating respective configuration.
  * <p>
  * Each provider instance is configured with two properties: The location in the
- * resource tree where resources are provided ({@link ResourceProvider#ROOTS})
+ * resource tree where resources are provided (provider.root)
  * and the file system path from where files and folders are mapped into the
- * resource ({@link #PROP_PROVIDER_FILE}).
+ * resource (provider.file).
  */
-@Component(
-        name="org.apache.sling.fsprovider.internal.FsResourceProvider",
-        label="%resource.resolver.name",
-        description="%resource.resolver.description",
-        configurationFactory=true,
-        policy=ConfigurationPolicy.REQUIRE,
-        metatype=true
-        )
-@Service(ResourceProvider.class)
-@Properties({
-    @Property(name="service.description", value="Sling Filesystem Resource Provider"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name=ResourceProvider.ROOTS)
-})
-public class FsResourceProvider implements ResourceProvider {
-
+@Component(name="org.apache.sling.fsprovider.internal.FsResourceProvider",
+           service=ResourceProvider.class,
+           configurationPolicy=ConfigurationPolicy.REQUIRE,
+           property={
+                   Constants.SERVICE_DESCRIPTION + "=Sling File System Resource Provider",
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+           })
+@Designate(ocd=FsResourceProvider.Config.class, factory=true)
+public final class FsResourceProvider extends ResourceProvider<Object> {
+    
     /**
-     * The name of the configuration property providing file system path of
-     * files and folders mapped into the resource tree (value is
-     * "provider.file").
+     * Resource metadata property set by {@link org.apache.sling.fsprovider.internal.mapper.FileResource}
+     * if the underlying file reference is a directory.
      */
-    @Property
-    public static final String PROP_PROVIDER_FILE = "provider.file";
+    public static final String RESOURCE_METADATA_FILE_DIRECTORY = ":org.apache.sling.fsprovider.file.directory";
+    
+    @ObjectClassDefinition(name = "Apache Sling File System Resource Provider",
+            description = "Configure an instance of the file system " +
+                          "resource provider in terms of provider root and file system location")
+    public @interface Config {
 
-    /**
-     * The name of the configuration property providing the check interval
-     * for file changes (value is "provider.checkinterval").
-     */
-    @Property(longValue=FsResourceProvider.DEFAULT_CHECKINTERVAL)
-    public static final String PROP_PROVIDER_CHECKINTERVAL = "provider.checkinterval";
+        @AttributeDefinition(name = "File System Root",
+                description = "File system directory mapped to the virtual " +
+                        "resource tree. This property must not be an empty string. If the path is " +
+                        "relative it is resolved against sling.home or the current working directory. " +
+                        "The path may be a file or folder. If the path does not address an existing " +
+                        "file or folder, an empty folder is created.")
+        String provider_file();
 
-    public static final long DEFAULT_CHECKINTERVAL = 1000;
+        @AttributeDefinition(name = "Provider Root",
+                description = "Location in the virtual resource tree where the " +
+                "file system resources are mapped in. This property must not be an empty string.")
+        String provider_root();
+        
+        @AttributeDefinition(name = "File system layout",
+                description = "File system layout mode for files, folders and content.",
+                options={
+                        @Option(value="FILES_FOLDERS", label="FILES_FOLDERS - "
+                                + "Support only files and folders (classic mode)"),
+                        @Option(value="INITIAL_CONTENT", label="INITIAL_CONTENT - "
+                                + "Sling-Initial-Content file system layout, supports file and folders ant content files in JSON and jcr.xml format"),
+                        @Option(value="FILEVAULT_XML", label="FILEVAULT_XML - "
+                                + "FileVault XML format (expanded content package)"),
+                })
+        FsMode provider_fs_mode() default FsMode.FILES_FOLDERS;
+        
+        @AttributeDefinition(name = "Init. Content Options",
+                description = "Import options for Sling-Initial-Content file system layout. Supported options: overwrite, ignoreImportProviders.")
+        String provider_initial_content_import_options();
+        
+        @AttributeDefinition(name = "FileVault Filter",
+                description = "Path to META-INF/vault/filter.xml when using FileVault XML file system layout.")
+        String provider_filevault_filterxml_path();
+        
+
+        @AttributeDefinition(name = "Check Interval",
+                             description = "If the interval has a value higher than 100, the provider will " +
+             "check the file system for changes periodically. This interval defines the period in milliseconds " +
+             "(the default is 1000). If a change is detected, resource events are sent through the event admin.")
+        long provider_checkinterval() default 1000;
+
+        @AttributeDefinition(name = "Cache Size",
+                description = "Max. number of content files cached in memory.")
+        int provider_cache_size() default 10000;
+
+        // Internal Name hint for web console.
+        String webconsole_configurationFactory_nameHint() default "{provider.fs.mode}: {" + ResourceProvider.PROPERTY_ROOT + "}";
+    }
 
     // The location in the resource tree where the resources are mapped
     private String providerRoot;
 
-    // providerRoot + "/" to be used for prefix matching of paths
-    private String providerRootPrefix;
-
     // The "root" file or folder in the file system
     private File providerFile;
 
-    /** The monitor to detect file changes. */
+    // The monitor to detect file changes.
     private FileMonitor monitor;
-
-    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
-    private volatile EventAdmin eventAdmin;
-
-    /**
-     * Same as {@link #getResource(ResourceResolver, String)}, i.e. the
-     * <code>request</code> parameter is ignored.
-     *
-     * @see #getResource(ResourceResolver, String)
-     */
-    public Resource getResource(ResourceResolver resourceResolver,
-            HttpServletRequest request, String path) {
-        return getResource(resourceResolver, path);
-    }
+    
+    // maps file system to resources
+    private FsMode fsMode;
+    private FsResourceMapper fileMapper;
+    private FsResourceMapper contentFileMapper;
+    private FileVaultResourceMapper fileVaultMapper;
+    
+    // if true resources from file system are only "overlayed" to JCR resources, serving JCR as fallback within the same path
+    private boolean overlayParentResourceProvider;
+    
+    // cache for parsed content files
+    private ContentFileCache contentFileCache;
 
     /**
-     * Returns a resource wrapping a filesystem file or folder for the given
+     * Returns a resource wrapping a file system file or folder for the given
      * path. If the <code>path</code> is equal to the configured resource tree
      * location of this provider, the configured file system file or folder is
      * used for the resource. Otherwise the configured resource tree location
@@ -119,134 +163,208 @@ public class FsResourceProvider implements ResourceProvider {
      * to access the file or folder. If no such file or folder exists, this
      * method returns <code>null</code>.
      */
-    public Resource getResource(ResourceResolver resourceResolver, String path) {
-        return getResource(resourceResolver, path, getFile(path));
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+    public Resource getResource(final ResolveContext<Object> ctx,
+            final String path,
+            final ResourceContext resourceContext,
+            final Resource parent) {
+        
+        ResourceResolver resolver = ctx.getResourceResolver();
+        
+        boolean askParentResourceProvider;
+        Resource rsrc = null;
+
+        if (fsMode == FsMode.FILEVAULT_XML) {
+            // filevault: check if path matches, if not fallback to parent resource provider
+            if (fileVaultMapper.pathMatches(path)) {
+                askParentResourceProvider = false;
+                rsrc = fileVaultMapper.getResource(resolver, path);
+            }
+            else {
+                askParentResourceProvider = true;
+            }
+        }
+        else {
+            // Sling-Initial-Content: mount folder/files an content files
+            askParentResourceProvider = this.overlayParentResourceProvider;
+            rsrc = contentFileMapper.getResource(resolver, path);
+            if (rsrc == null) {
+                rsrc = fileMapper.getResource(resolver, path);
+            }
+        }
+        
+        if (askParentResourceProvider) {
+            // make sure directory resources from parent resource provider have higher precedence than from this provider
+            // this allows properties like sling:resourceSuperType to take effect
+            if ( rsrc == null || rsrc.getResourceMetadata().containsKey(RESOURCE_METADATA_FILE_DIRECTORY) ) {
+            	// get resource from shadowed provider
+            	final ResourceProvider rp = ctx.getParentResourceProvider();
+            	if ( rp != null ) {
+            	    Resource resourceFromParentResourceProvider = rp.getResource((ResolveContext)ctx.getParentResolveContext(), 
+    	            		path, 
+    	            		resourceContext, parent);
+            	    if (resourceFromParentResourceProvider != null) {
+            	        rsrc = resourceFromParentResourceProvider;
+            	    }
+            	}        	
+            }
+        }
+        
+        return rsrc;
     }
 
     /**
      * Returns an iterator of resources.
      */
-    public Iterator<Resource> listChildren(Resource parent) {
-        File parentFile = parent.adaptTo(File.class);
-
-        // not a FsResource, try to create one from the resource
-        if (parentFile == null) {
-            // if the parent path is at or below the provider root, get
-            // the respective file
-            parentFile = getFile(parent.getPath());
-
-            // if the parent path is actually the parent of the provider
-            // root, return a single element iterator just containing the
-            // provider file, unless the provider file is a directory and
-            // a repository item with the same path actually exists
-            if (parentFile == null) {
-
-                String parentPath = parent.getPath().concat("/");
-                if (providerRoot.startsWith(parentPath)) {
-                    String relPath = providerRoot.substring(parentPath.length());
-                    if (relPath.indexOf('/') < 0) {
-                        Resource res = getResource(
-                                parent.getResourceResolver(), providerRoot,
-                                providerFile);
-                        if (res != null) {
-                            return Collections.singletonList(res).iterator();
-                        }
-                    }
-                }
-
-                // no children here
-                return null;
+    @SuppressWarnings("unchecked")
+    @Override
+    public Iterator<Resource> listChildren(final ResolveContext<Object> ctx, final Resource parent) {
+        ResourceResolver resolver = ctx.getResourceResolver();
+        
+        List<Iterator<Resource>> allChildren = new ArrayList<>();
+        Iterator<Resource> children;
+        boolean askParentResourceProvider;
+        
+        if (fsMode == FsMode.FILEVAULT_XML) {
+            // filevault: always ask provider, it checks itself if children matches the filters
+            askParentResourceProvider = true;
+            children = fileVaultMapper.getChildren(resolver, parent);
+            if (children != null) {
+                allChildren.add(children);
             }
         }
-
-        final File[] children = parentFile.listFiles();
-
-        if (children != null && children.length > 0) {
-            final ResourceResolver resolver = parent.getResourceResolver();
-            final String parentPath = parent.getPath();
-            return new Iterator<Resource>() {
-                int index = 0;
-
-                Resource next = seek();
-
-                public boolean hasNext() {
-                    return next != null;
-                }
-
-                public Resource next() {
-                    if (!hasNext()) {
-                        throw new NoSuchElementException();
+        else {
+            // Sling-Initial-Content: get all matchind folders/files and content files
+            askParentResourceProvider = this.overlayParentResourceProvider;
+            children = contentFileMapper.getChildren(resolver, parent);
+            if (children != null) {
+                allChildren.add(children);
+            }
+            children = fileMapper.getChildren(resolver, parent);
+            if (children != null) {
+                allChildren.add(children);
+            }
+        }
+        
+    	// get children from from shadowed provider
+        if (askParentResourceProvider) {
+        	final ResourceProvider parentResourceProvider = ctx.getParentResourceProvider();
+        	if (parentResourceProvider != null) {
+        		children = parentResourceProvider.listChildren(ctx.getParentResolveContext(), parent);
+                if (children != null) {
+                    if (fsMode == FsMode.FILEVAULT_XML) {
+                        // filevault: include all children from parent resource provider that do not match the filters
+                        allChildren.add(IteratorUtils.filteredIterator(children, new Predicate() {
+                            @Override
+                            public boolean evaluate(Object object) {
+                                Resource child = (Resource)object;
+                                return !fileVaultMapper.pathMatches(child.getPath());
+                            }
+                        }));
                     }
-
-                    Resource result = next;
-                    next = seek();
-                    return result;
-                }
-
-                public void remove() {
-                    throw new UnsupportedOperationException("remove");
-                }
-
-                private Resource seek() {
-                    while (index < children.length) {
-                        File file = children[index++];
-                        String path = parentPath + "/" + file.getName();
-                        Resource result = getResource(resolver, path, file);
-                        if (result != null) {
-                            return result;
-                        }
+                    else {
+                        allChildren.add(children);
                     }
-
-                    // nothing found any more
-                    return null;
                 }
-            };
+        	}
         }
 
-        // no children
-        return null;
+    	if (allChildren.isEmpty()) {
+    	    return null;
+    	}
+    	else if (allChildren.size() == 1) {
+    	    return allChildren.get(0);
+    	}
+    	else {
+    	    // merge all children from the different iterators, but filter out potential duplicates with same resource name
+    	    return IteratorUtils.filteredIterator(IteratorUtils.chainedIterator(allChildren), new Predicate() {
+    	        private Set<String> names = new HashSet<>();
+                @Override
+                public boolean evaluate(Object object) {
+                    Resource resource = (Resource)object;
+                    return names.add(resource.getName());
+                }
+            });
+    	}
     }
 
     // ---------- SCR Integration
-
-    protected void activate(BundleContext bundleContext, Map<?, ?> props) {
-        String providerRoot = (String) props.get(ROOTS);
-        if (providerRoot == null || providerRoot.length() == 0) {
-            throw new IllegalArgumentException(ROOTS + " property must be set");
+    @Activate
+    protected void activate(BundleContext bundleContext, final Config config) {
+        fsMode = config.provider_fs_mode();
+        String providerRoot = config.provider_root();
+        if (StringUtils.isBlank(providerRoot)) {
+            throw new IllegalArgumentException("provider.root property must be set");
         }
 
-        String providerFileName = (String) props.get(PROP_PROVIDER_FILE);
-        if (providerFileName == null || providerFileName.length() == 0) {
-            throw new IllegalArgumentException(PROP_PROVIDER_FILE
-                    + " property must be set");
+        String providerFileName = config.provider_file();
+        if (StringUtils.isBlank(providerFileName)) {
+            throw new IllegalArgumentException("provider.file property must be set");
         }
 
         this.providerRoot = providerRoot;
-        this.providerRootPrefix = providerRoot.concat("/");
         this.providerFile = getProviderFile(providerFileName, bundleContext);
-        // start background monitor if check interval is higher than 100
-        long checkInterval = DEFAULT_CHECKINTERVAL;
-        final Object interval = props.get(PROP_PROVIDER_CHECKINTERVAL);
-        if ( interval != null && interval instanceof Long ) {
-            checkInterval = (Long)interval;
+        this.overlayParentResourceProvider = false;
+        
+        InitialContentImportOptions options = new InitialContentImportOptions(config.provider_initial_content_import_options());
+        File filterXmlFile = null;
+                
+        List<String> contentFileSuffixes = new ArrayList<>();
+        if (fsMode == FsMode.FILEVAULT_XML) {
+            contentFileSuffixes.add("/" + DOT_CONTENT_XML);
+            if (StringUtils.isNotBlank(config.provider_filevault_filterxml_path())) {
+                filterXmlFile = new File(config.provider_filevault_filterxml_path());
+            }
         }
-        if ( checkInterval > 100 ) {
-            this.monitor = new FileMonitor(this, checkInterval);
+        else if (fsMode == FsMode.FILES_FOLDERS) {
+            overlayParentResourceProvider = true;
+        }
+        else if (fsMode == FsMode.INITIAL_CONTENT) {
+            overlayParentResourceProvider = !options.isOverwrite();
+            if (!options.getIgnoreImportProviders().contains("json")) {
+                contentFileSuffixes.add(ContentFileTypes.JSON_SUFFIX);
+            }
+            if (!options.getIgnoreImportProviders().contains("jcr.xml")) {
+                contentFileSuffixes.add(ContentFileTypes.JCR_XML_SUFFIX);
+            }
+        }
+        ContentFileExtensions contentFileExtensions = new ContentFileExtensions(contentFileSuffixes);
+        
+        this.contentFileCache = new ContentFileCache(config.provider_cache_size());
+        if (fsMode == FsMode.FILEVAULT_XML) {
+            this.fileVaultMapper = new FileVaultResourceMapper(this.providerFile, filterXmlFile, this.contentFileCache);
+        }
+        else {
+            this.fileMapper = new FileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions);
+            this.contentFileMapper = new ContentFileResourceMapper(this.providerRoot, this.providerFile,
+                    contentFileExtensions, this.contentFileCache);
+        }
+        
+        // start background monitor if check interval is higher than 100
+        if (config.provider_checkinterval() > 100) {
+            this.monitor = new FileMonitor(this, config.provider_checkinterval(), fsMode,
+                    contentFileExtensions, this.contentFileCache);
         }
     }
 
+    @Deactivate
     protected void deactivate() {
         if ( this.monitor != null ) {
             this.monitor.stop();
             this.monitor = null;
         }
         this.providerRoot = null;
-        this.providerRootPrefix = null;
         this.providerFile = null;
-    }
-
-    EventAdmin getEventAdmin() {
-        return this.eventAdmin;
+        this.overlayParentResourceProvider = false;
+        this.fileMapper = null;
+        this.contentFileMapper = null;
+        this.fileVaultMapper = null;
+        if (this.contentFileCache != null) {
+            this.contentFileCache.clear();
+            this.contentFileCache = null;
+        }
+        this.fsMode = null;
     }
 
     File getRootFile() {
@@ -286,41 +404,12 @@ public class FsResourceProvider implements ResourceProvider {
         return providerFile;
     }
 
-    /**
-     * Returns a file corresponding to the given absolute resource tree path. If
-     * the path equals the configured provider root, the provider root file is
-     * returned. If the path starts with the configured provider root, a file is
-     * returned relative to the provider root file whose relative path is the
-     * remains of the resource tree path without the provider root path.
-     * Otherwise <code>null</code> is returned.
-     */
-    private File getFile(String path) {
-        if (path.equals(providerRoot)) {
-            return providerFile;
+    public ObservationReporter getObservationReporter() {
+        final ProviderContext ctx = this.getProviderContext();
+        if (ctx != null) {
+            return ctx.getObservationReporter();
         }
-
-        if (path.startsWith(providerRootPrefix)) {
-            String relPath = path.substring(providerRootPrefix.length());
-            return new File(providerFile, relPath);
-        }
-
         return null;
     }
 
-    private Resource getResource(ResourceResolver resourceResolver,
-            String resourcePath, File file) {
-
-        if (file != null) {
-
-            // if the file exists, but is not a directory or no repository entry
-            // exists, return it as a resource
-            if (file.exists()) {
-                return new FsResource(resourceResolver, resourcePath, file);
-            }
-
-        }
-
-        // not applicable or not an existing file path
-        return null;
-    }
 }

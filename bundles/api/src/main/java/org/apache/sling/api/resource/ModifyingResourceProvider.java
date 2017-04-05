@@ -20,7 +20,7 @@ package org.apache.sling.api.resource;
 
 import java.util.Map;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A modifying resource provider is an extension of a resource provider which
@@ -42,7 +42,9 @@ import aQute.bnd.annotation.ConsumerType;
  * @see ResourceProviderFactory#getAdministrativeResourceProvider(java.util.Map)
  *
  * @since 2.2  (Sling API Bundle 2.2.0)
+ * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider}
  */
+@Deprecated
 @ConsumerType
 public interface ModifyingResourceProvider extends ResourceProvider {
 
@@ -98,6 +100,7 @@ public interface ModifyingResourceProvider extends ResourceProvider {
      * Are there any transient changes?
      *
      * @param resolver The current resource resolver.
+     * @return {@code true} if there are pending changes.
      */
     boolean hasChanges(ResourceResolver resolver);
 }

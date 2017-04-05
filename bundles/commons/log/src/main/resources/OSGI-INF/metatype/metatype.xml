@@ -61,6 +61,16 @@
              default="7"
              name="%log.config.maxCallerDataDepth.name"
              description="%log.config.maxCallerDataDepth.description" />
+        <metatype:AD id="org.apache.sling.commons.log.maxOldFileCountInDump"
+             type="Integer"
+             default="3"
+             name="%log.config.maxOldFileCountInDump.name"
+             description="%log.config.maxOldFileCountInDump.description" />
+        <metatype:AD id="org.apache.sling.commons.log.numOfLines"
+             type="Integer"
+             default="1000"
+             name="%log.config.numOfLines.name"
+             description="%log.config.numOfLines.description" />
     </metatype:OCD>
     <metatype:Designate pid="org.apache.sling.commons.log.LogManager">
         <metatype:Object
@@ -84,6 +94,9 @@
         <metatype:AD id="org.apache.sling.commons.log.file.buffered"
              type="Boolean" default="false" name="%log.file.buffered.name"
              description="%log.file.buffered.description" />
+        <metatype:AD id="webconsole.configurationFactory.nameHint"
+            type="String"
+            default="{org.apache.sling.commons.log.file}"/>
     </metatype:OCD>
     <metatype:Designate
         pid="org.apache.sling.commons.log.LogManager.factory.writer"
@@ -118,6 +131,13 @@
             type="String" name="%log.loggers.name"
             description="%log.loggers.description"
             cardinality="2147483647" />
+        <metatype:AD id="webconsole.configurationFactory.nameHint"
+            type="String"
+            default="{org.apache.sling.commons.log.file}: {org.apache.sling.commons.log.level}"/>
+        <metatype:AD id="org.apache.sling.commons.log.additiv"
+             name="%log.additiv.name"
+             description="%log.additiv.description"
+             type="Boolean" />
     </metatype:OCD>
     <metatype:Designate
         pid="org.apache.sling.commons.log.LogManager.factory.config"

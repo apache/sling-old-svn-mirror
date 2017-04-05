@@ -18,15 +18,25 @@ package org.apache.sling.models.impl;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.models.annotations.Exporter;
+import org.apache.sling.models.annotations.ExporterOption;
+import org.apache.sling.models.annotations.Exporters;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -37,9 +47,16 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.script.ScriptEngineFactory;
+import javax.servlet.Servlet;
+
 public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
-    static final String HEADER = "Sling-Model-Packages";
+    static final String PACKAGE_HEADER = "Sling-Model-Packages";
+    static final String CLASSES_HEADER = "Sling-Model-Classes";
+
+    static final String PROP_EXPORTER_SERVLET_CLASS = "sling.models.exporter.servlet.class";
+    static final String PROP_EXPORTER_SERVLET_NAME = "sling.models.exporter.servlet.name";
     
     /**
      * Service registration property for the adapter condition.
@@ -57,16 +74,23 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
     private final BundleTracker bundleTracker;
 
-    private final AdapterFactory factory;
+    private final ModelAdapterFactory factory;
     
     private final AdapterImplementations adapterImplementations;
+
+    private final BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
+
+    private final ScriptEngineFactory scriptEngineFactory;
     
     public ModelPackageBundleListener(BundleContext bundleContext,
-            AdapterFactory factory,
-            AdapterImplementations adapterImplementations) {
+                                      ModelAdapterFactory factory,
+                                      AdapterImplementations adapterImplementations,
+                                      BindingsValuesProvidersByContext bindingsValuesProvidersByContext) {
         this.bundleContext = bundleContext;
         this.factory = factory;
         this.adapterImplementations = adapterImplementations;
+        this.bindingsValuesProvidersByContext = bindingsValuesProvidersByContext;
+        this.scriptEngineFactory = new ExporterScriptEngineFactory(bundleContext.getBundle());
         this.bundleTracker = new BundleTracker(bundleContext, Bundle.ACTIVE, this);
         this.bundleTracker.open();
     }
@@ -76,9 +100,8 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
         List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
 
         Dictionary<?, ?> headers = bundle.getHeaders();
-        String packageList = PropertiesUtil.toString(headers.get(HEADER), null);
+        String packageList = PropertiesUtil.toString(headers.get(PACKAGE_HEADER), null);
         if (packageList != null) {
-
             packageList = StringUtils.deleteWhitespace(packageList);
             String[] packages = packageList.split(",");
             for (String singlePackage : packages) {
@@ -94,33 +117,74 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                 while (classUrls.hasMoreElements()) {
                     URL url = classUrls.nextElement();
                     String className = toClassName(url);
-                    try {
-                        Class<?> implType = bundle.loadClass(className);
-                        Model annotation = implType.getAnnotation(Model.class);
-                        if (annotation != null) {
-                            
-                            // get list of adapters from annotation - if not given use annotated class itself
-                            Class<?>[] adapterTypes = annotation.adapters();
-                            if (adapterTypes.length == 0) {
-                                adapterTypes = new Class<?>[] { implType };
-                            }
-                            // register adapter only if given adapters are valid
-                            if (validateAdapterClasses(implType, adapterTypes)) {
-                                for (Class<?> adapterType : adapterTypes) {
-                                    adapterImplementations.add(adapterType, implType);
-                                }
-                                ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
-                                regs.add(reg);
-                            }
-                        }
-                    } catch (ClassNotFoundException e) {
-                        log.warn("Unable to load class", e);
-                    }
+                    analyzeClass(bundle, className, regs);
 
                 }
             }
         }
+        String classesList = PropertiesUtil.toString(headers.get(CLASSES_HEADER), null);
+        if (classesList != null) {
+            classesList = StringUtils.deleteWhitespace(classesList);
+            String[] classes = classesList.split(",");
+            for (String className : classes) {
+                analyzeClass(bundle, className, regs);
+            }
+        }
+
         return regs.toArray(new ServiceRegistration[0]);
+    }
+
+    private void analyzeClass(Bundle bundle, String className, List<ServiceRegistration> regs) {
+        try {
+            Class<?> implType = bundle.loadClass(className);
+            Model annotation = implType.getAnnotation(Model.class);
+            if (annotation != null) {
+
+                // get list of adapters from annotation - if not given use annotated class itself
+                Class<?>[] adapterTypes = annotation.adapters();
+                if (adapterTypes.length == 0) {
+                    adapterTypes = new Class<?>[] { implType };
+                } else if (!ArrayUtils.contains(adapterTypes, implType)) {
+                    adapterTypes = (Class<?>[]) ArrayUtils.add(adapterTypes, implType);
+                }
+                // register adapter only if given adapters are valid
+                if (validateAdapterClasses(implType, adapterTypes)) {
+                    if (adapterImplementations.addAll(implType, adapterTypes)) {
+                        ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
+                        regs.add(reg);
+
+                        String[] resourceTypes = annotation.resourceType();
+                        for (String resourceType : resourceTypes) {
+                            if (StringUtils.isNotEmpty(resourceType)) {
+                                for (Class<?> adaptable : annotation.adaptables()) {
+                                    adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, implType);
+                                    ExportServlet.ExportedObjectAccessor accessor = null;
+                                    if (adaptable == Resource.class) {
+                                        accessor = new ExportServlet.ResourceAccessor(implType);
+                                    } else if (adaptable == SlingHttpServletRequest.class) {
+                                        accessor = new ExportServlet.RequestAccessor(implType);
+                                    }
+                                    Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
+                                    if (exporterAnnotation != null) {
+                                        registerExporter(bundle, implType, resourceType, exporterAnnotation, regs, accessor);
+                                    }
+                                    Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
+                                    if (exportersAnnotation != null) {
+                                        for (Exporter ann : exportersAnnotation.value()) {
+                                            registerExporter(bundle, implType, resourceType, ann, regs, accessor);
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        } catch (ClassNotFoundException e) {
+            log.warn("Unable to load class", e);
+        }
     }
 
     @Override
@@ -133,13 +197,17 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
             for (ServiceRegistration reg : (ServiceRegistration[]) object) {
                 ServiceReference ref = reg.getReference();
                 String[] adapterTypeNames = PropertiesUtil.toStringArray(ref.getProperty(AdapterFactory.ADAPTER_CLASSES));
-                String implTypeName = PropertiesUtil.toString(ref.getProperty(PROP_IMPLEMENTATION_CLASS), null);
-                for (String adapterTypeName : adapterTypeNames) {
-                    adapterImplementations.remove(adapterTypeName, implTypeName);
+                if (adapterTypeNames != null) {
+                    String implTypeName = PropertiesUtil.toString(ref.getProperty(PROP_IMPLEMENTATION_CLASS), null);
+                    for (String adapterTypeName : adapterTypeNames) {
+                        adapterImplementations.remove(adapterTypeName, implTypeName);
+                    }
                 }
                 reg.unregister();
             }
         }
+        adapterImplementations.removeResourceTypeBindings(bundle);
+
     }
 
     public synchronized void unregisterAll() {
@@ -199,5 +267,39 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
         }
         return bundleContext.registerService(AdapterFactory.SERVICE_NAME, factory, registrationProps);
     }
-    
+
+
+    private void registerExporter(Bundle bundle, Class<?> annotatedClass, String resourceType, Exporter exporterAnnotation,
+                                  List<ServiceRegistration> regs, ExportServlet.ExportedObjectAccessor accessor) {
+        if (accessor != null) {
+            Map<String, String> baseOptions = getOptions(exporterAnnotation);
+            ExportServlet servlet = new ExportServlet(bundle.getBundleContext(), factory, bindingsValuesProvidersByContext,
+                    scriptEngineFactory, annotatedClass, exporterAnnotation.selector(), exporterAnnotation.name(), accessor, baseOptions);
+            Dictionary<String, Object> registrationProps = new Hashtable<String, Object>();
+            registrationProps.put("sling.servlet.resourceTypes", resourceType);
+            registrationProps.put("sling.servlet.selectors", exporterAnnotation.selector());
+            registrationProps.put("sling.servlet.extensions", exporterAnnotation.extensions());
+            registrationProps.put(PROP_EXPORTER_SERVLET_CLASS, annotatedClass.getName());
+            registrationProps.put(PROP_EXPORTER_SERVLET_NAME, exporterAnnotation.name());
+
+            log.info("registering servlet for {}, {}, {}", new Object[]{resourceType, exporterAnnotation.selector(), exporterAnnotation.extensions()});
+
+            ServiceRegistration reg = bundleContext.registerService(Servlet.class.getName(), servlet, registrationProps);
+            regs.add(reg);
+        }
+    }
+
+    private Map<String, String> getOptions(Exporter annotation) {
+        ExporterOption[] options = annotation.options();
+        if (options.length == 0) {
+            return Collections.emptyMap();
+        } else {
+            Map<String, String> map = new HashMap<String, String>(options.length);
+            for (ExporterOption option : options) {
+                map.put(option.name(), option.value());
+            }
+            return map;
+        }
+    }
+
 }

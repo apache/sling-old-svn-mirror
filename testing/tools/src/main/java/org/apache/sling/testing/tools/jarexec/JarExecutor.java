@@ -58,6 +58,8 @@ public class JarExecutor {
     public static final String PROP_EXIT_TIMEOUT_SECONDS = PROP_PREFIX + "exit.timeout.seconds";
     public static final String PROP_WAIT_ONSHUTDOWN = PROP_PREFIX + "wait.on.shutdown";
     public static final String PROP_JAVA_PATH = PROP_PREFIX + "java.executable.path";
+    public static final String PROP_SYNC_EXEC = PROP_PREFIX + "synchronous.exec";
+    public static final String PROP_SYNC_EXEC_EXPECTED = PROP_PREFIX + "synchronous.exec.expected.result";
 
     @SuppressWarnings("serial")
     public static class ExecutorException extends Exception {
@@ -171,14 +173,25 @@ public class JarExecutor {
         String tmStr = config.getProperty(PROP_EXIT_TIMEOUT_SECONDS);
         final int exitTimeoutSeconds = tmStr == null ? DEFAULT_EXIT_TIMEOUT : Integer.valueOf(tmStr);
 
-        log.info("Executing " + cl);
-        executor.setStreamHandler(new PumpStreamHandler());
-        final ShutdownHookSingleProcessDestroyer pd = new ShutdownHookSingleProcessDestroyer("java -jar " + jarToExecute.getName(), exitTimeoutSeconds);
-        final boolean waitOnShutdown = Boolean.valueOf(config.getProperty(PROP_WAIT_ONSHUTDOWN, "false"));
-        log.info("Setting up ProcessDestroyer with waitOnShutdown=" + waitOnShutdown);
-        pd.setWaitOnShutdown(waitOnShutdown);
-        executor.setProcessDestroyer(pd);
-        executor.execute(cl, h);
+        if("true".equals(config.getProperty(PROP_SYNC_EXEC, ""))) {
+            final long start = System.currentTimeMillis();
+            log.info("Executing and waiting for result: " + cl);
+            final int result = executor.execute(cl);
+            final int expected = Integer.valueOf(config.getProperty(PROP_SYNC_EXEC_EXPECTED, "0"));
+            log.info("Execution took " + (System.currentTimeMillis() - start) + " msec");
+            if(result != expected) {
+                throw new ExecutorException("Expected result code " + expected + ", got " + result);
+            }
+        } else {
+            log.info("Executing asynchronously: " + cl);
+            executor.setStreamHandler(new PumpStreamHandler());
+            final ShutdownHookSingleProcessDestroyer pd = new ShutdownHookSingleProcessDestroyer("java -jar " + jarToExecute.getName(), exitTimeoutSeconds);
+            final boolean waitOnShutdown = Boolean.valueOf(config.getProperty(PROP_WAIT_ONSHUTDOWN, "false"));
+            log.info("Setting up ProcessDestroyer with waitOnShutdown=" + waitOnShutdown);
+            pd.setWaitOnShutdown(waitOnShutdown);
+            executor.setProcessDestroyer(pd);
+            executor.execute(cl, h);
+        }
     }
 
     /** Stop the process that we started, if any, and wait for it to exit before returning */

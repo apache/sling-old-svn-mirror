@@ -23,6 +23,7 @@ import static org.apache.sling.api.SlingConstants.SLING_CURRENT_SERVLET_NAME;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 
 import javax.servlet.Servlet;
@@ -48,7 +49,6 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.engine.impl.SlingHttpServletRequestImpl;
-import org.apache.sling.engine.impl.SlingHttpServletRequestImpl3;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
 import org.apache.sling.engine.impl.SlingMainServlet;
 import org.apache.sling.engine.impl.SlingRequestProcessorImpl;
@@ -115,7 +115,7 @@ public class RequestData {
     /**
      * The name of the request attribute to override the max call number (-1 for infinite or integer value).
      */
-    private static String REQUEST_MAX_CALL_OVERRIDE = SlingMainServlet.PROP_MAX_CALL_COUNTER;
+    private static String REQUEST_MAX_CALL_OVERRIDE = "sling.max.calls";
 
     private static SlingMainServlet SLING_MAIN_SERVLET;
 
@@ -216,11 +216,17 @@ public class RequestData {
         this.slingResponse = new SlingHttpServletResponseImpl(this,
             servletResponse);
 
-        this.requestProgressTracker = new SlingRequestProgressTracker();
-        this.requestProgressTracker.log(
-        		"Method={0}, PathInfo={1}",
-        		this.slingRequest.getMethod(), this.slingRequest.getPathInfo()
-        );
+        // Getting the RequestProgressTracker from the request attributes like
+        // this should not be generally used, it's just a way to pass it from
+        // its creation point to here, so it's made available via
+        // the Sling request's getRequestProgressTracker method.
+        final Object o = request.getAttribute(RequestProgressTracker.class.getName());
+        if(o instanceof SlingRequestProgressTracker) {
+            this.requestProgressTracker = (SlingRequestProgressTracker)o;
+        } else {
+            log.warn("SlingRequestProgressTracker not found in request attributes");
+            this.requestProgressTracker = new SlingRequestProgressTracker(request);
+        }
     }
 
     public Resource initResource(ResourceResolver resourceResolver) {
@@ -230,7 +236,20 @@ public class RequestData {
         // resolve the resource
         requestProgressTracker.startTimer("ResourceResolution");
         final SlingHttpServletRequest request = getSlingRequest();
-        Resource resource = resourceResolver.resolve(request, request.getPathInfo());
+
+        StringBuffer requestURL = servletRequest.getRequestURL();
+        String path = request.getPathInfo();
+        if (requestURL.indexOf(";") > -1 && !path.contains(";")) {
+            final String decodedURL;
+            try {
+                decodedURL = URLDecoder.decode(requestURL.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new AssertionError("UTF-8 encoding is not supported");
+            }
+            path = path.concat(decodedURL.substring(decodedURL.indexOf(';')));
+        }
+
+        Resource resource = resourceResolver.resolve(request, path);
         if (request.getAttribute(REQUEST_RESOURCE_PATH_ATTR) == null) {
             request.setAttribute(REQUEST_RESOURCE_PATH_ATTR, resource.getPath());
         }
@@ -681,22 +700,12 @@ public class RequestData {
     private static SlingHttpServletRequestFactory getSlingHttpServletRequestFactory() {
         SlingHttpServletRequestFactory factory = RequestData.REQUEST_FACTORY;
         if (factory == null) {
-            SlingMainServlet servlet = RequestData.SLING_MAIN_SERVLET;
-            if (servlet == null || servlet.getServletContext() == null
-                || servlet.getServletContext().getMajorVersion() < 3) {
-
-                factory = new SlingHttpServletRequestFactory() {
-                    public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
-                        return new SlingHttpServletRequestImpl(requestData, request);
-                    }
-                };
-            } else {
-                factory = new SlingHttpServletRequestFactory() {
-                    public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
-                        return new SlingHttpServletRequestImpl3(requestData, request);
-                    }
-                };
-            }
+            factory = new SlingHttpServletRequestFactory() {
+                @Override
+                public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
+                    return new SlingHttpServletRequestImpl(requestData, request);
+                }
+            };
             RequestData.REQUEST_FACTORY = factory;
         }
         return factory;

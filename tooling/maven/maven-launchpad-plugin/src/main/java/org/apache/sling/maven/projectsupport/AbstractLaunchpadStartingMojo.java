@@ -29,6 +29,7 @@ import org.apache.felix.framework.Logger;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.filtering.PropertyUtils;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
@@ -71,26 +72,17 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
     /**
      * The definition of the package to be included to provide web support for
      * JAR-packaged projects (i.e. pax-web).
-     *
-     * @parameter
      */
+    @Parameter
     private ArtifactDefinition jarWebSupport;
 
-    /**
-     * @parameter expression="${felix.log.level}"
-     */
+    @Parameter(property = "felix.log.level")
     private String logLevel;
 
-    /**
-     * @parameter expression="${propertiesFile}"
-     *            default-value="src/test/config/sling.properties"
-     */
+    @Parameter(property = "propertiesFile", defaultValue = "src/test/config/sling.properties")
     private File propertiesFile;
 
-    /**
-     * @parameter expression="${resourceProviderRoot}"
-     *            default-value="src/test/resources"
-     */
+    @Parameter(property = "resourceProviderRoot", defaultValue = "src/test/resources")
     private File resourceProviderRoot;
 
     private LaunchpadContentProvider resourceProvider = new BundleListContentProvider(resourceProviderRoot) {

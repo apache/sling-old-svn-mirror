@@ -18,9 +18,12 @@
  */
 package org.apache.sling.startupfilter;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
+@ConsumerType
 public interface StartupInfoProvider {
     /** Return startup progress information, which the startup
-     *  filter adds to its HTTP 503 response.  
+     *  filter adds to its HTTP 503 response.
      */
     String getProgressInfo();
 }

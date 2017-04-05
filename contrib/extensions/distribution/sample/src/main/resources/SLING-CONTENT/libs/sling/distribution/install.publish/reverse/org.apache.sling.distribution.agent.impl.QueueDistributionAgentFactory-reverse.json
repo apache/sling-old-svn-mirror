@@ -4,10 +4,6 @@
 
     "serviceName" : "distributionService",
 
-    "requestAuthorizationStrategy.target" : "(name=privilegeRead)",
-
-    "packageBuilder.target" : "(name=vlt)",
-
     "triggers.target": "(name=reverse-userGeneratedContent)"
 
 }

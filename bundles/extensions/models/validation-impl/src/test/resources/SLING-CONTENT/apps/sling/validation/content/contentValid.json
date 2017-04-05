@@ -1,0 +1,6 @@
+{
+	"jcr:primaryType": "nt:unstructured",
+	"sling:resourceType": "validation/test/resourceType1",
+	"field1": "HELLOWORLD",
+	"field2": "anything"
+}

@@ -21,6 +21,8 @@ package org.apache.sling.scripting.core;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -221,6 +223,7 @@ public class ScriptHelper implements SlingScriptHelper {
     /**
      * @see org.apache.sling.api.scripting.SlingScriptHelper#getServices(java.lang.Class, java.lang.String)
      */
+    @SuppressWarnings("unchecked")
     public <ServiceType> ServiceType[] getServices(
             Class<ServiceType> serviceType, String filter)
     throws InvalidServiceFilterSyntaxException {
@@ -229,20 +232,24 @@ public class ScriptHelper implements SlingScriptHelper {
                 serviceType.getName(), filter);
             ServiceType[] result = null;
             if (refs != null) {
+                // sort by service ranking (lowest first) (see ServiceReference#compareTo(Object))
+                List<ServiceReference> references = Arrays.asList(refs);
+                Collections.sort(references);
+                // get the highest ranking first
+                Collections.reverse(references);
+                
                 final List<ServiceType> objects = new ArrayList<ServiceType>();
-                for (int i = 0; i < refs.length; i++) {
-                    @SuppressWarnings("unchecked")
-                    final ServiceType service = (ServiceType) this.bundleContext.getService(refs[i]);
+                for (ServiceReference reference : references) {
+                    final ServiceType service = (ServiceType) this.bundleContext.getService(reference);
                     if (service != null) {
                         if ( this.references == null ) {
                             this.references = new ArrayList<ServiceReference>();
                         }
-                        this.references.add(refs[i]);
+                        this.references.add(reference);
                         objects.add(service);
                     }
                 }
                 if (objects.size() > 0) {
-                    @SuppressWarnings("unchecked")
                     ServiceType[] srv = (ServiceType[]) Array.newInstance(serviceType, objects.size());
                     result = objects.toArray(srv);
                 }

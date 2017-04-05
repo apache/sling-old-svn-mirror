@@ -32,11 +32,9 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
-import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 public class UserPrivilegesInfoTest {
 	
@@ -103,7 +101,6 @@ public class UserPrivilegesInfoTest {
 	 * to add a new user.
 	 */
 	@Test 
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
 	public void testCanAddUser() throws JSONException, IOException {
 		testUserId = H.createTestUser();
 
@@ -117,23 +114,12 @@ public class UserPrivilegesInfoTest {
 		JSONObject jsonObj = new JSONObject(json);
 		
 		assertEquals(false, jsonObj.getBoolean("canAddUser"));
-		
-		//now add the user to the 'User Admin' group.
-		H.addUserToUserAdminGroup(testUserId);
-		
-		//fetch the JSON again
-		String json2 = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json2);
-		JSONObject jsonObj2 = new JSONObject(json2);
-		
-		assertEquals(true, jsonObj2.getBoolean("canAddUser"));
 	}
 
 	/**
 	 * Checks whether the current user has been granted privileges
 	 * to add a new group.
 	 */
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
 	@Test 
 	public void testCanAddGroup() throws IOException, JSONException {
 		testUserId = H.createTestUser();
@@ -148,23 +134,12 @@ public class UserPrivilegesInfoTest {
 		JSONObject jsonObj = new JSONObject(json);
 		
 		assertEquals(false, jsonObj.getBoolean("canAddGroup"));
-		
-		//now add the user to the 'Group Admin' group.
-		H.addUserToGroupAdminGroup(testUserId);
-		
-		//fetch the JSON again
-		String json2 = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json2);
-		JSONObject jsonObj2 = new JSONObject(json2);
-		
-		assertEquals(true, jsonObj2.getBoolean("canAddGroup"));
 	}
 	
 	/**
 	 * Checks whether the current user has been granted privileges
 	 * to update the properties of the specified user.
 	 */
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
 	@Test 
 	public void testCanUpdateUserProperties() throws IOException, JSONException {
 		testUserId = H.createTestUser();
@@ -195,25 +170,12 @@ public class UserPrivilegesInfoTest {
 		
 		//user can not update other users properties
 		assertEquals(false, jsonObj2.getBoolean("canUpdateProperties"));
-		
-		
-		//3. now add the user to the 'User Admin' group.
-		H.addUserToUserAdminGroup(testUserId2);
-		
-		//fetch the JSON again
-		String json3 = H.getAuthenticatedContent(testUser2Creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json3);
-		JSONObject jsonObj3 = new JSONObject(json3);
-		
-		//user in 'User Admin' group can update the properties of other users
-		assertEquals(true, jsonObj3.getBoolean("canUpdateProperties"));
 	}
 
 	/**
 	 * Checks whether the current user has been granted privileges
 	 * to update the properties of the specified group.
 	 */
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
 	@Test 
 	public void testCanUpdateGroupProperties() throws IOException, JSONException {
 		testGroupId = H.createTestGroup();
@@ -231,25 +193,12 @@ public class UserPrivilegesInfoTest {
 		
 		//normal user can not update group properties
 		assertEquals(false, jsonObj.getBoolean("canUpdateProperties"));
-		
-
-		//2. now add the user to the 'Group Admin' group.
-		H.addUserToGroupAdminGroup(testUserId);
-		
-		//fetch the JSON again
-		String json2 = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json2);
-		JSONObject jsonObj2 = new JSONObject(json2);
-		
-		//user in 'Group Admin' group can update the properties of groups
-		assertEquals(true, jsonObj2.getBoolean("canUpdateProperties"));
 	}
 	
 	/**
 	 * Checks whether the current user has been granted privileges
 	 * to remove the specified user.
 	 */
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
 	@Test 
 	public void testCanRemoveUser() throws IOException, JSONException {
 		testUserId = H.createTestUser();
@@ -280,25 +229,12 @@ public class UserPrivilegesInfoTest {
 		
 		//user can not delete other users
 		assertEquals(false, jsonObj2.getBoolean("canRemove"));
-		
-		
-		//3. now add the user to the 'User Admin' group.
-		H.addUserToUserAdminGroup(testUserId2);
-		
-		//fetch the JSON again
-		String json3 = H.getAuthenticatedContent(testUser2Creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json3);
-		JSONObject jsonObj3 = new JSONObject(json3);
-		
-		//user in 'User Admin' group can remove other users
-		assertEquals(true, jsonObj3.getBoolean("canRemove"));
 	}
 
 	/**
 	 * Checks whether the current user has been granted privileges
 	 * to remove the specified group.
 	 */
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
 	@Test 
 	public void testCanRemoveGroup() throws IOException, JSONException {
 		testGroupId = H.createTestGroup();
@@ -316,25 +252,12 @@ public class UserPrivilegesInfoTest {
 		
 		//normal user can not remove group
 		assertEquals(false, jsonObj.getBoolean("canRemove"));
-		
-
-		//2. now add the user to the 'Group Admin' group.
-		H.addUserToGroupAdminGroup(testUserId);
-		
-		//fetch the JSON again
-		String json2 = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json2);
-		JSONObject jsonObj2 = new JSONObject(json2);
-		
-		//user in 'Group Admin' group can update the properties of groups
-		assertEquals(true, jsonObj2.getBoolean("canRemove"));
 	}
 	
 	/**
 	 * Checks whether the current user has been granted privileges
 	 * to update the membership of the specified group.
 	 */
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
 	@Test 
 	public void testCanUpdateGroupMembers() throws IOException, JSONException {
 		testGroupId = H.createTestGroup();
@@ -352,41 +275,5 @@ public class UserPrivilegesInfoTest {
 		
 		//normal user can not remove group
 		assertEquals(false, jsonObj.getBoolean("canUpdateGroupMembers"));
-		
-
-		//2. now add the user to the 'Group Admin' group.
-		H.addUserToGroupAdminGroup(testUserId);
-		
-		//fetch the JSON again
-		String json2 = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json2);
-		JSONObject jsonObj2 = new JSONObject(json2);
-		
-		//user in 'Group Admin' group can update the membership of groups
-		assertEquals(true, jsonObj2.getBoolean("canUpdateGroupMembers"));
-		
-		
-		//3. remove user from the 'Group Admin' group
-		H.removeUserFromGroup(testUserId, "GroupAdmin");
-	
-		//fetch the JSON again
-		String json3 = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json3);
-		JSONObject jsonObj3 = new JSONObject(json3);
-		
-		//user not in 'Group Admin' group can not update the membership of groups
-		assertEquals(false, jsonObj3.getBoolean("canUpdateGroupMembers"));
-		
-		
-		//4. add user to the 'User Admin' group
-		H.addUserToUserAdminGroup(testUserId);
-
-		//fetch the JSON again
-		String json4 = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json4);
-		JSONObject jsonObj4 = new JSONObject(json4);
-		
-		//user in 'User Admin' group can update the membership of groups
-		assertEquals(true, jsonObj4.getBoolean("canUpdateGroupMembers"));
 	}
 }

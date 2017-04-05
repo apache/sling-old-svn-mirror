@@ -52,7 +52,7 @@ public class SimpleFilterLocator implements FilterLocator {
     @Override
     public Filter loadFilter(InputStream filterFileContents) throws IOException {
 
-        List<String> filters = new ArrayList<String>();
+        List<String> filters = new ArrayList<>();
         if (filterFileContents != null) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(filterFileContents));
             String line;

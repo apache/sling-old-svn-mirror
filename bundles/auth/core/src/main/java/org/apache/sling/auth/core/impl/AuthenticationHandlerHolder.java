@@ -28,7 +28,7 @@ import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -53,11 +53,11 @@ final class AuthenticationHandlerHolder extends
             final ServiceReference serviceReference) {
         super(fullPath, serviceReference);
 
-        final String browserOnly = OsgiUtil.toString(serviceReference.getProperty(AuthConstants.AUTH_HANDLER_BROWSER_ONLY), null);
+        final String browserOnly = PropertiesUtil.toString(serviceReference.getProperty(AuthConstants.AUTH_HANDLER_BROWSER_ONLY), null);
 
         // assign the fields
         this.handler = handler;
-        this.authType = OsgiUtil.toString(serviceReference.getProperty(TYPE_PROPERTY), null);
+        this.authType = PropertiesUtil.toString(serviceReference.getProperty(TYPE_PROPERTY), null);
         this.browserOnlyRequestCredentials = "true".equalsIgnoreCase(browserOnly)
             || "yes".equalsIgnoreCase(browserOnly);
     }
@@ -70,11 +70,13 @@ final class AuthenticationHandlerHolder extends
         return null;
     }
 
+    @Override
     public AuthenticationInfo doExtractCredentials(HttpServletRequest request,
             HttpServletResponse response) {
         return handler.extractCredentials(request, response);
     }
 
+    @Override
     public boolean doRequestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
@@ -87,6 +89,7 @@ final class AuthenticationHandlerHolder extends
         return false;
     }
 
+    @Override
     public void doDropCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         handler.dropCredentials(request, response);

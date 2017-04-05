@@ -40,7 +40,7 @@ public class ResourceNotFoundException extends SlingException {
     }
 
     public ResourceNotFoundException(String resource, String message) {
-        super(message);
+        super("Resource at '"+ resource + "' not found: " + message);
         this.resource = resource;
     }
 

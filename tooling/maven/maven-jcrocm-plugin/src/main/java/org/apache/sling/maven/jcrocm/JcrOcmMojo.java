@@ -29,6 +29,10 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.StringUtils;
@@ -45,35 +49,20 @@ import com.thoughtworks.qdox.model.JavaSource;
  * <em>maven-jcrocm-plugin</em>. It is by default run in the
  * <code>generate-resources</code> phase and requires the compile scoped
  * dependencies to be resolved.
- *
- * @goal ocm
- * @phase generate-resources
- * @description Build Jackrabbit OCM Descriptors from Java Source
- * @requiresDependencyResolution compile
  */
+@Mojo(name = "ocm", defaultPhase = LifecyclePhase.GENERATE_RESOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class JcrOcmMojo extends AbstractMojo {
 
-    /**
-     * @parameter expression="${project.build.directory}/sling-generated"
-     * @required
-     * @readonly
-     */
+    @Parameter ( defaultValue = "${project.build.directory}/sling-generated", readonly = true)
     private File outputDirectory;
 
-    /**
-     * The Maven project.
-     *
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
-     */
+    @Parameter( defaultValue = "${project}", readonly = true )
     private MavenProject project;
 
     /**
      * Name and path of the generated descriptor.
-     *
-     * @parameter expression="${jcrocm.descriptor.name}" default-value="mappings.xml"
      */
+    @Parameter( property = "jcrocm.descriptor.name", defaultValue = "mappings.xml")
     private String finalName;
 
     public void execute() throws MojoFailureException {

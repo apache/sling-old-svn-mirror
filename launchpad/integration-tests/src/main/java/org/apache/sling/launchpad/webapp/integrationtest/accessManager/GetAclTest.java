@@ -36,11 +36,10 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
-import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Tests for the 'acl' and 'eacl' Sling Get Operation
@@ -85,7 +84,7 @@ public class GetAclTest {
 		testUserId = H.createTestUser();
 		testUserId2 = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -164,7 +163,7 @@ public class GetAclTest {
 	public void testEffectiveAclMergeForUser_ReplacePrivilegeOnChild() throws IOException, JSONException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -219,7 +218,7 @@ public class GetAclTest {
 	public void testEffectiveAclMergeForUser_FewerPrivilegesGrantedOnChild() throws IOException, JSONException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -274,7 +273,7 @@ public class GetAclTest {
 	public void testEffectiveAclMergeForUser_MorePrivilegesGrantedOnChild() throws IOException, JSONException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -325,12 +324,12 @@ public class GetAclTest {
 	/**
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
-	@Category(JackrabbitOnly.class) // TODO: fails on Oak
-	@Test 
+	@Test
+	@Ignore // TODO: fails on Oak
 	public void testEffectiveAclMergeForUser_SubsetOfPrivilegesDeniedOnChild() throws IOException, JSONException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -406,7 +405,7 @@ public class GetAclTest {
 	public void testEffectiveAclMergeForUser_SubsetOfPrivilegesDeniedOnChild2() throws IOException, JSONException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -479,7 +478,7 @@ public class GetAclTest {
 	public void testEffectiveAclMergeForUser_SupersetOfPrivilegesDeniedOnChild() throws IOException, JSONException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -534,7 +533,7 @@ public class GetAclTest {
 	public void testEffectiveAclMergeForUser_SupersetOfPrivilegesDeniedOnChild2() throws IOException, JSONException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 

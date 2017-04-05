@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.testing.mock.osgi.MapUtil;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -71,8 +72,19 @@ public class ContentBuilder {
         try {
             return resourceResolver.create(parentResource, name, properties);
         } catch (PersistenceException ex) {
-            throw new RuntimeException("Unable to create page at " + path, ex);
+            throw new RuntimeException("Unable to create resource at " + path, ex);
         }
+    }
+
+    /**
+     * Create resource. If parent resource(s) do not exist they are created
+     * automatically using <code>nt:unstructured</code> nodes.
+     * @param path Page path
+     * @param properties Properties for resource.
+     * @return Resource object
+     */
+    public final Resource resource(String path, Object... properties) {
+        return resource(path, MapUtil.toMap(properties));
     }
 
     /**
@@ -93,11 +105,10 @@ public class ContentBuilder {
         String name = ResourceUtil.getName(path);
         Resource parentResource = ensureResourceExists(parentPath);
         try {
-            resource = resourceResolver.create(
-                    parentResource,
-                    name,
+            resource = resourceResolver.create(parentResource, name,
                     ImmutableMap.<String, Object> builder()
-                            .put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED).build());
+                            .put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED)
+                            .build());
             resourceResolver.commit();
             return resource;
         } catch (PersistenceException ex) {

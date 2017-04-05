@@ -73,9 +73,13 @@ public class FileInstaller
 
     public void start(final OsgiInstaller installer, final SlingSettingsService settings) {
         for(final ScanConfiguration config : this.scanConfigurations) {
+            String key = config.directory;
+            if ( key.startsWith(settings.getSlingHomePath() + File.separator) ) {
+                key = "${sling.home}" + key.substring(settings.getSlingHomePath().length());
+            }
             logger.debug("Starting monitor for {}", config.directory);
             this.monitors.add(new FileMonitor(new File(config.directory),
-                    config.scanInterval, new Installer(installer, settings, config.directory, hash(config.directory))));
+                    config.scanInterval, new Installer(installer, settings, config.directory, hash(key))));
         }
     }
 
@@ -216,13 +220,13 @@ public class FileInstaller
     /**
      * Hash the string
      */
-    private static String hash(String value) {
+    private static String hash(final String value) {
         try {
             final MessageDigest d = MessageDigest.getInstance("MD5");
             d.update(value.getBytes("UTF-8"));
             final BigInteger bigInt = new BigInteger(1, d.digest());
             return new String(bigInt.toString(16));
-        } catch (Exception ignore) {
+        } catch (final Exception ignore) {
             // if anything goes wrong we just return the value
             return value;
         }

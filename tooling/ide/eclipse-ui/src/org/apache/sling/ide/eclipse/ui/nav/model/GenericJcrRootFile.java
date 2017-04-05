@@ -24,8 +24,8 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
+import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -54,12 +54,9 @@ public class GenericJcrRootFile extends JcrNode {
 		this.parent = parent;
 		this.domElement = null;
 		
-        InputStream in = file.getContents();
-        try {
+        try (InputStream in = file.getContents()) {
             this.document = TolerantXMLParser.parse(in, file.getFullPath().toOSString());
             handleJcrRoot(this.document.getRootElement());
-        } finally {
-            IOUtils.closeQuietly(in);
         }
 	}
 	
@@ -152,14 +149,15 @@ public class GenericJcrRootFile extends JcrNode {
 		}
 		JcrNode childJcrNode = new JcrNode(parent, domNode, this, null);
 		handleProperties(domNode, childJcrNode.properties);
-		List<Element> children = domNode.getChildren();
-		for (Iterator<Element> it = children.iterator(); it.hasNext();) {
-			Element element = it.next();
+		for (Element element : domNode.getChildren()) {
 			handleChild(childJcrNode, element);
 		}
 	}
 
     public void pickResources(List<IResource> membersList) {
+        
+        final SerializationManager serializationManager = Activator.getDefault().getSerializationManager();
+
         for (Iterator<IResource> it = membersList.iterator(); it.hasNext();) {
             final IResource resource = it.next();
 			final String resName = resource.getName();
@@ -171,7 +169,7 @@ public class GenericJcrRootFile extends JcrNode {
 			}
 			while(it2.hasNext()) {
                 JcrNode aChild = it2.next();
-				if (resName.equals(aChild.getName())) {
+				if (resName.equals(serializationManager.getOsPath(aChild.getName()))) {
 					// then pick this one
 					it.remove();
 					aChild.setResource(resource);

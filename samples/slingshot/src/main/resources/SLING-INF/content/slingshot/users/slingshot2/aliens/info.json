@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Streaminfo",
+    "title":"Aliens",
+    "description":"Strange creatures from outer space."
+}

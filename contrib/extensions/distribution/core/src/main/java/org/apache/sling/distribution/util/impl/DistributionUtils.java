@@ -1,0 +1,108 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.sling.distribution.util.impl;
+
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import java.util.HashMap;
+import java.util.Map;
+
+
+public class DistributionUtils {
+    private static final Logger log = LoggerFactory.getLogger(DistributionUtils.class);
+    private static final String AUTHENTICATION_INFO_SESSION = "user.jcr.credentials";
+
+    public static ResourceResolver loginService(ResourceResolverFactory resolverFactory, String serviceName) throws LoginException {
+        Map<String, Object> authInfo = new HashMap<String, Object>();
+
+        authInfo.put(ResourceResolverFactory.SUBSERVICE, serviceName);
+
+        return resolverFactory.getServiceResourceResolver(authInfo);
+    }
+
+    public static void safelyLogout(ResourceResolver resourceResolver) {
+        try {
+            if (resourceResolver != null) {
+                Session session = resourceResolver.adaptTo(Session.class);
+                resourceResolver.close();
+                if (session != null && session.isLive()) {
+                    session.logout();
+                }
+            }
+        } catch (Throwable t) {
+            log.error("cannot safely close resource resolver {}", resourceResolver);
+        }
+    }
+
+    public static void ungetResourceResolver(ResourceResolver resourceResolver) {
+
+        if (resourceResolver != null) {
+            try {
+                if (resourceResolver.hasChanges()) {
+                    resourceResolver.commit();
+                }
+            } catch (PersistenceException e) {
+                log.error("cannot commit changes to resource resolver", e);
+            } finally {
+                safelyLogout(resourceResolver);
+            }
+        }
+    }
+
+    public static ResourceResolver getResourceResolver(String user, String service, SlingRepository slingRepository,
+                                                       String subServiceName, ResourceResolverFactory resourceResolverFactory)
+            throws DistributionException {
+        ResourceResolver resourceResolver;
+
+        try {
+            Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+
+            if (subServiceName == null && user != null) {
+                try {
+                    Session session = slingRepository.impersonateFromService(service, new SimpleCredentials(user, new char[0]), null);
+                    authenticationInfo.put(AUTHENTICATION_INFO_SESSION, session);
+                } catch (NoSuchMethodError nsme) {
+                    log.warn("without sling.jcr.api 2.3.0 content will be aggregated using service {}", service);
+                    Session session = slingRepository.loginService(service, null);
+                    authenticationInfo.put(AUTHENTICATION_INFO_SESSION, session);
+                }
+            } else {
+                authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
+            }
+            resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+
+            return resourceResolver;
+        } catch (LoginException le) {
+            throw new DistributionException(le);
+        } catch (RepositoryException re) {
+            throw new DistributionException(re);
+        }
+    }
+}

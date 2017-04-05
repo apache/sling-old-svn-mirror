@@ -22,6 +22,7 @@ import org.apache.sling.commons.testing.integration.HttpTestBase;
  * Test the PlanetsResourceProvider that the test-services bundles provides */ 
 public class PlanetsResourceProviderTest extends HttpTestBase {
 
+    private static final String PROPSET_MSG = "Resources can each have different sets of properties";
     private void assertStrings(String url, String [] what) throws Exception {
         final String content = getContent(url, CONTENT_TYPE_JSON);
         for(String expected : what) {
@@ -40,7 +41,7 @@ public class PlanetsResourceProviderTest extends HttpTestBase {
                     "earth",
                     "moon",
                     "Moon",
-                    "Resources can have different sets of properties",
+                    PROPSET_MSG,
                     "\"name\": \"Uranus\""
             });
     }
@@ -52,7 +53,7 @@ public class PlanetsResourceProviderTest extends HttpTestBase {
                         "earth",
                         "moon",
                         "Moon",
-                        "Resources can have different sets of properties",
+                        PROPSET_MSG,
                         "\"name\": \"Uranus\"",
                         "384"
                 });
@@ -65,7 +66,7 @@ public class PlanetsResourceProviderTest extends HttpTestBase {
                         "!earth",
                         "!moon",
                         "Moon",
-                        "!Resources can have different sets of properties",
+                        "!" + PROPSET_MSG,
                         "!\"name\": \"Uranus\"",
                         "384"
                 });

@@ -45,8 +45,8 @@ public class Model extends Traceable {
 
     /**
      * Get or create the feature.
-     * @param runModes The run modes.
-     * @return The feature for the given run modes.
+     * @param name Feature name
+     * @return The feature for the given name.
      */
     public Feature getOrCreateFeature(final String name) {
         Feature result = getFeature(name);

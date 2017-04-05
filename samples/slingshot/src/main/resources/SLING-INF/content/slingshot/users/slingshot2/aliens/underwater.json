@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType":"sling:Folder",
+    "sling:resourceType":"slingshot/Streamentry",
+    "title":"Underwater",
+    "description":"Surprise down under..."
+}

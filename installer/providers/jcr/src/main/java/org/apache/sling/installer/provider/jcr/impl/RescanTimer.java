@@ -24,11 +24,26 @@ package org.apache.sling.installer.provider.jcr.impl;
  */
 
 class RescanTimer {
-    public static final long SCAN_DELAY_MSEC = 500L;
+    public static final long DEFAULT_SCAN_DELAY_MSEC = 500L;
     private long nextScanTime = Long.MAX_VALUE;
+    private final long scanDelay;
+    
+    /** Create a timer with a non-default delay - this should ONLY
+     *  be used in tests for now, as the existing code makes
+     *  some assumptions about this. 
+     * @param scanDelayMsec delay in msec
+     */
+    RescanTimer(long scanDelayMsec) {
+        this.scanDelay = scanDelayMsec;
+    }
+    
+    /** Standard constructor for non-test code */
+    RescanTimer() {
+        this(DEFAULT_SCAN_DELAY_MSEC);
+    }
     
     synchronized void scheduleScan() {
-        nextScanTime = System.currentTimeMillis() + SCAN_DELAY_MSEC;
+        nextScanTime = System.currentTimeMillis() + scanDelay;
     }
     
     synchronized void reset() {

@@ -22,6 +22,8 @@ import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 
@@ -38,30 +40,43 @@ public class MoveOperation extends AbstractCopyMoveOperation {
     }
 
     @Override
-    protected Item execute(List<Modification> changes, Item source,
-            String destParent, String destName,
-            VersioningConfiguration versioningConfiguration) throws RepositoryException {
+    protected Resource execute(final List<Modification> changes,
+            final Resource source,
+            String destParent,
+            String destName,
+            final VersioningConfiguration versioningConfiguration)
+    throws PersistenceException {
+        try {
+            // ensure we have an item underlying the request's resource
+            Item item = source.adaptTo(Item.class);
+            if (item == null) {
+                return null;
+            }
 
-        if (destName == null) {
-            destName = source.getName();
-        }
+            if (destName == null) {
+                destName = source.getName();
+            }
 
-        String sourcePath = source.getPath();
-        if (destParent.equals("/")) {
-            destParent = "";
-        }
-        String destPath = destParent + "/" + destName;
-        Session session = source.getSession();
-        
-        checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
+            String sourcePath = source.getPath();
+            if (destParent.equals("/")) {
+                destParent = "";
+            }
+            String destPath = destParent + "/" + destName;
+            Session session = item.getSession();
 
-        if (session.itemExists(destPath)) {
-            session.getItem(destPath).remove();
+            this.jcrSsupport.checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
+
+            final Resource dest = source.getResourceResolver().getResource(destPath);
+            if (dest != null ) {
+                source.getResourceResolver().delete(dest);
+            }
+
+            session.move(sourcePath, destPath);
+            changes.add(Modification.onMoved(sourcePath, destPath));
+            return source.getResourceResolver().getResource(destPath);
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
         }
-        
-        session.move(sourcePath, destPath);
-        changes.add(Modification.onMoved(sourcePath, destPath));
-        return session.getItem(destPath);
     }
 
 }

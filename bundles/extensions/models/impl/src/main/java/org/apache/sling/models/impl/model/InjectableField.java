@@ -19,9 +19,12 @@
 package org.apache.sling.models.impl.model;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.impl.ReflectionUtil;
+import org.apache.sling.models.impl.Result;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 
 public class InjectableField extends AbstractInjectableElement {
@@ -32,13 +35,35 @@ public class InjectableField extends AbstractInjectableElement {
         super(field, ReflectionUtil.mapPrimitiveClasses(field.getGenericType()), field.getName(), processorFactories, defaultInjectionStrategy);
         this.field = field;
     }
-    
-    public Field getField() {
-        return field;
+
+    public RuntimeException set(Object createdObject, Result<Object> result) {
+        synchronized (field) {
+            boolean accessible = field.isAccessible();
+            try {
+                if (!accessible) {
+                    field.setAccessible(true);
+                }
+                field.set(createdObject, result.getValue());
+            } catch (Exception e) {
+                return new ModelClassException("Could not inject field due to reflection issues", e);
+            } finally {
+                if (!accessible) {
+                    field.setAccessible(false);
+                }
+            }
+        }
+        return null;
     }
 
     public boolean isPrimitive() {
         return false;
     }
 
+    public Class<?> getFieldType() {
+        return field.getType();
+    }
+
+    public Type getFieldGenericType() {
+        return field.getGenericType();
+    }
 }

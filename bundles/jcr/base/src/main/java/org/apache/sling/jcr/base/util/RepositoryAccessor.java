@@ -23,9 +23,9 @@ import java.util.Hashtable;
 import javax.jcr.Repository;
 import javax.naming.InitialContext;
 
+import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
 import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
-import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,11 +140,11 @@ public class RepositoryAccessor {
      * <pre>
      *      jndi://jackrabbit:java.naming.factory.initial=org.SomeClass,java.naming.provider.url=http://foo.com
      * </pre>
-     * 
+     *
      * @throws NullPointerException If <code>url</code> is <code>null</code>.
      */
     public Repository getRepositoryFromURL(String url) {
-        
+
         if (url == null) {
             throw new NullPointerException("url");
         }
@@ -186,7 +186,7 @@ public class RepositoryAccessor {
      * this class may overwrite this method to use a different implementation.
      */
     protected LocalAdapterFactory getLocalAdapterFactory() {
-        return new JackrabbitClientAdapterFactory();
+        return new ClientAdapterFactory();
     }
 
     /**

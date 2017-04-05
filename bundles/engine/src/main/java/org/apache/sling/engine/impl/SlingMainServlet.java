@@ -18,7 +18,6 @@
  */
 package org.apache.sling.engine.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -28,34 +27,24 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.servlet.GenericServlet;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.References;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.request.SlingRequestEvent;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.commons.mime.MimeTypeService;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
+import org.apache.sling.engine.impl.helper.ClientAbortException;
 import org.apache.sling.engine.impl.helper.RequestListenerManager;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
-import org.apache.sling.engine.impl.helper.SlingServletContext3;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
 import org.apache.sling.engine.jmx.RequestProcessorMBean;
@@ -64,65 +53,84 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
-import org.osgi.service.http.HttpService;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>SlingMainServlet</code> TODO
+ * The <code>SlingMainServlet</code>
  */
 @SuppressWarnings("serial")
-@Component(immediate = true, metatype = true, label = "%sling.name", description = "%sling.description")
-@Properties( {
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling Servlet")
+@Component(property = {
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+        Constants.SERVICE_DESCRIPTION + "=Sling Servlet"
 })
-@References( {
-    @Reference(name = "ErrorHandler", referenceInterface = ErrorHandler.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, bind = "setErrorHandler", unbind = "unsetErrorHandler"),
-    @Reference(name = "ServletResolver", referenceInterface = ServletResolver.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, bind = "setServletResolver", unbind = "unsetServletResolver"),
-    @Reference(name = "MimeTypeService", referenceInterface = MimeTypeService.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, bind = "setMimeTypeService", unbind = "unsetMimeTypeService"),
-    @Reference(name = "AuthenticationSupport", referenceInterface = AuthenticationSupport.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, bind = "setAuthenticationSupport", unbind = "unsetAuthenticationSupport") })
+@Designate(ocd=SlingMainServlet.Config.class)
 public class SlingMainServlet extends GenericServlet {
 
-    @Property(intValue=RequestData.DEFAULT_MAX_CALL_COUNTER)
-    public static final String PROP_MAX_CALL_COUNTER = "sling.max.calls";
+    @ObjectClassDefinition(name ="Apache Sling Main Servlet",
+            description="Main processor of the Sling framework controlling all " +
+                    "aspects of processing requests inside of Sling, namely authentication, " +
+                    "resource resolution, servlet/script resolution and execution of servlets " +
+                    "and scripts.")
+    public @interface Config {
 
-    @Property(intValue=RequestData.DEFAULT_MAX_INCLUSION_COUNTER)
-    public static final String PROP_MAX_INCLUSION_COUNTER = "sling.max.inclusions";
+        @AttributeDefinition(name = "Number of Calls per Request",
+                description = "Defines the maximum number of Servlet and Script " +
+                     "calls while processing a single client request. This number should be high " +
+                     "enough to not limit request processing artificially. On the other hand it " +
+                     "should not be too high to allow the mechanism to limit the resources required " +
+                     "to process a request in case of errors. The default value is 1000.")
+        int sling_max_calls() default RequestData.DEFAULT_MAX_CALL_COUNTER;
 
-    public static final boolean DEFAULT_ALLOW_TRACE = false;
+        @AttributeDefinition(name = "Recursion Depth",
+                description = "The maximum number of recursive Servlet and " +
+                     "Script calls while processing a single client request. This number should not " +
+                     "be too high, otherwise StackOverflowErrors may occurr in case of erroneous " +
+                     "scripts and servlets. The default value is 50. ")
+        int sling_max_inclusions() default RequestData.DEFAULT_MAX_INCLUSION_COUNTER;
 
-    @Property(boolValue=DEFAULT_ALLOW_TRACE)
-    public static final String PROP_ALLOW_TRACE = "sling.trace.allow";
+        @AttributeDefinition(name = "Allow the HTTP TRACE method",
+                description = "If set to true, the HTTP TRACE method will be " +
+                     "enabled. By default the HTTP TRACE methods is disabled as it can be used in " +
+                     "Cross Site Scripting attacks on HTTP servers.")
+        boolean sling_trace_allow() default false;
 
-    public static final boolean DEFAULT_FILTER_COMPAT_MODE = false;
+        @AttributeDefinition(name = "Number of Requests to Record",
+                description = "Defines the number of requests that " +
+                     "internally recorded for display on the \"Recent Requests\" Web Console page. If " +
+                     "this value is less than or equal to zero, no requests are internally kept. The " +
+                     "default value is 20. ")
+        int sling_max_record_requests() default RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT;
 
-    @Property(boolValue=DEFAULT_FILTER_COMPAT_MODE)
-    public static final String PROP_FILTER_COMPAT_MODE = "sling.filter.compat.mode";
+        @AttributeDefinition(name = "Recorded Request Path Patterns",
+                description = "One or more regular expressions which " +
+                            "limit the requests which are stored by the \"Recent Requests\" Web Console page.")
+        String[] sling_store_pattern_requests();
 
-    @Property(intValue = RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT)
-    private static final String PROP_MAX_RECORD_REQUESTS = "sling.max.record.requests";
+        @AttributeDefinition(name = "Server Info",
+                description = "The server info returned by Sling. If this field is left empty, Sling generates a default into.")
+        String sling_serverinfo();
 
-    @Property(unbounded=PropertyUnbounded.ARRAY)
-    private static final String PROP_TRACK_PATTERNS_REQUESTS = "sling.store.pattern.requests";
+        @AttributeDefinition(name = "Additional response headers",
+                description = "Provides mappings for additional response headers "
+                    + "Each entry is of the form 'bundleId [ \":\" responseHeaderName ] \"=\" responseHeaderValue'")
+        String[] sling_additional_response_headers() default {"X-Content-Type-Options=nosniff", "X-Frame-Options=SAMEORIGIN"};
+    }
 
-    private static final String PROP_DEFAULT_PARAMETER_ENCODING = "sling.default.parameter.encoding";
+    private static final String DEPRECATED_ENCODING_PROPERTY = "sling.default.parameter.encoding";
 
-    @Property
-    private static final String PROP_SERVER_INFO = "sling.serverinfo";
-    
-
-    @Property(value = {"X-Content-Type-Options=nosniff"},
-            label = "Additional response headers",
-            description = "Provides mappings for additional response headers "
-                + "Each entry is of the form 'bundleId [ \":\" responseHeaderName ] \"=\" responseHeaderValue' ",
-            unbounded = PropertyUnbounded.ARRAY)
-    private static final String PROP_ADDITIONAL_RESPONSE_HEADERS = "sling.additional.response.headers";
-
-    @Reference
-    private HttpService httpService;
-
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     private volatile AdapterManager adapterManager;
 
     /** default log */
@@ -133,6 +141,11 @@ public class SlingMainServlet extends GenericServlet {
      * be the root, aka "<code>/</code>" (value is "/").
      */
     private static final String SLING_ROOT = "/";
+
+    /**
+     * The name of the servlet context for Sling
+     */
+    public static final String SERVLET_CONTEXT_NAME = "org.apache.sling";
 
     /**
      * The name of the product to report in the {@link #getServerInfo()} method
@@ -164,7 +177,7 @@ public class SlingMainServlet extends GenericServlet {
 
     private RequestListenerManager requestListenerManager;
 
-    private boolean allowTrace = DEFAULT_ALLOW_TRACE;
+    private boolean allowTrace;
 
     private Object printerRegistration;
 
@@ -176,12 +189,16 @@ public class SlingMainServlet extends GenericServlet {
 
     private final SlingRequestProcessorImpl requestProcessor = new SlingRequestProcessorImpl();
 
-    private ServiceRegistration requestProcessorRegistration;
+    private ServiceRegistration<SlingRequestProcessor> requestProcessorRegistration;
 
-    private ServiceRegistration requestProcessorMBeanRegistration;
+    private ServiceRegistration<RequestProcessorMBean> requestProcessorMBeanRegistration;
+
+    private ServiceRegistration<ServletContextHelper> contextRegistration;
+
+    private ServiceRegistration<Servlet> servletRegistration;
 
     private String configuredServerInfo;
-    
+
     // ---------- Servlet API -------------------------------------------------
 
     @Override
@@ -217,13 +234,8 @@ public class SlingMainServlet extends GenericServlet {
                 requestProcessor.doProcessRequest(request, (HttpServletResponse) res,
                     resolver);
 
-            } catch (IOException ioe) {
-
-                // SLING-3498: Jetty with NIO does not have a wrapped
-                // SocketException any longer but a plain IOException
-                // from the NIO Socket channel. Hence we don't care for
-                // unwrapping and just log at DEBUG level
-                log.debug("service: Probably client aborted request or any other network problem", ioe);
+            } catch (ClientAbortException cae) {
+                log.debug("service: ClientAbortException, probable cause is client aborted request or network problem", cae);
 
             } catch (Throwable t) {
 
@@ -341,30 +353,31 @@ public class SlingMainServlet extends GenericServlet {
 
     @Activate
     protected void activate(final BundleContext bundleContext,
-            final Map<String, Object> componentConfig) {
-        
-        final String[] props = PropertiesUtil.toStringArray(componentConfig.get(PROP_ADDITIONAL_RESPONSE_HEADERS));
-        
-        final ArrayList<StaticResponseHeader> mappings = new ArrayList<StaticResponseHeader>(props.length);
-        for (final String prop : props) {
-            if (prop != null && prop.trim().length() > 0 ) {
-                try {
-                    final StaticResponseHeader mapping = new StaticResponseHeader(prop.trim());
-                    mappings.add(mapping);
-                } catch (final IllegalArgumentException iae) {
-                    log.info("configure: Ignoring '{}': {}", prop, iae.getMessage());
+            final Map<String, Object> componentConfig,
+            final Config config) {
+
+        final String[] props = config.sling_additional_response_headers();
+        if ( props != null ) {
+            final ArrayList<StaticResponseHeader> mappings = new ArrayList<>(props.length);
+            for (final String prop : props) {
+                if (prop != null && prop.trim().length() > 0 ) {
+                    try {
+                        final StaticResponseHeader mapping = new StaticResponseHeader(prop.trim());
+                        mappings.add(mapping);
+                    } catch (final IllegalArgumentException iae) {
+                        log.info("configure: Ignoring '{}': {}", prop, iae.getMessage());
+                    }
                 }
             }
+            RequestData.setAdditionalResponseHeaders(mappings);
         }
-        RequestData.setAdditionalResponseHeaders(mappings);
-        
-        configuredServerInfo = PropertiesUtil.toString(componentConfig.get(PROP_SERVER_INFO), null);
+        configuredServerInfo = config.sling_serverinfo();
 
         // setup server info
         setProductInfo(bundleContext);
 
         // prepare the servlet configuration from the component config
-        final Hashtable<String, Object> configuration = new Hashtable<String, Object>(
+        final Hashtable<String, Object> configuration = new Hashtable<>(
             componentConfig);
 
         // ensure the servlet name
@@ -373,55 +386,51 @@ public class SlingMainServlet extends GenericServlet {
         }
 
         // configure method filter
-        allowTrace = PropertiesUtil.toBoolean(componentConfig.get(PROP_ALLOW_TRACE),
-                DEFAULT_ALLOW_TRACE);
+        allowTrace = config.sling_trace_allow();
 
         // configure the request limits
-        RequestData.setMaxIncludeCounter(PropertiesUtil.toInteger(
-            componentConfig.get(PROP_MAX_INCLUSION_COUNTER),
-            RequestData.DEFAULT_MAX_INCLUSION_COUNTER));
-        RequestData.setMaxCallCounter(PropertiesUtil.toInteger(
-            componentConfig.get(PROP_MAX_CALL_COUNTER),
-            RequestData.DEFAULT_MAX_CALL_COUNTER));
+        RequestData.setMaxIncludeCounter(config.sling_max_inclusions());
+        RequestData.setMaxCallCounter(config.sling_max_calls());
         RequestData.setSlingMainServlet(this);
 
-        // configure default request parameter encoding
-        // log a message if such configuration exists ....
-        if (componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING) != null) {
-            log.warn("Configure default request parameter encoding with 'org.apache.sling.parameters.config' configuration; the property "
-                + PROP_DEFAULT_PARAMETER_ENCODING
-                + "="
-                + componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING)
-                + " is ignored");
+        // Warn about the obsolete parameter encoding configuration
+        if (componentConfig.get(DEPRECATED_ENCODING_PROPERTY) != null) {
+            log.warn("Please configure the default request parameter encoding using "
+                + "the 'org.apache.sling.engine.parameters' configuration PID; the property "
+                + DEPRECATED_ENCODING_PROPERTY + "="
+                + componentConfig.get(DEPRECATED_ENCODING_PROPERTY)
+                + " is obsolete and ignored");
         }
 
-        // register the servlet and resources
-        try {
-            Dictionary<String, String> servletConfig = toStringConfig(configuration);
+        // register the servlet context
+        final Dictionary<String, String> contextProperties = new Hashtable<>();
+        contextProperties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, SERVLET_CONTEXT_NAME);
+        contextProperties.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, SLING_ROOT);
+        contextProperties.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Engine Servlet Context Helper");
+        contextProperties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
-            this.httpService.registerServlet(SLING_ROOT, this, servletConfig,
-                slingHttpContext);
+        this.contextRegistration = bundleContext.registerService(ServletContextHelper.class, this.slingHttpContext, contextProperties);
 
-            log.info("{} ready to serve requests", this.getServerInfo());
+        // register the servlet
+        final Dictionary<String, String> servletConfig = toStringConfig(configuration);
+        servletConfig.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + SERVLET_CONTEXT_NAME + ")");
+        servletConfig.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, SLING_ROOT);
+        servletConfig.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Engine Main Servlet");
+        servletConfig.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        this.servletRegistration = bundleContext.registerService(Servlet.class, this, servletConfig);
 
-        } catch (Exception e) {
-            log.error("Cannot register " + this.getServerInfo(), e);
-        }
+        log.info("{} ready to serve requests", this.getServerInfo());
 
         // now that the sling main servlet is registered with the HttpService
         // and initialized we can register the servlet context
-        if (getServletContext() == null || getServletContext().getMajorVersion() < 3) {
-            slingServletContext = new SlingServletContext(bundleContext, this);
-        } else {
-            slingServletContext = new SlingServletContext3(bundleContext, this);
-        }
+        slingServletContext = new SlingServletContext(bundleContext, this);
 
         // register render filters already registered after registration with
         // the HttpService as filter initialization may cause the servlet
         // context to be required (see SLING-42)
         filterManager = new ServletFilterManager(bundleContext,
-            slingServletContext,
-            PropertiesUtil.toBoolean(componentConfig.get(PROP_FILTER_COMPAT_MODE), DEFAULT_FILTER_COMPAT_MODE));
+            slingServletContext);
         filterManager.open();
         requestProcessor.setFilterManager(filterManager);
 
@@ -433,11 +442,10 @@ public class SlingMainServlet extends GenericServlet {
 
         // setup the request info recorder
         try {
-            int maxRequests = PropertiesUtil.toInteger(
-                componentConfig.get(PROP_MAX_RECORD_REQUESTS),
-                RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT);
-            String[] patterns = PropertiesUtil.toStringArray(componentConfig.get(PROP_TRACK_PATTERNS_REQUESTS), new String[0]);
-            List<Pattern> compiledPatterns = new ArrayList<Pattern>(patterns.length);
+            int maxRequests = config.sling_max_record_requests();
+            String[] patterns = config.sling_store_pattern_requests();
+            if ( patterns == null ) patterns = new String[0];
+            List<Pattern> compiledPatterns = new ArrayList<>(patterns.length);
             for (String pattern : patterns) {
                 if(pattern != null && pattern.trim().length() > 0) {
                     compiledPatterns.add(Pattern.compile(pattern));
@@ -450,22 +458,22 @@ public class SlingMainServlet extends GenericServlet {
         }
 
         try {
-            Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+            Dictionary<String, String> mbeanProps = new Hashtable<>();
             mbeanProps.put("jmx.objectname", "org.apache.sling:type=engine,service=RequestProcessor");
 
             RequestProcessorMBeanImpl mbean = new RequestProcessorMBeanImpl();
-            requestProcessorMBeanRegistration = bundleContext.registerService(RequestProcessorMBean.class.getName(), mbean, mbeanProps);
+            requestProcessorMBeanRegistration = bundleContext.registerService(RequestProcessorMBean.class, mbean, mbeanProps);
             requestProcessor.setMBean(mbean);
         } catch (Throwable t) {
             log.debug("Unable to register mbean");
         }
 
         // provide the SlingRequestProcessor service
-        Hashtable<String, String> srpProps = new Hashtable<String, String>();
+        Hashtable<String, String> srpProps = new Hashtable<>();
         srpProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         srpProps.put(Constants.SERVICE_DESCRIPTION, "Sling Request Processor");
         requestProcessorRegistration = bundleContext.registerService(
-            SlingRequestProcessor.NAME, requestProcessor, srpProps);
+            SlingRequestProcessor.class, requestProcessor, srpProps);
     }
 
     @Override
@@ -508,13 +516,21 @@ public class SlingMainServlet extends GenericServlet {
 
         // second unregister the servlet context *before* unregistering
         // and destroying the the sling main servlet
+        if ( this.contextRegistration != null ) {
+            this.contextRegistration.unregister();
+            this.contextRegistration = null;
+        }
         if (slingServletContext != null) {
             slingServletContext.dispose();
             slingServletContext = null;
         }
 
         // third unregister and destroy the sling main servlet
-        httpService.unregister(SLING_ROOT);
+        // unregister servlet
+        if ( this.servletRegistration != null ) {
+            this.servletRegistration.unregister();
+            this.servletRegistration = null;
+        }
 
         // dispose of request listener manager after unregistering the servlet
         // to prevent a potential NPE in the service method
@@ -529,6 +545,7 @@ public class SlingMainServlet extends GenericServlet {
         log.info(this.getServerInfo() + " shut down");
     }
 
+    @Reference(name = "ErrorHandler", cardinality=ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, unbind = "unsetErrorHandler")
     void setErrorHandler(final ErrorHandler errorHandler) {
         requestProcessor.setErrorHandler(errorHandler);
     }
@@ -537,6 +554,7 @@ public class SlingMainServlet extends GenericServlet {
         requestProcessor.unsetErrorHandler(errorHandler);
     }
 
+    @Reference(name = "ServletResolver", cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, unbind = "unsetServletResolver")
     public void setServletResolver(final ServletResolver servletResolver) {
         requestProcessor.setServletResolver(servletResolver);
     }
@@ -545,6 +563,7 @@ public class SlingMainServlet extends GenericServlet {
         requestProcessor.unsetServletResolver(servletResolver);
     }
 
+    @Reference(name = "MimeTypeService", cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, unbind = "unsetMimeTypeService")
     public void setMimeTypeService(final MimeTypeService mimeTypeService) {
         slingHttpContext.setMimeTypeService(mimeTypeService);
     }
@@ -553,6 +572,7 @@ public class SlingMainServlet extends GenericServlet {
         slingHttpContext.unsetMimeTypeService(mimeTypeService);
     }
 
+    @Reference(name = "AuthenticationSupport", cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, unbind = "unsetAuthenticationSupport")
     public void setAuthenticationSupport(
             final AuthenticationSupport authenticationSupport) {
         slingHttpContext.setAuthenticationSupport(authenticationSupport);
@@ -564,7 +584,7 @@ public class SlingMainServlet extends GenericServlet {
     }
 
     private Dictionary<String, String> toStringConfig(Dictionary<?, ?> config) {
-        Dictionary<String, String> stringConfig = new Hashtable<String, String>();
+        Dictionary<String, String> stringConfig = new Hashtable<>();
         for (Enumeration<?> ke = config.keys(); ke.hasMoreElements();) {
             Object key = ke.nextElement();
             stringConfig.put(key.toString(), String.valueOf(config.get(key)));

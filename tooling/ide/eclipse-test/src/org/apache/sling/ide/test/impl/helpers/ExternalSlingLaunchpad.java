@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.test.impl.helpers;
 
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,18 +24,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import junit.framework.AssertionFailedError;
-
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.junit.rules.ExternalResource;
+
+import com.google.gson.stream.JsonReader;
+
+import junit.framework.AssertionFailedError;
 
 public class ExternalSlingLaunchpad extends ExternalResource {
 
@@ -60,7 +58,7 @@ public class ExternalSlingLaunchpad extends ExternalResource {
 
         long cutoff = System.currentTimeMillis() + MAX_WAIT_TIME_MS;
 
-        List<SlingReadyRule> rules = new ArrayList<SlingReadyRule>();
+        List<SlingReadyRule> rules = new ArrayList<>();
         rules.add(new StartLevelSlingReadyRule(client));
         rules.add(new ActiveBundlesSlingReadyRule(client));
 
@@ -109,27 +107,22 @@ public class ExternalSlingLaunchpad extends ExternalResource {
             int status = client.executeMethod(httpMethod);
             debug("vmstat http call got return code " + status);
 
-            InputStream input = null;
-            try {
-                if (status == 200) {
+            if (status == 200) {
 
-                    String responseBody = IOUtils.toString(httpMethod.getResponseBodyAsStream(),
-                            httpMethod.getResponseCharSet());
+                String responseBody = IOUtils.toString(httpMethod.getResponseBodyAsStream(),
+                        httpMethod.getResponseCharSet());
 
-                    Matcher m = STARTLEVEL_JSON_SNIPPET.matcher(responseBody);
-                    if (m.find()) {
-                        int startLevel = Integer.parseInt(m.group(1));
-                        debug("vmstat http call got startLevel " + startLevel);
-                        if (startLevel >= EXPECTED_START_LEVEL) {
-                            debug("current startLevel " + startLevel + " >= " + EXPECTED_START_LEVEL
-                                    + ", we are done here");
-                            return true;
-                        }
+                Matcher m = STARTLEVEL_JSON_SNIPPET.matcher(responseBody);
+                if (m.find()) {
+                    int startLevel = Integer.parseInt(m.group(1));
+                    debug("vmstat http call got startLevel " + startLevel);
+                    if (startLevel >= EXPECTED_START_LEVEL) {
+                        debug("current startLevel " + startLevel + " >= " + EXPECTED_START_LEVEL
+                                + ", we are done here");
+                        return true;
                     }
-
                 }
-            } finally {
-                IOUtils.closeQuietly(input);
+
             }
             return false;
         }
@@ -148,30 +141,34 @@ public class ExternalSlingLaunchpad extends ExternalResource {
         public boolean evaluate() throws Exception {
             int status = client.executeMethod(httpMethod);
             debug("bundles http call got return code " + status);
-
-            InputStream input = null;
-            try {
-                if (status == 200) {
-                    input = httpMethod.getResponseBodyAsStream();
-                    JSONObject obj = new JSONObject(new JSONTokener(new InputStreamReader(input)));
-    
-                    JSONArray bundleStatus = obj.getJSONArray("s");
-    
-                    int total = bundleStatus.getInt(0);
-                    int active = bundleStatus.getInt(1);
-                    int fragment = bundleStatus.getInt(2);
-    
-                    debug("bundle http call status: total = " + total + ", active = " + active + ", fragment = " + fragment);
-    
-                    if (total == active + fragment) {
-                        debug("All bundles are started, we are done here");
-                        return true;
-                    }
-                }
-            } finally {
-                IOUtils.closeQuietly(input);
+            
+            if ( status != 200) {
+                return false;
             }
 
+            try (JsonReader jsonReader = new JsonReader(
+                    new InputStreamReader(httpMethod.getResponseBodyAsStream(), httpMethod.getResponseCharSet()))) {
+                jsonReader.beginObject();
+                while (jsonReader.hasNext()) {
+                    String name = jsonReader.nextName();
+                    if (name.equals("s")) {
+                        jsonReader.beginArray();
+                        int total = jsonReader.nextInt();
+                        int active = jsonReader.nextInt();
+                        int fragment = jsonReader.nextInt();
+                        debug("bundle http call status: total = " + total + ", active = " + active + ", fragment = " + fragment);
+
+                        if (total == active + fragment) {
+                            debug("All bundles are started, we are done here");
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        jsonReader.skipValue();
+                    }
+                }
+            }
             return false;
         }
     }

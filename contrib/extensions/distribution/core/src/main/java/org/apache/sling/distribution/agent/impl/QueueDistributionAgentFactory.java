@@ -18,6 +18,8 @@
  */
 package org.apache.sling.distribution.agent.impl;
 
+import java.util.Map;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -31,28 +33,33 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.monitor.impl.MonitoringDistributionQueueProvider;
+import org.apache.sling.distribution.monitor.impl.QueueDistributionAgentMBean;
+import org.apache.sling.distribution.monitor.impl.QueueDistributionAgentMBeanImpl;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.impl.exporter.LocalDistributionPackageExporter;
-import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
+import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.PriorityQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 /**
- * An OSGi service factory for {@link org.apache.sling.distribution.agent.DistributionAgent}s which references already existing OSGi services.
+ * An OSGi service factory for "queuing agents" that queue resources from the local instance (and can be eventually
+ * pulled from another remote "reverse agent").
+ *
+ * @see {@link org.apache.sling.distribution.agent.DistributionAgent}
  */
 @Component(metatype = true,
         label = "Apache Sling Distribution Agent - Queue Agents Factory",
@@ -64,8 +71,8 @@ import java.util.Map;
 @Reference(name = "triggers", referenceInterface = DistributionTrigger.class,
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
-public class QueueDistributionAgentFactory extends AbstractDistributionAgentFactory {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+@Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
+public class QueueDistributionAgentFactory extends AbstractDistributionAgentFactory<QueueDistributionAgentMBean> {
 
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -81,11 +88,12 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     private static final String ENABLED = "enabled";
 
 
-    @Property(label = "Service Name", description = "The name of the service used to access the repository.")
-    public static final String SERVICE_NAME = "serviceName";
+    @Property(label = "Service Name", description = "The name of the service used to access the repository. " +
+            "If not set, the calling user ResourceResolver will be used")
+    private static final String SERVICE_NAME = "serviceName";
 
     @Property(options = {
-            @PropertyOption(name = "debug", value = "debug"), @PropertyOption(name = "info", value = "info"),  @PropertyOption(name = "warn", value = "warn"),
+            @PropertyOption(name = "debug", value = "debug"), @PropertyOption(name = "info", value = "info"), @PropertyOption(name = "warn", value = "warn"),
             @PropertyOption(name = "error", value = "error")},
             value = "info",
             label = "Log Level", description = "The log level recorded in the transient log accessible via http."
@@ -93,25 +101,29 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     public static final String LOG_LEVEL = AbstractDistributionAgentFactory.LOG_LEVEL;
 
 
-
     @Property(cardinality = 100, label = "Allowed roots", description = "If set the agent will allow only distribution requests under the specified roots.")
     private static final String ALLOWED_ROOTS = "allowed.roots";
 
 
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "requestAuthorizationStrategy")
     private DistributionRequestAuthorizationStrategy requestAuthorizationStrategy;
 
 
     @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
-            "e.g. use target=(name=...) to bind to services by name.")
+            "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 
     @Property(value = DEFAULT_TRIGGER_TARGET, label = "Triggers", description = "The target reference for DistributionTrigger used to trigger distribution, " +
             "e.g. use target=(name=...) to bind to services by name.")
     public static final String TRIGGERS_TARGET = "triggers.target";
+
+    @Property(cardinality = 100, label = "Priority queues", description = "List of priority queues that should used for specific paths." +
+            "The selector format is  {queuePrefix}[|{mainQueueMatcher}]={pathMatcher}, e.g. french=/content/fr.*")
+    private static final String PRIORITY_QUEUES = "priorityQueues";
+
 
     @Reference
     private Packaging packaging;
@@ -127,6 +139,13 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
+
+    @Reference
+    private SlingRepository slingRepository;
+
+    public QueueDistributionAgentFactory() {
+        super(QueueDistributionAgentMBean.class);
+    }
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -150,18 +169,38 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     @Override
     protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog) {
 
-        String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
         String[] allowedRoots = PropertiesUtil.toStringArray(config.get(ALLOWED_ROOTS), null);
         allowedRoots = SettingsUtils.removeEmptyEntries(allowedRoots);
 
-        DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
-        DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
+
+        Map<String, String> priorityQueues = PropertiesUtil.toMap(config.get(PRIORITY_QUEUES), new String[0]);
+        priorityQueues = SettingsUtils.removeEmptyEntries(priorityQueues);
+
+
+        DistributionQueueProvider queueProvider = new MonitoringDistributionQueueProvider(new JobHandlingDistributionQueueProvider(agentName, jobManager, context), context);
+
+        DistributionQueueDispatchingStrategy exportQueueStrategy = null;
+
+
+        if (priorityQueues != null) {
+            exportQueueStrategy = new PriorityQueueDispatchingStrategy(priorityQueues, new String[] { DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME });
+        } else {
+            exportQueueStrategy = new SingleQueueDispatchingStrategy();
+        }
+
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
-        DistributionRequestType[] allowedRequests = new DistributionRequestType[] { DistributionRequestType.ADD, DistributionRequestType.DELETE };
+        DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.ADD, DistributionRequestType.DELETE};
 
-
-        return new SimpleDistributionAgent(agentName, false, serviceName,
-                null, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoots);
+        return new SimpleDistributionAgent(agentName, false, null,
+                serviceName, null, packageExporter, requestAuthorizationStrategy,
+                queueProvider, exportQueueStrategy, null, distributionEventFactory, resourceResolverFactory, slingRepository,
+                distributionLog, allowedRequests, allowedRoots, 0);
     }
+
+    @Override
+    protected QueueDistributionAgentMBean createMBeanAgent(DistributionAgent agent, Map<String, Object> osgiConfiguration) {
+        return new QueueDistributionAgentMBeanImpl(agent, osgiConfiguration);
+    }
+
 }

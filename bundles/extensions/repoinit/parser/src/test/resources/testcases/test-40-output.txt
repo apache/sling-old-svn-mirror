@@ -1,0 +1,2 @@
+RegisterNamespace (foo) uri:some-uri/V/1.0
+RegisterNamespace (prefix_with-other.things) andSimpleURI

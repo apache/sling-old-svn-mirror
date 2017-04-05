@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 
 /**
@@ -49,9 +49,9 @@ public interface UpdateHandler {
      * @return If the handler could handle/perist the resource an update result is returned
      *         otherwise the handler should return <code>null</code>
      */
-    UpdateResult handleRemoval(final String resourceType,
-            final String id,
-            final String url);
+    UpdateResult handleRemoval(String resourceType,
+            String id,
+            String url);
 
     /**
      * Handle the update of a resource
@@ -63,11 +63,11 @@ public interface UpdateHandler {
      * @return If the handler could handle/perist the resource an update result is returned
      *         otherwise the handler should return <code>null</code>
      */
-    UpdateResult handleUpdate(final String resourceType,
-            final String id,
-            final String url,
-            final Dictionary<String, Object> dict,
-            final Map<String, Object> attributes);
+    UpdateResult handleUpdate(String resourceType,
+            String id,
+            String url,
+            Dictionary<String, Object> dict,
+            Map<String, Object> attributes);
 
     /**
      * Handle the update of a resource
@@ -79,9 +79,9 @@ public interface UpdateHandler {
      * @return If the handler could handle/perist the resource an update result is returned
      *         otherwise the handler should return <code>null</code>
      */
-    UpdateResult handleUpdate(final String resourceType,
-            final String id,
-            final String url,
-            final InputStream is,
-            final Map<String, Object> attributes);
+    UpdateResult handleUpdate(String resourceType,
+            String id,
+            String url,
+            InputStream is,
+            Map<String, Object> attributes);
 }

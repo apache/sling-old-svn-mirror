@@ -16,13 +16,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../parent/pom.xml</relativePath>
+        <version>30</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.launchpad</artifactId>
-    <packaging>war</packaging>
-    <version>8-SNAPSHOT</version>
+    <packaging>slingstart</packaging>
+    <version>9-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Application Builder</name>
     <description>
@@ -35,37 +35,9 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/builder</url>
     </scm>
 
-
     <properties>
-        <oak.version>1.0.9</oak.version>
-        <!--
-            Jetty default port (override with -D)
-        -->
-        <http.port>8888</http.port>
-
-        <!-- path suffix for HTTP access to Sling -->
-        <http.base.path />
-
-        <!-- path suffix for WebDAV access to the repository -->
-        <webdav.workspace.path />
-
-        <!-- hostname for integration tests -->
-        <test.host>localhost</test.host>
-
-        <!--
-            Disable Jetty webapp rescan (override with -D)
-        -->
-        <jetty.scan.interval.seconds>0</jetty.scan.interval.seconds>
-
-        <!--
-            Sling home directory when starting with jetty:run
-        -->
-        <jetty.sling.home>target/sling</jetty.sling.home>
-
-        <!--
-            Context path of the Sling web application
-        -->
-        <jetty.sling.context>/</jetty.sling.context>
+        <sling.java.version>8</sling.java.version>
+        <IT.expected.bundles.count>125</IT.expected.bundles.count>
     </properties>
 
     <build>
@@ -78,10 +50,6 @@
                         <goals>
                             <goal>verify-legal-files</goal>
                         </goals>
-                        <configuration>
-                            <!-- TODO required for now due to missing legal files in bundleListConfig.zip -->
-                            <strict>false</strict>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -93,9 +61,9 @@
                             <directory>${basedir}</directory>
                             <includes>
                                 <include>derby.log</include>
-                                <include>cachedir</include>
-                                <include>sling</include>
-                                <include>jackrabbit</include>
+                                <include>cachedir/**</include>
+                                <include>sling/**</include>
+                                <include>jackrabbit/**</include>
                                 <include>coverage.ec</include>
                             </includes>
                         </fileset>
@@ -104,234 +72,105 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.sling</groupId>
-                <artifactId>maven-launchpad-plugin</artifactId>
+                <artifactId>slingstart-maven-plugin</artifactId>
+                <version>1.7.0</version>
                 <extensions>true</extensions>
-                <configuration>
-                    <includeDefaultBundles>false</includeDefaultBundles>
-                    <bundlesDirectory>install</bundlesDirectory>
-                    <bootDirectory>bundles</bootDirectory>
-                    <jarWebSupport>
-                        <bundles>
-                          <bundle>
-                                <groupId>org.apache.felix</groupId>
-                                <artifactId>org.apache.felix.http.api</artifactId>
-                                <version>2.3.2</version>
-                                <startLevel>5</startLevel>
-                            </bundle>
-                            <bundle>
-                                <groupId>org.apache.felix</groupId>
-                                <artifactId>org.apache.felix.http.servlet-api</artifactId>
-                                <version>1.0.1</version>
-                                <startLevel>5</startLevel>
-                            </bundle>
-                            <bundle>
-                                <groupId>org.apache.felix</groupId>
-                                <artifactId>org.apache.felix.http.jetty</artifactId>
-                                <version>2.3.2</version>
-                                <startLevel>5</startLevel>
-                            </bundle>
-                        </bundles>
-                    </jarWebSupport>
-                </configuration>
                 <executions>
                     <execution>
-                        <id>prepare-package-war</id>
+                         <id>start-container</id>
                         <goals>
-                            <goal>prepare-package</goal>
+                            <goal>start</goal>
+                            <goal>stop</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>prepare-package-jar</id>
-                        <goals>
-                            <goal>prepare-package</goal>
-                        </goals>
-                        <configuration>
-                            <packaging>jar</packaging>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>attach-bundle-list</id>
-                        <goals>
-                            <goal>attach-bundle-list</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>create-bundle-jar</id>
-                        <goals>
-                            <goal>create-bundle-jar</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <!-- Legal stuff -->
-                                <resource>
-                                    <directory>${project.build.directory}/maven-shared-archive-resources</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>create-standalone-jar</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>standalone</classifier>
-                            <archive>
-                                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-                                <manifest>
-                                    <addDefaultImplementationEntries>
-                                        true
-                            		</addDefaultImplementationEntries>
-                                </manifest>
-                            </archive>
-                        </configuration>
-
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
+                </executions>                
                 <configuration>
-                    <descriptors>
-                        <descriptor>src/main/assembly/bin.xml</descriptor>
-                    </descriptors>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>maven-jetty-plugin</artifactId>
-                <configuration>
-                    <contextPath>/</contextPath>
-                    <scanIntervalSeconds>
-                        ${jetty.scan.interval.seconds}
-                    </scanIntervalSeconds>
-
-                    <connectors>
-                        <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
+                    <createWebapp>true</createWebapp>
+                    <servers>
+                        <server>
                             <port>${http.port}</port>
-                            <maxIdleTime>60000</maxIdleTime>
-                        </connector>
-                    </connectors>
-
-                    <!--
-                        Use target/... as the webapp source, as we unpack stuff there from the Sling
-                        launcher modules
-                    -->
-                    <webAppSourceDirectory>
-                        target/${project.artifactId}-${project.version}
-                    </webAppSourceDirectory>
-                    <webAppConfig>
-                        <contextPath>${jetty.sling.context}</contextPath>
-                        <initParams>
-                            <sling.home>${jetty.sling.home}</sling.home>
-                        </initParams>
-                    </webAppConfig>
+                            <controlPort>${sling.control.port}</controlPort>
+                        </server>
+                    </servers>                    
                 </configuration>
             </plugin>
 
-            <!-- Include sling-webapp launcher classes and resources -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>
-                                true
-                            </addDefaultImplementationEntries>
-                        </manifest>
-                    </archive>
-                    <packagingExcludes>WEB-INF/classes/resources/**,WEB-INF/classes/META-INF/**</packagingExcludes>
-                    <webResources>
-                        <!-- the configuration resources -->
-                        <resource>
-                            <directory>
-                                ${project.build.directory}/launchpad-bundles
-                            </directory>
-                            <targetPath>WEB-INF</targetPath>
-                        </resource>
-                        <!-- ensure the legalize stuff is in the war -->
-                        <webResource>
-                            <targetPath />
-                            <filtering>false</filtering>
-                            <directory>${project.build.directory}/maven-shared-archive-resources</directory>
-                        </webResource>
-                    </webResources>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <preparationGoals>
-                        launchpad:check-bundle-list-for-snapshots clean verify
-                    </preparationGoals>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
-                <artifactId>emma-maven-plugin</artifactId>
-                <configuration>
-                    <filters>
-                        <filter>-*</filter>
-                    </filters>
-                </configuration>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <!-- pre-integration-test is too late -->
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>http.port</portName>
+                                <portName>sling.control.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
-        </plugins>
-    </build>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <!-- No javadocs -->
-                    <excludePackageNames>
-                        org.apache.sling
-                    </excludePackageNames>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
 
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <launchpad.http.port>${http.port}</launchpad.http.port>
+                        <IT.expected.bundles.count>${IT.expected.bundles.count}</IT.expected.bundles.count>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>            
+        </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Extend RAT configuration from parent pom -->
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <!-- Exclude sling instance -->
+                            <exclude>sling/**</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+    </build>
+    
     <dependencies>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>4.6.1-2.5.9-SNAPSHOT</version>
-            <classifier>webapp</classifier>
-            <type>war</type>
-            <scope>runtime</scope>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>4.6.1-2.5.9-SNAPSHOT</version>
-            <classifier>app</classifier>
-            <scope>provided</scope>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.9.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <repositories>
-        <repository>
-            <id>OPS4J</id>
-            <name>OPS4J Repository</name>
-            <url>http://repository.ops4j.org/maven2</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
 

@@ -25,7 +25,7 @@ package org.apache.sling.distribution.queue;
 public enum DistributionQueueState {
 
     /**
-     * The queue is not active
+     * The queue is active but processing has been stopped temporarily
      */
     PAUSED,
 
@@ -42,5 +42,10 @@ public enum DistributionQueueState {
     /**
      * The queue is active, there are items in the queue but it cannot process them.
      */
-    BLOCKED
+    BLOCKED,
+
+    /**
+     * The queue is passive as it only stores items not process them
+     */
+    PASSIVE
 }

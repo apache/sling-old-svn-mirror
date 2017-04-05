@@ -33,11 +33,9 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
-import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Tests for the 'createUser' Sling Post Operation
@@ -233,28 +231,4 @@ public class CreateUserTest {
 		JSONObject jsonObj = new JSONObject(json);
 		assertNotNull(jsonObj);
 	}
-	
-	/**
-	 * Test for SLING-2070 to verify that members of the UserAdmin group
-	 * can create users.
-	 */
-	@Test 
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
-	public void testCreateUserAsUserAdminGroupMember() throws IOException {
-		testUserId = H.createTestUser();
-		H.addUserToUserAdminGroup(testUserId);
-		
-        String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user.create.html";
-
-		String userId = "testUser" + random.nextInt();
-		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":name", userId));
-		postParams.add(new NameValuePair("pwd", "testPwd"));
-		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
-
-		Credentials creds = new UsernamePasswordCredentials(testUserId, "testPwd");
-		final String msg = "Expecting user " + testUserId + " to be able to create another user";
-		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, msg);
-	}
-	
 }

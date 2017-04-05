@@ -4,6 +4,6 @@
 
     "enabled" : false,
 
-    "requestAuthorizationStrategy.target" : "privilegeRead"
+    "requestAuthorizationStrategy.target" : "(name=privilegeRead)"
 
 }

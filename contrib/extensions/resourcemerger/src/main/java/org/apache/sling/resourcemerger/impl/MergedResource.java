@@ -18,6 +18,7 @@
  */
 package org.apache.sling.resourcemerger.impl;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.sling.api.resource.AbstractResource;
@@ -50,6 +51,9 @@ public class MergedResource extends AbstractResource {
     /** Cache value map. */
     private final ValueMap properties;
 
+    /** Resources which are merged together. */
+    private final List<Resource> mappedResources;
+
     /**
      * Constructor
      *
@@ -65,6 +69,7 @@ public class MergedResource extends AbstractResource {
                    final List<ValueMap> valueMaps) {
         this.resolver = resolver;
         this.path = (relativePath.length() == 0 ? mergeRootPath : mergeRootPath + "/" + relativePath);
+        this.mappedResources = mappedResources;
         this.properties = new DeepReadValueMapDecorator(this, new MergedValueMap(valueMaps));
         // get resource type
         final String slingPropRT = this.properties.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, String.class);
@@ -130,6 +135,9 @@ public class MergedResource extends AbstractResource {
         return resolver;
     }
 
+    public List<Resource> getMappedResources() {
+        return mappedResources;
+    }
 
     /**
      * {@inheritDoc}
@@ -177,7 +185,9 @@ public class MergedResource extends AbstractResource {
 
     @Override
     public String toString() {
-        return "MergedResource [path=" + this.path +
-               ", resources=" + this.metadata.get(MergedResourceConstants.METADATA_RESOURCES) + "]";
+        final Object resources = this.metadata.get(MergedResourceConstants.METADATA_RESOURCES);
+        return "MergedResource [path=" + this.path + ", resources="
+                + ((resources instanceof String[]) ? Arrays.toString((String[]) resources) : resources.toString())
+                + "]";
     }
 }

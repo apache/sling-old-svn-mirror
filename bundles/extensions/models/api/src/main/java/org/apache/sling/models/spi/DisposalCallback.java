@@ -16,10 +16,13 @@
  */
 package org.apache.sling.models.spi;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Callback interface which can be implemented by Injectors to perform some action
  * when a created object is destroyed.
  */
+@ConsumerType
 public interface DisposalCallback {
 
     /**

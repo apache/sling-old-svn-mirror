@@ -22,6 +22,8 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import java.util.Arrays;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -29,6 +31,7 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
@@ -43,11 +46,17 @@ public class MockSlingScriptHelperTest {
 
     @Before
     public void setUp() throws Exception {
-        this.resourceResolver = MockSling.newResourceResolver();
-        this.request = new MockSlingHttpServletRequest(this.resourceResolver);
-        this.response = new MockSlingHttpServletResponse();
         this.bundleContext = MockOsgi.newBundleContext();
+        this.resourceResolver = MockSling.newResourceResolver(bundleContext);
+        this.request = new MockSlingHttpServletRequest(this.resourceResolver, bundleContext);
+        this.response = new MockSlingHttpServletResponse();
         this.scriptHelper = MockSling.newSlingScriptHelper(this.request, this.response, this.bundleContext);
+    }
+    
+    @After
+    public void tearDown() {
+        this.resourceResolver.close();
+        MockOsgi.shutdown(this.bundleContext);
     }
 
     @Test
@@ -73,6 +82,7 @@ public class MockSlingScriptHelperTest {
             this.bundleContext.registerService(Integer.class.getName(), service, null);
         }
         Integer[] servicesResult = this.scriptHelper.getServices(Integer.class, null);
+        Arrays.sort(servicesResult);
         assertArrayEquals(services, servicesResult);
     }
 

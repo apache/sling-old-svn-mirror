@@ -21,7 +21,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ResourceResolver;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>ScriptResolver</code> interface defines the API for a service

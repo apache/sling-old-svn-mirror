@@ -19,19 +19,21 @@ package org.apache.sling.models.impl.injector;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
 
 public class SimpleInjector implements Injector {
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return "test";
     }
 
     @Override
-    public Object getValue(Object adaptable, String name, Type declaredType, AnnotatedElement element,
-            DisposalCallbackRegistry callbackRegistry) {
+    public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type declaredType, @Nonnull AnnotatedElement element,
+            @Nonnull DisposalCallbackRegistry callbackRegistry) {
         if (name.equals("testString") && declaredType.equals(String.class)) {
             return "test string";
         } else {

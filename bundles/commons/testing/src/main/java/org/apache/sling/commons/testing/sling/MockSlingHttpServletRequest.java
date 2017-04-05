@@ -19,16 +19,27 @@
 package org.apache.sling.commons.testing.sling;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.security.Principal;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import javax.servlet.AsyncContext;
+import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
+import javax.servlet.http.Part;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
@@ -116,40 +127,49 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
         this.method = (method == null) ? "GET" : method.toUpperCase();
     }
 
+    @Override
     public Cookie getCookie(String name) {
         return null;
     }
 
+    @Override
     public RequestDispatcher getRequestDispatcher(String path,
             RequestDispatcherOptions options) {
         return null;
     }
 
+    @Override
     public RequestDispatcher getRequestDispatcher(Resource resource,
             RequestDispatcherOptions options) {
         return null;
     }
 
+    @Override
     public RequestDispatcher getRequestDispatcher(Resource resource) {
         return null;
     }
 
+    @Override
     public RequestParameter getRequestParameter(String name) {
         return null;
     }
 
+    @Override
     public RequestParameterMap getRequestParameterMap() {
         return null;
     }
 
+    @Override
     public RequestParameter[] getRequestParameters(String name) {
         return null;
     }
 
+    @Override
     public RequestPathInfo getRequestPathInfo() {
         return requestPathInfo;
     }
 
+    @Override
     public RequestProgressTracker getRequestProgressTracker() {
         if (mockRequestProgressTracker == null) {
             mockRequestProgressTracker = new MockRequestProgressTracker();
@@ -157,247 +177,403 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
         return mockRequestProgressTracker;
     }
 
+    @Override
     public Resource getResource() {
         return resource;
     }
 
+    @Override
     public ResourceBundle getResourceBundle(Locale locale) {
         return null;
     }
 
+    @Override
     public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         return null;
     }
 
+    @Override
     public ResourceResolver getResourceResolver() {
         return mockResourceResolver;
     }
 
+    @Override
     public String getResponseContentType() {
         return null;
     }
 
+    @Override
     public Enumeration<String> getResponseContentTypes() {
         return null;
     }
 
+    @Override
     public String getAuthType() {
         return null;
     }
 
-	public String getContextPath() {
+	@Override
+    public String getContextPath() {
 		return contextPath;
 	}
 
+    @Override
     public Cookie[] getCookies() {
         return null;
     }
 
+    @Override
     public long getDateHeader(String name) {
         return 0;
     }
 
+    @Override
     public String getHeader(String name) {
         return null;
     }
 
-    public Enumeration<?> getHeaderNames() {
+    @Override
+    public Enumeration<String> getHeaderNames() {
         return null;
     }
 
-    public Enumeration<?> getHeaders(String name) {
+    @Override
+    public Enumeration<String> getHeaders(String name) {
         return null;
     }
 
+    @Override
     public int getIntHeader(String name) {
         return 0;
     }
 
+    @Override
     public String getMethod() {
         return method;
     }
 
+    @Override
     public String getPathInfo() {
         return null;
     }
 
+    @Override
     public String getPathTranslated() {
         return null;
     }
 
+    @Override
     public String getQueryString() {
         return queryString;
     }
 
+    @Override
     public String getRemoteUser() {
         return null;
     }
 
+    @Override
     public String getRequestURI() {
         return null;
     }
 
+    @Override
     public StringBuffer getRequestURL() {
         return null;
     }
 
+    @Override
     public String getRequestedSessionId() {
         return null;
     }
 
+    @Override
     public String getServletPath() {
         return null;
     }
 
+    @Override
     public HttpSession getSession() {
         return null;
     }
 
+    @Override
     public HttpSession getSession(boolean create) {
         return null;
     }
 
+    @Override
     public Principal getUserPrincipal() {
         return null;
     }
 
+    @Override
     public boolean isRequestedSessionIdFromCookie() {
         return false;
     }
 
+    @Override
     public boolean isRequestedSessionIdFromURL() {
         return false;
     }
 
+    @Override
+    @SuppressWarnings("deprecation")
+    @Deprecated
     public boolean isRequestedSessionIdFromUrl() {
         return false;
     }
 
+    @Override
     public boolean isRequestedSessionIdValid() {
         return false;
     }
 
+    @Override
     public boolean isUserInRole(String role) {
         return false;
     }
 
+    @Override
     public Object getAttribute(String name) {
         return null;
     }
 
-    public Enumeration<?> getAttributeNames() {
+    @Override
+    public Enumeration<String> getAttributeNames() {
         return null;
     }
 
+    @Override
     public String getCharacterEncoding() {
         return null;
     }
 
+    @Override
     public int getContentLength() {
         return 0;
     }
 
+    @Override
     public String getContentType() {
         return null;
     }
 
+    @Override
     public ServletInputStream getInputStream() {
         return null;
     }
 
+    @Override
     public String getLocalAddr() {
         return null;
     }
 
+    @Override
     public String getLocalName() {
         return null;
     }
 
+    @Override
     public int getLocalPort() {
         return 0;
     }
 
+    @Override
     public Locale getLocale() {
         return null;
     }
 
-    public Enumeration<?> getLocales() {
+    @Override
+    public Enumeration<Locale> getLocales() {
         return null;
     }
 
+    @Override
     public String getParameter(String name) {
         return null;
     }
 
-    public Map<?, ?> getParameterMap() {
+    @Override
+    public Map<String, String[]> getParameterMap() {
         return null;
     }
 
-    public Enumeration<?> getParameterNames() {
+    @Override
+    public Enumeration<String> getParameterNames() {
         return null;
     }
 
+    @Override
     public String[] getParameterValues(String name) {
         return null;
     }
 
+    @Override
     public String getProtocol() {
         return null;
     }
 
+    @Override
     public BufferedReader getReader() {
         return null;
     }
 
+    @Override
+    @SuppressWarnings("deprecation")
+    @Deprecated
     public String getRealPath(String path) {
         return null;
     }
 
+    @Override
     public String getRemoteAddr() {
         return null;
     }
 
+    @Override
     public String getRemoteHost() {
         return null;
     }
 
+    @Override
     public int getRemotePort() {
         return 0;
     }
 
+    @Override
     public RequestDispatcher getRequestDispatcher(String path) {
         return null;
     }
 
+    @Override
     public String getScheme() {
         return scheme;
     }
 
+    @Override
     public String getServerName() {
         return server;
     }
 
+    @Override
     public int getServerPort() {
         return port;
     }
 
+    @Override
     public boolean isSecure() {
         return this.secure;
     }
 
+    @Override
     public void removeAttribute(String name) {
 
     }
 
+    @Override
     public void setAttribute(String name, Object o) {
 
     }
 
+    @Override
     public void setCharacterEncoding(String env) {
 
     }
 
+    @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        return null;
+    }
+
+    @Override
+    public String changeSessionId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean authenticate(HttpServletResponse response) throws IOException, ServletException {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public void login(String username, String password) throws ServletException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void logout() throws ServletException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public Collection<Part> getParts() throws IOException, ServletException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Part getPart(String name) throws IOException, ServletException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) throws IOException, ServletException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public long getContentLengthLong() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public ServletContext getServletContext() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public AsyncContext startAsync() throws IllegalStateException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse)
+            throws IllegalStateException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean isAsyncStarted() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isAsyncSupported() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public AsyncContext getAsyncContext() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public DispatcherType getDispatcherType() {
+        // TODO Auto-generated method stub
         return null;
     }
 }

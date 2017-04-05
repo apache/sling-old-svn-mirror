@@ -21,8 +21,15 @@ package org.apache.sling.installer.provider.jcr.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.provider.jcr.impl.JcrInstaller.NodeConverter;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Constants;
@@ -43,7 +50,7 @@ public class InstallerConfig {
     private final FolderNameFilter folderNameFilter;
 
     /** The root folders that we watch */
-    private final String [] roots;
+    private final String[] roots;
 
     /** The path for new configurations. */
     private final String newConfigPath;
@@ -51,11 +58,17 @@ public class InstallerConfig {
     /** The path for pauseInstallation property */
     private final String pauseScanNodePath;
 
+    /** List of watched folders */
+    private final List<WatchedFolder> watchedFolders = new LinkedList<WatchedFolder>();
+
+    private final Logger logger;
+
     public InstallerConfig(
             final Logger logger,
             final ComponentContext ctx,
             final Dictionary<?, ?> cfg,
             final SlingSettingsService settings) {
+        this.logger = logger;
         this.writeBack = PropertiesUtil.toBoolean(getPropertyValue(logger, ctx, cfg, JcrInstaller.PROP_ENABLE_WRITEBACK), JcrInstaller.DEFAULT_ENABLE_WRITEBACK);
 
         // Setup converters
@@ -75,7 +88,7 @@ public class InstallerConfig {
 
         // Configurable folder regexp, system property overrides default value
         String folderNameRegexp = (String)getPropertyValue(logger, ctx, cfg, JcrInstaller.FOLDER_NAME_REGEXP_PROPERTY);
-        if(folderNameRegexp != null) {
+        if (folderNameRegexp != null) {
             folderNameRegexp = folderNameRegexp.trim();
             logger.debug("Using configured ({}) folder name regexp '{}'", JcrInstaller.FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
         } else {
@@ -149,5 +162,78 @@ public class InstallerConfig {
 
     public String getNewConfigPath() {
         return this.newConfigPath;
+    }
+
+    public List<WatchedFolder> cloneWatchedFolders() {
+        synchronized ( this.watchedFolders ) {
+            return new ArrayList<WatchedFolder>(this.watchedFolders);
+        }
+    }
+
+    /**
+     * Scan watchedFolders and get installable resources
+     */
+    public List<InstallableResource> scanWatchedFolders() throws RepositoryException {
+        final List<InstallableResource> resources = new LinkedList<InstallableResource>();
+        synchronized ( this.watchedFolders ) {
+            for(final WatchedFolder f : this.watchedFolders) {
+                final WatchedFolder.ScanResult r = f.scan();
+                logger.debug("Startup: {} provides resources {}", f, r.toAdd);
+                resources.addAll(r.toAdd);
+            }
+        }
+        return resources;
+    }
+
+    /**
+     * Check all WatchedFolder, in case some were deleted
+     */
+
+    public List<String> checkForRemovedWatchedFolders(final Session session) throws RepositoryException {
+        final List<String> removedResources = new LinkedList<String>();
+        synchronized ( this.watchedFolders ) {
+            final Iterator<WatchedFolder> i = this.watchedFolders.iterator();
+            while ( i.hasNext() ) {
+                final WatchedFolder wf = i.next();
+
+                logger.debug("Item {} exists? {}", wf.getPath(), session.itemExists(wf.getPath()));
+                if (!session.itemExists(wf.getPath())) {
+                    logger.info("Deleting {}, path does not exist anymore", wf);
+                    removedResources.addAll(wf.scan().toRemove);
+                    i.remove();
+                }
+            }
+        }
+        return removedResources;
+    }
+
+    /**
+     * Add WatchedFolder to our list if it doesn't exist yet.
+     */
+    public void addWatchedFolder(final WatchedFolder toAdd) {
+        synchronized ( this.watchedFolders ) {
+            WatchedFolder existing = null;
+            for(WatchedFolder wf : this.watchedFolders) {
+                if (wf.getPath().equals(toAdd.getPath())) {
+                    existing = wf;
+                    break;
+                }
+            }
+            if (existing == null) {
+                this.watchedFolders.add(toAdd);
+                toAdd.start();
+            }
+        }
+    }
+
+    public boolean anyWatchFolderNeedsScan() {
+        synchronized ( this.watchedFolders ) {
+            for (final WatchedFolder wf : this.watchedFolders) {
+                if (wf.needsScan()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

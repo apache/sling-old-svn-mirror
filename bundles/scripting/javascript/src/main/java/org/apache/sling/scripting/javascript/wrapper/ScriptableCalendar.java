@@ -19,11 +19,12 @@ package org.apache.sling.scripting.javascript.wrapper;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.Locale;
+
 import org.apache.sling.scripting.javascript.SlingWrapper;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.Undefined;
-import org.apache.sling.commons.json.jcr.JsonItemWriter;
 
 @SuppressWarnings("serial")
 public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
@@ -31,8 +32,14 @@ public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
 	public static final String CLASSNAME = "Calendar";
 	private SimpleDateFormat calendarFormat;
 
+    /** Used to format date values */
+    static final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
+
+    /** The Locale used to format date values */
+    static final Locale DATE_FORMAT_LOCALE = Locale.US;
+
 	/** Calendar is a class, not an interface - so we need to enumerate possible implementations here */
-    public static final Class<?> [] WRAPPED_CLASSES = { Calendar.class, GregorianCalendar.class };
+    private static final Class<?> [] WRAPPED_CLASSES = { Calendar.class, GregorianCalendar.class };
 
     /**
      * The wrapped Calendar. Will be {@code null} if the
@@ -87,7 +94,7 @@ public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
 	@Override
 	public String toString() {
         if (calendarFormat == null) {
-            calendarFormat = new SimpleDateFormat(JsonItemWriter.ECMA_DATE_FORMAT, JsonItemWriter.DATE_FORMAT_LOCALE);
+            calendarFormat = new SimpleDateFormat(ECMA_DATE_FORMAT, DATE_FORMAT_LOCALE);
         }
         return calendarFormat.format(calendar.getTime());
 	}

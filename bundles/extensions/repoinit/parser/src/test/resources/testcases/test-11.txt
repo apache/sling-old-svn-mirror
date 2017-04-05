@@ -1,0 +1,8 @@
+# Test multiple remove lines
+set ACL on /libs,/apps
+    remove * for user1,user2
+    allow jcr:read for user1,user2
+
+    remove * for another
+    allow x:y for another
+end

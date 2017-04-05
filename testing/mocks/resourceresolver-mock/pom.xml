@@ -23,22 +23,18 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>26</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.resourceresolver-mock</artifactId>
-    <version>1.1.5-SNAPSHOT</version>
+    <version>1.1.19-SNAPSHOT</version>
 
     <name>Apache Sling Testing Resource Resolver Mock</name>
     <description>
         Mock for the resource resolver / factory for easier testing.
     </description>
 
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
-    
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks/resourceresolver-mock</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks/resourceresolver-mock</developerConnection>
@@ -68,7 +64,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -87,7 +83,7 @@
             <version>2.5.3</version>
             <scope>compile</scope>
         </dependency>
-
+        <!-- testing -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -97,6 +93,18 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>15.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>2.3.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

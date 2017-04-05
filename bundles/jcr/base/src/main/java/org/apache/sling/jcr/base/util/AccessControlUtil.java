@@ -18,13 +18,6 @@
  */
 package org.apache.sling.jcr.base.util;
 
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.user.UserManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.Principal;
@@ -46,6 +39,13 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple utility class providing utilities with respect to
@@ -187,11 +187,11 @@ public class AccessControlUtil {
      * Same as {@link #addEntry(AccessControlList, Principal, Privilege[], boolean, Map)} using
      * some implementation specific restrictions.
      */
-    @SuppressWarnings("unchecked")
 	public static boolean addEntry(AccessControlList acl, Principal principal, Privilege privileges[], boolean isAllow)
         							throws AccessControlException, RepositoryException {
     	Object[] args = new Object[] {principal, privileges, isAllow};
-    	Class[] types = new Class[] {Principal.class, Privilege[].class, boolean.class};
+    	@SuppressWarnings("rawtypes")
+        Class[] types = new Class[] {Principal.class, Privilege[].class, boolean.class};
 		return safeInvokeRepoMethod(acl, METHOD_JACKRABBIT_ACL_ADD_ENTRY, Boolean.class, args, types);
     }
 
@@ -204,11 +204,11 @@ public class AccessControlUtil {
      * This method returns <code>true</code> if this policy was modified,
      * <code>false</code> otherwise.
      */
-    @SuppressWarnings("unchecked")
-	public static boolean addEntry(AccessControlList acl, Principal principal, Privilege privileges[], boolean isAllow, Map restrictions)
+	public static boolean addEntry(AccessControlList acl, Principal principal, Privilege privileges[], boolean isAllow, @SuppressWarnings("rawtypes") Map restrictions)
     															throws UnsupportedRepositoryOperationException, RepositoryException {
     	Object[] args = new Object[] {principal, privileges, isAllow, restrictions};
-    	Class[] types = new Class[] {Principal.class, Privilege[].class, boolean.class, Map.class};
+    	@SuppressWarnings("rawtypes")
+        Class[] types = new Class[] {Principal.class, Privilege[].class, boolean.class, Map.class};
 		return safeInvokeRepoMethod(acl, METHOD_JACKRABBIT_ACL_ADD_ENTRY, Boolean.class, args, types);
     }
 
@@ -230,18 +230,19 @@ public class AccessControlUtil {
      * @throws RepositoryException
      * @deprecated use @link {@link #replaceAccessControlEntry(Session, String, Principal, String[], String[], String[], String)} instead.
      */
-    public static void replaceAccessControlEntry(Session session, String resourcePath, Principal principal, 
+    @Deprecated
+    public static void replaceAccessControlEntry(Session session, String resourcePath, Principal principal,
 			String[] grantedPrivilegeNames, String[] deniedPrivilegeNames, String[] removedPrivilegeNames)
     		throws RepositoryException {
-    	replaceAccessControlEntry(session, 
-    			resourcePath, 
-    			principal, 
-    			grantedPrivilegeNames, 
-    			deniedPrivilegeNames, 
-    			removedPrivilegeNames, 
+    	replaceAccessControlEntry(session,
+    			resourcePath,
+    			principal,
+    			grantedPrivilegeNames,
+    			deniedPrivilegeNames,
+    			removedPrivilegeNames,
     			null);
-    }    
-    
+    }
+
     /**
      * Replaces existing access control entries in the ACL for the specified
      * <code>principal</code> and <code>resourcePath</code>. Any existing granted
@@ -257,7 +258,7 @@ public class AccessControlUtil {
      * @param deniedPrivilegeNames
      * @param removedPrivilegeNames privileges which, if they exist, should be
      * removed for this principal and resource
-     * @param order where the access control entry should go in the list.  
+     * @param order where the access control entry should go in the list.
      *         Value should be one of these:
      *         <table>
      *          <tr><td>null</td><td>If the ACE for the principal doesn't exist add at the end, otherwise leave the ACE at it's current position.</td></tr>
@@ -269,7 +270,7 @@ public class AccessControlUtil {
 	 *         </table>
      * @throws RepositoryException
      */
-    public static void replaceAccessControlEntry(Session session, String resourcePath, Principal principal, 
+    public static void replaceAccessControlEntry(Session session, String resourcePath, Principal principal,
     			String[] grantedPrivilegeNames, String[] deniedPrivilegeNames, String[] removedPrivilegeNames,
     			String order)
         		throws RepositoryException {
@@ -308,7 +309,7 @@ public class AccessControlUtil {
     		oldGrants = new HashSet<Privilege>();
     		oldDenies = new HashSet<Privilege>();
     	}
-      
+
     	// Combine all existing ACEs for the target principal.
     	AccessControlEntry[] accessControlEntries = acl.getAccessControlEntries();
     	for (int i=0; i < accessControlEntries.length; i++) {
@@ -321,7 +322,7 @@ public class AccessControlUtil {
     				//order not specified, so keep track of the original ACE position.
     				order = String.valueOf(i);
     			}
-    			
+
     			boolean isAllow = isAllow(ace);
     			Privilege[] privileges = ace.getPrivileges();
     			if (log.isDebugEnabled()) {
@@ -368,15 +369,15 @@ public class AccessControlUtil {
    		for (String name : newDeniedPrivilegeNames) {
    			Privilege privilege = accessControlManager.privilegeFromName(name);
    			deniedPrivilegeList.add(privilege);
-   		}        
+   		}
    		if (deniedPrivilegeList.size() > 0) {
    			addEntry(acl, principal, deniedPrivilegeList.toArray(new Privilege[deniedPrivilegeList.size()]), false);
    		}
 
-   		
+
    		//order the ACL
    		reorderAccessControlEntries(acl, principal, order);
-   		
+
     	accessControlManager.setPolicy(resourcePath, acl);
     	if (log.isDebugEnabled()) {
     		List<String> oldGrantedNames = new ArrayList<String>(oldGrants.size());
@@ -409,7 +410,7 @@ public class AccessControlUtil {
      * Use reflection to invoke a repository method.
      */
     @SuppressWarnings("unchecked")
-	private static <T> T safeInvokeRepoMethod(Object target, String methodName, Class<T> returnType, Object[] args, Class[] argsTypes)
+	private static <T> T safeInvokeRepoMethod(Object target, String methodName, Class<T> returnType, Object[] args, @SuppressWarnings("rawtypes") Class[] argsTypes)
     													throws UnsupportedRepositoryOperationException, RepositoryException {
     	try {
     		Method m = target.getClass().getMethod(methodName, argsTypes);
@@ -455,12 +456,12 @@ public class AccessControlUtil {
 		else
 			return null;
 	}
-  
+
 	/**
 	 * Helper routine to transform an input array of privilege names into a set in
 	 * a null-safe way while also adding its disaggregated privileges to an input set.
 	 */
-	private static Set<String> disaggregateToPrivilegeNames(AccessControlManager accessControlManager, 
+	private static Set<String> disaggregateToPrivilegeNames(AccessControlManager accessControlManager,
 			String[] privilegeNames, Set<String> disaggregatedPrivilegeNames)
       throws RepositoryException {
 		Set<String> originalPrivilegeNames = new HashSet<String>();
@@ -497,11 +498,11 @@ public class AccessControlUtil {
 
 	/**
 	 * Move the ACE(s) for the specified principal to the position specified by the 'order'
-	 * parameter. 
-	 * 
+	 * parameter.
+	 *
 	 * @param acl the acl of the node containing the ACE to position
 	 * @param principal the user or group of the ACE to position
-     * @param order where the access control entry should go in the list.  
+     * @param order where the access control entry should go in the list.
      *         Value should be one of these:
      *         <table>
      * 			<tr><td>first</td><td>Place the target ACE as the first amongst its siblings</td></tr>
@@ -510,20 +511,20 @@ public class AccessControlUtil {
 	 * 			<tr><td>after xyz</td><td>Place the target ACE immediately after the sibling whose name is xyz</td></tr>
 	 * 			<tr><td>numeric</td><td>Place the target ACE at the specified index</td></tr>
 	 *         </table>
-	 * @throws RepositoryException 
-	 * @throws UnsupportedRepositoryOperationException 
-	 * @throws AccessControlException 
+	 * @throws RepositoryException
+	 * @throws UnsupportedRepositoryOperationException
+	 * @throws AccessControlException
 	 */
-	private static void reorderAccessControlEntries(AccessControlList acl, 
-														Principal principal, 
-														String order) 
+	private static void reorderAccessControlEntries(AccessControlList acl,
+														Principal principal,
+														String order)
 							throws RepositoryException {
 		if (order == null || order.length() == 0) {
 			return; //nothing to do
 		}
 		if (acl instanceof JackrabbitAccessControlList) {
 			JackrabbitAccessControlList jacl = (JackrabbitAccessControlList)acl;
-			
+
 			AccessControlEntry[] accessControlEntries = jacl.getAccessControlEntries();
 			if (accessControlEntries.length <= 1) {
 				return; //only one ACE, so nothing to reorder.
@@ -536,28 +537,28 @@ public class AccessControlUtil {
 				beforeEntry = null;
 			} else if (order.startsWith("before ")) {
 				String beforePrincipalName = order.substring(7);
-				
+
 				//find the index of the ACE of the 'before' principal
 				for (int i=0; i < accessControlEntries.length; i++) {
 					if (beforePrincipalName.equals(accessControlEntries[i].getPrincipal().getName())) {
 						//found it!
 						beforeEntry = accessControlEntries[i];
 						break;
-					} 
+					}
 				}
-				
+
 				if (beforeEntry == null) {
 					//didn't find an ACE that matched the 'before' principal
 					throw new IllegalArgumentException("No ACE was found for the specified principal: " + beforePrincipalName);
 				}
 			} else if (order.startsWith("after ")) {
 				String afterPrincipalName = order.substring(6);
-				
+
 				//find the index of the ACE of the 'after' principal
 				for (int i = accessControlEntries.length - 1; i >= 0; i--) {
 					if (afterPrincipalName.equals(accessControlEntries[i].getPrincipal().getName())) {
 						//found it!
-						
+
 						// the 'before' ACE is the next one after the 'after' ACE
 						if (i >= accessControlEntries.length - 1) {
 							//the after is the last one in the list
@@ -566,9 +567,9 @@ public class AccessControlUtil {
 							beforeEntry = accessControlEntries[i + 1];
 						}
 						break;
-					} 
+					}
 				}
-				
+
 				if (beforeEntry == null) {
 					//didn't find an ACE that matched the 'after' principal
 					throw new IllegalArgumentException("No ACE was found for the specified principal: " + afterPrincipalName);
@@ -580,7 +581,7 @@ public class AccessControlUtil {
 						//invalid index
 						throw new IndexOutOfBoundsException("Index value is too large: " + index);
 					}
-					
+
 					if (index == 0) {
 						beforeEntry = accessControlEntries[0];
 					} else {
@@ -597,14 +598,14 @@ public class AccessControlUtil {
 							}
 
 							processedPrincipals.add(principal2);
-						}					
+						}
 					}
 				} catch (NumberFormatException nfe) {
 					//not a number.
 					throw new IllegalArgumentException("Illegal value for the order parameter: " + order);
 				}
 			}
-			
+
 			//now loop through the entries to move the affected ACEs to the specified
 			// position.
 			for (int i = accessControlEntries.length - 1; i >= 0; i--) {

@@ -206,7 +206,7 @@ public class AuthenticationResponseCodeTest {
         List<Header> headers = new ArrayList<Header>();
         headers.add(new Header("User-Agent", "Mozilla/5.0 Sling Integration Test"));
 
-        H.assertPostStatus(HttpTest.HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_UNAUTHORIZED, params,
+        assertPostStatus(HttpTest.HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_MOVED_TEMPORARILY, params, headers,
                 null);
     }
 

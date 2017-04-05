@@ -26,7 +26,7 @@ import java.util.Hashtable;
  * - or a factory pid and an alias (pid)
  * and properties.
  */
-public class Configuration extends Commentable {
+public class Configuration extends Commentable implements Comparable<Configuration> {
 
     /** The pid. */
     private final String pid;
@@ -44,6 +44,29 @@ public class Configuration extends Commentable {
         this.pid = (pid != null ? pid.trim() : null);
         this.factoryPid = (factoryPid != null ? factoryPid.trim() : null);
     }
+
+    private int compareString(final String a, final String b) {
+        if ( a == null ) {
+            if ( b == null ) {
+                return 0;
+            }
+            return -1;
+        }
+        if ( b == null ) {
+            return 1;
+        }
+        return a.compareTo(b);
+    }
+
+    @Override
+    public int compareTo(final Configuration o) {
+        int result = compareString(this.factoryPid, o.factoryPid);
+        if ( result == 0 ) {
+            result = compareString(this.pid, o.pid);
+        }
+        return result;
+    }
+
 
     /**
      * Get the pid.

@@ -19,6 +19,8 @@ package org.apache.sling.models.impl.injectors;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
+import javax.annotation.Nonnull;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
@@ -42,12 +44,12 @@ import org.osgi.framework.Constants;
 public class SelfInjector implements Injector, StaticInjectAnnotationProcessorFactory, AcceptsNullName {
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return "self";
     }
 
-    public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element,
-            DisposalCallbackRegistry callbackRegistry) {
+    public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
+            @Nonnull DisposalCallbackRegistry callbackRegistry) {
         // if the @Self annotation is present return the adaptable to be inserted directly or to be adapted from
         if (element.isAnnotationPresent(Self.class)) {
             return adaptable;

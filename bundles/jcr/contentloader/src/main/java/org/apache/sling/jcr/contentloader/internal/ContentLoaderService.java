@@ -33,7 +33,6 @@ import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.mime.MimeTypeService;
@@ -55,19 +54,11 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  */
-@Component(
-    metatype = false
+@Component
+@Property(
+    name = Constants.SERVICE_DESCRIPTION,
+    value = "Apache Sling Content Loader Implementation"
 )
-@Properties({
-    @Property(
-        name = Constants.SERVICE_VENDOR,
-        value = "The Apache Software Foundation"
-    ),
-    @Property(
-        name = Constants.SERVICE_DESCRIPTION,
-        value = "Apache Sling Content Loader Implementation"
-    )
-})
 public class ContentLoaderService implements SynchronousBundleListener, BundleHelper {
 
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
@@ -141,7 +132,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
         Session session = null;
         final Bundle bundle = event.getBundle();
         switch (event.getType()) {
-            case BundleEvent.STARTING:
+            case BundleEvent.RESOLVED:
                 // register content when the bundle content is available
                 // as node types are registered when the bundle is installed
                 // we can safely add the content at this point.

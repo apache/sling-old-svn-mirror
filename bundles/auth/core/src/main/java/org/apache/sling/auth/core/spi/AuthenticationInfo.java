@@ -179,7 +179,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * Sets or resets a property with the given <code>key</code> to a new
      * <code>value</code>. Some keys have special meanings and their values are
      * required to have predefined as listed in the following table:
-     * <table>
+     * <table summary="">
      * <tr>
      * <td>{@link #AUTH_TYPE}</td>
      * <td><code>String</code></td>

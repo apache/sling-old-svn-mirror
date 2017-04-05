@@ -18,6 +18,9 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Map;
 
 import org.apache.sling.distribution.DistributionRequestType;
@@ -25,44 +28,26 @@ import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 /**
  * Testcase for {@link JobHandlingUtils}
  */
 public class JobHandlingUtilsTest {
     @Test
     public void testFullPropertiesFromPackageCreation() throws Exception {
-        DistributionQueueItem distributionQueueItem = mock(DistributionQueueItem.class);
-        DistributionPackageInfo info = new DistributionPackageInfo();
-        info.setRequestType(DistributionRequestType.ADD);
-        info.setPaths(new String[]{"/content", "/apps"});
-        when(distributionQueueItem.getPackageInfo()).thenReturn(info);
-        when(distributionQueueItem.getId()).thenReturn("an-id");
-        when(distributionQueueItem.getType()).thenReturn("vlt");
-        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setPaths(new String[]{"/foo"});
-        packageInfo.setRequestType(DistributionRequestType.ADD);
-        when(distributionQueueItem.getPackageInfo()).thenReturn(packageInfo);
-        Map<String, Object> fullPropertiesFromPackage = JobHandlingUtils.createFullProperties(distributionQueueItem);
-        assertNotNull(fullPropertiesFromPackage);
-        assertEquals(4, fullPropertiesFromPackage.size());
-        assertNotNull(fullPropertiesFromPackage.get("distribution.package.paths"));
-        assertNotNull(fullPropertiesFromPackage.get("distribution.package.id"));
-        assertNotNull(fullPropertiesFromPackage.get("distribution.package.type"));
-        assertNotNull(fullPropertiesFromPackage.get("distribution.package.request.type"));
-    }
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo("vlt");
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_PATHS, new String[]{"/foo"});
+        packageInfo.put(DistributionPackageInfo.PROPERTY_REQUEST_TYPE, DistributionRequestType.ADD);
+        packageInfo.put(DistributionPackageInfo.PROPERTY_PACKAGE_TYPE, "vlt");
 
-    @Test
-    public void testIdPropertiesFromPackageCreation() throws Exception {
-        DistributionQueueItem distributionPackage = mock(DistributionQueueItem.class);
-        when(distributionPackage.getId()).thenReturn("an-id");
-        Map<String, Object> idPropertiesFromPackage = JobHandlingUtils.createIdProperties(distributionPackage.getId());
-        assertNotNull(idPropertiesFromPackage);
-        assertEquals(1, idPropertiesFromPackage.size());
-        assertNotNull(idPropertiesFromPackage.get("distribution.package.id"));
+        DistributionQueueItem queueItem = new DistributionQueueItem("an-id", packageInfo);
+
+        Map<String, Object> fullPropertiesFromPackage = JobHandlingUtils.createFullProperties(queueItem);
+        assertNotNull(fullPropertiesFromPackage);
+        assertEquals(5, fullPropertiesFromPackage.size());
+        assertNotNull(fullPropertiesFromPackage.get("distribution.request.paths"));
+        assertNotNull(fullPropertiesFromPackage.get("distribution.item.id"));
+        assertNotNull(fullPropertiesFromPackage.get("distribution.package.size"));
+        assertNotNull(fullPropertiesFromPackage.get("distribution.package.type"));
+        assertNotNull(fullPropertiesFromPackage.get("distribution.request.type"));
     }
 }

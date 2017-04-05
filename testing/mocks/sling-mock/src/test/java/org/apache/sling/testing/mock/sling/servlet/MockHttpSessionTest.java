@@ -18,57 +18,25 @@
  */
 package org.apache.sling.testing.mock.sling.servlet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import javax.servlet.http.HttpSession;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class MockHttpSessionTest {
 
-    private HttpSession httpSession;
+    private MockHttpSession httpSession;
 
     @Before
     public void setUp() throws Exception {
-        this.httpSession = new MockHttpSession();
+        httpSession = new MockHttpSession();
     }
 
     @Test
     public void testServletContext() {
-        assertNotNull(this.httpSession.getServletContext());
-    }
-
-    @Test
-    public void testId() {
-        assertNotNull(this.httpSession.getId());
-    }
-
-    @Test
-    public void testCreationTime() {
-        assertNotNull(this.httpSession.getCreationTime());
-    }
-
-    @Test
-    public void testAttributes() {
-        this.httpSession.setAttribute("attr1", "value1");
-        assertTrue(this.httpSession.getAttributeNames().hasMoreElements());
-        assertEquals("value1", this.httpSession.getAttribute("attr1"));
-        this.httpSession.removeAttribute("attr1");
-        assertFalse(this.httpSession.getAttributeNames().hasMoreElements());
-    }
-
-    @SuppressWarnings("deprecation")
-    @Test
-    public void testValues() {
-        this.httpSession.putValue("attr1", "value1");
-        assertEquals(1, this.httpSession.getValueNames().length);
-        assertEquals("value1", this.httpSession.getValue("attr1"));
-        this.httpSession.removeValue("attr1");
-        assertEquals(0, this.httpSession.getValueNames().length);
+        assertNotNull(httpSession.getServletContext());
+        assertTrue(httpSession.getServletContext() instanceof MockServletContext);
     }
 
 }

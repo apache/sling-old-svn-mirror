@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,17 +28,10 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
-import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.scripting.core.impl.helper.ProxyScriptEngineManager;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
@@ -49,6 +41,10 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -59,9 +55,15 @@ import org.slf4j.LoggerFactory;
  * Component which exposes a ScriptEngineManager service.
  *
  */
-@Component(metatype=false, immediate=true, specVersion="1.1")
-@Reference(name="ScriptEngineFactory", referenceInterface=ScriptEngineFactory.class,
-           policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE)
+@Component(
+    immediate = true,
+    reference = @Reference(
+        name = "ScriptEngineFactory",
+        service = ScriptEngineFactory.class,
+        policy = ReferencePolicy.DYNAMIC,
+        cardinality = ReferenceCardinality.OPTIONAL
+    )
+)
 public class ScriptEngineManagerFactory implements BundleListener {
 
     private final Logger log = LoggerFactory.getLogger(ScriptEngineManagerFactory.class);
@@ -97,44 +99,31 @@ public class ScriptEngineManagerFactory implements BundleListener {
         final SlingScriptEngineManager tmp = new SlingScriptEngineManager(loader);
 
         // register script engines from bundles
-        final SortedSet<Object> extensions = new TreeSet<Object>();
         synchronized (this.engineSpiBundles) {
             for (final Bundle bundle : this.engineSpiBundles) {
-                extensions.addAll(registerFactories(tmp, bundle));
+                registerFactories(tmp, bundle);
             }
         }
 
         // register script engines from registered services
         synchronized (this.engineSpiServices) {
             for (final Map.Entry<ScriptEngineFactory, Map<Object, Object>> factory : this.engineSpiServices.entrySet()) {
-                extensions.addAll(registerFactory(tmp, factory.getKey(),
-                    factory.getValue()));
+                registerFactory(tmp, factory.getKey(), factory.getValue());
             }
         }
 
         scriptEngineManager.setDelegatee(tmp);
 
-        // Log messages to verify which ScriptEngine is actually used
-        // for our registered extensions
-        if (log.isInfoEnabled()) {
-            for (Object o : extensions) {
-                final String ext = o.toString();
-                final ScriptEngine e = tmp.getEngineByExtension(ext);
-                if (e == null) {
-                    log.warn("No ScriptEngine found for extension '{}' that was just registered", ext);
-                } else {
-                    log.info("Script extension '{}' is now handled by ScriptEngine '{}', version='{}', class='{}'", new Object[] { ext,
-                            e.getFactory().getEngineName(), e.getFactory().getEngineVersion(), e.getClass().getName() });
-                }
-            }
+        final List<ScriptEngineFactory> factories = tmp.getEngineFactories();
+        for (final ScriptEngineFactory factory : factories) {
+            log.info("ScriptEngine {}/{} is now handling {}, {}, {}.", new Object[]{factory.getEngineName(), factory.getEngineVersion(), factory.getExtensions(), factory.getMimeTypes(), factory.getNames()});
         }
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<?> registerFactories(final SlingScriptEngineManager mgr, final Bundle bundle) {
+    private void registerFactories(final SlingScriptEngineManager mgr, final Bundle bundle) {
         URL url = bundle.getEntry(ENGINE_FACTORY_SERVICE);
         InputStream ins = null;
-        final SortedSet<String> extensions = new TreeSet<String>();
         try {
             ins = url.openStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(ins));
@@ -142,10 +131,9 @@ public class ScriptEngineManagerFactory implements BundleListener {
             while ((line = reader.readLine()) != null) {
                 if (!line.startsWith("#") && line.trim().length() > 0) {
 	                try {
-	                    Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
+	                    Class<ScriptEngineFactory> clazz = (Class<ScriptEngineFactory>) bundle.loadClass(line);
 	                    ScriptEngineFactory spi = clazz.newInstance();
 	                    registerFactory(mgr, spi, null);
-	                    extensions.addAll(spi.getExtensions());
 	                } catch (Throwable t) {
 	                    log.error("Cannot register ScriptEngineFactory " + line, t);
 	                }
@@ -161,21 +149,16 @@ public class ScriptEngineManagerFactory implements BundleListener {
                 }
             }
         }
-
-        return extensions;
     }
 
-    private Collection<?> registerFactory(final SlingScriptEngineManager mgr, final ScriptEngineFactory factory, final Map<Object, Object> props) {
-        log.info("Adding ScriptEngine {}, {} for language {}, {}", new Object[] { factory.getEngineName(), factory.getEngineVersion(),
-                factory.getLanguageName(), factory.getLanguageVersion() });
-
+    private void registerFactory(final SlingScriptEngineManager mgr, final ScriptEngineFactory factory, final Map<Object, Object> props) {
+        log.info("Adding ScriptEngine {}/{} for language {}/{}.", new Object[]{factory.getEngineName(), factory.getEngineVersion(), factory.getLanguageName(), factory.getLanguageVersion()});
         mgr.registerScriptEngineFactory(factory, props);
-
-        return factory.getExtensions();
     }
 
     // ---------- BundleListener interface -------------------------------------
 
+    @Override
     public void bundleChanged(BundleEvent event) {
         if (event.getType() == BundleEvent.STARTED
             && event.getBundle().getEntry(ENGINE_FACTORY_SERVICE) != null) {
@@ -310,7 +293,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
     /**
      * Get the script engine manager.
-     * Refresh the manager if changes occured.
+     * Refresh the manager if changes occurred.
      */
     ScriptEngineManager getScriptEngineManager() {
         return this.scriptEngineManager;

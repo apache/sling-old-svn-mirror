@@ -27,12 +27,13 @@ import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
-import org.apache.sling.commons.testing.sling.MockSlingHttpServletResponse;
 import org.apache.sling.servlets.post.HtmlResponse;
 import org.apache.sling.servlets.post.JSONResponse;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
+import org.apache.sling.servlets.post.impl.helper.MockSlingHttpServlet3Request;
+import org.apache.sling.servlets.post.impl.helper.MockSlingHttpServlet3Response;
 
 public class SlingPostServletTest extends TestCase {
     
@@ -72,7 +73,7 @@ public class SlingPostServletTest extends TestCase {
     }
 
     public void testGetJsonResponse() {
-        MockSlingHttpServletRequest req = new MockSlingHttpServletRequest(null, null, null, null, null) {
+        MockSlingHttpServletRequest req = new MockSlingHttpServlet3Request(null, null, null, null, null) {
             @Override
             public String getHeader(String name) {
                 return name.equals(MediaRangeList.HEADER_ACCEPT) ? "application/json" : super.getHeader(name);
@@ -91,9 +92,14 @@ public class SlingPostServletTest extends TestCase {
         String encodedUtf8 = "%D0%94%D1%80%D1%83%D0%B3%D0%B0";
         testRedirection("/", "/fred", "*.html", "/fred.html");
         testRedirection("/xyz/", "/xyz/"+utf8Path, "*", "/xyz/"+encodedUtf8);
-        testRedirection("/", "/fred/abc", "http://forced", "http://forced");
-        testRedirection("/", "/fred/"+utf8Path, "http://forced/xyz/*", "http://forced/xyz/"+encodedUtf8);
+        testRedirection("/", "/fred/"+utf8Path, "/xyz/*", "/xyz/"+encodedUtf8);
         testRedirection("/", "/fred/"+utf8Path, null, null);
+        // test redirect with host information
+        testRedirection("/", "/fred/abc", "http://forced", null);
+        testRedirection("/", "/fred/abc", "//forced.com/test", null);
+        testRedirection("/", "/fred/abc", "https://forced.com/test", null);
+        // invalid URI
+        testRedirection("/", "/fred/abc", "file://c:\\Users\\workspace\\test.java", null);
     }
 
     private void testRedirection(String requestPath, String resourcePath, String redirect, String expected) 
@@ -109,7 +115,7 @@ public class SlingPostServletTest extends TestCase {
     /**
      *
      */
-    private final class RedirectServletRequest extends MockSlingHttpServletRequest {
+    private final class RedirectServletRequest extends MockSlingHttpServlet3Request {
 
         private String requestPath;
         private String redirect;
@@ -130,7 +136,7 @@ public class SlingPostServletTest extends TestCase {
         }
     }
 
-    private final class RedirectServletResponse extends MockSlingHttpServletResponse {
+    private final class RedirectServletResponse extends MockSlingHttpServlet3Response {
 
         private String redirectLocation;
 
@@ -161,7 +167,7 @@ public class SlingPostServletTest extends TestCase {
     }
 
     private static class StatusParamSlingHttpServletRequest extends
-            MockSlingHttpServletRequest {
+            MockSlingHttpServlet3Request {
 
         private String statusParam;
 

@@ -39,12 +39,17 @@ public class PluginLoggerRegistrar {
      * @param plugin the plugin to register for
      * @return the service registration
      */
-    public static ServiceRegistration<?> register(Plugin plugin) {
+    public static ServiceRegistration<Logger> register(Plugin plugin) {
 
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put(DebugOptions.LISTENER_SYMBOLICNAME, plugin.getBundle().getSymbolicName());
         BundleContext ctx = plugin.getBundle().getBundleContext();
-        return ctx.registerService(new String[] { DebugOptionsListener.class.getName(), Logger.class.getName() },
+        
+        // safe to downcast since we are registering the Tracer which implements Logger
+        @SuppressWarnings("unchecked")
+        ServiceRegistration<Logger> serviceRegistration = (ServiceRegistration<Logger>) ctx.registerService(new String[] { DebugOptionsListener.class.getName(), Logger.class.getName() },
                 new Tracer(plugin), props);
+        
+        return serviceRegistration;
     }
 }

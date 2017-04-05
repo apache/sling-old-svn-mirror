@@ -27,7 +27,6 @@ import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
@@ -44,21 +43,20 @@ public class JarBuilder {
     public InputStream buildJar(final IFolder sourceDir) throws CoreException {
 
         ByteArrayOutputStream store = new ByteArrayOutputStream();
+        
+        IResource manifestResource = sourceDir.findMember(JarFile.MANIFEST_NAME);
+        if (manifestResource == null || manifestResource.getType() != IResource.FILE) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "No file named "
+                    + JarFile.MANIFEST_NAME + " found under " + sourceDir));
+        }
 
-        JarOutputStream zos = null;
-        InputStream manifestInput = null;
-        try {
-            IResource manifestResource = sourceDir.findMember(JarFile.MANIFEST_NAME);
-            if (manifestResource == null || manifestResource.getType() != IResource.FILE) {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "No file named "
-                        + JarFile.MANIFEST_NAME + " found under " + sourceDir));
-            }
+        
+        
+        try ( JarOutputStream zos = new JarOutputStream(store);
+                InputStream manifestInput = ((IFile) manifestResource).getContents() ) {
 
-            manifestInput = ((IFile) manifestResource).getContents();
-            
             Manifest manifest = new Manifest(manifestInput);
 
-            zos = new JarOutputStream(store);
             zos.setLevel(Deflater.NO_COMPRESSION);
             // manifest first
             final ZipEntry anEntry = new ZipEntry(JarFile.MANIFEST_NAME);
@@ -68,9 +66,6 @@ public class JarBuilder {
             zipDir(sourceDir, zos, "");
         } catch (IOException e) {
             throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
-        } finally {
-            IOUtils.closeQuietly(zos);
-            IOUtils.closeQuietly(manifestInput);
         }
 
         return new ByteArrayInputStream(store.toByteArray());
@@ -89,8 +84,7 @@ public class JarBuilder {
                 if (JarFile.MANIFEST_NAME.equals(entry)) {
                     continue;
                 }
-                final InputStream fis = ((IFile) f).getContents();
-                try {
+                try ( InputStream fis = ((IFile) f).getContents() ) {
                     final byte[] readBuffer = new byte[8192];
                     int bytesIn = 0;
                     final ZipEntry anEntry = new ZipEntry(entry);
@@ -98,8 +92,6 @@ public class JarBuilder {
                     while ((bytesIn = fis.read(readBuffer)) != -1) {
                         zos.write(readBuffer, 0, bytesIn);
                     }
-                } finally {
-                    IOUtils.closeQuietly(fis);
                 }
             }
         }

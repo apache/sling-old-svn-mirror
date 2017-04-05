@@ -23,6 +23,6 @@ public class AdaptToTEI extends AbstractVarTEI {
 
 	@Override
 	protected String getClassName(TagData data) {
-		return data.getAttributeString(ATTR_ADAPT_TO);
+		return safeGetStringAttribute(data, ATTR_ADAPT_TO, OBJECT_CLASS_NAME);
 	}
 }

@@ -1,5 +1,0 @@
-# Set default values for our variables
-defaults port 8080
-defaults config sling
-defaults oak.version 1.0.9
-defaults customBlobStore false

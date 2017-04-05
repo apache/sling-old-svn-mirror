@@ -36,11 +36,14 @@ import org.slf4j.Logger;
  */
 public class QuartzJobExecutor implements Job {
 
-    /** Is discovery information available? */
+    /** Is discovery available? */
+    public static final AtomicBoolean DISCOVERY_AVAILABLE = new AtomicBoolean(false);
+
+    /** Is stable discovery information available? */
     public static final AtomicBoolean DISCOVERY_INFO_AVAILABLE = new AtomicBoolean(false);
 
-    /** The id of the current instance. */
-    public static String SLING_ID;
+    /** The id of the current instance (if settings service is available. */
+    public static volatile String SLING_ID;
 
     /** Is this instance the leader? */
     public static final AtomicBoolean IS_LEADER = new AtomicBoolean(true);
@@ -57,47 +60,57 @@ public class QuartzJobExecutor implements Job {
         // check run on information
         final String[] runOn = (String[])data.get(QuartzScheduler.DATA_MAP_RUN_ON);
         if ( runOn != null ) {
-            if ( runOn.length == 1 && Scheduler.VALUE_RUN_ON_LEADER.equals(runOn[0])
-                 || runOn.length == 1 && Scheduler.VALUE_RUN_ON_SINGLE.equals(runOn[0]) ) {
-                if ( DISCOVERY_INFO_AVAILABLE.get() ) {
-                    if ( !IS_LEADER.get() ) {
-                        logger.debug("Excluding job {} with name {} and config {}.",
+            if ( runOn.length == 1 &&
+                 (Scheduler.VALUE_RUN_ON_LEADER.equals(runOn[0]) || Scheduler.VALUE_RUN_ON_SINGLE.equals(runOn[0])) ) {
+                if ( DISCOVERY_AVAILABLE.get() ) {
+                    if ( DISCOVERY_INFO_AVAILABLE.get() ) {
+                        if ( !IS_LEADER.get() ) {
+                            logger.debug("Excluding job {} with name {} and config {} - instance is not leader",
+                                    new Object[] {job, data.get(QuartzScheduler.DATA_MAP_NAME), runOn[0]});
+                            return;
+                        }
+                    } else {
+                        logger.debug("No discovery info available. Excluding job {} with name {} and config {}.",
                                 new Object[] {job, data.get(QuartzScheduler.DATA_MAP_NAME), runOn[0]});
                         return;
                     }
                 } else {
-                    logger.warn("No discovery info available. Executing job {} with name {} and config {} anyway.",
+                    logger.debug("No discovery available, therefore not executing job {} with name {} and config {}.",
                             new Object[] {job, data.get(QuartzScheduler.DATA_MAP_NAME), runOn[0]});
+                    return;
                 }
             } else { // sling IDs
                 final String myId = SLING_ID;
-                boolean schedule = false;
                 if ( myId == null ) {
-                    logger.warn("No Sling ID available. Executing job {} with name {} and config {} anyway.",
+                    logger.error("No Sling ID available, therefore not executing job {} with name {} and config {}.",
                             new Object[] {job, data.get(QuartzScheduler.DATA_MAP_NAME), Arrays.toString(runOn)});
-                    schedule = true;
+                    return;
                 } else {
+                    boolean schedule = false;
                     for(final String id : runOn ) {
                         if ( myId.equals(id) ) {
                             schedule = true;
                             break;
                         }
                     }
-                }
-                if ( !schedule ) {
-                    logger.debug("Excluding job {} with name {} and config {}.",
-                            new Object[] {job, data.get(QuartzScheduler.DATA_MAP_NAME), Arrays.toString(runOn)});
-                    return;
+                    if ( !schedule ) {
+                        logger.debug("Excluding job {} with name {} and config {} - different Sling ID",
+                                new Object[] {job, data.get(QuartzScheduler.DATA_MAP_NAME), Arrays.toString(runOn)});
+                        return;
+                    }
                 }
             }
         }
 
+        final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
+        String origThreadName = Thread.currentThread().getName();
         try {
+            Thread.currentThread().setName(origThreadName + "-" + name);
+
             logger.debug("Executing job {} with name {}", job, data.get(QuartzScheduler.DATA_MAP_NAME));
             if (job instanceof org.apache.sling.commons.scheduler.Job) {
                 @SuppressWarnings("unchecked")
                 final Map<String, Serializable> configuration = (Map<String, Serializable>) data.get(QuartzScheduler.DATA_MAP_CONFIGURATION);
-                final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
 
                 final JobContext jobCtx = new JobContextImpl(name, configuration);
                 ((org.apache.sling.commons.scheduler.Job) job).execute(jobCtx);
@@ -113,6 +126,8 @@ public class QuartzJobExecutor implements Job {
             }
             // there is nothing we can do here, so we just log
             logger.error("Exception during job execution of " + job + " : " + t.getMessage(), t);
+        } finally {
+            Thread.currentThread().setName(origThreadName);
         }
     }
 

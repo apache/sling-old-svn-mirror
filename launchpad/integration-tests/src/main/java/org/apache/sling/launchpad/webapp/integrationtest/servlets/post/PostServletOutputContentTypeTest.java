@@ -82,7 +82,7 @@ public class PostServletOutputContentTypeTest extends HttpTestBase {
 
       // Perform a POST that fails: invalid PostServlet operation
       // with Accept header set to JSON  
-      final String url = HTTP_BASE_URL + "/" + MY_TEST_PATH;
+      final String url = HTTP_BASE_URL + MY_TEST_PATH;
       final PostMethod post = new PostMethod(url);
       post.setFollowRedirects(false);
       post.addParameter(new NameValuePair(

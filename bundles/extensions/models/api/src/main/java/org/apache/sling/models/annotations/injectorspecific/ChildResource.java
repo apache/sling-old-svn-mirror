@@ -36,6 +36,7 @@ import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
 @InjectAnnotation
 @Source("child-resources")
 public @interface ChildResource {
+
     /**
      * Specifies the name of the child resource.
      * If empty or not set, then the name is derived from the method or field.
@@ -46,7 +47,7 @@ public @interface ChildResource {
      * If set to true, the model can be instantiated even if there is no child resource
      * with that name available.
      * Default = false.
-     * @deprecated Use {@link injectionStrategy} instead.
+     * @deprecated Use {@link #injectionStrategy} instead.
      */
     @Deprecated
     public boolean optional() default false;
@@ -56,6 +57,7 @@ public @interface ChildResource {
      * the standard annotations ({@link org.apache.sling.models.annotations.Optional}, {@link org.apache.sling.models.annotations.Required}) are used.
      * If even those are not available the default injection strategy defined on the {@link org.apache.sling.models.annotations.Model} applies.
      * Default value = DEFAULT.
+     * @return Injection strategy
      */
     public InjectionStrategy injectionStrategy() default InjectionStrategy.DEFAULT;
 
@@ -64,4 +66,5 @@ public @interface ChildResource {
      * property of the adaptable.
      */
     public String via() default "";
+
 }

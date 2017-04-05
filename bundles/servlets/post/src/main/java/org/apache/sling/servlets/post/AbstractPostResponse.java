@@ -260,7 +260,7 @@ public abstract class AbstractPostResponse implements PostResponse {
 
     /**
      * Records a 'moved' change.
-     * <p/>
+     * <p>
      * Note: the moved change only records the basic move command. the implied
      * changes on the moved properties and sub nodes are not recorded.
      *
@@ -273,7 +273,7 @@ public abstract class AbstractPostResponse implements PostResponse {
 
     /**
      * Records a 'copied' change.
-     * <p/>
+     * <p>
      * Note: the copy change only records the basic copy command. the implied
      * changes on the copied properties and sub nodes are not recorded.
      *
@@ -357,6 +357,15 @@ public abstract class AbstractPostResponse implements PostResponse {
      */
     protected Object getProperty(String name) {
         return properties.get(name);
+    }
+    
+    protected boolean isSafeReferer(){
+        String referer = getReferer();
+        if (referer.startsWith("http://") || referer.startsWith("https://")) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     protected abstract void doSend(HttpServletResponse response) throws IOException;

@@ -1,0 +1,10 @@
+sling:
+    build: .
+    ports:
+        - "8080:8080"
+    links:
+        - mongo
+    environment:
+       - SLING_OPTS=-Dsling.run.modes=oak_mongo -Doak.mongo.uri=mongodb://mongo:27017
+mongo:
+    image: mongo:3.0

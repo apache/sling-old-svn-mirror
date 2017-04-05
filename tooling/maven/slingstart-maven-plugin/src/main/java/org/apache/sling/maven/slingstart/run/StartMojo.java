@@ -42,7 +42,6 @@ import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -53,27 +52,22 @@ import org.apache.maven.project.MavenProject;
 import org.apache.sling.maven.slingstart.BuildConstants;
 
 /**
- * Mojo for starting launchpad.
+ * Start one or multiple launchpad instance(s).
  */
 @Mojo(
         name = "start",
         defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST,
         threadSafe = true
     )
-public class StartMojo extends AbstractMojo {
+public class StartMojo extends AbstractStartStopMojo {
 
     /**
-     * Set this to "true" to skip starting the launchpad
-     *
+     * Overwrites debug parameter of all server configurations (if set).
+     * Attaches a debugger to the forked JVM. If set to {@code "true"}, the process will allow a debugger to connect on port 8000.
+     * If set to some other string, that string will be appended to the server's {@code vmOpts}, allowing you to configure arbitrary debugging options.
      */
-    @Parameter(property = "launchpad.skip", defaultValue = "false")
-    protected boolean skipLaunchpad;
-
-    /**
-     * Parameter containing the list of server configurations
-     */
-    @Parameter
-    private List<ServerConfiguration> servers;
+    @Parameter(property = "launchpad.debug")
+    protected String debug;
 
     /**
      * Ready timeout in seconds. If the launchpad has not been started in this
@@ -103,7 +97,9 @@ public class StartMojo extends AbstractMojo {
 
     /**
      * Keep the launchpad running.
+     * @deprecated Use {@link AbstractStartStopMojo#blockUntilKeyIsPressed} instead.
      */
+    @Deprecated
     @Parameter(property = "launchpad.keep.running", defaultValue = "false")
     private boolean keepLaunchpadRunning;
 
@@ -112,12 +108,6 @@ public class StartMojo extends AbstractMojo {
      */
     @Parameter(property = "launchpad.parallelExecution", defaultValue = "true")
     private boolean parallelExecution;
-
-    /**
-     * The system properties file will contain all started instances with their ports etc.
-     */
-    @Parameter(defaultValue = "${project.build.directory}/launchpad-runner.properties")
-    protected File systemPropertiesFile;
 
     /**
      * The Maven project.
@@ -167,16 +157,9 @@ public class StartMojo extends AbstractMojo {
         return prjArtifact;
     }
 
-    /**
-     * @see org.apache.maven.plugin.Mojo#execute()
-     */
+    
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
-        if (this.skipLaunchpad) {
-            this.getLog().info("Executing of the start launchpad mojo is disabled by configuration.");
-            return;
-        }
-
+    protected void doExecute() throws MojoExecutionException, MojoFailureException {
         // delete properties
         if ( systemPropertiesFile != null && systemPropertiesFile.exists() ) {
             FileUtils.deleteQuietly(this.systemPropertiesFile);
@@ -189,7 +172,8 @@ public class StartMojo extends AbstractMojo {
         final LaunchpadEnvironment env = new LaunchpadEnvironment(this.findLaunchpadJar(),
                 this.cleanWorkingDirectory,
                 !this.keepLaunchpadRunning,
-                this.launchpadReadyTimeOutSec);
+                this.launchpadReadyTimeOutSec,
+                this.debug);
 
         // create callables
         final Collection<LauncherCallable> tasks = new LinkedList<LauncherCallable>();
@@ -241,6 +225,7 @@ public class StartMojo extends AbstractMojo {
                 }
             }
         }
+        blockIfNecessary();
     }
 
     /**
@@ -342,6 +327,10 @@ public class StartMojo extends AbstractMojo {
             launchpadConfiguration.setPort(String.valueOf(PortHelper.getNextAvailablePort()));
         }
 
+        if ( launchpadConfiguration.getControlPort() == null ) {
+            launchpadConfiguration.setControlPort(String.valueOf(PortHelper.getNextAvailablePort()));
+        }
+
         // set the id of the launchpad
         if ( launchpadConfiguration.getId() == null || launchpadConfiguration.getId().trim().length() == 0 ) {
             String runMode = launchpadConfiguration.getRunmode();
@@ -377,19 +366,38 @@ public class StartMojo extends AbstractMojo {
 
         // If a launchpad JAR is specified, use it
         if (launchpadJar != null) {
+            getLog().info("Using launchpad jar from '" +  launchpadJar + "' given as configuration parameter!");
             return launchpadJar;
         }
 
         // If a launchpad dependency is configured, resolve it
         if (launchpadDependency != null) {
+            getLog().info("Using launchpad dependency '" +  launchpadDependency + "' given as configuration parameter!");
             return getArtifact(launchpadDependency).getFile();
         }
 
         // If the current project is a slingstart project, use its JAR artifact
         if (this.project.getPackaging().equals(BuildConstants.PACKAGING_SLINGSTART)) {
-            final File jarFile = new File(this.project.getBuild().getDirectory(), this.project.getBuild().getFinalName() + ".jar");
-            if (jarFile.exists()) {
+            File jarFile = project.getArtifact().getFile();
+            if (jarFile != null && jarFile.exists()) {
+                getLog().info("Using launchpad jar being generated as this project's primary artifact: '" +  jarFile + "'!");
                 return jarFile;
+            }
+            else {
+                jarFile = new File(project.getBuild().getDirectory(), project.getBuild().getFinalName() + ".jar");
+                if (jarFile.exists()) {
+                    getLog().info("Using launchpad jar being generated as this project's primary artifact: '" +  jarFile + "'!");
+                    return jarFile;
+                }
+            }
+        }
+
+        // In case there was a provisioning model found but this is not a slingstart project, the JAR might be attached already through goal "package"
+        for (Artifact attachedArtifact : project.getAttachedArtifacts()) {
+            // find the attached artifact with classifier "standalone"
+            if (BuildConstants.TYPE_JAR.equals(attachedArtifact.getType()) && BuildConstants.CLASSIFIER_APP.equals(attachedArtifact.getClassifier())) {
+                getLog().info("Using launchpad jar being attached as additional project artifact: '" +  attachedArtifact.getFile() + "'!");
+                return attachedArtifact.getFile();
             }
         }
 
@@ -403,6 +411,7 @@ public class StartMojo extends AbstractMojo {
                 d.setVersion(dep.getVersion());
                 d.setScope(Artifact.SCOPE_RUNTIME);
                 d.setType(BuildConstants.TYPE_JAR);
+                getLog().info("Using launchpad jar from first dependency of type 'slingstart': '"+ d +"'!");
                 return getArtifact(d).getFile();
             }
         }

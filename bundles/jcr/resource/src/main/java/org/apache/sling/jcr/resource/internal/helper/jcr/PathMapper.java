@@ -21,14 +21,13 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,24 +35,32 @@ import org.slf4j.LoggerFactory;
  * The {@code PathMapper} allows to
  * - map path from the JCR resource tree to resource paths
  * - hide JCR nodes; however this is not a security feature
+ * @deprecated
  */
-@Service(value = PathMapper.class)
-@Component(metatype = true,
-        label = "Apache Sling JCR Resource Provider Path Mapper",
-        description = "This service provides path mappings for JCR nodes.")
+@Deprecated
+@Designate(ocd = PathMapper.Config.class)
+@Component(service = PathMapper.class,
+           property = {
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+           })
 public class PathMapper {
+
+    @ObjectClassDefinition(name = "Apache Sling JCR Resource Provider Path Mapper",
+        description = "This service provides path mappings for JCR nodes.")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Path Mapping",
+                description = "Defines an obtional path mapping for a path." +
+                        "Each mapping entry is expressed as follow: <JCRPath>:<resourcePath>. As an example: /foo:/libs, " +
+                        "this maps the JCR node /foo to the resource /libs. If the resource path is specified as '.', " +
+                        " the JCR tree is not visible in the resource tree. This should not be considered a security feature " +
+                        " as the nodes are still accessible through the JCR api. Mapping a JCR path to the root is not allowed. " +
+                        "The mappings are evaluated as ordered in the configuration.")
+        String[] path_mapping();
+    }
 
     /** Logger */
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    @Property(unbounded = PropertyUnbounded.ARRAY,
-            label = "Path mapping", description = "Defines an obtional path mapping for a path." +
-            "Each mapping entry is expressed as follow: <JCRPath>:<resourcePath>. As an example: /foo:/libs, " +
-            "this maps the JCR node /foo to the resource /libs. If the resource path is specified as '.', " +
-            " the JCR tree is not visible in the resource tree. This should not be considered a security feature " +
-            " as the nodes are still accessible through the JCR api. Mapping a JCR path to the root is not allowed. " +
-            "The mappings are evaluated as ordered in the configuration.")
-    private static final String PATH_MAPPING = "path.mapping";
 
     /** The mappings. */
     private final List<Mapping> mappings = new ArrayList<Mapping>();
@@ -78,10 +85,11 @@ public class PathMapper {
     }
 
     @Activate
-    private void activate(final Map<String, Object> props) {
+    private void activate(final Config configObj) {
         mappings.clear();
-        final String[] config = PropertiesUtil.toStringArray(props.get(PATH_MAPPING), null);
+        final String[] config = configObj.path_mapping();
         if ( config != null ) {
+            log.warn("The Apache Sling JCR Path Mapper is deprecated.");
             for (final String mapping : config) {
                 boolean valid = false;
                 final String[] parts = mapping.split(":");

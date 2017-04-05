@@ -23,7 +23,7 @@ import java.util.Map;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * This extension allows resource provider implementations to support
@@ -35,13 +35,15 @@ import aQute.bnd.annotation.ConsumerType;
  * {@link ResourceProvider#getResource(ResourceResolver, String)} is called.
  *
  * @since 2.8.0 (Sling API Bundle 2.9.0)
+ * @deprecated Use the {@link org.apache.sling.spi.resource.provider.ResourceProvider}
  */
+@Deprecated
 @ConsumerType
 public interface ParametrizableResourceProvider {
 
     /**
      * Returns a resource from this resource provider or <code>null</code> if
-     * the resource provider cannot find it. The path should have one of the {@link #ROOTS}
+     * the resource provider cannot find it. The path should have one of the {@link ResourceProvider#ROOTS}
      * strings as its prefix.
      *
      * The resource provider must not return cached instances for a resource as

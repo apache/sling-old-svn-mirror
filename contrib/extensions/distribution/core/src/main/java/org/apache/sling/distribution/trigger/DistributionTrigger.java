@@ -21,6 +21,7 @@ package org.apache.sling.distribution.trigger;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ConsumerType;
+import org.apache.sling.distribution.common.DistributionException;
 
 /**
  * A {@link DistributionTrigger} is responsible to trigger
@@ -36,15 +37,15 @@ public interface DistributionTrigger {
      * register a request handler to be triggered and returns a corresponding registration id
      *
      * @param requestHandler handler
-     * @throws DistributionTriggerException if registration fails
+     * @throws DistributionException if registration fails
      */
-    void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException;
+    void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException;
 
     /**
      * unregister the given handler, if existing
      *
      * @param requestHandler handler to unregister
-     * @throws DistributionTriggerException if any error happen
+     * @throws DistributionException if any error happen
      */
-    void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException;
+    void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException;
 }

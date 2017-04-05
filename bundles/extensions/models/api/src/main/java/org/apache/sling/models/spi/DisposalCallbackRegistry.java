@@ -16,10 +16,15 @@
  */
 package org.apache.sling.models.spi;
 
+import javax.annotation.Nonnull;
+
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Interface which allows for the registration of DisposalCallback listeners.
  * This interface should not be implemnted by clients.
  */
+@ConsumerType
 public interface DisposalCallbackRegistry {
     
     /**
@@ -27,6 +32,6 @@ public interface DisposalCallbackRegistry {
      * 
      * @param callback the callback to register
      */
-    void addDisposalCallback(DisposalCallback callback);
+    void addDisposalCallback(@Nonnull DisposalCallback callback);
 
 }

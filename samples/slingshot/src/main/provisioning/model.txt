@@ -1,0 +1,50 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+# The feature for Apache Sling - Slingshot Sample App
+#
+[feature name=slingshot]
+
+[configurations]
+   org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-sling.slingshot
+        user.mapping=[
+            "org.apache.sling.sample.slingshot\=slingshot-service"
+        ]
+
+[:repoinit]
+    create service user slingshot-service
+    create user slingshot1 with password slingshot1
+    create user slingshot2 with password slingshot2
+    
+    create path (sling:Folder) /slingshot
+    create path (sling:Folder) /slingshot/users
+    create path (sling:Folder) /slingshot/users/slingshot1
+    create path (sling:Folder) /slingshot/users/slingshot2
+
+    set ACL for slingshot-service
+        allow   jcr:read,rep:write    on /slingshot
+    end
+
+    set ACL for slingshot1
+        allow   jcr:read,rep:write    on /slingshot/users/slingshot1
+    end
+
+    set ACL for slingshot2
+        allow   jcr:read,rep:write    on /slingshot/users/slingshot2
+    end
+    

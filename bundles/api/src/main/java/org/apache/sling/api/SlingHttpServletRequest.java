@@ -37,7 +37,8 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import aQute.bnd.annotation.ProviderType;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>SlingHttpServletRequest</code> defines the interface to provide
@@ -200,6 +201,11 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
     /**
      * Same as {@link #getRequestDispatcher(Resource,RequestDispatcherOptions)}
      * but using empty options.
+     * @param resource The {@link Resource} instance whose response content may
+     *            be included by the returned dispatcher.
+     * @return a <code>RequestDispatcher</code> object that acts as a wrapper
+     *         for the <code>resource</code> or <code>null</code> if an
+     *         error occurs preparing the dispatcher.
      */
     @CheckForNull RequestDispatcher getRequestDispatcher(@Nonnull Resource resource);
 
@@ -265,6 +271,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
 
     /**
      * Returns the {@link RequestProgressTracker} of this request.
+     * @return The request progress tracker.
      */
     @Nonnull RequestProgressTracker getRequestProgressTracker();
 }

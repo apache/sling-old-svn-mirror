@@ -44,7 +44,7 @@ public class ResEditorResourceProvider implements ResourceProvider{
     public static final String ROOT_PATHELEMENT_NAME = "reseditor";
     public static final String ABS_ROOT = "/" + ROOT_PATHELEMENT_NAME;
     public static final String RESOURCE_EDITOR_PROVIDER_RESOURCE = "resource-editor.RESOURCE_EDITOR_PROVIDER_RESOURCE";
-    public static final String RESEDITOR_RESOURCE_TYPE = "sling/resource-editor";
+    public static final String RESEDITOR_RESOURCE_TYPE = "sling/resource-editor/scripts";
 
     
     /** ResourceProvider interface */

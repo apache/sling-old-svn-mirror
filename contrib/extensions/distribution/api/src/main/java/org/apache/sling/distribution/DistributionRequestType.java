@@ -18,6 +18,8 @@
  */
 package org.apache.sling.distribution;
 
+import aQute.bnd.annotation.ProviderType;
+
 import javax.annotation.CheckForNull;
 
 /**
@@ -30,6 +32,7 @@ import javax.annotation.CheckForNull;
  * {@code PULL} requests can for example lead to the creation of a "command package" that will trigger fetching of content
  * from the target instance.
  */
+@ProviderType
 public enum DistributionRequestType {
 
     /**

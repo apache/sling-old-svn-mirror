@@ -1,0 +1,8 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "temp",
+
+    "serviceName" : "distributionService",
+
+    "packageBuilder.target" : "(name=tempvlt)"
+}

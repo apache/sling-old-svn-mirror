@@ -32,6 +32,8 @@ public class InternalScheduleOptions implements ScheduleOptions {
 
     public String name;
 
+    public String threadPoolName;
+
     public boolean canRunConcurrently = false;
 
     public Map<String, Serializable> configuration;
@@ -55,6 +57,7 @@ public class InternalScheduleOptions implements ScheduleOptions {
     /**
      * @see org.apache.sling.commons.scheduler.ScheduleOptions#config(java.util.Map)
      */
+    @Override
     public ScheduleOptions config(final  Map<String, Serializable> config) {
         this.configuration = config;
         return this;
@@ -63,6 +66,7 @@ public class InternalScheduleOptions implements ScheduleOptions {
     /**
      * @see org.apache.sling.commons.scheduler.ScheduleOptions#name(java.lang.String)
      */
+    @Override
     public ScheduleOptions name(final String name) {
         this.name = name;
         return this;
@@ -71,6 +75,7 @@ public class InternalScheduleOptions implements ScheduleOptions {
     /**
      * @see org.apache.sling.commons.scheduler.ScheduleOptions#canRunConcurrently(boolean)
      */
+    @Override
     public ScheduleOptions canRunConcurrently(final boolean flag) {
         this.canRunConcurrently = flag;
         return this;
@@ -79,6 +84,7 @@ public class InternalScheduleOptions implements ScheduleOptions {
     /**
      * @see org.apache.sling.commons.scheduler.ScheduleOptions#onLeaderOnly(boolean)
      */
+    @Override
     public ScheduleOptions onLeaderOnly(final boolean flag) {
         if ( flag ) {
             this.runOn = new String[] {Scheduler.VALUE_RUN_ON_LEADER};
@@ -91,6 +97,7 @@ public class InternalScheduleOptions implements ScheduleOptions {
     /**
      * @see org.apache.sling.commons.scheduler.ScheduleOptions#onSingleInstanceOnly(boolean)
      */
+    @Override
     public ScheduleOptions onSingleInstanceOnly(final boolean flag) {
         if ( flag ) {
             this.runOn = new String[] {Scheduler.VALUE_RUN_ON_SINGLE};
@@ -103,8 +110,18 @@ public class InternalScheduleOptions implements ScheduleOptions {
     /**
      * @see org.apache.sling.commons.scheduler.ScheduleOptions#onInstancesOnly(java.lang.String[])
      */
+    @Override
     public ScheduleOptions onInstancesOnly(final String[] slingIds) {
         this.runOn = slingIds;
+        return this;
+    }
+
+    /**
+     * @see org.apache.sling.commons.scheduler.ScheduleOptions#threadPoolName(java.lang.String)
+     */
+    @Override
+    public ScheduleOptions threadPoolName(final String name) {
+        this.threadPoolName = name;
         return this;
     }
 }

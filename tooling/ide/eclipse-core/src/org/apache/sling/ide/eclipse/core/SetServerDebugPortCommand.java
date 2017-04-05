@@ -38,7 +38,8 @@ public class SetServerDebugPortCommand extends AbstractOperation {
 
     @Override
     public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-        oldValue = server.getAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, 30303);
+        oldValue = server.getAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, 
+                DefaultSlingLaunchpadConfiguration.INSTANCE.getDebugPort());
 
         server.setAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, debugPort);
 

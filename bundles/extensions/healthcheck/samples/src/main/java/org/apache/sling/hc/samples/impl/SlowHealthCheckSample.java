@@ -21,14 +21,11 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.hc.annotations.SlingHealthCheck;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.FormattingResultLog;
@@ -39,22 +36,8 @@ import org.slf4j.LoggerFactory;
  *  used to demonstrate execution timeouts and caching.
  */
 
-// Need to make the component immediate to make sure a single 
-// instance is used, otherwise the lazy DS activation policy
-// might cause a different instance to be used for every
-// execution. In this sample this is just done to allow the
-// counter to persist as long as this service's bundle is active.
-@Component(
-        configurationFactory=true,
-        policy=ConfigurationPolicy.REQUIRE,
-        metatype=true,
-        immediate=true)
-@Properties({
-    @Property(name=HealthCheck.NAME),
-    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
-    @Property(name=HealthCheck.MBEAN_NAME)
-})
-@Service(value=HealthCheck.class)
+// The annotation make the component immediate by default now
+@SlingHealthCheck(configurationFactory = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class SlowHealthCheckSample implements HealthCheck{
 
     private final Logger log = LoggerFactory.getLogger(getClass());

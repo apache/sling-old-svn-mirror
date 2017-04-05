@@ -22,17 +22,19 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 /**
  * Allows a test class to obtain a reference to an OSGi service. This rule embodies the logic to get a bundle context,
  * obtain a service reference, fetch the reference to the object and perform the proper cleanup after the test has run.
- */
+ * 
+ *  The {#link TeleporterRule} also provides access to OSGi
+ *  services for server-side tests, in a more integrated way. 
+*/
 public class Service implements TestRule {
 
     private final Class<?> serviceClass;
 
-    private Object service;
+    private ServiceGetter<?> serviceGetter;
 
     public Service(Class<?> serviceClass) {
         this.serviceClass = serviceClass;
@@ -46,28 +48,18 @@ public class Service implements TestRule {
                 final BundleContext bundleContext = Activator.getBundleContext();
 
                 if (bundleContext == null) {
-                    throw new IllegalStateException("unable to obtain a bundle context");
+                    // No bundle context usually means we're running client-side
+                    // in a test that uses ServerSideTestRule. In this case, this
+                    // rule does nothing.
+                    base.evaluate();
+                    return;
                 }
 
-                final ServiceReference serviceReference = bundleContext.getServiceReference(serviceClass.getName());
-
-                if (serviceReference == null) {
-                    throw new IllegalStateException("unable to get a service reference");
-                }
-
-                final Object service = bundleContext.getService(serviceReference);
-
-                if (service == null) {
-                    throw new IllegalStateException("unable to get an instance of the service");
-                }
-
-                Service.this.service = serviceClass.cast(service);
-
+                serviceGetter = ServiceGetter.create(bundleContext, serviceClass, null);
                 try {
                     base.evaluate();
                 } finally {
-                    Service.this.service = null;
-                    bundleContext.ungetService(serviceReference);
+                    serviceGetter.close();
                 }
             }
 
@@ -82,7 +74,7 @@ public class Service implements TestRule {
      * @return The service object.
      */
     public <T> T getService(Class<T> serviceClass) {
-        return serviceClass.cast(service);
+        return serviceClass.cast(serviceGetter.getService());
     }
 
 }

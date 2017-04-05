@@ -20,17 +20,16 @@ package org.apache.sling.testing.mock.osgi.context;
 
 import java.lang.reflect.Array;
 import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.sling.testing.mock.osgi.MapUtil;
+import org.apache.sling.testing.mock.osgi.MockEventAdmin;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
+import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
-
-import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Defines OSGi context objects and helper methods. Should not be used directly
@@ -45,16 +44,28 @@ public class OsgiContextImpl {
      * Setup actions before test method execution
      */
     protected void setUp() {
-        // can be overridden by subclasses
+        registerDefaultServices();
     }
     
     /**
      * Teardown actions after test method execution
      */
     protected void tearDown() {
-        // can be overridden by subclasses
+        if (componentContext != null) {
+            // deactivate all services
+            MockOsgi.shutdown(componentContext.getBundleContext());
+        }
+
+        this.componentContext = null;
     }
 
+    /**
+     * Default services that should be available for every unit test
+     */
+    private void registerDefaultServices() {
+        registerInjectActivateService(new MockEventAdmin());
+    }
+    
     /**
      * @return OSGi component context
      */
@@ -79,7 +90,7 @@ public class OsgiContextImpl {
      * @return Registered service instance
      */
     public final <T> T registerService(final T service) {
-        return registerService(null, service, null);
+        return registerService(null, service, (Map<String,Object>)null);
     }
 
     /**
@@ -90,7 +101,7 @@ public class OsgiContextImpl {
      * @return Registered service instance
      */
     public final <T> T registerService(final Class<T> serviceClass, final T service) {
-        return registerService(serviceClass, service, null);
+        return registerService(serviceClass, service, (Map<String,Object>)null);
     }
 
     /**
@@ -102,14 +113,23 @@ public class OsgiContextImpl {
      * @return Registered service instance
      */
     public final <T> T registerService(final Class<T> serviceClass, final T service, final Map<String, Object> properties) {
-        Dictionary<String, Object> serviceProperties = null;
-        if (properties != null) {
-            serviceProperties = new Hashtable<String, Object>(properties);
-        }
+        Dictionary<String, Object> serviceProperties = MapUtil.toDictionary(properties);
         bundleContext().registerService(serviceClass != null ? serviceClass.getName() : null, service, serviceProperties);
         return service;
     }
 
+    /**
+     * Registers a service in the mocked OSGi environment.
+     * @param <T> Service type
+     * @param serviceClass Service class
+     * @param service Service instance
+     * @param properties Service properties (optional)
+     * @return Registered service instance
+     */
+    public final <T> T registerService(final Class<T> serviceClass, final T service, final Object... properties) {
+        return registerService(serviceClass, service, MapUtil.toMap(properties));
+    }
+    
     /**
      * Injects dependencies, activates and registers a service in the mocked
      * OSGi environment.
@@ -118,7 +138,7 @@ public class OsgiContextImpl {
      * @return Registered service instance
      */
     public final <T> T registerInjectActivateService(final T service) {
-        return registerInjectActivateService(service, null);
+        return registerInjectActivateService(service, (Map<String,Object>)null);
     }
 
     /**
@@ -134,6 +154,18 @@ public class OsgiContextImpl {
         MockOsgi.activate(service, bundleContext(), properties);
         registerService(null, service, properties);
         return service;
+    }
+
+    /**
+     * Injects dependencies, activates and registers a service in the mocked
+     * OSGi environment.
+     * @param <T> Service type
+     * @param service Service instance
+     * @param properties Service properties (optional)
+     * @return Registered service instance
+     */
+    public final <T> T registerInjectActivateService(final T service, final Object... properties) {
+        return registerInjectActivateService(service, MapUtil.toMap(properties));
     }
 
     /**
@@ -163,8 +195,7 @@ public class OsgiContextImpl {
     @SuppressWarnings("unchecked")
     public final <ServiceType> ServiceType[] getServices(final Class<ServiceType> serviceType, final String filter) {
         try {
-            ServiceReference[] serviceReferences = bundleContext().getServiceReferences(serviceType.getName(),
-                    filter);
+            ServiceReference[] serviceReferences = bundleContext().getServiceReferences(serviceType.getName(), filter);
             if (serviceReferences != null) {
                 ServiceType[] services = (ServiceType[])Array.newInstance(serviceType, serviceReferences.length);
                 for (int i = 0; i < serviceReferences.length; i++) {
@@ -172,7 +203,7 @@ public class OsgiContextImpl {
                 }
                 return services;
             } else {
-                return (ServiceType[])ArrayUtils.EMPTY_OBJECT_ARRAY;
+                return (ServiceType[])Array.newInstance(serviceType, 0);
             }
         } catch (InvalidSyntaxException ex) {
             throw new RuntimeException("Invalid filter syntax: " + filter, ex);

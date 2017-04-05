@@ -17,8 +17,8 @@
 package org.apache.sling.servlets.post.impl.helper;
 
 /**
- * <code>Chunk</code> enscapsulates all chunk upload attributes.
- * 
+ * <code>Chunk</code> encapsulates all chunk upload attributes.
+ *
  * @since 2.3.4
  */
 public class Chunk {

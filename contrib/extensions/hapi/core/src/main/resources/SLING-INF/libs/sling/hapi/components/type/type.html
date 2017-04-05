@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+<html data-sly-use.type="org.apache.sling.hapi.sightly.TypeView"
+      data-sly-use.hapitype="${'org.apache.sling.hapi.sightly.HApiUse' @type='org.apache.sling.hapi.common.hapi_type'}" lang="${type.lang}">
+
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- Bootstrap -->
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+          <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+          <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <title>${type.title}</title>
+
+    </head>
+    <body>
+        <div class="container" data-sly-attribute="${hapitype.itemtype}">
+
+            <h1 data-sly-attribute="${hapitype.itemprop.hapi_name}">${type.title}</h1>
+            <div>
+                <p data-sly-attribute="${hapitype.itemprop.hapi_description}">${type.description}</p>
+            </div>
+            <h2 data-sly-test.parentUrl="${type.parentUrl}"> extends
+                <a data-sly-attribute="${hapitype.itemprop.hapi_parent}" href="${parentUrl}" >${type.parentFqdn}</a>
+            </h2>
+            <h3 data-sly-test="${type.parameters}">Parameters: </h3>
+                <ul data-sly-list.param="${type.parameters}" title="Parameters" class="list-inline">
+                <li data-sly-attribute="${hapitype.itemprop.hapi_parameter}">${param}</li>
+            </ul>
+            <h3>Properties: </h3>
+            <table class="table" data-sly-test.props="${type.props}">
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Expected Type</th>
+                        <th>Multiple</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody data-sly-list.prop="${type.props}">
+                    <tr data-sly-attribute="${hapitype.itemprop.hapi_property}"
+                        data-sly-use.hapi_type_prop="${'org.apache.sling.hapi.sightly.HApiUse' @type=hapitype.proptype.hapi_property}">
+
+                        <th data-sly-attribute="${hapi_type_prop.itemprop.hapi_name}">${prop.name}</th>
+                        <td>
+                            <a data-sly-attribute="${hapi_type_prop.itemprop.hapi_property_type}" href="${prop.type.url}">
+                                ${prop.type.name}
+                            </a>
+                        </td>
+                        <td data-sly-attribute="${hapi_type_prop.itemprop.hapi_multiple}">${prop.multiple}</td>
+                        <td data-sly-attribute="${hapi_type_prop.itemprop.hapi_description}">${prop.description}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div data-sly-test="${!props}">None</div>
+        </div>
+    </body>
+</html>

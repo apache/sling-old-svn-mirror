@@ -31,12 +31,15 @@ import java.util.Map;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.rewriter.PipelineConfiguration;
 import org.apache.sling.rewriter.ProcessingContext;
 import org.apache.sling.rewriter.Processor;
@@ -46,7 +49,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.EventHandler;
+import org.osgi.service.component.annotations.Activate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +60,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(value=ProcessorManager.class)
 public class ProcessorManagerImpl
-    implements ProcessorManager, EventHandler {
+    implements ProcessorManager, ResourceChangeListener, ExternalResourceChangeListener  {
 
     private static final String CONFIG_REL_PATH = "config/rewriter";
     private static final String CONFIG_PATH = "/" + CONFIG_REL_PATH;
@@ -73,20 +76,17 @@ public class ProcessorManagerImpl
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
-    /** The resource resolver. */
-    private ResourceResolver resourceResolver;
-
-    /** loaded processor configurationss */
+    /** loaded processor configurations */
     private final Map<String, ConfigEntry[]> processors = new HashMap<String, ConfigEntry[]>();
 
-    /** Ordered processor configs. */
+    /** Ordered processor configurations. */
     private List<ProcessorConfiguration> orderedProcessors = new ArrayList<ProcessorConfiguration>();
 
     /** Event handler registration */
-    private ServiceRegistration eventHandlerRegistration;
+    private volatile ServiceRegistration<ResourceChangeListener> eventHandlerRegistration;
 
-    /** Search paths */
-    private String[] searchPaths;
+    /** Search path */
+    private String[] searchPath;
 
     /** The factory cache. */
     private FactoryCache factoryCache;
@@ -95,30 +95,31 @@ public class ProcessorManagerImpl
      * Activate this component.
      * @param ctx
      */
-    protected void activate(final ComponentContext ctx)
+    @Activate
+	protected void activate(final BundleContext ctx)
     throws LoginException, InvalidSyntaxException {
-        this.bundleContext = ctx.getBundleContext();
+        this.bundleContext = ctx;
         this.factoryCache = new FactoryCache(this.bundleContext);
 
         // create array of search paths for actions and constraints
-        this.resourceResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-        this.searchPaths = resourceResolver.getSearchPath();
-
-        this.initProcessors();
-
-        // register event handler
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put("event.topics", new String[] { "org/apache/sling/api/resource/Resource/*",
-            "org/apache/sling/api/resource/ResourceProvider/*" });
-        props.put("service.description","Processor Configuration/Modification Handler");
-        props.put("service.vendor","The Apache Software Foundation");
-
-        this.eventHandlerRegistration = ctx.getBundleContext()
-                  .registerService(EventHandler.class.getName(), this, props);
-
-        this.factoryCache.start();
+        this.searchPath = this.initProcessors();
+    	// register event handler
+		final Dictionary<String, Object> props = new Hashtable<String, Object>();
+		props.put(ResourceChangeListener.CHANGES,
+				new String[] { ChangeType.ADDED.toString(), ChangeType.CHANGED.toString(),
+						ChangeType.REMOVED.toString(), ChangeType.PROVIDER_ADDED.toString(), ChangeType.PROVIDER_REMOVED.toString() });
+		props.put(ResourceChangeListener.PATHS, "glob:*" + CONFIG_PATH + "/**");
+		props.put("service.description", "Processor Configuration/Modification Handler");
+		props.put("service.vendor", "The Apache Software Foundation");
+		this.eventHandlerRegistration = this.bundleContext.registerService(ResourceChangeListener.class, this,
+				props);
+    	this.factoryCache.start();
 
         WebConsoleConfigPrinter.register(this.bundleContext, this);
+    }
+
+    private ResourceResolver createResourceResolver() throws LoginException {
+        return this.resourceResolverFactory.getServiceResourceResolver(null);
     }
 
     /**
@@ -132,87 +133,100 @@ public class ProcessorManagerImpl
         }
         this.factoryCache.stop();
         this.factoryCache = null;
-        if ( this.resourceResolver != null ) {
-            this.resourceResolver.close();
-            this.resourceResolver = null;
-        }
 
         WebConsoleConfigPrinter.unregister();
 
         this.bundleContext = null;
     }
 
-    /**
-     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
-     */
-    public void handleEvent(final org.osgi.service.event.Event event) {
-        // check if the event handles something in the search paths
-        String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
-        int foundPos = -1;
-        for(final String sPath : this.searchPaths) {
-            if ( path.startsWith(sPath) ) {
-                foundPos = sPath.length();
-                break;
-            }
-        }
-        if ( foundPos != -1 ) {
-            // now check if this is a rewriter config
-            // relative path after the search path
-            final int firstSlash = path.indexOf('/', foundPos);
-            final int pattern = path.indexOf(CONFIG_PATH, foundPos);
-            // only if firstSlash and pattern are at the same position, this migt be a rewriter config
-            if ( firstSlash == pattern && firstSlash != -1 ) {
-                // the node should be a child of CONFIG_PATH
-                if ( path.length() > pattern + CONFIG_PATH.length() && path.charAt(pattern + CONFIG_PATH.length()) == '/') {
-                    // if a child resource is changed, make sure we have the correct path
-                    final int slashPos = path.indexOf('/', pattern + CONFIG_PATH.length() + 1);
-                    if ( slashPos != -1 ) {
-                        path = path.substring(0, slashPos);
-                    }
-                    // we should do the update async as we don't want to block the event delivery
-                    final String configPath = path;
-                    final Thread t = new Thread() {
-                        public void run() {
-                            if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_REMOVED) ) {
-                                removeProcessor(configPath);
-                            } else {
-                                updateProcessor(configPath);
-                            }
-                        }
-                    };
-                    t.start();
+    @Override
+	public void onChange(final List<ResourceChange> changes) {
+    	for(final ResourceChange change : changes){
+    		// check if the event handles something in the search paths
+            String path = change.getPath();
+            int foundPos = -1;
+            for(final String sPath : this.searchPath) {
+                if ( path.startsWith(sPath) ) {
+                    foundPos = sPath.length();
+                    break;
                 }
             }
-        }
+            boolean handled = false;
+            if ( foundPos != -1 ) {
+                // now check if this is a rewriter config
+                // relative path after the search path
+                final int firstSlash = path.indexOf('/', foundPos);
+                final int pattern = path.indexOf(CONFIG_PATH, foundPos);
+                // only if firstSlash and pattern are at the same position, this might be a rewriter config
+                if ( firstSlash == pattern && firstSlash != -1 ) {
+                    // the node should be a child of CONFIG_PATH
+                    if ( path.length() > pattern + CONFIG_PATH.length() && path.charAt(pattern + CONFIG_PATH.length()) == '/') {
+                        // if a child resource is changed, make sure we have the correct path
+                        final int slashPos = path.indexOf('/', pattern + CONFIG_PATH.length() + 1);
+                        if ( slashPos != -1 ) {
+                            path = path.substring(0, slashPos);
+                        }
+                        // we should do the update async as we don't want to block the event delivery
+                        final String configPath = path;
+                        final Thread t = new Thread() {
+                            @Override
+                            public void run() {
+                                if (change.getType() == ChangeType.REMOVED) {
+                                    removeProcessor(configPath);
+                                } else {
+                                    updateProcessor(configPath);
+                                }
+                            }
+                        };
+                        t.start();
+                        handled = true;
+                    }
+                }
+            }
+            if ( !handled && change.getType() == ChangeType.REMOVED ) {
+                final Thread t = new Thread() {
+                    @Override
+                    public void run() {
+                        checkRemoval(change.getPath());
+                    }
+
+                };
+                t.start();
+            }
+    	}
+
     }
 
     /**
      * Initializes the current processors
      */
-    private synchronized void initProcessors() {
-        for(final String path : this.searchPaths ) {
-            // check if the search path exists
-            final Resource spResource = this.resourceResolver.getResource(path.substring(0, path.length() - 1));
-            if ( spResource != null ) {
-                // now iterate over the child nodes
-                final Iterator<Resource> spIter = spResource.listChildren();
-                while ( spIter.hasNext() ) {
-                    // check if the node has a rewriter config
-                    final Resource appResource = spIter.next();
-                    final Resource parentResource = this.resourceResolver.getResource(appResource.getPath() + CONFIG_PATH);
-                    if ( parentResource != null ) {
-                        // now read configs
-                        final Iterator<Resource> iter = parentResource.listChildren();
-                        while ( iter.hasNext() ) {
-                            final Resource configResource = iter.next();
-                            final String key = configResource.getName();
-                            final ProcessorConfigurationImpl config = this.getProcessorConfiguration(configResource);
-                            this.log.debug("Found new processor configuration {}", config);
-                            this.addProcessor(key, configResource.getPath(), config);
+    private synchronized String[] initProcessors() throws LoginException {
+        try ( final ResourceResolver resolver = this.createResourceResolver()) {
+            for(final String path : resolver.getSearchPath() ) {
+                // check if the search path exists
+                final Resource spResource = resolver.getResource(path.substring(0, path.length() - 1));
+                if ( spResource != null ) {
+                    // now iterate over the child nodes
+                    final Iterator<Resource> spIter = spResource.listChildren();
+                    while ( spIter.hasNext() ) {
+                        // check if the node has a rewriter config
+                        final Resource appResource = spIter.next();
+                        final Resource parentResource = resolver.getResource(appResource.getPath() + CONFIG_PATH);
+                        if ( parentResource != null ) {
+                            // now read configs
+                            final Iterator<Resource> iter = parentResource.listChildren();
+                            while ( iter.hasNext() ) {
+                                final Resource configResource = iter.next();
+                                final String key = configResource.getName();
+                                final ProcessorConfigurationImpl config = this.getProcessorConfiguration(configResource);
+                                this.log.debug("Found new processor configuration {}", config);
+                                this.addProcessor(key, configResource.getPath(), config);
+                            }
                         }
                     }
                 }
             }
+            return resolver.getSearchPath();
         }
     }
 
@@ -288,102 +302,106 @@ public class ProcessorManagerImpl
     /**
      * updates a processor
      */
-    private synchronized void updateProcessor(String path) {
+    private synchronized void updateProcessor(final String path) {
         final int pos = path.lastIndexOf('/');
         final String key = path.substring(pos + 1);
         int keyIndex = 0;
         // search the search path
-        for(final String searchPath : this.searchPaths) {
-            if ( path.startsWith(searchPath) ) {
+        for(final String sp : this.searchPath) {
+            if ( path.startsWith(sp) ) {
                 break;
             }
             keyIndex++;
         }
 
-        final Resource configResource = this.resourceResolver.getResource(path);
-        if ( configResource == null ) {
-            return;
-        }
-        final ProcessorConfigurationImpl config = this.getProcessorConfiguration(configResource);
-
-        final ConfigEntry[] configs = this.processors.get(key);
-        if ( configs != null ) {
-            // search path
-            int index = -1;
-            for(int i=0; i<configs.length; i++) {
-                if ( configs[i].path.equals(path) ) {
-                    index = i;
-                    break;
-                }
+        try ( final ResourceResolver resolver = this.createResourceResolver()) {
+            final Resource configResource = resolver.getResource(path);
+            if ( configResource == null ) {
+                return;
             }
-            if ( index != -1 ) {
-                // we are already in the array
-                if ( index == 0 ) {
-                    // we are the first, so remove the old, and add the new
-                    this.orderedProcessors.remove(configs[index].config);
-                    configs[index] = new ConfigEntry(path, config);
-                    if ( config.isActive() ) {
-                        this.orderedProcessors.add(config);
-                        Collections.sort(this.orderedProcessors, new ProcessorConfiguratorComparator());
-                    }
-                } else {
-                    // we are not the first, so we can simply exchange
-                    configs[index] = new ConfigEntry(path, config);
-                }
-            } else {
-                // now we have to insert the new config at the correct place
-                int insertIndex = 0;
-                boolean found = false;
-                while ( !found && insertIndex < configs.length) {
-                    final ConfigEntry current = configs[insertIndex];
-                    int currentIndex = -1;
-                    for(int i=0; i<this.searchPaths.length; i++) {
-                        if ( current.path.startsWith(this.searchPaths[i]) ) {
-                            currentIndex = i;
-                            break;
-                        }
-                    }
-                    if ( currentIndex >= keyIndex ) {
-                        found = true;
-                        insertIndex = currentIndex;
-                    }
-                }
+            final ProcessorConfigurationImpl config = this.getProcessorConfiguration(configResource);
 
-                if ( !found ) {
-                    // just append
-                    this.addProcessor(key, path, config);
-                } else {
-                    ConfigEntry[] newArray = new ConfigEntry[configs.length + 1];
-                    int i = 0;
-                    for(final ConfigEntry current : configs) {
-                        if ( i == insertIndex ) {
-                            newArray[i] = new ConfigEntry(path, config);
-                            i++;
-                        }
-                        newArray[i] = current;
-                        i++;
+            final ConfigEntry[] configs = this.processors.get(key);
+            if ( configs != null ) {
+                // search path
+                int index = -1;
+                for(int i=0; i<configs.length; i++) {
+                    if ( configs[i].path.equals(path) ) {
+                        index = i;
+                        break;
                     }
-                    this.processors.put(key, newArray);
-                    if ( insertIndex == 0 ) {
+                }
+                if ( index != -1 ) {
+                    // we are already in the array
+                    if ( index == 0 ) {
                         // we are the first, so remove the old, and add the new
-                        this.orderedProcessors.remove(configs[1].config);
+                        this.orderedProcessors.remove(configs[index].config);
+                        configs[index] = new ConfigEntry(path, config);
                         if ( config.isActive() ) {
                             this.orderedProcessors.add(config);
                             Collections.sort(this.orderedProcessors, new ProcessorConfiguratorComparator());
                         }
+                    } else {
+                        // we are not the first, so we can simply exchange
+                        configs[index] = new ConfigEntry(path, config);
+                    }
+                } else {
+                    // now we have to insert the new config at the correct place
+                    int insertIndex = 0;
+                    boolean found = false;
+                    while ( !found && insertIndex < configs.length) {
+                        final ConfigEntry current = configs[insertIndex];
+                        int currentIndex = -1;
+                        for(int i=0; i<searchPath.length; i++) {
+                            if ( current.path.startsWith(searchPath[i]) ) {
+                                currentIndex = i;
+                                break;
+                            }
+                        }
+                        if ( currentIndex >= keyIndex ) {
+                            found = true;
+                            insertIndex = currentIndex;
+                        }
+                    }
+
+                    if ( !found ) {
+                        // just append
+                        this.addProcessor(key, path, config);
+                    } else {
+                        ConfigEntry[] newArray = new ConfigEntry[configs.length + 1];
+                        int i = 0;
+                        for(final ConfigEntry current : configs) {
+                            if ( i == insertIndex ) {
+                                newArray[i] = new ConfigEntry(path, config);
+                                i++;
+                            }
+                            newArray[i] = current;
+                            i++;
+                        }
+                        this.processors.put(key, newArray);
+                        if ( insertIndex == 0 ) {
+                            // we are the first, so remove the old, and add the new
+                            this.orderedProcessors.remove(configs[1].config);
+                            if ( config.isActive() ) {
+                                this.orderedProcessors.add(config);
+                                Collections.sort(this.orderedProcessors, new ProcessorConfiguratorComparator());
+                            }
+                        }
                     }
                 }
+            } else {
+                // completely new, just add it
+                this.addProcessor(key, path, config);
             }
-        } else {
-            // completly new, just add it
-            this.addProcessor(key, path, config);
+        } catch ( final LoginException le) {
+            log.error("Unable to create resource resolver.", le);
         }
     }
 
     /**
      * removes a pipeline
      */
-    private synchronized void removeProcessor(String path) {
+    private synchronized void removeProcessor(final String path) {
         final int pos = path.lastIndexOf('/');
         final String key = path.substring(pos + 1);
         // we have to search the config
@@ -421,9 +439,25 @@ public class ProcessorManagerImpl
         }
     }
 
+    private synchronized void checkRemoval(final String path) {
+        final String prefix = path + "/";
+        final List<ConfigEntry> toRemove = new ArrayList<>();
+        for(final Map.Entry<String, ConfigEntry[]> entry : this.processors.entrySet()) {
+            for(final ConfigEntry config : entry.getValue()) {
+                if ( config.path != null && config.path.startsWith(prefix) ) {
+                    toRemove.add(config);
+                }
+            }
+        }
+        for(final ConfigEntry entry : toRemove) {
+            this.removeProcessor(entry.path);
+        }
+    }
+
     /**
      * @see org.apache.sling.rewriter.ProcessorManager#getProcessor(org.apache.sling.rewriter.ProcessorConfiguration, org.apache.sling.rewriter.ProcessingContext)
      */
+    @Override
     public Processor getProcessor(ProcessorConfiguration configuration,
                                   ProcessingContext      context) {
         if ( configuration == null ) {
@@ -455,6 +489,7 @@ public class ProcessorManagerImpl
     /**
      * @see org.apache.sling.rewriter.ProcessorManager#getProcessorConfigurations()
      */
+    @Override
     public List<ProcessorConfiguration> getProcessorConfigurations() {
         return this.orderedProcessors;
     }
@@ -464,6 +499,7 @@ public class ProcessorManagerImpl
         /**
          * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
          */
+        @Override
         public int compare(ProcessorConfiguration config0, ProcessorConfiguration config1) {
             final int o0 = ((ProcessorConfigurationImpl)config0).getOrder();
             final int o1 = ((ProcessorConfigurationImpl)config1).getOrder();

@@ -19,51 +19,52 @@
 package org.apache.sling.distribution.queue;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
  * An item in a {@link DistributionQueue}
- * <p/>
- * This is basically a proxy to {@link org.apache.sling.distribution.packaging.DistributionPackage} designed to avoid having
- * to keep the package {@link org.apache.sling.distribution.packaging.DistributionPackage#createInputStream() stream} into
+ * This is basically a proxy to {@link DistributionPackage} designed to avoid having
+ * to keep the package {@link DistributionPackage#createInputStream() stream} into
  * the queues.
  */
-public class DistributionQueueItem {
+public class DistributionQueueItem extends ValueMapDecorator implements ValueMap {
 
-    private final String id;
+    private final String packageId;
+    private final long size;
 
-    private final String type;
+    public DistributionQueueItem(@Nonnull String packageId, Map<String, Object> base) {
+        this(packageId, -1, base);
+    }
 
-    private final DistributionPackageInfo packageInfo;
+    public DistributionQueueItem(String id, long size, Map<String, Object> base) {
+        super(base);
+        this.packageId = id;
+        this.size = size;
 
-    public DistributionQueueItem(@Nonnull String id, @Nonnull String type, @Nonnull DistributionPackageInfo packageInfo) {
-        this.id = id;
-        this.type = type;
-        this.packageInfo = packageInfo;
     }
 
     @Nonnull
-    public String getId() {
-        return id;
+    public String getPackageId() {
+        return packageId;
     }
 
-    @Nonnull
-    public String getType() {
-        return type;
-    }
-
-    @Nonnull
-    public DistributionPackageInfo getPackageInfo() {
-        return packageInfo;
+    /**
+     * retrieve the size of the package referenced by this queue item.
+     * @return the size of the underlying package or {@code -1} if not available.
+     */
+    public long getSize() {
+        return size;
     }
 
     @Override
     public String toString() {
         return "DistributionQueueItem{" +
-                "id='" + id + '\'' +
-                ", type='" + type + '\'' +
-                ", packageInfo=" + packageInfo +
+                "id='" + packageId + '\'' +
+                ", info=" + super.toString() +
                 '}';
     }
 }

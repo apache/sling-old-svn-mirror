@@ -54,9 +54,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 @Service({ AsyncHealthCheckExecutor.class })
-@Component(label = "Apache Sling Async Health Check Executor",
-        description = "Runs async health checks",
-        metatype = true, immediate = true)
+@Component(immediate = true)
 public class AsyncHealthCheckExecutor implements ServiceListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(AsyncHealthCheckExecutor.class);
@@ -142,7 +140,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
             registeredJobs.put(descriptor, healthCheckAsyncJob);
             return true;
         } catch (Exception e) {
-            LOG.warn("Could not schedule job for " + descriptor + ". Exeception: " + e, e);
+            LOG.warn("Could not schedule job for " + descriptor + ". Exception: " + e, e);
             return false;
         }
 
@@ -162,7 +160,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
                 return true;
             }
         } catch (Exception e) {
-            LOG.warn("Could not unschedule job " + job + ". Exeception: " + e, e);
+            LOG.warn("Could not unschedule job " + job + ". Exception: " + e, e);
         }
         return false;
 

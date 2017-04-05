@@ -19,7 +19,7 @@
 
 package org.apache.sling.installer.api.jmx;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 @ProviderType
 public interface InstallerMBean {
@@ -27,21 +27,25 @@ public interface InstallerMBean {
     /**
      * Count of Active resource groups. These resource groups are currently
      * in processing.
+     * @return Get the active resource count.
      */
     int getActiveResourceCount();
 
     /**
      * Count of Installed resource groups. These resources groups are processed.
+     * @return Get the installed resource count
      */
     int getInstalledResourceCount();
 
     /**
      * Indicates that whether the installer is currently active
+     * @return If the installer is active.
      */
     boolean isActive();
 
     /**
      * Determines the time since when the installer is in suspended state
+     * @return Time since last suspended.
      */
     long getSuspendedSince();
 }

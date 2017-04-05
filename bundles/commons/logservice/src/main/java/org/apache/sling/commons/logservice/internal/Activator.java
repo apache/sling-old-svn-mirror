@@ -22,8 +22,10 @@ import java.util.Hashtable;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.LogService;
+import org.osgi.service.startlevel.StartLevel;
 
 /**
  * The <code>Activator</code> class is the <code>BundleActivator</code> for the
@@ -36,11 +38,17 @@ public class Activator implements BundleActivator {
 
     private LogSupport logSupport;
 
+    /** Reference to the start level service. */
+    private ServiceReference startLevelRef;
+
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(final BundleContext context) throws Exception {
-        logSupport = new LogSupport();
+        // get start level service, it's always there (required by the spec)
+        startLevelRef = context.getServiceReference(StartLevel.class.getName());
+
+        logSupport = new LogSupport((StartLevel)context.getService(startLevelRef));
         context.addBundleListener(logSupport);
         context.addFrameworkListener(logSupport);
         context.addServiceListener(logSupport);
@@ -66,6 +74,9 @@ public class Activator implements BundleActivator {
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(final BundleContext context) throws Exception {
+        if ( startLevelRef != null ) {
+            context.ungetService(startLevelRef);
+        }
         if (logSupport != null) {
             context.removeBundleListener(logSupport);
             context.removeFrameworkListener(logSupport);

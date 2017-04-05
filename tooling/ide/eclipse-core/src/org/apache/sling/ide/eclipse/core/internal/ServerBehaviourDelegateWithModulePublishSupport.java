@@ -50,14 +50,14 @@ public abstract class ServerBehaviourDelegateWithModulePublishSupport extends
     public void publish(int kind, List<IModule[]> modules,
             IProgressMonitor monitor, IAdaptable info) throws CoreException {
         info3 = info;
-        modules3 = modules==null ? null : new LinkedList<IModule[]>(modules);
+        modules3 = modules==null ? null : new LinkedList<>(modules);
         super.publish(kind, modules, monitor, info);
     }
     
     // from WST's ServerBehavior
     private List<Integer> computeDelta(final List<IModule[]> moduleList) {
 
-        final List<Integer> deltaKindList = new ArrayList<Integer>();
+        final List<Integer> deltaKindList = new ArrayList<>();
         final Iterator<IModule[]> iterator = moduleList.iterator();
         while (iterator.hasNext()) {
             IModule[] module = iterator.next();
@@ -89,7 +89,7 @@ public abstract class ServerBehaviourDelegateWithModulePublishSupport extends
         if (getServer().getServerType().hasRuntime() && getServer().getRuntime() == null)
             return new Status(IStatus.ERROR, Activator.PLUGIN_ID, 0, "No runtime available", null);
         
-        final List<IModule[]> moduleList = modules3==null ? getAllModules() : new LinkedList<IModule[]>(modules3);//getAllModules();
+        final List<IModule[]> moduleList = modules3==null ? getAllModules() : new LinkedList<>(modules3);//getAllModules();
         List<Integer> deltaKindList = computeDelta(moduleList);
         
         PublishOperation[] tasks = getTasks(kind, moduleList, deltaKindList);

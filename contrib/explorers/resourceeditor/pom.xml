@@ -17,7 +17,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>sling</artifactId>
             <version>22</version>
-            <relativePath>../../../parent/pom.xml</relativePath>
+            <relativePath/>
         </parent>
 
 	<groupId>org.apache.sling</groupId>
@@ -35,47 +35,33 @@
 			<resource>
 				<directory>src/main/resources</directory>
 			</resource>
+			<resource>
+				<directory>src/test/javascript</directory>
+			</resource>
 		</resources>
 		<plugins>
-			<plugin>
-				<groupId>org.lesscss</groupId>
-				<artifactId>lesscss-maven-plugin</artifactId>
-				<version>1.7.0.1.1</version>
-				<configuration>
-					<outputDirectory>${project.basedir}/src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/css</outputDirectory>
-					<includes>
-						<include>bootstrap.less</include>
-					</includes>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-scr-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>generate-scr-descriptor</id>
-						<goals>
-							<goal>scr</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Sling-Initial-Content>SLING-INF/libs/sling/resource-editor-static-content;overwrite:=true;path:=/libs/sling/resource-editor-static-content,SLING-INF/libs/sling/resource-editor;overwrite:=true;path:=/libs/sling/resource-editor</Sling-Initial-Content>
+<!-- 						<Sling-Initial-Content> -->
+<!-- 							META-INF/tags;overwrite:=true;path:=/libs/sling/resource-editor-tags/property-editor, -->
+<!-- 							SLING-INF/libs/sling;overwrite:=true;path:=/libs/sling -->
+<!-- 						</Sling-Initial-Content> -->
+						<Sling-Initial-Content>
+							META-INF/tags;overwrite:=true;path:=/libs/sling/resource-editor-tags/property-editor,
+							SLING-INF/libs/sling/resource-editor/static;overwrite:=true;path:=/libs/sling/resource-editor/static,
+							SLING-INF/libs/sling/resource-editor/scripts;overwrite:=true;path:=/libs/sling/resource-editor/scripts,
+							SLING-INF/libs/sling/resource-editor/content;overwrite:=true;path:=/libs/sling/resource-editor/content
+						</Sling-Initial-Content>
 						<Import-Package>!org.slf4j.impl,*,
-							org.apache.sling.commons.js.nodetypes.javascript,
+							org.apache.sling.jcr.js.nodetypes.javascript,
 							javax.el,
 							javax.naming,
 							javax.servlet.jsp,
@@ -95,10 +81,66 @@
 							org.xml.sax.helpers
 						</Import-Package>
 						<Export-Package>!org.apache.sling.reseditor</Export-Package>
+			            <Include-Resource>META-INF/resource-editor.tld=${project.build.outputDirectory}/META-INF/resource-editor.tld,{maven-resources}</Include-Resource>
+			            <Sling-Bundle-Resources>/META-INF/tags</Sling-Bundle-Resources>
 					</instructions>
 					<remoteOBR>www.jcrbrowser.org</remoteOBR>
 				</configuration>
 			</plugin>
+			<plugin>
+		        <groupId>com.github.eirslett</groupId>
+		        <artifactId>frontend-maven-plugin</artifactId>
+		        <version>1.2</version>
+		        <configuration>
+			        <workingDirectory>frontend</workingDirectory>
+			    </configuration>
+			    <executions>
+				    <execution>
+					    <goals> <goal>install-node-and-npm</goal> </goals>
+					    <configuration>
+					        <nodeVersion>v6.9.1</nodeVersion>
+					        <npmVersion>3.10.8</npmVersion>
+					    </configuration>
+					</execution>
+					<execution> 
+						<id>npm install</id> 	
+						<goals> <goal>npm</goal> 	</goals>
+					</execution>
+					<execution>
+						<id>grunt build</id>
+						<goals> <goal>grunt</goal> </goals>
+					</execution>
+					<execution>
+					    <id>javascript tests</id>
+					    <goals> <goal>karma</goal> </goals>
+					
+					    <!-- optional: the default phase is "test". Some developers
+					    choose to run karma in the "integration-test" phase. -->
+<!-- 					    <phase>install</phase> -->
+					
+					    <configuration>
+					        <!-- optional: the default is "karma.conf.js" in your working directory -->
+					        <karmaConfPath>karma.conf.ci.js</karmaConfPath>
+					    </configuration>
+					</execution>
+				</executions>
+		    </plugin>
+            <plugin>
+              <groupId>org.apache.rat</groupId>
+              <artifactId>apache-rat-plugin</artifactId>
+              <configuration>
+                <excludes>
+                  <exclude>frontend/**</exclude>
+                  <exclude>src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/generated/3rd_party/**/*</exclude>
+                  <exclude>src/main/resources/SLING-INF/libs/sling/resource-editor/servlet-nodes.json</exclude>
+                </excludes>
+              </configuration>
+            </plugin>	
+            <plugin>
+				<groupId>org.apache.sling</groupId>
+				<artifactId>maven-sling-plugin</artifactId>
+				<version>2.1.9-SNAPSHOT</version>
+            </plugin>		
 		</plugins>
 		<extensions>
 			<extension>
@@ -150,6 +192,12 @@
 			<artifactId>org.apache.felix.scr.annotations</artifactId>
 			<scope>provided</scope>
 		</dependency>
+	    <dependency>
+	      <groupId>commons-lang</groupId>
+	      <artifactId>commons-lang</artifactId>
+	      <version>2.5</version>
+	      <scope>provided</scope>
+	    </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -157,10 +205,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	<distributionManagement>
-		<repository>
-			<id>www.jcrbrowser.org</id>
-			<url>dav:http://www.jcrbrowser.org/sling/obr</url>
-		</repository>
-	</distributionManagement>
 </project>

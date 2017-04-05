@@ -41,6 +41,8 @@ public class LogWriter extends Writer {
 
     /**
      * Creates a writer based on the given logger.
+     *
+     * @param logger the logger
      */
     public LogWriter(Logger logger) {
         this.logger = logger;

@@ -31,12 +31,15 @@ import java.util.Set;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.filtering.PropertyUtils;
 import org.apache.sling.maven.projectsupport.BundleListUtils.ArtifactDefinitionsCallback;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.codehaus.plexus.archiver.ArchiverException;
+import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -74,73 +77,61 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
 
     /**
      * The definition of the defaultBundleList artifact.
-     *
-     * @parameter
      */
+    @Parameter
     protected ArtifactDefinition defaultBundleList;
 
     /**
      * Any additional bundles to include in the project's bundles directory.
-     *
-     * @parameter
      */
+    @Parameter
     private ArtifactDefinition[] additionalBundles;
 
     private BundleList initializedBundleList;
 
     /**
      * Bundles which should be removed from the project's bundles directory.
-     *
-     * @parameter
      */
+    @Parameter
     private ArtifactDefinition[] bundleExclusions;
 
     /**
      * If true, include the default bundles.
-     *
-     * @parameter expression="${includeDefaultBundles}" default-value="true"
      */
+    @Parameter( property = "includeDefaultBundles", defaultValue = "true")
     private boolean includeDefaultBundles;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private File[] rewriteRuleFiles;
 
     /**
      * The list of tokens to include when copying configs
      * from partial bundle lists.
-     *
-     * @parameter default-value="**"
      */
+    @Parameter( defaultValue = "**")
     private String[] configIncludes;
 
     /**
      * The list of tokens to exclude when copying the configs
      * from partial bundle lists.
-     *
-     * @parameter
      */
+    @Parameter
     private String[] configExcludes;
 
     /**
      * The list of names to exclude when copying properties
      * from partial bundle lists.
-     *
-     * @parameter
      */
+    @Parameter
     private String[] propertiesExcludes;
 
-    /**
-     * @component
-     */
+    @Component
     protected MavenFileFilter mavenFileFilter;
 
     /**
      * The zip unarchiver.
-     *
-     * @component role="org.codehaus.plexus.archiver.UnArchiver" roleHint="zip"
      */
+    @Component(role = UnArchiver.class, hint = "zip")
     private ZipUnArchiver zipUnarchiver;
 
     private Properties slingProperties;
@@ -155,14 +146,10 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
 
     private String slingStandaloneBootstrapCommand;
 
-    /**
-     * @parameter default-value="${project.build.directory}/tmpBundleListconfig"
-     */
+    @Parameter(defaultValue = "${project.build.directory}/tmpBundleListconfig")
     private File tmpOutputDir;
 
-    /**
-     * @parameter default-value="${project.build.directory}/tmpConfigDir"
-     */
+    @Parameter(defaultValue = "${project.build.directory}/tmpConfigDir")
     private File tempConfigDir;
 
     private File overlayConfigDir;

@@ -16,27 +16,21 @@
  */
 package org.apache.sling.servlets.post.impl.helper;
 
-import java.util.Map;
+import java.util.Calendar;
+import java.util.Iterator;
 
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.QueryResult;
-
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.servlets.post.SlingPostConstants;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,24 +54,37 @@ import org.slf4j.LoggerFactory;
  * default workspace assuming users are stored in that workspace and the
  * administrative user has full access.
  */
-@Component(metatype = true, label = "Apache Sling Post Chunk Upload : Cleanup Task", description = "Task to regularly purge incomplete chunks from the repository")
-@Service(value = Runnable.class)
-@Properties({
-    @Property(name = "scheduler.expression", value = "31 41 0/12 * * ?", label = "Schedule", description = "Cron expression scheudling this job. Default is hourly 17m23s after the hour. "
-        + "See http://www.docjar.com/docs/api/org/quartz/CronTrigger.html for a description "
-        + "of the format for this value."),
-    @Property(name = "service.description", value = "Periodic Chunk Cleanup Job", propertyPrivate = true),
-    @Property(name = "service.vendor", value = "The Apache Software Foundation", propertyPrivate = true) })
+@Component(service = Runnable.class,
+    property = {
+           "service.description=Periodic Chunk Cleanup Job",
+           "service.vendor=The Apache Software Foundation"
+    })
+@Designate(ocd = ChunkCleanUpTask.Config.class)
 public class ChunkCleanUpTask implements Runnable {
+
+    @ObjectClassDefinition(name = "Apache Sling Post Chunk Upload : Cleanup Task",
+            description = "Task to regularly purge incomplete chunks from the repository")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Schedule", description = "Cron expression scheudling this job. Default is hourly 17m23s after the hour. "
+                + "See http://www.docjar.com/docs/api/org/quartz/CronTrigger.html for a description "
+                + "of the format for this value.")
+        String scheduler_expression() default "31 41 0/12 * * ?";
+
+        @AttributeDefinition(name = "scheduler.concurrent",
+                description = "Allow Chunk Cleanup Task to run concurrently (default: false).")
+        boolean scheduler_concurrent() default false;
+
+        @AttributeDefinition(name = "Cleanup Age",
+                description = "The chunk's age in minutes before it is considered for clean up.")
+        int chunk_cleanup_age() default 360;
+    }
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
-    private SlingRepository repository;
-
-    @Property(intValue = 360, description = "The chunk's age in minutes before it is considered for clean up.")
-    private static final String CHUNK_CLEANUP_AGE = "chunk.cleanup.age";
+    private ResourceResolverFactory rrFactory;
 
     private SlingFileUploadHandler uploadhandler = new SlingFileUploadHandler();
 
@@ -89,16 +96,17 @@ public class ChunkCleanUpTask implements Runnable {
     /**
      * Executes the job. Is called for each triggered schedule point.
      */
+    @Override
     public void run() {
         log.debug("ChunkCleanUpTask: Starting cleanup");
         cleanup();
     }
 
     /**
-     * This method deletes chunks which are {@link #isEligibleForCleanUp(Node)}
+     * This method deletes chunks which are {@link #isEligibleForCleanUp(Resource)}
      * for cleanup. It queries all
      * {@link SlingPostConstants#NT_SLING_CHUNK_MIXIN} nodes and filter nodes
-     * which are {@link #isEligibleForCleanUp(Node)} for cleanup. It then
+     * which are {@link #isEligibleForCleanUp(Resource)} for cleanup. It then
      * deletes old chunks upload.
      */
     private void cleanup() {
@@ -108,31 +116,26 @@ public class ChunkCleanUpTask implements Runnable {
         int numCleaned = 0;
         int numLive = 0;
 
-        Session admin = null;
+        ResourceResolver admin = null;
         try {
-            // assume chunks are stored in the default workspace
-            admin = repository.loginAdministrative(null);
-            QueryManager qm = admin.getWorkspace().getQueryManager();
+            admin = rrFactory.getAdministrativeResourceResolver(null);
 
-            QueryResult queryres = qm.createQuery(
-                "SELECT * FROM [sling:chunks] ", Query.JCR_SQL2).execute();
-            NodeIterator nodeItr = queryres.getNodes();
-            while (nodeItr.hasNext()) {
-                Node node = nodeItr.nextNode();
-                if (isEligibleForCleanUp(node)) {
+            final Iterator<Resource> rsrcIter = admin.findResources(
+                "SELECT * FROM [sling:chunks] ", "sql");
+            while (rsrcIter.hasNext()) {
+                final Resource rsrc = rsrcIter.next();
+                if (isEligibleForCleanUp(rsrc)) {
                     numCleaned++;
-                    uploadhandler.deleteChunks(node);
+                    uploadhandler.deleteChunks(rsrc);
                 } else {
                     numLive++;
                 }
             }
-            if (admin.hasPendingChanges()) {
+            if (admin.hasChanges()) {
                 try {
-                    admin.refresh(true);
-                    admin.save();
-                } catch (InvalidItemStateException iise) {
-                    log.info("ChunkCleanUpTask: Concurrent modification to one or more of the chunk to be removed. Retrying later");
-                } catch (RepositoryException re) {
+                    admin.refresh();
+                    admin.commit();
+                } catch (PersistenceException re) {
                     log.info("ChunkCleanUpTask: Failed persisting chunk removal. Retrying later");
                 }
             }
@@ -143,7 +146,7 @@ public class ChunkCleanUpTask implements Runnable {
                 t);
         } finally {
             if (admin != null) {
-                admin.logout();
+                admin.close();
             }
         }
         long end = System.currentTimeMillis();
@@ -153,34 +156,35 @@ public class ChunkCleanUpTask implements Runnable {
     }
 
     /**
-     * Check if {@link Node} is eligible of
+     * Check if {@link Resource} is eligible of
      * {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE} cleanup. To be
      * eligible the age of last
      * {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE} uploaded should be
      * greater than @link {@link #chunkCleanUpAge}
      *
-     * @param node {@link Node} containing
+     * @param rsrc {@link Resource} containing
      *            {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE}
-     *            {@link Node}s
+     *            {@link Resource}s
      * @return true if eligible else false.
-     * @throws RepositoryException
      */
-    private boolean isEligibleForCleanUp(Node node) throws RepositoryException {
-        Node lastChunkNode = uploadhandler.getLastChunk(node);
-        return lastChunkNode != null
-            && (System.currentTimeMillis() - lastChunkNode.getProperty(
-                javax.jcr.Property.JCR_CREATED).getDate().getTimeInMillis()) > chunkCleanUpAge;
+    private boolean isEligibleForCleanUp(Resource rsrc) {
+        boolean result = false;
+        final Resource lastChunkNode = uploadhandler.getLastChunk(rsrc);
+        if ( lastChunkNode != null ) {
+            final Calendar created = lastChunkNode.getValueMap().get(JcrConstants.JCR_CREATED, Calendar.class);
+            if ( created != null && System.currentTimeMillis() - created.getTimeInMillis() > chunkCleanUpAge ) {
+                result = true;
+            }
+        }
+        return result;
     }
 
     @Activate
-    protected void activate(final ComponentContext context,
-            final Map<String, Object> configuration) {
-        chunkCleanUpAge = OsgiUtil.toInteger(
-            configuration.get(CHUNK_CLEANUP_AGE), 1) * 60 * 1000;
+    protected void activate(final Config configuration) {
+        chunkCleanUpAge = configuration.chunk_cleanup_age();
         log.info("scheduler config [{}], chunkGarbageTime  [{}] ms",
-            OsgiUtil.toString(configuration.get("scheduler.expression"), ""),
+            configuration.scheduler_expression(),
             chunkCleanUpAge);
 
     }
-
 }

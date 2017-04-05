@@ -65,6 +65,7 @@ public interface JcrResourceResolverFactory extends ResourceResolverFactory {
      *
      * @param session The JCR <code>Session</code> used by the created resource
      *            manager to access the repository.
+     * @return the resource resolver
      */
     ResourceResolver getResourceResolver(Session session);
 

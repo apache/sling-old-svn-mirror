@@ -28,6 +28,7 @@ public interface ISlingLaunchpadServer {
     public static final String PROP_DEBUG_PORT = "launchpad.debugPort";
 
     public static final String PROP_INSTALL_LOCALLY = "launchpad.installLocally";
+    public static final String PROP_RESOLVE_SOURCES = "launchpad.resolveSources";
     public static final String PROP_BUNDLE_VERSION_FORMAT = "launchpad.bundle.%s.version";
 
     ISlingLaunchpadConfiguration getConfiguration();

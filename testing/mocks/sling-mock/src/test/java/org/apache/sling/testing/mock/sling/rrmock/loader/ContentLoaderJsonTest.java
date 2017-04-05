@@ -18,8 +18,6 @@
  */
 package org.apache.sling.testing.mock.sling.rrmock.loader;
 
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.loader.AbstractContentLoaderJsonTest;
 
@@ -28,11 +26,6 @@ public class ContentLoaderJsonTest extends AbstractContentLoaderJsonTest {
     @Override
     protected ResourceResolverType getResourceResolverType() {
         return ResourceResolverType.RESOURCERESOLVER_MOCK;
-    }
-
-    @Override
-    protected ResourceResolver newResourceResolver() {
-        return MockSling.newResourceResolver(getResourceResolverType());
     }
 
 }

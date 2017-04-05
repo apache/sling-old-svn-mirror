@@ -1,0 +1,15 @@
+{
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:mixinTypes" : [
+        "mix:language"
+    ],
+    "jcr:language"   : "de",
+    "sling:basename" : [
+        "finance"
+    ],
+    "bank"          : {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key"      : "the bank",
+        "sling:message"  : "die Bank"
+    }
+}

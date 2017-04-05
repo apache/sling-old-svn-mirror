@@ -23,20 +23,16 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>22</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <version>30</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.jcr-mock</artifactId>
-    <version>1.1.5-SNAPSHOT</version>
+    <version>1.2.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Testing JCR Mock</name>
     <description>Mock implementation of selected JCR APIs.</description>
-
-    <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks/jcr-mock</connection>
@@ -49,7 +45,6 @@
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
-            <version>2.0</version>
             <scope>compile</scope>
         </dependency>
     
@@ -103,19 +98,6 @@
                 <extensions>true</extensions>
             </plugin>
       
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>generate-scr-scrdescriptor</id>
-                        <goals>
-                            <goal>scr</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-    
         </plugins>
     </build>
   

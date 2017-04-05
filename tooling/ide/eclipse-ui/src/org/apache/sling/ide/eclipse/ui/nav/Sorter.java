@@ -40,11 +40,10 @@ public class Sorter extends ViewerSorter {
 		JcrNode node2 = (JcrNode) e2;
 		JcrNode parent = node1.getParent();
 		Object[] children = parent.getChildren(false);
-		for (int i = 0; i < children.length; i++) {
-			Object aChild = children[i];
-			if (aChild==node1) {
+		for (Object child : children) {
+			if (child==node1) {
 				return -1;
-			} else if (aChild==node2) {
+			} else if (child==node2) {
 				return 1;
 			}
 		}

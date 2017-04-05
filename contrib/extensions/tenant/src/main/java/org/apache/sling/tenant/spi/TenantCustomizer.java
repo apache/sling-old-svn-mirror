@@ -30,7 +30,11 @@ import aQute.bnd.annotation.ConsumerType;
  *
  * Tools can hook into the tenant creation, changing a tenant and removing
  * thereof by implementing this interface.
+ *
+ * @deprecated This interface will not be supported in future versions. Use
+ *             {@link TenantManagerHook} instead.
  */
+@Deprecated
 @ConsumerType
 public interface TenantCustomizer {
 
@@ -54,7 +58,7 @@ public interface TenantCustomizer {
      *         property accessor methods. {@code null} or an empty map may be
      *         returned to not add properties.
      */
-    public Map<String, Object> setup(Tenant tenant, ResourceResolver resolver);
+    Map<String, Object> setup(Tenant tenant, ResourceResolver resolver);
 
     /**
      * Called to remove the setup for the given Tenant. This reverts all changes
@@ -72,5 +76,5 @@ public interface TenantCustomizer {
      *            persistence for further cleanup. Note, that this
      *            {@code resolver} will have administrative privileges.
      */
-    public void remove(Tenant tenant, ResourceResolver resolver);
+    void remove(Tenant tenant, ResourceResolver resolver);
 }

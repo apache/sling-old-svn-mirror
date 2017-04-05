@@ -18,43 +18,43 @@
  */
 package org.apache.sling.models.factory;
 
-import java.lang.reflect.AnnotatedElement;
+import java.util.ArrayList;
 import java.util.Collection;
+
+import aQute.bnd.annotation.ProviderType;
 
 /**
  * Exception which is triggered whenever a Sling Model cannot be instantiated
- * due to some missing elements (i.e. required fields/methods/constructor params
+ * due to some missing elements (i.e. required fields/methods/constructor parameters
  * could not be injected).
+ * Contains a number of {@link MissingElementException}s.
  * 
  * @see ModelFactory
  *
  */
+@ProviderType
 public final class MissingElementsException extends RuntimeException {
     private static final long serialVersionUID = 7870762030809272254L;
 
-    private final Collection<? extends AnnotatedElement> missingElements;
+    private Collection<MissingElementException> missingElements;
 
-    private String formatString;
-
-    private Class<?> type;
-
-    public MissingElementsException(String format, Collection<? extends AnnotatedElement> elements, Class<?> type) {
-        super();
-        this.formatString = format;
-        this.missingElements = elements;
-        this.type = type;
+    
+    public MissingElementsException(String message) {
+        super(message);
+        missingElements = new ArrayList<MissingElementException>();
     }
 
-    @Override
-    public String getMessage() {
-        return String.format(formatString, missingElements, type);
+    public void addMissingElementExceptions(MissingElementException e) {
+        // also add to suppressed list to make sure they appear as well with their full stack traces in the printStackTrace for this throwable
+        addSuppressed(e);
+        missingElements.add(e);
     }
-
-    public Class<?> getType() {
-        return type;
+    
+    public boolean isEmpty() {
+        return missingElements.isEmpty();
     }
-
-    public Collection<? extends AnnotatedElement> getMissingElements() {
+    
+    public Collection<MissingElementException> getMissingElements() {
         return missingElements;
     }
 }

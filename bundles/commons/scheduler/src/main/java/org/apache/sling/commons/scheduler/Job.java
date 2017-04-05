@@ -16,7 +16,7 @@
  */
 package org.apache.sling.commons.scheduler;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * A job is executed by the {@link Scheduler} service.

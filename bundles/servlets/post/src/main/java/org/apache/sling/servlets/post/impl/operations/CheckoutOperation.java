@@ -24,8 +24,8 @@ import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostResponse;
 
@@ -33,38 +33,42 @@ import org.apache.sling.servlets.post.PostResponse;
  * The <code>CheckoutOperation</code> class implements the
  * {@link org.apache.sling.servlets.post.SlingPostConstants#OPERATION_CHECKOUT checkout}
  * operation for the Sling default POST servlet.
+ * The checkout operation depends on the resources being backed up by a JCR node.
  */
 public class CheckoutOperation extends AbstractPostOperation {
     @Override
     protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes)
-            throws RepositoryException {
-        Iterator<Resource> res = getApplyToResources(request);
-        if (res == null) {
+            throws PersistenceException {
+        try {
+            Iterator<Resource> res = getApplyToResources(request);
+            if (res == null) {
 
-            Resource resource = request.getResource();
-            Node node = resource.adaptTo(Node.class);
-            if (node == null) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND,
-                    "Missing source " + resource + " for checkout");
-                return;
-            }
-
-            node.checkout();
-            changes.add(Modification.onCheckout(resource.getPath()));
-
-        } else {
-
-            while (res.hasNext()) {
-                Resource resource = res.next();
+                Resource resource = request.getResource();
                 Node node = resource.adaptTo(Node.class);
-                if (node != null) {
-                    node.checkout();
-                    changes.add(Modification.onCheckout(resource.getPath()));
+                if (node == null) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND,
+                        "Missing source " + resource + " for checkout");
+                    return;
                 }
+
+                node.getSession().getWorkspace().getVersionManager().checkout(node.getPath());
+                changes.add(Modification.onCheckout(resource.getPath()));
+
+            } else {
+
+                while (res.hasNext()) {
+                    Resource resource = res.next();
+                    Node node = resource.adaptTo(Node.class);
+                    if (node != null) {
+                        node.getSession().getWorkspace().getVersionManager().checkout(node.getPath());
+                        changes.add(Modification.onCheckout(resource.getPath()));
+                    }
+                }
+
             }
-
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
         }
-
     }
 
     /**

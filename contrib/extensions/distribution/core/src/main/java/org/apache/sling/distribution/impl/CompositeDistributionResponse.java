@@ -20,20 +20,32 @@
 package org.apache.sling.distribution.impl;
 
 
-import org.apache.sling.distribution.DistributionRequestState;
-import org.apache.sling.distribution.DistributionResponse;
-
 import javax.annotation.Nonnull;
 import java.util.List;
 
+import org.apache.sling.distribution.DistributionRequestState;
+import org.apache.sling.distribution.DistributionResponse;
+
+/**
+ * A composite {@link SimpleDistributionResponse}.
+ */
 public class CompositeDistributionResponse extends SimpleDistributionResponse {
+
+    private final int packagesCount;
+    private final long packagseSize;
+    private final int queuesCount;
+    private final long exportTime;
 
     private DistributionRequestState state;
 
     private String message;
 
-    public CompositeDistributionResponse(List<DistributionResponse> distributionResponses) {
+    public CompositeDistributionResponse(List<DistributionResponse> distributionResponses, int packagesCount, long packagseSize, long exportTime) {
         super(DistributionRequestState.DISTRIBUTED, null);
+        this.packagesCount = packagesCount;
+        this.packagseSize = packagseSize;
+        this.queuesCount = distributionResponses.size();
+        this.exportTime = exportTime;
         if (distributionResponses.isEmpty()) {
             state = DistributionRequestState.DROPPED;
         } else {
@@ -51,7 +63,7 @@ public class CompositeDistributionResponse extends SimpleDistributionResponse {
 
     @Override
     public boolean isSuccessful() {
-        return !DistributionRequestState.DROPPED.equals(state);
+        return DistributionRequestState.ACCEPTED.equals(state) || DistributionRequestState.DISTRIBUTED.equals(state);
     }
 
     @Nonnull
@@ -75,16 +87,12 @@ public class CompositeDistributionResponse extends SimpleDistributionResponse {
     }
 
 
-
     /* Provide the aggregated state of two {@link org.apache.sling.distribution.DistributionRequestState}s */
     private DistributionRequestState aggregatedState(DistributionRequestState first, DistributionRequestState second) {
         DistributionRequestState aggregatedState;
         switch (second) {
             case DISTRIBUTED:
                 aggregatedState = first;
-                break;
-            case DROPPED:
-                aggregatedState = DistributionRequestState.DISTRIBUTED;
                 break;
             case ACCEPTED:
                 if (first.equals(DistributionRequestState.DISTRIBUTED)) {
@@ -97,5 +105,21 @@ public class CompositeDistributionResponse extends SimpleDistributionResponse {
                 aggregatedState = DistributionRequestState.DROPPED;
         }
         return aggregatedState;
+    }
+
+    public int getPackagesCount() {
+        return packagesCount;
+    }
+
+    public long getExportTime() {
+        return exportTime;
+    }
+
+    public int getQueuesCount() {
+        return queuesCount;
+    }
+
+    public long getPackagseSize() {
+        return packagseSize;
     }
 }

@@ -1,0 +1,71 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+# This is the OAK feature.
+[feature name=oak]
+
+[variables]
+    oak.version=1.5.5
+
+# The segment node store is used via a configuration
+[artifacts startLevel=10]
+    org.apache.felix/org.apache.felix.jaas/0.0.4
+
+[artifacts startLevel=15]
+    org.apache.jackrabbit/oak-core/${oak.version}
+    org.apache.jackrabbit/oak-commons/${oak.version}
+    org.apache.jackrabbit/oak-lucene/${oak.version}
+    org.apache.jackrabbit/oak-blob/${oak.version}
+    org.apache.jackrabbit/oak-jcr/${oak.version}
+
+[artifacts startLevel=15 runModes=oak_tar]
+    org.apache.jackrabbit/oak-segment/${oak.version}
+
+# start the Oak server instance after all components have been configured
+# and started to avoid restarting that component ( see SLING-4556 )
+[artifacts startLevel=16]
+    # TODO replace with 1.0.2 once that's released
+    org.apache.sling/org.apache.sling.jcr.oak.server/1.0.1-SNAPSHOT
+
+[configurations]
+  org.apache.felix.jaas.Configuration.factory-LoginModuleImpl
+    jaas.controlFlag="required"
+    jaas.classname="org.apache.jackrabbit.oak.security.authentication.user.LoginModuleImpl"
+
+  org.apache.felix.jaas.ConfigurationSpi
+    jaas.defaultRealmName="jackrabbit.oak"
+    jaas.configProviderName="FelixJaasProvider"
+  
+  org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl
+    org.apache.jackrabbit.oak.authentication.configSpiName="FelixJaasProvider"
+
+  org.apache.jackrabbit.oak.security.user.UserConfigurationImpl
+    groupsPath="/home/groups"
+    usersPath="/home/users"
+    defaultDepth="1"
+    importBehavior="besteffort"  
+
+  org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider
+    enabledActions=["org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction"]
+    userPrivilegeNames=["jcr:all"]
+    groupPrivilegeNames=["jcr:read"]
+
+[configurations runModes=oak_tar]
+  org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
+    name="Default\ NodeStore"
+    repository.home="sling/repository"

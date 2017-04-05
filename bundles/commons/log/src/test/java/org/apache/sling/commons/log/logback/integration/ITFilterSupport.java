@@ -59,7 +59,7 @@ public class ITFilterSupport extends LogTestBase{
 
     @Test
     public void testTurboFilter() throws Exception {
-        TestAppender ta = registerAppender("turbofilter");
+        TestAppender ta = registerAppender("turbofilter", "TestAppender");
 
         org.slf4j.Logger bar = LoggerFactory.getLogger("turbofilter.foo.bar");
         assertTrue(bar.isDebugEnabled());
@@ -98,7 +98,7 @@ public class ITFilterSupport extends LogTestBase{
 
     @Test
     public void testNormalFilter() {
-        TestAppender ta = registerAppender("filter");
+        TestAppender ta = registerAppender("filter", "TestAppender");
 
         org.slf4j.Logger bar = LoggerFactory.getLogger("filter.foo.bar");
         assertTrue(bar.isDebugEnabled());
@@ -135,11 +135,43 @@ public class ITFilterSupport extends LogTestBase{
 
         bar.debug("Test");
         assertEquals(1, ta.events.size());
-
     }
 
-    private TestAppender registerAppender(String prefix) {
-        TestAppender ta = new TestAppender();
+    @Test
+    public void filterUsingWildcard() throws Exception{
+        TestAppender ta1 = registerAppender("filterUsingWildcard1", "app1");
+        TestAppender ta2 = registerAppender("filterUsingWildcard2", "app2");
+
+        //Set additivity to false to prevent other appender like CONSOLE from
+        //interfering
+        org.slf4j.Logger baz1 = LoggerFactory.getLogger("filterUsingWildcard1.foo.baz");
+        ((ch.qos.logback.classic.Logger)baz1).setAdditive(false);
+        org.slf4j.Logger baz2 = LoggerFactory.getLogger("filterUsingWildcard2.foo.baz");
+        ((ch.qos.logback.classic.Logger)baz2).setAdditive(false);
+
+        final List<String> msgs = new ArrayList<String>();
+        Filter stf = new Filter<ILoggingEvent>(){
+            @Override
+            public FilterReply decide(ILoggingEvent event) {
+                msgs.add(event.getMessage());
+                return FilterReply.NEUTRAL;
+            }
+        };
+
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put("appenders", "*");
+        ServiceRegistration sr  = bundleContext.registerService(Filter.class.getName(), stf, props);
+
+        delay();
+
+        baz1.info("baz1-1");
+        baz2.info("baz2-1");
+
+        assertEquals(2, msgs.size());
+    }
+
+    private TestAppender registerAppender(String prefix, String appenderName) {
+        TestAppender ta = new TestAppender(appenderName);
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         String[] loggers = {
@@ -181,6 +213,11 @@ public class ITFilterSupport extends LogTestBase{
 
     private static class TestAppender extends AppenderBase<ILoggingEvent> {
         final List<ILoggingEvent> events = new ArrayList<ILoggingEvent>();
+        final String name;
+
+        public TestAppender(String name) {
+            this.name = name;
+        }
 
         @Override
         protected void append(ILoggingEvent eventObject) {
@@ -189,7 +226,7 @@ public class ITFilterSupport extends LogTestBase{
 
         @Override
         public String getName() {
-            return "TestAppender";
+            return name;
         }
     }
 }

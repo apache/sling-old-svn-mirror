@@ -48,7 +48,7 @@ import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 
 class TagFileProcessor {
 
-    private Vector tempVector;
+    private Vector<Compiler> tempVector;
 
     /**
      * A visitor the tag file
@@ -143,6 +143,7 @@ class TagFileProcessor {
             variableVector = new Vector();
         }
 
+        @Override
         public void visit(Node.TagDirective n) throws JasperException {
 
             JspUtil.checkAttributes("Tag directive", n, tagDirectiveAttrs, err);
@@ -185,6 +186,7 @@ class TagFileProcessor {
             return result;
         }
 
+        @Override
         public void visit(Node.AttributeDirective n) throws JasperException {
 
             JspUtil.checkAttributes("Attribute directive", n,
@@ -284,6 +286,7 @@ class TagFileProcessor {
             checkUniqueName(attrName, ATTR_NAME, n, tagAttributeInfo);
         }
 
+        @Override
         public void visit(Node.VariableDirective n) throws JasperException {
 
             JspUtil.checkAttributes("Variable directive", n,
@@ -528,8 +531,8 @@ class TagFileProcessor {
     /**
      * Compiles and loads a tagfile.
      */
-    private Class loadTagFile(Compiler compiler, String tagFilePath,
-            TagInfo tagInfo, PageInfo parentPageInfo) throws JasperException {
+    private void loadTagFile(Compiler compiler, String tagFilePath,
+            Node.CustomTag n, PageInfo parentPageInfo) throws JasperException {
 
         JspCompilationContext ctxt = compiler.getCompilationContext();
         JspRuntimeContext rctxt = ctxt.getRuntimeContext();
@@ -541,7 +544,7 @@ class TagFileProcessor {
 
             if (wrapper == null) {
                 wrapper = new JspServletWrapper(ctxt.getServletContext(), ctxt
-                      .getOptions(), tagFilePath, tagInfo, ctxt
+                      .getOptions(), tagFilePath, n.getTagInfo(), ctxt
                       .getRuntimeContext(), compiler.getDefaultIsSession(),
                       ctxt.getTagFileJarUrl(tagFilePath));
                 wrapper = rctxt.addWrapper(tagFilePath, wrapper);
@@ -554,26 +557,48 @@ class TagFileProcessor {
                 // for the tag file. TagInfo instance was created the last
                 // time the tag file was scanned for directives, and the tag
                 // file may have been modified since then.
-                wrapper.getJspEngineContext().setTagInfo(tagInfo);
+                wrapper.getJspEngineContext().setTagInfo(n.getTagInfo());
             }
 
             Class tagClazz;
             int tripCount = wrapper.incTripCount();
             try {
                 if (tripCount > 0) {
+                    final String postfix = "_" + String.valueOf(tripCount);
                     // When tripCount is greater than zero, a circular
                     // dependency exists. The circularily dependant tag
                     // file is compiled in prototype mode, to avoid infinite
                     // recursion.
+                    final String tempTagFilePath = tagFilePath + postfix;
+                    final TagInfo tempTagInfo = new JasperTagInfo(
+                            n.getTagInfo().getTagName(),
+                            n.getTagInfo().getTagClassName() + postfix,
+                            n.getTagInfo().getBodyContent(),
+                            n.getTagInfo().getInfoString(),
+                            n.getTagInfo().getTagLibrary(),
+                            n.getTagInfo().getTagExtraInfo(),
+                            n.getTagInfo().getAttributes(),
+                            n.getTagInfo().getDisplayName(),
+                            n.getTagInfo().getSmallIcon(),
+                            n.getTagInfo().getLargeIcon(),
+                            n.getTagInfo().getTagVariableInfos(),
+                            ((JasperTagInfo)n.getTagInfo()).getDynamicAttributesMapName());
 
-                    JspServletWrapper tempWrapper = new JspServletWrapper(ctxt
-                          .getServletContext(), ctxt.getOptions(),
-                          tagFilePath, tagInfo, ctxt.getRuntimeContext(),
+                    JspServletWrapper tempWrapper = new JspServletWrapper(
+                            ctxt.getServletContext(),
+                            ctxt.getOptions(),
+                            tagFilePath,
+                          tempTagInfo,
+                          ctxt.getRuntimeContext(),
                           compiler.getDefaultIsSession(),
-                          ctxt.getTagFileJarUrl(tagFilePath));
+                          ctxt.getTagFileJarUrl(tempTagFilePath));
                     tagClazz = tempWrapper.loadTagFilePrototype();
-                    tempVector.add(tempWrapper.getJspEngineContext()
-                          .getCompiler());
+                    tempVector.add(tempWrapper.getJspEngineContext().getCompiler());
+                    String name = JspUtil.getCanonicalName(tagClazz);
+                    final int underscorePos = name.lastIndexOf(postfix);
+                    if ( underscorePos > -1 ) {
+                        n.setTagHandlerClassName(name.substring(0, underscorePos));
+                    }
                 } else {
                     tagClazz = wrapper.loadTagFile();
                 }
@@ -597,7 +622,7 @@ class TagFileProcessor {
                 // ignore errors
             }
 
-            return tagClazz;
+            n.setTagHandlerClass(tagClazz);
 
         } finally {
             rctxt.unlockTagFileLoading(tagFilePath);
@@ -620,6 +645,7 @@ class TagFileProcessor {
             this.pageInfo = compiler.getPageInfo();
         }
 
+        @Override
         public void visit(Node.CustomTag n) throws JasperException {
             TagFileInfo tagFileInfo = n.getTagFileInfo();
             if (tagFileInfo != null) {
@@ -629,9 +655,8 @@ class TagFileProcessor {
                     // Omit tag file dependency info on jar files for now.
                     pageInfo.addDependant(tagFilePath);
                 }
-                Class c = loadTagFile(compiler, tagFilePath, n.getTagInfo(),
-                        pageInfo);
-                n.setTagHandlerClass(c);
+                loadTagFile(compiler, tagFilePath, n, pageInfo);
+
             }
             visitBody(n);
         }
@@ -640,35 +665,28 @@ class TagFileProcessor {
     /**
      * Implements a phase of the translation that compiles (if necessary) the
      * tag files used in a JSP files. The directives in the tag files are
-     * assumed to have been proccessed and encapsulated as TagFileInfo in the
+     * assumed to have been processed and encapsulated as TagFileInfo in the
      * CustomTag nodes.
      */
     public void loadTagFiles(Compiler compiler, Node.Nodes page)
             throws JasperException {
 
-        tempVector = new Vector();
+        tempVector = new Vector<Compiler>();
         page.visit(new TagFileLoaderVisitor(compiler));
     }
 
     /**
-     * Removed the java and class files for the tag prototype generated from the
+     * Removed the java files for the tag prototype generated from the
      * current compilation.
      *
-     * @param classFileName
-     *            If non-null, remove only the class file with with this name.
      */
-    public void removeProtoTypeFiles(String classFileName) {
-        Iterator iter = tempVector.iterator();
+    public void removeProtoTypeFiles() {
+        final Iterator<Compiler> iter = tempVector.iterator();
         while (iter.hasNext()) {
-            Compiler c = (Compiler) iter.next();
-            if (classFileName == null) {
-                c.removeGeneratedClassFiles();
-            } else if (classFileName.equals(c.getCompilationContext()
-                    .getClassFileName())) {
-                c.removeGeneratedClassFiles();
-                tempVector.remove(c);
-                return;
-            }
+            final Compiler c = iter.next();
+            c.removeGeneratedFiles();
+            // we don't remove the .class file as this is already loaded by the class loader
         }
+        tempVector.clear();
     }
 }

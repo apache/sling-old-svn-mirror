@@ -67,10 +67,10 @@ public class ServicesListener implements StartupListener {
     private volatile State registrationState = State.NONE;
 
     /** The registration for the provider */
-    private ServiceRegistration providerReg;
+    private ServiceRegistration<?> providerReg;
 
     /** The registration for the provider2 */
-    private ServiceRegistration provider2Reg;
+    private ServiceRegistration<?> provider2Reg;
 
     /** Flag for marking if startup is finished. */
     private final AtomicBoolean startupFinished = new AtomicBoolean(false);
@@ -91,6 +91,7 @@ public class ServicesListener implements StartupListener {
     /**
      * @see org.apache.sling.launchpad.api.StartupListener#inform(org.apache.sling.launchpad.api.StartupMode, boolean)
      */
+    @Override
     public void inform(final StartupMode mode, final boolean finished) {
         if ( finished && this.startupFinished.compareAndSet(false, true) ) {
             notifyChange();
@@ -100,6 +101,7 @@ public class ServicesListener implements StartupListener {
     /**
      * @see org.apache.sling.launchpad.api.StartupListener#startupFinished(org.apache.sling.launchpad.api.StartupMode)
      */
+    @Override
     public void startupFinished(final StartupMode mode) {
         if ( this.startupFinished.compareAndSet(false, true) ) {
             notifyChange();
@@ -109,6 +111,7 @@ public class ServicesListener implements StartupListener {
     /**
      * @see org.apache.sling.launchpad.api.StartupListener#startupProgress(float)
      */
+    @Override
     public void startupProgress(final float progress) {
         // nothing to do
     }
@@ -203,7 +206,7 @@ public class ServicesListener implements StartupListener {
         private final String serviceName;
 
         /** The service reference. */
-        private volatile ServiceReference reference;
+        private volatile ServiceReference<?> reference;
 
         /** The service. */
         private volatile Object service;
@@ -227,7 +230,7 @@ public class ServicesListener implements StartupListener {
                 // this should really never happen
                 throw new RuntimeException("Unexpected exception occured.", ise);
             }
-            final ServiceReference ref = bundleContext.getServiceReference(serviceName);
+            final ServiceReference<?> ref = bundleContext.getServiceReference(serviceName);
             if ( ref != null ) {
                 this.retainService(ref);
             }
@@ -250,7 +253,7 @@ public class ServicesListener implements StartupListener {
         /**
          * Try to get the service and notify the change.
          */
-        private synchronized void retainService(final ServiceReference ref) {
+        private synchronized void retainService(final ServiceReference<?> ref) {
             boolean hadService = this.service != null;
             boolean getService = this.reference == null;
             if ( !getService ) {
@@ -278,7 +281,7 @@ public class ServicesListener implements StartupListener {
         /**
          * Try to release the service and notify the change.
          */
-        private synchronized void releaseService(final ServiceReference ref) {
+        private synchronized void releaseService(final ServiceReference<?> ref) {
             if ( this.reference != null && this.reference.compareTo(ref) == 0) {
                 this.service = null;
                 bundleContext.ungetService(this.reference);
@@ -290,6 +293,7 @@ public class ServicesListener implements StartupListener {
         /**
          * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
          */
+        @Override
         public void serviceChanged(final ServiceEvent event) {
             if (event.getType() == ServiceEvent.REGISTERED) {
                 this.retainService(event.getServiceReference());

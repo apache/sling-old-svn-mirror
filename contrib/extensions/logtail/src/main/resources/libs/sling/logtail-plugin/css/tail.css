@@ -1,0 +1,121 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+.header-cont {
+    position:fixed;
+    top:0;
+    left:0;
+}
+
+.pulldown {
+    height:20px;
+    cursor:pointer;
+    background:#CCCCCC;
+    margin: 0 auto;
+    border-radius: 0 0 25px 25px;
+    text-align: center;
+}
+
+.header {
+    background:#F0F0F0;
+    border:1px solid #CCC;
+    margin:0px auto;
+    height:50px;
+    vertical-align:middle;
+}
+
+.header table td {
+	width:5%;
+    text-align:center;
+    vertical-align:middle;
+}
+
+.header table td.longer {
+    width:20%;
+}
+
+.header table td button {
+	cursor:pointer;
+}
+
+.content {
+	font:Courier-New;
+    font-size:9px;
+}
+
+.criteria-item {
+	cursor:pointer;
+}
+
+.criteria-item.selected {
+	background-color: #2B60DE;
+    color:white;
+}
+
+.highlight-content-inner-div {
+	float:left;
+    clear:both;
+    width:95%;
+    margin-bottom: 10px;
+}
+
+span.box {
+    min-width:50px;
+    text-overflow:clip;
+    border:1px solid black;
+    margin-right: 5px;
+    margin-left: 5px;
+    margin-top:5px;
+    margin-bottom:5px;
+}
+
+.criteria-list {
+	padding: 0;
+    list-style:none;
+    margin:0;
+}
+
+#criteria {
+	min-height: 200px;
+    border:1px solid;
+}
+
+.lineNumberCol {
+	background-color: grey;
+	color: white;
+}
+
+#speed {
+    width:50px;
+}
+
+.loadingstatus li {
+	font-size:30px;
+	color:grey;
+	list-style: inherit !important;
+}
+
+.hide {
+    display: none;
+}
+
+.filterClear {
+  display: inline-block;
+  vertical-align: middle;
+}

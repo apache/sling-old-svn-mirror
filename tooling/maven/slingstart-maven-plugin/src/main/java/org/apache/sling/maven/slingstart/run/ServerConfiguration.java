@@ -28,6 +28,9 @@ public class ServerConfiguration implements Serializable {
 
     private static final String DEFAULT_VM_OPTS = "-Xmx1024m -XX:MaxPermSize=256m -Djava.awt.headless=true";
 
+    // http://docs.oracle.com/javase/7/docs/technotes/guides/jpda/conninv.html#Invocation
+    private static final String DEFAULT_VM_DEBUG_OPTS = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000";
+
     /** The unique id. */
     private String id;
 
@@ -37,11 +40,21 @@ public class ServerConfiguration implements Serializable {
     /** The port to use. */
     private String port;
 
+    /** The control port to use. */
+    private String controlPort;
+
     /** The context path. */
     private String contextPath;
 
     /** The vm options. */
     private String vmOpts = DEFAULT_VM_OPTS;
+
+    /** 
+     * If set to {@code "true"}, the process will allow a debugger to connect on port 8000. 
+     * If set to some other string, that string will be appended to this server's {@code vmOpts}, allowing you to configure arbitrary debugging options.
+     * If the global configuration property {@link StartMojo#debug} is set on the mojo itself, it will be used instead.
+     */
+    private String debug;
 
     /** Additional application options. */
     private String opts;
@@ -51,6 +64,13 @@ public class ServerConfiguration implements Serializable {
 
     /** The folder to use. */
     private File folder;
+    
+    /**
+     * The relative filename of the file which receives both the standard output (stdout) and standard error (stderr) of the server processes. 
+     * If null or empty string the server process inherits stdout from the parent process (i.e. the Maven process).
+     * The given filename must be relative to the working directory of the according server.
+     */
+    private String stdOutFile;
 
     /**
      * Get the instance id
@@ -100,6 +120,29 @@ public class ServerConfiguration implements Serializable {
         this.vmOpts = vmOpts;
     }
 
+    /**
+     * Returns the debugging options derived from the passed globalDebug parameter and the debug field (where the globalDebug parameter has precedence over the local field)
+     * @param globalDebug the global debug options (may be {@code null}).
+     * @return the debugging options to use or {@code null}. Should be appended to the ones being returned by {@link #getVmOpts()}.
+     * @see <a href="http://docs.oracle.com/javase/7/docs/technotes/guides/jpda/conninv.html#Invocation">JPDA Sun VM Invocation Options</a>
+     */
+    public String getVmDebugOpts(String globalDebug) {
+        if (globalDebug != null) {
+            if (Boolean.valueOf(globalDebug).equals(Boolean.TRUE)) {
+                return DEFAULT_VM_DEBUG_OPTS;
+            }
+            return globalDebug;
+        }
+        if (Boolean.valueOf(debug).equals(Boolean.TRUE)) {
+            return DEFAULT_VM_DEBUG_OPTS;
+        }
+        return debug;
+    }
+
+    public void setDebug(final String debug) {
+        this.debug = debug;
+    }
+
     public String getOpts() {
         return opts;
     }
@@ -124,6 +167,22 @@ public class ServerConfiguration implements Serializable {
         this.folder = folder.getAbsoluteFile();
     }
 
+    public String getControlPort() {
+        return controlPort;
+    }
+
+    public void setControlPort(String controlPort) {
+        this.controlPort = controlPort;
+    }
+
+    public String getStdOutFile() {
+        return stdOutFile;
+    }
+
+    public void setStdOutFile(String stdOutFile) {
+        this.stdOutFile = stdOutFile;
+    }
+
     /**
      * Get the server
      * @return The server
@@ -140,18 +199,21 @@ public class ServerConfiguration implements Serializable {
         copy.setPort(this.getPort());
         copy.setContextPath(this.getContextPath());
         copy.setVmOpts(this.getVmOpts());
+        copy.setDebug(this.debug);
         copy.setOpts(this.getOpts());
         copy.setInstances(1);
         copy.setFolder(this.getFolder());
-
+        copy.setControlPort(this.getControlPort());
+        copy.setStdOutFile(this.stdOutFile);
         return copy;
     }
 
     @Override
     public String toString() {
         return "LaunchpadConfiguration [id=" + id + ", runmode=" + runmode
-                + ", port=" + port + ", contextPath=" + contextPath
-                + ", vmOpts=" + vmOpts + ", opts=" + opts + ", instances="
-                + instances + ", folder=" + folder + "]";
+                + ", port=" + port + ", controlPort=" + controlPort
+                + ", contextPath=" + contextPath
+                + ", vmOpts=" + vmOpts + ", vmDebugOpts=" + getVmDebugOpts(null) + ", opts=" + opts + ", instances="
+                + instances + ", folder=" + folder + ", stdout=" + stdOutFile + "]";
     }
 }

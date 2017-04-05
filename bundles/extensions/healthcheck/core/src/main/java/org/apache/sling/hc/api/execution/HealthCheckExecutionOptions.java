@@ -79,5 +79,32 @@ public class HealthCheckExecutionOptions {
         return overrideGlobalTimeout;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (combineTagsWithOr ? 1231 : 1237);
+        result = prime * result + (forceInstantExecution ? 1231 : 1237);
+        result = prime * result + overrideGlobalTimeout;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        HealthCheckExecutionOptions other = (HealthCheckExecutionOptions) obj;
+        if (combineTagsWithOr != other.combineTagsWithOr)
+            return false;
+        if (forceInstantExecution != other.forceInstantExecution)
+            return false;
+        if (overrideGlobalTimeout != other.overrideGlobalTimeout)
+            return false;
+        return true;
+    }
 
 }

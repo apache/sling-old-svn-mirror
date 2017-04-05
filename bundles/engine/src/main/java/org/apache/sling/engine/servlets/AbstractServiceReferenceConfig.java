@@ -30,9 +30,9 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 
+import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.ServiceReference;
 
-import aQute.bnd.annotation.ConsumerType;
 
 /**
  * The <code>AbstractServiceReferenceConfig</code> may be used as a base class
@@ -110,6 +110,7 @@ public abstract class AbstractServiceReferenceConfig {
      * Returns the name of this configuration object. Implementations may use
      * this value to implement the <code>ServletConfig.getServletName()</code>
      * or <code>FilterConfig.getFilterName()</code> methods.
+     * @return The name
      */
     protected String getName() {
         return name;
@@ -119,6 +120,8 @@ public abstract class AbstractServiceReferenceConfig {
      * Looks for a name value in the service reference properties. See the
      * class comment at the top for the list of properties checked by this
      * method.
+     * @param reference The service reference
+     * @return The name
      */
     public static String getName(ServiceReference reference) {
         String servletName = null;

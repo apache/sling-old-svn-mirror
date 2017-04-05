@@ -1,7 +1,0 @@
-defaults crankstart.bundle.start.level 10
-
-bundle mvn:org.apache.felix/org.apache.felix.scr/1.8.2
-bundle mvn:org.apache.felix/org.apache.felix.metatype/1.0.10
-bundle mvn:org.apache.tika/tika-core/1.2
-bundle mvn:org.apache.tika/tika-bundle/1.2
-bundle mvn:org.apache.felix/org.apache.felix.jaas/0.0.2

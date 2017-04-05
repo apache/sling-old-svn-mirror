@@ -22,27 +22,30 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.NonExistingResource;
-import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
-import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
-import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
+import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
 import org.mockito.Mockito;
-import org.osgi.framework.Constants;
 
 /** Base class for tests that involve ResourceDecorators */
 public abstract class ResourceDecoratorTestBase {
@@ -53,12 +56,14 @@ public abstract class ResourceDecoratorTestBase {
     protected abstract Resource wrapResourceForTest(Resource resource);
 
     @Before
-    public void setup() {
+    public void setup() throws LoginException {
         final ResourceDecorator d = new ResourceDecorator() {
+            @Override
             public Resource decorate(Resource resource) {
                 return ResourceDecoratorTestBase.this.wrapResourceForTest(resource);
             }
 
+            @Override
             public Resource decorate(Resource resource, HttpServletRequest request) {
                 throw new UnsupportedOperationException("Not supposed to be used in these tests");
             }
@@ -68,20 +73,44 @@ public abstract class ResourceDecoratorTestBase {
         final ResourceDecoratorTracker t = new ResourceDecoratorTracker();
         t.bindResourceDecorator(d, null);
 
-        final ResourceProvider provider = new QueriableResourceProvider() {
+        final ResourceProvider<?> provider = new ResourceProvider<Object>() {
 
-            public Resource getResource(ResourceResolver resourceResolver, HttpServletRequest request, String path) {
-                return getResource(null, path);
+            @Override
+            public QueryLanguageProvider<Object> getQueryLanguageProvider() {
+                return new QueryLanguageProvider<Object>() {
+
+                    @Override
+                    public String[] getSupportedLanguages(ResolveContext<Object> ctx) {
+                        return new String[] { QUERY_LANGUAGE };
+                    }
+
+                    @Override
+                    public Iterator<Resource> findResources(ResolveContext<Object> ctx, String query, String language) {
+                        final List<Resource> found = new ArrayList<Resource>();
+                        found.add(mockResource("/tmp/C"));
+                        found.add(mockResource("/tmp/D"));
+                        found.add(mockResource("/var/one"));
+                        found.add(mockResource("/var/two"));
+                        return found.iterator();
+                    }
+
+                    @Override
+                    public Iterator<ValueMap> queryResources(ResolveContext<Object> ctx, String query, String language) {
+                        return null;
+                    }
+                };
             }
 
-            public Resource getResource(ResourceResolver resourceResolver, String path) {
+            @Override
+            public Resource getResource(ResolveContext<Object> ctx, String path, final ResourceContext rCtx, Resource parent) {
                 if(path.equals("/") || path.startsWith("/tmp") || path.startsWith("/var")) {
                     return mockResource(path);
                 }
                 return null;
             }
 
-            public Iterator<Resource> listChildren(Resource parent) {
+            @Override
+            public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
                 final List<Resource> children = new ArrayList<Resource>();
                 if("/".equals(parent.getPath())) {
                     children.add(mockResource("/tmp"));
@@ -99,40 +128,29 @@ public abstract class ResourceDecoratorTestBase {
                 return children.iterator();
             }
 
-            public Iterator<ValueMap> queryResources(ResourceResolver resolver, String query, String language) {
-                return null;
-            }
-
-            public Iterator<Resource> findResources(ResourceResolver resolver, String query, String language) {
-                final List<Resource> found = new ArrayList<Resource>();
-                found.add(mockResource("/tmp/C"));
-                found.add(mockResource("/tmp/D"));
-                found.add(mockResource("/var/one"));
-                found.add(mockResource("/var/two"));
-                return found.iterator();
-            }
-
         };
 
-        final RootResourceProviderEntry rrp = new RootResourceProviderEntry();
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put(Constants.SERVICE_ID, System.currentTimeMillis());
-        props.put(ResourceProvider.ROOTS, "/");
-        props.put(QueriableResourceProvider.LANGUAGES, QUERY_LANGUAGE);
-        rrp.bindResourceProvider(provider, props);
-
-        final CommonResourceResolverFactoryImpl  crf = new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
+        ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
+        final CommonResourceResolverFactoryImpl crf = new CommonResourceResolverFactoryImpl(activator) {
             @Override
             public ResourceDecoratorTracker getResourceDecoratorTracker() {
                 return t;
             }
 
             @Override
-            public RootResourceProviderEntry getRootProviderEntry() {
-                return rrp;
+            public ResourceAccessSecurityTracker getResourceAccessSecurityTracker() {
+                return new ResourceAccessSecurityTracker();
             }
         };
-        resolver = new ResourceResolverImpl(crf, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+
+        final List<ResourceProviderHandler> list = Arrays.asList(MockedResourceResolverImplTest.createRPHandler(provider, "A-provider", 0L, "/"));
+        resolver = new ResourceResolverImpl(crf, false, null, new ResourceProviderStorageProvider() {
+
+            @Override
+            public ResourceProviderStorage getResourceProviderStorage() {
+                return new ResourceProviderStorage(list);
+            }
+        });
     }
 
     protected void assertExistent(Resource r, boolean existent) {
@@ -145,6 +163,7 @@ public abstract class ResourceDecoratorTestBase {
     protected Resource mockResource(String path) {
         final Resource result = Mockito.mock(Resource.class);
         Mockito.when(result.getPath()).thenReturn(path);
+        Mockito.when(result.getName()).thenReturn(ResourceUtil.getName(path));
         final ResourceMetadata m = new ResourceMetadata();
         Mockito.when(result.getResourceMetadata()).thenReturn(m);
         return result;

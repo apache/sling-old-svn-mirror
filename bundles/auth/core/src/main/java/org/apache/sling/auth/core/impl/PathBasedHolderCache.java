@@ -99,7 +99,7 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         }
     }
 
-    public Collection<Type>[] findApplicableHolder(final HttpServletRequest request) {
+    public Collection<Type>[] findApplicableHolders(final HttpServletRequest request) {
         this.rwLock.readLock().lock();
         try {
             final String hostname = request.getServerName()

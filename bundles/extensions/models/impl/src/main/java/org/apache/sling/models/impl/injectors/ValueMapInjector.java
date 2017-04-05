@@ -24,7 +24,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -35,6 +38,7 @@ import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.ValuePreparer;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
@@ -46,17 +50,20 @@ import org.slf4j.LoggerFactory;
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 2000)
 @SuppressWarnings("deprecation")
-public class ValueMapInjector extends AbstractInjector implements Injector, InjectAnnotationProcessorFactory {
+public class ValueMapInjector extends AbstractInjector implements Injector, InjectAnnotationProcessorFactory, ValuePreparer {
 
     private static final Logger log = LoggerFactory.getLogger(ValueMapInjector.class);
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return "valuemap";
     }
 
-    public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element,
-            DisposalCallbackRegistry callbackRegistry) {
+    public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
+            @Nonnull DisposalCallbackRegistry callbackRegistry) {
+        if (adaptable == ObjectUtils.NULL) {
+            return null;
+        }
         ValueMap map = getValueMap(adaptable);
         if (map == null) {
             return null;
@@ -129,6 +136,12 @@ public class ValueMapInjector extends AbstractInjector implements Injector, Inje
             Array.set(wrapperArray, i, Array.get(primitiveArray, i));
         }
         return wrapperArray;
+    }
+
+    @Override
+    public Object prepareValue(final Object adaptable) {
+        Object prepared = getValueMap(adaptable);
+        return prepared != null ? prepared : ObjectUtils.NULL;
     }
 
     @Override

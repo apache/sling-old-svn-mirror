@@ -26,14 +26,13 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.sling.launchpad.api.StartupHandler;
-import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -42,39 +41,16 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 public class RunModeImplTest {
 
-    private final class StartupHandlerImpl implements StartupHandler {
-
-        private final StartupMode mode;
-
-        public StartupHandlerImpl() {
-            this(StartupMode.INSTALL);
-        }
-
-        public StartupHandlerImpl(final StartupMode mode) {
-            this.mode = mode;
-        }
-
-        public void waitWithStartup(final boolean flag) {
-            // nothing to do
-        }
-
-        public boolean isFinished() {
-            return false;
-        }
-
-        public StartupMode getMode() {
-            return this.mode;
-        }
-    };
-
     private void assertParse(String str, String [] expected) {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock(str, null, null), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock(str, null, null));
         final Set<String> modes = rm.getRunModes();
 
         Set<String> expectedSet = new HashSet<String>(expected.length);
@@ -103,61 +79,61 @@ public class RunModeImplTest {
     }
 
     @org.junit.Test public void testMatchesNotEmpty() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", null, null), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", null, null));
         assertActive(rm, true, "foo", "bar");
         assertActive(rm, false, "wiz", "bah", "");
     }
 
     @org.junit.Test public void testOptions() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", "a,b,c|d,e,f", null), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", "a,b,c|d,e,f", null));
         assertActive(rm, true, "foo", "bar", "a", "d");
         assertActive(rm, false, "b", "c", "e", "f");
     }
 
     @org.junit.Test public void testEmptyRunModesWithOptions() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("", "a,b,c|d,e,f", null), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("", "a,b,c|d,e,f", null));
         assertActive(rm, true, "a", "d");
         assertActive(rm, false, "b", "c", "e", "f");
     }
 
     @org.junit.Test public void testOptionsSelected() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e", "a,b,c|d,e,f", null), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e", "a,b,c|d,e,f", null));
         assertActive(rm, true, "foo", "bar", "c", "e");
         assertActive(rm, false, "a", "b", "d", "f");
     }
 
     @org.junit.Test public void testOptionsMultipleSelected() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e,f,a", "a,b,c|d,e,f", null), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e,f,a", "a,b,c|d,e,f", null));
         assertActive(rm, true, "foo", "bar", "a", "e");
         assertActive(rm, false, "b", "c", "d", "f");
     }
 
     @org.junit.Test public void testOptionsMultipleSelected2() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,f,a,d", "a,b,c|d,e,f", null), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,f,a,d", "a,b,c|d,e,f", null));
         assertActive(rm, true, "foo", "bar", "a", "d");
         assertActive(rm, false, "b", "c", "e", "f");
     }
 
     @org.junit.Test public void testInstallOptions() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", null, "a,b,c|d,e,f"), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", null, "a,b,c|d,e,f"));
         assertActive(rm, true, "foo", "bar", "a", "d");
         assertActive(rm, false, "b", "c", "e", "f");
     }
 
     @org.junit.Test public void testInstallOptionsSelected() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e", null , "a,b,c|d,e,f"), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e", null , "a,b,c|d,e,f"));
         assertActive(rm, true, "foo", "bar", "c", "e");
         assertActive(rm, false, "a", "b", "d", "f");
     }
 
     @org.junit.Test public void testInstallOptionsMultipleSelected() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e,f,a", null, "a,b,c|d,e,f"), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e,f,a", null, "a,b,c|d,e,f"));
         assertActive(rm, true, "foo", "bar", "a", "e");
         assertActive(rm, false, "b", "c", "d", "f");
     }
 
     @org.junit.Test public void testInstallOptionsMultipleSelected2() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,d,f,a", null, "a,b,c|d,e,f"), new StartupHandlerImpl());
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,d,f,a", null, "a,b,c|d,e,f"));
         assertActive(rm, true, "foo", "bar", "a", "d");
         assertActive(rm, false, "b", "c", "e", "f");
     }
@@ -167,13 +143,13 @@ public class RunModeImplTest {
 
         {
             // create first context to simulate install
-            final SlingSettingsService rm = new SlingSettingsServiceImpl(bc, new StartupHandlerImpl());
+            final SlingSettingsService rm = new SlingSettingsServiceImpl(bc);
             assertActive(rm, true, "foo", "bar", "a", "e");
             assertActive(rm, false, "b", "c", "d", "f");
         }
 
         {
-            final SlingSettingsService rm = new SlingSettingsServiceImpl(bc, new StartupHandlerImpl(StartupMode.RESTART));
+            final SlingSettingsService rm = new SlingSettingsServiceImpl(bc);
             assertActive(rm, true, "foo", "bar", "a", "e");
             assertActive(rm, false, "b", "c", "d", "f");
         }
@@ -182,7 +158,7 @@ public class RunModeImplTest {
         // mentioned in the .options properties are ignored
         bc.update("foo,doo,a,b,c,d,e,f,waa");
         {
-            final SlingSettingsService rm = new SlingSettingsServiceImpl(bc, new StartupHandlerImpl(StartupMode.RESTART));
+            final SlingSettingsService rm = new SlingSettingsServiceImpl(bc);
             assertActive(rm, true, "foo", "doo", "a", "e", "waa");
             assertActive(rm, false, "bar", "b", "c", "d", "f");
         }
@@ -206,58 +182,68 @@ public class RunModeImplTest {
             this.runModes = rm;
         }
 
+        @Override
         public void addBundleListener(BundleListener listener) {
             // TODO Auto-generated method stub
 
         }
 
+        @Override
         public void addFrameworkListener(FrameworkListener listener) {
             // TODO Auto-generated method stub
 
         }
 
+        @Override
         public void addServiceListener(ServiceListener listener, String filter)
                 throws InvalidSyntaxException {
             // TODO Auto-generated method stub
 
         }
 
+        @Override
         public void addServiceListener(ServiceListener listener) {
             // TODO Auto-generated method stub
 
         }
 
+        @Override
         public Filter createFilter(String filter) throws InvalidSyntaxException {
             // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public ServiceReference[] getAllServiceReferences(String clazz,
                 String filter) throws InvalidSyntaxException {
             // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public Bundle getBundle() {
             // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public Bundle getBundle(long id) {
             // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public Bundle[] getBundles() {
             return new Bundle[0];
         }
 
+        @Override
         public File getDataFile(String filename) {
             File f = files.get(filename);
             if ( f == null ) {
                 try {
                     f = File.createTempFile(filename, "id");
-                    f.deleteOnExit();
+                    f.delete();
                     files.put(filename, f);
                 } catch (IOException ioe) {
                     throw new RuntimeException(ioe);
@@ -266,6 +252,7 @@ public class RunModeImplTest {
             return f;
         }
 
+        @Override
         public String getProperty(String key) {
             if ( key.equals(SlingSettingsService.RUN_MODES_PROPERTY) ) {
                 return runModes;
@@ -277,51 +264,100 @@ public class RunModeImplTest {
             return null;
         }
 
+        @Override
         public Object getService(ServiceReference reference) {
             return null;
         }
 
+        @Override
         public ServiceReference getServiceReference(String clazz) {
             return null;
         }
 
+        @Override
         public ServiceReference[] getServiceReferences(String clazz,
                 String filter) throws InvalidSyntaxException {
             return null;
         }
 
+        @Override
         public Bundle installBundle(String location, InputStream input)
                 throws BundleException {
             return null;
         }
 
+        @Override
         public Bundle installBundle(String location) throws BundleException {
             return null;
         }
 
+        @Override
         @SuppressWarnings("unchecked")
         public ServiceRegistration registerService(String clazz,
                 Object service, Dictionary properties) {
             return null;
         }
 
+        @Override
         @SuppressWarnings("unchecked")
         public ServiceRegistration registerService(String[] clazzes,
                 Object service, Dictionary properties) {
             return null;
         }
 
+        @Override
         public void removeBundleListener(BundleListener listener) {
         }
 
+        @Override
         public void removeFrameworkListener(FrameworkListener listener) {
         }
 
+        @Override
         public void removeServiceListener(ServiceListener listener) {
         }
 
+        @Override
         public boolean ungetService(ServiceReference reference) {
             return false;
+        }
+
+        @Override
+        public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public <S> ServiceRegistration<S> registerService(Class<S> clazz, ServiceFactory<S> factory,
+                Dictionary<String, ?> properties) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public <S> ServiceReference<S> getServiceReference(Class<S> clazz) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter)
+                throws InvalidSyntaxException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public <S> ServiceObjects<S> getServiceObjects(ServiceReference<S> reference) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Bundle getBundle(String location) {
+            // TODO Auto-generated method stub
+            return null;
         }
     }
 }

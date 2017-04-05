@@ -46,7 +46,7 @@ public class PropertyTypeSupport {
     static Map<String,Integer> propertyTypeIndices;
     
     static{
-        propertyTypeIndices = new HashMap<String,Integer>();
+        propertyTypeIndices = new HashMap<>();
         for (int i = 0; i < PROPERTY_TYPES.length; i++) {
             String aPropertyType = PROPERTY_TYPES[i];
             propertyTypeIndices.put(aPropertyType, i);

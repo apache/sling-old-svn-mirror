@@ -1,0 +1,7 @@
+{
+  "jcr:primaryType": "sling:OsgiConfig",
+  "user.mapping": [
+    "org.apache.sling.scripting.thymeleaf=sling-scripting",
+    "org.apache.sling.scripting.thymeleaf.it.app=sling-scripting"
+  ]
+}

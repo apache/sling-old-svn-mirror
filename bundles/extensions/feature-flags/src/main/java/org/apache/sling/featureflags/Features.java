@@ -18,7 +18,7 @@
  */
 package org.apache.sling.featureflags;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The {@code Features} service is the applications access point to the Feature

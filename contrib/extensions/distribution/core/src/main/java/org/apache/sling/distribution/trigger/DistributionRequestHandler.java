@@ -19,8 +19,10 @@
 package org.apache.sling.distribution.trigger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import aQute.bnd.annotation.ConsumerType;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 
 /**
@@ -35,6 +37,6 @@ public interface DistributionRequestHandler {
      *
      * @param request a distribution request
      */
-    void handle(@Nonnull DistributionRequest request);
+    void handle(@Nullable ResourceResolver resourceResolver, @Nonnull DistributionRequest request);
 
 }

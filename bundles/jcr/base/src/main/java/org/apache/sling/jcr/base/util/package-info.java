@@ -20,5 +20,5 @@
 @Version("2.1")
 package org.apache.sling.jcr.base.util;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;
 

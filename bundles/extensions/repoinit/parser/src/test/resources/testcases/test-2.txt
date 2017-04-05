@@ -1,0 +1,2 @@
+create service user Mark-21
+delete service user Leonardo,Winston_32

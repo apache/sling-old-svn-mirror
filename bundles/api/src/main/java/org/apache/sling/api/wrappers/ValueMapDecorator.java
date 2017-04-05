@@ -18,12 +18,12 @@
  */
 package org.apache.sling.api.wrappers;
 
-import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.impl.ObjectConverter;
 
 /**
  * <code>ValueMapDecorator</code> decorates another {@link Map}
@@ -49,64 +49,11 @@ public class ValueMapDecorator implements ValueMap {
      * {@inheritDoc}
      */
     public <T> T get(String name, Class<T> type) {
-        return convert(get(name), type);
-    }
-
-    /**
-     * Converts the object to the given type.
-     * @param obj object
-     * @param type type
-     * @return the converted object
-     */
-    @SuppressWarnings("unchecked")
-    private <T> T convert(Object obj, Class<T> type) {
-        // todo: do smarter checks
-        try {
-            if (obj == null) {
-                return null;
-            } else if (type.isAssignableFrom(obj.getClass())) {
-                return (T) obj;
-            } else if (type.isArray()) {
-                return (T) convertToArray(obj, type.getComponentType());
-            } else if (type == String.class) {
-                return (T) String.valueOf(obj);
-            } else if (type == Integer.class) {
-                return (T) (Integer) Integer.parseInt(obj.toString());
-            } else if (type == Long.class) {
-                return (T) (Long) Long.parseLong(obj.toString());
-            } else if (type == Double.class) {
-                return (T) (Double) Double.parseDouble(obj.toString());
-            } else if (type == Boolean.class) {
-                return (T) (Boolean) Boolean.parseBoolean(obj.toString());
-            } else {
-                return null;
-            }
-        } catch (NumberFormatException e) {
-            return null;
+        if (base instanceof ValueMap) {
+            // shortcut if decorated map is ValueMap
+            return ((ValueMap)base).get(name, type);
         }
-    }
-
-    /**
-     * Converts the object to an array of the given type
-     * @param obj the object or object array
-     * @param type the component type of the array
-     * @return and array of type T
-     */
-    private <T> T[] convertToArray(Object obj, Class<T> type) {
-        if (obj.getClass().isArray()) {
-            final Object[] array = (Object[]) obj;
-			@SuppressWarnings("unchecked")
-			final T[] result = (T[]) Array.newInstance(type, array.length);
-            for (int i = 0; i < array.length; i++) {
-                result[i] = convert(array[i], type);
-            }
-            return result;
-        } else {
-            @SuppressWarnings("unchecked")
-            final T[] result = (T[]) Array.newInstance(type, 1);
-            result[0] = convert(obj, type);
-            return result;
-        }
+        return ObjectConverter.convert(get(name), type);
     }
 
     /**
@@ -114,7 +61,11 @@ public class ValueMapDecorator implements ValueMap {
      */
     @SuppressWarnings("unchecked")
     public <T> T get(String name, T defaultValue) {
-        if ( defaultValue == null ) {
+        if (base instanceof ValueMap) {
+            // shortcut if decorated map is ValueMap
+            return ((ValueMap)base).get(name, defaultValue);
+        }
+        if (defaultValue == null) {
             return (T)get(name);
         }
         T value = get(name, (Class<T>) defaultValue.getClass());
@@ -209,4 +160,22 @@ public class ValueMapDecorator implements ValueMap {
     public String toString() {
         return super.toString() + " : " + this.base.toString();
     }
+
+    @Override
+    /**
+     * {@inheritDoc}
+     */
+    public int hashCode() {
+        return base.hashCode();
+    }
+
+    @Override
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(Object obj) {
+        return base.equals(obj);
+    }
+
+
 }

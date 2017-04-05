@@ -28,9 +28,9 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.event.DistributionEventProperties;
 import org.apache.sling.distribution.event.DistributionEventTopics;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
@@ -59,7 +59,7 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
         this.pathPrefix = pathPrefix;
     }
 
-    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         // register an event handler on distribution package install (on a certain path) which triggers the chain distribution of that same package
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
@@ -67,7 +67,6 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
         properties.put(EventConstants.EVENT_TOPIC, DistributionEventTopics.AGENT_PACKAGE_DISTRIBUTED);
         log.info("handler {} will chain distribute on path '{}'", requestHandler, pathPrefix);
 
-//            properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
         if (bundleContext != null) {
             ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(),
                     new TriggerAgentEventListener(requestHandler, pathPrefix), properties);
@@ -75,18 +74,16 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
                 registrations.put(requestHandler.toString(), triggerPathEventRegistration);
             }
         } else {
-            throw new DistributionTriggerException("cannot register trigger since bundle context is null");
-
+            throw new DistributionException("cannot register trigger since bundle context is null");
         }
     }
 
-    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
+    public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
         ServiceRegistration serviceRegistration = registrations.get(requestHandler.toString());
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
         }
     }
-
 
     public void disable() {
         for (Map.Entry<String, ServiceRegistration> entry : registrations.entrySet()) {
@@ -96,7 +93,6 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
         }
         registrations.clear();
     }
-
 
     private class TriggerAgentEventListener implements EventHandler {
 
@@ -118,7 +114,7 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
                         log.info("triggering chain distribution from event {}", event);
 
                         DistributionRequestType action = DistributionRequestType.valueOf(String.valueOf(actionProperty));
-                        requestHandler.handle(new SimpleDistributionRequest(action, paths));
+                        requestHandler.handle(null, new SimpleDistributionRequest(action, paths));
                         break;
                     }
                 }

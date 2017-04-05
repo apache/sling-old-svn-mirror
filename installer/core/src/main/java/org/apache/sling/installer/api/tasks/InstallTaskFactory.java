@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api.tasks;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The install task factory creates a task for a given
@@ -31,12 +31,23 @@ import aQute.bnd.annotation.ConsumerType;
 public interface InstallTaskFactory {
 
     /**
+     * Optional service registration property setting a unique name
+     * for the task factory.
+     * The value of this property must be of type String.
+     * @since 1.4.0
+     */
+    String NAME = "installtaskfactory.name";
+
+    /**
      * Creates an {@link InstallTask} for the resource or
      * <code>null</code> if the factory does not support the resource.
      *
      * The factory should not alter the state of the resources,
      * therefore it's not allowed to call one of the setState methods
      * on the task resource group!
+     *
+     * @param group The group containing the resource to activate.
+     * @return An install task or {@code null}.
      */
-    InstallTask createTask(final TaskResourceGroup toActivate);
+    InstallTask createTask(TaskResourceGroup group);
 }

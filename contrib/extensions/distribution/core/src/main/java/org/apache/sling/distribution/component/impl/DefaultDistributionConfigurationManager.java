@@ -19,242 +19,228 @@
 package org.apache.sling.distribution.component.impl;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.resources.impl.OsgiUtils;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
- * {@link org.apache.sling.distribution.component.impl.DistributionComponentManager} implementation based on OSGI configs.
+ * {@link org.apache.sling.distribution.component.impl.DistributionConfigurationManager} implementation based on OSGI configs.
  * For each tree of properties a set of OSGI configs is generated and registered in ConfigurationAdmin.
  * To delete a component all configs owned by that component will be unregistered from ConfigurationAdmin.
  */
 @Component
 @Service(DistributionConfigurationManager.class)
 public class DefaultDistributionConfigurationManager implements DistributionConfigurationManager {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @Property(label = "Resource Config Enabled", description = "If storing config in resource tree is enabled.", boolValue = false)
+    public static final String CONFIG_ENABLED = "resource.config.enabled";
+
+    @Property(label = "Resource Config Prefix", description = "The prefix of properties to be stored in content", value = "etc.")
+    public static final String CONFIG_PREFIX = "resource.config.prefix";
+
+    @Property(label = "Resource Config Root", description = "The resource config root", value = "/etc/distribution")
+    public static final String CONFIG_ROOT = "resource.config.root";
+
+    @Property(label = "Resource Config Properties", description = "The resource config properties", value = {"enabled"})
+    public static final String CONFIG_PROPERTIES = "resource.config.properties";
+
+    @Property(label = "Resource Config Defaults", description = "The default values for resource config properties", value = {"serializationType=distribution"})
+    public static final String CONFIG_DEFAULTS = "resource.config.defaults";
 
     @Reference
     ConfigurationAdmin configurationAdmin;
 
+    private DistributionConfigurationManager osgiManager;
+    private DistributionConfigurationManager resourceManager;
 
-    public List<DistributionConfiguration> getConfigs(DistributionComponentKind kind) {
-        List<Configuration> configurations = getOsgiConfigurations(kind, null);
+    static String resourcePrefix;
+    static final String OSGI_PREFIX = "";
 
-        List<DistributionConfiguration> result = new ArrayList<DistributionConfiguration>();
-        if (configurations == null || configurations.size() == 0) {
-            return result;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @Activate
+    void activate(Map<String, Object> properties) {
+        boolean configEnabled = PropertiesUtil.toBoolean(properties.get(CONFIG_ENABLED), false);
+
+        String configRoot = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(properties.get(CONFIG_ROOT), null));
+        resourcePrefix = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(properties.get(CONFIG_PREFIX), null));
+
+        String[] configProperties = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(properties.get(CONFIG_PROPERTIES), null));
+
+        if (configEnabled && configRoot != null && configProperties != null) {
+            Map<String, String> configDefaults = PropertiesUtil.toMap(properties.get(CONFIG_DEFAULTS), new String[0]);
+
+            resourceManager = new ResourceConfigurationManager(configRoot, configProperties, configDefaults);
         }
 
+        osgiManager = new OsgiConfigurationManager(configurationAdmin);
+    }
 
-        for(Configuration configuration : configurations) {
-            Dictionary propertiesDict = configuration.getProperties();
-            Map<String, Object> properties = OsgiUtils.fromDictionary(propertiesDict);
+    @Deactivate
+    void deactivate() {
+        resourceManager = null;
+        osgiManager = null;
+    }
 
-            properties = filterBeforeRead(properties);
-            String name = PropertiesUtil.toString(properties.get(DistributionComponentConstants.PN_NAME), null);
-            result.add(new DistributionConfiguration(kind, name, properties));
 
+    @Override
+    public List<DistributionConfiguration> getConfigs(ResourceResolver resolver, DistributionComponentKind kind) {
+        List<DistributionConfiguration> result = osgiManager.getConfigs(resolver, kind);
+
+        if (resourceManager != null) {
+            List<DistributionConfiguration> resourceConfigs = resourceManager.getConfigs(resolver, kind);
+            result = mergeConfigs(result, resourceConfigs, resourcePrefix);
         }
 
         return result;
     }
 
-    public DistributionConfiguration getConfig(DistributionComponentKind kind, String name) {
-        List<Configuration> configurations = getOsgiConfigurations(kind, name);
+    @Override
+    public DistributionConfiguration getConfig(ResourceResolver resolver, DistributionComponentKind kind, String name) {
 
-        if (configurations == null || configurations.size() == 0) {
+        DistributionConfiguration resultConfig = osgiManager.getConfig(resolver, kind, name);
+
+        if (resourceManager != null) {
+            DistributionConfiguration resourceConfig = resourceManager.getConfig(resolver, kind, name);
+            resultConfig = mergeConfig(resultConfig, resourceConfig, resourcePrefix);
+        }
+
+        return resultConfig;
+    }
+
+    @Override
+    public void saveConfig(ResourceResolver resolver, DistributionConfiguration config) {
+        log.debug("saving config {}", config);
+
+        if (resourceManager != null) {
+            Map<String, DistributionConfiguration> splitConfig = splitConfig(config, resourcePrefix);
+
+            DistributionConfiguration defaultConfig = splitConfig.get(OSGI_PREFIX);
+
+            osgiManager.saveConfig(resolver, defaultConfig);
+
+            DistributionConfiguration resourceConfig = splitConfig.get(resourcePrefix);
+            log.debug("retrieved config {}", resourceConfig);
+
+            if (resourceConfig != null) {
+                resourceManager.saveConfig(resolver, resourceConfig);
+                log.debug("saved resource config: {}", resourceConfig);
+            }
+        } else {
+            osgiManager.saveConfig(resolver, config);
+            log.debug("saved osgi config: {}", config);
+        }
+    }
+
+    @Override
+    public void deleteConfig(ResourceResolver resolver, DistributionComponentKind kind, String name) {
+        osgiManager.deleteConfig(resolver, kind, name);
+
+        if (resourceManager != null) {
+            resourceManager.deleteConfig(resolver, kind, name);
+        }
+    }
+
+    static DistributionConfiguration mergeConfig(DistributionConfiguration main, DistributionConfiguration extension, String prefix) {
+
+        if (main == null) {
             return null;
         }
 
-        Configuration configuration = configurations.get(0);
+        Map<String, DistributionConfiguration> configMap = new HashMap<String, DistributionConfiguration>();
 
-        if (configuration != null) {
-            Dictionary properties = configuration.getProperties();
-            Map<String, Object> result = OsgiUtils.fromDictionary(properties);
+        configMap.put(OSGI_PREFIX, main);
+        configMap.put(prefix, extension);
 
-            String factoryPid = PropertiesUtil.toString(result.get(ConfigurationAdmin.SERVICE_FACTORYPID), null);
-            String type = kind.getType(factoryPid);
-
-            result.put(DistributionComponentConstants.PN_TYPE, type);
-            result = filterBeforeRead(result);
-            return new DistributionConfiguration(kind, name, result);
-        }
-
-        return null;
+        return mergeConfig(main.getKind(), main.getName(), configMap);
     }
 
-    public void saveConfig(DistributionConfiguration config) {
-        String componentName = config.getName();
-        DistributionComponentKind componentKind = config.getKind();
-        Map<String, Object> properties = config.getProperties();
-        String componentType = PropertiesUtil.toString(properties.get(DistributionComponentConstants.PN_TYPE), null);
-
-        if (componentKind == null || componentType == null) {
-            throw new IllegalArgumentException("kind and type are required");
-        }
-
-        String factoryPid = componentKind.getFactory(componentType);
-        if (factoryPid != null) {
-            properties.put(DistributionComponentConstants.PN_NAME, componentName);
-            Configuration configuration = saveOsgiConfig(factoryPid, componentName, properties);
-        }
-
-    }
-
-    public void deleteConfig(DistributionComponentKind kind, String name) {
-        List<Configuration> configs = getOsgiConfigurations(kind, name);
-
-        deleteOsgiConfigs(configs);
-
-        log.info("Delete component {}", name);
-
-    }
-
-
-    private void deleteOsgiConfigs(List<Configuration> configurations) {
-        for (Configuration configuration : configurations) {
-            String pid = configuration.getPid();
-
-            try {
-                configuration.delete();
-                log.info("Deleted configuration {}", pid);
-            } catch (IOException e) {
-                log.warn("Cannot delete configuration {}", pid, e);
-            }
-        }
-    }
-
-    public List<Configuration> getOsgiConfigurations(DistributionComponentKind kind, String componentName) {
-        List<String> factoryPids = kind.getFactories();
-
-        List<Configuration> allConfigurations = new ArrayList<Configuration>();
-        for (String factoryPid : factoryPids) {
-            List<Configuration> configurations = getOsgiConfigurationsFromFactory(factoryPid, componentName);
-            allConfigurations.addAll(configurations);
-        }
-
-       return allConfigurations;
-    }
-
-
-    private Configuration saveOsgiConfig(String factoryPid, String componentName, Map<String, Object> properties) {
-        try {
-            List<Configuration> configurations = getOsgiConfigurationsFromFactory(factoryPid, componentName);
-            Configuration configuration = null;
-            if (configurations == null || configurations.size() == 0) {
-                configuration = configurationAdmin.createFactoryConfiguration(factoryPid);
-            }
-            else {
-                configuration = configurations.get(0);
-            }
-
-            properties = filterBeforeSave(properties);
-
-            configuration.update(OsgiUtils.toDictionary(properties));
-
-            return configuration;
-        } catch (IOException e) {
-            log.error("Cannot create configuration with factory {}", factoryPid, e);
-        }
-
-        return null;
-    }
-
-    private List<Configuration> getOsgiConfigurationsFromFactory(String factoryPid, String componentName) {
-        List<Configuration> result = new ArrayList<Configuration>();
-
-        try {
-            String filter = OsgiUtils.getFilter(factoryPid, DistributionComponentConstants.PN_NAME, componentName);
-
-            Configuration[] configurations = configurationAdmin.listConfigurations(filter);
-            if (configurations != null) {
-                result.addAll(Arrays.asList(configurations));
-            }
-        } catch (IOException e) {
-            log.error("cannot get osgi configs", e);
-        } catch (InvalidSyntaxException e) {
-            log.error("cannot parse filter", e);
-        }
-
-        return result;
-    }
-
-    private Map<String, Object> filterBeforeSave(Map<String, Object> properties) {
+    static DistributionConfiguration mergeConfig(DistributionComponentKind kind, String name, Map<String, DistributionConfiguration> configMap) {
         Map<String, Object> result = new HashMap<String, Object>();
-
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            if (entry.getKey().endsWith(".target")) {
-                String entryValue = (String) entry.getValue();
-                entryValue = packOsgiFilter(entryValue);
-                if (entryValue != null) {
-                    result.put(entry.getKey(), entryValue);
-                }
-            } else {
-                result.put(entry.getKey(), entry.getValue());
+        for (String prefixKey : configMap.keySet()) {
+            DistributionConfiguration config = configMap.get(prefixKey);
+            if (config == null) {
+                continue;
             }
+            Map<String, Object> properties = config.getProperties();
 
-        }
-
-        result = OsgiUtils.sanitize(result);
-        return result;
-    }
-
-    private Map<String, Object> filterBeforeRead(Map<String, Object> properties) {
-        Map<String, Object> result = new HashMap<String, Object>();
-
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            if (entry.getKey().endsWith(".target")) {
-                String entryValue = (String) entry.getValue();
-                entryValue = unpackOsgiFilter(entryValue);
-                if (entryValue != null) {
-                    result.put(entry.getKey(), entryValue);
-                }
+            if (prefixKey.equals(OSGI_PREFIX)) {
+                result.putAll(properties);
             } else {
-                result.put(entry.getKey(), entry.getValue());
+                for (String propertyKey : properties.keySet()) {
+                    Object propertyValue = properties.get(propertyKey);
+                    result.put(prefixKey + propertyKey, propertyValue);
+                }
             }
-
         }
 
-        result = OsgiUtils.sanitize(result);
+        return new DistributionConfiguration(kind, name, result);
+    }
+
+    static List<DistributionConfiguration> mergeConfigs(List<DistributionConfiguration> target, List<DistributionConfiguration> source, String prefix) {
+        List<DistributionConfiguration> result = new ArrayList<DistributionConfiguration>();
+
+        Map<String, DistributionConfiguration> sourceMap = new HashMap<String, DistributionConfiguration>();
+        for (DistributionConfiguration config : source) {
+            sourceMap.put(config.getName(), config);
+        }
+
+        for (DistributionConfiguration targetConfig : target) {
+            DistributionConfiguration sourceConfig = sourceMap.get(targetConfig.getName());
+
+            DistributionConfiguration mergedConfig = mergeConfig(targetConfig, sourceConfig, prefix);
+
+            result.add(mergedConfig);
+        }
+
         return result;
     }
 
+    /**
+     * Split a {@link DistributionConfiguration} into two configurations, so that properties starting with a certain prefix
+     * go to a separate configuration while the remaining ones will live in a new configuration
+     * @param config a configuration
+     * @param prefix a prefix
+     * @return a {@link Map} of prefix -> configuration
+     */
+    private static Map<String, DistributionConfiguration> splitConfig(DistributionConfiguration config, String prefix) {
+        Map<String, Object> distributionConfigurationProperties = config.getProperties();
 
-    private String unpackOsgiFilter(String propertyValue) {
+        // properties for OSGi configuration
+        Map<String, Object> defaultMap = new HashMap<String, Object>();
 
-        String result = null;
+        // properties for resource configuration
+        Map<String, Object> prefixMap = new HashMap<String, Object>();
 
-        String namePattern = "\\(" + DistributionComponentConstants.PN_NAME + "=(.*?)\\)";
+        // split the properties of the given configuration between the OSGi config and the persisted config
+        for (String configurationPropertyKey : distributionConfigurationProperties.keySet()) {
+            if (configurationPropertyKey.startsWith(prefix)) {
+                prefixMap.put(configurationPropertyKey.substring(prefix.length()), distributionConfigurationProperties.get(configurationPropertyKey));
+            } else {
+                defaultMap.put(configurationPropertyKey, distributionConfigurationProperties.get(configurationPropertyKey));
+            }
+        }
 
-        Pattern r = Pattern.compile(namePattern);
-        Matcher m = r.matcher(propertyValue);
-
-        if (m.matches()) {
-            result = m.group(1);
+        // create an OSGi and a persisted configuration
+        Map<String, DistributionConfiguration> result = new HashMap<String, DistributionConfiguration>();
+        result.put(OSGI_PREFIX, new DistributionConfiguration(config.getKind(), config.getName(), defaultMap));
+        if (prefixMap.size() > 0) {
+            result.put(prefix, new DistributionConfiguration(config.getKind(), config.getName(), prefixMap));
         }
 
         return result;
     }
-
-    private String packOsgiFilter(String propertyValue) {
-        return "(" + DistributionComponentConstants.PN_NAME + "=" + OsgiUtils.escape(propertyValue) + ")";
-    }
-
 }

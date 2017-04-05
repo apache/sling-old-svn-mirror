@@ -1,0 +1,105 @@
+{
+  "jcr:primaryType": "nt:unstructured",
+  "exist": {
+    "jcr:primaryType": "nt:unstructured",
+    "path":"/content/fruits/apple",
+    "sling:resourceType": "slingPipes/base"
+  },
+  "doesntexist": {
+    "jcr:primaryType": "nt:unstructured",
+    "path":"/content/fruits/blueapple",
+    "sling:resourceType": "slingPipes/base"
+  },
+  "expectPathBinding": {
+    "jcr:primaryType": "nt:unstructured",
+    "path":"${path.fruit}/isnota/carrot",
+    "sling:resourceType": "slingPipes/base"
+  },
+  "filtersWormyFruit":{
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/filter",
+    "conf":{
+      "jcr:primaryType": "nt:unstructured",
+      "slingPipesFilter_test":"${fruit.worm === 'true'}"
+    }
+  },
+  "simple": {
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:description": "references a pipe with results",
+    "expr": "/etc/pipe/exist",
+    "sling:resourceType": "slingPipes/reference"
+  },
+  "refersfailure": {
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:description": "references a pipe with results",
+    "expr": "/etc/pipe/doesntexist",
+    "sling:resourceType": "slingPipes/reference"
+  },
+  "not": {
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:description": "references a pipe with results",
+    "expr": "/etc/pipe/exist",
+    "sling:resourceType": "slingPipes/not"
+  },
+  "notfailure": {
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:description": "references a pipe with results",
+    "path": "/content/fruits/apple",
+    "expr": "/etc/pipe/doesntexist",
+    "sling:resourceType": "slingPipes/not"
+  },
+  "testPathBinding": {
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:description": "container with reference as second pipe, using first's path",
+    "sling:resourceType": "slingPipes/container",
+    "conf":{
+      "jcr:primaryType": "sling:OrderedFolder",
+      "fruit":{
+        "jcr:primaryType": "nt:unstructured",
+        "path":"/content/fruits/apple",
+        "sling:resourceType": "slingPipes/base"
+      },
+      "ref":{
+        "jcr:primaryType": "nt:unstructured",
+        "expr":"/etc/pipe/expectPathBinding",
+        "sling:resourceType": "slingPipes/reference"
+      }
+    }
+  },
+  "isAppleWormy": {
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:description": "container with reference as second pipe, using first's output binding",
+    "sling:resourceType": "slingPipes/container",
+    "conf":{
+      "jcr:primaryType": "sling:OrderedFolder",
+      "fruit":{
+        "jcr:primaryType": "nt:unstructured",
+        "path":"/content/fruits/apple",
+        "sling:resourceType": "slingPipes/base"
+      },
+      "ref":{
+        "jcr:primaryType": "nt:unstructured",
+        "expr":"/etc/pipe/filtersWormyFruit",
+        "sling:resourceType": "slingPipes/reference"
+      }
+    }
+  },
+  "isBananaWormy": {
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:description": "container with reference as second pipe, using first's output binding",
+    "sling:resourceType": "slingPipes/container",
+    "conf":{
+      "jcr:primaryType": "sling:OrderedFolder",
+      "fruit":{
+        "jcr:primaryType": "nt:unstructured",
+        "path":"/content/fruits/banana",
+        "sling:resourceType": "slingPipes/base"
+      },
+      "ref":{
+        "jcr:primaryType": "nt:unstructured",
+        "expr":"/etc/pipe/filtersWormyFruit",
+        "sling:resourceType": "slingPipes/reference"
+      }
+    }
+  }
+}

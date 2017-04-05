@@ -95,6 +95,11 @@ public abstract class JcrCommand<T> implements Command<T> {
     public Set<CommandExecutionFlag> getFlags() {
         return Collections.unmodifiableSet(flags);
     }
+    
+    @Override
+    public Kind getKind() {
+        return null;
+    }
 
     protected ResourceProxy nodeToResource(Node node) throws RepositoryException {
     

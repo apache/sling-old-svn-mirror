@@ -22,7 +22,7 @@ import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.framework.Bundle;
-import org.osgi.service.startlevel.StartLevel;
+import org.osgi.framework.startlevel.BundleStartLevel;
 
 /**
  * Install a bundle supplied as a RegisteredResource.
@@ -48,15 +48,9 @@ public class BundleInstallTask extends AbstractBundleTask {
             ctx.log("Installed bundle {} from resource {}", b, getResource());
             // optionally set the start level
             if ( startLevel > 0 ) {
-                // get the start level service (if possible) so we can set the initial start level
-                final StartLevel startLevelService = this.getStartLevel();
-                if (startLevelService != null) {
-                    startLevelService.setBundleStartLevel(b, startLevel);
-                    ctx.log("Set start level for bundle {} to {}", b, startLevel);
-                } else {
-                    this.getLogger().info("Ignoring start level {} for bundle {} - start level service not available.",
-                            startLevel, b);
-                }
+                final BundleStartLevel startLevelService = b.adapt(BundleStartLevel.class);
+                startLevelService.setStartLevel(startLevel);
+                ctx.log("Set start level for bundle {} to {}", b, startLevel);
             }
 
             // fragment?

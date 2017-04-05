@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api.info;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 
 /**
@@ -33,6 +33,7 @@ public interface InfoProvider {
     /**
      * Return the current installation state.
      * The installation state is a snapshot of the state at method call time.
+     * @return The installation state
      */
     InstallationState getInstallationState();
 }

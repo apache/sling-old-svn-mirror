@@ -32,42 +32,42 @@ public interface Converter {
     /**
      * Convert to Long.
      * @return Long representation of the converted value
-     * @throws NumberFormatException
+     * @throws NumberFormatException if the conversion fails
      */
     Long toLong();
 
     /**
      * Convert to Byte.
      * @return Byte representation of the converted value
-     * @throws NumberFormatException
+     * @throws NumberFormatException if the conversion fails
      */
     Byte toByte();
 
     /**
      * Convert to Short.
      * @return Short representation of the converted value
-     * @throws NumberFormatException
+     * @throws NumberFormatException if the conversion fails
      */
     Short toShort();
 
     /**
      * Convert to Integer.
      * @return Integer representation of the converted value
-     * @throws NumberFormatException
+     * @throws NumberFormatException if the conversion fails
      */
     Integer toInteger();
 
     /**
      * Convert to Double.
      * @return Double representation of the converted value
-     * @throws NumberFormatException
+     * @throws NumberFormatException if the conversion fails
      */
     Double toDouble();
 
     /**
      * Convert to Float.
      * @return Float representation of the converted value
-     * @throws NumberFormatException
+     * @throws NumberFormatException if the conversion fails
      */
     Float toFloat();
 
@@ -94,7 +94,7 @@ public interface Converter {
     /**
      * Convert to BigDecimal.
      * @return BigDecimal representation of the converted value
-     * @throws NumberFormatException
+     * @throws NumberFormatException if the conversion fails
      */
     BigDecimal toBigDecimal();
 

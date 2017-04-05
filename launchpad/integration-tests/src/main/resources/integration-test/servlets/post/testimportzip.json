@@ -11,7 +11,7 @@
 				"jcr:lastModifiedBy":"admin",
 				":jcr:data":21,
 				"jcr:primaryType":"nt:resource",
-				"jcr:mimeType":"text/plain",
+				"jcr:mimeType":"text/plain"
 			}
 		}
 	}

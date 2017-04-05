@@ -80,13 +80,10 @@ public class VltSerializationManagerTest {
     public void getSerializationFilePath_FullCoverageAggerate() throws IOException {
 
         File contentFile = trash.newFile("default.xml");
-        InputStream in = getClass().getResourceAsStream("simple-content.xml");
-        FileOutputStream out = new FileOutputStream(contentFile);
-        try {
+        
+        try (InputStream in = getClass().getResourceAsStream("simple-content.xml"); 
+                FileOutputStream out = new FileOutputStream(contentFile);) {
             IOUtils.copy(in, out);
-        } finally {
-            IOUtils.closeQuietly(in);
-            IOUtils.closeQuietly(out);
         }
 
         assertThat(serializationManager.getBaseResourcePath(contentFile.getAbsolutePath()),
@@ -97,13 +94,10 @@ public class VltSerializationManagerTest {
     public void getSerializationFilePath_XmlFile() throws IOException {
 
         File contentFile = trash.newFile("file.xml");
-        InputStream in = getClass().getResourceAsStream("file.xml");
-        FileOutputStream out = new FileOutputStream(contentFile);
-        try {
+        
+        try (InputStream in = getClass().getResourceAsStream("file.xml");
+                FileOutputStream out = new FileOutputStream(contentFile)) {
             IOUtils.copy(in, out);
-        } finally {
-            IOUtils.closeQuietly(in);
-            IOUtils.closeQuietly(out);
         }
 
         assertThat(serializationManager.getBaseResourcePath(contentFile.getAbsolutePath()),

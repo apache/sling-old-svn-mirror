@@ -28,8 +28,7 @@
  *
  * @version 2.0.6
  */
-@Version("2.0.6")
+@org.osgi.annotation.versioning.Version("2.0.6")
 package org.apache.sling.engine.auth;
 
-import aQute.bnd.annotation.Version;
 

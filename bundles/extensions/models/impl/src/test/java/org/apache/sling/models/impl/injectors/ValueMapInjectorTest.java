@@ -21,9 +21,12 @@ package org.apache.sling.models.impl.injectors;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.AnnotatedElement;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +40,10 @@ public class ValueMapInjectorTest {
 
     @Mock
     private ValueMap valueMap;
+    @Mock
+    private AnnotatedElement element;
+    @Mock
+    private DisposalCallbackRegistry registry;
 
     private static final String STRING_PARAM = "param1";
     private static final String INTEGER_PARAM = "param2";
@@ -54,31 +61,31 @@ public class ValueMapInjectorTest {
 
     @Test
     public void testStringParam() {
-        Object result = injector.getValue(valueMap, STRING_PARAM, String.class, null, null);
+        Object result = injector.getValue(valueMap, STRING_PARAM, String.class, element, registry);
         assertEquals(STRING_VALUE, result);
     }
 
     @Test
     public void testIntegerParam() {
-        Object result = injector.getValue(valueMap, INTEGER_PARAM, Integer.class, null, null);
+        Object result = injector.getValue(valueMap, INTEGER_PARAM, Integer.class, element, registry);
         assertEquals(INTEGER_VALUE, result);
     }
 
     @Test
     public void testClassInstance() {
-        Object result = injector.getValue(valueMap, CLASS_PARAM, ResourceResolver.class, null, null);
+        Object result = injector.getValue(valueMap, CLASS_PARAM, ResourceResolver.class, element, registry);
         assertSame(CLASS_INSTANCE, result);
     }
 
     @Test
     public void testNonMatchingClassInstance() {
-        Object result = injector.getValue(valueMap, CLASS_PARAM, Resource.class, null, null);
+        Object result = injector.getValue(valueMap, CLASS_PARAM, Resource.class, element, registry);
         assertNull(result);
     }
 
     @Test
     public void testNonValueMapAdaptable() {
-        Object result = injector.getValue(mock(ResourceResolver.class), STRING_PARAM, String.class, null, null);
+        Object result = injector.getValue(mock(ResourceResolver.class), STRING_PARAM, String.class, element, registry);
         assertNull(result);
     }
 

@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import static org.apache.sling.jcr.resource.internal.AssertCalendar.assertEqualsCalendar;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -29,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -38,6 +41,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 
@@ -73,6 +77,10 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         super.tearDown();
     }
 
+    private HelperData getHelperData() throws Exception {
+        return new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl());
+    }
+
     private Map<String, Object> initialSet() {
         final Map<String, Object> values = new HashMap<String, Object>();
         values.put("string", "test");
@@ -82,11 +90,11 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
     }
 
     public void testStreams() throws Exception {
-        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, null);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, getHelperData());
         InputStream stream = new ByteArrayInputStream(TEST_BYTE_ARRAY);
         pvm.put("binary", stream);
         getSession().save();
-        final ModifiableValueMap modifiableValueMap2 = new JcrModifiableValueMap(this.rootNode, null);
+        final ModifiableValueMap modifiableValueMap2 = new JcrModifiableValueMap(this.rootNode, getHelperData());
         assertTrue("The read stream is not what we wrote.", IOUtils.toString(modifiableValueMap2.get("binary", InputStream.class)).equals
                 (TEST_BYTE_ARRAY_TO_STRING));
     }
@@ -94,7 +102,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
     public void testPut()
     throws Exception {
         getSession().refresh(false);
-        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, null);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, getHelperData());
         assertContains(pvm, initialSet());
         assertNull(pvm.get("something"));
 
@@ -110,14 +118,30 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         getSession().save();
         assertContains(pvm, currentlyStored);
 
-        final ModifiableValueMap pvm2 = new JcrModifiableValueMap(this.rootNode, null);
+        final ModifiableValueMap pvm2 = new JcrModifiableValueMap(this.rootNode, getHelperData());
         assertContains(pvm2, currentlyStored);
+    }
+
+    public void testRemove()
+    throws Exception {
+        getSession().refresh(false);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, getHelperData());
+
+        final String key = "removeMe";
+        final Long longValue = 5L;
+
+        pvm.put(key, longValue);
+
+        final Object removedValue = pvm.remove(key);
+        assertTrue(removedValue instanceof Long);
+        assertTrue(removedValue == longValue);
+        assertFalse(pvm.containsKey(key));
     }
 
     public void testSerializable()
     throws Exception {
         this.rootNode.getSession().refresh(false);
-        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, null);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, getHelperData());
         assertContains(pvm, initialSet());
         assertNull(pvm.get("something"));
 
@@ -134,7 +158,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
         getSession().save();
 
-        final ModifiableValueMap pvm2 = new JcrModifiableValueMap(this.rootNode, null);
+        final ModifiableValueMap pvm2 = new JcrModifiableValueMap(this.rootNode, getHelperData());
         // check if we get the list again
         @SuppressWarnings("unchecked")
         final List<String> strings3 = (List<String>) pvm2.get("something", Serializable.class);
@@ -144,7 +168,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
     public void testExceptions() throws Exception {
         this.rootNode.getSession().refresh(false);
-        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, null);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, getHelperData());
         try {
             pvm.put(null, "something");
             fail("Put with null key");
@@ -171,7 +195,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         this.rootNode.getSession().refresh(false);
         final Node testNode = this.rootNode.addNode("testMixins" + System.currentTimeMillis());
         testNode.getSession().save();
-        final ModifiableValueMap pvm = new JcrModifiableValueMap(testNode, null);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(testNode, getHelperData());
 
         final String[] types = pvm.get("jcr:mixinTypes", String[].class);
         final Set<String> exNodeTypes = getMixinNodeTypes(testNode);
@@ -209,7 +233,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
         final Node testNode = this.rootNode.addNode("nameTest" + System.currentTimeMillis());
         testNode.getSession().save();
-        final ModifiableValueMap pvm = new JcrModifiableValueMap(testNode, null);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(testNode, getHelperData());
         pvm.put(TEST_PATH, VALUE);
         pvm.put(PROP1, VALUE1);
         pvm.put(PROP2, VALUE2);
@@ -217,7 +241,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         getSession().save();
 
         // read with property map
-        final ValueMap vm = new JcrModifiableValueMap(testNode, null);
+        final ValueMap vm = new JcrModifiableValueMap(testNode, getHelperData());
         assertEquals(VALUE, vm.get(TEST_PATH));
         assertEquals(VALUE1, vm.get(PROP1));
         assertEquals(VALUE2, vm.get(PROP2));
@@ -241,14 +265,14 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         testNode.setProperty(PROP3, VALUE);
         testNode.getSession().save();
 
-        final ModifiableValueMap pvm = new JcrModifiableValueMap(testNode, null);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(testNode, getHelperData());
         pvm.put(PROP3, VALUE3);
         pvm.put("jcr:a:b", VALUE3);
         pvm.put("jcr:", VALUE3);
         getSession().save();
 
         // read with property map
-        final ValueMap vm = new JcrModifiableValueMap(testNode, null);
+        final ValueMap vm = new JcrModifiableValueMap(testNode, getHelperData());
         assertEquals(VALUE3, vm.get(PROP3));
         assertEquals(VALUE3, vm.get("jcr:a:b"));
         assertEquals(VALUE3, vm.get("jcr:"));
@@ -296,19 +320,19 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         testNode.getSession().save();
 
         // write with property map
-        final ModifiableValueMap pvm = new JcrModifiableValueMap(testNode, null);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(testNode, getHelperData());
         pvm.put(PROP2, dateValue2);
         pvm.put(PROP3, calendarValue3);
         getSession().save();
 
         // read with property map
-        final ValueMap vm = new JcrModifiableValueMap(testNode, null);
+        final ValueMap vm = new JcrModifiableValueMap(testNode, getHelperData());
         assertEquals(dateValue1, vm.get(PROP1, Date.class));
-        assertEquals(calendarValue1, vm.get(PROP1, Calendar.class));
+        assertEqualsCalendar(calendarValue1, vm.get(PROP1, Calendar.class));
         assertEquals(dateValue2, vm.get(PROP2, Date.class));
-        assertEquals(calendarValue2, vm.get(PROP2, Calendar.class));
+        assertEqualsCalendar(calendarValue2, vm.get(PROP2, Calendar.class));
         assertEquals(dateValue3, vm.get(PROP3, Date.class));
-        assertEquals(calendarValue3, vm.get(PROP3, Calendar.class));
+        assertEqualsCalendar(calendarValue3, vm.get(PROP3, Calendar.class));
 
         // check types
         assertTrue(vm.get(PROP1) instanceof Calendar);
@@ -316,8 +340,8 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         assertTrue(vm.get(PROP3) instanceof Calendar);
 
         // read properties
-        assertEquals(calendarValue1, testNode.getProperty(PROP1).getDate());
-        assertEquals(calendarValue3, testNode.getProperty(PROP3).getDate());
+        assertEqualsCalendar(calendarValue1, testNode.getProperty(PROP1).getDate());
+        assertEqualsCalendar(calendarValue3, testNode.getProperty(PROP3).getDate());
 
     }
 

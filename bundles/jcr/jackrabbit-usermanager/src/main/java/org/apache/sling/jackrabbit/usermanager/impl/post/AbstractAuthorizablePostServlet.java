@@ -20,7 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
-import java.util.Dictionary;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,7 +31,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.api.SlingIOException;
@@ -42,7 +41,8 @@ import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
-import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for all the POST servlets for the UserManager operations
@@ -53,13 +53,13 @@ public abstract class AbstractAuthorizablePostServlet extends
 
     public static final String PROP_DATE_FORMAT = "servlet.post.dateFormats";
 
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractAuthorizablePostServlet.class);
+
     private DateParser dateParser;
 
     // ---------- SCR Integration ----------------------------------------------
 
-    protected void activate(ComponentContext context) {
-        Dictionary<?, ?> props = context.getProperties();
-
+    protected void activate(Map<String, Object> props) {
         dateParser = new DateParser();
         String[] dateFormats = OsgiUtil.toStringArray(props.get(PROP_DATE_FORMAT));
         for (String dateFormat : dateFormats) {
@@ -67,7 +67,7 @@ public abstract class AbstractAuthorizablePostServlet extends
         }
     }
 
-    protected void deactivate(ComponentContext context) {
+    protected void deactivate() {
         dateParser = null;
     }
 
@@ -76,19 +76,16 @@ public abstract class AbstractAuthorizablePostServlet extends
 
     /**
      * Collects the properties that form the content to be written back to the
-     * repository. NOTE: In the returned map, the key is the property name not a
-     * path.
-     *
-     * @throws RepositoryException if a repository error occurs
-     * @throws ServletException if an internal error occurs
+     * repository.
+     * @param properties the properties out of which to generate the {@link RequestProperty}s
+     * @return the list of {@link RequestProperty}s
      */
-    protected Map<String, RequestProperty> collectContent(
-            Map<String, ?> properties,
-            String authorizablePath) {
+    protected Collection<RequestProperty> collectContent(
+            Map<String, ?> properties) {
 
         boolean requireItemPrefix = requireItemPathPrefix(properties);
 
-        // walk the request parameters and collect the properties
+        // walk the request parameters and collect the properties (the key is the property path).
         Map<String, RequestProperty> reqProperties = new HashMap<String, RequestProperty>();
         for (Map.Entry<String, ?> e : properties.entrySet()) {
             final String paramName = e.getKey();
@@ -106,20 +103,19 @@ public abstract class AbstractAuthorizablePostServlet extends
                 continue;
             }
 
-            // ensure the paramName is an absolute property name
+            // ensure the paramName is an absolute property path (i.e. starts with "/", where root refers to the authorizable's root, https://issues.apache.org/jira/browse/SLING-1577)
             String propPath;
             if (paramName.startsWith("./")) {
-                propPath = paramName.substring(2);
+                propPath = paramName.substring(1);
             } else {
-                propPath = paramName;
-            }
-            if (propPath.indexOf('/') != -1) {
-                // only one path segment is valid here, so this paramter can't
-                // be used.
-                continue; // skip it.
+                propPath = "/" + paramName;
             }
 
-            propPath = authorizablePath + "/" + propPath;
+            if (propPath.indexOf("..") != -1) {
+                // it is not supported to set properties potentially outside of the authorizable node
+                LOG.warn("Property path containing '..' is not supported, skipping parameter {}", SlingPostConstants.SUFFIX_COPY_FROM, paramName);
+                continue; // skip it.
+            }
 
             // @TypeHint example
             // <input type="text" name="./age" />
@@ -193,6 +189,7 @@ public abstract class AbstractAuthorizablePostServlet extends
             // property to Text.
             if (propPath.endsWith(SlingPostConstants.SUFFIX_MOVE_FROM)) {
                 // don't support @MoveFrom here
+                LOG.warn("Suffix {} not supported, skipping parameter {}", SlingPostConstants.SUFFIX_MOVE_FROM, paramName);
                 continue;
             }
 
@@ -203,6 +200,7 @@ public abstract class AbstractAuthorizablePostServlet extends
             // property to Text.
             if (propPath.endsWith(SlingPostConstants.SUFFIX_COPY_FROM)) {
                 // don't support @CopyFrom here
+                LOG.warn("Suffix {} not supported, skipping parameter {}", SlingPostConstants.SUFFIX_COPY_FROM, paramName);
                 continue;
             }
 
@@ -212,7 +210,7 @@ public abstract class AbstractAuthorizablePostServlet extends
             prop.setValues(convertToRequestParameterArray(e.getValue()));
         }
 
-        return reqProperties;
+        return reqProperties.values();
     }
 
     /**
@@ -220,7 +218,8 @@ public abstract class AbstractAuthorizablePostServlet extends
      * request property does not exist yet it is created and stored in the
      * <code>props</code>.
      *
-     * @param props The map of already seen request properties.
+     * @param props The map of already seen request properties 
+     *               (key is the property path).
      * @param paramPath The absolute path of the property including the
      *            <code>suffix</code> to be looked up.
      * @param suffix The (optional) suffix to remove from the
@@ -250,7 +249,7 @@ public abstract class AbstractAuthorizablePostServlet extends
      * @param authorizable The
      *            <code>org.apache.jackrabbit.api.security.user.Authorizable</code>
      *            that should have properties deleted.
-     * @param reqProperties The map of request properties to check for
+     * @param reqProperties The collection of request properties to check for
      *            properties to be removed.
      * @param changes The <code>List</code> to be updated with
      *            information on deleted properties.
@@ -258,10 +257,10 @@ public abstract class AbstractAuthorizablePostServlet extends
      *             removing properties.
      */
     protected void processDeletes(Authorizable authorizable,
-            Map<String, RequestProperty> reqProperties,
+            Collection<RequestProperty> reqProperties,
             List<Modification> changes) throws RepositoryException {
 
-        for (RequestProperty property : reqProperties.values()) {
+        for (RequestProperty property : reqProperties) {
             if (property.isDelete()) {
                 if (authorizable.hasProperty(property.getName())) {
                     authorizable.removeProperty(property.getName());
@@ -273,30 +272,36 @@ public abstract class AbstractAuthorizablePostServlet extends
 
     /**
      * Writes back the content
+     * @param session the sessioin to write the authorizable properties
+     * @param authorizable the authorizable to modify
+     * @param reqProperties the properties to write
+     * @param changes the list of changes which is supposed to be extended
      *
      * @throws RepositoryException if a repository error occurs
-     * @throws ServletException if an internal error occurs
      */
     protected void writeContent(Session session, Authorizable authorizable,
-            Map<String, RequestProperty> reqProperties,
+            Collection<RequestProperty> reqProperties,
             List<Modification> changes) throws RepositoryException {
 
-        for (RequestProperty prop : reqProperties.values()) {
+        for (RequestProperty prop : reqProperties) {
             if (prop.hasValues()) {
+                // remove artificial "/" prepended to the prop path
+                String relativePath = prop.getPath().substring(1);
+                
                 // skip jcr special properties
-                if (prop.getName().equals("jcr:primaryType")
-                    || prop.getName().equals("jcr:mixinTypes")) {
+                if (relativePath.equals("jcr:primaryType")
+                    || relativePath.equals("jcr:mixinTypes")) {
                     continue;
                 }
                 if (authorizable.isGroup()) {
-                    if (prop.getName().equals("groupId")) {
+                    if (relativePath.equals("groupId")) {
                         // skip these
                         continue;
                     }
                 } else {
-                    if (prop.getName().equals("userId")
-                        || prop.getName().equals("pwd")
-                        || prop.getName().equals("pwdConfirm")) {
+                    if (relativePath.equals("userId")
+                        || relativePath.equals("pwd")
+                        || relativePath.equals("pwdConfirm")) {
                         // skip these
                         continue;
                     }
@@ -341,31 +346,33 @@ public abstract class AbstractAuthorizablePostServlet extends
                 // ignore
             }
         }
+        // remove artificial "/" prepended to the prop path
+        String relativePath = prop.getPath().substring(1);
 
         String[] values = prop.getStringValues();
         if (values == null) {
             // remove property
-            boolean removedProp = removePropertyIfExists(parent, prop.getName());
+            boolean removedProp = removePropertyIfExists(parent, relativePath);
             if (removedProp) {
                 changes.add(Modification.onDeleted(parentPath + "/"
-                    + prop.getName()));
+                    + relativePath));
             }
         } else if (values.length == 0) {
             // do not create new prop here, but clear existing
-            if (parent.hasProperty(prop.getName())) {
+            if (parent.hasProperty(relativePath)) {
                 Value val = session.getValueFactory().createValue("");
-                parent.setProperty(prop.getName(), val);
+                parent.setProperty(relativePath, val);
                 changes.add(Modification.onModified(parentPath + "/"
-                    + prop.getName()));
+                    + relativePath));
             }
         } else if (values.length == 1) {
-            boolean removedProp = removePropertyIfExists(parent, prop.getName());
+            boolean removedProp = removePropertyIfExists(parent, relativePath);
             // if the provided value is the empty string, we don't have to do
             // anything.
             if (values[0].length() == 0) {
                 if (removedProp) {
                     changes.add(Modification.onDeleted(parentPath + "/"
-                        + prop.getName()));
+                        + relativePath));
                 }
             } else {
                 // modify property
@@ -376,15 +383,15 @@ public abstract class AbstractAuthorizablePostServlet extends
                         if (prop.hasMultiValueTypeHint()) {
                             final Value[] array = new Value[1];
                             array[0] = session.getValueFactory().createValue(c);
-                            parent.setProperty(prop.getName(), array);
+                            parent.setProperty(relativePath, array);
                             changes.add(Modification.onModified(parentPath
-                                + "/" + prop.getName()));
+                                + "/" + relativePath));
                         } else {
                             Value cVal = session.getValueFactory().createValue(
                                 c);
                             parent.setProperty(prop.getName(), cVal);
                             changes.add(Modification.onModified(parentPath
-                                + "/" + prop.getName()));
+                                + "/" + relativePath));
                         }
                         return;
                     }
@@ -393,32 +400,32 @@ public abstract class AbstractAuthorizablePostServlet extends
                 if (type == PropertyType.UNDEFINED) {
                     Value val = session.getValueFactory().createValue(
                         values[0], PropertyType.STRING);
-                    parent.setProperty(prop.getName(), val);
+                    parent.setProperty(relativePath, val);
                 } else {
                     if (prop.hasMultiValueTypeHint()) {
                         final Value[] array = new Value[1];
                         array[0] = session.getValueFactory().createValue(
                             values[0], type);
-                        parent.setProperty(prop.getName(), array);
+                        parent.setProperty(relativePath, array);
                     } else {
                         Value val = session.getValueFactory().createValue(
                             values[0], type);
-                        parent.setProperty(prop.getName(), val);
+                        parent.setProperty(relativePath, val);
                     }
                 }
                 changes.add(Modification.onModified(parentPath + "/"
-                    + prop.getName()));
+                    + relativePath));
             }
         } else {
-            removePropertyIfExists(parent, prop.getName());
+            removePropertyIfExists(parent, relativePath);
             if (type == PropertyType.DATE) {
                 // try conversion
                 ValueFactory valFac = session.getValueFactory();
                 Value[] c = dateParser.parse(values, valFac);
                 if (c != null) {
-                    parent.setProperty(prop.getName(), c);
+                    parent.setProperty(relativePath, c);
                     changes.add(Modification.onModified(parentPath + "/"
-                        + prop.getName()));
+                        + relativePath));
                     return;
                 }
                 // fall back to default behaviour
@@ -435,9 +442,9 @@ public abstract class AbstractAuthorizablePostServlet extends
                         type);
                 }
             }
-            parent.setProperty(prop.getName(), vals);
+            parent.setProperty(relativePath, vals);
             changes.add(Modification.onModified(parentPath + "/"
-                + prop.getName()));
+                + relativePath));
         }
 
     }
@@ -448,15 +455,15 @@ public abstract class AbstractAuthorizablePostServlet extends
      *
      * @param authorizable the <code>org.apache.jackrabbit.api.security.user.Authorizable</code>
      *         that should have properties deleted.
-     * @param name the name of the property to remove
+     * @param path the path of the property to remove
      * @return path of the property that was removed or <code>null</code> if it
      *         was not removed
      * @throws RepositoryException if a repository error occurs.
      */
-    private boolean removePropertyIfExists(Authorizable authorizable, String name)
+    private boolean removePropertyIfExists(Authorizable authorizable, String path)
             throws RepositoryException {
-        if (authorizable.getProperty(name) != null) {
-            authorizable.removeProperty(name);
+        if (authorizable.getProperty(path) != null) {
+            authorizable.removeProperty(path);
             return true;
         }
         return false;
@@ -465,11 +472,11 @@ public abstract class AbstractAuthorizablePostServlet extends
     // ------ These methods were copied from AbstractSlingPostOperation ------
 
     /**
-     * Returns <code>true</code> if the <code>name</code> starts with either of
-     * the prefixes {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT
-     * <code>./</code>}, {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT
-     * <code>../</code>} and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE
-     * <code>/</code>}.
+     * @param name the name
+     * @return <code>true</code> if the <code>name</code> starts with either of
+     * the prefixes {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT},
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT} and 
+     * {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE}
      */
     protected boolean hasItemPathPrefix(String name) {
         return name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
@@ -478,12 +485,13 @@ public abstract class AbstractAuthorizablePostServlet extends
     }
 
     /**
-     * Returns true if any of the request parameters starts with
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>}.
+     * @param properties the request parameters
+     * @return {@code true} if any of the request parameters starts with
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT}.
      * In this case only parameters starting with either of the prefixes
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
-     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>} are
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT},
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT}
+     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE} are
      * considered as providing content to be stored. Otherwise all parameters
      * not starting with the command prefix <code>:</code> are considered as
      * parameters to be stored.
@@ -671,6 +679,12 @@ public abstract class AbstractAuthorizablePostServlet extends
         }
 
         @Override
+		public String getName() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
         public String toString() {
             return this.getString();
         }

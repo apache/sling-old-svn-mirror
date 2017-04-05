@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import org.apache.sling.ide.eclipse.core.DefaultSlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
@@ -36,13 +37,14 @@ public class SlingLaunchpadConfiguration implements ISlingLaunchpadConfiguration
 
     @Override
     public int getPort() {
-        // TODO central place for setting defaults
-        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080);
+        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_PORT, 
+                DefaultSlingLaunchpadConfiguration.INSTANCE.getPort());
     }
 
     @Override
     public int getDebugPort() {
-        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, 30303);
+        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, 
+                DefaultSlingLaunchpadConfiguration.INSTANCE.getDebugPort());
     }
     
     private IServerWorkingCopy workingCopy() {
@@ -72,7 +74,8 @@ public class SlingLaunchpadConfiguration implements ISlingLaunchpadConfiguration
 
     @Override
     public String getUsername() {
-        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_USERNAME, "admin");
+        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_USERNAME, 
+                DefaultSlingLaunchpadConfiguration.INSTANCE.getUsername());
     }
 
     public void setUsername(String username) {
@@ -81,11 +84,17 @@ public class SlingLaunchpadConfiguration implements ISlingLaunchpadConfiguration
 
     @Override
     public String getPassword() {
-        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_PASSWORD, "admin");
+        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_PASSWORD,
+                DefaultSlingLaunchpadConfiguration.INSTANCE.getPassword());
     }
 
     public void setPassword(String password) {
         workingCopy().setAttribute(ISlingLaunchpadServer.PROP_PASSWORD, password);
+    }
+
+    @Override
+    public boolean resolveSourcesInDebugMode() {
+        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_RESOLVE_SOURCES, true);
     }
 
 }

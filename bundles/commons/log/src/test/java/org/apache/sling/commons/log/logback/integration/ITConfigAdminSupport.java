@@ -25,6 +25,7 @@ import java.util.Iterator;
 
 import javax.inject.Inject;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
@@ -39,6 +40,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -114,6 +116,31 @@ public class ITConfigAdminSupport extends LogTestBase {
         // foo1.bar should not have explicit appender attached with it
         Iterator<Appender<ILoggingEvent>> itr = ((ch.qos.logback.classic.Logger) slf4jLogger).iteratorForAppenders();
         assertFalse(itr.hasNext());
+    }
+
+    @Test
+    public void testResetToDefault() throws Exception {
+        ch.qos.logback.classic.Logger lgLog =
+                (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("foo2.bar");
+
+        lgLog.setLevel(Level.TRACE);
+        assertEquals(Level.TRACE, lgLog.getLevel());
+
+        // Set log level to debug for foo2.bar
+        Configuration config = ca.createFactoryConfiguration(FACTORY_PID_CONFIGS, null);
+        Dictionary<String, Object> p = new Hashtable<String, Object>();
+        p.put(LOG_LOGGERS, new String[]{
+                "foo2.bar"
+        });
+        p.put(LOG_LEVEL, "DEFAULT");
+        config.update(p);
+
+        delay();
+
+        Logger slf4jLogger = LoggerFactory.getLogger("foo2.bar");
+        assertFalse(slf4jLogger.isDebugEnabled());
+        assertFalse(slf4jLogger.isTraceEnabled());
+        assertTrue(lgLog.isAdditive());
     }
 
     @Test

@@ -78,7 +78,7 @@ public class ModifyOperation extends AbstractCreateOperation {
     protected void doRun(final SlingHttpServletRequest request,
                     final PostResponse response,
                     final List<Modification> changes)
-    throws RepositoryException {
+    throws PersistenceException {
 
         try {
             final Map<String, RequestProperty> reqProperties = collectContent(request, response);
@@ -102,20 +102,14 @@ public class ModifyOperation extends AbstractCreateOperation {
 
             // order content
             final Resource newResource = request.getResourceResolver().getResource(response.getPath());
-            final Node newNode = newResource.adaptTo(Node.class);
-            if ( newNode != null ) {
-                orderNode(request, newNode, changes);
-            }
-        } catch ( final PersistenceException pe) {
-            if ( pe.getCause() instanceof RepositoryException ) {
-                throw (RepositoryException)pe.getCause();
-            }
-            throw new RepositoryException(pe);
+            this.jcrSsupport.orderNode(request, newResource, changes);
+        } catch ( final RepositoryException pe) {
+            throw new PersistenceException(pe.getMessage(), pe);
         }
     }
 
     @Override
-    protected String getItemPath(SlingHttpServletRequest request) {
+    protected String getResourcePath(SlingHttpServletRequest request) {
 
         // calculate the paths
         StringBuilder rootPathBuf = new StringBuilder();
@@ -255,17 +249,14 @@ public class ModifyOperation extends AbstractCreateOperation {
             // first, otherwise ensure the parent location
             if (session.itemExists(propPath)) {
                 Node parent = session.getItem(propPath).getParent();
-                checkoutIfNecessary(parent, changes, versioningConfiguration);
+                this.jcrSsupport.checkoutIfNecessary(resolver.getResource(parent.getPath()), changes, versioningConfiguration);
 
                 session.getItem(propPath).remove();
                 changes.add(Modification.onDeleted(propPath));
             } else {
-                Resource parent = deepGetOrCreateNode(resolver, property.getParentPath(),
+                Resource parent = deepGetOrCreateResource(resolver, property.getParentPath(),
                     reqProperties, changes, versioningConfiguration);
-                final Node node = parent.adaptTo(Node.class);
-                if ( node != null ) {
-                    checkoutIfNecessary(node, changes, versioningConfiguration);
-                }
+                this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);
             }
 
             // move through the session and record operation
@@ -274,12 +265,12 @@ public class ModifyOperation extends AbstractCreateOperation {
 
                 // node move/copy through session
                 if (isMove) {
-                    checkoutIfNecessary(sourceItem.getParent(), changes, versioningConfiguration);
+                    this.jcrSsupport.checkoutIfNecessary(resolver.getResource(sourceItem.getParent().getPath()), changes, versioningConfiguration);
                     session.move(source, propPath);
                 } else {
                     Node sourceNode = (Node) sourceItem;
                     Node destParent = (Node) session.getItem(property.getParentPath());
-                    checkoutIfNecessary(destParent, changes, versioningConfiguration);
+                    this.jcrSsupport.checkoutIfNecessary(resolver.getResource(destParent.getPath()), changes, versioningConfiguration);
                     CopyOperation.copy(sourceNode, destParent,
                         property.getName());
                 }
@@ -291,12 +282,12 @@ public class ModifyOperation extends AbstractCreateOperation {
 
                 // create destination property
                 Node destParent = (Node) session.getItem(property.getParentPath());
-                checkoutIfNecessary(destParent, changes, versioningConfiguration);
+                this.jcrSsupport.checkoutIfNecessary(resolver.getResource(destParent.getPath()), changes, versioningConfiguration);
                 CopyOperation.copy(sourceProperty, destParent, null);
 
                 // remove source property (if not just copying)
                 if (isMove) {
-                    checkoutIfNecessary(sourceProperty.getParent(), changes, versioningConfiguration);
+                    this.jcrSsupport.checkoutIfNecessary(resolver.getResource(sourceProperty.getParent().getPath()), changes, versioningConfiguration);
                     sourceProperty.remove();
                 }
             }
@@ -343,7 +334,7 @@ public class ModifyOperation extends AbstractCreateOperation {
                 final Node parentNode = parent.adaptTo(Node.class);
 
                 if ( parentNode != null ) {
-                    checkoutIfNecessary(parentNode, changes, versioningConfiguration);
+                    this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);
 
                     if (property.getName().equals("jcr:mixinTypes")) {
 
@@ -391,13 +382,10 @@ public class ModifyOperation extends AbstractCreateOperation {
 
         for (final RequestProperty prop : reqProperties.values()) {
             if (prop.hasValues()) {
-                final Resource parent = deepGetOrCreateNode(resolver,
+                final Resource parent = deepGetOrCreateResource(resolver,
                     prop.getParentPath(), reqProperties, changes, versioningConfiguration);
 
-                final Node parentNode = parent.adaptTo(Node.class);
-                if ( parentNode != null ) {
-                    checkoutIfNecessary(parentNode, changes, versioningConfiguration);
-                }
+                this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);
 
                 // skip jcr special properties
                 if (prop.getName().equals("jcr:primaryType")

@@ -37,6 +37,7 @@ import java.util.ArrayList;
  * @author vidar@idium.no
  * @since Apr 17, 2009 6:55:30 PM
  */
+@Deprecated
 public class JsonJcrNode extends JSONObject {
 
     private Node node;
@@ -100,7 +101,7 @@ public class JsonJcrNode extends JSONObject {
             // (colon is not allowed as a JCR property name)
             // in the name, and the value should be the size of the binary data
             String key = ":" + p.getName();
-            if (!p.getDefinition().isMultiple()) {
+            if (!p.isMultiple()) {
                 this.put(key, p.getLength());
             } else {
                 final long[] sizes = p.getLengths();
@@ -113,7 +114,7 @@ public class JsonJcrNode extends JSONObject {
         } else {
             String key = p.getName();
 
-            if (!p.getDefinition().isMultiple()) {
+            if (!p.isMultiple()) {
                 addValue(key, p.getValue());
             } else {
                 for (Value v : p.getValues()) {

@@ -20,6 +20,7 @@ package org.apache.sling.testing.mock.sling.services;
 
 import java.net.URL;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.sling.settings.SlingSettingsService;
 
@@ -31,6 +32,7 @@ import com.google.common.collect.ImmutableSet;
 public final class MockSlingSettingService implements SlingSettingsService {
 
     private Set<String> runModes;
+    private String slingId;
 
     /**
      * Instantiate with no default run modes.
@@ -45,6 +47,7 @@ public final class MockSlingSettingService implements SlingSettingsService {
      */
     public MockSlingSettingService(Set<String> defaultRunModes) {
         this.runModes = defaultRunModes;
+        this.slingId = UUID.randomUUID().toString();
     }
 
     @Override
@@ -56,14 +59,14 @@ public final class MockSlingSettingService implements SlingSettingsService {
         this.runModes = runModes;
     }
 
+    @Override
+    public String getSlingId() {
+        return slingId;
+    }
+
     // --- unsupported operations ---
     @Override
     public String getAbsolutePathWithinSlingHome(String relativePath) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getSlingId() {
         throw new UnsupportedOperationException();
     }
 
