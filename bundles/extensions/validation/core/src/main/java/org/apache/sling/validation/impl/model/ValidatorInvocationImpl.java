@@ -27,7 +27,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.validation.model.ValidatorInvocation;
 
-public class ValidationInvocationImpl implements ValidatorInvocation {
+public class ValidatorInvocationImpl implements ValidatorInvocation {
     private final @Nonnull String id; 
     private final @Nonnull Map<String, Object> parameters;
     private final Integer severity;
@@ -39,7 +39,7 @@ public class ValidationInvocationImpl implements ValidatorInvocation {
      * @param parameters
      * @param severity
      */
-    public ValidationInvocationImpl(@Nonnull String id, @Nonnull Map<String, Object> parameters, Integer severity) {
+    public ValidatorInvocationImpl(@Nonnull String id, @Nonnull Map<String, Object> parameters, Integer severity) {
         super();
         this.id = id;
         this.parameters = parameters;
@@ -83,7 +83,7 @@ public class ValidationInvocationImpl implements ValidatorInvocation {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ValidationInvocationImpl other = (ValidationInvocationImpl) obj;
+        ValidatorInvocationImpl other = (ValidatorInvocationImpl) obj;
         if (id == null) {
             if (other.id != null)
                 return false;
