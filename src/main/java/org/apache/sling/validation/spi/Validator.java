@@ -73,7 +73,7 @@ public interface Validator <T> {
      * @return the validation result (encapsulates the validation status as well as messages).
      * @throws SlingValidationException if some expected arguments are missing from the arguments map
      */
-    @Nonnull ValidationResult validate(@Nonnull T data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments) throws SlingValidationException;
+    @Nonnull ValidationResult validate(@Nonnull T data, @Nonnull ValidatorContext context, @Nonnull ValueMap arguments) throws SlingValidationException;
     
     /**
      * Each {@link Validator} must have a service property with name {@code validator.id} of type {@link String}. The validators are only addressable via the value of this property 
@@ -83,7 +83,7 @@ public interface Validator <T> {
     String PROPERTY_VALIDATOR_ID = "validator.id";
     
     /***
-     * Each {@link Validator} may have a service property with name {@code validator.severity} of type {@link String}. This is taken as the severity of all 
+     * Each {@link Validator} may have a service property with name {@code validator.severity} of type {@link Integer}. This is taken as the severity of all 
      * {@link ValidationFailure}s constructed by this {@link Validator} in case the model has not overwritten the severity. 
      * If this property is not set the default severity is being used.
      */
