@@ -147,8 +147,7 @@ class TeleporterHttpClient {
             
             String jsonBody = waitForStatus(url, 200, timeoutInSeconds * 1000);
             // deserialize json (https://issues.apache.org/jira/browse/SLING-6536)
-            try {
-                JsonReader jsonReader = Json.createReader(new StringReader(jsonBody));
+            try (JsonReader jsonReader = Json.createReader(new StringReader(jsonBody))) {
                 // extract state
                 JsonArray jsonArray = jsonReader.readObject().getJsonArray("data");
                 if (jsonArray == null) {
@@ -191,7 +190,7 @@ class TeleporterHttpClient {
             }
             d.waitNextDelay();
         }
-        throw new IOException("Bundle '" + bundleSymbolicName + "' was not started after " + timeoutInSeconds + " seconds. The check at " + url + " was not successfull");
+        throw new IOException("Bundle '" + bundleSymbolicName + "' was not started after " + timeoutInSeconds + " seconds. The check at " + url + " was not successfull. Probably some dependent bundle was not started.");
     }
 
     void uninstallBundle(String bundleSymbolicName, int webConsoleReadyTimeoutSeconds) throws MalformedURLException, IOException {
