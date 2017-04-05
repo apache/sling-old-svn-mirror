@@ -89,7 +89,10 @@
       <groupId>org.apache.johnzon</groupId>
       <artifactId>johnzon-core</artifactId>
       <version>1.0.0</version>
-      <scope>test</scope>
+      <!-- this dependency is necessary at test execution time from dependent modules 
+           and must therefore be available transitively 
+           (https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope) -->
+      <scope>runtime</scope> 
     </dependency>
     <!-- JSR 353 API -->
     <dependency>
