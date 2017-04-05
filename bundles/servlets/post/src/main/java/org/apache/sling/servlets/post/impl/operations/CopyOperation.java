@@ -26,6 +26,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.VersioningConfiguration;
@@ -43,22 +44,28 @@ public class CopyOperation extends AbstractCopyMoveOperation {
     }
 
     @Override
-    protected Resource execute(List<Modification> changes,
-            Resource source,
-            String destParent, String destName,
-            VersioningConfiguration versioningConfiguration) throws RepositoryException {
-        // ensure we have an item underlying the request's resource
-        Item item = source.adaptTo(Item.class);
-        if (item == null) {
-            return null;
+    protected Resource execute(final List<Modification> changes,
+            final Resource source,
+            final String destParent,
+            final String destName,
+            final VersioningConfiguration versioningConfiguration)
+    throws PersistenceException {
+        try {
+            // ensure we have an item underlying the request's resource
+            Item item = source.adaptTo(Item.class);
+            if (item == null) {
+                return null;
+            }
+
+            Item destItem = copy(item, (Node) item.getSession().getItem(destParent), destName);
+
+            String dest = destParent + "/" + destName;
+            changes.add(Modification.onCopied(source.getPath(), dest));
+            log.debug("copy {} to {}", source, dest);
+            return source.getResourceResolver().getResource(destItem.getPath());
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re, source.getPath(), null);
         }
-
-        Item destItem = copy(item, (Node) item.getSession().getItem(destParent), destName);
-
-        String dest = destParent + "/" + destName;
-        changes.add(Modification.onCopied(source.getPath(), dest));
-        log.debug("copy {} to {}", source, dest);
-        return source.getResourceResolver().getResource(destItem.getPath());
     }
 
     /**

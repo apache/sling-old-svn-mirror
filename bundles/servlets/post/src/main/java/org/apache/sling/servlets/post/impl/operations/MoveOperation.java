@@ -40,36 +40,43 @@ public class MoveOperation extends AbstractCopyMoveOperation {
     }
 
     @Override
-    protected Resource execute(List<Modification> changes, Resource source,
-            String destParent, String destName,
-            VersioningConfiguration versioningConfiguration)
-    throws PersistenceException, RepositoryException {
-        // ensure we have an item underlying the request's resource
-        Item item = source.adaptTo(Item.class);
-        if (item == null) {
-            return null;
+    protected Resource execute(final List<Modification> changes,
+            final Resource source,
+            String destParent,
+            String destName,
+            final VersioningConfiguration versioningConfiguration)
+    throws PersistenceException {
+        try {
+            // ensure we have an item underlying the request's resource
+            Item item = source.adaptTo(Item.class);
+            if (item == null) {
+                return null;
+            }
+
+            if (destName == null) {
+                destName = source.getName();
+            }
+
+            String sourcePath = source.getPath();
+            if (destParent.equals("/")) {
+                destParent = "";
+            }
+            String destPath = destParent + "/" + destName;
+            Session session = item.getSession();
+
+            this.jcrSsupport.checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
+
+            final Resource dest = source.getResourceResolver().getResource(destPath);
+            if (dest != null ) {
+                source.getResourceResolver().delete(dest);
+            }
+
+            session.move(sourcePath, destPath);
+            changes.add(Modification.onMoved(sourcePath, destPath));
+            return source.getResourceResolver().getResource(destPath);
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
         }
-
-        if (destName == null) {
-            destName = source.getName();
-        }
-
-        String sourcePath = source.getPath();
-        if (destParent.equals("/")) {
-            destParent = "";
-        }
-        String destPath = destParent + "/" + destName;
-        Session session = item.getSession();
-
-        this.jcrSsupport.checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
-
-        if (session.itemExists(destPath)) {
-            session.getItem(destPath).remove();
-        }
-
-        session.move(sourcePath, destPath);
-        changes.add(Modification.onMoved(sourcePath, destPath));
-        return source.getResourceResolver().getResource(destPath);
     }
 
 }
