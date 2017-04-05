@@ -63,7 +63,7 @@ public class ResourcePropertyBuilder {
     }
     
     public @Nonnull ResourcePropertyBuilder validator(@Nonnull String id, Integer severity, @Nonnull Map<String, Object> parameters) {
-        validators.add(new ValidationInvocationImpl(id, parameters, severity));
+        validators.add(new ValidatorInvocationImpl(id, parameters, severity));
         return this;
     }
 
