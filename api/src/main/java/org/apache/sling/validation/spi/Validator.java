@@ -73,7 +73,7 @@ public interface Validator <T> {
      * @return the validation result (encapsulates the validation status as well as messages).
      * @throws SlingValidationException if some expected arguments are missing from the arguments map
      */
-    @Nonnull ValidationResult validate(@Nonnull T data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments) throws SlingValidationException;
+    @Nonnull ValidationResult validate(@Nonnull T data, @Nonnull ValidatorContext context, @Nonnull ValueMap arguments) throws SlingValidationException;
     
     /**
      * Each {@link Validator} must have a service property with name {@code validator.id} of type {@link String}. The validators are only addressable via the value of this property 

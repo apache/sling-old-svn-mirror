@@ -25,9 +25,9 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.spi.ValidationContext;
+import org.apache.sling.validation.spi.ValidatorContext;
 
-public class ValidationContextImpl implements ValidationContext {
+public class ValidationContextImpl implements ValidatorContext {
 
     private final @Nonnull String location;
     private final int severity;
