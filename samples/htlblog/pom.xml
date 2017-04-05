@@ -39,12 +39,7 @@
                 <configuration>
                     <excludes>
                         <exclude>readme.md</exclude>
-                        <exclude>src/main/resources/initial-content/apps/htlblog/clientlibs/css/*.css</exclude>
-                        <exclude>src/main/resources/initial-content/apps/htlblog/clientlibs/js/*.js</exclude>
-                        <exclude>src/main/resources/initial-content/apps/htlblog/clientlibs/img/*.svg</exclude>
-                        <exclude>src/main/resources/initial-content/apps/htlblog/clientlibs/fonts/**</exclude>
-                        <exclude>src/main/resources/initial-content/apps/*.json</exclude>
-                        <exclude>src/main/resources/initial-content/content/*.json</exclude>
+                        <exclude>src/main/resources/initial-content/apps/htlblog/clientlibs/bootstrap/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
