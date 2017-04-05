@@ -23,6 +23,9 @@ This sample is designed as an introduction to Sling and HTL.
 
     http://localhost:8080/content/htlblog.html
 
+# Screenshot
+![HTL Blog Screenshot](https://github.com/auniverseaway/sling/raw/SLING-6740_HTLBlog_Sample/samples/htlblog/src/main/resources/initial-content/apps/htlblog/clientlibs/img/screen-shot.png)
+
 # Parts of the Application
 ## Java
 HTL Blog uses Sling Models extensively. You can read about them [here](https://sling.apache.org/documentation/bundles/models.html).
