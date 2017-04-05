@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.validation.examples</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Validation Framework Examples</name>
