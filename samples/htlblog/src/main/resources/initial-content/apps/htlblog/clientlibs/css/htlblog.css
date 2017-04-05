@@ -1,13 +1,29 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 body {
-	margin-top: 50px;
+    margin-top: 50px;
 }
 
 header {
-	margin: 30px 0;
+    margin: 30px 0;
 }
 
 header .sling-logo {
-	max-width: 180px;
+    max-width: 180px;
 }
 
 .btn-anchor {
@@ -33,21 +49,22 @@ header .sling-logo {
 }
 
 .btn-anchor:hover {
-	text-decoration: none;
+    text-decoration: none;
 }
 
 .create-new {
-
+    display: block;
+    margin-bottom: 30px;
 }
 
 .post-item form {
-	display: inline;
+    display: inline;
 }
 
 article {
-	margin-bottom: 120px;
+    margin-bottom: 120px;
 }
 
 .featured-image {
-	width: 100%;
+    width: 100%;
 }
