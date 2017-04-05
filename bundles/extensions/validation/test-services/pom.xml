@@ -27,15 +27,15 @@
     </parent>
 
     <artifactId>org.apache.sling.validation.test-services</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Validation Framework Testing Services</name>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.validation.test-services-1.0.0</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.validation.test-services-1.0.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.validation.test-services-1.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/test-services</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/validation/test-services</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/validation/test-services</url>
     </scm>
 
     <build>
