@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>\${rootArtifactId}</artifactId>
+        <groupId>\${groupId}</groupId>
+        <version>\${version}</version>
+    </parent>
+
+    <artifactId>all</artifactId>
+    <packaging>content-package</packaging>
+
+    <name>\${artifactName} - All</name>
+    <description>\${package} - \${artifactName}: All-in-one deployment content package</description>
+
+    <properties>
+        <maven.test.skip>true</maven.test.skip>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>\${project.groupId}</groupId>
+            <artifactId>core</artifactId>
+            <version>\${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>\${project.groupId}</groupId>
+            <artifactId>ui.apps</artifactId>
+            <version>\${project.version}</version>
+            <type>content-package</type>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.day.jcr.vault</groupId>
+                <artifactId>maven-vault-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <group>\${packageGroup}</group>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                        <configuration>
+                            <embeddedTarget>/apps/\${appsFolderName}/install</embeddedTarget>
+                            <embeddeds>
+                                <embedded>
+                                    <groupId>\${project.groupId}</groupId>
+                                    <artifactId>core</artifactId>
+                                    <filter>true</filter>
+                                </embedded>
+                            </embeddeds>
+                            <subPackages>
+                                <subPackage>
+                                    <groupId>\${project.groupId}</groupId>
+                                    <artifactId>ui.apps</artifactId>
+                                    <filter>true</filter>
+                                </subPackage>
+                            </subPackages>
+                            <!-- This gives the Package a recognizable name in the Package Manager by prepending the Artifact Id of the Project -->
+                            <name>\${rootArtifactId}-\${artifactId}</name>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.day.jcr.vault</groupId>
+                <artifactId>content-package-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <failOnError>true</failOnError>
+                    <targetURL>http://\${sling.host}:\${sling.port}/bin/cpm/package.service.html</targetURL>
+                    <userId>\${sling.user}</userId>
+                    <password>\${sling.password}</password>
+                    <useProxy>false</useProxy>
+                    <failOnMissingEmbed>true</failOnMissingEmbed>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>autoInstallAll</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.day.jcr.vault</groupId>
+                        <artifactId>content-package-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>install-package</id>
+                                <goals>
+                                    <goal>install</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

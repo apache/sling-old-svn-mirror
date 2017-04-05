@@ -71,5 +71,7 @@
         <module>bundle</module>
         <module>bundle-for-jcrinstall</module>
         <module>taglib</module>
+        <module>project</module>
+        <module>project-all</module>
     </modules>
 </project>

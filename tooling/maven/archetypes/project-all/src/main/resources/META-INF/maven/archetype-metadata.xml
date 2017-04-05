@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<archetype-descriptor
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.0.0 http://maven.apache.org/xsd/archetype-descriptor-1.0.0.xsd"
+        name="sling-all-project-archetype"
+        xmlns="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+>
+    <requiredProperties>
+        <requiredProperty key="version">
+            <defaultValue>1.0.0-SNAPSHOT</defaultValue>
+        </requiredProperty>
+
+        <!--
+           The Project Label used a prefix to the name of modules and is part of the descriptions
+        -->
+        <requiredProperty key="artifactName"/>
+        <!--
+           This is the folder name of the group underneath of /etc/packages where the content package
+           is installed
+        -->
+        <requiredProperty key="packageGroup">
+            <defaultValue>${groupId}</defaultValue>
+        </requiredProperty>
+        <!--
+            The folder name underneath /apps where components etc is installed from content packages.
+            This folder separates projects from each other and should be unique within your deployment
+            environment to avoid overrides
+        -->
+        <requiredProperty key="appsFolderName"/>
+        <!--
+            The folder name underneath /content where content is installed. In general this is the same
+            value as the appsFolderName but can be different
+        -->
+        <requiredProperty key="contentFolderName"/>
+        <!--
+            Package of the generated Service classes
+        -->
+        <requiredProperty key="package">
+            <defaultValue>${groupId}</defaultValue>
+        </requiredProperty>
+        <!--
+            Sub Package for the Sling Models (it is prepended with the package specified above)
+        -->
+        <requiredProperty key="slingModelSubPackage">
+            <!--<defaultValue>models</defaultValue>-->
+        </requiredProperty>
+        <!--
+            Target Host Name or IP Address of the Deployment Sling Server
+        -->
+        <requiredProperty key="slingHostName">
+            <defaultValue>localhost</defaultValue>
+        </requiredProperty>
+        <!--
+            Target Port of the Deployment Sling Server
+        -->
+        <requiredProperty key="slingPort">
+            <defaultValue>8080</defaultValue>
+        </requiredProperty>
+    </requiredProperties>
+    <fileSets>
+        <fileSet encoding="UTF-8">
+            <directory></directory>
+            <includes>
+                <include>Readme.md</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+
+    <!--AS NOTE: the only dynamic change that can be made here is to add ${rootArtifactId} to the id and name
+                 as the dir must map the folder we have in archetype-resources.
+    -->
+    <modules>
+        <module id="core" dir="core" name="core">
+            <fileSets>
+                <fileSet filtered="true" packaged="true" encoding="UTF-8">
+                    <directory>src/main/java</directory>
+                    <includes>
+                        <include>**/*.java</include>
+                    </includes>
+                </fileSet>
+                <fileSet filtered="true" packaged="true" encoding="UTF-8">
+                    <directory>src/test/java</directory>
+                    <includes>
+                        <include>**/*.java</include>
+                    </includes>
+                </fileSet>
+            </fileSets>
+        </module>
+        <module id="core.example" dir="core.example" name="core.example">
+            <fileSets>
+                <fileSet filtered="true" packaged="true" encoding="UTF-8">
+                    <directory>src/main/java</directory>
+                    <includes>
+                        <include>**/*.java</include>
+                    </includes>
+                </fileSet>
+                <fileSet filtered="true" packaged="true" encoding="UTF-8">
+                    <directory>src/test/java</directory>
+                    <includes>
+                        <include>**/*.java</include>
+                    </includes>
+                </fileSet>
+            </fileSets>
+        </module>
+        <module id="ui.apps" dir="ui.apps" name="ui.apps">
+            <fileSets>
+                <fileSet filtered="true" encoding="UTF-8">
+                    <directory>src/main/content</directory>
+                    <includes>
+                        <include>**/*.xml</include>
+                        <include>**/*.html</include>
+                    </includes>
+                </fileSet>
+            </fileSets>
+        </module>
+        <module id="ui.apps.example" dir="ui.apps.example" name="ui.apps.example">
+            <fileSets>
+                <fileSet filtered="true" encoding="UTF-8">
+                    <directory>src/main/content</directory>
+                    <includes>
+                        <include>**/*.xml</include>
+                        <include>**/*.html</include>
+                    </includes>
+                </fileSet>
+            </fileSets>
+        </module>
+        <module id="all" dir="all" name="all">
+            <fileSets>
+                <fileSet filtered="true" encoding="UTF-8">
+                    <directory>src/main/content</directory>
+                    <includes>
+                        <include>**/*.xml</include>
+                        <include>**/*.html</include>
+                    </includes>
+                </fileSet>
+            </fileSets>
+        </module>
+    </modules>
+</archetype-descriptor>
