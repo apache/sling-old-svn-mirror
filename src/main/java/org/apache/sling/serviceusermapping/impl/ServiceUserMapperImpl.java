@@ -72,8 +72,14 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
         @AttributeDefinition(name = "Default User",
             description = "The name of the user to use as the default if no service mapping"
-                + "applies. If this property is missing or empty no default user is defined.")
+                + " applies. If this property is missing or empty no default user is defined.")
         String user_default();
+
+        @AttributeDefinition(name = "Default Mapping",
+                description = "If enabled and no mapping for a requested service user exists and no " +
+                      " default user is defined, a " +
+                     "default mapping is applied which uses the service user \"serviceuser@\" + {bundleId} + [\":\" + subServiceName]")
+        boolean user_default_mapping() default true;
     }
 
     /** default log */
@@ -83,13 +89,15 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private String defaultUser;
 
-    private Map<Long, MappingConfigAmendment> amendments = new HashMap<Long, MappingConfigAmendment>();
+    private boolean useDefaultMapping;
+
+    private Map<Long, MappingConfigAmendment> amendments = new HashMap<>();
 
     private Mapping[] activeMappings = new Mapping[0];
 
-    private final List<ServiceUserValidator> validators = new CopyOnWriteArrayList<ServiceUserValidator>();
+    private final List<ServiceUserValidator> validators = new CopyOnWriteArrayList<>();
 
-    private SortedMap<Mapping, Registration> activeRegistrations = new TreeMap<Mapping, Registration>();
+    private SortedMap<Mapping, Registration> activeRegistrations = new TreeMap<>();
 
     private BundleContext bundleContext;
 
@@ -107,7 +115,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         final String[] props = config.user_mapping();
 
         if ( props != null ) {
-            final ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
+            final ArrayList<Mapping> mappings = new ArrayList<>(props.length);
             for (final String prop : props) {
                 if (prop != null && prop.trim().length() > 0 ) {
                     try {
@@ -124,6 +132,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             this.globalServiceUserMappings = new Mapping[0];
         }
         this.defaultUser = config.user_default();
+        this.useDefaultMapping = config.user_default_mapping();
 
         RegistrationSet registrationSet = null;
         this.bundleContext = bundleContext;
@@ -208,13 +217,13 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     }
 
     protected RegistrationSet updateMappings() {
-        final List<MappingConfigAmendment> sortedMappings = new ArrayList<MappingConfigAmendment>();
+        final List<MappingConfigAmendment> sortedMappings = new ArrayList<>();
         for(final MappingConfigAmendment amendment : this.amendments.values() ) {
             sortedMappings.add(amendment);
         }
         Collections.sort(sortedMappings);
 
-        final List<Mapping> mappings = new ArrayList<Mapping>();
+        final List<Mapping> mappings = new ArrayList<>();
         for(final Mapping m : this.globalServiceUserMappings) {
             mappings.add(m);
         }
@@ -242,8 +251,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             return result;
         }
 
-        final SortedSet<Mapping> orderedNewMappings = new TreeSet<Mapping>(Arrays.asList(newMappings));
-        final SortedMap<Mapping, Registration> newRegistrations = new TreeMap<Mapping, Registration>();
+        final SortedSet<Mapping> orderedNewMappings = new TreeSet<>(Arrays.asList(newMappings));
+        final SortedMap<Mapping, Registration> newRegistrations = new TreeMap<>();
 
         // keep those that are still mapped
         for (Map.Entry<Mapping, Registration> registrationEntry: activeRegistrations.entrySet()) {
@@ -319,7 +328,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
         for (final Registration registration : registrationSet.added) {
             Mapping mapping = registration.mapping;
-            final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+            final Dictionary<String, Object> properties = new Hashtable<>();
             if (mapping.getSubServiceName() != null) {
                 properties.put(ServiceUserMapped.SUBSERVICENAME, mapping.getSubServiceName());
             }
@@ -368,6 +377,13 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             }
         }
 
+        // use default mapping if configured and no default user
+        if ( this.defaultUser == null || this.defaultUser.isEmpty() ) {
+            final String userName = "serviceuser@" + serviceName + (subServiceName == null ? "" : ":" + subServiceName);
+            log.debug("internalGetUserId: no mapping found, using default mapping [{}]", userName);
+            return userName;
+
+        }
         log.debug("internalGetUserId: no mapping found, fallback to default user [{}]", this.defaultUser);
         return this.defaultUser;
     }
@@ -418,8 +434,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     }
 
     class RegistrationSet {
-        Collection<Registration> added = new ArrayList<Registration>();
-        Collection<Registration> removed = new ArrayList<Registration>();
+        Collection<Registration> added = new ArrayList<>();
+        Collection<Registration> removed = new ArrayList<>();
     }
 }
 

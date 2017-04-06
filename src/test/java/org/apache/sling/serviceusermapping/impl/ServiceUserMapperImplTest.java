@@ -42,6 +42,8 @@ public class ServiceUserMapperImplTest {
 
     private static final String BUNDLE_SYMBOLIC2 = "bundle2";
 
+    private static final String BUNDLE_SYMBOLIC3 = "bundle3";
+
     private static final String SUB = "sub";
 
     private static final String NONE = "none";
@@ -58,6 +60,7 @@ public class ServiceUserMapperImplTest {
 
     private static final Bundle BUNDLE2;
 
+    private static final Bundle BUNDLE3;
 
     static {
         BUNDLE1 = mock(Bundle.class);
@@ -65,6 +68,9 @@ public class ServiceUserMapperImplTest {
 
         BUNDLE2 = mock(Bundle.class);
         when(BUNDLE2.getSymbolicName()).thenReturn(BUNDLE_SYMBOLIC2);
+
+        BUNDLE3 = mock(Bundle.class);
+        when(BUNDLE3.getSymbolicName()).thenReturn(BUNDLE_SYMBOLIC3);
     }
 
     @Test
@@ -77,6 +83,7 @@ public class ServiceUserMapperImplTest {
             BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
         });
         when(config.user_default()).thenReturn(NONE);
+        when(config.user_default_mapping()).thenReturn(false);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -87,6 +94,58 @@ public class ServiceUserMapperImplTest {
         TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, ""));
         TestCase.assertEquals(SAMPLE_SUB, sum.getServiceUserID(BUNDLE1, SUB));
         TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, SUB));
+        TestCase.assertEquals(NONE, sum.getServiceUserID(BUNDLE3, null));
+        TestCase.assertEquals(NONE, sum.getServiceUserID(BUNDLE3, SUB));
+    }
+
+    @Test
+    public void test_getServiceUserIDwithDefaultMappingEnabledAndDefaultUser() {
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {
+            BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
+            BUNDLE_SYMBOLIC2 + "=" + ANOTHER, //
+            BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
+            BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
+        });
+        when(config.user_default()).thenReturn(NONE);
+        when(config.user_default_mapping()).thenReturn(true);
+
+        final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
+        sum.configure(null, config);
+
+        TestCase.assertEquals(SAMPLE, sum.getServiceUserID(BUNDLE1, null));
+        TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, null));
+        TestCase.assertEquals(SAMPLE, sum.getServiceUserID(BUNDLE1, ""));
+        TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, ""));
+        TestCase.assertEquals(SAMPLE_SUB, sum.getServiceUserID(BUNDLE1, SUB));
+        TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, SUB));
+        TestCase.assertEquals(NONE, sum.getServiceUserID(BUNDLE3, null));
+        TestCase.assertEquals(NONE, sum.getServiceUserID(BUNDLE3, SUB));
+    }
+
+    @Test
+    public void test_getServiceUserIDwithDefaultMappingEnabledAndNoDefaultUser() {
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {
+            BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
+            BUNDLE_SYMBOLIC2 + "=" + ANOTHER, //
+            BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
+            BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
+        });
+        when(config.user_default()).thenReturn(null);
+        when(config.user_default_mapping()).thenReturn(true);
+
+        final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
+        sum.configure(null, config);
+
+        TestCase.assertEquals(SAMPLE, sum.getServiceUserID(BUNDLE1, null));
+        TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, null));
+        TestCase.assertEquals(SAMPLE, sum.getServiceUserID(BUNDLE1, ""));
+        TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, ""));
+        TestCase.assertEquals(SAMPLE_SUB, sum.getServiceUserID(BUNDLE1, SUB));
+        TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, SUB));
+        TestCase.assertEquals("serviceuser@" + BUNDLE_SYMBOLIC3, sum.getServiceUserID(BUNDLE3, null));
+        TestCase.assertEquals("serviceuser@" + BUNDLE_SYMBOLIC3 + ":" + SUB, sum.getServiceUserID(BUNDLE3, SUB));
     }
 
     @Test
@@ -99,6 +158,7 @@ public class ServiceUserMapperImplTest {
                 BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
         });
         when(config.user_default()).thenReturn(NONE);
+        when(config.user_default_mapping()).thenReturn(false);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -131,6 +191,7 @@ public class ServiceUserMapperImplTest {
                 BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
         });
         when(config.user_default()).thenReturn(NONE);
+        when(config.user_default_mapping()).thenReturn(false);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -172,6 +233,7 @@ public class ServiceUserMapperImplTest {
         ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
         when(config.user_mapping()).thenReturn(new String[] {});
         when(config.user_default()).thenReturn(NONE);
+        when(config.user_default_mapping()).thenReturn(false);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -214,6 +276,7 @@ public class ServiceUserMapperImplTest {
                 BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
                 });
         when(config.user_default()).thenReturn(NONE);
+        when(config.user_default_mapping()).thenReturn(false);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.registerAsync = false;
@@ -262,7 +325,7 @@ public class ServiceUserMapperImplTest {
 
 
         final BundleContext bundleContext = mock(BundleContext.class);
-        final Map<String, Map<Object, Dictionary>> registrations = new HashMap<String, Map<Object, Dictionary>>();
+        final Map<String, Map<Object, Dictionary>> registrations = new HashMap<>();
 
         public ServiceRegistrationContextHelper() {
             when(bundleContext.registerService(any(String.class), any(Object.class), any(Dictionary.class)))
