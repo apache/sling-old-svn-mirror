@@ -42,7 +42,6 @@ import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
-import org.apache.sling.servlets.post.impl.helper.ReferenceParser;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.servlets.post.impl.helper.SlingFileUploadHandler;
 import org.apache.sling.servlets.post.impl.helper.SlingPropertyValueHandler;
@@ -378,7 +377,7 @@ public class ModifyOperation extends AbstractCreateOperation {
     throws RepositoryException, PersistenceException {
 
         final SlingPropertyValueHandler propHandler = new SlingPropertyValueHandler(
-            dateParser, new ReferenceParser(resolver.adaptTo(Session.class)), changes);
+            dateParser, this.jcrSsupport, changes);
 
         for (final RequestProperty prop : reqProperties.values()) {
             if (prop.hasValues()) {

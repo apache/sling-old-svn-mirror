@@ -16,9 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.post.impl.operations;
+package org.apache.sling.servlets.post.impl.helper;
 
 import java.util.List;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.PersistenceException;
@@ -101,4 +106,25 @@ public class JCRSupport {
         }
         return false;
     }
+
+    public Value parse(Session session, String value, ValueFactory factory, boolean weak) throws RepositoryException {
+        return ReferenceParser.parse(session, value, factory, weak);
+    }
+
+    /**
+     * Parses the given source strings and returns the respective reference value
+     * instances. If no node matches for any of the sources
+     * returns <code>null</code>.
+     * <p/>
+     *
+     * @param values path or UUID strings
+     * @param factory the value factory
+     * @param weak true to create a WeakReference value
+     * @return the values or <code>null</code>
+     * @throws RepositoryException
+     */
+    public Value[] parse(Session session, String[] values, ValueFactory factory, boolean weak) throws RepositoryException {
+        return ReferenceParser.parse(session, values, factory, weak);
+    }
+
 }
