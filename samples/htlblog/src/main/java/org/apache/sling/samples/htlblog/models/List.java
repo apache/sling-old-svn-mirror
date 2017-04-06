@@ -46,6 +46,7 @@ public class List {
     public List(final SlingHttpServletRequest request) {
         ResourceResolver resourceResolver = request.getResourceResolver();
         this.resource = resourceResolver.getResource("/content/htlblog/posts");
+        resourceResolver.close();
     }
 
     /**
@@ -58,8 +59,12 @@ public class List {
      */
     @SuppressWarnings("unchecked")
     public Iterator<Post> getChildren() {
-        java.util.List<Resource> childrenList = IteratorUtils.toList(this.resource.getChildren().iterator());
-        Iterator<Resource> reverseChildren = new ReverseListIterator(childrenList);
-        return ResourceUtil.adaptTo(reverseChildren, Post.class);
+        if(this.resource != null) {
+            java.util.List<Resource> childrenList = IteratorUtils.toList(this.resource.getChildren().iterator());
+            Iterator<Resource> reverseChildren = new ReverseListIterator(childrenList);
+            return ResourceUtil.adaptTo(reverseChildren, Post.class);
+        } else {
+            return null;
+        }
     }
 }

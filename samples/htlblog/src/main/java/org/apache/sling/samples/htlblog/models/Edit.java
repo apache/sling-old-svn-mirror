@@ -35,9 +35,6 @@ public class Edit {
     /** The Constant LOGGER. */
     private static final Logger LOGGER = LoggerFactory.getLogger(Edit.class);
 
-    /** The resource resolver. */
-    private ResourceResolver resourceResolver;
-
     /** The post. */
     private Post post;
 
@@ -47,16 +44,18 @@ public class Edit {
      * @param request the request
      */
     public Edit(SlingHttpServletRequest request) {
-        this.resourceResolver = request.getResourceResolver();
+        ResourceResolver resourceResolver = request.getResourceResolver();
         try {
             String path = request.getParameter("post");
             if (path != null) {
-                Resource resource = this.resourceResolver.getResource(path);
+                Resource resource = resourceResolver.getResource(path);
                 this.post = resource.adaptTo(Post.class);
             }
+            LOGGER.info("Creating new post.");
         } catch (Exception e) {
             LOGGER.info("Couldn't get the post to edit.", e);
         }
+        resourceResolver.close();
     }
 
     /**

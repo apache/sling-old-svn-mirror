@@ -30,8 +30,7 @@ import org.apache.sling.models.annotations.Model;
 @Model(adaptables=SlingHttpServletRequest.class)
 public class Author {
 
-    /** The resource resolver. */
-    ResourceResolver resourceResolver;
+    private String userId;
 
     /**
      * Instantiates a new author model.
@@ -39,7 +38,9 @@ public class Author {
      * @param request the request
      */
     public Author(SlingHttpServletRequest request) {
-        resourceResolver = request.getResourceResolver();
+        ResourceResolver resourceResolver = request.getResourceResolver();
+        userId = resourceResolver.getUserID();
+        resourceResolver.close();
     }
 
     /**
@@ -48,8 +49,7 @@ public class Author {
      * @return the user id
      */
     public String getUserId() {
-        Session session = resourceResolver.adaptTo(Session.class);
-        return session.getUserID();
+        return userId;
     }
 
     /**
@@ -59,7 +59,6 @@ public class Author {
      */
     public boolean isLoggedIn() {
         boolean isLoggedIn = false;
-        String userId = getUserId();
         if(!userId.equals("anonymous")) {
             isLoggedIn = true;
         }
