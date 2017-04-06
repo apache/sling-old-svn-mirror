@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.post.impl.operations;
+package org.apache.sling.servlets.post.impl.helper;
 
 import java.util.List;
 

@@ -48,7 +48,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
-import org.apache.sling.servlets.post.impl.operations.JCRSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

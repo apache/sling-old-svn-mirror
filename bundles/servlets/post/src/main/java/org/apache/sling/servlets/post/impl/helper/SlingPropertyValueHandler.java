@@ -70,7 +70,7 @@ public class SlingPropertyValueHandler {
 
     private final DateParser dateParser;
 
-    private final ReferenceParser referenceParser;
+    private final JCRSupport jcrSupport;
 
     /**
      * current date for all properties in this request
@@ -78,11 +78,13 @@ public class SlingPropertyValueHandler {
     private final Calendar now = Calendar.getInstance();
 
     /**
-     * Constructs a propert value handler
+     * Constructs a property value handler
      */
-    public SlingPropertyValueHandler(DateParser dateParser, ReferenceParser referenceParser, List<Modification> changes) {
+    public SlingPropertyValueHandler(final DateParser dateParser,
+            final JCRSupport jcrSupport,
+            final List<Modification> changes) {
         this.dateParser = dateParser;
-        this.referenceParser = referenceParser;
+        this.jcrSupport = jcrSupport;
         this.changes = changes;
     }
 
@@ -558,16 +560,20 @@ public class SlingPropertyValueHandler {
      * Stores property value(s) as reference(s). Will parse the reference(s) from the string
      * value(s) in the {@link RequestProperty}.
      *
-     * @return true only if parsing was successfull and the property was actually changed
+     * @return true only if parsing was successful and the property was actually changed
      */
-    private boolean storeAsReference(final Modifiable parent, String name, String[] values, int type, boolean multiValued, ValueFactory valFac)
-            throws RepositoryException, PersistenceException {
+    private boolean storeAsReference(final Modifiable parent,
+            final String name,
+            final String[] values,
+            final int type,
+            final boolean multiValued,
+            final ValueFactory valFac)
+    throws RepositoryException, PersistenceException {
         if ( parent.node == null ) {
-            // TODO
             throw new PersistenceException("Resource " + parent.resource.getPath() + " does not support reference properties.");
         }
         if (multiValued) {
-            Value[] array = referenceParser.parse(values, valFac, isWeakReference(type));
+            Value[] array = this.jcrSupport.parse(parent.node.getSession(), values, valFac, isWeakReference(type));
             if (array != null) {
                 changes.add(Modification.onModified(
                         parent.node.setProperty(name, array).getPath()
@@ -576,7 +582,7 @@ public class SlingPropertyValueHandler {
             }
         } else {
             if (values.length >= 1) {
-                Value v = referenceParser.parse(values[0], valFac, isWeakReference(type));
+                Value v = this.jcrSupport.parse(parent.node.getSession(), values[0], valFac, isWeakReference(type));
                 if (v != null) {
                     changes.add(Modification.onModified(
                             parent.node.setProperty(name, v).getPath()
