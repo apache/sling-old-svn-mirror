@@ -108,6 +108,10 @@
                         <extensions>true</extensions>
                         <configuration>
                             <group>com.headwire.sling.group</group>
+                            <!-- Merge the Permissions -->
+                            <properties>
+                                <acHandling>merge</acHandling>
+                            </properties>
                         </configuration>
                         <executions>
                             <execution>
@@ -115,11 +119,11 @@
                                     <goal>package</goal>
                                 </goals>
                                 <configuration>
-                                    <embeddedTarget>/apps/slingbucks2Apps/install</embeddedTarget>
+                                    <embeddedTarget>/apps/slingbucks2App/install</embeddedTarget>
                                     <embeddeds>
                                         <embedded>
                                             <groupId>${project.groupId}</groupId>
-                                            <artifactId>core</artifactId>
+                                            <artifactId>core.slingbucks</artifactId>
                                             <filter>true</filter>
                                         </embedded>
                                     </embeddeds>

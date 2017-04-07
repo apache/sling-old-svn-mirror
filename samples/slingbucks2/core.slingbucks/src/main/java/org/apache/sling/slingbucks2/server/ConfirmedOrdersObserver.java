@@ -79,8 +79,8 @@ public class ConfirmedOrdersObserver implements EventListener, Runnable {
     private static final long WAIT_AFTER_LAST_CHANGE_MSEC = 5000;
     
     protected void activate(ComponentContext context)  throws Exception {
-        session = repository.loginAdministrative(null);
-        
+        session = repository.loginService("slingbucks2-service", null);
+
         // Listen for changes to our orders
         if (repository.getDescriptor(Repository.OPTION_OBSERVATION_SUPPORTED).equals("true")) {
             observationManager = session.getWorkspace().getObservationManager();

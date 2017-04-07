@@ -34,6 +34,7 @@
         filter list and add filter entries until all of the app provides
         nodes are included but none of the customer generatedd nodes.
     -->
+    <filter root="/home/users/system/n0yvdAb-3zmGNh9RyKqma"/>
     <filter root="/content/slingbucks2Content/private/confirmed" mode="update">
         <exclude pattern="/content/slingbucks2Content/private/confirmed/.*"/>
     </filter>
@@ -41,5 +42,9 @@
         <exclude pattern="/content/slingbucks2Content/public/orders/.*"/>
     </filter>
     <filter root="/content/slingbucks2Content/readonly/options" mode="update"/>
-    <filter root="/apps/slingbucks2App"/>
+    <filter root="/content/slingbucks2Content/rep:policy" mode="merge"/>
+    <filter root="/apps/slingbucks2App" mode="merge">
+        <exclude pattern="/apps/slingbucks2App/install(/.*)?" />
+    </filter>
+    <filter root="/apps/slingbucks2App/install/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-slingbucks2.config" />
 </workspaceFilter>
