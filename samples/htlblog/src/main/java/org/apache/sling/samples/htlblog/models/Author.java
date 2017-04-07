@@ -40,7 +40,6 @@ public class Author {
     public Author(SlingHttpServletRequest request) {
         ResourceResolver resourceResolver = request.getResourceResolver();
         userId = resourceResolver.getUserID();
-        resourceResolver.close();
     }
 
     /**

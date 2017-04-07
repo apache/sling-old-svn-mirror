@@ -55,7 +55,6 @@ public class Edit {
         } catch (Exception e) {
             LOGGER.info("Couldn't get the post to edit.", e);
         }
-        resourceResolver.close();
     }
 
     /**

@@ -46,7 +46,6 @@ public class List {
     public List(final SlingHttpServletRequest request) {
         ResourceResolver resourceResolver = request.getResourceResolver();
         this.resource = resourceResolver.getResource("/content/htlblog/posts");
-        resourceResolver.close();
     }
 
     /**
