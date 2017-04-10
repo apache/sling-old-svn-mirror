@@ -42,7 +42,9 @@
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <felix.shell>false</felix.shell>
         <sling.hc.samples.version>1.0.7-SNAPSHOT</sling.hc.samples.version>
-        <sling.hc.core.version>1.2.3-SNAPSHOT</sling.hc.core.version>
+        <sling.hc.api.version>0.0.99-SNAPSHOT</sling.hc.api.version>
+        <sling.hc.core.version>1.2.7-SNAPSHOT</sling.hc.core.version>
+        <sling.johnzon.version>0.1.0-SNAPSHOT</sling.johnzon.version>
     </properties>
 
     <scm>
@@ -60,7 +62,9 @@
                     <systemProperties>
                         <org.ops4j.pax.logging.DefaultServiceLog.level>${org.ops4j.pax.logging.DefaultServiceLog.level}</org.ops4j.pax.logging.DefaultServiceLog.level>
                         <sling.hc.core.version>${sling.hc.core.version}</sling.hc.core.version>
+                        <sling.hc.api.version>${sling.hc.api.version}</sling.hc.api.version>
                         <sling.hc.samples.version>${sling.hc.samples.version}</sling.hc.samples.version>
+                        <sling.johnzon.version>${sling.johnzon.version}</sling.johnzon.version>
                         <felix.shell>${felix.shell}</felix.shell>
                     </systemProperties>
                 </configuration>
@@ -71,8 +75,8 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.hc.core</artifactId>
-            <version>${sling.hc.core.version}</version>
+            <artifactId>org.apache.sling.hc.api</artifactId>
+            <version>${sling.hc.api.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
