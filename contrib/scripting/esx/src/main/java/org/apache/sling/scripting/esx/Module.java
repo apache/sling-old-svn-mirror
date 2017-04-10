@@ -106,9 +106,9 @@ public class Module extends SimpleBindings implements Require {
         put(CONTEXT_FIELD_CONSOLE, new ConsoleLog((String) get(CONTEXT_FIELD_FILENAME)));
     }
 
-    private ScriptObjectMirror decoreateScript(String source)
+    private ScriptObjectMirror decorateScript(String source)
             throws ScriptException {
-        return decoreateScript(source, true);
+        return decorateScript(source, true);
     }
 
     /**
@@ -117,7 +117,7 @@ public class Module extends SimpleBindings implements Require {
      * @return
      * @throws ScriptException
      */
-    private ScriptObjectMirror decoreateScript(String source, boolean es6)
+    private ScriptObjectMirror decorateScript(String source, boolean es6)
             throws ScriptException {
         String filename = (String) get("filename");
         if (filename.indexOf("node_modules") == -1 && es6) {
@@ -173,7 +173,7 @@ public class Module extends SimpleBindings implements Require {
 
         if (function == null) {
             if (moduleScript.isJsFile()) {
-                function = decoreateScript(
+                function = Module.this.decorateScript(
                         //readScript(moduleResource)//  
                         readScript(moduleResource)
                 );
@@ -181,7 +181,7 @@ public class Module extends SimpleBindings implements Require {
 
             if (moduleScript.isJsonFile()) {
                 String jsonfile = readScript(moduleResource);
-                function = decoreateScript(
+                function = decorateScript(
                         "module.exports = " + jsonfile
                 , false);
             }
@@ -211,7 +211,7 @@ public class Module extends SimpleBindings implements Require {
                  + "exports.children = this.children;";*/
                 String source = "module.exports = this.simpleResource;";
 
-                function = decoreateScript(source, false);
+                function = decorateScript(source, false);
             }
             if (!moduleScript.isResourceFile()) {
                 factory.getModuleCache().put(moduleScript.getResource().getPath(), function);
@@ -226,7 +226,7 @@ public class Module extends SimpleBindings implements Require {
             log.debug("sourcE: ");
             source = "module.exports = \"" + source + "\";";
             log.debug(source);
-            function = decoreateScript(source);
+            function = Module.this.decorateScript(source);
             factory.getModuleCache().put(moduleScript.getResource().getPath(), function);
         }
         JSObject process = (JSObject) factory.getNashornEngine().eval("Object");
