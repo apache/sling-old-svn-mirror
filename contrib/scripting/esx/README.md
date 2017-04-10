@@ -27,7 +27,7 @@ This module implements a Nashorn Apache Sling Script Engine for the "esx" extens
 
 It requires a function named `render` in the `esx` script that processes the request.
 
-To activate this script engine you must first **enable Nashorn support** in the 
+To activate this script engine you must first **enable Nashorn support** in the
 `sling.properties` file of your Sling instance:
 
 ```
@@ -45,27 +45,27 @@ First create a node with some content:
 	  -Ftitle="Hello ESX" \
 	  -Ftext="Here's some example text" \
 	  http://localhost:8080/apps/foo
-	  
+
 Then create an ESX script to render it:
 
     $ cat << EOF > /tmp/foo.esx
     var foo = {
       render: function () {
-        var output  = "<h1>" + currentNode.properties.title + "</h1>";             
+        var output  = `<h1>${currentNode.properties.title}</h1>`;
         output += currentNode.properties.text;
         return output;     
       }
     }  
     module.exports = foo;
     EOF
-	
+
     $ curl -u admin:admin -T /tmp/foo.esx http://localhost:8080/apps/foo/foo.esx
-   
+
     $ curl http://localhost:8080/apps/foo.html
     <h1>Hello ESX</h1>Here's some example text
-  	  
 
-An ESX file is a regular java script file. 
+
+An ESX file is a regular java script file.
 
 The NodeJS module resolution (https://nodejs.org/api/modules.html) is implemented to give access to the
 rich collection of Node modules.
@@ -98,7 +98,7 @@ We have borrowed the requirejs loader plugin syntax instead (see http://requirej
   - the json as a whole will be exported as a javascript Object
 
 ##  Demo Application
-Currently the demo application is bundles with the engine bundle. 
+Currently the demo application is bundles with the engine bundle.
 
 open http://localhost:8080/libs/esx/demo/content/demo.html
 
