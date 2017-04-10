@@ -27,9 +27,9 @@
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.event.resource</artifactId>
+    <artifactId>org.apache.sling.event</artifactId>
     <packaging>bundle</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>4.2.3-SNAPSHOT</version>
 
     <name>Apache Sling Event Support</name>
     <description>
@@ -38,7 +38,7 @@
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event/resource</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event/resourc33</developerConnection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event/resource</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/event/resource</url>
     </scm>
 
