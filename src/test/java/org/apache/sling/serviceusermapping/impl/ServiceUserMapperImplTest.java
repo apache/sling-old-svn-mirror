@@ -83,7 +83,7 @@ public class ServiceUserMapperImplTest {
             BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
         });
         when(config.user_default()).thenReturn(NONE);
-        when(config.user_default_mapping()).thenReturn(false);
+        when(config.user_enable_default_mapping()).thenReturn(false);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -108,7 +108,7 @@ public class ServiceUserMapperImplTest {
             BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
         });
         when(config.user_default()).thenReturn(NONE);
-        when(config.user_default_mapping()).thenReturn(true);
+        when(config.user_enable_default_mapping()).thenReturn(true);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -133,7 +133,7 @@ public class ServiceUserMapperImplTest {
             BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
         });
         when(config.user_default()).thenReturn(null);
-        when(config.user_default_mapping()).thenReturn(true);
+        when(config.user_enable_default_mapping()).thenReturn(true);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -144,8 +144,8 @@ public class ServiceUserMapperImplTest {
         TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, ""));
         TestCase.assertEquals(SAMPLE_SUB, sum.getServiceUserID(BUNDLE1, SUB));
         TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, SUB));
-        TestCase.assertEquals("serviceuser@" + BUNDLE_SYMBOLIC3, sum.getServiceUserID(BUNDLE3, null));
-        TestCase.assertEquals("serviceuser@" + BUNDLE_SYMBOLIC3 + ":" + SUB, sum.getServiceUserID(BUNDLE3, SUB));
+        TestCase.assertEquals("serviceuser--" + BUNDLE_SYMBOLIC3, sum.getServiceUserID(BUNDLE3, null));
+        TestCase.assertEquals("serviceuser--" + BUNDLE_SYMBOLIC3 + "--" + SUB, sum.getServiceUserID(BUNDLE3, SUB));
     }
 
     @Test
@@ -158,7 +158,7 @@ public class ServiceUserMapperImplTest {
                 BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
         });
         when(config.user_default()).thenReturn(NONE);
-        when(config.user_default_mapping()).thenReturn(false);
+        when(config.user_enable_default_mapping()).thenReturn(false);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -191,7 +191,7 @@ public class ServiceUserMapperImplTest {
                 BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
         });
         when(config.user_default()).thenReturn(NONE);
-        when(config.user_default_mapping()).thenReturn(false);
+        when(config.user_enable_default_mapping()).thenReturn(false);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -233,7 +233,7 @@ public class ServiceUserMapperImplTest {
         ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
         when(config.user_mapping()).thenReturn(new String[] {});
         when(config.user_default()).thenReturn(NONE);
-        when(config.user_default_mapping()).thenReturn(false);
+        when(config.user_enable_default_mapping()).thenReturn(false);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(null, config);
@@ -276,7 +276,7 @@ public class ServiceUserMapperImplTest {
                 BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
                 });
         when(config.user_default()).thenReturn(NONE);
-        when(config.user_default_mapping()).thenReturn(false);
+        when(config.user_enable_default_mapping()).thenReturn(false);
 
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.registerAsync = false;

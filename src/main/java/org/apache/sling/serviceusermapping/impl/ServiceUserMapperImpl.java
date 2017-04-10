@@ -79,7 +79,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
                 description = "If enabled and no mapping for a requested service user exists and no " +
                       " default user is defined, a " +
                      "default mapping is applied which uses the service user \"serviceuser@\" + {bundleId} + [\":\" + subServiceName]")
-        boolean user_default_mapping() default true;
+        boolean user_enable_default_mapping() default true;
     }
 
     /** default log */
@@ -132,7 +132,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             this.globalServiceUserMappings = new Mapping[0];
         }
         this.defaultUser = config.user_default();
-        this.useDefaultMapping = config.user_default_mapping();
+        this.useDefaultMapping = config.user_enable_default_mapping();
 
         RegistrationSet registrationSet = null;
         this.bundleContext = bundleContext;
@@ -379,7 +379,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
         // use default mapping if configured and no default user
         if ( this.defaultUser == null || this.defaultUser.isEmpty() ) {
-            final String userName = "serviceuser@" + serviceName + (subServiceName == null ? "" : ":" + subServiceName);
+            final String userName = "serviceuser--" + serviceName + (subServiceName == null ? "" : "--" + subServiceName);
             log.debug("internalGetUserId: no mapping found, using default mapping [{}]", userName);
             return userName;
 
