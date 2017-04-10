@@ -97,12 +97,8 @@ We have borrowed the requirejs loader plugin syntax instead (see http://requirej
 - json loader  (e.g. ```require("./dict/en.json```)
   - the json as a whole will be exported as a javascript Object
 
-## Installing Demo Application
-Currently the demo application is bundles with the engine bundle. To install the engine with the demo application, follow this steps:
-- switch to directory src/main/resources/libs/esx/demo
-- run: npm install
-- go back to package root directory
-- run mvn clean install sling:install´
+##  Demo Application
+Currently the demo application is bundles with the engine bundle. 
 
 open http://localhost:8080/libs/esx/demo/content/demo.html
 
