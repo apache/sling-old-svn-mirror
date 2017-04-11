@@ -42,7 +42,6 @@ import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
-import org.apache.sling.servlets.post.impl.helper.ReferenceParser;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.servlets.post.impl.helper.SlingFileUploadHandler;
 import org.apache.sling.servlets.post.impl.helper.SlingPropertyValueHandler;
@@ -254,7 +253,7 @@ public class ModifyOperation extends AbstractCreateOperation {
                 session.getItem(propPath).remove();
                 changes.add(Modification.onDeleted(propPath));
             } else {
-                Resource parent = deepGetOrCreateNode(resolver, property.getParentPath(),
+                Resource parent = deepGetOrCreateResource(resolver, property.getParentPath(),
                     reqProperties, changes, versioningConfiguration);
                 this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);
             }
@@ -378,11 +377,11 @@ public class ModifyOperation extends AbstractCreateOperation {
     throws RepositoryException, PersistenceException {
 
         final SlingPropertyValueHandler propHandler = new SlingPropertyValueHandler(
-            dateParser, new ReferenceParser(resolver.adaptTo(Session.class)), changes);
+            dateParser, this.jcrSsupport, changes);
 
         for (final RequestProperty prop : reqProperties.values()) {
             if (prop.hasValues()) {
-                final Resource parent = deepGetOrCreateNode(resolver,
+                final Resource parent = deepGetOrCreateResource(resolver,
                     prop.getParentPath(), reqProperties, changes, versioningConfiguration);
 
                 this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);

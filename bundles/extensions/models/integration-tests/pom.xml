@@ -130,6 +130,10 @@
                         </Sling-Model-Classes>
                         <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
                         <Export-Package>org.apache.sling.models.it</Export-Package>
+                        <Import-Package>
+                            org.apache.commons.beanutils;resolution:=optional,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

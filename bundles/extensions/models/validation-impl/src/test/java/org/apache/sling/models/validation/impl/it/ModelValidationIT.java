@@ -22,7 +22,6 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.models.factory.ModelFactory;
 import org.apache.sling.models.factory.ValidationException;
@@ -84,7 +83,7 @@ public class ModelValidationIT {
     }
 
     @Test
-    public void testValidModel() throws IOException, JSONException {
+    public void testValidModel() throws IOException {
         // create a valid resource
         Resource contentResource = resourceResolver.getResource("/apps/sling/validation/content/contentValid");
         Assert.assertNotNull("Content resource must exist", contentResource);
@@ -94,7 +93,7 @@ public class ModelValidationIT {
     }
 
     @Test
-    public void testInvalidModel() throws IOException, JSONException {
+    public void testInvalidModel() throws IOException {
         // create a valid resource
         Resource contentResource = resourceResolver.getResource("/apps/sling/validation/content/contentInvalid");
         Assert.assertNotNull("Content resource must exist", contentResource);

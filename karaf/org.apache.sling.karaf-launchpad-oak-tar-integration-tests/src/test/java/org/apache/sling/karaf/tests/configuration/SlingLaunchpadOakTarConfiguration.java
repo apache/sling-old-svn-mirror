@@ -96,7 +96,9 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.test-fragment").versionAsInProject(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.tools").versionAsInProject(),
             mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpcore-osgi").versionAsInProject(),
-            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpclient-osgi").versionAsInProject()
+            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpclient-osgi").versionAsInProject(),
+            // TODO remove (required by org.apache.sling.junit.core)
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.json").version("2.0.20")
         );
     }
 

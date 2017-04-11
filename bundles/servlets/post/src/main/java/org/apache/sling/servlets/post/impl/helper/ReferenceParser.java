@@ -16,29 +16,16 @@
  */
 package org.apache.sling.servlets.post.impl.helper;
 
-import java.lang.reflect.Method;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
- * Takes a string representation of a node (either a path or a uuid) and tries for parse it.
+ * Takes a string representation of a node (either a path or a uuid) and tries to parse it.
  */
 public class ReferenceParser {
-
-    private final Session session;
-
-    private static final Logger logger = LoggerFactory.getLogger(ReferenceParser.class);
-
-    public ReferenceParser(Session session) {
-        this.session = session;
-    }
 
     /**
      * Parses the given source string and returns the correct Value object.
@@ -51,8 +38,8 @@ public class ReferenceParser {
      * @return the value or <code>null</code>
      * @throws RepositoryException
      */
-    public Value parse(String value, ValueFactory factory, boolean weak) throws RepositoryException {
-        Node n = parse(value);
+    public static Value parse(Session session, String value, ValueFactory factory, boolean weak) throws RepositoryException {
+        Node n = parse(session, value);
         if (n == null) {
             return null;
         }
@@ -71,10 +58,10 @@ public class ReferenceParser {
      * @return the values or <code>null</code>
      * @throws RepositoryException
      */
-    public Value[] parse(String[] values, ValueFactory factory, boolean weak) throws RepositoryException {
+    public static Value[] parse(Session session, String[] values, ValueFactory factory, boolean weak) throws RepositoryException {
         Value ret[] = new Value[values.length];
         for (int i=0; i< values.length; i++) {
-            Node n = parse(values[i]);
+            Node n = parse(session, values[i]);
             if (n == null) {
                 return null;
             }
@@ -83,24 +70,15 @@ public class ReferenceParser {
         return ret;
     }
 
-    private Value createReferenceValue(Node node, ValueFactory factory, boolean weak) throws RepositoryException {
+    private static Value createReferenceValue(Node node, ValueFactory factory, boolean weak) throws RepositoryException {
         if (weak) {
-            try {
-                final Method m = factory.getClass().getMethod("createValue", new Class[] { Node.class, Boolean.TYPE });
-                return (Value) m.invoke(factory, node, true);
-            } catch (NoSuchMethodException e) {
-                logger.warn("A WeakReference type hint was received, but JCR 2 isn't available. Falling back to Reference type.");
-                return factory.createValue(node);
-            } catch (Exception e) {
-                logger.error("Unable to create WeakReference Value.", e);
-                return null;
-            }
+            return factory.createValue(node, true);
         } else {
             return factory.createValue(node);
         }
     }
 
-    private Node parse(String value) throws RepositoryException {
+    private static Node parse(Session session, String value) throws RepositoryException {
         try {
             if (session.itemExists(value)) {
                 return (Node) session.getItem(value);

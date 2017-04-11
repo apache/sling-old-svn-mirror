@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.post.impl.operations;
+package org.apache.sling.servlets.post.impl.helper;
 
 import java.util.List;
 
@@ -24,10 +24,15 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
@@ -144,7 +149,16 @@ public class JCRSupportImpl {
     }
 
     private boolean isVersionable(final Node node) throws RepositoryException {
-        return node.isNodeType("mix:versionable");
+        return node.isNodeType(JcrConstants.MIX_VERSIONABLE);
+    }
+
+    public boolean isVersionable(final Resource rsrc) throws PersistenceException {
+        try {
+            final Node node = rsrc.adaptTo(Node.class);
+            return node != null && isVersionable(node);
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re, rsrc.getPath(), null);
+        }
     }
 
     public boolean checkin(final Resource rsrc)
@@ -196,5 +210,36 @@ public class JCRSupportImpl {
                 }
             }
         }
+    }
+
+    public boolean isNode(final Resource rsrc) {
+        return rsrc.adaptTo(Node.class) != null;
+    }
+
+    public boolean isNodeType(final Resource rsrc, final String typeHint) {
+        final Node node = rsrc.adaptTo(Node.class);
+        if ( node != null ) {
+            try {
+                return node.isNodeType(typeHint);
+            } catch ( final RepositoryException re) {
+                // ignore
+            }
+        }
+        return false;
+    }
+
+    public Boolean isFileNodeType(final ResourceResolver resolver, final String nodeType) {
+        final Session session = resolver.adaptTo(Session.class);
+        if ( session != null ) {
+            try {
+                final NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
+                final NodeType nt = ntMgr.getNodeType(nodeType);
+                return nt.isNodeType(JcrConstants.NT_FILE);
+            } catch (RepositoryException e) {
+                // assuming type not valid.
+                return null;
+            }
+        }
+        return false;
     }
 }

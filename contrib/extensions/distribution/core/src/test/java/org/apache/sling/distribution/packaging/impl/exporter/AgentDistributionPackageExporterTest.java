@@ -44,7 +44,7 @@ public class AgentDistributionPackageExporterTest {
         AgentDistributionPackageExporter distributionPackageExporter = new AgentDistributionPackageExporter(null,
                 mock(DistributionAgent.class), mock(DistributionPackageBuilderProvider.class), null);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        String[] args = null; // vargarg doesn't match and causes compiler warning
+        String[] args = new String[0]; // vargarg doesn't match and causes compiler warning
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.TEST, args);
         final List<DistributionPackage> distributionPackages = new ArrayList<DistributionPackage>();
         distributionPackageExporter.exportPackages(resourceResolver, distributionRequest, new DistributionPackageProcessor() {

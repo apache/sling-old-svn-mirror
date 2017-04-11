@@ -27,7 +27,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.validation.model.ValidatorInvocation;
 
-public class ParameterizedValidatorImpl implements ValidatorInvocation {
+public class ValidatorInvocationImpl implements ValidatorInvocation {
     private final @Nonnull String id; 
     private final @Nonnull Map<String, Object> parameters;
     private final Integer severity;
@@ -35,11 +35,11 @@ public class ParameterizedValidatorImpl implements ValidatorInvocation {
     /**
      * 
      * Only the map has proper support for equals (see https://issues.apache.org/jira/browse/SLING-4784)
-     * @param validator
+     * @param id
      * @param parameters
      * @param severity
      */
-    public ParameterizedValidatorImpl(@Nonnull String id, @Nonnull Map<String, Object> parameters, Integer severity) {
+    public ValidatorInvocationImpl(@Nonnull String id, @Nonnull Map<String, Object> parameters, Integer severity) {
         super();
         this.id = id;
         this.parameters = parameters;
@@ -52,10 +52,6 @@ public class ParameterizedValidatorImpl implements ValidatorInvocation {
         return id;
     }
 
-
-    /* (non-Javadoc)
-     * @see org.apache.sling.validation.impl.ParameterizedValidator#getParameters()
-     */
     @Override
     public @Nonnull ValueMap getParameters() {
         return new ValueMapDecorator(parameters);
@@ -87,7 +83,7 @@ public class ParameterizedValidatorImpl implements ValidatorInvocation {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ParameterizedValidatorImpl other = (ParameterizedValidatorImpl) obj;
+        ValidatorInvocationImpl other = (ValidatorInvocationImpl) obj;
         if (id == null) {
             if (other.id != null)
                 return false;

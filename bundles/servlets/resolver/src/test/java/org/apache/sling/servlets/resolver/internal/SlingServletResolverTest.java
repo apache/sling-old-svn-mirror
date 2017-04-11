@@ -43,7 +43,6 @@ import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.commons.testing.osgi.MockBundle;
 import org.apache.sling.commons.testing.osgi.MockBundleContext;
-import org.apache.sling.commons.testing.osgi.MockComponentContext;
 import org.apache.sling.commons.testing.osgi.MockServiceReference;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
@@ -154,8 +153,6 @@ public class SlingServletResolverTest {
                 return null;
             }
         };
-        MockComponentContext mockComponentContext = new MockComponentContext(
-            bundleContext, SlingServletResolverTest.this.servlet);
         MockServiceReference serviceReference = new MockServiceReference(bundle);
         serviceReference.setProperty(Constants.SERVICE_ID, 1L);
         serviceReference.setProperty(ServletResolverConstants.SLING_SERVLET_NAME,
@@ -165,10 +162,9 @@ public class SlingServletResolverTest {
         serviceReference.setProperty(
             ServletResolverConstants.SLING_SERVLET_EXTENSIONS,
             SERVLET_EXTENSION);
-        mockComponentContext.locateService(SERVLET_NAME, serviceReference);
 
-        servletResolver.bindServlet(serviceReference);
-        servletResolver.activate(mockComponentContext, new SlingServletResolver.Config() {
+        servletResolver.bindServlet(SlingServletResolverTest.this.servlet, serviceReference);
+        servletResolver.activate(bundleContext, new SlingServletResolver.Config() {
 
             @Override
             public Class<? extends Annotation> annotationType() {
@@ -248,7 +244,7 @@ public class SlingServletResolverTest {
         srpf.setAccessible(true);
         ServletResourceProviderFactory factory = (ServletResourceProviderFactory) srpf.get(servletResolver);
 
-        ServletResourceProvider servlet = factory.create(msr);
+        ServletResourceProvider servlet = factory.create(msr, null);
 
         Method createServiceProperties = SlingServletResolver.class.getDeclaredMethod("createServiceProperties", ServiceReference.class, ServletResourceProvider.class, String.class);
         createServiceProperties.setAccessible(true);

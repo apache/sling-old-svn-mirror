@@ -30,14 +30,14 @@ import org.osgi.annotation.versioning.ProviderType;
 
 
 /**
- * Used as parameter for each call of {@link Validator#validate(Object, ValidationContext, ValueMap)}
+ * Used as parameter for each call of {@link Validator#validate(Object, ValidatorContext, ValueMap)}
  * Exposes additional information about the context in which the validation was called.
  */
 @ProviderType
-public interface ValidationContext {
+public interface ValidatorContext {
 
     /**
-     * @return the relative location of the property which should be checked by the validator. Refers to the 'data' parameter of {@link Validator#validate(Object, ValidationContext, ValueMap)}
+     * @return the relative location of the property which should be checked by the validator. Refers to the 'data' parameter of {@link Validator#validate(Object, ValidatorContext, ValueMap)}
      */
     @Nonnull String getLocation();
 

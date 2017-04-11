@@ -50,7 +50,7 @@ import org.apache.sling.validation.model.ValidatorInvocation;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.spi.ValidationModelRetriever;
-import org.apache.sling.validation.spi.ValidationContext;
+import org.apache.sling.validation.spi.ValidatorContext;
 import org.apache.sling.validation.spi.Validator;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
@@ -134,10 +134,6 @@ public class ValidationServiceImpl implements ValidationService{
     
     /** 
      * Necessary to deal with property changes which do not lead to service restarts (when a modified method is provided)
-     * 
-     * @param validator
-     * @param properties
-     * @param serviceReference
      */
     protected void updatedValidator(@Nonnull Validator<?> validator, Map<String, Object> properties, ServiceReference<Validator<?>> serviceReference) {
         validatorMap.update(properties, validator, serviceReference);
@@ -161,7 +157,7 @@ public class ValidationServiceImpl implements ValidationService{
     /**
      * If the given resourceType is starting with a "/", it will strip out the leading search path from the given resource type.
      * Otherwise it will just return the given resource type (as this is already relative).
-     * @param resourceType
+     * @param resourceType the resource type to convert
      * @return a relative resource type (without the leading search path)
      * @throws IllegalArgumentException in case the resource type is starting with a "/" but not with any of the search paths.
      */
@@ -396,7 +392,7 @@ public class ValidationServiceImpl implements ValidationService{
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void validateValue(CompositeValidationResult result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, Resource resource, @Nonnull Validator validator, ValueMap validatorParameters, @Nonnull ResourceBundle defaultResourceBundle, int severity) {
         try {
-            ValidationContext validationContext = new ValidationContextImpl(relativePath + property, severity, valueMap, resource, defaultResourceBundle);
+            ValidatorContext validationContext = new ValidationContextImpl(relativePath + property, severity, valueMap, resource, defaultResourceBundle);
             ValidationResult validatorResult = ((Validator)validator).validate(value, validationContext, validatorParameters);
             result.addValidationResult(validatorResult);
         } catch (SlingValidationException e) {

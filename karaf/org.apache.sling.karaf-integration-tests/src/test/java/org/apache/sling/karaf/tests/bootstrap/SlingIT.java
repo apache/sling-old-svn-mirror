@@ -101,8 +101,8 @@ public class SlingIT extends KarafTestSupport {
     }
 
     @Test
-    public void testOrgApacheSlingCommonsJson() {
-        final Bundle bundle = findBundle("org.apache.sling.commons.json");
+    public void testOrgApacheSlingCommonsJohnzon() {
+        final Bundle bundle = findBundle("org.apache.sling.commons.johnzon");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
@@ -131,13 +131,6 @@ public class SlingIT extends KarafTestSupport {
     @Test
     public void testOrgApacheSlingCommonsThreads() {
         final Bundle bundle = findBundle("org.apache.sling.commons.threads");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    public void testJavaxJcr() {
-        final Bundle bundle = findBundle("javax.jcr");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }

@@ -49,7 +49,7 @@ public class AdaptToMethod implements TemplateMethodModelEx {
     @Override
     public Object exec(final List arguments) throws TemplateModelException {
         if (arguments.size() != 2) {
-            throw new TemplateModelException("Wrong number of arguments");
+            throw new TemplateModelException("wrong number of arguments, expecting 2 (adaptable and adapter type).");
         }
         try {
             final String classname = arguments.get(1).toString();

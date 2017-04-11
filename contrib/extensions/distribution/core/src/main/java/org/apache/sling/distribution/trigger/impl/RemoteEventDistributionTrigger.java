@@ -98,7 +98,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
     }
 
     public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionException {
-        Future<HttpResponse> httpResponseFuture = requests.remove(requestHandler.toString());
+        Future<HttpResponse> httpResponseFuture = requests.remove(requestHandler);
         if (httpResponseFuture != null) {
             httpResponseFuture.cancel(true);
         }

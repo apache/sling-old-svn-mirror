@@ -184,10 +184,10 @@ public class SlingServletResolver
 
     private final Map<ServiceReference<Servlet>, ServletReg> servletsByReference = new HashMap<>();
 
-    private final List<ServiceReference<Servlet>> pendingServlets = new ArrayList<>();
+    private final List<PendingServlet> pendingServlets = new ArrayList<>();
 
-    /** The component context. */
-    private ComponentContext context;
+    /** The bundle context. */
+    private BundleContext context;
 
     private ServletResourceProviderFactory servletResourceProviderFactory;
 
@@ -794,8 +794,8 @@ public class SlingServletResolver
      * Activate this component.
      */
     @Activate
-    protected void activate(final ComponentContext context, final Config config) throws LoginException {
-        final Collection<ServiceReference<Servlet>> refs;
+    protected void activate(final BundleContext context, final Config config) throws LoginException {
+        final Collection<PendingServlet> refs;
         synchronized (this.pendingServlets) {
 
             refs = new ArrayList<>(pendingServlets);
@@ -855,18 +855,18 @@ public class SlingServletResolver
         props.put("service.description", "Apache Sling Servlet Resolver and Error Handler");
         props.put("service.vendor","The Apache Software Foundation");
 
-        this.eventHandlerReg = context.getBundleContext()
+        this.eventHandlerReg = context
                   .registerService(new String[] {ResourceChangeListener.class.getName(), EventHandler.class.getName()}, this, props);
 
 
-        this.plugin = new ServletResolverWebConsolePlugin(context.getBundleContext());
+        this.plugin = new ServletResolverWebConsolePlugin(context);
         if (this.cacheSize > 0) {
             try {
                 Dictionary<String, String> mbeanProps = new Hashtable<>();
                 mbeanProps.put("jmx.objectname", "org.apache.sling:type=servletResolver,service=SlingServletResolverCache");
 
                 ServletResolverCacheMBeanImpl mbean = new ServletResolverCacheMBeanImpl();
-                mbeanRegistration = context.getBundleContext().registerService(SlingServletResolverCacheMBean.class, mbean, mbeanProps);
+                mbeanRegistration = context.registerService(SlingServletResolverCacheMBean.class, mbean, mbeanProps);
             } catch (Throwable t) {
                 LOGGER.debug("Unable to register mbean");
             }
@@ -931,22 +931,22 @@ public class SlingServletResolver
 
     @Reference(
             name = REF_SERVLET,
-            service = javax.servlet.Servlet.class,
+            service = Servlet.class,
             cardinality = ReferenceCardinality.MULTIPLE,
             policy = ReferencePolicy.DYNAMIC,
             target="(|(" + ServletResolverConstants.SLING_SERVLET_PATHS + "=*)(" + ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=*))")
-    protected void bindServlet(final ServiceReference<Servlet> reference) {
+    protected void bindServlet(final Servlet servlet, final ServiceReference<Servlet> reference) {
         boolean directCreate = true;
         if (context == null) {
             synchronized ( pendingServlets ) {
                 if (context == null) {
-                    pendingServlets.add(reference);
+                    pendingServlets.add(new PendingServlet(servlet, reference));
                     directCreate = false;
                 }
             }
         }
         if ( directCreate ) {
-            createServlet(reference);
+            createServlet(servlet, reference);
         }
     }
 
@@ -959,40 +959,23 @@ public class SlingServletResolver
 
     // ---------- Servlet Management -------------------------------------------
 
-    private void createAllServlets(final Collection<ServiceReference<Servlet>> pendingServlets) {
-        for (final ServiceReference<Servlet> serviceReference : pendingServlets) {
-            createServlet(serviceReference);
+    private void createAllServlets(final Collection<PendingServlet> pendingServlets) {
+        for (final PendingServlet ps : pendingServlets) {
+            createServlet(ps.servlet, ps.reference);
         }
     }
 
 
-    private boolean createServlet(final ServiceReference<Servlet> reference) {
+    private boolean createServlet(final Servlet servlet, final ServiceReference<Servlet> reference) {
         // check for a name, this is required
         final String name = getName(reference);
 
         // check for Sling properties in the service registration
-        final ServletResourceProvider provider = servletResourceProviderFactory.create(reference);
+        final ServletResourceProvider provider = servletResourceProviderFactory.create(reference, servlet);
         if (provider == null) {
             // this is expected if the servlet is not destined for Sling
             return false;
         }
-
-        // only now try to access the servlet service, this may still fail
-        Throwable exception = null;
-        Servlet servlet = null;
-        try {
-            servlet = context.locateService(REF_SERVLET, reference);
-        } catch (Throwable t) {
-            exception = t;
-        }
-        if (servlet == null) {
-            LOGGER.error("bindServlet: Servlet service not available from reference "
-                      + ServletResourceProviderFactory.getServiceReferenceInfo(reference), exception);
-            return false;
-        }
-
-        // assign the servlet to the provider
-        provider.setServlet(servlet);
 
         // initialize now
         try {
@@ -1009,7 +992,7 @@ public class SlingServletResolver
         final List<ServiceRegistration<ResourceProvider<Object>>> regs = new ArrayList<>();
         for(final String root : provider.getServletPaths()) {
             @SuppressWarnings("unchecked")
-            final ServiceRegistration<ResourceProvider<Object>> reg = (ServiceRegistration<ResourceProvider<Object>>) context.getBundleContext().registerService(
+            final ServiceRegistration<ResourceProvider<Object>> reg = (ServiceRegistration<ResourceProvider<Object>>) context.registerService(
                 ResourceProvider.class.getName(),
                 provider,
                 createServiceProperties(reference, provider, root));
@@ -1056,7 +1039,11 @@ public class SlingServletResolver
         if (registration != null) {
 
             for(final ServiceRegistration<ResourceProvider<Object>> reg : registration.registrations) {
-                reg.unregister();
+                try {
+                    reg.unregister();
+                } catch ( final IllegalStateException ise) {
+                    // this might happen on shutdown
+                }
             }
             final String name = RequestUtil.getServletName(registration.servlet);
             LOGGER.debug("unbindServlet: Servlet {} removed", name);
@@ -1133,6 +1120,16 @@ public class SlingServletResolver
         public ServletReg(final Servlet s, final List<ServiceRegistration<ResourceProvider<Object>>> srs) {
             this.servlet = s;
             this.registrations = srs;
+        }
+    }
+
+    private static final class PendingServlet {
+        public final Servlet servlet;
+        public final ServiceReference<Servlet> reference;
+
+        public PendingServlet(final Servlet s, final ServiceReference<Servlet> ref) {
+            this.servlet = s;
+            this.reference = ref;
         }
     }
 
