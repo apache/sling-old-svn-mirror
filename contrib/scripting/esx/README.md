@@ -25,18 +25,16 @@ This module is considered **experimental** for now.
 ## Description
 This module implements a Nashorn Apache Sling Script Engine for the "esx" extension.
 
-It requires a function named `render` in the `esx` script that processes the request.
+It requires a function named `render` in the `esx` script that processes the 
+request.
 
-To activate this script engine you must first **enable Nashorn support** in the
-`sling.properties` file of your Sling instance:
+## Installation
+The `org.apache.sling.fragment.nashorn` bundle must be installed before this bundle, to export the `jdk.nashorn.api.scripting` package.
 
-```
-jre-1.8=jdk.nashorn.api.scripting;version\="0.0.0.1_008_JavaSE"
-```
-**attention**
-> currently this implementation only works with java version "1.8.0_92" and higher
+Currently this implementation requires **java version "1.8.0_92"** or higher
 
-Once the bundle is active, you can try the engine with this minimal (and not very interesting) example:
+## Usage
+Once this bundle is active you can try the engine with this minimal (and not very interesting) example:
 
 First create a node with some content:
 
