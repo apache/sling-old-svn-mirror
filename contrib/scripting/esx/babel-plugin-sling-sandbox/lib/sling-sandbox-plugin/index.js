@@ -14,20 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import moment from "moment";
-import _ from "underscore";
-import BlogComponent from "BlogComponent";
-
-class BlogPostComponent extends BlogComponent {
-  constructor() {
-    super();
-    this.partialContentTemplateURL = __dirname + "/templates/detail.html"
-  }
-  init() {
-    var createdAt = parseInt(simpleResource.getDateTimeProperty("jcr:created"));
-    this.model.blogpost = this.transformMarkdown(currentNode.properties.content);
-    this.model.date = moment(createdAt).format('MMMM Do YYYY');
-  }
+module.exports = function (babel) {
+  const { types: t } = babel;
+ 
+  return {
+    visitor: {
+        BlockStatement(path) {
+            var threadInterrupted =  t.callExpression(
+                    t.memberExpression(
+                        t.identifier('SlingSandbox'),
+                        t.identifier('checkInterrupted'))
+                , []);
+          
+          path.unshiftContainer('body',
+            t.expressionStatement(
+                threadInterrupted
+            )                                                              );
+        }
+    }
+  };
 }
-
-module.exports = new BlogPostComponent();

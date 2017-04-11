@@ -14,20 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import moment from "moment";
-import _ from "underscore";
-import BlogComponent from "BlogComponent";
+package org.apache.sling.scripting.esx.services;
 
-class BlogPostComponent extends BlogComponent {
-  constructor() {
-    super();
-    this.partialContentTemplateURL = __dirname + "/templates/detail.html"
-  }
-  init() {
-    var createdAt = parseInt(simpleResource.getDateTimeProperty("jcr:created"));
-    this.model.blogpost = this.transformMarkdown(currentNode.properties.content);
-    this.model.date = moment(createdAt).format('MMMM Do YYYY');
-  }
+import javax.script.ScriptException;
+
+/**
+ *
+ * @author senol
+ */
+public interface ScriptSandboxService {
+    public String compileSource(String source) throws ScriptException;
 }
-
-module.exports = new BlogPostComponent();

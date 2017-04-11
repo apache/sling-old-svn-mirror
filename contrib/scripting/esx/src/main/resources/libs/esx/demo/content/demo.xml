@@ -142,6 +142,10 @@ Praesent euismod eget mi nec porta. Donec auctor finibus enim. Pellentesque ut s
               <value>100</value>
             </property>
                 <property>
+                  <name>navTitle</name>
+                  <value>About</value>
+                </property>            
+                <property>
                   <name>jcr:title</name>
                   <value>About this Blog</value>
                 </property>

@@ -14,20 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import moment from "moment";
-import _ from "underscore";
-import BlogComponent from "BlogComponent";
+var gulp = require("gulp");
+var gutil = require("gulp-util");
+var install = require("gulp-install");
+var webpack = require("webpack");
+var webpackConfig = require("./babel-plugin-sling-sandbox/webpack.config.js");
 
-class BlogPostComponent extends BlogComponent {
-  constructor() {
-    super();
-    this.partialContentTemplateURL = __dirname + "/templates/detail.html"
-  }
-  init() {
-    var createdAt = parseInt(simpleResource.getDateTimeProperty("jcr:created"));
-    this.model.blogpost = this.transformMarkdown(currentNode.properties.content);
-    this.model.date = moment(createdAt).format('MMMM Do YYYY');
-  }
-}
 
-module.exports = new BlogPostComponent();
+gulp.task('default', function() {
+      gulp.src(["babel-plugin-sling-sandbox/package.json","src/**/package.json"])
+        .pipe(install());
+});

@@ -4,3 +4,4 @@ target
 .project
 settings.xml
 node_modules
+node
