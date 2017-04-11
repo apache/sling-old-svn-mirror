@@ -44,12 +44,6 @@
 
     <properties>
         <site.jira.version.id>12315369</site.jira.version.id>
-        <exam.version>4.4.0</exam.version>
-        <url.version>2.4.5</url.version>
-        <bundle.build.dir>${basedir}/target</bundle.build.dir>
-        <bundle.file.name>${bundle.build.dir}/${project.build.finalName}.jar</bundle.file.name>
-        <min.port>37000</min.port>
-        <max.port>37999</max.port>
     </properties>
 
     <build>
