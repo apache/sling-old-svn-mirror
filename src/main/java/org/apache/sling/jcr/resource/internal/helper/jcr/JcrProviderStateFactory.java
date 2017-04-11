@@ -56,16 +56,12 @@ public class JcrProviderStateFactory {
 
     private final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference;
 
-    private final PathMapper pathMapper;
-
     public JcrProviderStateFactory(final ServiceReference<SlingRepository> repositoryReference,
             final SlingRepository repository,
-            final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference,
-            final PathMapper pathMapper) {
+            final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference) {
         this.repository = repository;
         this.repositoryReference = repositoryReference;
         this.dynamicClassLoaderManagerReference = dynamicClassLoaderManagerReference;
-        this.pathMapper = pathMapper;
     }
 
     /** Get the calling Bundle from auth info, fail if not provided
@@ -146,7 +142,7 @@ public class JcrProviderStateFactory {
             @Nullable final BundleContext ctx
     ) throws LoginException {
         final Session session = handleImpersonation(s, authenticationInfo, logoutSession);
-        final HelperData data = new HelperData(this.dynamicClassLoaderManagerReference, this.pathMapper);
+        final HelperData data = new HelperData(this.dynamicClassLoaderManagerReference);
         return new JcrProviderState(session, data, logoutSession, ctx, ctx == null ? null : repositoryReference);
     }
 

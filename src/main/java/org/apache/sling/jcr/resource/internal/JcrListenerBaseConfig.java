@@ -35,7 +35,6 @@ import org.apache.jackrabbit.oak.jcr.observation.filter.OakEventFilter;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
 import org.slf4j.Logger;
@@ -51,17 +50,13 @@ public class JcrListenerBaseConfig implements Closeable {
 
     private final Session session;
 
-    private final PathMapper pathMapper;
-
     private final ObservationReporter reporter;
 
     @SuppressWarnings("deprecation")
     public JcrListenerBaseConfig(
                     final ObservationReporter reporter,
-                    final PathMapper pathMapper,
                     final SlingRepository repository)
     throws RepositoryException {
-        this.pathMapper = pathMapper;
         this.reporter = reporter;
         // The session should have read access on the whole repository
         this.session = repository.loginService("observation", repository.getDefaultWorkspace());
@@ -190,9 +185,5 @@ public class JcrListenerBaseConfig implements Closeable {
      */
     public ObservationReporter getReporter() {
         return this.reporter;
-    }
-
-    public PathMapper getPathMapper() {
-        return this.pathMapper;
     }
 }
