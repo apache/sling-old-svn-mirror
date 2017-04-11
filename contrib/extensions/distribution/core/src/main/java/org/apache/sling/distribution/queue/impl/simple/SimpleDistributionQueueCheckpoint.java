@@ -86,7 +86,7 @@ class SimpleDistributionQueueCheckpoint implements Runnable {
                 lines.add(packageId + " " + w.toString());
             }
             log.debug("parsed {} items", lines.size());
-            IOUtils.writeLines(lines, Charset.defaultCharset().name(), fileOutputStream);
+            IOUtils.writeLines(lines, Charset.defaultCharset().name(), fileOutputStream, Charset.defaultCharset());
             fileOutputStream.flush();
             fileOutputStream.close();
             boolean success = checkpointFile.renameTo(new File(checkpointDirectory, fileName));
