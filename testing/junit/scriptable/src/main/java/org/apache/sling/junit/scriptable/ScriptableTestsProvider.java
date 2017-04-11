@@ -18,8 +18,10 @@ package org.apache.sling.junit.scriptable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -33,10 +35,12 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
+import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.junit.TestsProvider;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -93,7 +97,7 @@ public class ScriptableTestsProvider implements TestsProvider {
     private SlingRequestProcessor requestProcessor;
     
     @Reference
-    private JcrResourceResolverFactory resolverFactory;
+    private ResourceResolverFactory resolverFactory;
     
     // Need one listener per root path
     private List<EventListener> listeners = new ArrayList<EventListener>();
@@ -114,7 +118,9 @@ public class ScriptableTestsProvider implements TestsProvider {
     protected void activate(ComponentContext ctx) throws Exception {
         pid = (String)ctx.getProperties().get(Constants.SERVICE_PID);
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
-        resolver = resolverFactory.getResourceResolver(session);
+        Map<String, Object> auth = new HashMap<String, Object>();
+        auth.put(JcrResourceConstants.AUTHENTICATION_INFO_SESSION, session);
+        resolver = resolverFactory.getResourceResolver(auth);
         
         // Copy resource resolver paths and make sure they end with a /
         final String [] paths = resolver.getSearchPath();
