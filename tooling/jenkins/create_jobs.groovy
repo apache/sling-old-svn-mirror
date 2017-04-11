@@ -145,6 +145,9 @@ def modules = [
         location: 'bundles/extensions/fsresource'
     ],
     [
+        location: 'bundles/extensions/healthcheck/api'
+    ],
+    [
         location: 'bundles/extensions/healthcheck/annotations'
     ],
     [
