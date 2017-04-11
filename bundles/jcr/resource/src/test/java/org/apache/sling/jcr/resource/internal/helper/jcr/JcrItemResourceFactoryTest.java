@@ -32,7 +32,6 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.internal.HelperData;
-import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 
 public class JcrItemResourceFactoryTest extends RepositoryTestBase {
 
@@ -88,7 +87,7 @@ public class JcrItemResourceFactoryTest extends RepositoryTestBase {
     }
 
     private void compareGetItemOrNull(String path, String expectedPath) throws RepositoryException {
-        HelperData helper = new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl());
+        HelperData helper = new HelperData(new AtomicReference<DynamicClassLoaderManager>());
         Item item1 = new JcrItemResourceFactory(session, helper).getItemOrNull(path);
         Item item2 = new JcrItemResourceFactory(nonJackrabbitSession, helper).getItemOrNull(path);
         if (expectedPath == null) {

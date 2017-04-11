@@ -75,7 +75,6 @@ public class JcrResourceListenerTest {
         RepositoryUtil.registerSlingNodeTypes(adminSession);
         final SlingRepository repo = RepositoryUtil.getRepository();
         this.config = new JcrListenerBaseConfig(getObservationReporter(),
-                new PathMapperImpl(),
                 new SlingRepository() {
 
                     @Override

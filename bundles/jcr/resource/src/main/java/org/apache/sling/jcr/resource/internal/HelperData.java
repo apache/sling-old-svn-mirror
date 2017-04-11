@@ -24,7 +24,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
-import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 
 /**
  * This is a helper class used to pass several services/data to the resource
@@ -34,14 +33,10 @@ public class HelperData {
 
     private final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference;
 
-    public final PathMapper pathMapper;
-
     private volatile String[] namespacePrefixes;
 
-    public HelperData(final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference,
-            final PathMapper pathMapper) {
+    public HelperData(final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference) {
         this.dynamicClassLoaderManagerReference = dynamicClassLoaderManagerReference;
-        this.pathMapper = pathMapper;
     }
 
     public String[] getNamespacePrefixes(final Session session)
