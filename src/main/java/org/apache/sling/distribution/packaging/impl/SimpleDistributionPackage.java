@@ -45,7 +45,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
     private final long size;
 
     public SimpleDistributionPackage(DistributionRequest request, String type) {
-        super(toIdString(request, type), type, null, null);
+        super(toIdString(request), type, null, null);
         String[] paths = request.getPaths();
         DistributionRequestType requestType = request.getRequestType();
 
@@ -54,7 +54,7 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
         this.size = getId().toCharArray().length;
     }
 
-    private static String toIdString(DistributionRequest request, String type) {
+    private static String toIdString(DistributionRequest request) {
 
         StringBuilder b = new StringBuilder();
 
@@ -65,7 +65,9 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
 
         String[] paths = request.getPaths();
 
-        if (paths != null && paths.length != 0) {
+        if (paths == null || paths.length == 0) {
+            b.append(PATH_DELIM);
+        } else {
             for (int i = 0; i < paths.length; i++) {
                 b.append(paths[i]);
                 if (i < paths.length - 1) {
@@ -93,12 +95,11 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
         String actionString = parts[0];
         String pathsString = parts.length < 2 ? null : parts[1];
 
-
         DistributionRequestType distributionRequestType = DistributionRequestType.fromName(actionString);
 
         SimpleDistributionPackage distributionPackage = null;
         if (distributionRequestType != null) {
-            String[] paths = pathsString == null ? null : pathsString.split(PATH_DELIM);
+            String[] paths = pathsString == null ? new String[0] : pathsString.split(PATH_DELIM);
 
             DistributionRequest request = new SimpleDistributionRequest(distributionRequestType, paths);
             distributionPackage = new SimpleDistributionPackage(request, type);
@@ -142,8 +143,12 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
             stream.reset();
             String s = new String(buffer, "UTF-8");
 
+            log.info("buffer {}", s);
+
             if (bytesRead > 0 && buffer[0] > 0 && s.startsWith(SimpleDistributionPackage.PACKAGE_START)) {
                 String streamString = IOUtils.toString(stream, "UTF-8");
+
+                log.info("stream string {}", streamString);
 
                 return fromIdString(streamString, type);
             }

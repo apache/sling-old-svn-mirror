@@ -49,4 +49,17 @@ public class SimpleDistributionPackageTest {
         assertEquals(createdPackage.getId(), readPackage.getId());
         assertTrue(IOUtils.contentEquals(createdPackage.createInputStream(), readPackage.createInputStream()));
     }
+
+    @Test
+    public void testSimplePackageFromTest() throws Exception {
+        DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.TEST);
+        SimpleDistributionPackage createdPackage = new SimpleDistributionPackage(distributionRequest, "VOID");
+        SimpleDistributionPackage readPackage = SimpleDistributionPackage.fromStream(new ByteArrayInputStream(("DSTRPCK:TEST|").getBytes()), "VOID");
+        assertNotNull(readPackage);
+        assertEquals(createdPackage.getType(), readPackage.getType());
+        assertEquals(createdPackage.getInfo().getRequestType(), readPackage.getInfo().getRequestType());
+        assertEquals(Arrays.toString(createdPackage.getInfo().getPaths()), Arrays.toString(readPackage.getInfo().getPaths()));
+        assertEquals(createdPackage.getId(), readPackage.getId());
+        assertTrue(IOUtils.contentEquals(createdPackage.createInputStream(), readPackage.createInputStream()));
+    }
 }
