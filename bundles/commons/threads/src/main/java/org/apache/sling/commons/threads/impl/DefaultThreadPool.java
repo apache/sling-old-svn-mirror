@@ -82,9 +82,9 @@ public class DefaultThreadPool
             delegateThreadFactory = this.configuration.getFactory();
         }
         // Min pool size
-        if (this.configuration.getMinPoolSize() < 1) {
+        if (this.configuration.getMinPoolSize() < 0) {
             this.configuration.setMinPoolSize(1);
-            this.logger.warn("min-pool-size < 1 for pool \"" + this.name + "\". Set to 1");
+            this.logger.warn("min-pool-size < 0 for pool \"" + this.name + "\". Set to 1");
         }
         // Max pool size
         if ( this.configuration.getMaxPoolSize() < 0 ) {
