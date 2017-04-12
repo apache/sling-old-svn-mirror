@@ -69,32 +69,10 @@
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
             </plugin>
-            <!-- plain unit tests -->
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>**/it/**</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>port-java8</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-                <jdk>1.8</jdk>
-            </activation>
-            <properties>
-                <min.port>38000</min.port>
-                <max.port>38999</max.port>
-            </properties>
-        </profile>
-    </profiles>
 </project>
