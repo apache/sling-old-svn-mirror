@@ -61,7 +61,10 @@ public interface ThreadPoolConfig {
     /**
      * Return the maximum age before a thread is retired.
      * @return The maximum age of a thread in milliseconds.
+     * @deprecated Since version 3.4.0 always returns -1 as threads are no longer retired
+     * but instead the thread locals are cleaned up (<a href="https://issues.apache.org/jira/browse/SLING-6261">SLING-6261</a>)
      */
+    @Deprecated
     long getMaxThreadAge();
 
     /**

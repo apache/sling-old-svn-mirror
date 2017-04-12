@@ -132,17 +132,33 @@ public class DefaultThreadPool
                 handler = new ThreadPoolExecutor.CallerRunsPolicy();
                 break;
         }
-
-        this.executor = new ThreadExpiringThreadPool(this.configuration.getMinPoolSize(),
-                this.configuration.getMaxPoolSize(),
-                this.configuration.getMaxThreadAge(),
-                TimeUnit.MILLISECONDS,
-                this.configuration.getKeepAliveTime(),
-                TimeUnit.MILLISECONDS,
-                queue,
-                threadFactory,
-                handler);
+        try {
+            this.executor = new ThreadPoolExecutorCleaningThreadLocals(this.configuration.getMinPoolSize(),
+                    this.configuration.getMaxPoolSize(),
+                    this.configuration.getKeepAliveTime(),
+                    TimeUnit.MILLISECONDS,
+                    queue,
+                    threadFactory,
+                    handler,
+                    new LoggingThreadLocalChangeListener());
+        } catch (IllegalStateException e) {
+            logger.warn("Unsupported JRE, cannot register ThreadPoolExecutorCleaningThreadLocals due to '{}', fall back to regular ThreadPoolExecutor", e.getMessage(), e);
+            this.executor = new ThreadPoolExecutor(this.configuration.getMinPoolSize(),
+                    this.configuration.getMaxPoolSize(),
+                    this.configuration.getKeepAliveTime(),
+                    TimeUnit.MILLISECONDS,
+                    queue,
+                    threadFactory,
+                    handler);
+        }
         this.logger.info("Thread pool [{}] initialized.", name);
+    }
+
+    private static class LoggingThreadLocalChangeListener implements ThreadLocalChangeListener {
+        @Override
+        public void changed(Mode mode, Thread thread, ThreadLocal<?> threadLocal, Object value) {
+            LOGGER.debug("Thread '{}' {} ThreadLocal {} with value {}", thread, mode, threadLocal.getClass(), value);
+        }
     }
 
     /**

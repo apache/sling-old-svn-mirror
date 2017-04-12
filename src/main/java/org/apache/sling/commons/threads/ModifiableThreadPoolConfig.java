@@ -72,8 +72,12 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
     /** The queue size */
     private int queueSize = -1;
 
-    /** Max age of a thread in milliseconds */
-    private long maxThreadAge = TimeUnit.MINUTES.toMillis(5);
+    /** Max age of a thread in milliseconds 
+     * @deprecated Since version 3.4.0 always returns -1 as threads are no longer retired
+     * but instead the thread locals are cleaned up (<a href="https://issues.apache.org/jira/browse/SLING-6261">SLING-6261</a>)
+     */
+    @Deprecated
+    private long maxThreadAge = -1;
 
     /** The keep alive time. */
     private long  keepAliveTime = 60000L;
@@ -169,9 +173,11 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
     }
 
 
-    /**
+    /*
+     * (non-Javadoc)
      * @see org.apache.sling.commons.threads.ThreadPoolConfig#getMaxThreadAge()
      */
+    @Override
     public long getMaxThreadAge() {
         return maxThreadAge;
     }
@@ -179,6 +185,8 @@ public final class ModifiableThreadPoolConfig implements ThreadPoolConfig {
     /**
      * Set the max thread age.
      * @param maxThreadAge New max thread age in milliseconds.
+     * @deprecated Since version 3.4.0 should no longer be called, as threads are no longer retired
+     * but instead the thread locals are cleaned up (<a href="https://issues.apache.org/jira/browse/SLING-6261">SLING-6261</a>)
      */
     public void setMaxThreadAge(final long maxThreadAge) {
         this.maxThreadAge = maxThreadAge;
