@@ -27,7 +27,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.spi.ValidatorContext;
 
-public class ValidationContextImpl implements ValidatorContext {
+public class ValidatorContextImpl implements ValidatorContext {
 
     private final @Nonnull String location;
     private final int severity;
@@ -35,7 +35,7 @@ public class ValidationContextImpl implements ValidatorContext {
     private final Resource resource;
     private final @Nonnull ResourceBundle defaultResourceBundle;
 
-    public ValidationContextImpl(@Nonnull String location, int severity, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ResourceBundle defaultResourceBundle) {
+    public ValidatorContextImpl(@Nonnull String location, int severity, @Nonnull ValueMap valueMap, Resource resource, @Nonnull ResourceBundle defaultResourceBundle) {
         super();
         this.location = location;
         this.severity = severity;

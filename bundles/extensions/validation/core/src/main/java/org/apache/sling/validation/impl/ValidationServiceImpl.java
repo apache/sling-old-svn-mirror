@@ -392,7 +392,7 @@ public class ValidationServiceImpl implements ValidationService{
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void validateValue(CompositeValidationResult result, @Nonnull Object value, String property, String relativePath, @Nonnull ValueMap valueMap, Resource resource, @Nonnull Validator validator, ValueMap validatorParameters, @Nonnull ResourceBundle defaultResourceBundle, int severity) {
         try {
-            ValidatorContext validationContext = new ValidationContextImpl(relativePath + property, severity, valueMap, resource, defaultResourceBundle);
+            ValidatorContext validationContext = new ValidatorContextImpl(relativePath + property, severity, valueMap, resource, defaultResourceBundle);
             ValidationResult validatorResult = ((Validator)validator).validate(value, validationContext, validatorParameters);
             result.addValidationResult(validatorResult);
         } catch (SlingValidationException e) {
