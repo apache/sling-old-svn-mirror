@@ -43,7 +43,7 @@
     </scm>
 
     <properties>
-        <site.jira.version.id>12315369</site.jira.version.id>
+        <site.jira.version.id>12340350</site.jira.version.id>
     </properties>
 
     <build>
