@@ -23,10 +23,14 @@ import java.util.List;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -241,5 +245,153 @@ public class JCRSupportImpl {
             }
         }
         return false;
+    }
+
+    private PropertyDefinition searchPropertyDefinition(final NodeType nodeType, final String name) {
+        if ( nodeType.getPropertyDefinitions() != null ) {
+            for(final PropertyDefinition pd : nodeType.getPropertyDefinitions()) {
+                if ( pd.getName().equals(name) ) {
+                    return pd;
+                }
+            }
+        }
+        // SLING-2877:
+        // no need to search property definitions of super types, as nodeType.getPropertyDefinitions()
+        // already includes those. see javadoc of {@link NodeType#getPropertyDefinitions()}
+        return null;
+    }
+
+    private PropertyDefinition searchPropertyDefinition(final Node node, final String name)
+    throws RepositoryException {
+        PropertyDefinition result = searchPropertyDefinition(node.getPrimaryNodeType(), name);
+        if ( result == null ) {
+            if ( node.getMixinNodeTypes() != null ) {
+                for(final NodeType mt : node.getMixinNodeTypes()) {
+                    result = this.searchPropertyDefinition(mt, name);
+                    if ( result != null ) {
+                        return result;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public boolean isPropertyProtectedOrNewAutoCreated(final Object n, final String name)
+    throws PersistenceException {
+        final Node node = (Node)n;
+        try {
+            final PropertyDefinition pd = this.searchPropertyDefinition(node, name);
+            if ( pd != null ) {
+                // SLING-2877 (autocreated check is only required for new nodes)
+                if ( (node.isNew() && pd.isAutoCreated()) || pd.isProtected() ) {
+                    return true;
+                }
+            }
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
+        }
+        return false;
+    }
+
+    public boolean isNewNode(final Object node) {
+        return ((Node)node).isNew();
+    }
+
+    public boolean isPropertyMandatory(final Object node, final String name)
+    throws PersistenceException {
+        try {
+            final Property prop = ((Node)node).getProperty(name);
+            return prop.getDefinition().isMandatory();
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
+        }
+    }
+
+    public boolean isPropertyMultiple(final Object node, final String name)
+    throws PersistenceException {
+        try {
+            final Property prop = ((Node)node).getProperty(name);
+            return prop.getDefinition().isMultiple();
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
+        }
+    }
+
+    public Integer getPropertyType(final Object node, final String name)
+    throws PersistenceException {
+        try {
+            if ( ((Node)node).hasProperty(name) ) {
+                return ((Node)node).getProperty(name).getType();
+            }
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
+        }
+        return null;
+    }
+
+    private boolean isWeakReference(int propertyType) {
+        return propertyType == PropertyType.WEAKREFERENCE;
+    }
+
+    /**
+     * Stores property value(s) as reference(s). Will parse the reference(s) from the string
+     * value(s) in the {@link RequestProperty}.
+     *
+     * @return A modification only if parsing was successful and the property was actually changed
+     */
+    public Modification storeAsReference(
+            final Object n,
+            final String name,
+            final String[] values,
+            final int type,
+            final boolean multiValued)
+    throws PersistenceException {
+        try {
+            final Node node = (Node)n;
+            if (multiValued) {
+                Value[] array = ReferenceParser.parse(node.getSession(), values, isWeakReference(type));
+                if (array != null) {
+                    return Modification.onModified(
+                            node.setProperty(name, array).getPath());
+                }
+            } else {
+                if (values.length >= 1) {
+                    Value v = ReferenceParser.parse(node.getSession(), values[0], isWeakReference(type));
+                    if (v != null) {
+                        return Modification.onModified(
+                                node.setProperty(name, v).getPath());
+                    }
+                }
+            }
+            return null;
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
+        }
+    }
+
+    public boolean hasSession(final ResourceResolver resolver) {
+        return resolver.adaptTo(Session.class) != null;
+    }
+
+    public void setTypedProperty(final Object n,
+            final String name,
+            final String[] values,
+            final int type,
+            final boolean multiValued)
+    throws PersistenceException {
+        try {
+            if (multiValued) {
+                ((Node)n).setProperty(name, values, type);
+            } else if (values.length >= 1) {
+                ((Node)n).setProperty(name, values[0], type);
+            }
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
+        }
+    }
+
+    public Object getNode(final Resource rsrc) {
+        return rsrc.adaptTo(Node.class);
     }
 }
