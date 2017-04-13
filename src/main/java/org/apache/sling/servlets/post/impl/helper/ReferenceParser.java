@@ -24,6 +24,7 @@ import javax.jcr.ValueFactory;
 
 /**
  * Takes a string representation of a node (either a path or a uuid) and tries to parse it.
+ * ReferenceParser is only used if JCR is available.
  */
 public class ReferenceParser {
 
@@ -33,17 +34,16 @@ public class ReferenceParser {
      * <p/>
      *
      * @param value a path or UUID
-     * @param factory the value factory
      * @param weak true to create a WeakReference value
      * @return the value or <code>null</code>
      * @throws RepositoryException
      */
-    public static Value parse(Session session, String value, ValueFactory factory, boolean weak) throws RepositoryException {
+    public static Value parse(Session session, String value, boolean weak) throws RepositoryException {
         Node n = parse(session, value);
         if (n == null) {
             return null;
         }
-        return createReferenceValue(n, factory, weak);
+        return createReferenceValue(n, session.getValueFactory(), weak);
     }
 
     /**
@@ -58,14 +58,14 @@ public class ReferenceParser {
      * @return the values or <code>null</code>
      * @throws RepositoryException
      */
-    public static Value[] parse(Session session, String[] values, ValueFactory factory, boolean weak) throws RepositoryException {
+    public static Value[] parse(Session session, String[] values, boolean weak) throws RepositoryException {
         Value ret[] = new Value[values.length];
         for (int i=0; i< values.length; i++) {
             Node n = parse(session, values[i]);
             if (n == null) {
                 return null;
             }
-            ret[i] = createReferenceValue(n, factory, weak);
+            ret[i] = createReferenceValue(n, session.getValueFactory(), weak);
         }
         return ret;
     }

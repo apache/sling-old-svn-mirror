@@ -20,11 +20,6 @@ package org.apache.sling.servlets.post.impl.helper;
 
 import java.util.List;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.ValueFactory;
-
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -107,24 +102,89 @@ public class JCRSupport {
         return false;
     }
 
-    public Value parse(Session session, String value, ValueFactory factory, boolean weak) throws RepositoryException {
-        return ReferenceParser.parse(session, value, factory, weak);
+    public boolean isPropertyProtectedOrNewAutoCreated(final Object node, final String name)
+    throws PersistenceException {
+        if ( node != null && supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).isPropertyProtectedOrNewAutoCreated(node, name);
+        }
+        return false;
+    }
+
+    public boolean isPropertyMandatory(final Object node, final String name)
+    throws PersistenceException {
+        if ( node != null && supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).isPropertyMandatory(node, name);
+        }
+        return false;
+    }
+
+    public boolean isPropertyMultiple(final Object node, final String name)
+    throws PersistenceException {
+        if ( node != null && supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).isPropertyMultiple(node, name);
+        }
+        return false;
+    }
+
+    public boolean isNewNode(final Object node) {
+        if ( node != null && supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).isNewNode(node);
+        }
+        return true;
+    }
+
+    public Integer getPropertyType(final Object node, final String name)
+    throws PersistenceException {
+        if ( node != null && supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).getPropertyType(node, name);
+        }
+        return null;
+    }
+
+    public boolean hasSession(final ResourceResolver resolver) {
+        if ( supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).hasSession(resolver);
+        }
+        return false;
     }
 
     /**
-     * Parses the given source strings and returns the respective reference value
-     * instances. If no node matches for any of the sources
-     * returns <code>null</code>.
-     * <p/>
+     * Stores property value(s) as reference(s). Will parse the reference(s) from the string
+     * value(s) in the {@link RequestProperty}.
      *
-     * @param values path or UUID strings
-     * @param factory the value factory
-     * @param weak true to create a WeakReference value
-     * @return the values or <code>null</code>
-     * @throws RepositoryException
+     * @return true only if parsing was successful and the property was actually changed
      */
-    public Value[] parse(Session session, String[] values, ValueFactory factory, boolean weak) throws RepositoryException {
-        return ReferenceParser.parse(session, values, factory, weak);
+    public Modification storeAsReference(
+            final Resource resource,
+            final Object node,
+            final String name,
+            final String[] values,
+            final int type,
+            final boolean multiValued)
+    throws PersistenceException {
+        if ( node != null && supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).storeAsReference(node, name, values, type, multiValued);
+        }
+        throw new PersistenceException("Resource " + resource.getPath() + " does not support reference properties.", null, resource.getPath(), name);
     }
 
+    public void setTypedProperty(final Object n,
+            final String name,
+            final String[] values,
+            final int type,
+            final boolean multiValued)
+    throws PersistenceException {
+        if ( n != null && supportImpl != null ) {
+            ((JCRSupportImpl)supportImpl).setTypedProperty(n, name, values, type, multiValued);
+        } else {
+            throw new PersistenceException("Property should be stored through JCR but JCR support is not available");
+        }
+    }
+
+    public Object getNode(final Resource rsrc) {
+        if ( supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).getNode(rsrc);
+        }
+        return null;
+    }
 }
