@@ -187,4 +187,13 @@ public class JCRSupport {
         }
         return null;
     }
+
+    public void setPrimaryNodeType(final Object node, final String type)
+    throws PersistenceException {
+        if ( node != null && supportImpl != null ) {
+            ((JCRSupportImpl)supportImpl).setPrimaryNodeType(node, type);
+        } else {
+            throw new PersistenceException("Node type should be set but JCR support is not available");
+        }
+    }
 }

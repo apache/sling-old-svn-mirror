@@ -394,4 +394,13 @@ public class JCRSupportImpl {
     public Object getNode(final Resource rsrc) {
         return rsrc.adaptTo(Node.class);
     }
+
+    public void setPrimaryNodeType(final Object node, final String type)
+    throws PersistenceException {
+        try {
+            ((Node)node).setPrimaryType(type);
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
+        }
+    }
 }

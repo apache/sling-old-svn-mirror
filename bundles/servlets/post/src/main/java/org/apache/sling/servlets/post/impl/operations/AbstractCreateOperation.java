@@ -25,10 +25,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.regex.Pattern;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.servlet.ServletException;
-
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
@@ -141,7 +137,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             final PostResponse response,
             final List<Modification> changes,
             final VersioningConfiguration versioningConfiguration)
-    throws PersistenceException, RepositoryException {
+    throws PersistenceException {
 
         final String path = response.getPath();
         final Resource resource = resolver.getResource(path);
@@ -161,18 +157,18 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,
                     final VersioningConfiguration versioningConfiguration)
-    throws PersistenceException, RepositoryException {
+    throws PersistenceException {
         final String nodeType = getPrimaryType(reqProperties, path);
         if (nodeType != null) {
             final Resource rsrc = resolver.getResource(path);
             final ModifiableValueMap mvm = rsrc.adaptTo(ModifiableValueMap.class);
             if ( mvm != null ) {
-                final Node node = rsrc.adaptTo(Node.class);
+                final Object node = this.jcrSsupport.getNode(rsrc);
                 final boolean wasVersionable = (node == null ? false : this.jcrSsupport.isVersionable(rsrc));
 
                 if ( node != null ) {
                     this.jcrSsupport.checkoutIfNecessary(rsrc, changes, versioningConfiguration);
-                    node.setPrimaryType(nodeType);
+                    this.jcrSsupport.setPrimaryNodeType(node, nodeType);
                 } else {
                     mvm.put(JcrConstants.JCR_PRIMARYTYPE, nodeType);
                 }
@@ -220,9 +216,6 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     /**
      * Collects the properties that form the content to be written back to the
      * resource tree.
-     *
-     * @throws RepositoryException if a repository error occurs
-     * @throws ServletException if an internal error occurs
      */
     protected Map<String, RequestProperty> collectContent(
             final SlingHttpServletRequest request,
@@ -530,7 +523,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,
                     final VersioningConfiguration versioningConfiguration)
-    throws PersistenceException, RepositoryException {
+    throws PersistenceException {
         if (log.isDebugEnabled()) {
             log.debug("Deep-creating resource '{}'", path);
         }
@@ -642,7 +635,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
 
     protected String generateName(SlingHttpServletRequest request, String basePath)
-    	throws RepositoryException {
+    	throws PersistenceException {
 
 		// SLING-1091: If a :name parameter is supplied, the (first) value of this parameter is used unmodified as the name
 		//    for the new node. If the name is illegally formed with respect to JCR name requirements, an exception will be
@@ -658,7 +651,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
 		        // if the resulting path already exists then report an error
 	            if (request.getResourceResolver().getResource(basePath) != null) {
-	    		    throw new RepositoryException(
+	    		    throw new PersistenceException(
 	    			        "Collision in node names for path=" + basePath);
 	            }
 
@@ -692,7 +685,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     }
 
     /** Generate a unique path in case the node name generator didn't */
-    private String ensureUniquePath(SlingHttpServletRequest request, String basePath) throws RepositoryException {
+    private String ensureUniquePath(SlingHttpServletRequest request, String basePath) throws PersistenceException {
 		// if resulting path exists, add a suffix until it's not the case
 		// anymore
         final ResourceResolver resolver = request.getResourceResolver();
@@ -713,7 +706,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
 	        // Give up after MAX_TRIES
 	        if (resolver.getResource(basePath) != null ) {
-	            throw new RepositoryException(
+	            throw new PersistenceException(
 	                "Collision in generated node names under " + basePath + ", generated path " + basePath + " already exists");
 	        }
 		}
