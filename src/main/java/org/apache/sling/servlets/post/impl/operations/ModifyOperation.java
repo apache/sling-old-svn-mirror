@@ -164,7 +164,7 @@ public class ModifyOperation extends AbstractCreateOperation {
         if (doGenerateName) {
             try {
                 path = generateName(request, path);
-            } catch (RepositoryException re) {
+            } catch (PersistenceException re) {
                 throw new SlingException("Failed to generate name", re);
             }
         }
