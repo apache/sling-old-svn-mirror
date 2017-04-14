@@ -81,6 +81,10 @@ a:hover {
     text-align: center;
 }
 
+.logo img {
+    height: 63px;
+}
+
 .header {
     text-align: right;
     margin-right: 20pt;
