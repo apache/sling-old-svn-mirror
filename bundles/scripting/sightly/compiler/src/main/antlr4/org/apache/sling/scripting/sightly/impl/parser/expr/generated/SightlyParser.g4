@@ -40,7 +40,7 @@ interpolation returns [Interpolation interp]
     :    (
         textFrag { $interp.addText($textFrag.str); }
         | expression { $interp.addExpression($expression.expr.withRawText($expression.text)); }
-        )* //perhaphs too restrictive
+        )* //perhaps too restrictive
     ;
 
 textFrag returns [String str]
