@@ -318,7 +318,10 @@ public class VltUtils {
                     continue;
                 }
 
-                List<String> filterSet = new ArrayList<String>();
+                List<String> filterSet = result.get(path);
+                if (filterSet == null) {
+                    filterSet = new ArrayList<String>();
+                }
 
                 for (int i = 1; i < filterParts.length; i++) {
                     String filterPart = SettingsUtils.removeEmptyEntry(filterParts[i]);
