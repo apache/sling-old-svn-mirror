@@ -62,6 +62,8 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.osgi.RankedServices;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.ValidationStrategy;
+import org.apache.sling.models.annotations.ViaProviderType;
+import org.apache.sling.models.annotations.via.BeanProperty;
 import org.apache.sling.models.export.spi.ModelExporter;
 import org.apache.sling.models.factory.ExportException;
 import org.apache.sling.models.factory.InvalidAdaptableException;
@@ -86,6 +88,7 @@ import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.ModelValidation;
 import org.apache.sling.models.spi.ValuePreparer;
+import org.apache.sling.models.spi.ViaProvider;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory2;
@@ -106,7 +109,12 @@ import org.slf4j.LoggerFactory;
         name = "injector",
         referenceInterface = Injector.class,
         cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-        policy = ReferencePolicy.DYNAMIC)
+        policy = ReferencePolicy.DYNAMIC),
+    @Reference(
+            name = "viaProvider",
+            referenceInterface = ViaProvider.class,
+            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC)
 })
 @SuppressWarnings("deprecation")
 public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFactory {
@@ -168,6 +176,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     private final @Nonnull ConcurrentMap<String, RankedServices<Injector>> injectors = new ConcurrentHashMap<String, RankedServices<Injector>>();
     private final @Nonnull RankedServices<Injector> sortedInjectors = new RankedServices<Injector>();
+    private final @Nonnull ConcurrentMap<Class<? extends ViaProviderType>, ViaProvider> viaProviders = new ConcurrentHashMap<Class<? extends ViaProviderType>, ViaProvider>();
 
     @Reference(name = "injectAnnotationProcessorFactory", referenceInterface = InjectAnnotationProcessorFactory.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -728,21 +737,29 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
     
     private Object getAdaptable(Object adaptable, InjectableElement point, InjectAnnotationProcessor processor) {
-        String viaPropertyName = null;
+        String viaValue = null;
+        Class<? extends ViaProviderType> viaProviderType = null;
         if (processor != null) {
-            viaPropertyName = processor.getVia();
+            viaValue = processor.getVia();
+            viaProviderType = BeanProperty.class; // processors don't support via provider type
         }
-        if (viaPropertyName == null) {
-            viaPropertyName = point.getVia();
+        if (StringUtils.isBlank(viaValue)) {
+            viaValue = point.getVia();
+            viaProviderType = point.getViaProviderType();
         }
-        if (viaPropertyName == null) {
+        if (viaProviderType == null || viaValue == null) {
             return adaptable;
         }
-        try {
-            return PropertyUtils.getProperty(adaptable, viaPropertyName);
-        } catch (Exception e) {
-            log.error("Unable to execution projection " + viaPropertyName, e);
+        ViaProvider viaProvider = viaProviders.get(viaProviderType);
+        if (viaProvider == null) {
+            log.error("Unable to find Via provider type {}.", viaProviderType);
             return null;
+        }
+        final Object viaResult = viaProvider.getAdaptable(adaptable, viaValue);
+        if (viaResult == ViaProvider.ORIGINAL) {
+            return adaptable;
+        } else {
+            return viaResult;
         }
     }
 
@@ -1069,6 +1086,16 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     }
 
+    protected void bindViaProvider(final ViaProvider viaProvider, final Map<String, Object> props) {
+        Class<? extends ViaProviderType> type = viaProvider.getType();
+        viaProviders.put(type, viaProvider);
+    }
+
+    protected void unbindViaProvider(final ViaProvider viaProvider, final Map<String, Object> props) {
+        Class<? extends ViaProviderType> type = viaProvider.getType();
+        viaProviders.remove(type, viaProvider);
+    }
+
     @Nonnull Collection<Injector> getInjectors() {
         return sortedInjectors.get();
     }
@@ -1087,6 +1114,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Nonnull ImplementationPicker[] getImplementationPickers() {
         return adapterImplementations.getImplementationPickers();
+    }
+
+    @Nonnull Map<Class<? extends ViaProviderType>, ViaProvider> getViaProviders() {
+        return viaProviders;
     }
 
     @Override

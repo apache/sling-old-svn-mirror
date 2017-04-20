@@ -21,11 +21,12 @@ package org.apache.sling.models.impl.model;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
+import org.apache.sling.models.annotations.ViaProviderType;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 
 @SuppressWarnings("deprecation")
 public interface InjectableElement {
-    
+
     /**
      * @return Underlying annotated element
      */
@@ -35,17 +36,17 @@ public interface InjectableElement {
      * @return Type of injectable mapped to wrapper class
      */
     Type getType();
-    
+
     /**
      * @return true if original type of injectable is a primitive type
      */
     boolean isPrimitive();
-    
+
     /**
      * @return Name for injection
      */
     String getName();
-    
+
     /**
      * @return Via annotation or null
      */
@@ -55,7 +56,9 @@ public interface InjectableElement {
      * @return Via annotation or null
      */
     String getVia();
-    
+
+    Class<? extends ViaProviderType> getViaProviderType();
+
     /**
      * @return true, if a default value is set
      */
@@ -65,7 +68,7 @@ public interface InjectableElement {
      * @return Default value or null
      */
     Object getDefaultValue();
-    
+
     /**
      * @return {@code true} if the element is optional otherwise {@code false}
      */
