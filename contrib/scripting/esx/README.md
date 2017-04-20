@@ -49,7 +49,7 @@ Then create an ESX script to render it:
     $ cat << EOF > /tmp/foo.esx
     var foo = {
       render: function () {
-        var output  = '<h1>\${currentNode.properties.title}</h1>';
+        var output  = \`<h1>\${currentNode.properties.title}</h1>\`;
         output += currentNode.properties.text;
         return output;     
       }
