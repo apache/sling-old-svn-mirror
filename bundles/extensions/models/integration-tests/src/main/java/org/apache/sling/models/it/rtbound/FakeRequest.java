@@ -38,11 +38,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-class FakeRequest implements SlingHttpServletRequest {
+public class FakeRequest implements SlingHttpServletRequest {
 
     private final Resource resource;
 
-    FakeRequest(Resource r) {
+    public FakeRequest(Resource r) {
         this.resource = r;
     }
 

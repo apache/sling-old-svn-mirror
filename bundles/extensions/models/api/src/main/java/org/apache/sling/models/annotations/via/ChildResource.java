@@ -14,7 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.5.0")
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.annotations.via;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.models.annotations.ViaProviderType;
+
+/**
+ * Marker class for using the ChildResource @Via provider.
+ */
+public class ChildResource implements ViaProviderType {
+}

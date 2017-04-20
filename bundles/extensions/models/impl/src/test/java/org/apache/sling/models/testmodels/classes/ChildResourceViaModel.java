@@ -14,7 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.5.0")
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.testmodels.classes;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Via;
+import org.apache.sling.models.annotations.via.ChildResource;
+
+import javax.inject.Inject;
+
+@Model(adaptables = Resource.class)
+public class ChildResourceViaModel {
+
+    @Inject
+    @Via(value = "jcr:content", type = ChildResource.class)
+    private String firstProperty;
+
+    public String getFirstProperty() {
+        return firstProperty;
+    }
+
+}

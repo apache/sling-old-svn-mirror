@@ -16,29 +16,8 @@
  */
 package org.apache.sling.models.annotations;
 
-import org.apache.sling.models.annotations.via.BeanProperty;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 /**
- * Indicate that this injection point should be handled using some value
- * derived from the adaptable.
+ * Marker interface for eligible @Via provider identifiers.
  */
-@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Via {
-
-    /**
-     * A string value which the via provider uses to determine the correct adaptable.
-     */
-    public String value() default "";
-
-    /**
-     * The specific ViaProvider which will handle retrieval of the adaptable.
-     */
-    public Class<? extends ViaProviderType> type() default BeanProperty.class;
-
+public interface ViaProviderType {
 }

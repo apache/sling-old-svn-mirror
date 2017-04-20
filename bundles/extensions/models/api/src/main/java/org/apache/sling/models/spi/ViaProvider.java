@@ -14,31 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.spi;
 
-import org.apache.sling.models.annotations.via.BeanProperty;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.apache.sling.models.annotations.ViaProviderType;
 
 /**
- * Indicate that this injection point should be handled using some value
- * derived from the adaptable.
+ * SPI interface for providers of the @Via annotation.
  */
-@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Via {
+public interface ViaProvider {
 
     /**
-     * A string value which the via provider uses to determine the correct adaptable.
+     * Return the marker class for use in the @Via annotation
+     *
+     * @return the marker class
      */
-    public String value() default "";
+    Class<? extends ViaProviderType> getType();
 
     /**
-     * The specific ViaProvider which will handle retrieval of the adaptable.
+     * Get an adaptable using the value of the @Via annotation.
+     *
+     * @param original the original adaptable
+     * @param value the value of the @Via annotation
+     * @return the projected adaptable
      */
-    public Class<? extends ViaProviderType> type() default BeanProperty.class;
+    Object getAdaptable(Object original, String value);
 
+    /**
+     * Marker object indicating that the original object should be used.
+     */
+    Object ORIGINAL = new Object();
 }

@@ -14,7 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.5.0")
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.it.delegate.request;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Via;
+
+import javax.inject.Inject;
+
+@Model(adaptables = SlingHttpServletRequest.class, adapters = DelegateInterface.class,
+    resourceType = "sling/delegate/base")
+public class DelegateBaseModel implements DelegateInterface {
+
+    @Inject @Via("resource")
+    private String text;
+
+    @Inject @Via("resource")
+    private String other;
+
+    @Override
+    public String getText() {
+        return text;
+    }
+
+    @Override
+    public String getOther() {
+        return other;
+    }
+}

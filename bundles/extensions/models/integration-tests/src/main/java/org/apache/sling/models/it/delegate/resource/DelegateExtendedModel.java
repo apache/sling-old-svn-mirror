@@ -14,7 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.5.0")
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.it.delegate.resource;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Via;
+import org.apache.sling.models.annotations.injectorspecific.Self;
+import org.apache.sling.models.annotations.via.ResourceSuperType;
+
+@Model(adaptables = Resource.class, adapters = DelegateInterface.class,
+        resourceType = "sling/delegate/extended")
+public class DelegateExtendedModel implements DelegateInterface {
+
+    @Self @Via(type = ResourceSuperType.class)
+    private DelegateInterface delegate;
+
+    @Override
+    public String getOther() {
+        return delegate.getOther();
+    }
+
+    @Override
+    public String getText() {
+        return delegate.getText().toUpperCase();
+    }
+}

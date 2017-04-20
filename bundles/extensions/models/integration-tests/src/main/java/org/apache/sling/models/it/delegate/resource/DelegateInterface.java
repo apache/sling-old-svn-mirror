@@ -14,7 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.5.0")
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.it.delegate.resource;
 
-import aQute.bnd.annotation.Version;
+public interface DelegateInterface {
+
+    String getText();
+
+    String getOther();
+
+}

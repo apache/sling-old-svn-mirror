@@ -116,7 +116,9 @@
                             org.apache.sling.models.it.noclasses,
                             org.apache.sling.models.it.models,
                             org.apache.sling.models.it.rtbound,
-                            org.apache.sling.models.it.rtboundpicker
+                            org.apache.sling.models.it.rtboundpicker,
+                            org.apache.sling.models.it.delegate.request,
+                            org.apache.sling.models.it.delegate.resource
                         </Sling-Model-Packages>
                         <Sling-Model-Classes>
                             org.apache.sling.models.it.exporter.BaseComponent,
@@ -416,4 +418,18 @@
             <scope>compile</scope>
         </dependency>
     </dependencies>
+    <profiles>
+        <profile>
+            <id>debug-remote-process</id>
+            <properties>
+                <jar.executor.vm.options>-Xmx512m -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=38080,suspend=n</jar.executor.vm.options>
+            </properties>
+        </profile>
+        <profile>
+            <id>debug-remote-process-suspend</id>
+            <properties>
+                <jar.executor.vm.options>-Xmx512m -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=38080,suspend=n</jar.executor.vm.options>
+            </properties>
+        </profile>
+    </profiles>
 </project>
