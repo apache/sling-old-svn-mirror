@@ -46,6 +46,7 @@
 
     <modules>
         <module>core.slingbucks</module>
+        <module>ui.apps.user</module>
         <module>ui.apps.slingbucks</module>
     </modules>
 
@@ -201,17 +202,17 @@
                         <failOnError>true</failOnError>
                     </configuration>
                 </plugin>
-                <!-- Content Package Plugin -->
-                <plugin>
-                    <groupId>com.day.jcr.vault</groupId>
-                    <artifactId>content-package-maven-plugin</artifactId>
-                    <version>0.0.24</version>
-                    <configuration>
-                        <targetURL>http://${sling.host}:${sling.port}/crx/packmgr/service.jsp</targetURL>
-                        <failOnError>true</failOnError>
-                        <failOnMissingEmbed>true</failOnMissingEmbed>
-                    </configuration>
-                </plugin>
+                <!--&lt;!&ndash; Content Package Plugin &ndash;&gt;-->
+                <!--<plugin>-->
+                    <!--<groupId>com.day.jcr.vault</groupId>-->
+                    <!--<artifactId>content-package-maven-plugin</artifactId>-->
+                    <!--<version>0.0.24</version>-->
+                    <!--<configuration>-->
+                        <!--<targetURL>http://${sling.host}:${sling.port}/crx/packmgr/service.jsp</targetURL>-->
+                        <!--<failOnError>true</failOnError>-->
+                        <!--<failOnMissingEmbed>true</failOnMissingEmbed>-->
+                    <!--</configuration>-->
+                <!--</plugin>-->
                 <!-- Apache Felix Bundle Plugin -->
                 <plugin>
                     <groupId>org.apache.felix</groupId>

@@ -28,23 +28,17 @@
         <version>0.9.9-SNAPSHOT</version>
     </parent>
 
-    <artifactId>ui.apps.slingbucks</artifactId>
+    <artifactId>ui.apps.user</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache Sling Slingbucks 2 (HTL) - sample coffee store management application - JCR Content</name>
-    <description>Content Slingbucks Example Content Package</description>
+    <name>Apache Sling Slingbucks 2 (HTL) - sample coffee store management application - Service User</name>
+    <description>Content Slingbucks Example Service User Package</description>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>core.slingbucks</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>ui.apps.user</artifactId>
-            <version>${project.version}</version>
-            <type>zip</type>
         </dependency>
     </dependencies>
 
@@ -81,40 +75,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <id>copy</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>core.slingbucks</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.outputDirectory}/jcr_root/apps/slingbucks2App/install/</outputDirectory>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>ui.apps.user</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>zip</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.outputDirectory}/jcr_root/etc/packages/org.apache.sling.samples.slingbucks2</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
@@ -136,7 +96,6 @@
             </plugin>
         </plugins>
     </build>
-
     <profiles>
         <profile>
             <id>autoInstallPackage</id>

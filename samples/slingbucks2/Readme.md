@@ -40,6 +40,7 @@ Please look here: **ui.apps.slingbucks/src/main/content/jcr_root/apps/slingbucks
 The project has two modules:
 
 1. **core.slingbucks**: OSGi Bundle that contains the services and Sling Model
+2. **ui.apps.user**: JCR Package with the content
 2. **ui.apps.slingbucks**: JCR Package with the content
 
 **Note**: to make this sample a little bit more instructive and to showcase
