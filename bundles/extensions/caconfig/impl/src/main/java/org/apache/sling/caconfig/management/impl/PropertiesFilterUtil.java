@@ -16,37 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.resource.impl.util;
+package org.apache.sling.caconfig.management.impl;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.sling.caconfig.management.ConfigurationManagementSettings;
 
 /**
  * Filter internal properties from ConfigManager API output.
  */
 public final class PropertiesFilterUtil {
 
-    private static final Set<String> PROPERTIES_TO_IGNORE = new HashSet<>(Arrays.asList(
-            "jcr:primaryType",
-            "jcr:mixinTypes",
-            "jcr:created",
-            "jcr:createdBy",
-            "jcr:lastModified",
-            "jcr:lastModifiedBy",
-            "jcr:uuid"));
-    
     private PropertiesFilterUtil() {
         // static methods only
     }
 
-    public static void removeIgnoredProperties(Set<String> propertyNames) {
-        propertyNames.removeAll(PROPERTIES_TO_IGNORE);
+    public static void removeIgnoredProperties(Set<String> propertyNames, ConfigurationManagementSettings settings) {
+        Set<String> ignoredProperties = settings.getIgnoredPropertyNames(propertyNames);
+        propertyNames.removeAll(ignoredProperties);
     }
 
-    public static void removeIgnoredProperties(Map<String,Object> props) {
-        for (String propertyName : PROPERTIES_TO_IGNORE) {
+    public static void removeIgnoredProperties(Map<String,Object> props, ConfigurationManagementSettings settings) {
+        for (String propertyName : settings.getIgnoredPropertyNames(props.keySet())) {
             props.remove(propertyName);
         }
     }

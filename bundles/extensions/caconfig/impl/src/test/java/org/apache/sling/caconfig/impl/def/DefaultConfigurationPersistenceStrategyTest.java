@@ -27,11 +27,13 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.caconfig.management.impl.ConfigurationManagementSettingsImpl;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.apache.sling.hamcrest.ResourceMatchers;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -42,6 +44,11 @@ public class DefaultConfigurationPersistenceStrategyTest {
 
     @Rule
     public SlingContext context = new SlingContext();
+    
+    @Before
+    public void setUp() {
+        context.registerInjectActivateService(new ConfigurationManagementSettingsImpl());
+    }
     
     @Test
     public void testGetResource() {
