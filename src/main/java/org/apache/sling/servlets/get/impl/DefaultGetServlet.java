@@ -174,32 +174,42 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         this.indexFiles = null;
     }
 
+    private Servlet getDefaultRendererServlet(final String type) {
+        if ( StreamRendererServlet.EXT_RES.equals(type) ) {
+            return new StreamRendererServlet(index, indexFiles);
+        } else if ( HtmlRendererServlet.EXT_HTML.equals(type) ) {
+            return new HtmlRendererServlet();
+        } else if ( PlainTextRendererServlet.EXT_TXT.equals(type) ) {
+            return new PlainTextRendererServlet();
+        } else if (JsonRendererServlet.EXT_JSON.equals(type) ) {
+            return new JsonRendererServlet(jsonMaximumResults);
+        } else if ( XMLRendererServlet.EXT_XML.equals(type) ) {
+            return new XMLRendererServlet();
+        }
+        return null;
+    }
+
     @Override
     public void init() throws ServletException {
         super.init();
 
         // Register renderer servlets
-        setupServlet(rendererMap, StreamRendererServlet.EXT_RES,
-            new StreamRendererServlet(index, indexFiles));
+        setupServlet(rendererMap, StreamRendererServlet.EXT_RES);
 
         if (enableHtml) {
-            setupServlet(rendererMap, HtmlRendererServlet.EXT_HTML,
-                new HtmlRendererServlet());
+            setupServlet(rendererMap, HtmlRendererServlet.EXT_HTML);
         }
 
         if (enableTxt) {
-            setupServlet(rendererMap, PlainTextRendererServlet.EXT_TXT,
-                new PlainTextRendererServlet());
+            setupServlet(rendererMap, PlainTextRendererServlet.EXT_TXT);
         }
 
         if (enableJson) {
-            setupServlet(rendererMap, JsonRendererServlet.EXT_JSON,
-                new JsonRendererServlet(jsonMaximumResults));
+            setupServlet(rendererMap, JsonRendererServlet.EXT_JSON);
         }
 
         if (enableXml) {
-            setupServlet(rendererMap, XMLRendererServlet.EXT_XML,
-                new XMLRendererServlet());
+            setupServlet(rendererMap, XMLRendererServlet.EXT_XML);
         }
 
         // use the servlet for rendering StreamRendererServlet.EXT_RES as the
@@ -212,7 +222,10 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
                 final int pos = m.indexOf(':');
                 if (pos != -1) {
                     final String type = m.substring(0, pos);
-                    final Servlet servlet = rendererMap.get(type);
+                    Servlet servlet = rendererMap.get(type);
+                    if ( servlet == null ) {
+                        servlet = setupServlet(rendererMap, type);
+                    }
                     if (servlet != null) {
                         final String extensions = m.substring(pos + 1);
                         final StringTokenizer st = new StringTokenizer(
@@ -221,6 +234,8 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
                             final String ext = st.nextToken();
                             rendererMap.put(ext, servlet);
                         }
+                    } else {
+                        logger.warn("Unable to enable renderer alias(es) for {} - type not supported", m);
                     }
                 }
             }
@@ -300,13 +315,17 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         super.destroy();
     }
 
-    private void setupServlet(Map<String, Servlet> rendererMap, String key,
-            Servlet servlet) {
-        try {
-            servlet.init(getServletConfig());
-            rendererMap.put(key, servlet);
-        } catch (Throwable t) {
-            logger.error("Error while initializing servlet " + servlet, t);
+    private Servlet setupServlet(final Map<String, Servlet> rendererMap,
+            final String key) {
+        final Servlet servlet = getDefaultRendererServlet(key);
+        if ( servlet != null ) {
+            try {
+                servlet.init(getServletConfig());
+                rendererMap.put(key, servlet);
+            } catch (Throwable t) {
+                logger.error("Error while initializing servlet " + servlet, t);
+            }
         }
+        return servlet;
     }
 }
