@@ -27,6 +27,10 @@ import java.util.Map;
 
 import org.apache.sling.caconfig.management.ConfigurationCollectionData;
 import org.apache.sling.caconfig.management.ConfigurationData;
+import org.apache.sling.caconfig.management.ConfigurationManagementSettings;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -38,13 +42,22 @@ import com.google.common.collect.ImmutableMap;
 @RunWith(MockitoJUnitRunner.class)
 public class ConfigurationCollectionDataImplTest {
     
+    @Rule
+    public SlingContext context = new SlingContext();
+    
     @Mock
     private Collection<ConfigurationData> items;
+    private ConfigurationManagementSettings configurationManagementSettings;
 
+    @Before
+    public void setUp() {
+        configurationManagementSettings = context.registerInjectActivateService(new ConfigurationManagementSettingsImpl());
+    }
+    
     @Test
     public void testProperties() {
         Map<String,Object> props = ImmutableMap.<String,Object>of("jcr:primaryType", "test", "prop1", "value1"); 
-        ConfigurationCollectionData underTest = new ConfigurationCollectionDataImpl("name1", items, "/path1", props);
+        ConfigurationCollectionData underTest = new ConfigurationCollectionDataImpl("name1", items, "/path1", props, configurationManagementSettings);
         
         assertEquals("name1", underTest.getConfigName());
         assertSame(items, underTest.getItems());
@@ -54,7 +67,7 @@ public class ConfigurationCollectionDataImplTest {
 
     @Test
     public void testEmpty() {
-        ConfigurationCollectionData underTest = new ConfigurationCollectionDataImpl("name1", ImmutableList.<ConfigurationData>of(), "/path1", null);
+        ConfigurationCollectionData underTest = new ConfigurationCollectionDataImpl("name1", ImmutableList.<ConfigurationData>of(), "/path1", null, configurationManagementSettings);
         
         assertEquals("name1", underTest.getConfigName());
         assertTrue(underTest.getItems().isEmpty());

@@ -28,8 +28,9 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.caconfig.management.ConfigurationManagementSettings;
+import org.apache.sling.caconfig.management.impl.PropertiesFilterUtil;
 import org.apache.sling.caconfig.resource.impl.util.MapUtil;
-import org.apache.sling.caconfig.resource.impl.util.PropertiesFilterUtil;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceAccessDeniedException;
@@ -38,6 +39,7 @@ import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -62,6 +64,9 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         boolean enabled() default true;
 
     }
+    
+    @Reference
+    private ConfigurationManagementSettings configurationManagementSettings;
 
     private volatile Config config;
     
@@ -229,7 +234,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         }
         // remove all existing properties that are not filterd
         Set<String> propertyNamesToRemove = new HashSet<>(modValueMap.keySet());
-        PropertiesFilterUtil.removeIgnoredProperties(propertyNamesToRemove);
+        PropertiesFilterUtil.removeIgnoredProperties(propertyNamesToRemove, configurationManagementSettings);
         for (String propertyName : propertyNamesToRemove) {
             modValueMap.remove(propertyName);
         }

@@ -16,10 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Management API of the Context-Aware configuration implementation.
- * This API is only indented for advanced use cases like writing a configuration editor,
- * not for "normal" applications just reading configuration.
- */
-@org.osgi.annotation.versioning.Version("2.1.0")
 package org.apache.sling.caconfig.management;
+
+import java.util.Set;
+
+import org.osgi.annotation.versioning.ProviderType;
+
+/**
+ * Settings for reading and writing configurations.
+ */
+@ProviderType
+public interface ConfigurationManagementSettings {
+    
+    /**
+     * Detects property names that should be ignored/filtered out when reading or writing configuration data properties.
+     * @param propertyNames Existing property names to evaluate. 
+     * @return Property names that should be ignored/filtered out from the given set of property names.
+     */
+    Set<String> getIgnoredPropertyNames(Set<String> propertyNames);
+    
+}
