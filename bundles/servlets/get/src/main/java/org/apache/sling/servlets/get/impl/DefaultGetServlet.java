@@ -175,18 +175,27 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
     }
 
     private Servlet getDefaultRendererServlet(final String type) {
+        Servlet servlet = null;
         if ( StreamRendererServlet.EXT_RES.equals(type) ) {
-            return new StreamRendererServlet(index, indexFiles);
+            servlet = new StreamRendererServlet(index, indexFiles);
         } else if ( HtmlRendererServlet.EXT_HTML.equals(type) ) {
-            return new HtmlRendererServlet();
+            servlet = new HtmlRendererServlet();
         } else if ( PlainTextRendererServlet.EXT_TXT.equals(type) ) {
-            return new PlainTextRendererServlet();
+            servlet = new PlainTextRendererServlet();
         } else if (JsonRendererServlet.EXT_JSON.equals(type) ) {
-            return new JsonRendererServlet(jsonMaximumResults);
+            servlet = new JsonRendererServlet(jsonMaximumResults);
         } else if ( XMLRendererServlet.EXT_XML.equals(type) ) {
-            return new XMLRendererServlet();
+            servlet = new XMLRendererServlet();
         }
-        return null;
+        if ( servlet != null ) {
+            try {
+                servlet.init(getServletConfig());
+            } catch (Throwable t) {
+                logger.error("Error while initializing servlet " + servlet, t);
+                servlet = null;
+            }
+        }
+        return servlet;
     }
 
     @Override
@@ -194,22 +203,27 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         super.init();
 
         // Register renderer servlets
-        setupServlet(rendererMap, StreamRendererServlet.EXT_RES);
+        rendererMap.put(StreamRendererServlet.EXT_RES,
+                getDefaultRendererServlet(StreamRendererServlet.EXT_RES));
 
         if (enableHtml) {
-            setupServlet(rendererMap, HtmlRendererServlet.EXT_HTML);
+            rendererMap.put(HtmlRendererServlet.EXT_HTML,
+                    getDefaultRendererServlet(HtmlRendererServlet.EXT_HTML));
         }
 
         if (enableTxt) {
-            setupServlet(rendererMap, PlainTextRendererServlet.EXT_TXT);
+            rendererMap.put(PlainTextRendererServlet.EXT_TXT,
+                    getDefaultRendererServlet(PlainTextRendererServlet.EXT_TXT));
         }
 
         if (enableJson) {
-            setupServlet(rendererMap, JsonRendererServlet.EXT_JSON);
+            rendererMap.put(JsonRendererServlet.EXT_JSON,
+                    getDefaultRendererServlet(JsonRendererServlet.EXT_JSON));
         }
 
         if (enableXml) {
-            setupServlet(rendererMap, XMLRendererServlet.EXT_XML);
+            rendererMap.put(XMLRendererServlet.EXT_XML,
+                    getDefaultRendererServlet(XMLRendererServlet.EXT_XML));
         }
 
         // use the servlet for rendering StreamRendererServlet.EXT_RES as the
@@ -224,7 +238,7 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
                     final String type = m.substring(0, pos);
                     Servlet servlet = rendererMap.get(type);
                     if ( servlet == null ) {
-                        servlet = setupServlet(rendererMap, type);
+                        servlet = getDefaultRendererServlet(type);
                     }
                     if (servlet != null) {
                         final String extensions = m.substring(pos + 1);
@@ -313,19 +327,5 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         rendererMap.clear();
 
         super.destroy();
-    }
-
-    private Servlet setupServlet(final Map<String, Servlet> rendererMap,
-            final String key) {
-        final Servlet servlet = getDefaultRendererServlet(key);
-        if ( servlet != null ) {
-            try {
-                servlet.init(getServletConfig());
-                rendererMap.put(key, servlet);
-            } catch (Throwable t) {
-                logger.error("Error while initializing servlet " + servlet, t);
-            }
-        }
-        return servlet;
     }
 }
