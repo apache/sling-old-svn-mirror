@@ -104,6 +104,7 @@ public final class ContextPlugins {
      * @param context Sling context
      */
     private static void registerConfigurationResolver(SlingContextImpl context) {
+        registerByClassName(context, "org.apache.sling.caconfig.management.impl.ConfigurationManagementSettingsImpl");
         
         if (!registerByClassName(context, "org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexerImpl")) {
             // fallback to impl 1.2
