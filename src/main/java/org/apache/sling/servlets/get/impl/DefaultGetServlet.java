@@ -202,9 +202,12 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
     public void init() throws ServletException {
         super.init();
 
+        // use the servlet for rendering StreamRendererServlet.EXT_RES as the
+        // streamer servlet
+        streamerServlet = getDefaultRendererServlet(StreamRendererServlet.EXT_RES);
+
         // Register renderer servlets
-        rendererMap.put(StreamRendererServlet.EXT_RES,
-                getDefaultRendererServlet(StreamRendererServlet.EXT_RES));
+        rendererMap.put(StreamRendererServlet.EXT_RES, streamerServlet);
 
         if (enableHtml) {
             rendererMap.put(HtmlRendererServlet.EXT_HTML,
@@ -226,9 +229,6 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
                     getDefaultRendererServlet(XMLRendererServlet.EXT_XML));
         }
 
-        // use the servlet for rendering StreamRendererServlet.EXT_RES as the
-        // streamer servlet
-        streamerServlet = rendererMap.get(StreamRendererServlet.EXT_RES);
 
         // check additional aliases
         if (this.aliases != null) {
