@@ -181,10 +181,10 @@ public class SlingServletResolver
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
-    @Reference(target="(subServiceName=scripts)")
+    @Reference(target="("+ServiceUserMapped.SUBSERVICENAME+"=scripts)")
     private ServiceUserMapped scriptServiceUserMapped;
 
-    @Reference(target="(subServiceName=console)")
+    @Reference(target="("+ServiceUserMapped.SUBSERVICENAME+"=console)")
     private ServiceUserMapped consoleServiceUserMapped;
 
     private ResourceResolver sharedScriptResolver;
