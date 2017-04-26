@@ -23,16 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,14 +36,13 @@ import org.slf4j.LoggerFactory;
  * The quartz based implementation of the scheduler.
  *
  */
-@Component(
-    immediate = true
-)
+@Component
 public class WhiteboardHandler {
 
+    /** Track runnable and job service with at least expression or period service registration property. */
     private static final String SCHEDULED_JOB_FILTER =
-            "(|(" + Constants.OBJECTCLASS + "=" + Runnable.class.getName() + ")" +
-            "(" + Constants.OBJECTCLASS + "=" + Job.class.getName() + "))";
+            "(|(" + Scheduler.PROPERTY_SCHEDULER_EXPRESSION + "=*)" +
+                  "(" + Scheduler.PROPERTY_SCHEDULER_PERIOD + "=*))";
 
     /** Default logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -55,57 +50,9 @@ public class WhiteboardHandler {
     @Reference
     private QuartzScheduler scheduler;
 
-    private ServiceTracker serviceTracker;
+    private final Map<Long, String> idToNameMap = new ConcurrentHashMap<>();
 
-    private final Map<Long, String> idToNameMap = new ConcurrentHashMap<Long, String>();
-
-    /**
-     * Activate this component.
-     * @throws InvalidSyntaxException
-     */
-    @Activate
-    protected void activate(final BundleContext btx) throws InvalidSyntaxException {
-        this.serviceTracker = new ServiceTracker(btx,
-                btx.createFilter(SCHEDULED_JOB_FILTER),
-                new ServiceTrackerCustomizer() {
-
-            @Override
-            public void  removedService(final ServiceReference reference, final Object service) {
-                unregister(reference);
-                btx.ungetService(reference);
-            }
-
-            @Override
-            public void modifiedService(final ServiceReference reference, final Object service) {
-                unregister(reference);
-                register(reference, service);
-            }
-
-            @Override
-            public Object addingService(final ServiceReference reference) {
-                final Object obj = btx.getService(reference);
-                if ( obj != null ) {
-                    register(reference, obj);
-                }
-                return obj;
-            }
-        });
-        this.serviceTracker.open();
-    }
-
-    /**
-     * Deactivate this component.
-     * Stop the scheduler.
-     */
-    @Deactivate
-    protected void deactivate() {
-        if ( this.serviceTracker != null ) {
-            this.serviceTracker.close();
-            this.serviceTracker = null;
-        }
-    }
-
-    private String getStringProperty(final ServiceReference ref, final String name) {
+    private String getStringProperty(final ServiceReference<?> ref, final String name) {
         final Object obj = ref.getProperty(name);
         if ( obj == null ) {
             return null;
@@ -116,7 +63,7 @@ public class WhiteboardHandler {
         throw new IllegalArgumentException("Property " + name + " is not of type String");
     }
 
-    private Boolean getBooleanProperty(final ServiceReference ref, final String name) {
+    private Boolean getBooleanProperty(final ServiceReference<?> ref, final String name) {
         final Object obj = ref.getProperty(name);
         if ( obj == null ) {
             return null;
@@ -127,7 +74,7 @@ public class WhiteboardHandler {
         throw new IllegalArgumentException("Property " + name + " is not of type Boolean");
     }
 
-    private boolean getBooleanOrDefault(final ServiceReference ref, final String name, final boolean defaultValue) {
+    private boolean getBooleanOrDefault(final ServiceReference<?> ref, final String name, final boolean defaultValue) {
         final Boolean value = getBooleanProperty(ref, name);
         if (value == null) {
             return defaultValue;
@@ -135,7 +82,7 @@ public class WhiteboardHandler {
         return value;
     }
 
-    private Long getLongProperty(final ServiceReference ref, final String name) {
+    private Long getLongProperty(final ServiceReference<?> ref, final String name) {
         final Object obj = ref.getProperty(name);
         if ( obj == null ) {
             return null;
@@ -146,7 +93,7 @@ public class WhiteboardHandler {
         throw new IllegalArgumentException("Property " + name + " is not of type Long");
     }
 
-    private Integer getIntegerProperty(final ServiceReference ref, final String name) {
+    private Integer getIntegerProperty(final ServiceReference<?> ref, final String name) {
         final Object obj = ref.getProperty(name);
         if ( obj == null ) {
             return null;
@@ -157,7 +104,7 @@ public class WhiteboardHandler {
         throw new IllegalArgumentException("Property " + name + " is not of type Integer");
     }
 
-    private String[] getStringArray(final ServiceReference ref, final String name) {
+    private String[] getStringArray(final ServiceReference<?> ref, final String name) {
         final Object value = ref.getProperty(name);
         if ( value instanceof String[] ) {
             return (String[])value;
@@ -172,7 +119,7 @@ public class WhiteboardHandler {
      * @param ref The service reference
      * @throws IllegalArgumentException
      */
-    private String getServiceIdentifier(final ServiceReference ref) {
+    private String getServiceIdentifier(final ServiceReference<?> ref) {
         String name = getStringProperty(ref, Scheduler.PROPERTY_SCHEDULER_NAME);
         if ( name == null ) {
             name = getStringProperty(ref, Constants.SERVICE_PID);
@@ -185,13 +132,54 @@ public class WhiteboardHandler {
         return name;
     }
 
+    @Reference(service = Runnable.class,
+            target = SCHEDULED_JOB_FILTER,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            updated = "updatedRunnable")
+    private void registerRunnable(final ServiceReference<Runnable> ref, final Runnable service) {
+        register(ref, service);
+    }
+
+    @SuppressWarnings("unused")
+    private void unregisterRunnable(final ServiceReference<Runnable> ref) {
+        unregister(ref);
+    }
+
+    @SuppressWarnings("unused")
+    private void updatedRunnable(final ServiceReference<Runnable> ref, final Runnable service) {
+        unregister(ref);
+        register(ref, service);
+    }
+
+    @Reference(service = Job.class,
+            target = SCHEDULED_JOB_FILTER,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            updated = "updatedJob")
+    private void registerJob(final ServiceReference<Job> ref, final Job service) {
+        register(ref, service);
+    }
+
+    @SuppressWarnings("unused")
+    private void unregisterJob(final ServiceReference<Job> ref) {
+        unregister(ref);
+
+    }
+
+    @SuppressWarnings("unused")
+    private void updatedJob(final ServiceReference<Job> ref, final Job service) {
+        unregister(ref);
+        register(ref, service);
+    }
+
     /**
      * Register a job or task
      * @param ref The service reference
      * @param job The job object
      * @throws IllegalArgumentException
      */
-    private void register(final ServiceReference ref, final Object job) {
+    void register(final ServiceReference<?> ref, final Object job) {
         try {
             if (!tryScheduleExpression(ref, job) && !trySchedulePeriod(ref, job)) {
                 this.logger.debug("Ignoring service {} : no scheduling property found.", ref);
@@ -206,14 +194,14 @@ public class WhiteboardHandler {
      * Unregister a service.
      * @param reference The service reference.
      */
-    private void unregister(final ServiceReference reference) {
+    void unregister(final ServiceReference<?> reference) {
         final String name = idToNameMap.remove(getLongProperty(reference, Constants.SERVICE_ID));
         if ( name != null ) {
             this.scheduler.unschedule(reference.getBundle().getBundleId(), name);
         }
     }
 
-    private boolean trySchedulePeriod(final ServiceReference ref, final Object job) {
+    private boolean trySchedulePeriod(final ServiceReference<?> ref, final Object job) {
         final Long period = getLongProperty(ref, Scheduler.PROPERTY_SCHEDULER_PERIOD);
         if ( period == null ) {
             return false;
@@ -239,7 +227,7 @@ public class WhiteboardHandler {
         return false;
     }
 
-    private boolean tryScheduleExpression(final ServiceReference ref, final Object job) {
+    private boolean tryScheduleExpression(final ServiceReference<?> ref, final Object job) {
         final String expression = getStringProperty(ref, Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
         if ( expression != null ) {
             scheduleJob(ref, job, this.scheduler.EXPR(expression));
@@ -248,11 +236,11 @@ public class WhiteboardHandler {
         return false;
     }
 
-    private String[] getRunOpts(final ServiceReference ref) {
+    private String[] getRunOpts(final ServiceReference<?> ref) {
         return getStringArray(ref, Scheduler.PROPERTY_SCHEDULER_RUN_ON);
     }
 
-    private void scheduleJob(final ServiceReference ref, final Object job, final ScheduleOptions scheduleOptions) {
+    private void scheduleJob(final ServiceReference<?> ref, final Object job, final ScheduleOptions scheduleOptions) {
         final String name = getServiceIdentifier(ref);
         final Boolean concurrent = getBooleanProperty(ref, Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
         final String[] runOnOpts = getRunOpts(ref);
