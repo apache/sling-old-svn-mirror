@@ -1181,7 +1181,7 @@ public class SlingServletResolver
 
             ResourceResolver resourceResolver = null;
             try {
-                resourceResolver = resourceResolverFactory.getServiceResourceResolver(Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, (Object)"scripts"));
+                resourceResolver = resourceResolverFactory.getServiceResourceResolver(Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, (Object)"console"));
 
                 final PrintWriter pw = response.getWriter();
 
