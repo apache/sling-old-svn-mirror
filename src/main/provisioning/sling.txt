@@ -183,9 +183,11 @@
       "org.apache.sling.resourceresolver:console\=sling-readall"
     ]
 
+  # the user mapping for the servlet resolver, subservice "console" namely the user sling-scripting is created in scripting.txt
   org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-servletsresolver
     user.mapping=[
       "org.apache.sling.servlets.resolver:console\=sling-readall"
+      "org.apache.sling.servlets.resolver:scripts\=sling-scripting"
     ]
 
   org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-observation
