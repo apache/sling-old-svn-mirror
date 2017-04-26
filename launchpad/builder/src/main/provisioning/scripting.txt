@@ -58,5 +58,4 @@
         user.mapping=[
             "org.apache.sling.scripting.core\=sling-scripting",
             "org.apache.sling.scripting.sightly.js.provider\=sling-scripting",
-            "org.apache.sling.servlets.resolver:scripts\=sling-scripting"
         ]
