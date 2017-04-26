@@ -52,7 +52,6 @@ import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
 import org.apache.sling.provisioning.model.RunMode;
 import org.apache.sling.provisioning.model.Traceable;
 import org.apache.sling.provisioning.model.io.ModelReader;
-import org.codehaus.plexus.component.configurator.converters.basic.BooleanConverter;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
@@ -66,7 +65,7 @@ public class ModelPreprocessor {
         public boolean      done = false;
         public Model        model;
         public boolean      extendMavenClassPath = true;
-        public final Map<org.apache.sling.provisioning.model.Artifact, Model> includedModels = new HashMap<org.apache.sling.provisioning.model.Artifact, Model>();
+        public final Map<org.apache.sling.provisioning.model.Artifact, Model> includedModels = new HashMap<>();
 
     }
 
@@ -75,7 +74,7 @@ public class ModelPreprocessor {
         public ArtifactResolver resolver;
         public MavenSession session;
         public Logger logger;
-        public final Map<String, ProjectInfo> modelProjects = new HashMap<String, ProjectInfo>();
+        public final Map<String, ProjectInfo> modelProjects = new HashMap<>();
     }
 
     /**
@@ -137,7 +136,7 @@ public class ModelPreprocessor {
 
         // process attachments
         processAttachments(env, info);
-        
+
         // is the maven classpath supposed to be extended?
         info.extendMavenClassPath = !nodeBooleanValue(info.plugin, AbstractSlingStartMojo.CONFIGURATION_NAME_DISABLE_EXTENDING_CLASSPATH, false);
 
@@ -169,7 +168,6 @@ public class ModelPreprocessor {
             this.mergeModels(info.model, d);
         }
         this.mergeModels(info.model, info.localModel);
-        info.localModel = info.model;
         info.model = ModelUtility.getEffectiveModel(info.model, resolverOptions);
 
         final Map<Traceable, String> errors = ModelUtility.validate(info.model);
@@ -269,12 +267,12 @@ public class ModelPreprocessor {
             final Model effectiveModel)
     throws MavenExecutionException {
         // slingstart or slingfeature
-        final List<Model> dependencies = new ArrayList<Model>();
+        final List<Model> dependencies = new ArrayList<>();
 
         for(final Feature feature : effectiveModel.getFeatures()) {
             for(final RunMode runMode : feature.getRunModes()) {
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
-                    final List<org.apache.sling.provisioning.model.Artifact> removeList = new ArrayList<org.apache.sling.provisioning.model.Artifact>();
+                    final List<org.apache.sling.provisioning.model.Artifact> removeList = new ArrayList<>();
                     for(final org.apache.sling.provisioning.model.Artifact a : group) {
                         if ( a.getType().equals(BuildConstants.PACKAGING_SLINGSTART)
                              || a.getType().equals(BuildConstants.PACKAGING_PARTIAL_SYSTEM)) {
@@ -515,7 +513,7 @@ public class ModelPreprocessor {
             final Logger logger)
     throws MavenExecutionException, IOException {
         final Pattern p = Pattern.compile(pattern);
-        final List<String> candidates = new ArrayList<String>();
+        final List<String> candidates = new ArrayList<>();
         if ( modelDirectory != null && modelDirectory.exists() ) {
             for(final File f : modelDirectory.listFiles() ) {
                 if ( f.isFile() && !f.getName().startsWith(".") ) {
