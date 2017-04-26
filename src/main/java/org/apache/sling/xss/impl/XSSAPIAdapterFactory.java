@@ -42,11 +42,12 @@ import org.slf4j.LoggerFactory;
 )
 public class XSSAPIAdapterFactory implements AdapterFactory {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(XSSAPIAdapterFactory.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(XSSAPIAdapterFactory.class);
 
     @Reference
     XSSAPI xssApi;
 
+    @Override
     public <AdapterType> AdapterType getAdapter(@Nonnull Object adaptable, @Nonnull Class<AdapterType> type) {
         if (adaptable instanceof ResourceResolver) {
             return getAdapter((ResourceResolver) adaptable, type);
