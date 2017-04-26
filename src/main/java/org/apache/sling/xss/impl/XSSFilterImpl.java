@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.xss.ProtectionContext;
 import org.apache.sling.xss.XSSFilter;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -51,6 +52,7 @@ import org.slf4j.LoggerFactory;
 @Component(
         service = {ResourceChangeListener.class, XSSFilter.class},
         property = {
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
                 ResourceChangeListener.CHANGES + "=ADDED",
                 ResourceChangeListener.CHANGES + "=CHANGED",
                 ResourceChangeListener.CHANGES + "=REMOVED",
