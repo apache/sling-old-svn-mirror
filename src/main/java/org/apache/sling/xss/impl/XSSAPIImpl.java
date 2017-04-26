@@ -48,17 +48,18 @@ import org.xml.sax.XMLReader;
 
 @Component
 public class XSSAPIImpl implements XSSAPI {
-    private static final Logger LOGGER = LoggerFactory.getLogger(XSSAPIImpl.class);
+
+    private final Logger LOGGER = LoggerFactory.getLogger(XSSAPIImpl.class);
 
     @Reference
-    private XSSFilter xssFilter = null;
+    private XSSFilter xssFilter;
 
-    private Validator validator = ESAPI.validator();
+    private final Validator validator = ESAPI.validator();
 
     private static final Pattern PATTERN_AUTO_DIMENSION = Pattern.compile("['\"]?auto['\"]?");
 
     private SAXParserFactory factory;
-    
+
     private volatile JsonReaderFactory jsonReaderFactory;
 
     @Activate
