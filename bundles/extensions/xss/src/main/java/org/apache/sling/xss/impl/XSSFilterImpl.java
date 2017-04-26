@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
 )
 public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, ExternalResourceChangeListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(XSSFilterImpl.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(XSSFilterImpl.class);
 
     // Default href configuration copied from the config.xml supplied with AntiSamy
     static final Attribute DEFAULT_HREF_ATTRIBUTE = new Attribute(
@@ -83,10 +83,10 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
     private final XSSFilterRule plainHtmlContext = new PlainTextToHtmlContentContext();
 
     // policies cache
-    private Map<String, PolicyHandler> policies = new ConcurrentHashMap<>();
+    private final Map<String, PolicyHandler> policies = new ConcurrentHashMap<>();
 
     @Reference
-    private ResourceResolverFactory resourceResolverFactory = null;
+    private ResourceResolverFactory resourceResolverFactory;
 
     @Reference
     private ServiceUserMapped serviceUserMapped;
