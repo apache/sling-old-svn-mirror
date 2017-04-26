@@ -261,7 +261,10 @@ public class WhiteboardHandler {
 
         final long bundleId = ref.getBundle().getBundleId();
         final Long serviceId = getLongProperty(ref, Constants.SERVICE_ID);
-        this.scheduler.schedule(bundleId, serviceId, job, options);
-        this.idToNameMap.put(serviceId, name);
+        if ( this.scheduler.schedule(bundleId, serviceId, job, options) ) {
+            this.idToNameMap.put(serviceId, name);
+        } else {
+            logger.error("Scheduling service {} failed.", ref);
+        }
     }
 }
