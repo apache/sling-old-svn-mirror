@@ -34,7 +34,10 @@ import org.osgi.annotation.versioning.ProviderType;
  * or
  * by using the whiteboard pattern and registering a Runnable service with either
  * the {@link #PROPERTY_SCHEDULER_EXPRESSION} or {@link #PROPERTY_SCHEDULER_PERIOD}
- * property. Services registered by the whiteboard pattern can by default run concurrently,
+ * property. If both properties are specified, only {@link #PROPERTY_SCHEDULER_PERIOD}
+ * is considered for scheduling.
+ *
+ * Services registered by the whiteboard pattern can by default run concurrently,
  * which usually is not wanted. Therefore it is advisable to also set the
  * {@link #PROPERTY_SCHEDULER_CONCURRENT} property with Boolean.FALSE.
  *
@@ -77,14 +80,14 @@ public interface Scheduler {
 
     /**
      * Name of the configuration property to define the instances this job should run on.
-     * By default a job is run on all instances. This property can be configured with:
-     * - a list of Sling IDs : in that case the job is only run on instances in this set.
+     * By default a job is run on all instances where the scheduler has been instructed to
+     * schedule the job, e.g. if the same code is running on all instances.
+     * This property can be configured with:
      * - constant {@link #VALUE_RUN_ON_LEADER} : the job is only run on the leader
      * - constant {@link #VALUE_RUN_ON_SINGLE} : the job is only run on a single instance in a cluster. This is
      *                     basically the same as {@link #VALUE_RUN_ON_LEADER} but it's not further specified which
      *                     single instance is used.
-     * Default is to start the job on all instances. This property needs to be of type String
-     * or String[].
+     * Default is to start the job on all instances. This property needs to be of type String.
      * If no topology information is available (= no Apache Sling Discovery Implementation active)
      * this option is ignored, and the job is run on all instances.
      * @since 2.3.0
@@ -186,10 +189,10 @@ public interface Scheduler {
     /**
      * Create a schedule options to fire a job period starting at a specific date.
      * <p>In case the scheduled time was missed due to the Scheduler not running or no thread being available at that point in time
-     * the behavior depends on the {@code times} parameter: 
+     * the behavior depends on the {@code times} parameter:
      * <ol>
      * <li>If {@code times} is -1 (meaning unlimited repetitions) there will be no immediate action. Instead the scheduler just waits for next scheduled interval.
-     * <li>Otherwise (limited amount of repitions) the job will be executed only once, as soon as the Scheduler is running again and a thread is available for processing the job. 
+     * <li>Otherwise (limited amount of repitions) the job will be executed only once, as soon as the Scheduler is running again and a thread is available for processing the job.
      * Then the scheduler waits desired interval and executes all remaining triggers.
      * Effectively the first fire time of the misfired trigger is moved to current time with no other changes.
      * </ol>
