@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 @Component(
         property = {
                 Constants.SERVICE_DESCRIPTION + "=Adapter for the XSSAPI service.",
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
                 AdapterFactory.ADAPTER_CLASSES + "=org.apache.sling.xss.XSSAPI",
                 AdapterFactory.ADAPTABLE_CLASSES + "=org.apache.sling.api.resource.ResourceResolver",
                 AdapterFactory.ADAPTABLE_CLASSES + "=org.apache.sling.api.SlingHttpServletRequest"
