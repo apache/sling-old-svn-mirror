@@ -78,6 +78,7 @@ import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.engine.servlets.ErrorHandler;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultErrorHandlerServlet;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet;
 import org.apache.sling.servlets.resolver.internal.helper.AbstractResourceCollector;
@@ -179,6 +180,12 @@ public class SlingServletResolver
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
+
+    @Reference(target="(subServiceName=scripts)")
+    private ServiceUserMapped scriptServiceUserMapped;
+
+    @Reference(target="(subServiceName=console)")
+    private ServiceUserMapped consoleServiceUserMapped;
 
     private ResourceResolver sharedScriptResolver;
 
