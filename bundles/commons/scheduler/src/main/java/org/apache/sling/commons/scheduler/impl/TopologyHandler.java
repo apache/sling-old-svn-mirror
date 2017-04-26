@@ -19,6 +19,7 @@ package org.apache.sling.commons.scheduler.impl;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -28,7 +29,10 @@ import org.osgi.service.component.annotations.Deactivate;
  *                    are available
  */
 @Component(
-    service = TopologyEventListener.class
+    service = TopologyEventListener.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
 )
 public class TopologyHandler implements TopologyEventListener {
 
@@ -45,6 +49,7 @@ public class TopologyHandler implements TopologyEventListener {
     /**
      * @see org.apache.sling.discovery.TopologyEventListener#handleTopologyEvent(org.apache.sling.discovery.TopologyEvent)
      */
+    @Override
     public void handleTopologyEvent(final TopologyEvent event) {
         if ( event.getType() == Type.TOPOLOGY_INIT || event.getType() == Type.TOPOLOGY_CHANGED ) {
             QuartzJobExecutor.IS_LEADER.set(event.getNewView().getLocalInstance().isLeader());
