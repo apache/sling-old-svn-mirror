@@ -16,6 +16,7 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -122,8 +123,12 @@ public class WhiteboardHandler {
     private String getServiceIdentifier(final ServiceReference<?> ref) {
         String name = getStringProperty(ref, Scheduler.PROPERTY_SCHEDULER_NAME);
         if ( name == null ) {
-            name = getStringProperty(ref, Constants.SERVICE_PID);
-            if ( name == null ) {
+            final Object pid = ref.getProperty(Constants.SERVICE_PID);
+            if ( pid instanceof String ) {
+                name = (String)pid;
+            } else if ( pid instanceof String[] ) {
+                name = Arrays.toString((String[])pid);
+            } else {
                 name = "Registered Service";
             }
         }
