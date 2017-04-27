@@ -27,14 +27,14 @@
     </parent>
     <artifactId>org.apache.sling.models.impl</artifactId>
     <packaging>bundle</packaging>
-    <version>1.3.9-SNAPSHOT</version>
+    <version>1.4.0</version>
     <name>Apache Sling Models Implementation</name>
     <description>Apache Sling Models Implementation</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/models/impl</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/models/impl</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/models/impl</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.models.impl-1.4.0</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.models.impl-1.4.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.models.impl-1.4.0</url>
     </scm>
     <properties>
         <sling.java.version>7</sling.java.version>
