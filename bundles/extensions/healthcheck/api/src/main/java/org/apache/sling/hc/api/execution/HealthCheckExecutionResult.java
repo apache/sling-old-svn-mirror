@@ -21,8 +21,8 @@ import java.util.Date;
 
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.HealthCheckMetadata;
+import org.osgi.annotation.versioning.ProviderType;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Interface for health check executions via the {@link HealthCheckExecutor}.
