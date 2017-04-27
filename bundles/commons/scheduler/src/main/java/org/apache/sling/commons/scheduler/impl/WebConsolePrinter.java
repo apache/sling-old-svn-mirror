@@ -24,12 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -42,15 +39,15 @@ import org.quartz.impl.matchers.GroupMatcher;
  * prints out the current configuration/status.
  *
  */
-@Component
-@Service(value=WebConsolePrinter.class)
-@Properties({
-    @Property(name=Constants.SERVICE_DESCRIPTION,
-              value="Apache Sling Scheduler Configuration Printer"),
-    @Property(name="felix.webconsole.label", value="slingscheduler"),
-    @Property(name="felix.webconsole.title", value="Sling Scheduler"),
-    @Property(name="felix.webconsole.configprinter.modes", value="always")
-})
+@Component(
+        service = WebConsolePrinter.class,
+        property = {
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+                Constants.SERVICE_DESCRIPTION + "=Apache Sling Scheduler Configuration Printer",
+                "felix.webconsole.label=slingscheduler",
+                "felix.webconsole.title=Sling Scheduler",
+                "felix.webconsole.configprinter.modes=always"
+        })
 public class WebConsolePrinter {
 
     private static String HEADLINE = "Apache Sling Scheduler";

@@ -36,10 +36,10 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.caconfig.management.ConfigurationData;
+import org.apache.sling.caconfig.management.ConfigurationManagementSettings;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.management.ValueInfo;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationOverrideMultiplexer;
-import org.apache.sling.caconfig.resource.impl.util.PropertiesFilterUtil;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
 import org.apache.sling.caconfig.spi.metadata.PropertyMetadata;
@@ -53,6 +53,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
     private final Resource contextResource;
     private final String configName;
     private final ConfigurationManager configurationManager;
+    private final ConfigurationManagementSettings configurationManagementSettings;
     private final ConfigurationOverrideMultiplexer configurationOverrideMultiplexer;
     private final ConfigurationPersistenceStrategy2 configurationPersistenceStrategy;
     private final boolean configResourceCollection;
@@ -68,7 +69,9 @@ final class ConfigurationDataImpl implements ConfigurationData {
             Resource resolvedConfigurationResource, Resource writebackConfigurationResource,
             Iterator<Resource> configurationResourceInheritanceChain,
             Resource contextResource, String configName,
-            ConfigurationManager configurationManager, ConfigurationOverrideMultiplexer configurationOverrideMultiplexer,
+            ConfigurationManager configurationManager,
+            ConfigurationManagementSettings configurationManagementSettings,
+            ConfigurationOverrideMultiplexer configurationOverrideMultiplexer,
             ConfigurationPersistenceStrategy2 configurationPersistenceStrategy,
             boolean configResourceCollection, String collectionItemName) {
         this.configMetadata = configMetadata;
@@ -79,6 +82,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
         this.contextResource = contextResource;
         this.configName = configName;
         this.configurationManager = configurationManager;
+        this.configurationManagementSettings = configurationManagementSettings;
         this.configurationOverrideMultiplexer = configurationOverrideMultiplexer;
         this.configurationPersistenceStrategy = configurationPersistenceStrategy;
         this.configResourceCollection = configResourceCollection;
@@ -88,12 +92,16 @@ final class ConfigurationDataImpl implements ConfigurationData {
 
     public ConfigurationDataImpl(ConfigurationMetadata configMetadata,
             Resource contextResource, String configName,
-            ConfigurationManager configurationManager, ConfigurationOverrideMultiplexer configurationOverrideMultiplexer,
+            ConfigurationManager configurationManager,
+            ConfigurationManagementSettings configurationManagementSettings,
+            ConfigurationOverrideMultiplexer configurationOverrideMultiplexer,
             ConfigurationPersistenceStrategy2 configurationPersistenceStrategy,
             boolean configResourceCollection) {
         this(configMetadata, null, null, null,
                 contextResource, configName,
-                configurationManager, configurationOverrideMultiplexer,
+                configurationManager,
+                configurationManagementSettings,
+                configurationOverrideMultiplexer,
                 configurationPersistenceStrategy,
                 configResourceCollection, null);
     }
@@ -129,7 +137,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (resolvedConfigurationResource != null) {
                 propertyNamesCache.addAll(new TreeSet<>(ResourceUtil.getValueMap(resolvedConfigurationResource).keySet()));
             }
-            PropertiesFilterUtil.removeIgnoredProperties(propertyNamesCache);
+            PropertiesFilterUtil.removeIgnoredProperties(propertyNamesCache, configurationManagementSettings);
         }
         return propertyNamesCache;
     }
@@ -141,7 +149,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (writebackConfigurationResource != null) {
                 props.putAll(ResourceUtil.getValueMap(writebackConfigurationResource));
             }
-            PropertiesFilterUtil.removeIgnoredProperties(props);
+            PropertiesFilterUtil.removeIgnoredProperties(props, configurationManagementSettings);
             resolveNestedConfigs(props);
             valuesCache = new ValueMapDecorator(props);
         }
@@ -162,7 +170,7 @@ final class ConfigurationDataImpl implements ConfigurationData {
             if (resolvedConfigurationResource != null) {
                 props.putAll(ResourceUtil.getValueMap(resolvedConfigurationResource));
             }
-            PropertiesFilterUtil.removeIgnoredProperties(props);
+            PropertiesFilterUtil.removeIgnoredProperties(props, configurationManagementSettings);
             resolveNestedConfigs(props);
             effectiveValuesCache = new ValueMapDecorator(props);
         }

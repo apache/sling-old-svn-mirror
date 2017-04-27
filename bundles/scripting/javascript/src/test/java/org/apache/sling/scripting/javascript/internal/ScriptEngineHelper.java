@@ -33,18 +33,18 @@ import javax.script.SimpleScriptContext;
 import org.apache.sling.commons.testing.osgi.MockBundle;
 import org.apache.sling.commons.testing.osgi.MockComponentContext;
 import org.apache.sling.scripting.api.ScriptCache;
-import org.mockito.Mockito;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Wrapper;
 import org.osgi.framework.BundleContext;
 
+import static org.mockito.Mockito.mock;
 
 /** Helpers to run javascript code fragments in tests */
 public class ScriptEngineHelper {
     private static ScriptEngine engine;
-    private static ScriptCache scriptCache = Mockito.mock(ScriptCache.class);
+    private static ScriptCache scriptCache = mock(ScriptCache.class);
 
     public static class Data extends HashMap<String, Object> {
     }
@@ -52,10 +52,12 @@ public class ScriptEngineHelper {
     private static ScriptEngine getEngine() {
         if (engine == null) {
             synchronized (ScriptEngineHelper.class) {
-                RhinoJavaScriptEngineFactory f = new RhinoJavaScriptEngineFactory();
-                Whitebox.setInternalState(f, "scriptCache", scriptCache);
-                f.activate(new RhinoMockComponentContext());
-                engine = f.getScriptEngine();
+                final RhinoMockComponentContext componentContext = new RhinoMockComponentContext();
+                final RhinoJavaScriptEngineFactoryConfiguration configuration = mock(RhinoJavaScriptEngineFactoryConfiguration.class);
+                RhinoJavaScriptEngineFactory factory = new RhinoJavaScriptEngineFactory();
+                Whitebox.setInternalState(factory, "scriptCache", scriptCache);
+                factory.activate(componentContext, configuration);
+                engine = factory.getScriptEngine();
             }
         }
         return engine;
@@ -113,7 +115,7 @@ public class ScriptEngineHelper {
 
     private static class RhinoMockComponentContext extends MockComponentContext {
 
-        private BundleContext bundleContext = Mockito.mock(BundleContext.class);
+        private BundleContext bundleContext = mock(BundleContext.class);
 
         private RhinoMockComponentContext() {
             super(new MockBundle(0));

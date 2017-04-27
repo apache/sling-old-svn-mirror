@@ -34,6 +34,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.xss.ProtectionContext;
 import org.apache.sling.xss.XSSAPI;
 import org.apache.sling.xss.XSSFilter;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -46,19 +47,24 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
-@Component
+@Component(service = XSSAPI.class,
+           property = {
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+           })
+
 public class XSSAPIImpl implements XSSAPI {
-    private static final Logger LOGGER = LoggerFactory.getLogger(XSSAPIImpl.class);
+
+    private final Logger LOGGER = LoggerFactory.getLogger(XSSAPIImpl.class);
 
     @Reference
-    private XSSFilter xssFilter = null;
+    private XSSFilter xssFilter;
 
-    private Validator validator = ESAPI.validator();
+    private final Validator validator = ESAPI.validator();
 
     private static final Pattern PATTERN_AUTO_DIMENSION = Pattern.compile("['\"]?auto['\"]?");
 
     private SAXParserFactory factory;
-    
+
     private volatile JsonReaderFactory jsonReaderFactory;
 
     @Activate

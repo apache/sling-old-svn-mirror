@@ -48,7 +48,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
-import org.apache.sling.servlets.post.impl.operations.JCRSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,10 +126,13 @@ public class SlingFileUploadHandler {
         boolean createNtFile = parentResource.isResourceType(JcrConstants.NT_FOLDER) || this.jcrSupport.isNodeType(parentResource, JcrConstants.NT_FOLDER);
         String typeHint = prop.getTypeHint();
         if (typeHint != null) {
-            createNtFile = this.jcrSupport.isFileNodeType(parentResource.getResourceResolver(), typeHint);
-            if ( !createNtFile ) {
+            Boolean isFileNodeType = this.jcrSupport.isFileNodeType(parentResource.getResourceResolver(), typeHint);
+            if ( isFileNodeType == null ) {
                 // assuming type not valid.
+                createNtFile = false;
                 typeHint = null;
+            } else {
+                createNtFile = isFileNodeType;
             }
         }
 
@@ -576,7 +578,13 @@ public class SlingFileUploadHandler {
     throws PersistenceException {
         Map<String, Object> properties = null;
         if ( typeHint != null ) {
-            properties = Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)typeHint);
+            // sling resource type not allowed for nt:file nor nt:resource
+            if ( !jcrSupport.isNode(parent)
+                 || (!JcrConstants.NT_FILE.equals(typeHint) && !JcrConstants.NT_RESOURCE.equals(typeHint)) ) {
+                properties = Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)typeHint);
+            } else {
+                properties = Collections.singletonMap(JcrConstants.JCR_PRIMARYTYPE, (Object)typeHint);
+            }
         }
         final Resource result = parent.getResourceResolver().create(parent, name, properties);
         changes.add(Modification.onCreated(result.getPath()));

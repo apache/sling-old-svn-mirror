@@ -106,6 +106,7 @@ public class U {
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.johnzon").versionAsInProject(),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.hc.api").versionAsInProject(),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.1.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.2.8"),
                     mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.2"),

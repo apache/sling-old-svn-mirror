@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 @Component(
         property = {
                 Constants.SERVICE_DESCRIPTION + "=Adapter for the XSSAPI service.",
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
                 AdapterFactory.ADAPTER_CLASSES + "=org.apache.sling.xss.XSSAPI",
                 AdapterFactory.ADAPTABLE_CLASSES + "=org.apache.sling.api.resource.ResourceResolver",
                 AdapterFactory.ADAPTABLE_CLASSES + "=org.apache.sling.api.SlingHttpServletRequest"
@@ -42,11 +43,12 @@ import org.slf4j.LoggerFactory;
 )
 public class XSSAPIAdapterFactory implements AdapterFactory {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(XSSAPIAdapterFactory.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(XSSAPIAdapterFactory.class);
 
     @Reference
     XSSAPI xssApi;
 
+    @Override
     public <AdapterType> AdapterType getAdapter(@Nonnull Object adaptable, @Nonnull Class<AdapterType> type) {
         if (adaptable instanceof ResourceResolver) {
             return getAdapter((ResourceResolver) adaptable, type);

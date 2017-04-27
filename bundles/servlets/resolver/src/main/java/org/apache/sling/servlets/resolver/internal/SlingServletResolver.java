@@ -78,6 +78,7 @@ import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.engine.servlets.ErrorHandler;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultErrorHandlerServlet;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet;
 import org.apache.sling.servlets.resolver.internal.helper.AbstractResourceCollector;
@@ -179,6 +180,12 @@ public class SlingServletResolver
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
+
+    @Reference(target="("+ServiceUserMapped.SUBSERVICENAME+"=scripts)")
+    private ServiceUserMapped scriptServiceUserMapped;
+
+    @Reference(target="("+ServiceUserMapped.SUBSERVICENAME+"=console)")
+    private ServiceUserMapped consoleServiceUserMapped;
 
     private ResourceResolver sharedScriptResolver;
 
@@ -1181,7 +1188,7 @@ public class SlingServletResolver
 
             ResourceResolver resourceResolver = null;
             try {
-                resourceResolver = resourceResolverFactory.getServiceResourceResolver(Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, (Object)"scripts"));
+                resourceResolver = resourceResolverFactory.getServiceResourceResolver(Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, (Object)"console"));
 
                 final PrintWriter pw = response.getWriter();
 
@@ -1281,6 +1288,12 @@ public class SlingServletResolver
                     if (servlets == null || servlets.isEmpty()) {
                         pw.println("Could not find a suitable servlet for this request!");
                     } else {
+                        // check for non-existing resources
+                        if (ResourceUtil.isNonExistingResource(resource)) {
+                            pw.println("The resource given by path '");
+                            pw.println(resource.getPath());
+                            pw.println("' does not exist. Therefore no resource type could be determined!<br/>");
+                        }
                         pw.print("Candidate servlets and scripts in order of preference for method ");
                         pw.print(ResponseUtil.escapeXml(method));
                         pw.println(":<br/>");

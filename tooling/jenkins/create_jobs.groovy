@@ -121,7 +121,10 @@ def modules = [
         location: 'bundles/extensions/discovery/oak'
     ],
     [
-        location: 'bundles/extensions/event'
+        location: 'bundles/extensions/event/api'
+    ],
+    [
+        location: 'bundles/extensions/event/resource'
     ],
     [
         location: 'bundles/extensions/feature-flags'
@@ -140,6 +143,9 @@ def modules = [
     ],
     [
         location: 'bundles/extensions/fsresource'
+    ],
+    [
+        location: 'bundles/extensions/healthcheck/api'
     ],
     [
         location: 'bundles/extensions/healthcheck/annotations'

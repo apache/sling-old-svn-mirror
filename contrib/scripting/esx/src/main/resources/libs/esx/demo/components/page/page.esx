@@ -14,33 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var math = require("calculator");
-var pathInfo = require("./helper/pathinfo");
-var moment = require("moment");
-var _ = require('underscore');
+import math from "calculator";
+import pathInfo from "pathinfo";
+import moment from "moment";
+import BlogComponent from "BlogComponent"
+import $ from "jquery";
 
-var BlogComponent = require("BlogComponent");
-
-function PageComponent() {
-    BlogComponent.call(this);
-    this.partialContentTemplateURL = __dirname + "/templates/listing.html"
-}
-PageComponent.prototype = Object.create(BlogComponent.prototype);
-
-PageComponent.prototype.init = function () {
+class PageComponent extends BlogComponent {
+  constructor() {
+    super();
+    var template = pathInfo.hasSelector("small") ?"/templates/listing-small.html" : "/templates/listing.html";
+    this.partialContentTemplateURL = __dirname + template;
+  }
+  init() {
+    var self = this;
     var list = [];
-    var posts = require("resource!" + this.basePath + "/posts").simpleResource.children;
-    for each(var post in posts) {
+    var posts = require("resource!" + this.basePath + "/posts").children;
+    posts.forEach(function(post){
         var blogPostModel = {};
         var createdAt = parseInt(post.getDateTimeProperty("jcr:created"));
-        blogPostModel.content = this.transformMarkdown(post.properties.content);
+        blogPostModel.content = self.transformMarkdown(post.properties.content);
         blogPostModel.properties = post.properties;
-        blogPostModel.path = post.path;
+        blogPostModel.path = pathInfo.hasSelector("small") ? post.path + ".small": post.path;
         blogPostModel.date = moment(createdAt).format('MMMM Do YYYY, h:mm:ss a');
         list.push(blogPostModel);
-    }
-
+    });
     this.model.posts = list;
+  }
 }
-
 module.exports = new PageComponent();

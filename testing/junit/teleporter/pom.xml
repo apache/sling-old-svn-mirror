@@ -82,14 +82,17 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.junit.core</artifactId>
-      <version>1.0.23</version>
+      <version>1.0.24-SNAPSHOT</version>
     </dependency>
     <!-- JSR 353 (JSON-P 1.0) implementation -->
     <dependency>
       <groupId>org.apache.johnzon</groupId>
       <artifactId>johnzon-core</artifactId>
       <version>1.0.0</version>
-      <scope>test</scope>
+      <!-- this dependency is necessary at test execution time from dependent modules 
+           and must therefore be available transitively 
+           (https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope) -->
+      <scope>runtime</scope> 
     </dependency>
     <!-- JSR 353 API -->
     <dependency>

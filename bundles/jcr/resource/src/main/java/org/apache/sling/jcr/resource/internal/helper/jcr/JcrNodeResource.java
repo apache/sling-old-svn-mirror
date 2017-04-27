@@ -39,8 +39,7 @@ import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.JcrValueMap;
@@ -134,27 +133,6 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
             return (Type) getInputStream(); // unchecked cast
         } else if (type == Map.class || type == ValueMap.class) {
             return (Type) new JcrValueMap(getNode(), this.helper); // unchecked cast
-        } else if (type == PersistableValueMap.class ) {
-            if ( LOG_DEPRECATED_MAP ) {
-                LOG_DEPRECATED_MAP = false;
-                LOGGER.warn("DEPRECATION WARNING: PersistableValueMap is deprecated, a JcrResource should not be adapted to this anymore. Please switch to ModifiableValueMap.");
-            }
-            // check write
-            try {
-                getNode().getSession().checkPermission(getPath(),
-                    "set_property");
-                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.getDynamicClassLoader());
-            } catch (AccessControlException ace) {
-                // the user has no write permission, cannot adapt
-                LOGGER.debug(
-                    "adaptTo(PersistableValueMap): Cannot set properties on {}",
-                    this);
-            } catch (RepositoryException e) {
-                // some other problem, cannot adapt
-                LOGGER.debug(
-                    "adaptTo(PersistableValueMap): Unexpected problem for {}",
-                    this);
-            }
         } else if (type == ModifiableValueMap.class ) {
             // check write
             try {

@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.apache.sling.caconfig.management.ConfigurationCollectionData;
 import org.apache.sling.caconfig.management.ConfigurationData;
-import org.apache.sling.caconfig.resource.impl.util.PropertiesFilterUtil;
+import org.apache.sling.caconfig.management.ConfigurationManagementSettings;
 
 final class ConfigurationCollectionDataImpl implements ConfigurationCollectionData {
     
@@ -32,14 +32,17 @@ final class ConfigurationCollectionDataImpl implements ConfigurationCollectionDa
     private final Collection<ConfigurationData> items;
     private final String resourcePath;
     private final Map<String,Object> properties;
+    private final ConfigurationManagementSettings configurationManagementSettings;
     private Map<String,Object> filteredPropertiesCache;
     
     public ConfigurationCollectionDataImpl(String configName, Collection<ConfigurationData> items,
-            String resourcePath, Map<String, Object> properties) {
+            String resourcePath, Map<String, Object> properties,
+            ConfigurationManagementSettings configurationManagementSettings) {
         this.configName = configName;
         this.items = items;
         this.resourcePath = resourcePath;
         this.properties = properties;
+        this.configurationManagementSettings = configurationManagementSettings;
     }
 
     @Override
@@ -63,7 +66,7 @@ final class ConfigurationCollectionDataImpl implements ConfigurationCollectionDa
             filteredPropertiesCache = new HashMap<>();
             if (properties != null) {
                 filteredPropertiesCache.putAll(properties);
-                PropertiesFilterUtil.removeIgnoredProperties(filteredPropertiesCache);
+                PropertiesFilterUtil.removeIgnoredProperties(filteredPropertiesCache, configurationManagementSettings);
             }
         }
         return filteredPropertiesCache;

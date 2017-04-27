@@ -233,6 +233,14 @@
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
   </feature>
+  <feature name="sling-extension-models-jacksonexporter" version="${project.version}">
+    <bundle>mvn:org.apache.sling/org.apache.sling.models.jacksonexporter/1.0.6</bundle>
+    <!-- dependencies -->
+    <feature version="${project.version}">sling-extension-models</feature>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/2.8.7</bundle>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/2.8.7</bundle>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/2.8.7</bundle>
+  </feature>
   <feature name="sling-extension-pipes" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.pipes/0.0.10</bundle>
     <!-- dependencies -->
@@ -289,8 +297,8 @@
   </feature>
   <feature name="sling-extension-validation" version="${project.version}">
     <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-validation.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-validation</configfile>
-    <bundle>mvn:org.apache.sling/org.apache.sling.validation.api/1.0.0-SNAPSHOT</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.validation.core/1.0.0-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.validation.api/1.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.validation.core/1.0.0</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-extension-i18n</feature>
@@ -360,7 +368,7 @@
   </feature>
   <feature name="sling-jcr-jackrabbit-security" version="${project.version}">
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/3.0.1-SNAPSHOT</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.6</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling-jcr</feature>
     <feature version="${project.version}">sling-servlets</feature>

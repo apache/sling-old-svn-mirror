@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.caconfig.management.ConfigurationData;
+import org.apache.sling.caconfig.management.ConfigurationManagementSettings;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.management.ValueInfo;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationOverrideMultiplexer;
@@ -55,6 +56,7 @@ public class ConfigurationDataImplTest {
     private ConfigurationOverrideMultiplexer configurationOverrideMultiplexer;
     @Mock
     private ConfigurationManager configurationManager;
+    private ConfigurationManagementSettings configurationManagementSettings;
     private ConfigurationPersistenceStrategy2 configurationPersistenceStrategy;
     
     private Resource configResource;
@@ -62,6 +64,7 @@ public class ConfigurationDataImplTest {
     
     @Before
     public void setUp() {
+        configurationManagementSettings = context.registerInjectActivateService(new ConfigurationManagementSettingsImpl());
         configurationPersistenceStrategy = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
         configResource = context.create().resource("/conf/test",
@@ -78,7 +81,8 @@ public class ConfigurationDataImplTest {
     @Test
     public void testWithResourceMetadata() {
         ConfigurationData underTest = new ConfigurationDataImpl(configMetadata, configResource, configResource, null,
-                contextResource, "test", configurationManager, configurationOverrideMultiplexer, configurationPersistenceStrategy,
+                contextResource, "test", configurationManager, configurationManagementSettings,
+                configurationOverrideMultiplexer, configurationPersistenceStrategy,
                 true, "item1");
         
         assertEquals("test", underTest.getConfigName());
@@ -122,7 +126,8 @@ public class ConfigurationDataImplTest {
     @Test
     public void testWithResourceOnly() {
         ConfigurationData underTest = new ConfigurationDataImpl(null, configResource, configResource, null,
-                contextResource, "test", configurationManager, configurationOverrideMultiplexer, configurationPersistenceStrategy,
+                contextResource, "test", configurationManager, configurationManagementSettings,
+                configurationOverrideMultiplexer, configurationPersistenceStrategy,
                 false, null);
         
         assertEquals("test", underTest.getConfigName());
@@ -152,7 +157,8 @@ public class ConfigurationDataImplTest {
     @Test
     public void testMetadataOnly() {
         ConfigurationData underTest = new ConfigurationDataImpl(configMetadata,
-                contextResource, "test", configurationManager, configurationOverrideMultiplexer, configurationPersistenceStrategy,
+                contextResource, "test", configurationManager, configurationManagementSettings,
+                configurationOverrideMultiplexer, configurationPersistenceStrategy,
                 false);
         
         assertEquals("test", underTest.getConfigName());
@@ -186,7 +192,8 @@ public class ConfigurationDataImplTest {
                 "jcr:primaryType", "myType");
 
         ConfigurationData underTest = new ConfigurationDataImpl(null, resource, resource, null,
-                contextResource, "test", configurationManager, configurationOverrideMultiplexer, configurationPersistenceStrategy,
+                contextResource, "test", configurationManager, configurationManagementSettings,
+                configurationOverrideMultiplexer, configurationPersistenceStrategy,
                 false, null);
         
         assertEquals(ImmutableSet.of("prop1", "prop4"), underTest.getPropertyNames());

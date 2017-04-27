@@ -21,7 +21,7 @@
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
   # this is necessary to execute the tests
-  org.apache.sling/org.apache.sling.junit.core/1.0.23
+  org.apache.sling/org.apache.sling.junit.core/1.0.24-SNAPSHOT
   # deploy the validation framework
   org.apache.sling/org.apache.sling.validation.api/1.0.0-SNAPSHOT
   org.apache.sling/org.apache.sling.validation.core/1.0.0-SNAPSHOT

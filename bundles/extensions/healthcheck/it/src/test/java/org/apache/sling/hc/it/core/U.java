@@ -62,8 +62,10 @@ public class U {
     }
     
     static Option[] config() {
+        final String apiVersion = System.getProperty("sling.hc.api.version");
         final String coreVersion = System.getProperty("sling.hc.core.version");
         final String samplesVersion = System.getProperty("sling.hc.samples.version");
+        final String johnzonVersion = System.getProperty("sling.johnzon.version");
         final String localRepo = System.getProperty("maven.repo.local", "");
         final boolean felixShell = "true".equals(System.getProperty("felix.shell", "false"));
 
@@ -86,6 +88,8 @@ public class U {
                     mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
                     mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
                     mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.1.0"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.commons.johnzon", johnzonVersion),
+                    mavenBundle("org.apache.sling", "org.apache.sling.hc.api", apiVersion),
                     mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
                     mavenBundle("org.apache.sling", "org.apache.sling.hc.samples", samplesVersion),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),

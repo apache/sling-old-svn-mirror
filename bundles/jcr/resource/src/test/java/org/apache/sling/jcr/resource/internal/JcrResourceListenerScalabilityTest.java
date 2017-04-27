@@ -73,7 +73,6 @@ public class JcrResourceListenerScalabilityTest {
 
         final ProviderContext ctx = new SimpleProviderContext();
         this.config = new JcrListenerBaseConfig(ctx.getObservationReporter(),
-                new PathMapperImpl(),
                 RepositoryUtil.getRepository());
         jcrResourceListener = new JcrResourceListener(this.config, ctx.getObservationReporter().getObserverConfigurations().get(0));
 

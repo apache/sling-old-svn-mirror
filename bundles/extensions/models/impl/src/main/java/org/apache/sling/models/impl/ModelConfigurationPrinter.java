@@ -20,8 +20,10 @@ import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.sling.models.annotations.ViaProviderType;
 import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.ViaProvider;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
@@ -97,6 +99,21 @@ public class ModelConfigurationPrinter {
                 printWriter.println();
             }
         }
+
+        printWriter.println();
+
+        // implementation pickers
+        printWriter.println("Sling Models Via Providers:");
+        Map<Class<? extends ViaProviderType>, ViaProvider> viaProviders = modelAdapterFactory.getViaProviders();
+        if (viaProviders == null || viaProviders.size() == 0) {
+            printWriter.println("none");
+        } else {
+            for (Map.Entry<Class<? extends ViaProviderType>, ViaProvider> entry : viaProviders.entrySet()) {
+                printWriter.printf("%s (Type: %s)", entry.getValue().getClass().getName(), entry.getKey().getName());
+                printWriter.println();
+            }
+        }
+
 
         printWriter.println();
 
