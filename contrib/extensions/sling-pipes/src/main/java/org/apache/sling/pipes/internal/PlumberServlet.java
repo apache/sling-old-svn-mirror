@@ -21,11 +21,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
@@ -39,6 +38,8 @@ import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,13 +48,17 @@ import org.slf4j.LoggerFactory;
  * it can also be launched against a container pipe resource directly (no need for path parameter)
  *
  */
-@SlingServlet(resourceTypes = {Plumber.RESOURCE_TYPE,
-        ContainerPipe.RESOURCE_TYPE,
-        AuthorizablePipe.RESOURCE_TYPE,
-        WritePipe.RESOURCE_TYPE,
-        SlingQueryPipe.RESOURCE_TYPE},
-        methods={"GET","POST"},
-        extensions = {"json"})
+@Component(service = {Servlet.class},
+        property= {
+                "sling.servlet.resourceTypes=" + Plumber.RESOURCE_TYPE,
+                "sling.servlet.resourceTypes=" + ContainerPipe.RESOURCE_TYPE,
+                "sling.servlet.resourceTypes=" + AuthorizablePipe.RESOURCE_TYPE,
+                "sling.servlet.resourceTypes=" + WritePipe.RESOURCE_TYPE,
+                "sling.servlet.resourceTypes=" + SlingQueryPipe.RESOURCE_TYPE,
+                "sling.servlet.methods=GET",
+                "sling.servlet.methods=POST",
+                "sling.servlet.extensions=json"
+        })
 public class PlumberServlet extends SlingAllMethodsServlet {
     Logger log = LoggerFactory.getLogger(this.getClass());
 
