@@ -29,7 +29,10 @@ import org.apache.sling.servlets.post.PostResponseCreator;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.osgi.service.component.annotations.Component;
 
-@Component(service = PostResponseCreator.class)
+@Component(service = PostResponseCreator.class,
+    property = {
+            "service.vendor=The Apache Software Foundation"
+    })
 public class PostResponseWithErrorHandling implements PostResponseCreator {
 
 	@Override

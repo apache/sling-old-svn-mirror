@@ -43,7 +43,7 @@ public class JCRSupport {
         try {
             impl = new JCRSupportImpl();
         } catch ( final Throwable t) {
-            logger.warn("Support for JCR operations like checkin, checkout, ordering etc. is currently disabled " +
+            logger.warn("Support for JCR operations like checkin, checkout, import, ordering etc. is currently disabled " +
                         "in the servlets post module. Check whether the JCR API is available.");
         }
         this.supportImpl = impl;
@@ -214,5 +214,9 @@ public class JCRSupport {
     throws PersistenceException {
         // the caller already got an item and a node, so supportImpl is available
         ((JCRSupportImpl)supportImpl).move(src, dstParent, name);
+    }
+
+    public boolean jcrEnabled() {
+        return this.supportImpl != null;
     }
 }
