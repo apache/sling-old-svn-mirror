@@ -18,12 +18,9 @@ package org.apache.sling.servlets.post.impl.operations;
 
 import java.util.List;
 
-import javax.jcr.Item;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 
@@ -46,37 +43,46 @@ public class MoveOperation extends AbstractCopyMoveOperation {
             String destName,
             final VersioningConfiguration versioningConfiguration)
     throws PersistenceException {
-        try {
-            // ensure we have an item underlying the request's resource
-            Item item = source.adaptTo(Item.class);
-            if (item == null) {
-                return null;
-            }
-
-            if (destName == null) {
-                destName = source.getName();
-            }
-
-            String sourcePath = source.getPath();
-            if (destParent.equals("/")) {
-                destParent = "";
-            }
-            String destPath = destParent + "/" + destName;
-            Session session = item.getSession();
-
-            this.jcrSsupport.checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
-
-            final Resource dest = source.getResourceResolver().getResource(destPath);
-            if (dest != null ) {
-                source.getResourceResolver().delete(dest);
-            }
-
-            session.move(sourcePath, destPath);
-            changes.add(Modification.onMoved(sourcePath, destPath));
-            return source.getResourceResolver().getResource(destPath);
-        } catch ( final RepositoryException re) {
-            throw new PersistenceException(re.getMessage(), re);
+        if (destName == null) {
+            destName = source.getName();
         }
+
+        if (destParent.equals("/")) {
+            destParent = "";
+        }
+        final String destPath = destParent + "/" + destName;
+
+        final Resource destParentRsrc = source.getResourceResolver().getResource(destParent);
+        final Resource dest = destParentRsrc.getChild(destName);
+        if (dest != null ) {
+            source.getResourceResolver().delete(dest);
+        }
+
+        // ensure we have an item underlying the request's resource
+        final Object item = this.jcrSsupport.getItem(source);
+        final Object target = this.jcrSsupport.getNode(destParentRsrc);
+        if (item == null || target == null ) {
+            move(source, destParentRsrc);
+        } else {
+            this.jcrSsupport.checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
+            this.jcrSsupport.move(item, target, destName);
+        }
+        changes.add(Modification.onMoved(source.getPath(), destPath));
+        return source.getResourceResolver().getResource(destPath);
     }
 
+    /**
+     * Move the source as a child resource to the parent
+     */
+    private void move(final Resource source, final Resource dest)
+    throws PersistenceException {
+        // first copy
+        final ValueMap vm = source.getValueMap();
+        final Resource result = source.getResourceResolver().create(dest, source.getName(), vm);
+        for(final Resource c : source.getChildren()) {
+            move(c, result);
+        }
+        // then delete
+        source.getResourceResolver().delete(source);
+    }
 }

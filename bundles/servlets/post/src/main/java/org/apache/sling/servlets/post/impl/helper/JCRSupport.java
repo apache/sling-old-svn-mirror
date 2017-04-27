@@ -188,6 +188,13 @@ public class JCRSupport {
         return null;
     }
 
+    public Object getItem(final Resource rsrc) {
+        if ( supportImpl != null ) {
+            return ((JCRSupportImpl)supportImpl).getItem(rsrc);
+        }
+        return null;
+    }
+
     public void setPrimaryNodeType(final Object node, final String type)
     throws PersistenceException {
         if ( node != null && supportImpl != null ) {
@@ -195,5 +202,17 @@ public class JCRSupport {
         } else {
             throw new PersistenceException("Node type should be set but JCR support is not available");
         }
+    }
+
+    public String copy(Object src, Object dstParent, String name)
+    throws PersistenceException {
+        // the caller already got an item and a node, so supportImpl is available
+        return ((JCRSupportImpl)supportImpl).copy(src, dstParent, name);
+    }
+
+    public void move(Object src, Object dstParent, String name)
+    throws PersistenceException {
+        // the caller already got an item and a node, so supportImpl is available
+        ((JCRSupportImpl)supportImpl).move(src, dstParent, name);
     }
 }

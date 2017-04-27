@@ -21,14 +21,9 @@ package org.apache.sling.servlets.post.impl.operations;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.nodetype.NodeType;
 import javax.servlet.ServletContext;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -78,33 +73,28 @@ public class ModifyOperation extends AbstractCreateOperation {
                     final PostResponse response,
                     final List<Modification> changes)
     throws PersistenceException {
+        final Map<String, RequestProperty> reqProperties = collectContent(request, response);
 
-        try {
-            final Map<String, RequestProperty> reqProperties = collectContent(request, response);
+        final VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
-            final VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
+        // do not change order unless you have a very good reason.
 
-            // do not change order unless you have a very good reason.
+        // ensure root of new content
+        processCreate(request.getResourceResolver(), reqProperties, response, changes, versioningConfiguration);
 
-            // ensure root of new content
-            processCreate(request.getResourceResolver(), reqProperties, response, changes, versioningConfiguration);
+        // write content from existing content (@Move/CopyFrom parameters)
+        processMoves(request.getResourceResolver(), reqProperties, changes, versioningConfiguration);
+        processCopies(request.getResourceResolver(), reqProperties, changes, versioningConfiguration);
 
-            // write content from existing content (@Move/CopyFrom parameters)
-            processMoves(request.getResourceResolver(), reqProperties, changes, versioningConfiguration);
-            processCopies(request.getResourceResolver(), reqProperties, changes, versioningConfiguration);
+        // cleanup any old content (@Delete parameters)
+        processDeletes(request.getResourceResolver(), reqProperties, changes, versioningConfiguration);
 
-            // cleanup any old content (@Delete parameters)
-            processDeletes(request.getResourceResolver(), reqProperties, changes, versioningConfiguration);
+        // write content from form
+        writeContent(request.getResourceResolver(), reqProperties, changes, versioningConfiguration);
 
-            // write content from form
-            writeContent(request.getResourceResolver(), reqProperties, changes, versioningConfiguration);
-
-            // order content
-            final Resource newResource = request.getResourceResolver().getResource(response.getPath());
-            this.jcrSsupport.orderNode(request, newResource, changes);
-        } catch ( final RepositoryException pe) {
-            throw new PersistenceException(pe.getMessage(), pe);
-        }
+        // order content
+        final Resource newResource = request.getResourceResolver().getResource(response.getPath());
+        this.jcrSsupport.orderNode(request, newResource, changes);
     }
 
     @Override
@@ -180,7 +170,7 @@ public class ModifyOperation extends AbstractCreateOperation {
     private void processMoves(final ResourceResolver resolver,
             Map<String, RequestProperty> reqProperties, List<Modification> changes,
             VersioningConfiguration versioningConfiguration)
-            throws RepositoryException, PersistenceException {
+            throws PersistenceException {
 
         for (RequestProperty property : reqProperties.values()) {
             if (property.hasRepositoryMoveSource()) {
@@ -198,7 +188,7 @@ public class ModifyOperation extends AbstractCreateOperation {
     private void processCopies(final ResourceResolver resolver,
             Map<String, RequestProperty> reqProperties, List<Modification> changes,
             VersioningConfiguration versioningConfiguration)
-            throws RepositoryException, PersistenceException {
+            throws PersistenceException {
 
         for (RequestProperty property : reqProperties.values()) {
             if (property.hasRepositoryCopySource()) {
@@ -210,8 +200,8 @@ public class ModifyOperation extends AbstractCreateOperation {
 
     /**
      * Internal implementation of the
-     * {@link #processCopies(Session, Map, HtmlResponse)} and
-     * {@link #processMoves(Session, Map, HtmlResponse)} methods taking into
+     * {@link #processCopies(ResourceResolver, Map, HtmlResponse)} and
+     * {@link #processMoves(ResourceResolver, Map, HtmlResponse)} methods taking into
      * account whether the source is actually a property or a node.
      * <p>
      * Any intermediary nodes to the destination as indicated by the
@@ -222,35 +212,34 @@ public class ModifyOperation extends AbstractCreateOperation {
      *            content of the operation.
      * @param isMove <code>true</code> if the source item is to be moved.
      *            Otherwise the source item is just copied.
-     * @param session The repository session to use to access the content
+     * @param resolver The resource resolver to use to access the content
      * @param reqProperties All accepted request properties. This is used to
      *            create intermediary nodes along the property path.
-     * @param response The <code>HtmlResponse</code> into which successfull
+     * @param response The <code>HtmlResponse</code> into which successful
      *            copies and moves as well as intermediary node creations are
      *            recorded.
-     * @throws RepositoryException May be thrown if an error occurrs.
+     * @throws PersistenceException May be thrown if an error occurs.
      */
     private void processMovesCopiesInternal(
                     RequestProperty property,
             boolean isMove, final ResourceResolver resolver,
             Map<String, RequestProperty> reqProperties, List<Modification> changes,
             VersioningConfiguration versioningConfiguration)
-            throws RepositoryException, PersistenceException {
+            throws PersistenceException {
 
-        final Session session = resolver.adaptTo(Session.class);
         String propPath = property.getPath();
         String source = property.getRepositorySource();
 
         // only continue here, if the source really exists
-        if (session.itemExists(source)) {
+        if (resolver.getResource(source) != null ) {
 
             // if the destination item already exists, remove it
             // first, otherwise ensure the parent location
-            if (session.itemExists(propPath)) {
-                Node parent = session.getItem(propPath).getParent();
-                this.jcrSsupport.checkoutIfNecessary(resolver.getResource(parent.getPath()), changes, versioningConfiguration);
+            if (resolver.getResource(propPath) != null) {
+                final Resource parent = resolver.getResource(propPath).getParent();
+                this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);
 
-                session.getItem(propPath).remove();
+                resolver.delete(resolver.getResource(propPath));
                 changes.add(Modification.onDeleted(propPath));
             } else {
                 Resource parent = deepGetOrCreateResource(resolver, property.getParentPath(),
@@ -259,35 +248,30 @@ public class ModifyOperation extends AbstractCreateOperation {
             }
 
             // move through the session and record operation
-            Item sourceItem = session.getItem(source);
-            if (sourceItem.isNode()) {
-
-                // node move/copy through session
-                if (isMove) {
-                    this.jcrSsupport.checkoutIfNecessary(resolver.getResource(sourceItem.getParent().getPath()), changes, versioningConfiguration);
-                    session.move(source, propPath);
+            // check if the item is backed by JCR
+            Resource sourceRsrc = resolver.getResource(source);
+            final Object sourceItem = this.jcrSsupport.getItem(sourceRsrc);
+            final Object destItem = this.jcrSsupport.getItem(resolver.getResource(property.getParentPath()));
+            if ( sourceItem != null && destItem != null ) {
+                if ( this.jcrSsupport.isNode(sourceRsrc) ) {
+                    if ( isMove ) {
+                        this.jcrSsupport.checkoutIfNecessary(sourceRsrc.getParent(), changes, versioningConfiguration);
+                        this.jcrSsupport.move(sourceItem, destItem, ResourceUtil.getName(propPath));
+                    } else {
+                        this.jcrSsupport.checkoutIfNecessary(resolver.getResource(property.getParentPath()), changes, versioningConfiguration);
+                        this.jcrSsupport.copy(sourceItem, destItem, property.getName());
+                    }
                 } else {
-                    Node sourceNode = (Node) sourceItem;
-                    Node destParent = (Node) session.getItem(property.getParentPath());
-                    this.jcrSsupport.checkoutIfNecessary(resolver.getResource(destParent.getPath()), changes, versioningConfiguration);
-                    CopyOperation.copy(sourceNode, destParent,
-                        property.getName());
-                }
+                    // property: move manually
+                    this.jcrSsupport.checkoutIfNecessary(resolver.getResource(property.getParentPath()), changes, versioningConfiguration);
+                    // create destination property
+                    this.jcrSsupport.copy(sourceItem, destItem, ResourceUtil.getName(source));
 
-            } else {
-
-                // property move manually
-                Property sourceProperty = (Property) sourceItem;
-
-                // create destination property
-                Node destParent = (Node) session.getItem(property.getParentPath());
-                this.jcrSsupport.checkoutIfNecessary(resolver.getResource(destParent.getPath()), changes, versioningConfiguration);
-                CopyOperation.copy(sourceProperty, destParent, null);
-
-                // remove source property (if not just copying)
-                if (isMove) {
-                    this.jcrSsupport.checkoutIfNecessary(resolver.getResource(sourceProperty.getParent().getPath()), changes, versioningConfiguration);
-                    sourceProperty.remove();
+                    // remove source property (if not just copying)
+                    if ( isMove ) {
+                        this.jcrSsupport.checkoutIfNecessary(sourceRsrc.getParent(), changes, versioningConfiguration);
+                        resolver.delete(sourceRsrc);
+                    }
                 }
             }
 
@@ -314,14 +298,14 @@ public class ModifyOperation extends AbstractCreateOperation {
      *            properties to be removed.
      * @param response The <code>HtmlResponse</code> to be updated with
      *            information on deleted properties.
-     * @throws RepositoryException Is thrown if an error occurrs checking or
+     * @throws PersistenceException Is thrown if an error occurs checking or
      *             removing properties.
      */
     private void processDeletes(final ResourceResolver resolver,
             final Map<String, RequestProperty> reqProperties,
             final List<Modification> changes,
             final VersioningConfiguration versioningConfiguration)
-    throws RepositoryException, PersistenceException {
+    throws PersistenceException {
 
         for (final RequestProperty property : reqProperties.values()) {
 
@@ -330,32 +314,19 @@ public class ModifyOperation extends AbstractCreateOperation {
                 if ( parent == null ) {
                     continue;
                 }
-                final Node parentNode = parent.adaptTo(Node.class);
+                this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);
 
-                if ( parentNode != null ) {
-                    this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);
-
-                    if (property.getName().equals("jcr:mixinTypes")) {
-
-                        // clear all mixins
-                        for (NodeType mixin : parentNode.getMixinNodeTypes()) {
-                            parentNode.removeMixin(mixin.getName());
-                        }
-
-                    } else {
-                        if ( parentNode.hasProperty(property.getName())) {
-                            parentNode.getProperty(property.getName()).remove();
-                        } else if ( parentNode.hasNode(property.getName())) {
-                            parentNode.getNode(property.getName()).remove();
-                        }
-                    }
-
-                } else {
-                    final ValueMap vm = parent.adaptTo(ModifiableValueMap.class);
-                    if ( vm == null ) {
-                        throw new PersistenceException("Resource '" + parent.getPath() + "' is not modifiable.");
-                    }
+                final ValueMap vm = parent.adaptTo(ModifiableValueMap.class);
+                if ( vm == null ) {
+                    throw new PersistenceException("Resource '" + parent.getPath() + "' is not modifiable.");
+                }
+                if ( vm.containsKey(property.getName()) ) {
                     vm.remove(property.getName());
+                } else {
+                    final Resource childRsrc = resolver.getResource(parent.getPath() + '/' + property.getName());
+                    if ( childRsrc != null ) {
+                        resolver.delete(childRsrc);
+                    }
                 }
 
                 changes.add(Modification.onDeleted(property.getPath()));
@@ -367,14 +338,13 @@ public class ModifyOperation extends AbstractCreateOperation {
     /**
      * Writes back the content
      *
-     * @throws RepositoryException if a repository error occurs
      * @throws PersistenceException if a persistence error occurs
      */
     private void writeContent(final ResourceResolver resolver,
             final Map<String, RequestProperty> reqProperties,
             final List<Modification> changes,
             final VersioningConfiguration versioningConfiguration)
-    throws RepositoryException, PersistenceException {
+    throws PersistenceException {
 
         final SlingPropertyValueHandler propHandler = new SlingPropertyValueHandler(
             dateParser, this.jcrSsupport, changes);
@@ -387,8 +357,8 @@ public class ModifyOperation extends AbstractCreateOperation {
                 this.jcrSsupport.checkoutIfNecessary(parent, changes, versioningConfiguration);
 
                 // skip jcr special properties
-                if (prop.getName().equals("jcr:primaryType")
-                    || prop.getName().equals("jcr:mixinTypes")) {
+                if (prop.getName().equals(JcrConstants.JCR_PRIMARYTYPE)
+                    || prop.getName().equals(JcrConstants.JCR_MIXINTYPES)) {
                     continue;
                 }
 
