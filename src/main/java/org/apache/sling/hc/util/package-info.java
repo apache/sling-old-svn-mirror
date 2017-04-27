@@ -20,5 +20,4 @@
 @Version("1.3.0")
 package org.apache.sling.hc.util;
 
-import aQute.bnd.annotation.Version;
-
+import org.osgi.annotation.versioning.Version;

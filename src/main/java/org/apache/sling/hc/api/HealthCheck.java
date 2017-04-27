@@ -17,8 +17,7 @@
  */
 package org.apache.sling.hc.api;
 
-import aQute.bnd.annotation.ConsumerType;
-
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Health Check services can be executed and
@@ -60,7 +59,7 @@ public interface HealthCheck {
      * The value of this property must be of type String or String array.
      */
     String TAGS = "hc.tags";
-    
+
     /**
      * Optional service property: If this property is set the health check
      * will be executed asynchronously using the cron expression provided.
@@ -69,7 +68,7 @@ public interface HealthCheck {
 
     /**
      * Optional service property: TTL for health check {@link Result}.
-     * The value of this property must be of type {@link Long} and is 
+     * The value of this property must be of type {@link Long} and is
      * specified in ms.
      */
     String RESULT_CACHE_TTL_IN_MS = "hc.resultCacheTtlInMs";

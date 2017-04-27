@@ -21,8 +21,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.HealthCheck;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -120,8 +118,8 @@ public class HealthCheckMetadata {
     }
 
     /**
-     * TTL for the result cache in ms. 
-     * 
+     * TTL for the result cache in ms.
+     *
      * @return TTL for the result cache or <code>null</code> if not configured.
      */
     public Long getResultCacheTtlInMs() {
@@ -152,13 +150,22 @@ public class HealthCheckMetadata {
 
     private String getHealthCheckTitle(final ServiceReference ref) {
         String name = (String) ref.getProperty(HealthCheck.NAME);
-        if (StringUtils.isBlank(name)) {
-            name = PropertiesUtil.toString(ref.getProperty(Constants.SERVICE_DESCRIPTION), null);
+        if (name == null || name.isEmpty()) {
+            final Object val = ref.getProperty(Constants.SERVICE_DESCRIPTION);
+            if ( val != null ) {
+                name = val.toString();
+            }
         }
-        if (StringUtils.isBlank(name)) {
+        if (name == null || name.isEmpty()) {
             name = "HealthCheck:" + ref.getProperty(Constants.SERVICE_ID);
-            final String pid = PropertiesUtil.toString(ref.getProperty(Constants.SERVICE_PID), null);
-            if ( !StringUtils.isBlank(pid) ) {
+            final Object val = ref.getProperty(Constants.SERVICE_PID);
+            String pid = null;
+            if ( val instanceof String ) {
+                pid = (String)val;
+            } else if ( val instanceof String[]) {
+                pid = Arrays.toString((String[])val);
+            }
+            if ( pid != null && !pid.isEmpty() ) {
                 name = name + " (" + pid + ")";
             }
         }
@@ -166,7 +173,7 @@ public class HealthCheckMetadata {
     }
 
     private List<String> arrayPropertyToListOfStr(final Object arrayProp) {
-        List<String> res = new LinkedList<String>();
+        List<String> res = new LinkedList<>();
         if (arrayProp instanceof String) {
             res.add((String) arrayProp);
         } else if (arrayProp instanceof String[]) {

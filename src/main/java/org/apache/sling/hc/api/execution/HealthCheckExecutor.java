@@ -20,8 +20,8 @@ package org.apache.sling.hc.api.execution;
 import java.util.List;
 
 import org.apache.sling.hc.api.HealthCheck;
+import org.osgi.annotation.versioning.ProviderType;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Executes health checks registered as OSGi services and
@@ -42,7 +42,7 @@ public interface HealthCheckExecutor {
     /**
      * Executes all health checks with the supplied list of tags.
      * If no tags are supplied, all health checks are executed.
-     * 
+     *
      * @param options options for controlling execution behavior
      * @param tags tags to be executed
      *
