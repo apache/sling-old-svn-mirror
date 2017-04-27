@@ -23,6 +23,8 @@ import java.util.Set;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -30,6 +32,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.pipes.BasePipe;
@@ -40,6 +43,7 @@ import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,14 +54,14 @@ import org.slf4j.LoggerFactory;
  */
 @Component(service = {Servlet.class},
         property= {
-                "sling.servlet.resourceTypes=" + Plumber.RESOURCE_TYPE,
-                "sling.servlet.resourceTypes=" + ContainerPipe.RESOURCE_TYPE,
-                "sling.servlet.resourceTypes=" + AuthorizablePipe.RESOURCE_TYPE,
-                "sling.servlet.resourceTypes=" + WritePipe.RESOURCE_TYPE,
-                "sling.servlet.resourceTypes=" + SlingQueryPipe.RESOURCE_TYPE,
-                "sling.servlet.methods=GET",
-                "sling.servlet.methods=POST",
-                "sling.servlet.extensions=json"
+                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + Plumber.RESOURCE_TYPE,
+                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ContainerPipe.RESOURCE_TYPE,
+                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + AuthorizablePipe.RESOURCE_TYPE,
+                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + WritePipe.RESOURCE_TYPE,
+                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + SlingQueryPipe.RESOURCE_TYPE,
+                ServletResolverConstants.SLING_SERVLET_METHODS + "=GET",
+                ServletResolverConstants.SLING_SERVLET_METHODS + "=POST",
+                ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=json"
         })
 public class PlumberServlet extends SlingAllMethodsServlet {
     Logger log = LoggerFactory.getLogger(this.getClass());
