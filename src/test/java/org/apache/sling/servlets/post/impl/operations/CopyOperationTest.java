@@ -21,8 +21,7 @@ package org.apache.sling.servlets.post.impl.operations;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import junit.framework.TestCase;
-
+import org.apache.sling.servlets.post.impl.helper.JCRSupportImpl;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -30,16 +29,18 @@ import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import junit.framework.TestCase;
+
 @RunWith(JMock.class)
 public class CopyOperationTest extends TestCase {
     private Mockery context = new JUnit4Mockery();
     private int counter;
-    
+
     private void assertResult(final String srcPath, final String destPath, Boolean expectedResult) throws RepositoryException {
         counter++;
         final Node src = context.mock(Node.class, "src" + counter);
         final Node dest = context.mock(Node.class, "dest" + counter);
-        
+
         context.checking(new Expectations() {
             {
                 allowing(src).getPath();
@@ -49,12 +50,12 @@ public class CopyOperationTest extends TestCase {
             }
         });
 
-        final boolean result = CopyOperation.isAncestorOrSameNode(src, dest);
+        final boolean result = JCRSupportImpl.isAncestorOrSameNode(src, dest);
         assertEquals(
                 "Expecting isAncestorOrSameNode to be " + expectedResult + " for " + srcPath + " and " + destPath,
                 expectedResult.booleanValue(), result);
     }
-    
+
     @Test
     public void testIsAncestorOrSameNode() throws RepositoryException {
         final Object [] testCases = {
@@ -68,10 +69,10 @@ public class CopyOperationTest extends TestCase {
                 "/ab/cd", "/ab/cde", false,
                 "/ab", "/cd", false,
         };
-        
+
         for(int i=0; i < testCases.length; i+=3) {
             assertResult((String)testCases[i], (String)testCases[i+1], (Boolean)(testCases[i+2]));
         }
-        
+
     }
 }
