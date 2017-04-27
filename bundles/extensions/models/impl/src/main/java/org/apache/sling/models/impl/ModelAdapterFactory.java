@@ -35,6 +35,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -216,6 +217,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     // Use threadlocal to count recursive invocations and break recursing if a max. limit is reached (to avoid cyclic dependencies)
     private ThreadLocal<ThreadInvocationCounter> invocationCountThreadLocal;
 
+    private Map<Object, Map<Class, Object>> adapterCache;
+
+    // use a smaller initial capacity than the default as we expect a relatively small number of
+    // adapters per adaptable
+    private final int INNER_CACHE_INITIAL_CAPACITY = 4;
+
+
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
         Result<AdapterType> result = internalCreateModel(adaptable, type);
         if (!result.wasSuccessful()) {
@@ -297,7 +305,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     @SuppressWarnings("unchecked")
-    private <ModelType> Result<ModelType> internalCreateModel(Object adaptable, Class<ModelType> requestedType) {
+    private <ModelType> Result<ModelType> internalCreateModel(final Object adaptable, final Class<ModelType> requestedType) {
         Result<ModelType> result;
         ThreadInvocationCounter threadInvocationCounter = invocationCountThreadLocal.get();
         if (threadInvocationCounter.isMaximumReached()) {
@@ -317,6 +325,17 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             boolean isAdaptable = false;
 
             Model modelAnnotation = modelClass.getModelAnnotation();
+
+            if (modelAnnotation.cache()) {
+                Map<Class, Object> adaptableCache = adapterCache.get(adaptable);
+                if (adaptableCache != null) {
+                    ModelType cachedObject = (ModelType) adaptableCache.get(requestedType);
+                    if (cachedObject != null) {
+                        return new Result<ModelType>(cachedObject);
+                    }
+                }
+            }
+
             Class<?>[] declaredAdaptable = modelAnnotation.adaptables();
             for (Class<?> clazz : declaredAdaptable) {
                 if (clazz.isInstance(adaptable)) {
@@ -335,6 +354,16 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                     Result<InvocationHandler> handlerResult = createInvocationHandler(adaptable, modelClass);
                     if (handlerResult.wasSuccessful()) {
                         ModelType model = (ModelType) Proxy.newProxyInstance(modelClass.getType().getClassLoader(), new Class<?>[] { modelClass.getType() }, handlerResult.getValue());
+
+                        if (modelAnnotation.cache()) {
+                            Map<Class, Object> adaptableCache = adapterCache.get(adaptable);
+                            if (adaptableCache == null) {
+                                adaptableCache = new ConcurrentHashMap<Class, Object>(INNER_CACHE_INITIAL_CAPACITY);
+                                adapterCache.put(adaptable, adaptableCache);
+                            }
+                            adaptableCache.put(requestedType, model);
+                        }
+
                         result = new Result<ModelType>(model);
                     } else {
                         return new Result<ModelType>(handlerResult.getThrowable());
@@ -342,6 +371,15 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                 } else {
                     try {
                         result = createObject(adaptable, modelClass);
+
+                        if (result.wasSuccessful() && modelAnnotation.cache()) {
+                            Map<Class, Object> adaptableCache = adapterCache.get(adaptable);
+                            if (adaptableCache == null) {
+                                adaptableCache = new ConcurrentHashMap<Class, Object>(INNER_CACHE_INITIAL_CAPACITY);
+                                adapterCache.put(adaptable, adaptableCache);
+                            }
+                            adaptableCache.put(requestedType, result.getValue());
+                        }
                     } catch (Exception e) {
                         String msg = String.format("Unable to create model %s", modelClass.getType());
                         return new Result<ModelType>(new ModelClassException(msg, e));
@@ -972,6 +1010,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             }
         };
 
+        this.adapterCache = Collections.synchronizedMap(new WeakHashMap<Object, Map<Class, Object>>());
+
         BundleContext bundleContext = ctx.getBundleContext();
         this.queue = new ReferenceQueue<Object>();
         this.disposalCallbacks = new ConcurrentHashMap<java.lang.ref.Reference<Object>, DisposalCallbackRegistryImpl>();
@@ -999,6 +1039,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Deactivate
     protected void deactivate() {
+        this.adapterCache = null;
         this.clearDisposalCallbackRegistryQueue();
         this.listener.unregisterAll();
         this.adapterImplementations.removeAll();

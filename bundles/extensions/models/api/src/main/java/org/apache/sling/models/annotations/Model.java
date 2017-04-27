@@ -67,4 +67,11 @@ public @interface Model {
      */
     public String[] resourceType() default {};
 
+    /**
+     *
+     * @return whether or not the model should be cached for the lifecycle of the adaptable
+     */
+    public boolean cache() default false;
+
+
 }
