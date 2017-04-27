@@ -64,8 +64,10 @@ public class WritePipeTest extends AbstractPipeTest {
      */
     public static void assertPiped(Resource resource) {
         ValueMap properties = resource.adaptTo(ValueMap.class);
+        String[] array = new String[]{"cabbage","carrot"};
         assertArrayEquals("Second fruit should have been correctly instantiated & patched, added to the first", new String[]{"apple","banana"}, properties.get("fruits", String[].class));
-        assertArrayEquals("Fixed mv should be there", new String[]{"cabbage","carrot"}, properties.get("fixedVegetables", String[].class));
+        assertArrayEquals("Fixed mv should be there", array, properties.get("fixedVegetables", String[].class));
+        assertArrayEquals("Expr fixed mv should there and computed", array, properties.get("computedVegetables", String[].class));
     }
 
     @Test
