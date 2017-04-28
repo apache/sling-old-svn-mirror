@@ -86,7 +86,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.xss</artifactId>
-            <version>1.0.6</version>
+            <version>1.0.19-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
