@@ -241,6 +241,7 @@ public interface XSSAPI {
      * @param request the request from which to obtain the {@link org.apache.sling.xss.XSSAPI}
      * @return an XSSAPI service capable of validating hrefs.
      */
+    @Deprecated
     XSSAPI getRequestSpecificAPI(SlingHttpServletRequest request);
 
     /**
@@ -250,6 +251,7 @@ public interface XSSAPI {
      * @param resourceResolver the resolver from which to obtain the {@link org.apache.sling.xss.XSSAPI}
      * @return an XSSAPI service capable of validating hrefs.
      */
+    @Deprecated
     XSSAPI getResourceResolverSpecificAPI(ResourceResolver resourceResolver);
 
 }

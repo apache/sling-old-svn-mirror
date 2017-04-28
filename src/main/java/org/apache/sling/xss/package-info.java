@@ -19,7 +19,7 @@
  *
  * @version 1.1.0
  */
-@Version("1.1.0")
+@Version("1.1.1")
 package org.apache.sling.xss;
 
 import aQute.bnd.annotation.Version;

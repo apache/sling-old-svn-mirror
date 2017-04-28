@@ -25,6 +25,7 @@ import org.apache.sling.commons.json.io.JSONWriter;
  * <p>
  * Support for handling xss protected values with JSON objects and JSON writers.
  */
+@Deprecated
 public final class JSONUtil {
 
     /**
