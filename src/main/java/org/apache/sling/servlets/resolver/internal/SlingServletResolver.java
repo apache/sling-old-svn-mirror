@@ -853,18 +853,19 @@ public class SlingServletResolver
         // setup default servlet
         this.getDefaultServlet();
 
-        // and finally register as event listener
+        // and finally register as event listener if we need to flush the cache
+        if ( this.cache != null ) {
 
-		final Dictionary<String, Object> props = new Hashtable<>();
-        props.put("event.topics", new String[] {"javax/script/ScriptEngineFactory/*",
-            "org/apache/sling/api/adapter/AdapterFactory/*","org/apache/sling/scripting/core/BindingsValuesProvider/*" });
-        props.put(ResourceChangeListener.PATHS, "/");
-        props.put("service.description", "Apache Sling Servlet Resolver and Error Handler");
-        props.put("service.vendor","The Apache Software Foundation");
+    		final Dictionary<String, Object> props = new Hashtable<>();
+            props.put("event.topics", new String[] {"javax/script/ScriptEngineFactory/*",
+                "org/apache/sling/api/adapter/AdapterFactory/*","org/apache/sling/scripting/core/BindingsValuesProvider/*" });
+            props.put(ResourceChangeListener.PATHS, "/");
+            props.put("service.description", "Apache Sling Servlet Resolver and Error Handler");
+            props.put("service.vendor","The Apache Software Foundation");
 
-        this.eventHandlerReg = context
-                  .registerService(new String[] {ResourceChangeListener.class.getName(), EventHandler.class.getName()}, this, props);
-
+            this.eventHandlerReg = context
+                      .registerService(new String[] {ResourceChangeListener.class.getName(), EventHandler.class.getName()}, this, props);
+        }
 
         this.plugin = new ServletResolverWebConsolePlugin(context);
         if (this.cacheSize > 0) {
@@ -1068,25 +1069,7 @@ public class SlingServletResolver
      */
     @Override
     public void handleEvent(final Event event) {
-        if (this.cache != null) {
-            boolean flushCache = false;
-            // we may receive different events
-            final String topic = event.getTopic();
-            if (topic.startsWith("javax/script/ScriptEngineFactory/")) {
-                // script engine factory added or removed: we always flush
-                flushCache = true;
-            } else if (topic.startsWith("org/apache/sling/api/adapter/AdapterFactory/")) {
-                // adapter factory added or removed: we always flush
-                // as adapting might be transitive
-                flushCache = true;
-            } else if (topic.startsWith("org/apache/sling/scripting/core/BindingsValuesProvider/")) {
-                // bindings values provide factory added or removed: we always flush
-                flushCache = true;
-            }
-            if (flushCache) {
-                flushCache();
-            }
-        }
+        flushCache();
     }
 
     private void flushCache() {
@@ -1419,23 +1402,21 @@ public class SlingServletResolver
 
     @Override
 	public void onChange(final List<ResourceChange> changes) {
-        if (this.cache != null) {
-            boolean flushCache = false;
-            for(final ResourceChange change : changes){
-                // if the path of the event is a sub path of a search path
-                // we flush the whole cache
-                final String path = change.getPath();
-                int index = 0;
-                while (!flushCache && index < searchPaths.length) {
-                    if (path.startsWith(this.searchPaths[index])) {
-                        flushCache = true;
-                    }
-                    index++;
+        boolean flushCache = false;
+        for(final ResourceChange change : changes){
+            // if the path of the event is a sub path of a search path
+            // we flush the whole cache
+            final String path = change.getPath();
+            int index = 0;
+            while (!flushCache && index < searchPaths.length) {
+                if (path.startsWith(this.searchPaths[index])) {
+                    flushCache = true;
                 }
-                if ( flushCache ) {
-                    flushCache();
-                    break; // we can stop looping
-                }
+                index++;
+            }
+            if ( flushCache ) {
+                flushCache();
+                break; // we can stop looping
             }
         }
     }
