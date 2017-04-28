@@ -39,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
@@ -46,6 +47,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -121,6 +123,30 @@ public class MockBundleContextTest {
         bundleContext.ungetService(refsString[0]);
         bundleContext.ungetService(refsString[1]);
         bundleContext.ungetService(refInteger);
+    }
+    
+    @Test
+    public void testServiceFactoryRegistration() throws InvalidSyntaxException {
+        // prepare test services
+        Class<String> clazz = String.class;
+        final String service = "abc";
+        Dictionary<String, Object> properties1 = getServiceProperties(null);
+        ServiceRegistration reg = bundleContext.registerService(clazz, new ServiceFactory<String>() {
+            @Override
+            public String getService(Bundle bundle, ServiceRegistration<String> registration) {
+                return service;
+            }
+            @Override
+            public void ungetService(Bundle bundle, ServiceRegistration<String> registration, String service) {
+                // do nothing
+            }
+        }, properties1);
+
+        ServiceReference<String> ref = bundleContext.getServiceReference(clazz);
+        assertNotNull(ref);
+        assertSame(reg.getReference(), ref);
+        assertSame(service, bundleContext.getService(ref));
+        bundleContext.ungetService(ref);
     }
     
     @Test
@@ -233,4 +259,23 @@ public class MockBundleContextTest {
         
         assertEquals(childFile.getParentFile(), rootFile);
     }
+
+    @Test
+    public void testSystemBundleById() {
+        Bundle systemBundle = bundleContext.getBundle(Constants.SYSTEM_BUNDLE_ID);
+        assertNotNull(systemBundle);
+        assertEquals(Constants.SYSTEM_BUNDLE_ID, systemBundle.getBundleId());
+        assertEquals(Constants.SYSTEM_BUNDLE_SYMBOLICNAME, systemBundle.getSymbolicName());
+        assertEquals(Constants.SYSTEM_BUNDLE_LOCATION, systemBundle.getLocation());
+    }
+
+    @Test
+    public void testSystemBundleByLocation() {
+        Bundle systemBundle = bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
+        assertNotNull(systemBundle);
+        assertEquals(Constants.SYSTEM_BUNDLE_ID, systemBundle.getBundleId());
+        assertEquals(Constants.SYSTEM_BUNDLE_SYMBOLICNAME, systemBundle.getSymbolicName());
+        assertEquals(Constants.SYSTEM_BUNDLE_LOCATION, systemBundle.getLocation());
+    }
+
 }

@@ -101,8 +101,15 @@ class MockServiceRegistration<T> implements ServiceRegistration<T>, Comparable<M
         return clazzes;
     }
 
+    @SuppressWarnings("unchecked")
     T getService() {
-        return this.service;
+        if (this.service instanceof ServiceFactory) {
+            ServiceFactory<T> factory = (ServiceFactory<T>)this.service;
+            return factory.getService(this.bundleContext.getBundle(), this);
+        }
+        else {
+            return this.service;
+        }
     }
     
     @Override

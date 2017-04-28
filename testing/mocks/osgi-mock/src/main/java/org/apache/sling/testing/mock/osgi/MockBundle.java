@@ -31,6 +31,7 @@ import java.util.Vector;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 
@@ -46,16 +47,26 @@ public final class MockBundle implements Bundle {
     private final long bundleId;
     private final BundleContext bundleContext;
     private Map<String, String> headers = ImmutableMap.<String, String>of();
-    private String symbolicName = "mock-bundle";
+    private String symbolicName;
     private long lastModified;
+
+    /**
+     * Constructor
+     * @param bundleContext Bundle context
+     * @param bundleId Bundle ID
+     */
+    MockBundle(BundleContext bundleContext, long bundleId) {
+        this.bundleId = bundleId;
+        this.bundleContext = bundleContext;
+        this.symbolicName = (bundleId == Constants.SYSTEM_BUNDLE_ID ? Constants.SYSTEM_BUNDLE_SYMBOLICNAME : "mock-bundle");
+    }
 
     /**
      * Constructor
      * @param bundleContext Bundle context
      */
     public MockBundle(BundleContext bundleContext) {
-        this.bundleId = ++bundleCounter;
-        this.bundleContext = bundleContext;
+        this(bundleContext, ++bundleCounter);
     }
 
     @Override
@@ -174,14 +185,19 @@ public final class MockBundle implements Bundle {
         return queryPath;
     }
     
+    @Override
+    public String getLocation() {
+        if (bundleId == Constants.SYSTEM_BUNDLE_ID) {
+            return Constants.SYSTEM_BUNDLE_LOCATION;
+        }
+        else {
+            return null;
+        }
+    }
+
     // --- unsupported operations ---
     @Override
     public Enumeration<URL> findEntries(final String path, final String filePattern, final boolean recurse) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getLocation() {
         throw new UnsupportedOperationException();
     }
 
