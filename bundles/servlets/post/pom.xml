@@ -53,6 +53,13 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                            javax.jcr;resolution:=optional,
+                            javax.jcr.nodetype;resolution:=optional,
+                            javax.jcr.version;resolution:=optional,
+                            org.apache.sling.jcr.contentloader;resolution:=optional,
+                            *
+                        </Import-Package>
                         <Sling-Bundle-Resources>
                             /system/sling.js
                         </Sling-Bundle-Resources>
