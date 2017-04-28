@@ -53,7 +53,7 @@
     org.apache.sling/org.apache.sling.hc.webconsole/1.1.2
     org.apache.sling/org.apache.sling.i18n/2.5.8
     org.apache.sling/org.apache.sling.installer.console/1.0.2
-    org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.24
+    org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.25-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.contentloader/2.1.11-SNAPSHOT
     org.apache.sling/org.apache.sling.jcr.resource/2.9.3-SNAPSHOT
     org.apache.sling/org.apache.sling.launchpad.content/2.0.9-SNAPSHOT
