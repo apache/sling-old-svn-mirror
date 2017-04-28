@@ -414,7 +414,10 @@ public class JCRSupportImpl {
     throws PersistenceException {
         try {
             final Session session = ((Item)src).getSession();
-            session.move(((Item)src).getPath(), ((Node)dstParent).getPath() + '/' + name);
+            final Item source = ((Item)src);
+            final String targetParentPath = ((Node)dstParent).getPath();
+            final String targetPath = (targetParentPath.equals("/") ? "" : targetParentPath) + '/' + name;
+            session.move(source.getPath(), targetPath);
         } catch ( final RepositoryException re) {
             throw new PersistenceException(re.getMessage(), re);
         }

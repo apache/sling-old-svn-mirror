@@ -39,18 +39,13 @@ public class MoveOperation extends AbstractCopyMoveOperation {
     @Override
     protected Resource execute(final List<Modification> changes,
             final Resource source,
-            String destParent,
+            final String destParent,
             String destName,
             final VersioningConfiguration versioningConfiguration)
     throws PersistenceException {
         if (destName == null) {
             destName = source.getName();
         }
-
-        if (destParent.equals("/")) {
-            destParent = "";
-        }
-        final String destPath = destParent + "/" + destName;
 
         final Resource destParentRsrc = source.getResourceResolver().getResource(destParent);
         final Resource dest = destParentRsrc.getChild(destName);
@@ -61,14 +56,18 @@ public class MoveOperation extends AbstractCopyMoveOperation {
         // ensure we have an item underlying the request's resource
         final Object item = this.jcrSsupport.getItem(source);
         final Object target = this.jcrSsupport.getNode(destParentRsrc);
+
         if (item == null || target == null ) {
             move(source, destParentRsrc);
         } else {
             this.jcrSsupport.checkoutIfNecessary(source.getParent(), changes, versioningConfiguration);
             this.jcrSsupport.move(item, target, destName);
         }
-        changes.add(Modification.onMoved(source.getPath(), destPath));
-        return source.getResourceResolver().getResource(destPath);
+        final Resource result = destParentRsrc.getChild(destName);
+        if ( result != null ) {
+            changes.add(Modification.onMoved(source.getPath(), result.getPath()));
+        }
+        return result;
     }
 
     /**
