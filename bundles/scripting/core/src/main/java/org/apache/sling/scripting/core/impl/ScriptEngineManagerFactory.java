@@ -45,9 +45,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
-import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
         name = "ScriptEngineFactory",
         service = ScriptEngineFactory.class,
         policy = ReferencePolicy.DYNAMIC,
-        cardinality = ReferenceCardinality.OPTIONAL
+        cardinality = ReferenceCardinality.MULTIPLE
     )
 )
 public class ScriptEngineManagerFactory implements BundleListener {
@@ -72,9 +72,12 @@ public class ScriptEngineManagerFactory implements BundleListener {
     private BundleContext bundleContext;
 
     /**
-     * The service tracker for the event admin
+     * Event admin is optional
      */
-    private ServiceTracker eventAdminTracker;
+    @Reference(policy = ReferencePolicy.DYNAMIC,
+            policyOption = ReferencePolicyOption.GREEDY,
+            cardinality=ReferenceCardinality.OPTIONAL)
+    private volatile EventAdmin eventAdmin;
 
     /**
      * The proxy to the actual ScriptEngineManager. This proxy is actually
@@ -181,10 +184,6 @@ public class ScriptEngineManagerFactory implements BundleListener {
     protected void activate(ComponentContext context) {
         this.bundleContext = context.getBundleContext();
 
-        // setup tracker first as this is used in the bind/unbind methods
-        this.eventAdminTracker = new ServiceTracker(this.bundleContext, EventAdmin.class.getName(), null);
-        this.eventAdminTracker.open();
-
         this.bundleContext.addBundleListener(this);
 
         Bundle[] bundles = this.bundleContext.getBundles();
@@ -225,11 +224,6 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
         scriptEngineManager.setDelegatee(null);
 
-        if (this.eventAdminTracker != null) {
-            this.eventAdminTracker.close();
-            this.eventAdminTracker = null;
-        }
-
         this.bundleContext = null;
     }
 
@@ -260,15 +254,6 @@ public class ScriptEngineManagerFactory implements BundleListener {
         postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_REMOVED, scriptEngineFactory);
     }
 
-    /**
-     * Get the event admin.
-     *
-     * @return The event admin or <code>null</code>
-     */
-    private EventAdmin getEventAdmin() {
-        return (EventAdmin) (this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
-    }
-
     private String[] toArray(final List<String> list) {
         return list.toArray(new String[list.size()]);
     }
@@ -277,7 +262,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
      * Post a notification with the EventAdmin
      */
     private void postEvent(final String topic, final ScriptEngineFactory scriptEngineFactory) {
-        final EventAdmin localEA = this.getEventAdmin();
+        final EventAdmin localEA = this.eventAdmin;
         if (localEA != null) {
             final Dictionary<String, Object> props = new Hashtable<>();
             props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_NAME, scriptEngineFactory.getEngineName());
