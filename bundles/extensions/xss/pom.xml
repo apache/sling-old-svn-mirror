@@ -90,6 +90,9 @@
                             !org.apache.xml.resolver,
                             !org.apache.xml.resolver.readers,
                             !org.apache.log,
+                            !javax.mail.internet,
+                            !javax.servlet.jsp,
+                            !javax.servlet.jsp.tagext,
                             !sun.io,
                             *
                         </Import-Package>
