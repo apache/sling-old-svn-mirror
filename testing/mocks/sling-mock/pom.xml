@@ -45,7 +45,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.osgi-mock</artifactId>
-            <version>2.2.4</version>
+            <version>2.2.5-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -260,5 +260,43 @@
     
         </plugins>
     </build>
+  
+    <profiles>
+        <profile>
+            <id>latest-resource-bundles</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.api</artifactId>
+                    <version>2.16.2</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.resourceresolver</artifactId>
+                    <version>1.5.22</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.jcr.resource</artifactId>
+                    <version>2.9.2</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.jackrabbit</groupId>
+                    <artifactId>jackrabbit-api</artifactId>
+                    <version>2.13.4</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.jackrabbit</groupId>
+                    <artifactId>oak-jcr</artifactId>
+                    <version>1.5.15</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
   
 </project>
