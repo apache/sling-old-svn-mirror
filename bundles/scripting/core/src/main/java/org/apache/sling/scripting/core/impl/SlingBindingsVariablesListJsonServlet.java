@@ -28,6 +28,7 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -37,8 +38,8 @@ import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
-import org.apache.felix.utils.json.JSONWriter;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -47,12 +48,13 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * Return all scripting variables for all registered scripting languages for the default context (=request).
  * This can only be achieved when a real Sling request and Sling response is available.
- * Also the context (i.e. the resource on which the request is acting) is important, 
+ * Also the context (i.e. the resource on which the request is acting) is important,
  * because the actual binding variables might differ depending on the context
  */
 @Component(
     service = Servlet.class,
     property = {
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
         "sling.servlet.resourceTypes=sling/servlet/default",
         "sling.servlet.selectors=SLING_availablebindings",
         "sling.servlet.methods=GET",
@@ -62,7 +64,7 @@ import org.osgi.service.component.annotations.Reference;
 public class SlingBindingsVariablesListJsonServlet extends SlingSafeMethodsServlet {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -6744726829737263875L;
 
@@ -71,7 +73,7 @@ public class SlingBindingsVariablesListJsonServlet extends SlingSafeMethodsServl
      */
     @Reference
     private ScriptEngineManager scriptEngineManager;
-    
+
     /**
      * The BindingsValuesProviderTracker
      */
@@ -134,33 +136,32 @@ public class SlingBindingsVariablesListJsonServlet extends SlingSafeMethodsServl
     /**
      * Gets the {@link Bindings} object for the given {@link ScriptEngineFactory}.
      * It only considers the default context "request".
-     * 
+     *
      * @see <a href="https://issues.apache.org/jira/browse/SLING-3038">binding contexts(SLING-3083)</a>
-     * 
+     *
      * @param scriptEngineFactory the factory of the script engine, for which to retrieve the bindings
      * @param request the current request (necessary to create the bindings)
      * @param response the current response (necessary to create the bindings)
      * @return the bindings (list of key/value pairs) as defined by {@link Bindings} for the given script engine.
      * @throws IOException
-     * @throws JSONException
      */
     private Bindings getBindingsByEngine(ScriptEngineFactory scriptEngineFactory, SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         String context = SlingScriptAdapterFactory.BINDINGS_CONTEXT; // use default context only
-        final Collection<BindingsValuesProvider> bindingsValuesProviders = 
+        final Collection<BindingsValuesProvider> bindingsValuesProviders =
                 bindingsValuesProviderTracker.getBindingsValuesProviders(scriptEngineFactory, context);
-        
+
         Resource invalidScriptResource = new NonExistingResource(request.getResourceResolver(), "some/invalid/scriptpath");
         DefaultSlingScript defaultSlingScript = new DefaultSlingScript(bundleContext, invalidScriptResource, scriptEngineFactory.getScriptEngine(), bindingsValuesProviders, null, null);
-        
+
         // prepare the bindings (similar as in DefaultSlingScript#service)
         final SlingBindings initalBindings = new SlingBindings();
-        initalBindings.setRequest((SlingHttpServletRequest) request);
-        initalBindings.setResponse((SlingHttpServletResponse) response);
+        initalBindings.setRequest(request);
+        initalBindings.setResponse(response);
         final Bindings bindings = defaultSlingScript.verifySlingBindings(initalBindings);
-        
+
         // only thing being added in {DefaultSlingScript#call(...)} is resource resolver
         bindings.put(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, request.getResourceResolver());
-        
+
         return bindings;
     }
 }
