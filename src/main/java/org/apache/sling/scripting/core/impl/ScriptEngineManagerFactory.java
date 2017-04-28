@@ -55,8 +55,7 @@ import org.slf4j.LoggerFactory;
  * Component which exposes a ScriptEngineManager service.
  *
  */
-@Component(
-    immediate = true,
+@Component(service = {},
     reference = @Reference(
         name = "ScriptEngineFactory",
         service = ScriptEngineFactory.class,
@@ -84,9 +83,9 @@ public class ScriptEngineManagerFactory implements BundleListener {
      */
     private final ProxyScriptEngineManager scriptEngineManager = new ProxyScriptEngineManager();
 
-    private final Set<Bundle> engineSpiBundles = new HashSet<Bundle>();
+    private final Set<Bundle> engineSpiBundles = new HashSet<>();
 
-    private final Map<ScriptEngineFactory, Map<Object, Object>> engineSpiServices = new HashMap<ScriptEngineFactory, Map<Object, Object>>();
+    private final Map<ScriptEngineFactory, Map<Object, Object>> engineSpiServices = new HashMap<>();
 
     private ServiceRegistration scriptEngineManagerRegistration;
 
@@ -280,7 +279,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
     private void postEvent(final String topic, final ScriptEngineFactory scriptEngineFactory) {
         final EventAdmin localEA = this.getEventAdmin();
         if (localEA != null) {
-            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            final Dictionary<String, Object> props = new Hashtable<>();
             props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_NAME, scriptEngineFactory.getEngineName());
             props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_VERSION, scriptEngineFactory.getEngineVersion());
             props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_EXTENSIONS, toArray(scriptEngineFactory.getExtensions()));
