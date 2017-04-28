@@ -321,7 +321,11 @@ public class ModifyOperation extends AbstractCreateOperation {
                     throw new PersistenceException("Resource '" + parent.getPath() + "' is not modifiable.");
                 }
                 if ( vm.containsKey(property.getName()) ) {
-                    vm.remove(property.getName());
+                    if ( JcrConstants.JCR_MIXINTYPES.equals(property.getName()) ) {
+                        vm.put(JcrConstants.JCR_MIXINTYPES, new String[0]);
+                    } else {
+                        vm.remove(property.getName());
+                    }
                 } else {
                     final Resource childRsrc = resolver.getResource(parent.getPath() + '/' + property.getName());
                     if ( childRsrc != null ) {
