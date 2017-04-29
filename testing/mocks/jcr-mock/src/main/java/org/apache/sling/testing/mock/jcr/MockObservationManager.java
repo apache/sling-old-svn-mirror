@@ -26,15 +26,23 @@ import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
 
+import org.apache.jackrabbit.api.observation.JackrabbitEventFilter;
+import org.apache.jackrabbit.api.observation.JackrabbitObservationManager;
+
 /**
  * Mock {@link ObservationManager} implementation.
  */
-class MockObservationManager implements ObservationManager {
+class MockObservationManager implements ObservationManager, JackrabbitObservationManager {
 
     @Override
     public void addEventListener(final EventListener listener, final int eventTypes, final String absPath,
             final boolean isDeep, final String[] uuid, final String[] nodeTypeName, final boolean noLocal)
             throws RepositoryException {
+        // do nothing
+    }
+
+    @Override
+    public void addEventListener(EventListener listener, JackrabbitEventFilter filter) throws RepositoryException {
         // do nothing
     }
 
