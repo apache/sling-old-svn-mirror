@@ -208,6 +208,7 @@ public class SlingContextImpl extends OsgiContextImpl {
         this.contentBuilder = null;
         this.resourceBuilder = null;
         this.uniqueRoot = null;
+        this.resourceResolverFactory = null;
         
         super.tearDown();
     }
