@@ -124,6 +124,7 @@ class ResourceResolverFactoryInitializer {
         Dictionary<String, Object> config = new Hashtable<String, Object>();
         // do not required a specific resource provider (otherwise "NONE" will not work)
         config.put("resource.resolver.required.providers", "");
+        config.put("resource.resolver.required.providernames", "");
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         MockOsgi.injectServices(activator, bundleContext);
         MockOsgi.activate(activator, bundleContext, config);
