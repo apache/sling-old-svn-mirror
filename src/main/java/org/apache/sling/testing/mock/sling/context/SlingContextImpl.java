@@ -118,7 +118,6 @@ public class SlingContextImpl extends OsgiContextImpl {
             MockOsgi.setConfigForPid(bundleContext(), RESOURCERESOLVERFACTORYACTIVATOR_PID, this.resourceResolverFactoryActivatorProps);
         }
         
-        this.resourceResolverFactory = newResourceResolverFactory();
         registerDefaultServices();
     }
     
@@ -128,6 +127,13 @@ public class SlingContextImpl extends OsgiContextImpl {
      */
     protected ResourceResolverFactory newResourceResolverFactory() {
         return ContextResourceResolverFactory.get(this.resourceResolverType, bundleContext());
+    }
+    
+    private ResourceResolverFactory resourceResolverFactory() {
+        if (this.resourceResolverFactory == null) {
+            this.resourceResolverFactory = newResourceResolverFactory();
+        }
+        return this.resourceResolverFactory;
     }
 
     /**
@@ -212,7 +218,7 @@ public class SlingContextImpl extends OsgiContextImpl {
     public final ResourceResolverType resourceResolverType() {
         return this.resourceResolverType;
     }
-
+    
     /**
      * Returns the singleton resource resolver bound to this context.
      * It is automatically closed after the test.
@@ -221,7 +227,7 @@ public class SlingContextImpl extends OsgiContextImpl {
     public final ResourceResolver resourceResolver() {
         if (this.resourceResolver == null) {
             try {
-                this.resourceResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+                this.resourceResolver = this.resourceResolverFactory().getAdministrativeResourceResolver(null);
             } catch (LoginException ex) {
                 throw new RuntimeException("Creating resource resolver failed.", ex);
             }
