@@ -28,7 +28,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProvider;
-import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
@@ -84,11 +83,19 @@ class ResourceResolverFactoryInitializer {
      * Ensure dependencies for JcrResourceProvider are present.
      * @param bundleContext Bundle context
      */
+    @SuppressWarnings("unchecked")
     private static void ensureJcrResourceProviderDependencies(BundleContext bundleContext) {
         if (bundleContext.getServiceReference(DynamicClassLoaderManager.class) == null) {
             bundleContext.registerService(DynamicClassLoaderManager.class, new MockDynamicClassLoaderManager(), null);
         }
-        registerServiceIfNotPresent(bundleContext, PathMapper.class, new PathMapper());
+        
+        try {
+            Class pathMapperClass = Class.forName("org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper");
+            registerServiceIfNotPresent(bundleContext, pathMapperClass, pathMapperClass.newInstance());
+        }
+        catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+            // ignore - service was removed in org.apache.sling.jcr.resource 3.0.0
+        }
     }
  
     /**
