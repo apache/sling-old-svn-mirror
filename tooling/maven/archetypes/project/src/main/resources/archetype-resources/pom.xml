@@ -54,7 +54,23 @@
         <sling.password>admin</sling.password>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <release.plugin.version>2.5.3</release.plugin.version>
+        <source.plugin.version>3.0.1</source.plugin.version>
+        <resource.plugin.version>3.0.2</resource.plugin.version>
+        <jar.plugin.version>3.0.2</jar.plugin.version>
+        <enforcer.plugin.version>1.4.1</enforcer.plugin.version>
+        <compiler.plugin.version>3.6.1</compiler.plugin.version>
         <bundle.plugin.version>2.5.4</bundle.plugin.version>
+        <clean.plugin.version>3.0.0</clean.plugin.version>
+        <installer.plguin.version>2.5.2</installer.plguin.version>
+        <surfire.plguin.version>2.20</surfire.plguin.version>
+        <failsafe.plguin.version>2.20</failsafe.plguin.version>
+        <deploy.plugin.version>2.8.2</deploy.plugin.version>
+        <sling.plugin.version>2.1.10</sling.plugin.version>
+        <content.plugin.version>0.0.24</content.plugin.version>
+        <vault.plugin.version>0.0.10</vault.plugin.version>
+        <dependency.plugin.version>3.0.0</dependency.plugin.version>
+        <build.helper.plugin.version>3.0.0</build.helper.plugin.version>
     </properties>
 
     <build>
@@ -88,7 +104,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <!--<version>2.5</version>-->
             </plugin>
             <!-- Maven Enforcer Plugin -->
             <plugin>
@@ -131,77 +146,77 @@
                 <!-- Maven Release Plugin -->
                 <plugin>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.3</version>
+                    <version>${release.plugin.version}</version>
                 </plugin>
                 <!-- Maven Source Plugin -->
                 <plugin>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>3.0.1</version>
+                    <version>${source.plugin.version}</version>
                 </plugin>
                 <!-- Maven Resources Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>2.7</version>
+                    <version>${resource.plugin.version}</version>
                 </plugin>
                 <!-- Maven Jar Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.0.2</version>
+                    <version>${jar.plugin.version}</version>
                 </plugin>
                 <!-- Maven Enforcer Plugin -->
                 <plugin>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>1.4.1</version>
+                    <version>${enforcer.plugin.version}</version>
                 </plugin>
                 <!-- Maven Compiler Plugin -->
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>${compilerplugin.version}</version>
+                    <version>${compiler.plugin.version}</version>
                 </plugin>
 
                 <!-- Maven Clean Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>${clean.plugin.version}</version>
                 </plugin>
                 <!-- Maven Installer Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-install-plugin</artifactId>
-                    <version>2.5.2</version>
+                    <version>${installer.plguin.version}</version>
                 </plugin>
                 <!-- Maven Surefire Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18.1</version>
+                    <version>${surfire.plguin.version}</version>
                 </plugin>
                 <!-- Maven Failsafe Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.18.1</version>
+                    <version>${failsafe.plguin.version}</version>
                 </plugin>
                 <!-- Maven Deploy Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
-                    <version>2.8.2</version>
+                    <version>${deploy.plugin.version}</version>
                 </plugin>
                 <!-- Apache Sling Plugin -->
                 <plugin>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>maven-sling-plugin</artifactId>
-                    <version>${slingplugin.version}</version>
+                    <version>${sling.plugin.version}</version>
                 </plugin>
                 <!-- Content Package Plugin -->
                 <plugin>
                     <groupId>com.day.jcr.vault</groupId>
                     <artifactId>content-package-maven-plugin</artifactId>
-                    <version>0.0.24</version>
+                    <version>${content.plugin.version}</version>
                     <configuration>
                         <targetURL>http://\${sling.host}:\${sling.port}/bin/cpm/package.service.html</targetURL>
                         <userId>${sling.user}</userId>
@@ -216,7 +231,7 @@
                 <plugin>
                     <groupId>com.day.jcr.vault</groupId>
                     <artifactId>maven-vault-plugin</artifactId>
-                    <version>0.0.10</version>
+                    <version>${vault.plugin.version}</version>
                 </plugin>
                 <!-- Apache Felix Bundle Plugin -->
                 <plugin>
@@ -229,13 +244,13 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
-                    <version>2.10</version>
+                    <version>${dependency.plugin.version}</version>
                 </plugin>
                 <!-- Build Helper Maven Plugin -->
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>1.9.1</version>
+                    <version>${build.helper.plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
