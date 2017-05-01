@@ -20,7 +20,7 @@
 [feature name=sling]
 
 [artifacts]
-    org.apache.sling/org.apache.sling.scripting.api/2.1.12
+    org.apache.sling/org.apache.sling.scripting.api/2.2.0
     org.apache.sling/org.apache.sling.scripting.core/2.0.46
     org.apache.sling/org.apache.sling.scripting.javascript/2.0.31-SNAPSHOT
     org.apache.sling/org.apache.sling.scripting.jsp/2.3.0
