@@ -22,8 +22,6 @@ package org.apache.sling.xss;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
