@@ -68,6 +68,11 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
      */
     private static final String PROP_IMPLEMENTATION_CLASS = "models.adapter.implementationClass";
 
+    /**
+     * Service registration property letting the Adapter Manager the adapter is OK to be in a private package
+     */
+    public static final String PROP_ALLOWED_IN_PRIVATE = "adapter.allowed.in.private.package";
+
     private static final Logger log = LoggerFactory.getLogger(ModelPackageBundleListener.class);
 
     private final BundleContext bundleContext;
@@ -261,6 +266,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
         registrationProps.put(AdapterFactory.ADAPTER_CLASSES, toStringArray(adapterTypes));
         registrationProps.put(AdapterFactory.ADAPTABLE_CLASSES, toStringArray(adaptableTypes));
         registrationProps.put(PROP_IMPLEMENTATION_CLASS, implType.getName());
+        registrationProps.put(PROP_ALLOWED_IN_PRIVATE, true);
 
         if (StringUtils.isNotBlank(condition)) {
             registrationProps.put(PROP_ADAPTER_CONDITION, condition);
