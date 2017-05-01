@@ -67,6 +67,8 @@ public class AdapterManagerImpl implements AdapterManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    static final String ALLOWED_IN_PRIVATE = "adapter.allowed.in.private.package";
+
     /**
      * The OSGi <code>ComponentContext</code> to retrieve
      * {@link AdapterFactory} service instances.
@@ -244,6 +246,7 @@ public class AdapterManagerImpl implements AdapterManager {
             final ServiceReference<AdapterFactory> reference) {
         final String[] adaptables = PropertiesUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
         final String[] adapters = PropertiesUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
+        final boolean allowedInPrivatePackage = PropertiesUtil.toBoolean(reference.getProperty(ALLOWED_IN_PRIVATE), false);
 
         if (adaptables == null || adaptables.length == 0 || adapters == null
                 || adapters.length == 0) {
@@ -251,13 +254,13 @@ public class AdapterManagerImpl implements AdapterManager {
         }
 
         for (String clazz : adaptables) {
-            if (!checkPackage(packageAdmin, clazz)) {
+            if (!allowedInPrivatePackage && !checkPackage(packageAdmin, clazz)) {
                 log.warn("Adaptable class {} in factory service {} is not in an exported package.", clazz, reference.getProperty(Constants.SERVICE_ID));
             }
         }
 
         for (String clazz : adapters) {
-            if (!checkPackage(packageAdmin, clazz)) {
+            if (!allowedInPrivatePackage && !checkPackage(packageAdmin, clazz)) {
                 log.warn("Adapter class {} in factory service {} is not in an exported package.", clazz, reference.getProperty(Constants.SERVICE_ID));
             }
         }
