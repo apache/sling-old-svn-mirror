@@ -33,6 +33,7 @@ import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This component is responsible to launch a {@link org.apache.sling.commons.scheduler.Job}
@@ -56,99 +57,142 @@ public class QuartzJobExecutor implements Job {
     /** The available Sling IDs */
     public static final AtomicReference<String[]> SLING_IDS = new AtomicReference<>(null);
 
+    public static class JobDesc {
+
+        public final Object job;
+        public final String providedName;
+        public final String name;
+        public final String[] runOn;
+
+        public JobDesc(final JobDataMap data) {
+            this.job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
+            this.name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
+            this.providedName = (String)data.get(QuartzScheduler.DATA_MAP_PROVIDED_NAME);
+            this.runOn = (String[])data.get(QuartzScheduler.DATA_MAP_RUN_ON);
+        }
+
+        public boolean isKnownJob() {
+            return this.job != null && this.name != null;
+        }
+
+        public String getKey() {
+            String key = job.getClass().getName();
+            if ( providedName != null ) {
+                key = key + "-" + providedName;
+            }
+            return key;
+        }
+
+        @Override
+        public String toString() {
+            final String runOnInfo;
+            if ( this.runOn == null ) {
+                runOnInfo = null;
+            } else if ( isRunOnLeader() ) {
+                runOnInfo = Scheduler.VALUE_RUN_ON_LEADER;
+            } else if ( isRunOnSingle() ) {
+                runOnInfo = Scheduler.VALUE_RUN_ON_SINGLE;
+            } else {
+                runOnInfo = Arrays.toString(runOn);
+            }
+            return "job '" + job + "' with name '" + name + "'" + (runOnInfo == null ? "" : " and config " + runOnInfo);
+        }
+
+        public boolean isRunOnLeader() {
+           return runOn != null && runOn.length == 1 && Scheduler.VALUE_RUN_ON_LEADER.equals(runOn[0]);
+        }
+
+        public boolean isRunOnSingle() {
+            return runOn != null && runOn.length == 1 && Scheduler.VALUE_RUN_ON_SINGLE.equals(runOn[0]);
+        }
+
+        public boolean shouldRunAsSingle() {
+            final String[] ids = QuartzJobExecutor.SLING_IDS.get();
+            boolean schedule = false;
+            if ( ids != null ) {
+                int index = 0;
+                try {
+                    final MessageDigest m = MessageDigest.getInstance("MD5");
+                    m.reset();
+                    m.update(getKey().getBytes("UTF-8"));
+                    index = new BigInteger(1, m.digest()).mod(BigInteger.valueOf(ids.length)).intValue();
+                } catch ( final IOException | NoSuchAlgorithmException ex ) {
+                    // although this should never happen (MD5 and UTF-8 are always available) we consider
+                    // this an error case
+                    LoggerFactory.getLogger(getClass().getName()).error("Unable to distribute scheduled " + this, ex);
+                    return false;
+                }
+                final String myId = SLING_ID;
+                schedule = myId != null && myId.equals(ids[index]);
+            }
+            return schedule;
+        }
+    }
+
     private boolean checkDiscoveryAvailable(final Logger logger,
-            final Object job,
-            final String name,
-            final String[] runOn) {
+            final JobDesc desc) {
         if ( DISCOVERY_AVAILABLE.get() ) {
             if ( DISCOVERY_INFO_AVAILABLE.get() ) {
                 return true;
             } else {
-                logger.debug("No discovery info available. Excluding job {} with name {} and config {}.",
-                        new Object[] {job, name, runOn[0]});
+                logger.debug("No discovery info available. Excluding {}.", desc);
                 return false;
             }
         } else {
-            logger.debug("No discovery available, therefore not executing job {} with name {} and config {}.",
-                    new Object[] {job, name, runOn[0]});
+            logger.debug("No discovery available, therefore not executing {}.", desc);
             return false;
         }
     }
 
     private String checkSlingId(final Logger logger,
-            final Object job,
-            final String name,
-            final String[] runOn) {
+            final JobDesc desc) {
         final String myId = SLING_ID;
         if ( myId == null ) {
-            logger.error("No Sling ID available, therefore not executing job {} with name {} and config {}.",
-                    new Object[] {job, name, Arrays.toString(runOn)});
+            logger.error("No Sling ID available, therefore not executing {}.", desc);
             return null;
         }
         return myId;
     }
 
     private boolean shouldRun(final Logger logger,
-            final Object job,
-            final String name,
-            final String[] runOn) {
-        if ( runOn != null ) {
-            if ( runOn.length == 1 && Scheduler.VALUE_RUN_ON_LEADER.equals(runOn[0]) ) {
+            final JobDesc desc) {
+        if ( desc.runOn != null ) {
+            if ( desc.isRunOnLeader() ) {
                 // leader
-                if ( !checkDiscoveryAvailable(logger, job, name, runOn) ) {
+                if ( !checkDiscoveryAvailable(logger, desc) ) {
                     return false;
                 }
                 if ( !IS_LEADER.get() ) {
-                    logger.debug("Excluding job {} with name {} and config {} - instance is not leader",
-                            new Object[] {job, name, runOn[0]});
+                    logger.debug("Excluding {} - instance is not leader", desc);
                     return false;
                 }
-            } else if ( runOn.length == 1 && Scheduler.VALUE_RUN_ON_SINGLE.equals(runOn[0]) ) {
+            } else if ( desc.isRunOnSingle() ) {
                 // single instance
-                if ( !checkDiscoveryAvailable(logger, job, name, runOn) ) {
+                if ( !checkDiscoveryAvailable(logger, desc) ) {
                     return false;
                 }
-                final String myId = checkSlingId(logger, job, name, runOn);
+                final String myId = checkSlingId(logger, desc);
                 if ( myId == null ) {
                     return false;
                 }
-                final String[] ids = QuartzJobExecutor.SLING_IDS.get();
-                boolean schedule = false;
-                if ( ids != null ) {
-                    int index = 0;
-                    try {
-                        final MessageDigest m = MessageDigest.getInstance("MD5");
-                        m.reset();
-                        m.update(job.getClass().getName().getBytes("UTF-8"));
-                        index = new BigInteger(1, m.digest()).mod(BigInteger.valueOf(ids.length)).intValue();
-                    } catch ( final IOException | NoSuchAlgorithmException ex ) {
-                        // although this should never happen (MD5 and UTF-8 are always available) we consider
-                        // this an error case
-                        logger.error("Unable to distribute scheduled job " + job + " with name " + name, ex);
-                        return false;
-                    }
-                    schedule = myId.equals(ids[index]);
-                }
-                if ( !schedule ) {
-                    logger.debug("Excluding job {} with name {} and config {} - distributed to different Sling instance",
-                            new Object[] {job, name, runOn});
+                if ( !desc.shouldRunAsSingle() ) {
+                    logger.debug("Excluding {} - distributed to different Sling instance", desc);
                     return false;
                 }
             } else { // sling IDs
-                final String myId = checkSlingId(logger, job, name, runOn);
+                final String myId = checkSlingId(logger, desc);
                 if ( myId == null ) {
                     return false;
                 } else {
                     boolean schedule = false;
-                    for(final String id : runOn ) {
+                    for(final String id : desc.runOn ) {
                         if ( myId.equals(id) ) {
                             schedule = true;
                             break;
                         }
                     }
                     if ( !schedule ) {
-                        logger.debug("Excluding job {} with name {} and config {} - different Sling ID",
-                                new Object[] {job, name, Arrays.toString(runOn)});
+                        logger.debug("Excluding job {} - different Sling ID", desc);
                         return false;
                     }
                 }
@@ -164,30 +208,29 @@ public class QuartzJobExecutor implements Job {
     public void execute(final JobExecutionContext context) throws JobExecutionException {
 
         final JobDataMap data = context.getJobDetail().getJobDataMap();
-        final Object job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
+        final JobDesc desc = new JobDesc(data);
         final Logger logger = (Logger)data.get(QuartzScheduler.DATA_MAP_LOGGER);
 
         // check run on information
-        final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
-        if ( !shouldRun(logger, job, name, (String[])data.get(QuartzScheduler.DATA_MAP_RUN_ON)) ) {
+        if ( !shouldRun(logger, desc) ) {
             return;
         }
 
         String origThreadName = Thread.currentThread().getName();
         try {
-            Thread.currentThread().setName(origThreadName + "-" + name);
+            Thread.currentThread().setName(origThreadName + "-" + desc.name);
 
-            logger.debug("Executing job {} with name {}", job, data.get(QuartzScheduler.DATA_MAP_NAME));
-            if (job instanceof org.apache.sling.commons.scheduler.Job) {
+            logger.debug("Executing job {}", desc);
+            if (desc.job instanceof org.apache.sling.commons.scheduler.Job) {
                 @SuppressWarnings("unchecked")
                 final Map<String, Serializable> configuration = (Map<String, Serializable>) data.get(QuartzScheduler.DATA_MAP_CONFIGURATION);
 
-                final JobContext jobCtx = new JobContextImpl(name, configuration);
-                ((org.apache.sling.commons.scheduler.Job) job).execute(jobCtx);
-            } else if (job instanceof Runnable) {
-                ((Runnable) job).run();
+                final JobContext jobCtx = new JobContextImpl(desc.name, configuration);
+                ((org.apache.sling.commons.scheduler.Job) desc.job).execute(jobCtx);
+            } else if (desc.job instanceof Runnable) {
+                ((Runnable) desc.job).run();
             } else {
-                logger.error("Scheduled job {} is neither a job nor a runnable.", job);
+                logger.error("Scheduled job {} is neither a job nor a runnable: {}", desc);
             }
         } catch (final Throwable t) {
             // if this is a quartz exception, rethrow it
@@ -195,7 +238,7 @@ public class QuartzJobExecutor implements Job {
                 throw (JobExecutionException) t;
             }
             // there is nothing we can do here, so we just log
-            logger.error("Exception during job execution of " + job + " : " + t.getMessage(), t);
+            logger.error("Exception during job execution of " + desc + " : " + t.getMessage(), t);
         } finally {
             Thread.currentThread().setName(origThreadName);
         }

@@ -81,32 +81,35 @@ public class WebConsolePrinter {
                         final Set<JobKey> keys = s.getJobKeys(GroupMatcher.jobGroupEquals(group));
                         for(final JobKey key : keys) {
                             final JobDetail detail = s.getJobDetail(key);
-                            final String jobName = (String) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME);
-                            final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
+                            final QuartzJobExecutor.JobDesc desc = new QuartzJobExecutor.JobDesc(detail.getJobDataMap());
                             // only print jobs started through the sling scheduler
-                            if ( jobName != null && job != null ) {
+                            if ( desc.isKnownJob() ) {
                                 pw.print("Job : ");
-                                pw.print(detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME));
+                                pw.print(desc.name);
                                 if ( detail.getDescription() != null && detail.getDescription().length() > 0 ) {
                                     pw.print(" (");
                                     pw.print(detail.getDescription());
                                     pw.print(")");
                                 }
                                 pw.print(", class: ");
-                                pw.print(job.getClass().getName());
+                                pw.print(desc.job.getClass().getName());
                                 pw.print(", concurrent: ");
                                 pw.print(!detail.isConcurrentExectionDisallowed());
-                                final String[] runOn = (String[])detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_RUN_ON);
-                                if ( runOn != null ) {
+                                if ( desc.runOn != null ) {
                                     pw.print(", runOn: ");
-                                    pw.print(Arrays.toString(runOn));
+                                    pw.print(Arrays.toString(desc.runOn));
                                     // check run on information
-                                    if ( runOn.length == 1 &&
-                                         (org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_LEADER.equals(runOn[0]) || org.apache.sling.commons.scheduler.Scheduler.VALUE_RUN_ON_SINGLE.equals(runOn[0])) ) {
+                                    if ( desc.isRunOnLeader() || desc.isRunOnSingle() ) {
                                         if ( QuartzJobExecutor.DISCOVERY_AVAILABLE.get() ) {
                                             if ( QuartzJobExecutor.DISCOVERY_INFO_AVAILABLE.get() ) {
-                                                if ( !QuartzJobExecutor.IS_LEADER.get() ) {
-                                                    pw.print(" (inactive: not leader)");
+                                                if ( desc.isRunOnLeader() ) {
+                                                    if ( !QuartzJobExecutor.IS_LEADER.get() ) {
+                                                        pw.print(" (inactive: not leader)");
+                                                    }
+                                                } else {
+                                                    if ( !desc.shouldRunAsSingle() ) {
+                                                        pw.print(" (inactive: single distributed elsewhere)");
+                                                    }
                                                 }
                                             } else {
                                                 pw.print(" (inactive: no discovery info)");
@@ -120,7 +123,7 @@ public class WebConsolePrinter {
                                             pw.print(" (inactive: no Sling settings)");
                                         } else {
                                             boolean schedule = false;
-                                            for(final String id : runOn ) {
+                                            for(final String id : desc.runOn ) {
                                                 if ( myId.equals(id) ) {
                                                     schedule = true;
                                                     break;

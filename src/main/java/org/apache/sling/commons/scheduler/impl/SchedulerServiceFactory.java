@@ -23,6 +23,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -37,7 +38,10 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
     service = Scheduler.class,
-    scope = ServiceScope.BUNDLE
+    scope = ServiceScope.BUNDLE,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
 )
 public class SchedulerServiceFactory implements Scheduler {
 
