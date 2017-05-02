@@ -22,7 +22,7 @@
     </parent>
 
     <artifactId>org.apache.sling.provisioning.model</artifactId>
-    <version>1.8.2</version>
+    <version>1.8.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Provisioning Model</name>
@@ -31,9 +31,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.provisioning.model-1.8.2</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.provisioning.model-1.8.2</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.provisioning.model-1.8.2</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/support/provisioning-model</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/support/provisioning-model</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/support/provisioning-model</url>
     </scm>
 
     <build>
