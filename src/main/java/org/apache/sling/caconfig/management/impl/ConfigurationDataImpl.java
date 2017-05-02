@@ -260,8 +260,22 @@ final class ConfigurationDataImpl implements ConfigurationData {
     }
 
     @Override
+    public boolean isInherited() {
+        // detect if the whole config or config item was inherited
+        if (resolvedConfigurationResource != null) {
+            if (writebackConfigurationResource == null) {
+                return true;
+            }
+            else {
+                return !StringUtils.equals(writebackConfigurationResource.getPath(), resolvedConfigurationResource.getPath());
+            }
+        }
+        return false;
+    }
+    
+    @Override
     public boolean isOverridden() {
         return isAllOverridden;
     }
-    
+
 }
