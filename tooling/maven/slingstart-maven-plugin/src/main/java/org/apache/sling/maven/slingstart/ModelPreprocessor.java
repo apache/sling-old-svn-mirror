@@ -159,15 +159,18 @@ public class ModelPreprocessor {
                     nodeBooleanValue(info.plugin, "allowUnresolvedPomDependencies", false)));
         }
 
-        // we have to create an effective model to add the dependencies
-        final Model effectiveModel = ModelUtility.getEffectiveModel(info.localModel, resolverOptions);
+        final Model copyModel = new Model();
+        this.mergeModels(copyModel, info.localModel);
 
-        final List<Model> dependencies = searchSlingstartDependencies(env, info, info.localModel, effectiveModel);
+        // we have to create an effective model to add the dependencies
+        final Model effectiveModel = ModelUtility.getEffectiveModel(copyModel, resolverOptions);
+
+        final List<Model> dependencies = searchSlingstartDependencies(env, info, copyModel, effectiveModel);
         info.model = new Model();
         for(final Model d : dependencies) {
             this.mergeModels(info.model, d);
         }
-        this.mergeModels(info.model, info.localModel);
+        this.mergeModels(info.model, copyModel);
         info.model = ModelUtility.getEffectiveModel(info.model, resolverOptions);
 
         final Map<Traceable, String> errors = ModelUtility.validate(info.model);
