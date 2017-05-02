@@ -75,6 +75,11 @@ public interface ConfigurationData {
      * @return Value information. Null if neither property metadata nor an existing value exists.
      */
     @CheckForNull ValueInfo<?> getValueInfo(String propertyName);
+
+    /**
+     * @return true if the whole configuration is inherited.
+     */
+    boolean isInherited();
     
     /**
      * @return true if the whole configuration is overridden by an configuration override provider.
