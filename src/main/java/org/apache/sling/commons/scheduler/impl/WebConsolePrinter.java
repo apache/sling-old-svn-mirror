@@ -102,7 +102,7 @@ public class WebConsolePrinter {
                                     if ( desc.isRunOnLeader() || desc.isRunOnSingle() ) {
                                         if ( QuartzJobExecutor.DISCOVERY_AVAILABLE.get() ) {
                                             if ( QuartzJobExecutor.DISCOVERY_INFO_AVAILABLE.get() ) {
-                                                if ( desc.isRunOnLeader() ) {
+                                                if ( desc.isRunOnLeader() || QuartzJobExecutor.FORCE_LEADER.get() ) {
                                                     if ( !QuartzJobExecutor.IS_LEADER.get() ) {
                                                         pw.print(" (inactive: not leader)");
                                                     }
