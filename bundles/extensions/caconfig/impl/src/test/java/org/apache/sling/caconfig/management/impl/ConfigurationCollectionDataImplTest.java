@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.sling.caconfig.management.ConfigurationCollectionData;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManagementSettings;
+import org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceNameConstants;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -72,7 +73,7 @@ public class ConfigurationCollectionDataImplTest {
         assertEquals("name1", underTest.getConfigName());
         assertTrue(underTest.getItems().isEmpty());
         assertEquals("/path1", underTest.getResourcePath());
-        assertTrue(underTest.getProperties().isEmpty());
+        assertEquals(ImmutableMap.<String,Object>of(ConfigurationResourceNameConstants.PROPERTY_CONFIG_COLLECTION_INHERIT, true), underTest.getProperties());
     }
 
 }

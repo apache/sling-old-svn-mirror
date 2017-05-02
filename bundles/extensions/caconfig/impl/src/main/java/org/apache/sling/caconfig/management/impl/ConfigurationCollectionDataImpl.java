@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.sling.caconfig.management.ConfigurationCollectionData;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManagementSettings;
+import org.apache.sling.caconfig.resource.impl.def.ConfigurationResourceNameConstants;
 
 final class ConfigurationCollectionDataImpl implements ConfigurationCollectionData {
     
@@ -67,6 +68,9 @@ final class ConfigurationCollectionDataImpl implements ConfigurationCollectionDa
             if (properties != null) {
                 filteredPropertiesCache.putAll(properties);
                 PropertiesFilterUtil.removeIgnoredProperties(filteredPropertiesCache, configurationManagementSettings);
+            }
+            else {
+                filteredPropertiesCache.put(ConfigurationResourceNameConstants.PROPERTY_CONFIG_COLLECTION_INHERIT, true);
             }
         }
         return filteredPropertiesCache;
