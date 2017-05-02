@@ -86,6 +86,11 @@ public class ResultJsonSerializer {
         result.add("status", healthCheckResult.getHealthCheckResult().getStatus().toString());
         result.add("timeInMs", healthCheckResult.getElapsedTimeInMs());
         result.add("finishedAt", healthCheckResult.getFinishedAt().toString());
+        JsonArrayBuilder tagsArray = Json.createArrayBuilder();
+        for (final String tag : healthCheckResult.getHealthCheckMetadata().getTags()) {
+            tagsArray.add(tag);
+        }
+        result.add("tags", tagsArray);
 
         JsonArrayBuilder messagesArr = Json.createArrayBuilder();
         
