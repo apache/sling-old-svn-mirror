@@ -66,10 +66,9 @@ import org.slf4j.LoggerFactory;
  * Useful in combination with load balancers.
  * <p>
  * NOTE: This servlet registers directly (low-level) at the HttpService and is not processed by sling (better performance, fewer dependencies, no authentication required, 503 can be sent without the progress tracker information). */
-@Service
 @Component(label = "Apache Sling Health Check Executor Servlet",
         description = "Serializes health check results into html or json format",
-        policy = ConfigurationPolicy.REQUIRE, metatype = true, immediate = true)
+        policy = ConfigurationPolicy.REQUIRE, metatype = true)
 public class HealthCheckExecutorServlet extends HttpServlet {
     private static final long serialVersionUID = 8013511523994541848L;
 
@@ -126,6 +125,8 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             description = "Servlet path (defaults to " + SERVLET_PATH_DEFAULT + " in order to not be accessible via Apache/Internet)", value = SERVLET_PATH_DEFAULT)
     private String servletPath;
 
+    private String[] servletPaths;
+
     public static final String PROPERTY_DISABLED = "disabled";
     @Property(name = PROPERTY_DISABLED, label = "Disabled",
             description = "Allows to disable the servlet if required for security reasons", boolValue = false)
@@ -149,52 +150,58 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     @Activate
     protected final void activate(final ComponentContext context) {
         final Dictionary<?, ?> properties = context.getProperties();
-        this.servletPath = (String) properties.get(PROPERTY_SERVLET_PATH);
+        this.servletPath = PropertiesUtil.toString(properties.get(PROPERTY_SERVLET_PATH), SERVLET_PATH_DEFAULT);
         this.disabled = PropertiesUtil.toBoolean(properties.get(PROPERTY_DISABLED), false);
+
+        Map<String, HttpServlet> servletsToRegister = new HashMap<String, HttpServlet>();
+        servletsToRegister.put(this.servletPath, this);
+        servletsToRegister.put(this.servletPath + "." + FORMAT_HTML, new ProxyServlet(FORMAT_HTML));
+        servletsToRegister.put(this.servletPath + "." + FORMAT_JSON, new ProxyServlet(FORMAT_JSON));
+        servletsToRegister.put(this.servletPath + "." + FORMAT_JSONP, new ProxyServlet(FORMAT_JSONP));
+        servletsToRegister.put(this.servletPath + "." + FORMAT_TXT, new ProxyServlet(FORMAT_TXT));
+
 
         if (disabled) {
             LOG.info("Health Check Servlet is disabled by configuration");
             return;
         }
 
-        try {
-            LOG.debug("Registering {} to path {}", getClass().getSimpleName(), this.servletPath);
-            this.httpService.registerServlet(this.servletPath, this, null, null);
-        } catch (Exception e) {
-            LOG.error("Could not register health check servlet: " + e, e);
+        for (final Map.Entry<String, HttpServlet> servlet : servletsToRegister.entrySet()) {
+            try {
+                LOG.debug("Registering {} to path {}", getClass().getSimpleName(), servlet.getKey());
+                this.httpService.registerServlet(servlet.getKey(), servlet.getValue(), null, null);
+            } catch (Exception e) {
+                LOG.error("Could not register health check servlet: " + e, e);
+            }
         }
+        this.servletPaths = servletsToRegister.keySet().toArray(new String[0]);
 
     }
 
     @Deactivate
     public void deactivate(final ComponentContext componentContext) {
-        if (disabled) {
+        if (disabled || this.servletPaths == null) {
             return;
         }
 
-        try {
-            LOG.debug("Unregistering path {}", this.servletPath);
-            this.httpService.unregister(this.servletPath);
-        } catch (Exception e) {
-            LOG.error("Could not unregister health check servlet: "+e, e);
+        for (final String servletPath : this.servletPaths) {
+            try {
+                LOG.debug("Unregistering path {}", servletPath);
+                this.httpService.unregister(servletPath);
+            } catch (Exception e) {
+                LOG.error("Could not unregister health check servlet: " + e, e);
+            }
         }
+        this.servletPaths = null;
     }
 
-    @Override
-    protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response, final String format) throws ServletException, IOException {
         String tagsStr = StringUtils.defaultIfEmpty(StringUtils.substringBeforeLast(request.getPathInfo(), "."), "").replace("/", "");
         if (StringUtils.isBlank(tagsStr)) {
             // if not provided via path use parameter or default
             tagsStr = StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS.name), "");
         }
         final String[] tags = tagsStr.split("[, ;]+");
-
-        String format = StringUtils.substringAfterLast(request.getPathInfo(), ".");
-        if (StringUtils.isBlank(format)) {
-            // if not provided via extension use parameter or default
-            format = StringUtils.defaultIfEmpty(request.getParameter(PARAM_FORMAT.name), FORMAT_HTML);
-        }
 
         final Boolean includeDebug = Boolean.valueOf(request.getParameter(PARAM_INCLUDE_DEBUG.name));
         final Map<Result.Status, Integer> statusMapping = request.getParameter(PARAM_HTTP_STATUS.name) != null ? getStatusMapping(request
@@ -239,7 +246,17 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             response.setContentType("text/plain");
             response.getWriter().println("Invalid format " + format + " - supported formats: html|json|jsonp|txt");
         }
+    }
 
+    @Override
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        String format = StringUtils.substringAfterLast(request.getPathInfo(), ".");
+        if (StringUtils.isBlank(format)) {
+            // if not provided via extension use parameter or default
+            format = StringUtils.defaultIfEmpty(request.getParameter(PARAM_FORMAT.name), FORMAT_HTML);
+        }
+
+        doGet(request, response, format);
     }
 
     private void sendTxtResponse(final Result overallResult, final HttpServletResponse response) throws IOException {
@@ -312,6 +329,20 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             statusMapping.put(Result.Status.HEALTH_CHECK_ERROR, statusMapping.get(Result.Status.CRITICAL));
         }
         return statusMapping;
+    }
+
+    private class ProxyServlet extends HttpServlet {
+
+        private final String format;
+
+        private ProxyServlet(final String format) {
+            this.format = format;
+        }
+
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            HealthCheckExecutorServlet.this.doGet(req, resp, format);
+        }
     }
 
 
