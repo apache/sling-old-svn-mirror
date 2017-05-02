@@ -51,6 +51,9 @@ public class QuartzJobExecutor implements Job {
     /** The id of the current instance (if settings service is available. */
     public static volatile String SLING_ID;
 
+    /** Force leader for jobs with run on single */
+    public static final AtomicBoolean FORCE_LEADER = new AtomicBoolean(true);
+
     /** Is this instance the leader? */
     public static final AtomicBoolean IS_LEADER = new AtomicBoolean(true);
 
@@ -175,13 +178,20 @@ public class QuartzJobExecutor implements Job {
                 if ( !checkDiscoveryAvailable(logger, desc) ) {
                     return false;
                 }
-                final String myId = checkSlingId(logger, desc);
-                if ( myId == null ) {
-                    return false;
-                }
-                if ( desc.shouldRunAsSingleOn() != null ) {
-                    logger.debug("Excluding {} - distributed to different Sling instance", desc);
-                    return false;
+                if ( FORCE_LEADER.get() ) {
+                    if ( !IS_LEADER.get() ) {
+                        logger.debug("Excluding {} - instance is not leader", desc);
+                        return false;
+                    }
+                } else {
+                    final String myId = checkSlingId(logger, desc);
+                    if ( myId == null ) {
+                        return false;
+                    }
+                    if ( desc.shouldRunAsSingleOn() != null ) {
+                        logger.debug("Excluding {} - distributed to different Sling instance", desc);
+                        return false;
+                    }
                 }
             } else { // sling IDs
                 final String myId = checkSlingId(logger, desc);

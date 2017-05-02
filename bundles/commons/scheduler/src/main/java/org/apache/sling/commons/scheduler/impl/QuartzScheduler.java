@@ -119,6 +119,8 @@ public class QuartzScheduler implements BundleListener {
         // SLING-2261 Prevent Quartz from checking for updates
         System.setProperty("org.terracotta.quartz.skipUpdateCheck", Boolean.TRUE.toString());
 
+        QuartzJobExecutor.FORCE_LEADER.set(configuration.scheduler_useleaderforsingle());
+
         defaultPoolName = configuration.poolName();
         allowedPoolNames = configuration.allowedPoolNames();
         if (allowedPoolNames == null) {
