@@ -18,23 +18,17 @@
  */
 package org.apache.sling.validation.impl.model;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ResourceProperty;
-
 public class ChildResourceBuilder {
 
-    public boolean optional;
-    public boolean multiple;
-    String nameRegex;
+    private boolean optional;
+    private String nameRegex;
     @Nonnull
     private final List<ResourceProperty> resourceProperties;
     @Nonnull
@@ -43,8 +37,8 @@ public class ChildResourceBuilder {
     public ChildResourceBuilder() {
         this.nameRegex = null;
         this.optional = false;
-        resourceProperties = new ArrayList<ResourceProperty>();
-        children = new ArrayList<ChildResource>();
+        resourceProperties = new ArrayList<>();
+        children = new ArrayList<>();
     }
 
     public @Nonnull ChildResourceBuilder nameRegex(String nameRegex) {
@@ -59,28 +53,5 @@ public class ChildResourceBuilder {
 
     public @Nonnull ChildResource build(@Nonnull String name) {
         return new ChildResourceImpl(name, nameRegex, !optional, resourceProperties, children);
-    }
-
-
-    public ChildResource getChildResource(DefaultInjectionStrategy defaultInjectionStrategy, Field field) {
-        ChildrenValidator childrenValidator = field.getAnnotation(ChildrenValidator.class);
-
-        nameRegex(childrenValidator.nameRegex());
-
-
-        childrenValidator.properties();
-
-
-
-        //TODO: Add ability to add validators.
-        Map<String, Object> validatorArguments = Arrays.asList(childrenValidator.properties())
-                .parallelStream()
-                .map(str -> str.split("="))
-                .collect(Collectors.toMap(keyvalue -> keyvalue[0], keyvalue ->keyvalue[1]));
-
-
-
-
-        return build(field.getName());
     }
 }

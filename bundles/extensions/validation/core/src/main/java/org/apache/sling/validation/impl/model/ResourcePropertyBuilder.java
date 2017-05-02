@@ -18,19 +18,14 @@
  */
 package org.apache.sling.validation.impl.model;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.model.ValidatorInvocation;
 import org.apache.sling.validation.model.ResourceProperty;
+import org.apache.sling.validation.model.ValidatorInvocation;
 
 public class ResourcePropertyBuilder {
 
@@ -83,48 +78,5 @@ public class ResourcePropertyBuilder {
 
     public @Nonnull ResourceProperty build(@Nonnull String name) {
         return new ResourcePropertyImpl(name, nameRegex, multiple, !optional, validators);
-    }
-
-    public @Nonnull ResourcePropertyBuilder name(@Nonnull String name) {
-        this.name = name;
-        return this;
-    }
-
-    public @Nonnull ResourceProperty build() {
-        return new ResourcePropertyImpl(name, nameRegex, multiple, !optional, validators);
-    }
-
-    public ResourcePropertyBuilder addFieldValidator(FieldValidator fieldValidator) {
-        Map<String, Object> validatorArguments = Arrays.asList(fieldValidator.validatorArguments())
-                .parallelStream()
-                .map(str -> str.split("="))
-                .collect(Collectors.toMap(keyvalue -> keyvalue[0], keyvalue ->keyvalue[1]));
-
-        return validator(fieldValidator.validatorName(), fieldValidator.severity(), validatorArguments);
-    }
-
-    public ResourcePropertyBuilder addValueMapValue(DefaultInjectionStrategy defaultInjectionStrategy, Field field) {
-
-        ValueMapValue valueMapValue = field.getAnnotation(ValueMapValue.class);
-        InjectionStrategy injectionStrategy = valueMapValue.injectionStrategy();
-        if (injectionStrategy.equals(InjectionStrategy.OPTIONAL) || (injectionStrategy.equals(InjectionStrategy.DEFAULT)
-                && defaultInjectionStrategy.equals(DefaultInjectionStrategy.OPTIONAL))) {
-            this.optional();
-        }
-
-        if (field.getType().isArray() || Collection.class.isAssignableFrom(field.getType())) {
-            this.multiple();
-        }
-
-        String fieldName = valueMapValue.name();
-        if (fieldName.isEmpty()) {
-            fieldName = field.getName();
-        }
-
-        return name(fieldName);
-    }
-
-    public ResourcePropertyBuilder addNameRegex(NameRegex nameRegex) {
-        return nameRegex(nameRegex.regex());
     }
 }

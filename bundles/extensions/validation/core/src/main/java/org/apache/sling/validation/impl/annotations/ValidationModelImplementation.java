@@ -17,12 +17,12 @@
 package org.apache.sling.validation.impl.annotations;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.sling.validation.model.ValidationModel;
 import org.osgi.framework.Bundle;
@@ -31,31 +31,39 @@ import org.slf4j.LoggerFactory;
 
 /** @author karolis.mackevicius@netcentric.biz
  * @since 02/04/17 */
-final class ValidationModelImplementations {
+final class ValidationModelImplementation {
 
-    private static final Logger log = LoggerFactory.getLogger(ValidationModelImplementations.class);
+    private static final Logger log = LoggerFactory.getLogger(ValidationModelImplementation.class);
 
-    private final ConcurrentMap<Bundle, Map<String, ConcurrentSkipListSet<ValidationModel>>> validationModels = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Bundle, ConcurrentHashMap<String, List<ValidationModel>>> validationModels = new ConcurrentHashMap<>();
 
     /** Remove all implementation mappings. */
     public void removeAll() {
         validationModels.clear();
     }
 
-    public void registerValidationModelByBundle(final Bundle bundle, String resourceType, final ValidationModel model) {
-        Map<String, ConcurrentSkipListSet<ValidationModel>> map = validationModels.get(bundle);
-        ConcurrentSkipListSet<ValidationModel> models;
-        if (map == null) {
-            models = new ConcurrentSkipListSet(Collections.singleton(model));
-            map = Collections.singletonMap(resourceType, models);
+    public void registerValidationModelsByBundle(final Bundle bundle, final Collection<ValidationModel> validationModels) {
+        validationModels.forEach( model -> registerValidationModelByBundle(bundle, model));
+    }
+
+    public void registerValidationModelByBundle(final Bundle bundle, final ValidationModel model) {
+        ConcurrentHashMap<String, List<ValidationModel>> map = validationModels.get(bundle);
+        String resourceType = model.getValidatingResourceType();
+        List<ValidationModel> models;
+        if (Objects.isNull(map)) {
+            models = new ArrayList<>();
+            models.add(model);
+
+            map = new ConcurrentHashMap<>();
+            map.put(resourceType, models);
             validationModels.put(bundle, map);
         } else {
-            models = map.getOrDefault(resourceType, new ConcurrentSkipListSet<>());
+            models = map.getOrDefault(resourceType, new ArrayList<>());
             models.add(model);
         }
     }
 
-    public Map<String, ConcurrentSkipListSet<ValidationModel>> getValidationModels(final Bundle bundle) {
+    public ConcurrentHashMap<String, List<ValidationModel>> getValidationModels(final Bundle bundle) {
         return validationModels.getOrDefault(bundle, new ConcurrentHashMap<>());
     }
 

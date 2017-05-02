@@ -16,22 +16,23 @@
  */
 package org.apache.sling.validation.impl.annotations;
 
-import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
-import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
+
+import org.apache.commons.collections4.EnumerationUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.ValidationStrategy;
-import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
-import org.apache.sling.validation.annotations.ChildrenValidator;
-import org.apache.sling.validation.annotations.FieldValidator;
-import org.apache.sling.validation.annotations.NameRegex;
-import org.apache.sling.validation.impl.model.ChildResourceBuilder;
-import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
-import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.model.ValidationModel;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -46,119 +47,89 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
     static final String PACKAGE_HEADER = "Sling-Model-Packages";
     static final String CLASSES_HEADER = "Sling-Model-Classes";
 
-    private static final Logger log = LoggerFactory.getLogger(ValidationPackageBundleListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ValidationPackageBundleListener.class);
+    private static final String COMMA_SEPARATOR_REGEX = ",";
 
     private final BundleTracker bundleTracker;
 
-    private final ValidationModelImplementations validationModelImplementations;
+    private final ValidationModelImplementation validationModelImplementation;
 
     public ValidationPackageBundleListener(BundleContext bundleContext,
-            ValidationModelImplementations validationModelImplementations) {
-        this.validationModelImplementations = validationModelImplementations;
+            ValidationModelImplementation validationModelImplementation) {
+        this.validationModelImplementation = validationModelImplementation;
         this.bundleTracker = new BundleTracker(bundleContext, Bundle.ACTIVE, this);
         this.bundleTracker.open();
     }
 
     @Override
     public Object addingBundle(Bundle bundle, BundleEvent event) {
-
-        Dictionary<String, String> headers = bundle.getHeaders();
-        String packageList = headers.get(PACKAGE_HEADER);
-        if (packageList != null) {
-            packageList = StringUtils.deleteWhitespace(packageList);
-            String[] packages = packageList.split(",");
-            for (String singlePackage : packages) {
-                @SuppressWarnings("unchecked")
-                Enumeration<URL> classUrls = bundle.findEntries("/" + singlePackage.replace('.', '/'), "*.class",
-                        true);
-
-                if (classUrls == null) {
-                    log.warn("No adaptable classes found in package {}, ignoring", singlePackage);
-                    continue;
-                }
-
-                while (classUrls.hasMoreElements()) {
-                    URL url = classUrls.nextElement();
-                    String className = toClassName(url);
-                    analyzeClass(bundle, className);
-
-                }
-            }
-        }
-        String classesList = headers.get(CLASSES_HEADER);
-        if (classesList != null) {
-            classesList = StringUtils.deleteWhitespace(classesList);
-            String[] classes = classesList.split(",");
-            for (String className : classes) {
-                analyzeClass(bundle, className);
-            }
-        }
-
+        Set<String> classNames = getBundleClasses(bundle);
+        classNames.forEach(className -> analyzeClass(bundle, className));
         return bundle;
+    }
+
+    private Set<String> getBundleClasses(@Nonnull Bundle bundle) {
+        Set<String> classNames = new HashSet<>();
+        classNames.addAll(getPackageHeaderClassNames(bundle));
+        classNames.addAll(getClassHeaderClassNames(bundle.getHeaders()));
+        return classNames;
     }
 
     private void analyzeClass(Bundle bundle, String className) {
         try {
             Class<?> implType = bundle.loadClass(className);
+            if (!implType.isAnnotationPresent(Model.class)) {
+                return;
+            }
+
             Model model = implType.getAnnotation(Model.class);
-
-            if (model == null) {
-                return;
-            }
-            ValidationStrategy validationStrategy = model.validation();
-            if (validationStrategy.equals(ValidationStrategy.DISABLED)) {
-                log.info("Validation not required for Model: {}", implType.getName());
+            if (model.validation().equals(ValidationStrategy.DISABLED)) {
                 return;
             }
 
-            ValidationModelBuilder modelBuilder = new ValidationModelBuilder();
-            // TODO: add applicable paths.
-            modelBuilder.addApplicablePaths(new String[] {});
-
-            DefaultInjectionStrategy defaultInjectionStrategy = model.defaultInjectionStrategy();
-            log.info("Validation Model for: {}", implType.getName());
-            Field[] fields = implType.getDeclaredFields();
-
-
-            for (Field field : fields) {
-
-                if (field.isAnnotationPresent(ValueMapValue.class)) {
-                    ResourcePropertyBuilder builder = new ResourcePropertyBuilder();
-                    builder.addValueMapValue(defaultInjectionStrategy, field);
-
-                    if(field.isAnnotationPresent(FieldValidator.class)) {
-                        builder.addFieldValidator(field.getAnnotation(FieldValidator.class));
-                    }
-
-                    if(field.isAnnotationPresent(NameRegex.class)) {
-                        builder.addNameRegex(field.getAnnotation(NameRegex.class));
-                    }
-                    modelBuilder.resourceProperty(builder.build());
-                }
-
-                //TODO: add child resources.
-                if(field.isAnnotationPresent(ChildrenValidator.class)) {
-                    ChildResourceBuilder builder = new ChildResourceBuilder();
-                    builder.getChildResource(defaultInjectionStrategy, field);
-                }
-
-            }
-
-
-
-            for (String resourceType : model.resourceType()) {
-                if (StringUtils.isNotEmpty(resourceType)) {
-                    ValidationModel vm = modelBuilder.build(resourceType, StringUtils.EMPTY);
-                    validationModelImplementations.registerValidationModelByBundle(bundle, resourceType, vm);
-                }
-            }
+            List<ValidationModel> validationModels = new AnnotationValidationModelBuilder().build(implType);
+            validationModelImplementation.registerValidationModelsByBundle(bundle, validationModels);
 
         } catch (ClassNotFoundException e) {
-            log.warn("Unable to load class", e);
+            LOG.warn("Unable to load class", e);
         }
     }
 
+    private HashSet<String> getClassHeaderClassNames(@Nonnull Dictionary<String, String> headers) {
+        return Optional.ofNullable(StringUtils.deleteWhitespace(headers.get(CLASSES_HEADER)))
+                .map(classes -> classes.split(COMMA_SEPARATOR_REGEX))
+                .map(Arrays::asList)
+                .map(HashSet::new)
+                .orElse(new HashSet<>());
+    }
 
+    private Set<String> getPackageHeaderClassNames(@Nonnull Bundle bundle) {
+        return Optional.ofNullable(StringUtils.deleteWhitespace(bundle.getHeaders().get(PACKAGE_HEADER)))
+                .map(packages -> packages.split(COMMA_SEPARATOR_REGEX))
+                .map(Arrays::asList)
+                .map(list -> getClassNamesFromPackages(bundle, list))
+                .orElse(Collections.emptySet());
+    }
+
+    private Set<String> getClassNamesFromPackages(@Nonnull Bundle bundle, @Nonnull List<String> packages) {
+        return packages.parallelStream()
+                .map(singlePackage -> findEntries(bundle, singlePackage))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> findEntries(@Nonnull Bundle bundle, @Nonnull String singlePackage) {
+        return Optional.ofNullable(bundle.findEntries("/" + singlePackage.replace('.', '/'), "*.class", true))
+                .map(EnumerationUtils::toList)
+                .map(this::getClassesFromUrl)
+                .orElse(Collections.emptySet());
+    }
+
+    private Set<String> getClassesFromUrl(List<URL> urls) {
+        return urls.parallelStream()
+                .map(this::toClassName)
+                .collect(Collectors.toSet());
+    }
 
     @Override
     public void modifiedBundle(Bundle bundle, BundleEvent event, Object object) {
@@ -166,7 +137,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
 
     @Override
     public void removedBundle(Bundle bundle, BundleEvent event, Object object) {
-        validationModelImplementations.removeValidationModels(bundle);
+        validationModelImplementation.removeValidationModels(bundle);
 
     }
 

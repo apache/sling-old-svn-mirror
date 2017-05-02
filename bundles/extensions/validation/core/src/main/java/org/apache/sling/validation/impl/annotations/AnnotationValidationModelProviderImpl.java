@@ -17,7 +17,6 @@
 package org.apache.sling.validation.impl.annotations;
 
 import java.util.List;
-
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.model.ValidationModel;
@@ -26,31 +25,28 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(name = "Apache Sling Validation Annotation Based Model Provider", service = ValidationModelProvider.class)
-public class AnnotationValidationModelProvider implements ValidationModelProvider {
+@Component(immediate = true, service = ValidationModelProvider.class)
+public class AnnotationValidationModelProviderImpl implements ValidationModelProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(AnnotationValidationModelProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(AnnotationValidationModelProviderImpl.class);
 
     ValidationPackageBundleListener listener;
 
-    final ValidationModelImplementations validationModelImplementations = new ValidationModelImplementations();
+    final ValidationModelImplementation validationModelImplementations = new ValidationModelImplementation();
 
     @Activate
-    @Modified
     protected void activate(final ComponentContext ctx) {
         this.listener = new ValidationPackageBundleListener(ctx.getBundleContext(), this.validationModelImplementations);
-
     }
 
     @Override
+    @Nonnull
     public List<ValidationModel> getValidationModels(@Nonnull String relativeResourceType) throws IllegalStateException {
-        log.info("getValidationModels called");
-        List<ValidationModel> list = validationModelImplementations.getValidationModelsByResourceType(relativeResourceType);
-        return list;
+        log.debug("Get Validation Model for resource type: {}", relativeResourceType);
+        return validationModelImplementations.getValidationModelsByResourceType(relativeResourceType);
 
     }
 
@@ -59,6 +55,5 @@ public class AnnotationValidationModelProvider implements ValidationModelProvide
         this.listener.unregisterAll();
         this.validationModelImplementations.removeAll();
     }
-
 
 }
