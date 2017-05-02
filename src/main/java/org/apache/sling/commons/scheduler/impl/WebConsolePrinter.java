@@ -107,8 +107,11 @@ public class WebConsolePrinter {
                                                         pw.print(" (inactive: not leader)");
                                                     }
                                                 } else {
-                                                    if ( !desc.shouldRunAsSingle() ) {
-                                                        pw.print(" (inactive: single distributed elsewhere)");
+                                                    final String id = desc.shouldRunAsSingleOn();
+                                                    if ( id != null ) {
+                                                        pw.print(" (inactive: single distributed elsewhere ");
+                                                        pw.print(id);
+                                                        pw.print(")");
                                                     }
                                                 }
                                             } else {

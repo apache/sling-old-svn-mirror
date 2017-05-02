@@ -106,7 +106,10 @@ public class QuartzJobExecutor implements Job {
             return runOn != null && runOn.length == 1 && Scheduler.VALUE_RUN_ON_SINGLE.equals(runOn[0]);
         }
 
-        public boolean shouldRunAsSingle() {
+        public String shouldRunAsSingleOn() {
+            if ( !isRunOnSingle() ) {
+                return null;
+            }
             final String[] ids = QuartzJobExecutor.SLING_IDS.get();
             boolean schedule = false;
             if ( ids != null ) {
@@ -120,12 +123,13 @@ public class QuartzJobExecutor implements Job {
                     // although this should never happen (MD5 and UTF-8 are always available) we consider
                     // this an error case
                     LoggerFactory.getLogger(getClass().getName()).error("Unable to distribute scheduled " + this, ex);
-                    return false;
+                    return "";
                 }
                 final String myId = SLING_ID;
                 schedule = myId != null && myId.equals(ids[index]);
+                return schedule ? null : ids[index];
             }
-            return schedule;
+            return "";
         }
     }
 
@@ -175,7 +179,7 @@ public class QuartzJobExecutor implements Job {
                 if ( myId == null ) {
                     return false;
                 }
-                if ( !desc.shouldRunAsSingle() ) {
+                if ( desc.shouldRunAsSingleOn() != null ) {
                     logger.debug("Excluding {} - distributed to different Sling instance", desc);
                     return false;
                 }
