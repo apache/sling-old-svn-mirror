@@ -62,15 +62,11 @@ public class HealthCheckServletIT {
     }
     
     private int countServletServices(String packageNamePrefix) throws InvalidSyntaxException {
-        final ServiceReference [] refs = bundleContext.getServiceReferences("javax.servlet.Servlet", null);
+        final List<String> classNames = httpService.getServletClassNames();
         int count = 0;
-        if(refs != null) {
-            for(ServiceReference ref : refs) {
-                final Object o = bundleContext.getService(ref);
-                if(o.getClass().getName().startsWith(packageNamePrefix)) {
-                    count++;
-                }
-                bundleContext.ungetService(ref);
+        for(final String className : classNames) {
+            if(className.startsWith(packageNamePrefix)) {
+                count++;
             }
         }
         return count;
@@ -113,9 +109,11 @@ public class HealthCheckServletIT {
             Thread.sleep(50L);
         }
         
-        assertEquals("After adding configuration, expecting one servlet from " +  packagePrefix, 1, countServletServices(packagePrefix));
+        assertEquals("After adding configuration, expecting five servlets from " +  packagePrefix, 5, countServletServices(packagePrefix));
         final List<String> paths = httpService.getPaths();
-        assertEquals("Expecting one new servlet registration", pathsBefore + 1, paths.size());
-        assertEquals("Expecting the HC servlet to be registered at " + path, path, paths.get(paths.size() - 1));
+        assertEquals("Expecting five new servlet registration", pathsBefore + 5, paths.size());
+        assertEquals("Expecting the HC servlet to be registered at " + path, path, paths.get(paths.size() - 5));
+        assertEquals("Expecting the HTML HC servlet to be registered at " + path + ".html", path + ".html", paths.get(paths.size() - 4));
+        assertEquals("Expecting the JSON HC servlet to be registered at " + path + ".json", path + ".json", paths.get(paths.size() - 3));
     }
 }
