@@ -81,7 +81,7 @@ public class ResultHtmlSerializer {
         final DateFormat dfLong = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         writer.println("<table id=\"healthCheckResults\" cellspacing=\"0\">");
-        writer.println("<thead><tr><th>Health Check</th><th>Status</th><th>Log</th><th colspan=\"2\">Execution Time</th></tr></thead>");
+        writer.println("<thead><tr><th>Health Check</th><th>Status</th><th>Log</th><th>Finished At</th><th>Execution Time</th></tr></thead>");
         for (HealthCheckExecutionResult executionResult : executionResults) {
             Result result = executionResult.getHealthCheckResult();
             writer.println("<tr class=\"" + getClassForStatus(result.getStatus()) + "\" "
