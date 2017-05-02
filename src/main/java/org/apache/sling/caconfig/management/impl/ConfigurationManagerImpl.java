@@ -192,6 +192,15 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
                 }
             }
         }
+        // fallback for writeback path detection when no configuration resources does exist yet
+        if (writebackConfigResourceCollectionParentPath == null) {
+            for (String configBucketName : configurationResourceResolverConfig.configBucketNames()) {
+                writebackConfigResourceCollectionParentPath = configurationResourceResolvingStrategy.getResourceCollectionParentPath(resource, configBucketName, configName);
+                if (writebackConfigResourceCollectionParentPath != null) {
+                    break;
+                }
+            }
+        }
         
         // get properties of parent resource of the current level
         Map<String,Object> resourceCollectionParentProps = null;
