@@ -122,12 +122,16 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
-    public void bundleChanged(BundleEvent event) {
+    public synchronized void bundleChanged(BundleEvent event) {
 
         //
         // NOTE:
         // This is synchronous - take care to not block the system !!
         //
+
+        if (this.bundleContentLoader == null) {
+            return;
+        }
 
         Session session = null;
         final Bundle bundle = event.getBundle();
@@ -139,9 +143,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
                 try {
                     session = this.getSession();
                     final boolean isUpdate;
-                    synchronized ( this.updatedBundles ) {
-                        isUpdate = this.updatedBundles.remove(bundle.getSymbolicName());
-                    }
+                    isUpdate = this.updatedBundles.remove(bundle.getSymbolicName());
                     bundleContentLoader.registerBundle(session, bundle, isUpdate);
                 } catch (Throwable t) {
                     log.error(
@@ -155,9 +157,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
             case BundleEvent.UPDATED:
                 // we just add the symbolic name to the list of updated bundles
                 // we will use this info when the new start event is triggered
-                synchronized ( this.updatedBundles ) {
-                    this.updatedBundles.add(bundle.getSymbolicName());
-                }
+                this.updatedBundles.add(bundle.getSymbolicName());
                 break;
             case BundleEvent.UNINSTALLED:
                 try {
@@ -213,7 +213,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
-    protected void activate(ComponentContext componentContext) {
+    protected synchronized void activate(ComponentContext componentContext) {
         this.slingId = this.settingsService.getSlingId();
         this.bundleContentLoader = new BundleContentLoader(this, contentReaderWhiteboard);
 
@@ -266,7 +266,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     }
 
     /** Deactivates this component, called by SCR to take out of service */
-    protected void deactivate(ComponentContext componentContext) {
+    protected synchronized void deactivate(ComponentContext componentContext) {
         componentContext.getBundleContext().removeBundleListener(this);
 
         if ( this.bundleContentLoader != null ) {
