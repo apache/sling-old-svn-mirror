@@ -20,13 +20,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonWriter;
 
