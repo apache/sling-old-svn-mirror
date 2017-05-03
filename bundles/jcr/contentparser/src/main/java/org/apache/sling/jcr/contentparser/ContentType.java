@@ -27,7 +27,8 @@ import org.osgi.annotation.versioning.ProviderType;
 public enum ContentType {
 
     /**
-     * JSON content.
+     * JSON content descriptor file.
+     * @see https://sling.apache.org/documentation/bundles/content-loading-jcr-contentloader.html#json-descriptor-files
      */
     JSON("json"),
 
