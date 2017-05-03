@@ -226,16 +226,16 @@
             <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>        
-    <dependency>
+        <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-json_1.0_spec</artifactId>
             <version>1.0-alpha-1</version>
             <scope>provided</scope>
         </dependency>
-    <dependency>
+        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.johnzon</artifactId>    
-            <version>0.1.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency> 
         
