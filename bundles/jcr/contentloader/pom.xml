@@ -86,9 +86,10 @@
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
           <excludes>
-            <exclude>**/*.json</exclude>
-            <exclude>src/test/resources/reader/testfile.txt</exclude>
-            <exclude>src/test/resources/initial-content/ordered-content.ordered-json</exclude>
+            <exclude>src/test/**/*.json</exclude>
+            <exclude>src/test/**/*.ordered-json</exclude>
+            <exclude>src/test/**/*.xml</exclude>
+            <exclude>src/test/**/*.txt</exclude>
             <exclude>jackrabbit/**</exclude>
             <exclude>derby.log</exclude>
           </excludes>
