@@ -39,6 +39,7 @@ import javax.jcr.query.RowIterator;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.CharEncoding;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.PersistenceException;
@@ -655,7 +656,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         }
         json.append("}");
 
-        InputStream stream = new ByteArrayInputStream(json.toString().getBytes());
+        InputStream stream = new ByteArrayInputStream(json.toString().getBytes(CharEncoding.UTF_8));
         Binary binary = getSession().getValueFactory().createBinary(stream);
         content.setProperty("jcr:data", binary);
         getSession().save();
@@ -675,6 +676,39 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
             assertTrue("bundle returned key that is not supposed to be there: " + key, MESSAGES_DE_APPS.containsKey(key));
         }
         assertEquals(MESSAGES_DE.size(), counter);
+    }
+
+    public void test_json_dictionary_with_hierarchy() throws Exception {
+        Node appsI18n = getSession().getRootNode().addNode("apps").addNode("i18n", "nt:unstructured");
+        Node deJson = appsI18n.addNode("de.json", "nt:file");
+        deJson.addMixin("mix:language");
+        deJson.setProperty("jcr:language", "de");
+        Node content = deJson.addNode("jcr:content", "nt:resource");
+        content.setProperty("jcr:mimeType", "application/json");
+
+        // manually creating json file, good enough for the test
+        String json = "{"
+                + "\"prop1\":\"value1\","
+                    + "\"obj1\":{"
+                        + "\"prop2\":\"value2\","
+                        + "\"obj2\":{"
+                          + "\"prop3\":\"value3\""
+                          + "}"
+                    + "}"
+                + "}";
+
+        InputStream stream = new ByteArrayInputStream(json.getBytes(CharEncoding.UTF_8));
+        Binary binary = getSession().getValueFactory().createBinary(stream);
+        content.setProperty("jcr:data", binary);
+        getSession().save();
+
+        // test getString
+        JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), null, resolver);
+        assertEquals("value1", bundle.getString("prop1"));
+        assertEquals("value2", bundle.getString("obj1.prop2"));
+        assertEquals("value3", bundle.getString("obj1.obj2.prop3"));
+        assertFalse(bundle.keySet().contains("prop2"));
+        assertFalse(bundle.keySet().contains("prop3"));
     }
 
     private class TestResource extends AbstractResource {
