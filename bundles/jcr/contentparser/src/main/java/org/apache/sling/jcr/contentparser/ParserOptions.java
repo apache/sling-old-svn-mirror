@@ -40,7 +40,12 @@ public final class ParserOptions {
      * Default list of prefixes to remove from property names.
      */
     public static final Set<String> DEFAULT_REMOVE_PROPERTY_NAME_PREFIXES
-            = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("jcr:reference:", "jcr:path:")));
+        = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            "jcr:reference:",
+            "jcr:path:",
+            "jcr:name:",
+            "jcr:uri:"
+          )));
     
     private String defaultPrimaryType = DEFAULT_PRIMARY_TYPE;
     private boolean detectCalendarValues;
