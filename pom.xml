@@ -312,7 +312,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.paxexam.util</artifactId>
-      <version>1.0.4</version>
+      <version>1.0.5-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
