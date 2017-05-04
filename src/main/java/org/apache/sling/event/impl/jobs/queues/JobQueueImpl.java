@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -80,7 +82,7 @@ public class JobQueueImpl
     private final QueueServices services;
 
     /** The map of events we're processing. */
-    private final Map<String, JobHandler> processingJobsLists = new HashMap<String, JobHandler>();
+    private final Map<String, JobHandler> processingJobsLists = new HashMap<>();
 
     private final ThreadPool threadPool;
 
@@ -676,7 +678,6 @@ public class JobQueueImpl
                 this.isSleepingUntil = fireDate.getTime();
             }
 
-            final String jobName = "Waiting:" + queueName + ":" + handler.hashCode();
             final Runnable t = new Runnable() {
                 @Override
                 public void run() {
@@ -695,10 +696,14 @@ public class JobQueueImpl
                 }
             };
             this.waitCounter.incrementAndGet();
-            if ( !services.scheduler.schedule(t, services.scheduler.AT(fireDate).name(jobName)) ) {
-                // if scheduling fails run the thread directly
-                t.run();
-            }
+            final Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+
+                @Override
+                public void run() {
+                    t.run();
+                }
+            }, delay);
         } else {
             // put directly into queue
             this.requeue(handler);

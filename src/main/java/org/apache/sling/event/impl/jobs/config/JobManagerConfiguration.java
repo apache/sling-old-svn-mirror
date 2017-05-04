@@ -18,12 +18,13 @@
  */
 package org.apache.sling.event.impl.jobs.config;
 
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -494,27 +495,22 @@ public class JobManagerConfiguration {
         } else {
             // and run checker again in some seconds (if leader)
             // notify listeners afterwards
-            final Scheduler local = this.scheduler;
-            if ( local != null ) {
-                final Runnable r = new Runnable() {
+            final Timer timer = new Timer();
+            timer.schedule(new TimerTask()
+            {
 
-                    @Override
-                    public void run() {
-                        if ( newCaps == topologyCapabilities && newCaps.isActive()) {
-                            // start listeners
-                            notifiyListeners();
-                            if ( newCaps.isLeader() && newCaps.isActive() ) {
-                                final CheckTopologyTask mt = new CheckTopologyTask(JobManagerConfiguration.this);
-                                mt.fullRun();
-                            }
+                @Override
+                public void run() {
+                    if ( newCaps == topologyCapabilities && newCaps.isActive()) {
+                        // start listeners
+                        notifiyListeners();
+                        if ( newCaps.isLeader() && newCaps.isActive() ) {
+                            final CheckTopologyTask mt = new CheckTopologyTask(JobManagerConfiguration.this);
+                            mt.fullRun();
                         }
                     }
-                };
-                if ( !local.schedule(r, local.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000))) ) {
-                    // if for whatever reason scheduling doesn't work, let's run now
-                    r.run();
                 }
-            }
+            }, this.backgroundLoadDelay * 1000);
         }
         logger.debug("Job processing started");
     }

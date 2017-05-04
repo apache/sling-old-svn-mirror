@@ -85,9 +85,6 @@ public class QueueManager
     private EventAdmin eventAdmin;
 
     @Reference
-    private Scheduler scheduler;
-
-    @Reference
     private JobConsumerManager jobConsumerManager;
 
     @Reference
@@ -135,7 +132,6 @@ public class QueueManager
         queueServices.configuration = this.configuration;
         queueServices.eventAdmin = this.eventAdmin;
         queueServices.jobConsumerManager = this.jobConsumerManager;
-        queueServices.scheduler = this.scheduler;
         queueServices.threadPoolManager = this.threadPoolManager;
         queueServices.statisticsManager = statisticsManager;
         queueServices.eventingThreadPool = this.threadPool;
