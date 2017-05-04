@@ -28,13 +28,13 @@ public enum ContentType {
 
     /**
      * JSON content descriptor file.
-     * @see https://sling.apache.org/documentation/bundles/content-loading-jcr-contentloader.html#json-descriptor-files
+     * @see <a href="https://sling.apache.org/documentation/bundles/content-loading-jcr-contentloader.html#json-descriptor-files">JCR ContentLoader JSON descriptor files</a>
      */
     JSON("json"),
 
     /**
      * XML content descriptor file.
-     * @see https://sling.apache.org/documentation/bundles/content-loading-jcr-contentloader.html#xml-descriptor-files
+     * @see <a href="https://sling.apache.org/documentation/bundles/content-loading-jcr-contentloader.html#xml-descriptor-files">JCR ContentLoader XML descriptor files</a>
      */
     XML("xml"),
 
