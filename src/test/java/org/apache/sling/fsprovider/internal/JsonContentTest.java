@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,8 +54,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 /**
  * Test access to files and folders and JSON content from file system.
@@ -247,7 +248,8 @@ public class JsonContentTest {
     @Test
     public void testFolder2ChildNodes() throws RepositoryException {
         Resource folder2 = fsroot.getChild("folder2");
-        List<Resource> children = ImmutableList.copyOf(folder2.listChildren());
+        List<Resource> children = Lists.newArrayList(folder2.listChildren());
+        Collections.sort(children, new ResourcePathComparator());
         
         assertEquals(2, children.size());
         Resource child1 = children.get(0);
