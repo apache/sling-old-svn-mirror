@@ -82,16 +82,8 @@
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*",
                             quartz;inline="org/quartz/CronExpression.*|org/quartz/ValueSet.*"
                         </Embed-Dependency>
-                        <_plugin>org.apache.felix.scrplugin.bnd.SCRDescriptorBndPlugin;destdir=${project.build.outputDirectory};</_plugin>
                     </instructions>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.felix</groupId>
-                        <artifactId>org.apache.felix.scr.bnd</artifactId>
-                        <version>1.7.2</version>
-                    </dependency>
-                </dependencies>
             </plugin>
            <plugin>
                 <groupId>org.apache.rat</groupId>
