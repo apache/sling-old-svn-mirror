@@ -336,6 +336,9 @@ public class JsonReader implements ContentReader {
      *     ],
      *  }
      *  </code>
+     *  @param obj Object
+     *  @param contentCreator Content creator
+     *  @throws RepositoryException Repository exception
      */
     protected void createPrincipals(Object obj, ContentCreator contentCreator) throws RepositoryException {
     	if (obj instanceof JsonObject) {
