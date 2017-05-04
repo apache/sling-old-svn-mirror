@@ -260,7 +260,22 @@ public class JsonContentTest {
 
         Resource child2 = children.get(1);
         assertEquals("folder21", child2.getName());
-        assertEquals("nt:folder", ResourceUtil.getValueMap(child2).get("jcr:primaryType", String.class));
+        assertEquals("sling:OrderedFolder", ResourceUtil.getValueMap(child2).get("jcr:primaryType", String.class));
+    }
+
+    @Test
+    public void testFile21aNodeDescriptor() throws RepositoryException {
+        Resource file21a = fsroot.getChild("folder2/folder21/file21a.txt");
+        assertEquals("nt:file", file21a.getResourceType());
+        assertEquals("/my/super/type", file21a.getResourceSuperType());
+        
+        ValueMap props = ResourceUtil.getValueMap(file21a);
+        assertEquals("nt:file", props.get("jcr:primaryType", String.class));
+        assertEquals("/my/super/type", props.get("sling:resourceSuperType", String.class));
+        assertEquals("en", props.get("jcr:language", String.class));
+        assertArrayEquals(new String[] { "mix:language" }, props.get("jcr:mixinTypes", String[].class));
+
+        assertNull(fsroot.getChild("folder2/folder21/file21a.txt.xml"));
     }
 
 }

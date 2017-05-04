@@ -88,7 +88,7 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
                     List<Resource> childResources = new ArrayList<>();
                     for (File file : parentFile.listFiles()) {
                         String filenameSuffix = contentFileExtensions.getSuffix(file);
-                        if (filenameSuffix != null) {
+                        if (filenameSuffix != null && !isNodeDescriptor(file)) {
                             String path = parentPath + "/" + StringUtils.substringBeforeLast(file.getName(), filenameSuffix);
                             ContentFile contentFile = new ContentFile(file, path, null, contentFileCache);
                             childResources.add(new ContentFileResource(resolver, contentFile));
@@ -144,5 +144,15 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
                 + (subPath != null ? "/" + subPath : "");
         return getFile(parentPath, nextSubPath);
     }
-
+    
+    private boolean isNodeDescriptor(File file) {
+        for (String filenameSuffix : contentFileExtensions.getSuffixes()) {
+            if (StringUtils.endsWith(file.getPath(), filenameSuffix)) {
+                File fileWithoutSuffix = new File(StringUtils.substringBeforeLast(file.getPath(), filenameSuffix));
+                return fileWithoutSuffix.exists();
+            }
+        }
+        return false;
+    }
+    
 }

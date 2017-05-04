@@ -31,6 +31,11 @@ public final class ContentFileTypes {
     public static final String JSON_SUFFIX = "." + ContentType.JSON.getExtension();
 
     /**
+     * XML content files.
+     */
+    public static final String XML_SUFFIX = "." + ContentType.XML.getExtension();
+        
+    /**
      * JCR XML content files.
      */
     public static final String JCR_XML_SUFFIX = "." + ContentType.JCR_XML.getExtension();

@@ -29,6 +29,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.fsprovider.internal.ContentFileExtensions;
 import org.apache.sling.fsprovider.internal.FsResourceMapper;
+import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 
 public final class FileResourceMapper implements FsResourceMapper {
 
@@ -42,19 +43,22 @@ public final class FileResourceMapper implements FsResourceMapper {
     private final File providerFile;
     
     private final ContentFileExtensions contentFileExtensions;
+    private final ContentFileCache contentFileCache;
     
-    public FileResourceMapper(String providerRoot, File providerFile, ContentFileExtensions contentFileExtensions) {
+    public FileResourceMapper(String providerRoot, File providerFile,
+            ContentFileExtensions contentFileExtensions, ContentFileCache contentFileCache) {
         this.providerRoot = providerRoot;
         this.providerRootPrefix = providerRoot.concat("/");
         this.providerFile = providerFile;
         this.contentFileExtensions = contentFileExtensions;
+        this.contentFileCache = contentFileCache;
     }
     
     @Override
     public Resource getResource(final ResourceResolver resolver, final String resourcePath) {
         File file = getFile(resourcePath);
         if (file != null) {
-            return new FileResource(resolver, resourcePath, file);
+            return new FileResource(resolver, resourcePath, file, contentFileExtensions, contentFileCache);
         }
         else {
             return null;
@@ -84,7 +88,7 @@ public final class FileResourceMapper implements FsResourceMapper {
                     if (providerRoot.startsWith(parentPathPrefix)) {
                         String relPath = providerRoot.substring(parentPathPrefix.length());
                         if (relPath.indexOf('/') < 0) {
-                            Resource res = new FileResource(resolver, providerRoot, providerFile);
+                            Resource res = new FileResource(resolver, providerRoot, providerFile, contentFileExtensions, contentFileCache);
                             return IteratorUtils.singletonIterator(res);
                         }
                     }
@@ -115,7 +119,7 @@ public final class FileResourceMapper implements FsResourceMapper {
             public Object transform(Object input) {
                 File file = (File)input;
                 String path = parentPath + "/" + file.getName();
-                return new FileResource(resolver, path, file);
+                return new FileResource(resolver, path, file, contentFileExtensions, contentFileCache);
             }
         });
     }
