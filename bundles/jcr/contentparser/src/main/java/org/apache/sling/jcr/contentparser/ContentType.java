@@ -33,6 +33,12 @@ public enum ContentType {
     JSON("json"),
 
     /**
+     * XML content descriptor file.
+     * @see https://sling.apache.org/documentation/bundles/content-loading-jcr-contentloader.html#xml-descriptor-files
+     */
+    XML("xml"),
+
+    /**
      * JCR XML content (FileVault XML). Also known as extended document view XML.
      * Extends the regular document view as specified by JCR 2.0 by specifics like
      * multivalue and typing information. Is used by Jackrabbit FileVault.
