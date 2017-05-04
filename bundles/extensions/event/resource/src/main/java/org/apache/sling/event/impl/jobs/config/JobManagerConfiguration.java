@@ -27,14 +27,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -46,7 +38,6 @@ import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.commons.InitDelayingTopologyEventListener;
 import org.apache.sling.event.impl.EnvironmentComponent;
-import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.tasks.CheckTopologyTask;
 import org.apache.sling.event.impl.jobs.tasks.FindUnfinishedJobsTask;
 import org.apache.sling.event.impl.jobs.tasks.UpgradeTask;
@@ -54,6 +45,15 @@ import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,35 +61,32 @@ import org.slf4j.LoggerFactory;
  * Configuration of the job handling
  *
  */
-@Component(immediate=true, metatype=true,
-           label="Apache Sling Job Manager",
-           description="This is the central service of the job handling.",
-           name="org.apache.sling.event.impl.jobs.jcr.PersistenceHandler")
-@Service(value={JobManagerConfiguration.class})
-@Properties({
-    @Property(name=JobManagerConfiguration.PROPERTY_DISABLE_DISTRIBUTION,
-              boolValue=JobManagerConfiguration.DEFAULT_DISABLE_DISTRIBUTION,
-              label="Disable Distribution",
-              description="If the distribution is disabled, all jobs will be processed on the leader only! "
-                        + "Please use this switch with care."),
-    @Property(name=JobManagerConfiguration.PROPERTY_LOG_DEPRECATION_WARNINGS,
-              boolValue=JobManagerConfiguration.DEFAULT_LOG_DEPRECATION_WARNINGS,
-              label="Deprecation Warnings",
-              description="If this switch is enabled, deprecation warnings will be logged with the INFO level."),
-    @Property(name=JobManagerConfiguration.PROPERTY_STARTUP_DELAY,
-              longValue=JobManagerConfiguration.DEFAULT_STARTUP_DELAY,
-              label="Startup Delay",
-              description="Specify amount in seconds that job manager waits on startup before starting with job handling. "
-                        + "This can be used to allow enough time to restart a cluster before jobs are eventually reassigned."),
-    @Property(name=JobManagerConfiguration.PROPERTY_REPOSITORY_PATH,
-              value=JobManagerConfiguration.DEFAULT_REPOSITORY_PATH, propertyPrivate=true),
-    @Property(name=JobManagerConfiguration.PROPERTY_SCHEDULED_JOBS_PATH,
-              value=JobManagerConfiguration.DEFAULT_SCHEDULED_JOBS_PATH, propertyPrivate=true),
-    @Property(name=JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY,
-              longValue=JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY, propertyPrivate=true),
+@Component(immediate=true,
+           service=JobManagerConfiguration.class,
+           name="org.apache.sling.event.impl.jobs.jcr.PersistenceHandler",
+           property = {
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+                   JobManagerConfiguration.PROPERTY_REPOSITORY_PATH + "=" + JobManagerConfiguration.DEFAULT_REPOSITORY_PATH,
+                   JobManagerConfiguration.PROPERTY_SCHEDULED_JOBS_PATH + "=" + JobManagerConfiguration.DEFAULT_SCHEDULED_JOBS_PATH,
+                   JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY + ":Long=" + JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY
 })
+@Designate(ocd = JobManagerConfiguration.Config.class)
 public class JobManagerConfiguration {
 
+    @ObjectClassDefinition(name = "Apache Sling Job Manager",
+            description="This is the central service of the job handling.")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Disable Distribution",
+        description="If the distribution is disabled, all jobs will be processed on the leader only! "
+                + "Please use this switch with care.")
+        boolean job_consumermanager_disableDistribution() default false;
+
+        @AttributeDefinition(name = "Startup Delay",
+              description="Specify amount in seconds that job manager waits on startup before starting with job handling. "
+                        + "This can be used to allow enough time to restart a cluster before jobs are eventually reassigned.")
+        long startup_delay() default 30;
+    }
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger("org.apache.sling.event.impl.jobs");
 
@@ -102,12 +99,6 @@ public class JobManagerConfiguration {
     /** Default background load delay. */
     public static final long DEFAULT_BACKGROUND_LOAD_DELAY = 10;
 
-    /** Default startup delay. */
-    public static final long DEFAULT_STARTUP_DELAY = 30;
-
-    /** Default for disabling the distribution. */
-    public static final boolean DEFAULT_DISABLE_DISTRIBUTION = false;
-
     /** Default resource path for scheduled jobs. */
     public static final String DEFAULT_SCHEDULED_JOBS_PATH = "/var/eventing/scheduled-jobs";
 
@@ -117,23 +108,8 @@ public class JobManagerConfiguration {
     /** The background loader waits this time of seconds after startup before loading events from the repository. (in secs) */
     public static final String PROPERTY_BACKGROUND_LOAD_DELAY = "load.delay";
 
-    /** The entire job handling waits time amount of seconds until it starts - to allow avoiding reassign on restart of a cluster */
-    public static final String PROPERTY_STARTUP_DELAY = "startup.delay";
-
-    /** Configuration switch for distributing the jobs. */
-    public static final String PROPERTY_DISABLE_DISTRIBUTION = "job.consumermanager.disableDistribution";
-
     /** Configuration property for the scheduled jobs path. */
     public static final String PROPERTY_SCHEDULED_JOBS_PATH = "job.scheduled.jobs.path";
-
-    /** Default value for background loading. */
-    public static final boolean DEFAULT_BACKGROUND_LOAD_SEARCH = true;
-
-    /** Configuration property for deprecation warnings. */
-    public static final String PROPERTY_LOG_DEPRECATION_WARNINGS = "job.log.deprecation";
-
-    /** Default value for deprecation warnings. */
-    public static final boolean DEFAULT_LOG_DEPRECATION_WARNINGS = true;
 
     /** The jobs base path with a slash. */
     private String jobsBasePathWithSlash;
@@ -173,7 +149,7 @@ public class JobManagerConfiguration {
     private String scheduledJobsPathWithSlash;
 
     /** List of topology awares. */
-    private final List<ConfigurationChangeListener> listeners = new ArrayList<ConfigurationChangeListener>();
+    private final List<ConfigurationChangeListener> listeners = new ArrayList<>();
 
     /** The environment component. */
     @Reference
@@ -200,11 +176,12 @@ public class JobManagerConfiguration {
     /**
      * Activate this component.
      * @param props Configuration properties
+     * @param config Configuration properties
      * @throws RuntimeException If the default paths can't be created
      */
     @Activate
-    protected void activate(final Map<String, Object> props) {
-        this.update(props);
+    protected void activate(final Map<String, Object> props, final Config config) {
+        this.update(props, config);
         this.jobsBasePathWithSlash = PropertiesUtil.toString(props.get(PROPERTY_REPOSITORY_PATH),
                 DEFAULT_REPOSITORY_PATH) + '/';
 
@@ -240,7 +217,7 @@ public class JobManagerConfiguration {
 
         // SLING-5560 : use an InitDelayingTopologyEventListener
         if (this.startupDelay > 0) {
-            logger.debug("activate: job manager will start in {} sec. ({})", this.startupDelay, PROPERTY_STARTUP_DELAY);
+            logger.debug("activate: job manager will start in {} sec. ({})", this.startupDelay, config.startup_delay());
             this.startupDelayListener = new InitDelayingTopologyEventListener(startupDelay, new TopologyEventListener() {
 
                 @Override
@@ -249,7 +226,7 @@ public class JobManagerConfiguration {
                 }
             }, this.scheduler, logger);
         } else {
-            logger.debug("activate: job manager will start without delay. ({}:{})", PROPERTY_STARTUP_DELAY, this.startupDelay);
+            logger.debug("activate: job manager will start without delay. ({}:{})", config.startup_delay(), this.startupDelay);
         }
     }
 
@@ -257,14 +234,13 @@ public class JobManagerConfiguration {
      * Update with a new configuration
      */
     @Modified
-    protected void update(final Map<String, Object> props) {
-        this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
+    protected void update(final Map<String, Object> props, final Config config) {
+        this.disabledDistribution = config.job_consumermanager_disableDistribution();
         this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
         // SLING-5560: note that currently you can't change the startupDelay to have
         // an immediate effect - it will only have an effect on next activation.
         // (as 'startup delay runnable' is already scheduled in activate)
-        this.startupDelay = PropertiesUtil.toLong(props.get(PROPERTY_STARTUP_DELAY), DEFAULT_STARTUP_DELAY);
-        Utility.LOG_DEPRECATION_WARNINGS = PropertiesUtil.toBoolean(props.get(PROPERTY_LOG_DEPRECATION_WARNINGS), DEFAULT_LOG_DEPRECATION_WARNINGS);
+        this.startupDelay = config.startup_delay();
     }
 
     /**
@@ -622,7 +598,7 @@ public class JobManagerConfiguration {
         }
     }
 
-    private final Map<String, Job> retryList = new HashMap<String, Job>();
+    private final Map<String, Job> retryList = new HashMap<>();
 
     public void addJobToRetryList(final Job job) {
         synchronized ( retryList ) {
@@ -631,7 +607,7 @@ public class JobManagerConfiguration {
     }
 
     public List<Job> clearJobRetryList() {
-        final List<Job> result = new ArrayList<Job>();
+        final List<Job> result = new ArrayList<>();
         synchronized ( this.retryList ) {
             result.addAll(retryList.values());
             retryList.clear();

@@ -40,8 +40,6 @@ import org.slf4j.Logger;
 
 public abstract class Utility {
 
-    public static volatile boolean LOG_DEPRECATION_WARNINGS = true;
-
     /**
      * Check if the job topic is a valid OSGI event name (see 113.3.1 of the OSGI spec)
      * @return <code>null</code> if the topic is syntactically correct otherwise an error description is returned
@@ -55,7 +53,7 @@ public abstract class Utility {
                 } catch (final IllegalArgumentException iae) {
                 	message = String.format("Discarding job - job has an illegal job topic '%s'",jobTopic);
                 }
-                
+
             } else {
                 message = "Discarding job - job topic is not of type string";
             }
@@ -90,7 +88,7 @@ public abstract class Utility {
      * @return New event object.
      */
     public static Event toEvent(final Job job) {
-        final Map<String, Object> eventProps = new HashMap<String, Object>();
+        final Map<String, Object> eventProps = new HashMap<>();
         eventProps.putAll(((JobImpl)job).getProperties());
         eventProps.put(ResourceHelper.PROPERTY_JOB_ID, job.getId());
         eventProps.remove(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER);
@@ -257,7 +255,7 @@ public abstract class Utility {
      * @return Sorted list of children.
      */
     public static List<Resource> getSortedChildren(final Logger logger, final String type, final Resource rsrc) {
-        final List<Resource> children = new ArrayList<Resource>();
+        final List<Resource> children = new ArrayList<>();
         final Iterator<Resource> monthIter = rsrc.listChildren();
         while ( monthIter.hasNext() ) {
             final Resource monthResource = monthIter.next();
@@ -266,16 +264,5 @@ public abstract class Utility {
         }
         Collections.sort(children, RESOURCE_COMPARATOR);
         return children;
-    }
-
-    /**
-     * Log a deprecation warning on level info into the log
-     * @param logger The logger to use
-     * @param message The message.
-     */
-    public static void logDeprecated(final Logger logger, final String message) {
-        if ( LOG_DEPRECATION_WARNINGS && logger.isInfoEnabled() ) {
-            logger.info("DEPRECATION-WARNING: " + message, new Exception(message));
-        }
     }
 }

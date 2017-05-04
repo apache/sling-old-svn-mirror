@@ -24,68 +24,128 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class InternalQueueConfigurationTest {
 
-    @org.junit.Test public void testMaxParallel() {
-        final Map<String, Object> p = new HashMap<String, Object>();
-        p.put(ConfigurationConstants.PROP_NAME, "QueueConfigurationTest");
-        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, -1);
+    private InternalQueueConfiguration.Config createConfig(final double maxParallel) {
+        return createConfig(null, "QueueConfigurationTest", maxParallel);
+    }
 
-        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+    private InternalQueueConfiguration.Config createConfig(final String[] topics) {
+        return createConfig(topics, "QueueConfigurationTest", ConfigurationConstants.DEFAULT_MAX_PARALLEL);
+    }
+
+    private InternalQueueConfiguration.Config createConfig(final String[] topics, final String name) {
+        return createConfig(topics, name, ConfigurationConstants.DEFAULT_MAX_PARALLEL);
+    }
+
+    private InternalQueueConfiguration.Config createConfig(final String[] topics,
+            final String name,
+            final double maxParallel) {
+        return new InternalQueueConfiguration.Config() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return InternalQueueConfiguration.Config.class;
+            }
+
+            @Override
+            public String queue_name() {
+                return name;
+            }
+
+            @Override
+            public String[] queue_topics() {
+                return topics;
+            }
+
+            @Override
+            public String queue_type() {
+                return "UNORDERED";
+            }
+
+            @Override
+            public String queue_priority() {
+                return ConfigurationConstants.DEFAULT_PRIORITY;
+            }
+
+            @Override
+            public int queue_retries() {
+                return ConfigurationConstants.DEFAULT_RETRIES;
+            }
+
+            @Override
+            public long queue_retrydelay() {
+                return ConfigurationConstants.DEFAULT_RETRY_DELAY;
+            }
+
+            @Override
+            public double queue_maxparallel() {
+                return maxParallel;
+            }
+
+            @Override
+            public boolean queue_keepJobs() {
+                return false;
+            }
+
+            @Override
+            public boolean queue_preferRunOnCreationInstance() {
+                return false;
+            }
+
+            @Override
+            public int queue_threadPoolSize() {
+                return 0;
+            }
+
+            @Override
+            public int service_ranking() {
+                return 0;
+            }
+        };
+    }
+
+    @org.junit.Test public void testMaxParallel() {
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(-1));
         assertEquals(Runtime.getRuntime().availableProcessors(), c.getMaxParallel());
 
         // Edge cases 0.0 and 1.0 (treated as int numbers)
-        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 0.0);
-        c = InternalQueueConfiguration.fromConfiguration(p);
+        c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(0.0));
         assertEquals(0, c.getMaxParallel());
 
-        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 1.0);
-        c = InternalQueueConfiguration.fromConfiguration(p);
+        c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(1.0));
         assertEquals(1, c.getMaxParallel());
 
         // percentage (50%)
-        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 0.5);
-        c = InternalQueueConfiguration.fromConfiguration(p);
+        c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(0.5));
         assertEquals((int) Math.round(Runtime.getRuntime().availableProcessors() * 0.5), c.getMaxParallel());
 
         // rounding
-        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 0.90);
-        c = InternalQueueConfiguration.fromConfiguration(p);
+        c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(0.90));
         assertEquals((int) Math.round(Runtime.getRuntime().availableProcessors() * 0.9), c.getMaxParallel());
 
-        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 0.99);
-        c = InternalQueueConfiguration.fromConfiguration(p);
+        c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(0.99));
         assertEquals((int) Math.round(Runtime.getRuntime().availableProcessors() * 0.99), c.getMaxParallel());
 
         // Percentages can't go over 99% (0.99)
-        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, 1.01);
-        c = InternalQueueConfiguration.fromConfiguration(p);
+        c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(1.01));
         assertEquals(Runtime.getRuntime().availableProcessors(), c.getMaxParallel());
 
         // Treat negative values same a -1 (all cores)
-        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, -0.5);
-        c = InternalQueueConfiguration.fromConfiguration(p);
+        c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(-0.5));
         assertEquals(Runtime.getRuntime().availableProcessors(), c.getMaxParallel());
 
-        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, -2);
-        c = InternalQueueConfiguration.fromConfiguration(p);
+        c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(-2));
         assertEquals(Runtime.getRuntime().availableProcessors(), c.getMaxParallel());
-
-        // Invalid number results in ConfigurationConstants.DEFAULT_MAX_PARALLEL
-        p.put(ConfigurationConstants.PROP_MAX_PARALLEL, "a string");
-        c = InternalQueueConfiguration.fromConfiguration(p);
-        assertEquals(ConfigurationConstants.DEFAULT_MAX_PARALLEL, c.getMaxParallel());
     }
 
     @org.junit.Test public void testTopicMatchersDot() {
-        final Map<String, Object> p = new HashMap<String, Object>();
-        p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a."});
-        p.put(ConfigurationConstants.PROP_NAME, "test");
-
-        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(new String[] {"a."}));
         assertTrue(c.isValid());
         assertNotNull(c.match("a/b"));
         assertNotNull(c.match("a/c"));
@@ -96,11 +156,7 @@ public class InternalQueueConfigurationTest {
     }
 
     @org.junit.Test public void testTopicMatchersStar() {
-        final Map<String, Object> p = new HashMap<String, Object>();
-        p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a*"});
-        p.put(ConfigurationConstants.PROP_NAME, "test");
-
-        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(new String[] {"a*"}));
         assertTrue(c.isValid());
         assertNotNull(c.match("a/b"));
         assertNotNull(c.match("a/c"));
@@ -111,11 +167,7 @@ public class InternalQueueConfigurationTest {
     }
 
     @org.junit.Test public void testTopicMatchers() {
-        final Map<String, Object> p = new HashMap<String, Object>();
-        p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a"});
-        p.put(ConfigurationConstants.PROP_NAME, "test");
-
-        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(new String[] {"a"}));
         assertTrue(c.isValid());
         assertNull(c.match("a/b"));
         assertNull(c.match("a/c"));
@@ -126,11 +178,7 @@ public class InternalQueueConfigurationTest {
     }
 
     @org.junit.Test public void testTopicMatcherAndReplacement() {
-        final Map<String, Object> p = new HashMap<String, Object>();
-        p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a."});
-        p.put(ConfigurationConstants.PROP_NAME, "test-queue-{0}");
-
-        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(new String[] {"a."}, "test-queue-{0}"));
         assertTrue(c.isValid());
         final String b = "a/b";
         assertNotNull(c.match(b));
@@ -141,11 +189,7 @@ public class InternalQueueConfigurationTest {
     }
 
     @org.junit.Test public void testTopicMatchersDotAndSlash() {
-        final Map<String, Object> p = new HashMap<String, Object>();
-        p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a/."});
-        p.put(ConfigurationConstants.PROP_NAME, "test");
-
-        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(new String[] {"a/."}));
         assertTrue(c.isValid());
         assertNotNull(c.match("a/b"));
         assertNotNull(c.match("a/c"));
@@ -156,11 +200,11 @@ public class InternalQueueConfigurationTest {
     }
 
     @org.junit.Test public void testTopicMatchersStarAndSlash() {
-        final Map<String, Object> p = new HashMap<String, Object>();
+        final Map<String, Object> p = new HashMap<>();
         p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a/*"});
         p.put(ConfigurationConstants.PROP_NAME, "test");
 
-        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(new String[] {"a/*"}));
         assertTrue(c.isValid());
         assertNotNull(c.match("a/b"));
         assertNotNull(c.match("a/c"));
@@ -171,11 +215,7 @@ public class InternalQueueConfigurationTest {
     }
 
     @org.junit.Test public void testTopicMatcherAndReplacementAndSlash() {
-        final Map<String, Object> p = new HashMap<String, Object>();
-        p.put(ConfigurationConstants.PROP_TOPICS, new String[] {"a/."});
-        p.put(ConfigurationConstants.PROP_NAME, "test-queue-{0}");
-
-        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(new String[] {"a/."}, "test-queue-{0}"));
         assertTrue(c.isValid());
         final String b = "a/b";
         assertNotNull(c.match(b));
@@ -186,10 +226,10 @@ public class InternalQueueConfigurationTest {
     }
 
     @org.junit.Test public void testNoTopicMatchers() {
-        final Map<String, Object> p = new HashMap<String, Object>();
+        final Map<String, Object> p = new HashMap<>();
         p.put(ConfigurationConstants.PROP_NAME, "test");
 
-        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
+        InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(Collections.<String, Object>emptyMap(), createConfig(null));
         assertFalse(c.isValid());
     }
 }

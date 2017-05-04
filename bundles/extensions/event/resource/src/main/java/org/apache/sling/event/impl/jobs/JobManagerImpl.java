@@ -28,13 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
@@ -69,6 +62,10 @@ import org.apache.sling.event.jobs.jmx.QueuesMBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
@@ -80,15 +77,15 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of the job manager.
  */
-@Component(immediate=true)
-@Service(value={JobManager.class, EventHandler.class, Runnable.class})
-@Properties({
-    @Property(name="scheduler.period", longValue=60),
-    @Property(name="scheduler.concurrent", boolValue=false),
-    @Property(name=EventConstants.EVENT_TOPIC,
-              value={ResourceHelper.BUNDLE_EVENT_STARTED,
-                     ResourceHelper.BUNDLE_EVENT_UPDATED})
-})
+@Component(immediate=true,
+    service={JobManager.class, EventHandler.class, Runnable.class},
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            "scheduler.period:Long=60",
+            "scheduler.concurrent:Boolean=false",
+            EventConstants.EVENT_TOPIC + "=" + ResourceHelper.BUNDLE_EVENT_STARTED,
+            EventConstants.EVENT_TOPIC + "=" + ResourceHelper.BUNDLE_EVENT_UPDATED
+    })
 public class JobManagerImpl
     implements JobManager, EventHandler, Runnable {
 
@@ -383,7 +380,7 @@ public class JobManagerImpl
                                        || type == QueryType.ERROR
                                        || type == QueryType.GIVEN_UP
                                        || type == QueryType.STOPPED;
-        final List<Job> result = new ArrayList<Job>();
+        final List<Job> result = new ArrayList<>();
         final ResourceResolver resolver = this.configuration.createResourceResolver();
         final StringBuilder buf = new StringBuilder(64);
         try {
@@ -609,7 +606,7 @@ public class JobManagerImpl
         final String path = this.configuration.getUniquePath(info.targetId, jobTopic, jobId, jobProperties);
 
         // create properties
-        final Map<String, Object> properties = new HashMap<String, Object>();
+        final Map<String, Object> properties = new HashMap<>();
 
         if ( jobProperties != null ) {
             for(final Map.Entry<String, Object> entry : jobProperties.entrySet() ) {
@@ -720,7 +717,7 @@ public class JobManagerImpl
                                   errorMessage});
             return null;
         }
-        final List<String> errorList = new ArrayList<String>();
+        final List<String> errorList = new ArrayList<>();
         Job result = this.addJobInternal(topic, properties, errorList);
         if ( errors != null ) {
             errors.addAll(errorList);

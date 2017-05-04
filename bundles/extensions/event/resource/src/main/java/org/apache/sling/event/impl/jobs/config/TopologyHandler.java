@@ -22,13 +22,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEventListener;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +36,10 @@ import org.slf4j.LoggerFactory;
  * This topology handler is handling the topology change events asynchronously
  * and processes them by queuing them.
  */
-@Component
-@Service(value = TopologyEventListener.class)
+@Component(service = TopologyEventListener.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    })
 public class TopologyHandler implements TopologyEventListener, Runnable {
 
     /** The logger. */
@@ -47,7 +49,7 @@ public class TopologyHandler implements TopologyEventListener, Runnable {
     private JobManagerConfiguration configuration;
 
     /** A local queue for async handling of the events */
-    private final BlockingQueue<QueueItem> queue = new LinkedBlockingQueue<QueueItem>();
+    private final BlockingQueue<QueueItem> queue = new LinkedBlockingQueue<>();
 
     /** Active flag. */
     private final AtomicBoolean isActive = new AtomicBoolean(false);

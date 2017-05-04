@@ -293,10 +293,10 @@ public abstract class AbstractJobHandlingTest {
     public void setup() throws IOException {
         // set load delay to 3 sec
         final org.osgi.service.cm.Configuration c2 = this.configAdmin.getConfiguration("org.apache.sling.event.impl.jobs.jcr.PersistenceHandler", null);
-        Dictionary<String, Object> p2 = new Hashtable<String, Object>();
+        Dictionary<String, Object> p2 = new Hashtable<>();
         p2.put(JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY, 3L);
         // and startup.delay to 1sec - otherwise default of 30sec breaks tests!
-        p2.put(JobManagerConfiguration.PROPERTY_STARTUP_DELAY, 1L);
+        p2.put("startup.delay", 1L);
         c2.update(p2);
 
         // SLING-5560 : since the above (re)config is now applied, we're safe
@@ -390,7 +390,7 @@ public abstract class AbstractJobHandlingTest {
      */
     protected ServiceRegistration<EventHandler> registerEventHandler(final String topic,
             final EventHandler handler) {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put(EventConstants.EVENT_TOPIC, topic);
         final ServiceRegistration<EventHandler> reg = this.bc.registerService(EventHandler.class,
                 handler, props);
@@ -429,7 +429,7 @@ public abstract class AbstractJobHandlingTest {
     protected ServiceRegistration<JobConsumer> registerJobConsumer(final String topic,
             final JobConsumer handler) {
         long cc = this.getConsumerChangeCount();
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put(JobConsumer.PROPERTY_TOPICS, topic);
         final ServiceRegistration<JobConsumer> reg = this.bc.registerService(JobConsumer.class,
                 handler, props);
@@ -444,7 +444,7 @@ public abstract class AbstractJobHandlingTest {
     protected ServiceRegistration<JobExecutor> registerJobExecutor(final String topic,
             final JobExecutor handler) {
         long cc = this.getConsumerChangeCount();
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put(JobConsumer.PROPERTY_TOPICS, topic);
         final ServiceRegistration<JobExecutor> reg = this.bc.registerService(JobExecutor.class,
                 handler, props);
