@@ -39,6 +39,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.fsprovider.internal.ContentFileExtensions;
+import org.apache.sling.fsprovider.internal.FsMode;
 import org.apache.sling.fsprovider.internal.mapper.valuemap.ValueMapDecorator;
 import org.apache.sling.fsprovider.internal.parser.ContentElement;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
@@ -89,6 +90,7 @@ public final class FileResource extends AbstractResource {
 
     private final ContentFileExtensions contentFileExtensions;
     private final ContentFileCache contentFileCache;
+    private final FsMode fsMode;
 
     private static final Logger log = LoggerFactory.getLogger(FileResource.class);
     
@@ -99,17 +101,19 @@ public final class FileResource extends AbstractResource {
      * @param resourcePath The resource path in the resource tree
      * @param file The wrapped file
      */
-    FileResource(ResourceResolver resolver, String resourcePath, File file) {
-        this(resolver, resourcePath, file, null, null);
+    FileResource(ResourceResolver resolver, String resourcePath, File file, FsMode fsMode) {
+        this(resolver, resourcePath, file, null, null, fsMode);
     }
     
     FileResource(ResourceResolver resolver, String resourcePath, File file,
-            ContentFileExtensions contentFileExtensions, ContentFileCache contentFileCache) {
+            ContentFileExtensions contentFileExtensions, ContentFileCache contentFileCache,
+            FsMode fsMode) {
         this.resolver = resolver;
         this.resourcePath = resourcePath;
         this.file = file;
         this.contentFileExtensions = contentFileExtensions;
         this.contentFileCache = contentFileCache;
+        this.fsMode = fsMode;
     }
 
     /**
@@ -130,7 +134,7 @@ public final class FileResource extends AbstractResource {
             metaData.setContentLength(file.length());
             metaData.setModificationTime(file.lastModified());
             metaData.setResolutionPath(resourcePath);
-            if ( this.file.isDirectory() ) {
+            if (fsMode == FsMode.FILES_FOLDERS && this.file.isDirectory()) {
                 metaData.put(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING, Boolean.TRUE);
             }
         }

@@ -288,7 +288,7 @@ public final class FsResourceProvider implements ResourceProvider {
             this.fileVaultMapper = new FileVaultResourceMapper(this.providerFile, filterXmlFile, this.contentFileCache);
         }
         else {
-            this.fileMapper = new FileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions, this.contentFileCache);
+            this.fileMapper = new FileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions, this.contentFileCache, this.fsMode);
             this.contentFileMapper = new ContentFileResourceMapper(this.providerRoot, this.providerFile,
                     contentFileExtensions, this.contentFileCache);
         }
