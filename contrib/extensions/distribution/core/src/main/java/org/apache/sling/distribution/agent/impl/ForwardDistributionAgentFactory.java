@@ -61,6 +61,7 @@ import org.apache.sling.distribution.queue.impl.PriorityQueueDispatchingStrategy
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.simple.SimpleDistributionQueueProvider;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.HttpConfiguration;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -179,6 +180,12 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Property(boolValue = false, label = "Async delivery", description = "Whether or not to use a separate delivery queue to maximize transport throughput when queue has more than 100 items")
     public static final String ASYNC_DELIVERY = "async.delivery";
 
+    /**
+     * timeout for HTTP requests
+     */
+    @Property(label = "HTTP connection timeout", intValue = 10, description = "The connection timeout for HTTP requests (in seconds).")
+    public static final String HTTP = "http.conn.timeout";
+
     @Reference
     private Packaging packaging;
 
@@ -239,6 +246,9 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         Map<String, String> priorityQueues = PropertiesUtil.toMap(config.get(PRIORITY_QUEUES), new String[0]);
         priorityQueues = SettingsUtils.removeEmptyEntries(priorityQueues);
 
+        Integer timeout = PropertiesUtil.toInteger(HTTP, 10) * 1000;
+        HttpConfiguration httpConfiguration = new HttpConfiguration(timeout);
+
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
 
         DistributionQueueProvider queueProvider;
@@ -293,7 +303,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         processingQueues.addAll(endpointNames);
         processingQueues.removeAll(Arrays.asList(passiveQueues));
 
-        packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap);
+        packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider,
+                importerEndpointsMap, httpConfiguration);
 
         DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.ADD, DistributionRequestType.DELETE};
 

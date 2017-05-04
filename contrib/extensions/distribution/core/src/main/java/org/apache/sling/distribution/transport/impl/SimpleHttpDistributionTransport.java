@@ -71,16 +71,19 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     private final DistributionEndpoint distributionEndpoint;
     private final DistributionPackageBuilder packageBuilder;
     private final DistributionTransportSecretProvider secretProvider;
+    private final HttpConfiguration httpConfiguration;
     private final String contextKeyExecutor;
 
     public SimpleHttpDistributionTransport(DefaultDistributionLog log, DistributionEndpoint distributionEndpoint,
                                            DistributionPackageBuilder packageBuilder,
-                                           DistributionTransportSecretProvider secretProvider) {
+                                           DistributionTransportSecretProvider secretProvider,
+                                           HttpConfiguration httpConfiguration) {
         this.log = log;
 
         this.distributionEndpoint = distributionEndpoint;
         this.packageBuilder = packageBuilder;
         this.secretProvider = secretProvider;
+        this.httpConfiguration = httpConfiguration;
         this.contextKeyExecutor = EXECUTOR_CONTEXT_KEY_PREFIX + "_" + getHostAndPort(distributionEndpoint.getUri()) + "_" + UUID.randomUUID();
     }
 
@@ -98,7 +101,10 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             try {
                 Executor executor = getExecutor(distributionContext);
 
-                Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
+                Request req = Request.Post(distributionEndpoint.getUri())
+                        .connectTimeout(httpConfiguration.getConnectTimeout())
+                        .socketTimeout(httpConfiguration.getSocketTimeout())
+                        .useExpectContinue();
 
                 // add the message body digest, see https://tools.ietf.org/html/rfc3230#section-4.3.2
                 if (distributionPackage instanceof AbstractDistributionPackage) {
@@ -147,7 +153,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             Executor executor = getExecutor(distributionContext);
 
             // TODO : add queue parameter
-            InputStream inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI);
+            InputStream inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI, httpConfiguration);
 
             if (inputStream == null) {
                 return null;
