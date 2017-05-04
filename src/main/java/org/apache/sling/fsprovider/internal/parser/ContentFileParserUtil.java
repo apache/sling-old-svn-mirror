@@ -20,6 +20,7 @@ package org.apache.sling.fsprovider.internal.parser;
 
 import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JCR_XML_SUFFIX;
+import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.XML_SUFFIX;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JSON_SUFFIX;
 
 import java.io.BufferedInputStream;
@@ -54,6 +55,7 @@ class ContentFileParserUtil {
         }
     }
     private static final ContentParser JCR_XML_PARSER = ContentParserFactory.create(ContentType.JCR_XML);
+    private static final ContentParser XML_PARSER = ContentParserFactory.create(ContentType.XML);
     
     private ContentFileParserUtil() {
         // static methods only
@@ -74,6 +76,9 @@ class ContentFileParserUtil {
             }
             else if (StringUtils.equals(file.getName(), DOT_CONTENT_XML) || StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
                 return parse(JCR_XML_PARSER, file);
+            }
+            else if (StringUtils.endsWith(file.getName(), XML_SUFFIX) && !StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
+                return parse(XML_PARSER, file);
             }
         }
         catch (Throwable ex) {

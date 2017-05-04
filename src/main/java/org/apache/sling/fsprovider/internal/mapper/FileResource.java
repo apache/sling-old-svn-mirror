@@ -28,6 +28,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.sling.adapter.annotations.Adaptable;
@@ -37,8 +38,12 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.fsprovider.internal.ContentFileExtensions;
 import org.apache.sling.fsprovider.internal.FsResourceProvider;
 import org.apache.sling.fsprovider.internal.mapper.valuemap.ValueMapDecorator;
+import org.apache.sling.fsprovider.internal.parser.ContentElement;
+import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
+import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,11 +78,18 @@ public final class FileResource extends AbstractResource {
     // the file wrapped by this instance
     private final File file;
 
-    // the resource type, assigned on demand
-    private String resourceType;
-
     // the resource metadata, assigned on demand
     private ResourceMetadata metaData;
+
+    // the resource type, assigned on demand
+    private String resourceType;
+    private String resourceSuperType;
+    
+    // valuemap is build on demand
+    private ValueMap valueMap;
+
+    private final ContentFileExtensions contentFileExtensions;
+    private final ContentFileCache contentFileCache;
 
     private static final Logger log = LoggerFactory.getLogger(FileResource.class);
     
@@ -89,9 +101,16 @@ public final class FileResource extends AbstractResource {
      * @param file The wrapped file
      */
     FileResource(ResourceResolver resolver, String resourcePath, File file) {
+        this(resolver, resourcePath, file, null, null);
+    }
+    
+    FileResource(ResourceResolver resolver, String resourcePath, File file,
+            ContentFileExtensions contentFileExtensions, ContentFileCache contentFileCache) {
         this.resolver = resolver;
         this.resourcePath = resourcePath;
         this.file = file;
+        this.contentFileExtensions = contentFileExtensions;
+        this.contentFileCache = contentFileCache;
     }
 
     /**
@@ -127,21 +146,21 @@ public final class FileResource extends AbstractResource {
         return resolver;
     }
 
-    /**
-     * Returns <code>null</code>}
-     */
     public String getResourceSuperType() {
-        return null;
+        if (resourceSuperType == null) {
+            resourceSuperType = getValueMap().get("sling:resourceSuperType", String.class);
+        }
+        return resourceSuperType;
     }
 
-    /**
-     * Returns {@link #RESOURCE_TYPE_FILE} if this resource
-     * wraps a file. Otherwise {@link #RESOURCE_TYPE_FOLDER}
-     * is returned.
-     */
     public String getResourceType() {
         if (resourceType == null) {
-            resourceType = file.isFile() ? RESOURCE_TYPE_FILE : RESOURCE_TYPE_FOLDER;
+            ValueMap props = getValueMap();
+            resourceType = props.get("sling:resourceType", String.class);
+            if (resourceType == null) {
+                // fallback to jcr:primaryType when resource type not set
+                resourceType = props.get("jcr:primaryType", String.class);
+            }
         }
         return resourceType;
     }
@@ -177,20 +196,9 @@ public final class FileResource extends AbstractResource {
             catch (MalformedURLException mue) {
                 log.info("adaptTo: Cannot convert the file path " + file + " to an URL", mue);
             }
-
         }
         else if (type == ValueMap.class) {
-            // this resource simulates nt:file/nt:folder behavior by returning it as resource type
-            // we should simulate the corresponding JCR properties in a value map as well
-            if (file.exists() && file.canRead()) {
-                Map<String,Object> props = new HashMap<String, Object>();
-                props.put("jcr:primaryType", getResourceType());
-                props.put("jcr:createdBy", "system");
-                Calendar lastModifed = Calendar.getInstance();
-                lastModifed.setTimeInMillis(file.lastModified());
-                props.put("jcr:created", lastModifed);
-                return (AdapterType) new ValueMapDecorator(props);
-            }
+            return (AdapterType) getValueMap();
         }
         return super.adaptTo(type);
     }
@@ -204,4 +212,50 @@ public final class FileResource extends AbstractResource {
                 .build();
     }
 
+    @Override
+    public ValueMap getValueMap() {
+        if (valueMap == null) {
+            // this resource simulates nt:file/nt:folder behavior by returning it as resource type
+            // we should simulate the corresponding JCR properties in a value map as well
+            if (file.exists() && file.canRead()) {
+                Map<String,Object> props = new HashMap<String, Object>();
+                props.put("jcr:primaryType", file.isFile() ? RESOURCE_TYPE_FILE : RESOURCE_TYPE_FOLDER);
+                props.put("jcr:createdBy", "system");
+                
+                Calendar lastModifed = Calendar.getInstance();
+                lastModifed.setTimeInMillis(file.lastModified());
+                props.put("jcr:created", lastModifed);
+                
+                // overlay properties with those from node descriptor content file, if it exists
+                ContentElement content = getNodeDescriptorContent();
+                if (content != null) {
+                    for (Map.Entry<String, Object> entry : content.getProperties().entrySet()) {
+                        // skip primary type if it is the default type assigned by contentparser when none is defined
+                        if (StringUtils.equals(entry.getKey(), "jcr:primaryType")
+                                && StringUtils.equals((String)entry.getValue(), ParserOptions.DEFAULT_PRIMARY_TYPE)) {
+                            continue;
+                        }
+                        props.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                
+                valueMap = new ValueMapDecorator(props);
+            }
+        }
+        return valueMap;
+    }
+    
+    private ContentElement getNodeDescriptorContent() {
+        if (contentFileExtensions == null || contentFileCache == null) {
+            return null;
+        }
+        for (String fileNameSuffix : contentFileExtensions.getSuffixes()) {
+            File fileWithSuffix = new File(file.getPath() + fileNameSuffix);
+            if (fileWithSuffix.exists() && fileWithSuffix.canRead()) {
+                return contentFileCache.get(resourcePath, fileWithSuffix);
+            }
+        }
+        return null;
+    }
+    
 }
