@@ -31,10 +31,7 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.impl.DistributionTransportContext;
-import org.apache.sling.distribution.transport.impl.DistributionTransport;
-import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
+import org.apache.sling.distribution.transport.impl.*;
 
 /**
  * Remote implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageImporter}
@@ -45,7 +42,7 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
     private final DistributionTransportContext distributionContext = new DistributionTransportContext();
 
     public RemoteDistributionPackageImporter(DefaultDistributionLog log, DistributionTransportSecretProvider distributionTransportSecretProvider,
-                                             Map<String, String> endpointsMap) {
+                                             Map<String, String> endpointsMap, HttpConfiguration httpConfiguration) {
         if (distributionTransportSecretProvider == null) {
             throw new IllegalArgumentException("distributionTransportSecretProvider is required");
         }
@@ -54,7 +51,8 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
             String endpointKey = entry.getKey();
             String endpoint = entry.getValue();
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider));
+                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint),
+                        null, distributionTransportSecretProvider, httpConfiguration));
             }
         }
     }

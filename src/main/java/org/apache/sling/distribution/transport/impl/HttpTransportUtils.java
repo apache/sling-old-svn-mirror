@@ -19,22 +19,26 @@
 
 package org.apache.sling.distribution.transport.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 class HttpTransportUtils {
 
-    public static InputStream fetchNextPackage(Executor executor, URI distributionURI) throws URISyntaxException, IOException {
+    public static InputStream fetchNextPackage(Executor executor, URI distributionURI, HttpConfiguration httpConfiguration)
+            throws URISyntaxException, IOException {
         URI fetchUri = getFetchUri(distributionURI);
-        Request fetchReq = Request.Post(fetchUri).useExpectContinue();
+        Request fetchReq = Request.Post(fetchUri)
+                .connectTimeout(httpConfiguration.getConnectTimeout())
+                .socketTimeout(httpConfiguration.getSocketTimeout())
+                .useExpectContinue();
         HttpResponse httpResponse = executor.execute(fetchReq).returnResponse();
 
         if (httpResponse.getStatusLine().getStatusCode() != 200) {
