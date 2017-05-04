@@ -22,22 +22,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.event.impl.support.ResourceHelper;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 
 /**
  * The queue manager manages queue configurations.
  */
-@Component
-@Service(value=QueueConfigurationManager.class)
-@Reference(referenceInterface=InternalQueueConfiguration.class, policy=ReferencePolicy.DYNAMIC,
-           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
-           bind="bindConfig", unbind="unbindConfig", updated="updateConfig")
+@Component(service = QueueConfigurationManager.class,
+property = {
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+})
 public class QueueConfigurationManager {
 
     /** Empty configuration array. */
@@ -47,7 +46,7 @@ public class QueueConfigurationManager {
     private volatile InternalQueueConfiguration[] orderedConfigs = EMPTY_CONFIGS;
 
     /** All configurations. */
-    private final List<InternalQueueConfiguration> configurations = new ArrayList<InternalQueueConfiguration>();
+    private final List<InternalQueueConfiguration> configurations = new ArrayList<>();
 
     /** The main queue configuration. */
     @Reference
@@ -57,6 +56,9 @@ public class QueueConfigurationManager {
      * Add a new queue configuration.
      * @param config A new queue configuration.
      */
+    @Reference(service=InternalQueueConfiguration.class, policy=ReferencePolicy.DYNAMIC,
+            cardinality=ReferenceCardinality.MULTIPLE,
+            updated="updateConfig")
     protected void bindConfig(final InternalQueueConfiguration config) {
         synchronized ( configurations ) {
             configurations.add(config);

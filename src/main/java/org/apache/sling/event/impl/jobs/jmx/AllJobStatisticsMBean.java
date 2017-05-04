@@ -17,23 +17,24 @@
  */
 package org.apache.sling.event.impl.jobs.jmx;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.jmx.StatisticsMBean;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-@Component
-@Service(value = StatisticsMBean.class)
-@Properties(@Property(name = "jmx.objectname", value = "org.apache.sling:type=queues,name=AllQueues"))
+@Component(service =  StatisticsMBean.class,
+    property = {
+            "jmx.objectname=org.apache.sling:type=queues,name=AllQueues",
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+})
 public class AllJobStatisticsMBean extends AbstractJobStatistics {
 
     private static final long TTL = 1000L;
     private long agregateStatisticsTTL = 0L;
     private Statistics aggregateStatistics;
+
     @Reference
     private JobManager jobManager;
 

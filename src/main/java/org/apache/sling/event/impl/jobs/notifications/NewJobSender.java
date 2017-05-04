@@ -22,10 +22,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
@@ -36,6 +32,10 @@ import org.apache.sling.event.jobs.NotificationConstants;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * This component receives resource added events and sends a job
  * created event.
  */
-@Component
+@Component(service = {})
 public class NewJobSender implements ResourceChangeListener, ExternalResourceChangeListener {
 
     /** Logger. */
@@ -68,7 +68,7 @@ public class NewJobSender implements ResourceChangeListener, ExternalResourceCha
      */
     @Activate
     protected void activate(final BundleContext bundleContext) {
-        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        final Dictionary<String, Object> properties = new Hashtable<>();
         properties.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Job Topic Manager Event Handler");
         properties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         properties.put(ResourceChangeListener.CHANGES, ChangeType.ADDED.toString());
@@ -104,7 +104,7 @@ public class NewJobSender implements ResourceChangeListener, ExternalResourceCha
 
                 if ( path.indexOf("_", topicEnd + 1) != -1 ) {
                 	// only job id and topic are guaranteed
-                	final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+                	final Dictionary<String, Object> properties = new Hashtable<>();
                 	properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, jobId);
                     properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC, topic);
 

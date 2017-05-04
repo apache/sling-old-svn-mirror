@@ -29,13 +29,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -48,7 +41,6 @@ import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.config.ConfigurationChangeListener;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.jmx.QueueStatusEvent;
 import org.apache.sling.event.impl.jobs.jmx.QueuesMBeanImpl;
@@ -59,6 +51,11 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
@@ -70,13 +67,14 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of the queue manager.
  */
-@Component(immediate=true)
-@Service(value={Runnable.class, QueueManager.class, EventHandler.class})
-@Properties({
-    @Property(name=Scheduler.PROPERTY_SCHEDULER_PERIOD, longValue=60),
-    @Property(name=Scheduler.PROPERTY_SCHEDULER_CONCURRENT, boolValue=false),
-    @Property(name=EventConstants.EVENT_TOPIC, value=NotificationConstants.TOPIC_JOB_ADDED)
-})
+@Component(immediate=true,
+           service={Runnable.class, QueueManager.class, EventHandler.class},
+           property={
+                   Scheduler.PROPERTY_SCHEDULER_PERIOD + ":Long=60",
+                   Scheduler.PROPERTY_SCHEDULER_CONCURRENT + ":Boolean=false",
+                   EventConstants.EVENT_TOPIC + "=" + NotificationConstants.TOPIC_JOB_ADDED,
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+           })
 public class QueueManager
     implements Runnable, EventHandler, ConfigurationChangeListener {
 
@@ -101,7 +99,7 @@ public class QueueManager
     /**
      * Our thread pool.
      */
-    @Reference(referenceInterface=EventingThreadPool.class)
+    @Reference(service=EventingThreadPool.class)
     private ThreadPool threadPool;
 
     /** The job manager configuration. */
@@ -115,7 +113,7 @@ public class QueueManager
     private final Object queuesLock = new Object();
 
     /** All active queues. */
-    private final Map<String, JobQueueImpl> queues = new ConcurrentHashMap<String, JobQueueImpl>();
+    private final Map<String, JobQueueImpl> queues = new ConcurrentHashMap<>();
 
     /** We count the scheduler runs. */
     private volatile long schedulerRuns;
@@ -294,7 +292,7 @@ public class QueueManager
     private void restart() {
         // let's rename/close all queues and clear them
         synchronized ( queuesLock ) {
-            final List<JobQueueImpl> queues = new ArrayList<JobQueueImpl>(this.queues.values());
+            final List<JobQueueImpl> queues = new ArrayList<>(this.queues.values());
             for(final JobQueueImpl queue : queues ) {
                 this.outdateQueue(queue);
             }
@@ -382,7 +380,7 @@ public class QueueManager
      * Scan the resource tree for topics.
      */
     private Set<String> scanTopics() {
-        final Set<String> topics = new HashSet<String>();
+        final Set<String> topics = new HashSet<>();
 
         final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
@@ -420,12 +418,12 @@ public class QueueManager
      * Get the latest mapping from queue name to topics
      */
     private Map<QueueInfo, Set<String>> updateTopicMapping(final Set<String> topics) {
-        final Map<QueueInfo, Set<String>> mapping = new HashMap<QueueConfigurationManager.QueueInfo, Set<String>>();
+        final Map<QueueInfo, Set<String>> mapping = new HashMap<>();
         for(final String topic : topics) {
             final QueueInfo queueInfo = this.configuration.getQueueConfigurationManager().getQueueInfo(topic);
             Set<String> queueTopics = mapping.get(queueInfo);
             if ( queueTopics == null ) {
-                queueTopics = new HashSet<String>();
+                queueTopics = new HashSet<>();
                 mapping.put(queueInfo, queueTopics);
             }
             queueTopics.add(topic);

@@ -18,48 +18,50 @@
  */
 package org.apache.sling.event.impl;
 
-import java.util.Map;
-
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPriority;
 import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 
 /**
  * The configurable eventing thread pool.
  */
-@Component(label="Apache Sling Job Thread Pool",
+@Component(service = EventingThreadPool.class,
+           property = {
+              Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+})
+@Designate(ocd = EventingThreadPool.Config.class)
+public class EventingThreadPool implements ThreadPool {
+
+    @ObjectClassDefinition(name = "Apache Sling Job Thread Pool",
         description="This is the thread pool used by the Apache Sling job handling. The "
                   + "threads from this pool are merely used for executing jobs. By limiting this pool, it is "
                   + "possible to limit the maximum number of parallel processed jobs - regardless of the queue "
-                  + "configuration.",
-        metatype=true)
-@Service(value=EventingThreadPool.class)
-public class EventingThreadPool implements ThreadPool {
+                  + "configuration.")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Pool Size",
+              description="The size of the thread pool. This pool is used to execute jobs and therefore "
+                        + "limits the maximum number of jobs executed in parallel.")
+        int minPoolSize() default 35;
+    }
 
     @Reference
     private ThreadPoolManager threadPoolManager;
 
     /** The real thread pool used. */
     private org.apache.sling.commons.threads.ThreadPool threadPool;
-
-    private static final int DEFAULT_POOL_SIZE = 35;
-
-    @Property(intValue=DEFAULT_POOL_SIZE,
-              label="Pool Size",
-              description="The size of the thread pool. This pool is used to execute jobs and therefore "
-                        + "limits the maximum number of jobs executed in parallel.")
-    private static final String PROPERTY_POOL_SIZE = "minPoolSize";
 
     public EventingThreadPool() {
         // default constructor
@@ -79,9 +81,8 @@ public class EventingThreadPool implements ThreadPool {
      */
     @Activate
     @Modified
-    protected void activate(final Map<String, Object> props) {
-        final int maxPoolSize = PropertiesUtil.toInteger(props.get(PROPERTY_POOL_SIZE), DEFAULT_POOL_SIZE);
-        this.configure(maxPoolSize);
+    protected void activate(final Config config) {
+        this.configure(config.minPoolSize());
     }
 
     private void configure(final int maxPoolSize) {

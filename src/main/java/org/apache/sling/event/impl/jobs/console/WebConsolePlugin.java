@@ -33,11 +33,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
@@ -53,6 +48,9 @@ import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,13 +59,13 @@ import org.slf4j.LoggerFactory;
  * and the configurations.
  * @since 3.0
  */
-@Component
-@Service(value={javax.servlet.Servlet.class, JobConsumer.class})
-@Properties({
-    @Property(name="felix.webconsole.label", value="slingevent"),
-    @Property(name="felix.webconsole.title", value="Jobs"),
-    @Property(name="felix.webconsole.category", value="Sling"),
-    @Property(name=JobConsumer.PROPERTY_TOPICS, value={"sling/webconsole/test"})
+@Component(service={javax.servlet.Servlet.class, JobConsumer.class},
+property = {
+    Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+    "felix.webconsole.label=slingevent",
+    "felix.webconsole.title=Jobs",
+    "felix.webconsole.category=SLING",
+    JobConsumer.PROPERTY_TOPICS + "=sling/webconsole/test"
 })
 public class WebConsolePlugin extends HttpServlet implements JobConsumer {
 
