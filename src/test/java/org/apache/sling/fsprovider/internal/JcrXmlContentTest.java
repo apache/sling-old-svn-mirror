@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.jcr.Node;
@@ -45,7 +46,7 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * Test access to files and folders from file system.
@@ -155,7 +156,8 @@ public class JcrXmlContentTest {
     @Test
     public void testFolder3ChildNodes() throws RepositoryException {
         Resource folder3 = fsroot.getChild("folder3");
-        List<Resource> children = ImmutableList.copyOf(folder3.listChildren());
+        List<Resource> children = Lists.newArrayList(folder3.listChildren());
+        Collections.sort(children, new ResourcePathComparator());
         
         assertEquals(2, children.size());
         Resource child1 = children.get(0);
