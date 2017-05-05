@@ -81,22 +81,19 @@ public class ResultHtmlSerializer {
         final DateFormat dfLong = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         writer.println("<table id=\"healthCheckResults\" cellspacing=\"0\">");
-        writer.println("<thead><tr><th>Health Check</th><th>Status</th><th>Log</th><th>Finished At</th><th>Execution Time</th></tr></thead>");
+        writer.println(
+                "<thead><tr><th>Health Check <span style='color:gray'>(tags)</span></th><th>Status</th><th>Log</th><th>Finished At</th><th>Time</th></tr></thead>");
         for (HealthCheckExecutionResult executionResult : executionResults) {
             Result result = executionResult.getHealthCheckResult();
             List<String> tags = executionResult.getHealthCheckMetadata().getTags();
             boolean hasTags = tags != null && tags.size() > 0 && StringUtils.isNotBlank(tags.get(0));
-            writer.print("<tr class=\"" + getClassForStatus(result.getStatus()) + "\" ");
-            if (hasTags) {
-                writer.print("title=\"Tags: " + StringEscapeUtils.escapeHtml(StringUtils.join(tags, ",")) + "\"");
-            }
-            writer.println(">");
+            writer.print("<tr class=\"" + getClassForStatus(result.getStatus()) + "\">");
             writer.print("<td><p title=\"" + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getName()) + "\">"
-                    + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getTitle()) + "</p>");
+                    + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getTitle()) + "");
             if (hasTags) {
-                writer.println("<span>Tags: " + StringEscapeUtils.escapeHtml(StringUtils.join(tags, ", ")) + "</span>");
+                writer.println("<br/><span style='color:gray'>" + StringEscapeUtils.escapeHtml(StringUtils.join(tags, ", ")) + "</span>");
             }
-            writer.println("</td>");
+            writer.println("</p></td>");
             writer.println("<td style='font-weight:bold;'>" + StringEscapeUtils.escapeHtml(result.getStatus().toString()) + "</td>");
             writer.println("<td>");
             boolean isFirst = true;
