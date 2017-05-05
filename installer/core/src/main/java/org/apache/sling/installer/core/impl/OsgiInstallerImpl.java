@@ -103,16 +103,16 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     private final BundleContext ctx;
 
     /** New clients are joining through this map. */
-    private final Map<String, List<InternalResource>> newResourcesSchemes = new HashMap<String, List<InternalResource>>();
+    private final Map<String, List<InternalResource>> newResourcesSchemes = new HashMap<>();
 
     /** New resources added by clients. */
-    private final List<InternalResource> newResources = new LinkedList<InternalResource>();
+    private final List<InternalResource> newResources = new LinkedList<>();
 
     /** Removed resources from clients. */
-    private final Set<String> urlsToRemove = new HashSet<String>();
+    private final Set<String> urlsToRemove = new HashSet<>();
 
     /** Update infos to process. */
-    private final List<UpdateInfo> updateInfos = new ArrayList<OsgiInstallerImpl.UpdateInfo>();
+    private final List<UpdateInfo> updateInfos = new ArrayList<>();
 
     /** Are the required services satisfied? */
     private volatile boolean satisfied = false;
@@ -226,9 +226,9 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
      */
     private void init() {
         // start service trackers
-        this.factoryTracker = new SortingServiceTracker<InstallTaskFactory>(ctx, InstallTaskFactory.class.getName(), this);
-        this.transformerTracker = new SortingServiceTracker<ResourceTransformer>(ctx, ResourceTransformer.class.getName(), this);
-        this.updateHandlerTracker = new SortingServiceTracker<UpdateHandler>(ctx, UpdateHandler.class.getName(), null);
+        this.factoryTracker = new SortingServiceTracker<>(ctx, InstallTaskFactory.class.getName(), this);
+        this.transformerTracker = new SortingServiceTracker<>(ctx, ResourceTransformer.class.getName(), this);
+        this.updateHandlerTracker = new SortingServiceTracker<>(ctx, UpdateHandler.class.getName(), null);
         this.factoryTracker.open();
         this.transformerTracker.open();
         this.updateHandlerTracker.open();
@@ -364,7 +364,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         checkScheme(scheme);
         List<InternalResource> createdResources = null;
         if ( resources != null && resources.length > 0 ) {
-            createdResources = new ArrayList<InternalResource>();
+            createdResources = new ArrayList<>();
             for(final InstallableResource r : resources ) {
                 try {
                     final InternalResource rr = InternalResource.create(scheme, r);
@@ -412,7 +412,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             synchronized ( this.resourcesLock ) {
                 if ( updatedResources != null && updatedResources.size() > 0 ) {
                     this.newResources.addAll(updatedResources);
-                    final Set<String> newUrls = new HashSet<String>();
+                    final Set<String> newUrls = new HashSet<>();
                     for(final InternalResource rsrc : updatedResources) {
                         newUrls.add(rsrc.getURL());
                     }
@@ -426,7 +426,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     }
                 }
                 if ( ids != null && ids.length > 0 ) {
-                    final Set<String> removedUrls = new HashSet<String>();
+                    final Set<String> removedUrls = new HashSet<>();
                     for(final String id : ids) {
                         final String url = scheme + ':' + id;
                         // Will mark all resources which have r's URL as uninstallable
@@ -499,7 +499,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             this.closeInputStreams(resources);
         }
     }
-    
+
     /** When a resource from "incoming" is about to replace "existing", we might need to transfer their private
      *  data file, or delete it if it's not needed anymore.
      */
@@ -520,14 +520,14 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     break;
                 }
             }
-            
+
             if(existing.getPrivateCopyOfFile() != null) {
                 logger.debug("Private data file not needed anymore, deleting it: {}", existing.getURL());
                 existing.getPrivateCopyOfFile().delete();
             }
         }
     }
-    
+
     private void mergeNewlyRegisteredResources() {
         synchronized ( this.resourcesLock ) {
             for(final Map.Entry<String, List<InternalResource>> entry : this.newResourcesSchemes.entrySet()) {
@@ -541,7 +541,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                 for(final String entityId : this.persistentList.getEntityIds()) {
                     final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
 
-                    final List<TaskResource> toRemove = new ArrayList<TaskResource>();
+                    final List<TaskResource> toRemove = new ArrayList<>();
                     boolean first = true;
                     for(final TaskResource r : group.listResources()) {
                         if ( r.getScheme().equals(scheme) ) {
@@ -639,7 +639,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
      * Compute OSGi tasks based on our resources, and add to supplied list of tasks.
      */
     private SortedSet<InstallTask> computeTasks() {
-        final SortedSet<InstallTask> tasks = new TreeSet<InstallTask>();
+        final SortedSet<InstallTask> tasks = new TreeSet<>();
 
         // Walk the list of entities, and create appropriate OSGi tasks for each group
         final List<InstallTaskFactory> services = this.factoryTracker.getSortedServices();
@@ -911,11 +911,13 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
      * @return <code>true</code> if another cycle should be started.
      */
     private boolean cleanupInstallableResources() {
-        final boolean result = this.persistentList.compact();
-        this.persistentList.save();
-        printResources("Compacted");
-        logger.debug("cleanupInstallableResources returns {}", result);
-        return result;
+        synchronized ( this.resourcesLock ) {
+            final boolean result = this.persistentList.compact();
+            this.persistentList.save();
+            printResources("Compacted");
+            logger.debug("cleanupInstallableResources returns {}", result);
+            return result;
+        }
     }
 
     /**
@@ -926,47 +928,49 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         final List<ServiceReference> serviceRefs = this.transformerTracker.getSortedServiceReferences();
 
         if ( serviceRefs.size() > 0 ) {
-            // Walk the list of unknown resources and invoke all transformers
-            int index = 0;
-            final List<RegisteredResource> unknownList = this.persistentList.getUntransformedResources();
+            synchronized ( this.resourcesLock ) {
+                // Walk the list of unknown resources and invoke all transformers
+                int index = 0;
+                final List<RegisteredResource> unknownList = this.persistentList.getUntransformedResources();
 
-            while ( index < unknownList.size() ) {
-                final RegisteredResource resource = unknownList.get(index);
-                for(final ServiceReference reference : serviceRefs) {
-                    final Long id = (Long)reference.getProperty(Constants.SERVICE_ID);
-                    // check if this transformer has already been invoked for the resource
-                    final String transformers = (String)((RegisteredResourceImpl)resource).getAttribute(ResourceTransformer.class.getName());
-                    if ( id == null ||
-                            (transformers != null && transformers.contains(":" + id + ':'))) {
-                        continue;
-                    }
-                    final ResourceTransformer transformer = (ResourceTransformer) this.transformerTracker.getService(reference);
-                    if ( transformer != null ) {
-                        try {
-                            final TransformationResult[] result = transformer.transform(resource);
-                            final String newTransformers = (transformers == null ? ":" + id + ':' : transformers + id + ':');
-                            ((RegisteredResourceImpl)resource).setAttribute(ResourceTransformer.class.getName(), newTransformers);
-                            if ( logger.isDebugEnabled() ) {
-                                logger.debug("Invoked transformer {} on {} : {}",
-                                        new Object[] {transformer, resource, Arrays.toString(result)});
+                while ( index < unknownList.size() ) {
+                    final RegisteredResource resource = unknownList.get(index);
+                    for(final ServiceReference reference : serviceRefs) {
+                        final Long id = (Long)reference.getProperty(Constants.SERVICE_ID);
+                        // check if this transformer has already been invoked for the resource
+                        final String transformers = (String)((RegisteredResourceImpl)resource).getAttribute(ResourceTransformer.class.getName());
+                        if ( id == null ||
+                                (transformers != null && transformers.contains(":" + id + ':'))) {
+                            continue;
+                        }
+                        final ResourceTransformer transformer = (ResourceTransformer) this.transformerTracker.getService(reference);
+                        if ( transformer != null ) {
+                            try {
+                                final TransformationResult[] result = transformer.transform(resource);
+                                final String newTransformers = (transformers == null ? ":" + id + ':' : transformers + id + ':');
+                                ((RegisteredResourceImpl)resource).setAttribute(ResourceTransformer.class.getName(), newTransformers);
+                                if ( logger.isDebugEnabled() ) {
+                                    logger.debug("Invoked transformer {} on {} : {}",
+                                            new Object[] {transformer, resource, Arrays.toString(result)});
+                                }
+                                if ( result != null && result.length > 0 ) {
+                                    this.persistentList.transform(resource, result);
+                                    changed = true;
+                                    index--;
+                                    break;
+                                }
+                            } catch (final Throwable t) {
+                                logger.error("Uncaught exception during resource transformation!", t);
                             }
-                            if ( result != null && result.length > 0 ) {
-                                this.persistentList.transform(resource, result);
-                                changed = true;
-                                index--;
-                                break;
-                            }
-                        } catch (final Throwable t) {
-                            logger.error("Uncaught exception during resource transformation!", t);
                         }
                     }
+                    index++;
                 }
-                index++;
             }
-        }
-        if ( changed ) {
-            this.persistentList.save();
-            printResources("Transformed");
+            if ( changed ) {
+                this.persistentList.save();
+                printResources("Transformed");
+            }
         }
     }
 
@@ -1077,7 +1081,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceRemoved(java.lang.String, java.lang.String)
      */
     private void processUpdateInfos() {
-        final List<UpdateInfo> infos = new ArrayList<OsgiInstallerImpl.UpdateInfo>();
+        final List<UpdateInfo> infos = new ArrayList<>();
         synchronized ( resourcesLock ) {
             infos.addAll(updateInfos);
             updateInfos.clear();
@@ -1360,9 +1364,9 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         synchronized ( this.resourcesLock ) {
             final InstallationState state = new InstallationState() {
 
-                private final List<ResourceGroup> activeResources = new ArrayList<ResourceGroup>();
-                private final List<ResourceGroup> installedResources = new ArrayList<ResourceGroup>();
-                private final List<RegisteredResource> untransformedResources = new ArrayList<RegisteredResource>();
+                private final List<ResourceGroup> activeResources = new ArrayList<>();
+                private final List<ResourceGroup> installedResources = new ArrayList<>();
+                private final List<RegisteredResource> untransformedResources = new ArrayList<>();
 
                 @Override
                 public List<ResourceGroup> getActiveResources() {
@@ -1392,7 +1396,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
 
                     final String alias = group.getAlias();
-                    final List<Resource> resources = new ArrayList<Resource>();
+                    final List<Resource> resources = new ArrayList<>();
                     boolean first = true;
                     boolean isActive = false;
                     for(final TaskResource tr : group.getResources()) {
