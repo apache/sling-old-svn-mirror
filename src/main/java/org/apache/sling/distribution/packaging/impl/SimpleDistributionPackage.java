@@ -143,12 +143,8 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
             stream.reset();
             String s = new String(buffer, "UTF-8");
 
-            log.info("buffer {}", s);
-
             if (bytesRead > 0 && buffer[0] > 0 && s.startsWith(SimpleDistributionPackage.PACKAGE_START)) {
                 String streamString = IOUtils.toString(stream, "UTF-8");
-
-                log.info("stream string {}", streamString);
 
                 return fromIdString(streamString, type);
             }
