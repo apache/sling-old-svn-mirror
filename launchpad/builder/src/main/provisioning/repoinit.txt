@@ -21,7 +21,7 @@
 [artifacts]
   org.apache.sling/org.apache.sling.repoinit.parser/1.1.0
   org.apache.sling/org.apache.sling.jcr.repoinit/1.1.4
-  org.apache.sling/org.apache.sling.provisioning.model/1.8.0
+  org.apache.sling/org.apache.sling.provisioning.model/1.8.2
 
 [:repoinit]
     # general
