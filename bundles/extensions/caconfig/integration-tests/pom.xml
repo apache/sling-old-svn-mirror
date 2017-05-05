@@ -157,7 +157,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.caconfig.impl</artifactId>
-            <version>1.3.3-SNAPSHOT</version>
+            <version>1.4.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
