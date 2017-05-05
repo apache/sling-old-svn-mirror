@@ -26,6 +26,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * Environment component. This component provides "global settings"
@@ -45,11 +46,11 @@ public class EnvironmentComponent {
     /**
      * Our thread pool.
      */
-    @Reference(service=EventingThreadPool.class)
+    @Reference(service=EventingThreadPool.class, policyOption=ReferencePolicyOption.GREEDY)
     private ThreadPool threadPool;
 
     /** Sling settings service. */
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private SlingSettingsService settingsService;
 
     /**

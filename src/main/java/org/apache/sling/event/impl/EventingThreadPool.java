@@ -29,6 +29,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -57,7 +58,7 @@ public class EventingThreadPool implements ThreadPool {
         int minPoolSize() default 35;
     }
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private ThreadPoolManager threadPoolManager;
 
     /** The real thread pool used. */

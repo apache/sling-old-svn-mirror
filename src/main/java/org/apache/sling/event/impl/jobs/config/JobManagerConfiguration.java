@@ -52,6 +52,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -156,16 +157,16 @@ public class JobManagerConfiguration {
     @Reference
     private EnvironmentComponent environment;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private ResourceResolverFactory resourceResolverFactory;
 
     @Reference
     private QueueConfigurationManager queueConfigManager;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private Scheduler scheduler;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private ServiceUserMapped serviceUserMapped;
 
     /** Is this still active? */
