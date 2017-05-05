@@ -243,8 +243,32 @@ public class DefaultTopologyView extends BaseTopologyView {
 
     @Override
     public String toString() {
+        StringBuilder sb = new StringBuilder();
+        try{
+            boolean firstCluster = true;
+            for (ClusterView clusterView : getClusterViews()) {
+                if (!firstCluster) {
+                    sb.append(", ");
+                }
+                firstCluster = false;
+                sb.append("[clusterId=" + clusterView.getId() + ", instances=");
+                boolean firstInstance = true;
+                for (InstanceDescription id : clusterView.getInstances()) {
+                    if (!firstInstance) {
+                        sb.append(", ");
+                    }
+                    firstInstance = false;
+                    sb.append("[id=" + id.getSlingId() + ", isLeader=" + id.isLeader() + 
+                            ", isLocal=" + id.isLocal() + "]");
+                }
+                sb.append("]");
+            }
+        } catch(Exception e) {
+            // paranoia fallback
+            sb = new StringBuilder(instances.toString());
+        }
         return "DefaultTopologyView[current=" + isCurrent() + ", num=" + instances.size() + ", instances="
-                + instances + "]";
+                + sb + "]";
     }
 
     @Override
