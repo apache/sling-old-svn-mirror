@@ -71,9 +71,9 @@
         <jacoco.maven.plugin.version>0.7.6.201602180812</jacoco.maven.plugin.version>
         <!-- HTL modules under test versions -->
         <org.apache.sling.scripting.sightly.compiler.version>1.0.9-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.version>
-        <org.apache.sling.scripting.sightly.compiler.java.version>1.0.9-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.java.version>
-        <org.apache.sling.scripting.sightly.version>1.0.33-SNAPSHOT</org.apache.sling.scripting.sightly.version>
-        <org.apache.sling.scripting.sightly.js.provider.version>1.0.21-SNAPSHOT</org.apache.sling.scripting.sightly.js.provider.version>
+        <org.apache.sling.scripting.sightly.compiler.java.version>1.0.11-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.java.version>
+        <org.apache.sling.scripting.sightly.version>1.0.35-SNAPSHOT</org.apache.sling.scripting.sightly.version>
+        <org.apache.sling.scripting.sightly.js.provider.version>1.0.23-SNAPSHOT</org.apache.sling.scripting.sightly.js.provider.version>
         <org.apache.sling.scripting.sightly.models.provider.version>1.0.7-SNAPSHOT</org.apache.sling.scripting.sightly.models.provider.version>
     </properties>
 
