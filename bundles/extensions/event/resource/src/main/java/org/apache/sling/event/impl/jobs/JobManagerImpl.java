@@ -66,6 +66,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
@@ -92,10 +93,10 @@ public class JobManagerImpl
     /** Default logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private EventAdmin eventAdmin;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private Scheduler scheduler;
 
     @Reference
@@ -104,7 +105,7 @@ public class JobManagerImpl
     @Reference
     private QueuesMBean queuesMBean;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private ThreadPoolManager threadPoolManager;
 
     /** The job manager configuration. */
@@ -637,7 +638,7 @@ public class JobManagerImpl
         if ( logger.isDebugEnabled() ) {
             logger.debug("Storing new job {} at {}", Utility.toString(jobTopic, properties), path);
         }
-        ResourceHelper.getOrCreateResource(resolver,
+        ResourceHelper.createAndCommitResource(resolver,
                 path,
                 properties);
 
