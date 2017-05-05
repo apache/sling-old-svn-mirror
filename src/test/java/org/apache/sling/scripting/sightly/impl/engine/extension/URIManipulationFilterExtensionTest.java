@@ -16,7 +16,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 
@@ -65,16 +65,16 @@ public class URIManipulationFilterExtensionTest {
     public void testPercentEncodedURLs_SLING_6761() {
         assertEquals(
                 "/example/search.html?q=6%25-10%25",
-                underTest.call(renderContext, "/example/search?q=6%25-10%25", new HashMap<String, Object>() {{
+                underTest.call(renderContext, "/example/search?q=6%25-10%25", new LinkedHashMap<String, Object>() {{
                     put(URIManipulationFilterExtension.EXTENSION, "html");
                 }})
         );
         assertEquals(
                 "/example/search.a.html?q=6%25-10%25&s=%40sling&t=%25sling",
-                underTest.call(renderContext, "/example/search?q=6%25-10%25", new HashMap<String, Object>() {{
+                underTest.call(renderContext, "/example/search?q=6%25-10%25", new LinkedHashMap<String, Object>() {{
                     put(URIManipulationFilterExtension.EXTENSION, "html");
                     put(URIManipulationFilterExtension.ADD_SELECTORS, "a");
-                    put(URIManipulationFilterExtension.ADD_QUERY, new HashMap<String, Object>() {{
+                    put(URIManipulationFilterExtension.ADD_QUERY, new LinkedHashMap<String, Object>() {{
                         put("s", "@sling");
                         put("t", "%sling");
                     }});
