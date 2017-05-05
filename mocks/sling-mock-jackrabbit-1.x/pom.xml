@@ -35,7 +35,7 @@
     <description>Implements a resource resolver type for Jackrabbit that can be used in unit tests based on Sling Mocks.</description>
 
     <properties>
-        <sling-mock.version>1.9.5-SNAPSHOT</sling-mock.version>
+        <sling-mock.version>1.9.6</sling-mock.version>
     </properties>
 
     <scm>
