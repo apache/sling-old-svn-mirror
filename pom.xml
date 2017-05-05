@@ -138,13 +138,15 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly</artifactId>
-            <version>1.0.34</version>
+            <!-- reset to 1.0.34 after the release is public -->
+            <version>1.0.35-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler.java</artifactId>
-            <version>1.0.10</version>
+            <!-- reset to 1.0.10 after the release is public -->
+            <version>1.0.11-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
