@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.validation.impl.annotations;
+package org.apache.sling.validation.impl.annotationmodel;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -33,6 +33,7 @@ import org.apache.commons.collections4.EnumerationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.ValidationStrategy;
+import org.apache.sling.validation.impl.annotationmodel.builders.AnnotationValidationModelBuilder;
 import org.apache.sling.validation.model.ValidationModel;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -66,6 +67,20 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
         Set<String> classNames = getBundleClasses(bundle);
         classNames.forEach(className -> analyzeClass(bundle, className));
         return bundle;
+    }
+
+    @Override
+    public void removedBundle(Bundle bundle, BundleEvent event, Object object) {
+        validationModelImplementation.removeValidationModels(bundle);
+
+    }
+
+    @Override
+    public void modifiedBundle(Bundle bundle, BundleEvent event, Object object) {
+    }
+
+    public synchronized void unregisterAll() {
+        this.bundleTracker.close();
     }
 
     private Set<String> getBundleClasses(@Nonnull Bundle bundle) {
@@ -129,20 +144,6 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
         return urls.parallelStream()
                 .map(this::toClassName)
                 .collect(Collectors.toSet());
-    }
-
-    @Override
-    public void modifiedBundle(Bundle bundle, BundleEvent event, Object object) {
-    }
-
-    @Override
-    public void removedBundle(Bundle bundle, BundleEvent event, Object object) {
-        validationModelImplementation.removeValidationModels(bundle);
-
-    }
-
-    public synchronized void unregisterAll() {
-        this.bundleTracker.close();
     }
 
     /** Convert class URL to class name */

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl.annotations;
+package org.apache.sling.validation.impl.annotationmodel.builders;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -35,6 +35,7 @@ import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.injectorspecific.ChildResource;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 import org.apache.sling.validation.annotations.ValidationPaths;
+import org.apache.sling.validation.impl.annotationmodel.ValidationPackageBundleListener;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
@@ -46,6 +47,7 @@ import org.slf4j.LoggerFactory;
 public class AnnotationValidationModelBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationPackageBundleListener.class);
+    private static final String[] EMPTY_PATHS = {};
 
     public List<ValidationModel> build(@Nonnull Class<?> clazz) {
         List<ValidationModel> validationModels = new ArrayList<>();
@@ -55,11 +57,12 @@ public class AnnotationValidationModelBuilder {
 
         String[] paths = Optional.ofNullable(clazz.getAnnotation(ValidationPaths.class))
                 .map(ValidationPaths::paths)
-                .orElse(new String[] {});
+                .orElse(EMPTY_PATHS);
+
         modelBuilder.addApplicablePaths(paths);
 
         DefaultInjectionStrategy defaultInjectionStrategy = model.defaultInjectionStrategy();
-        LOG.info("Validation Model for: {}", clazz.getName());
+        LOG.debug("Validation Model for: {}", clazz.getName());
 
         List<ResourceProperty> resourceProperties = getResourceProperties(clazz, defaultInjectionStrategy);
         modelBuilder.resourceProperties(resourceProperties);
@@ -78,17 +81,17 @@ public class AnnotationValidationModelBuilder {
         return Stream.of(clazz.getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(ChildResource.class))
                 .filter(this::isModelClassField)
-                .map(field -> buildChildResource(field, clazz))
+                .map(this::buildChildResource)
                 .collect(Collectors.toList());
     }
 
     private boolean isModelClassField(Field field) {
-        return getFieldClass(field).isAnnotationPresent(Model.class);
+        return getClass(field).isAnnotationPresent(Model.class);
     }
 
-    private org.apache.sling.validation.model.ChildResource buildChildResource(@Nonnull Field field, @Nonnull Class<?> fieldClass) {
+    private org.apache.sling.validation.model.ChildResource buildChildResource(@Nonnull Field field) {
 
-        Class<?> clazz = getFieldClass(field);
+        Class<?> clazz = getClass(field);
 
         Model model = clazz.getDeclaredAnnotation(Model.class);
 
@@ -106,7 +109,7 @@ public class AnnotationValidationModelBuilder {
                 .collect(Collectors.toList());
     }
 
-    private Class<?> getFieldClass(Field field) {
+    private Class<?> getClass(Field field) {
         Class<?> clazz = field.getType();
         if (Collection.class.isAssignableFrom(field.getType())) {
             ParameterizedType stringListType = (ParameterizedType) field.getGenericType();

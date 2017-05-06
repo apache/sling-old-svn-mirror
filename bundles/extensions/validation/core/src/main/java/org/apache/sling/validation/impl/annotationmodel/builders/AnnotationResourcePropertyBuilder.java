@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl.annotations;
+package org.apache.sling.validation.impl.annotationmodel.builders;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

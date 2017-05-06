@@ -14,15 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.validation.impl.annotations;
+package org.apache.sling.validation.impl.annotationmodel;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
+
+import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.model.ValidationModel;
 import org.osgi.framework.Bundle;
@@ -38,36 +41,48 @@ final class ValidationModelImplementation {
     private final ConcurrentMap<Bundle, ConcurrentHashMap<String, List<ValidationModel>>> validationModels = new ConcurrentHashMap<>();
 
     /** Remove all implementation mappings. */
-    public void removeAll() {
+    void removeAll() {
         validationModels.clear();
     }
 
-    public void registerValidationModelsByBundle(final Bundle bundle, final Collection<ValidationModel> validationModels) {
-        validationModels.forEach( model -> registerValidationModelByBundle(bundle, model));
+    void registerValidationModelsByBundle(final Bundle bundle, final Collection<ValidationModel> models) {
+        models.forEach(model -> registerValidationModelByBundle(bundle, model));
     }
 
-    public void registerValidationModelByBundle(final Bundle bundle, final ValidationModel model) {
-        ConcurrentHashMap<String, List<ValidationModel>> map = validationModels.get(bundle);
+    private void registerValidationModelByBundle(final Bundle bundle, final ValidationModel model) {
+
+        ConcurrentHashMap<String, List<ValidationModel>> map = Optional.ofNullable(validationModels.get(bundle))
+                .orElseGet(supplyConcurrentHashMap(bundle));
+
         String resourceType = model.getValidatingResourceType();
-        List<ValidationModel> models;
-        if (Objects.isNull(map)) {
-            models = new ArrayList<>();
-            models.add(model);
-
-            map = new ConcurrentHashMap<>();
-            map.put(resourceType, models);
-            validationModels.put(bundle, map);
-        } else {
-            models = map.getOrDefault(resourceType, new ArrayList<>());
-            models.add(model);
-        }
+        Optional.ofNullable(map.get(resourceType))
+                .orElseGet(supplyList(map, resourceType))
+                .add(model);
     }
 
-    public ConcurrentHashMap<String, List<ValidationModel>> getValidationModels(final Bundle bundle) {
+    private Supplier<List<ValidationModel>> supplyList(ConcurrentHashMap<String, List<ValidationModel>> map, String resourceType) {
+        return () -> {
+            List<ValidationModel> validationModels = new ArrayList<>();
+            map.put(resourceType, validationModels);
+            return validationModels;
+        };
+    }
+
+    private Supplier<ConcurrentHashMap<String, List<ValidationModel>>> supplyConcurrentHashMap(Bundle bundle) {
+        return () -> {
+            ConcurrentHashMap<String, List<ValidationModel>> cmp = new ConcurrentHashMap<>();
+            validationModels.put(bundle, cmp);
+            return cmp;
+        };
+    }
+
+    @Nonnull
+    ConcurrentMap<String, List<ValidationModel>> getValidationModels(final Bundle bundle) {
         return validationModels.getOrDefault(bundle, new ConcurrentHashMap<>());
     }
 
-    public List<ValidationModel> getValidationModelsByResourceType(String resourceType) {
+    @Nonnull
+    List<ValidationModel> getValidationModelsByResourceType(String resourceType) {
         return validationModels.entrySet()
                 .parallelStream()
                 .map(Map.Entry::getValue)
@@ -77,7 +92,7 @@ final class ValidationModelImplementation {
                 .collect(ArrayList::new, ArrayList::addAll, ArrayList::addAll);
     }
 
-    public void removeValidationModels(Bundle bundle) {
+    void removeValidationModels(Bundle bundle) {
         validationModels.remove(bundle);
     }
 }
