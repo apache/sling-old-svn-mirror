@@ -32,8 +32,24 @@ import org.slf4j.helpers.MessageFormatter;
 
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
-import java.io.*;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -407,7 +423,6 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
             return count;
         }
 
-
         private String determineCaller() {
             StackTraceElement caller = queryCallerFinder.determineCaller(Thread.currentThread().getStackTrace());
             if (caller != null) {
@@ -422,7 +437,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
          */
         public void attemptQueryEntry(){
             if (query != null && plan != null){
-                    queries.add(new QueryEntry(nullSafeTrim(query), nullSafeTrim(plan), caller));
+                queries.add(new QueryEntry(nullSafeTrim(query), nullSafeTrim(plan), caller));
                 plan = query = null;
             }
         }
