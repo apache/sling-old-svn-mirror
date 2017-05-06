@@ -19,10 +19,6 @@
 
 package org.apache.sling.tracer.internal;
 
-import java.io.StringWriter;
-
-import javax.servlet.http.HttpServletRequest;
-
 import ch.qos.logback.classic.Level;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.Test;
@@ -30,16 +26,17 @@ import org.slf4j.MDC;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import javax.servlet.http.HttpServletRequest;
+import java.io.StringWriter;
+
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class JSONRecordingTest {
     static final String MDC_QUERY_ID = "oak.query.id";
     static String QE_LOGGER = "org.apache.jackrabbit.oak.query.QueryImpl";
+    static String UNION_QUERY_LOGGER = "org.apache.jackrabbit.oak.query.UnionQueryImpl";
     private HttpServletRequest request = mock(HttpServletRequest.class);
 
     private TracerConfig tc = new TracerConfig(TracerContext.QUERY_LOGGER, Level.INFO);
@@ -64,6 +61,43 @@ public class JSONRecordingTest {
         assertTrue(json.has("time"));
         assertTrue(json.has("timestamp"));
         assertEquals(1, json.getJSONArray("queries").length());
+    }
+
+    @Test
+    public void logUnionQueries() throws Exception{
+        StringWriter sw = new StringWriter();
+
+        when(request.getMethod()).thenReturn("GET");
+        JSONRecording r = new JSONRecording("abc", request, true);
+
+        MDC.put(MDC_QUERY_ID, "1");
+        r.log(tc, Level.DEBUG, "org.apache.jackrabbit.oak.query.QueryEngineImpl",
+                tuple("Parsing {} statement: {}",  "XPATH", "SELECT FOO BAR"));
+        r.log(tc, Level.DEBUG, UNION_QUERY_LOGGER, tuple("query union plan FOO PLAN */ union BAR PLAN", "FOO PLAN */ union BAR PLAN"));
+        // Two sub-query plans for the split union
+        r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query plan FOO PLAN", "xpath", "FOO PLAN"));
+        r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query plan BAR PLAN", "xpath", "BAR PLAN"));
+
+
+        MDC.put(MDC_QUERY_ID, "2");
+        r.log(tc, Level.DEBUG, "org.apache.jackrabbit.oak.query.QueryEngineImpl",
+                tuple("Parsing {} statement: {}",  "XPATH", "SELECT FOO"));
+        r.log(tc, Level.DEBUG, QE_LOGGER, tuple("query plan FOO PLAN", "xpath", "FOO PLAN"));
+
+        r.done();
+        r.render(sw);
+
+        JSONObject json = new JSONObject(sw.toString());
+        assertEquals("GET", json.get("method"));
+        assertTrue(json.has("time"));
+        assertTrue(json.has("timestamp"));
+        assertEquals(2, json.getJSONArray("queries").length());
+
+        assertEquals(json.getJSONArray("queries").getJSONObject(0).getString("query"), "SELECT FOO BAR");
+        assertEquals(json.getJSONArray("queries").getJSONObject(0).getString("plan"), "FOO PLAN */ union BAR PLAN");
+
+        assertEquals(json.getJSONArray("queries").getJSONObject(1).getString("query"), "SELECT FOO");
+        assertEquals(json.getJSONArray("queries").getJSONObject(1).getString("plan"), "FOO PLAN");
     }
 
     @Test

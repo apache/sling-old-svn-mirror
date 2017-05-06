@@ -19,30 +19,6 @@
 
 package org.apache.sling.tracer.internal;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-
-import javax.annotation.Nonnull;
-import javax.servlet.http.HttpServletRequest;
-
 import ch.qos.logback.classic.Level;
 import com.google.common.primitives.Longs;
 import org.apache.commons.io.IOUtils;
@@ -53,6 +29,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
+
+import javax.annotation.Nonnull;
+import javax.servlet.http.HttpServletRequest;
+import java.io.*;
+import java.util.*;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.sling.tracer.internal.Util.nullSafeString;
@@ -362,6 +345,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         String query;
         String plan;
         String caller;
+        int subPlans = 0;
 
         public void record(Level level, String logger, FormattingTuple tuple) {
             //Assuming in a series of log statement from query package we see 'query'
@@ -391,15 +375,38 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
                     if ("org.apache.jackrabbit.oak.query.QueryImpl".equals(logger)
                             && msg.startsWith("query plan ")){
                         //logDebug("query execute " + statement);
-                        plan = msg.substring("query plan ".length());
+                        if (subPlans == 0) {
+                            plan = msg.substring("query plan ".length());
+                        } else {
+                            subPlans--;
+                        }
                     } else if ("org.apache.jackrabbit.oak.query.UnionQueryImpl".equals(logger)
                             && msg.contains("query union plan") && args.length > 0){
                         // LOG.debug("query union plan {}", getPlan());
                         plan = nullSafeString(args[0]);
+
+                        // Determine number of sub-queries in this UNION query so they can be ignored
+                        int tmp = count(plan, "*/ union ");
+                        if (tmp > 0) {
+                            subPlans = tmp + 1;
+                        }
                     }
                 }
             }
         }
+
+        private int count(final String string, final String substring) {
+            int count = 0;
+            int i = 0;
+
+            while ((i = string.indexOf(substring, i)) != -1) {
+                i++;
+                count++;
+            }
+
+            return count;
+        }
+
 
         private String determineCaller() {
             StackTraceElement caller = queryCallerFinder.determineCaller(Thread.currentThread().getStackTrace());
@@ -415,7 +422,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
          */
         public void attemptQueryEntry(){
             if (query != null && plan != null){
-                queries.add(new QueryEntry(nullSafeTrim(query), nullSafeTrim(plan), caller));
+                    queries.add(new QueryEntry(nullSafeTrim(query), nullSafeTrim(plan), caller));
                 plan = query = null;
             }
         }
