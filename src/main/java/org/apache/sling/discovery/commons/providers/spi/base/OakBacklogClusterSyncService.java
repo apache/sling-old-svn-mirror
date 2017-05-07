@@ -76,15 +76,6 @@ public class OakBacklogClusterSyncService extends AbstractServiceWithBackgroundC
 
     /**
      * for testing only!
-     * @param resourceResolverFactory
-     * @param slingId the local slingId
-     * @param syncTokenTimeoutMillis timeout value in millis after which the
-     * sync-token process is cancelled - or -1 if no timeout should be used there
-     * @param backlogWaitTimeoutMillis timeout value in millis after which
-     * the waiting-while-backlog should be cancelled - or -1 if no timeout should be
-     * used there
-     * @throws LoginException when the login for initialization failed
-     * @throws JSONException when the descriptor wasn't proper json at init time
      */
     public static OakBacklogClusterSyncService testConstructor(
             final DiscoveryLiteConfig commonsConfig,

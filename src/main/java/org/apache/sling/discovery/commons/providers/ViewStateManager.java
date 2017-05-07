@@ -83,7 +83,6 @@ public interface ViewStateManager {
      * listeners (in the latter case, also sends a TOPOLOGY_CHANGING if that has not yet been 
      * done)
      * @param newView the new, established view
-     * @return false if the newView was the same as previous and we were not in 'changing' mode,
      * true if we were either in changing mode or the newView was different from the previous one.
      */
     void handleNewView(BaseTopologyView newView);
@@ -94,7 +93,7 @@ public interface ViewStateManager {
      * <p>
      * @param timeout time in millis to wait for at max - 0 to not wait at all - -1 
      * to wait indefinitely
-     * @return 0 if no more async events exist, >0 the number of queued or in-flight (being sent)
+     * @return 0 if no more async events exist, or the number of queued or in-flight (being sent)
      * events if the timeout hit early
      */
     int waitForAsyncEvents(long timeout);
