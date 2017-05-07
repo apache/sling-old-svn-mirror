@@ -26,16 +26,9 @@ import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.validation.annotations.Validate;
 
-/**
- * The type Abstract annotation builder.
- *
- * @author karolis.mackevicius @netcentric.biz
- * @since 01 /05/17
- */
+/** The Abstract annotation builder, providing common functionality for Annotation Based Builders. */
 abstract class AbstractAnnotationBuilder {
 
-    private boolean optional;
-    private boolean multiple;
     private String nameRegex;
     private String name;
 
@@ -48,13 +41,13 @@ abstract class AbstractAnnotationBuilder {
         }
     }
 
-    void setOptional(DefaultInjectionStrategy defaultInjectionStrategy, InjectionStrategy injectionStrategy) {
-        optional = injectionStrategy.equals(InjectionStrategy.OPTIONAL) || (injectionStrategy.equals(InjectionStrategy.DEFAULT)
+    boolean isOptional(DefaultInjectionStrategy defaultInjectionStrategy, InjectionStrategy injectionStrategy) {
+        return injectionStrategy.equals(InjectionStrategy.OPTIONAL) || (injectionStrategy.equals(InjectionStrategy.DEFAULT)
                 && defaultInjectionStrategy.equals(DefaultInjectionStrategy.OPTIONAL));
     }
 
-    void setMultiple(Field field) {
-        multiple = (field.getType().isArray() || Collection.class.isAssignableFrom(field.getType()));
+    boolean isMultiple(Field field) {
+        return (field.getType().isArray() || Collection.class.isAssignableFrom(field.getType()));
     }
 
     void setName(Field field, String annotationName) {
@@ -63,14 +56,6 @@ abstract class AbstractAnnotationBuilder {
         } else {
             name = annotationName;
         }
-    }
-
-    boolean isOptional() {
-        return optional;
-    }
-
-    boolean isMultiple() {
-        return multiple;
     }
 
     String getNameRegex() {

@@ -42,13 +42,20 @@ import org.apache.sling.validation.model.ValidationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author karolis.mackevicius@netcentric.biz
- * @since 05/04/17 */
+/**
+ * The Annotation based validation model builder.
+ */
 public class AnnotationValidationModelBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationPackageBundleListener.class);
     private static final String[] EMPTY_PATHS = {};
 
+    /**
+     * Build Validation Models for given class.
+     *
+     * @param clazz the clazz
+     * @return the list
+     */
     public List<ValidationModel> build(@Nonnull Class<?> clazz) {
         List<ValidationModel> validationModels = new ArrayList<>();
         ValidationModelBuilder modelBuilder = new ValidationModelBuilder();

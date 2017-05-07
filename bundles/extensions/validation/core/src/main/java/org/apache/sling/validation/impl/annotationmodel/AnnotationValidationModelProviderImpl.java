@@ -28,15 +28,23 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The Annotation validation model provider.
+ */
 @Component(immediate = true, service = ValidationModelProvider.class)
 public class AnnotationValidationModelProviderImpl implements ValidationModelProvider {
 
     private static final Logger log = LoggerFactory.getLogger(AnnotationValidationModelProviderImpl.class);
 
-    ValidationPackageBundleListener listener;
+    private ValidationPackageBundleListener listener;
+    private final ValidationModelImplementation validationModelImplementations = new ValidationModelImplementation();
 
-    final ValidationModelImplementation validationModelImplementations = new ValidationModelImplementation();
-
+    /**
+     * Activate.
+     * Registers validation package bundle listener.
+     *
+     * @param ctx the ctx
+     */
     @Activate
     protected void activate(final ComponentContext ctx) {
         this.listener = new ValidationPackageBundleListener(ctx.getBundleContext(), this.validationModelImplementations);
@@ -50,6 +58,10 @@ public class AnnotationValidationModelProviderImpl implements ValidationModelPro
 
     }
 
+    /**
+     * Deactivate.
+     * Unregisters listener and removes all validation models.
+     */
     @Deactivate
     protected void deactivate() {
         this.listener.unregisterAll();

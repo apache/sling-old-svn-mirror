@@ -32,8 +32,9 @@ import org.apache.sling.validation.impl.model.ChildResourceImpl;
 import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ResourceProperty;
 
-/** @author karolis.mackevicius@netcentric.biz
- * @since 09/04/17 */
+/**
+ * The Annotation based child resources builder.
+ */
 public class AnnotationChildResourceBuilder extends AbstractAnnotationBuilder {
 
     private static final String ANYTHING_REGEX = ".*";
@@ -43,26 +44,43 @@ public class AnnotationChildResourceBuilder extends AbstractAnnotationBuilder {
     @Nonnull
     private final List<ChildResource> children = new ArrayList<>();
 
+    /**
+     * Build child resource.
+     *
+     * @param field                    the field
+     * @param defaultInjectionStrategy the default injection strategy
+     * @return the child resource
+     */
     public @Nonnull ChildResource build(@Nonnull Field field, DefaultInjectionStrategy defaultInjectionStrategy) {
         org.apache.sling.models.annotations.injectorspecific.ChildResource child = field
                 .getAnnotation(org.apache.sling.models.annotations.injectorspecific.ChildResource.class);
-        setOptional(defaultInjectionStrategy, child.injectionStrategy());
-        setMultiple(field);
         setName(field, child.name());
         setRegex(field);
 
-        if(isMultiple()) {
-            ChildResource childResource = new ChildResourceImpl(StringUtils.EMPTY, ANYTHING_REGEX, !isOptional(), resourceProperties, children);
-            return new ChildResourceImpl(getName(), getNameRegex(), !isOptional(), Collections.emptyList(), Collections.singletonList(childResource));
+        if(isMultiple(field)) {
+            ChildResource childResource = new ChildResourceImpl(StringUtils.EMPTY, ANYTHING_REGEX, !isOptional(defaultInjectionStrategy, child.injectionStrategy()), resourceProperties, children);
+            return new ChildResourceImpl(getName(), getNameRegex(), !isOptional(defaultInjectionStrategy, child.injectionStrategy()), Collections.emptyList(), Collections.singletonList(childResource));
         }
-        return new ChildResourceImpl(getName(), getNameRegex(), !isOptional(), resourceProperties, children);
+        return new ChildResourceImpl(getName(), getNameRegex(), !isOptional(defaultInjectionStrategy, child.injectionStrategy()), resourceProperties, children);
     }
 
+    /**
+     * Add resource properties.
+     *
+     * @param properties the properties
+     * @return the annotation child resource builder
+     */
     public AnnotationChildResourceBuilder addResourceProperties(@Nonnull Collection<ResourceProperty> properties) {
         this.resourceProperties.addAll(properties);
         return this;
     }
 
+    /**
+     * Add child resources.
+     *
+     * @param childResources the child resources
+     * @return the annotation child resource builder
+     */
     public AnnotationChildResourceBuilder addChildResources(Collection<ChildResource> childResources) {
         children.addAll(childResources);
         return this;

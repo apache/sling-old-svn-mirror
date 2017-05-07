@@ -32,19 +32,66 @@ import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author karolis.mackevicius@netcentric.biz
- * @since 02/04/17 */
+/**
+ * The Validation model implementation.
+ * It keeps all registered validation models.
+ */
 final class ValidationModelImplementation {
 
     private static final Logger log = LoggerFactory.getLogger(ValidationModelImplementation.class);
 
     private final ConcurrentMap<Bundle, ConcurrentHashMap<String, List<ValidationModel>>> validationModels = new ConcurrentHashMap<>();
 
-    /** Remove all implementation mappings. */
+    /**
+     * Remove all implementation mappings.
+     */
     void removeAll() {
         validationModels.clear();
     }
 
+    /**
+     * Gets validation models.
+     *
+     * @param bundle the bundle
+     * @return the validation models
+     */
+    @Nonnull
+    ConcurrentMap<String, List<ValidationModel>> getValidationModels(final Bundle bundle) {
+        return validationModels.getOrDefault(bundle, new ConcurrentHashMap<>());
+    }
+
+    /**
+     * Gets validation models by resource type.
+     *
+     * @param resourceType the resource type
+     * @return the validation models by resource type
+     */
+    @Nonnull
+    List<ValidationModel> getValidationModelsByResourceType(String resourceType) {
+        return validationModels.entrySet()
+                .parallelStream()
+                .map(Map.Entry::getValue)
+                .filter(setMap -> setMap.containsKey(resourceType))
+                .map(setMap -> setMap.get(resourceType))
+                .map(ArrayList<ValidationModel>::new)
+                .collect(ArrayList::new, ArrayList::addAll, ArrayList::addAll);
+    }
+
+    /**
+     * Remove validation models.
+     *
+     * @param bundle the bundle
+     */
+    void removeValidationModels(Bundle bundle) {
+        validationModels.remove(bundle);
+    }
+
+    /**
+     * Register validation models by bundle.
+     *
+     * @param bundle the bundle
+     * @param models the models
+     */
     void registerValidationModelsByBundle(final Bundle bundle, final Collection<ValidationModel> models) {
         models.forEach(model -> registerValidationModelByBundle(bundle, model));
     }
@@ -74,25 +121,5 @@ final class ValidationModelImplementation {
             validationModels.put(bundle, cmp);
             return cmp;
         };
-    }
-
-    @Nonnull
-    ConcurrentMap<String, List<ValidationModel>> getValidationModels(final Bundle bundle) {
-        return validationModels.getOrDefault(bundle, new ConcurrentHashMap<>());
-    }
-
-    @Nonnull
-    List<ValidationModel> getValidationModelsByResourceType(String resourceType) {
-        return validationModels.entrySet()
-                .parallelStream()
-                .map(Map.Entry::getValue)
-                .filter(setMap -> setMap.containsKey(resourceType))
-                .map(setMap -> setMap.get(resourceType))
-                .map(ArrayList<ValidationModel>::new)
-                .collect(ArrayList::new, ArrayList::addAll, ArrayList::addAll);
-    }
-
-    void removeValidationModels(Bundle bundle) {
-        validationModels.remove(bundle);
     }
 }

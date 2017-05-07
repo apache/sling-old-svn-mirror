@@ -30,14 +30,27 @@ import org.apache.sling.validation.annotations.Validate;
 import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
 import org.apache.sling.validation.model.ResourceProperty;
 
+/**
+ * The Annotation based resource property builder.
+ */
 public class AnnotationResourcePropertyBuilder extends AbstractAnnotationBuilder {
 
     private ResourcePropertyBuilder builder;
 
+    /**
+     * Constructor.
+     */
     public AnnotationResourcePropertyBuilder() {
         builder = new ResourcePropertyBuilder();
     }
 
+    /**
+     * Build resource property based on field annotations.
+     *
+     * @param defaultInjectionStrategy the default injection strategy
+     * @param field                    the field
+     * @return the resource property
+     */
     public ResourceProperty build(DefaultInjectionStrategy defaultInjectionStrategy, Field field) {
 
         if (field.isAnnotationPresent(Validate.class)) {
@@ -46,10 +59,15 @@ public class AnnotationResourcePropertyBuilder extends AbstractAnnotationBuilder
         setRegex(field);
         if (field.isAnnotationPresent(ValueMapValue.class)) {
             ValueMapValue valueMapValue = field.getAnnotation(ValueMapValue.class);
-            setOptional(defaultInjectionStrategy, valueMapValue.injectionStrategy());
-            setMultiple(field);
+            if (isOptional(defaultInjectionStrategy, valueMapValue.injectionStrategy())) {
+                builder.optional();
+            }
+            if (isMultiple(field)) {
+                builder.multiple();
+            }
             setName(field, valueMapValue.name());
         }
+
         return builder.build(getName());
     }
 

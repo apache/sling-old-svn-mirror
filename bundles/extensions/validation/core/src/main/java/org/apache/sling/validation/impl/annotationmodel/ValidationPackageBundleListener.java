@@ -43,6 +43,9 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The Validation package bundle listener.
+ */
 public class ValidationPackageBundleListener implements BundleTrackerCustomizer {
 
     static final String PACKAGE_HEADER = "Sling-Model-Packages";
@@ -55,6 +58,12 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
 
     private final ValidationModelImplementation validationModelImplementation;
 
+    /**
+     * Instantiates a new Validation package bundle listener.
+     *
+     * @param bundleContext                 the bundle context
+     * @param validationModelImplementation the validation model implementation
+     */
     public ValidationPackageBundleListener(BundleContext bundleContext,
             ValidationModelImplementation validationModelImplementation) {
         this.validationModelImplementation = validationModelImplementation;
@@ -79,6 +88,9 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
     public void modifiedBundle(Bundle bundle, BundleEvent event, Object object) {
     }
 
+    /**
+     * Unregister all.
+     */
     public synchronized void unregisterAll() {
         this.bundleTracker.close();
     }
