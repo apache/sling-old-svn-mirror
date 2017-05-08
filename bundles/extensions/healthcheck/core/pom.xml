@@ -31,7 +31,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.hc.core</artifactId>
     <packaging>bundle</packaging>
-    <version>1.2.8</version>
+    <version>1.2.9-SNAPSHOT</version>
 
     <name>Apache Sling Health Check Core</name>
     <inceptionYear>2013</inceptionYear>
@@ -52,9 +52,9 @@
     </properties>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.core-1.2.8</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.core-1.2.8</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.hc.core-1.2.8</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/core</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/core</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/healthcheck/core</url>
     </scm>
 
     <build>
@@ -135,7 +135,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.hc.api</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
