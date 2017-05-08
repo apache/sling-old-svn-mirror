@@ -20,9 +20,9 @@
 /**
  * Provides commons utility for users for the Discovery API.
  *
- * @version 1.0.0
+ * @version 1.2.0
  */
-@Version("1.1.0")
+@Version("1.2.0")
 package org.apache.sling.discovery.commons;
 
 import aQute.bnd.annotation.Version;

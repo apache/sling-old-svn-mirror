@@ -45,13 +45,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestInitDelayingTopologyEventListener {
-    
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+
     class TestListener implements TopologyEventListener {
 
         private List<TopologyEvent> events = new LinkedList<TopologyEvent>();
-        
+
         @Override
         public void handleTopologyEvent(TopologyEvent event) {
             synchronized(events) {
@@ -59,7 +59,7 @@ public class TestInitDelayingTopologyEventListener {
                 events.notifyAll();
             }
         }
-        
+
         public List<TopologyEvent> getEvents() {
             synchronized(events) {
                 return events;
@@ -213,7 +213,7 @@ public class TestInitDelayingTopologyEventListener {
     @Test
     public void testConstructor() throws Exception {
         final TopologyEventListener delegate = new TopologyEventListener() {
-            
+
             @Override
             public void handleTopologyEvent(TopologyEvent event) {
                 // nothing here atm
@@ -239,12 +239,6 @@ public class TestInitDelayingTopologyEventListener {
             // ok
         }
         try{
-            new InitDelayingTopologyEventListener(1, delegate, null);
-            fail("should complain");
-        } catch(IllegalArgumentException re) {
-            // ok
-        }
-        try{
             new InitDelayingTopologyEventListener(-1, delegate, scheduler, null);
             fail("should complain");
         } catch(IllegalArgumentException re) {
@@ -258,12 +252,6 @@ public class TestInitDelayingTopologyEventListener {
         }
         try{
             new InitDelayingTopologyEventListener(1, null, scheduler, null);
-            fail("should complain");
-        } catch(IllegalArgumentException re) {
-            // ok
-        }
-        try{
-            new InitDelayingTopologyEventListener(1, delegate, null, null);
             fail("should complain");
         } catch(IllegalArgumentException re) {
             // ok
@@ -286,14 +274,8 @@ public class TestInitDelayingTopologyEventListener {
         } catch(IllegalArgumentException re) {
             // ok
         }
-        try{
-            new InitDelayingTopologyEventListener(1, delegate, null, logger);
-            fail("should complain");
-        } catch(IllegalArgumentException re) {
-            // ok
-        }
     }
-    
+
     private TopologyView createView(boolean current) {
         final TopologyView view = Mockito.mock(TopologyView.class);
         Mockito.when(view.isCurrent()).thenReturn(current);
@@ -331,7 +313,7 @@ public class TestInitDelayingTopologyEventListener {
             }
         }
     }
-    
+
     @Test
     public void testDisposing() throws Exception {
         final TestListener delegate = new TestListener();
@@ -347,7 +329,7 @@ public class TestInitDelayingTopologyEventListener {
         delegate.assureEventCnt(1, 1000);
         delegate.assureEventCnt(1, 500);
     }
-    
+
     @Test
     public void testNoEvents() throws Exception {
         final TestListener delegate = new TestListener();
@@ -355,7 +337,7 @@ public class TestInitDelayingTopologyEventListener {
         InitDelayingTopologyEventListener listener = new InitDelayingTopologyEventListener(1, delegate, scheduler, logger);
         // no events:
         delegate.assureEventCnt(0, 1500);
-        
+
         // then the first init is passed through
         listener.handleTopologyEvent(createEvent(Type.TOPOLOGY_INIT));
         delegate.waitForEventCnt(1, 5000);
