@@ -18,7 +18,8 @@
  */
 package org.apache.sling.discovery.commons;
 
-import java.sql.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -42,7 +43,7 @@ import org.slf4j.LoggerFactory;
  *      (as the discovery API says the first event received is an INIT event).
  *      </li>
  *  <li>if the last event received was not a CHANGING event
- *      (ie it was an INIT, CHANGED or PROPERTIES), then 
+ *      (ie it was an INIT, CHANGED or PROPERTIES), then
  *      as soon as the startup time passes this facade will simulate
  *      an INIT event
  *      (again, as the discovery API says the first event received is an INIT event)
@@ -67,32 +68,37 @@ public class InitDelayingTopologyEventListener implements TopologyEventListener 
     private final AtomicBoolean active = new AtomicBoolean(false);
 
     /** flag indicating whether we're still delaying or not **/
-    private boolean delaying = true;
-    
-    /** the last pending delayed event - we only have to keep the last event to support all different cases **/
-    private TopologyEvent pendingDelayedEvent = null;
+    private volatile boolean delaying = true;
 
-    /** 
+    /** the last pending delayed event - we only have to keep the last event to support all different cases **/
+    private volatile TopologyEvent pendingDelayedEvent;
+
+    /**
      * Creates a new init-delaying listener with the given delay, delegate and scheduler.
      * <p>
      * For properly disposing the caller should use the dispose method!
+     * @param startupDelay The startup delay in seconds
+     * @param delegate The topology event listener
      * @see #dispose()
      */
-    public InitDelayingTopologyEventListener(final long startupDelay, final TopologyEventListener delegate, final Scheduler scheduler) {
-        this(startupDelay, delegate, scheduler, null);
+    public InitDelayingTopologyEventListener(final long startupDelay,
+            final TopologyEventListener delegate) {
+        this(startupDelay, delegate, (Logger)null);
     }
 
     /**
      * Creates a new init-delaying listener with the given delay, delegate, scheduler and optinoal logger.
      * <p>
      * For properly disposing the caller should use the dispose method!
+     * @param startupDelay The startup delay in seconds
+     * @param delegate The topology event listener
+     * @param loggerOrNull Optional logger instance
      * @see #dispose()
      */
-    public InitDelayingTopologyEventListener(final long startupDelay, final TopologyEventListener delegate, 
-            final Scheduler scheduler, final Logger loggerOrNull) {
-        if ( scheduler == null ) {
-            throw new IllegalArgumentException("scheduler must not be null");
-        }
+    public InitDelayingTopologyEventListener(final long startupDelay,
+            final TopologyEventListener delegate,
+            final Logger loggerOrNull) {
+
         if ( delegate == null ) {
             throw new IllegalArgumentException("delegate must not be null");
         }
@@ -106,13 +112,13 @@ public class InitDelayingTopologyEventListener implements TopologyEventListener 
             this.logger = LoggerFactory.getLogger(this.getClass());
         }
         final Runnable r = new Runnable() {
-            
+
             @Override
             public void run() {
                 if (InitDelayingTopologyEventListener.this.active.get()) {
                     // only call afterStartupDelay if we're active
                     // (to avoid this call if disposed in the meantime)
-                    
+
                     // and since after disposing this listener is no longer
                     // used - ie it is a throw-away - you can create
                     // such a listener on each activate and dispose it on
@@ -123,20 +129,59 @@ public class InitDelayingTopologyEventListener implements TopologyEventListener 
                 }
             }
         };
-        
+
         // mark this listener as active
         this.active.set(true);
 
-        // schedule me if you can
-        if ( !scheduler.schedule(r, scheduler.AT(new Date(System.currentTimeMillis() + startupDelay * 1000))) ) {
-            // if for whatever reason scheduling doesn't work, let's run now
-            logger.warn("activate: could not schedule startupDelay handler with scheduler ({}) - "
-                    + "thus starting ({}) immediately", scheduler, delegate);
-            r.run();
-        }
+        // schedule me
+        final Timer timer = new Timer();
+        final TimerTask task = new TimerTask() {
+
+            @Override
+            public void run() {
+                r.run();
+            }
+        };
+        timer.schedule(task, startupDelay * 1000);
         // SLING-5560 : at this point either r is invoked immediately or scheduled after the delay
     }
-    
+
+    /**
+     * Creates a new init-delaying listener with the given delay, delegate and scheduler.
+     * <p>
+     * For properly disposing the caller should use the dispose method!
+     * @param startupDelay The startup delay in seconds
+     * @param delegate The topology event listener
+     * @param scheduler Scheduler to schedule the delay (not used)
+     * @see #dispose()
+     * @deprecated Use {@link InitDelayingTopologyEventListener#InitDelayingTopologyEventListener(long, TopologyEventListener)
+     */
+    @Deprecated
+    public InitDelayingTopologyEventListener(final long startupDelay,
+            final TopologyEventListener delegate,
+            final Scheduler scheduler) {
+        this(startupDelay, delegate, scheduler, null);
+    }
+
+    /**
+     * Creates a new init-delaying listener with the given delay, delegate, scheduler and optinoal logger.
+     * <p>
+     * For properly disposing the caller should use the dispose method!
+     * @param startupDelay The startup delay in seconds
+     * @param delegate The topology event listener
+     * @param scheduler Scheduler to schedule the delay (not used)
+     * @param loggerOrNull Optional logger instance
+     * @see #dispose()
+     * @deprecated Use {@link InitDelayingTopologyEventListener#InitDelayingTopologyEventListener(long, TopologyEventListener, Logger)
+     */
+    @Deprecated
+    public InitDelayingTopologyEventListener(final long startupDelay,
+            final TopologyEventListener delegate,
+            final Scheduler scheduler,
+            final Logger loggerOrNull) {
+        this(startupDelay, delegate, loggerOrNull);
+    }
+
     @Override
     public void handleTopologyEvent(TopologyEvent event) {
         synchronized ( syncObj ) {
@@ -146,7 +191,7 @@ public class InitDelayingTopologyEventListener implements TopologyEventListener 
                 // event
                 this.logger.debug("handleTopologyEvent: delaying processing of received topology event (startup delay active) {}", event);
                 this.pendingDelayedEvent = event;
-                
+
                 // and we're delaying - so stop processing now and return
                 return;
             } else if ( this.pendingDelayedEvent != null ) {
@@ -157,7 +202,7 @@ public class InitDelayingTopologyEventListener implements TopologyEventListener 
                 // in afterStartupDelay).
                 // which means that we must now convert the new event into an INIT
                 // to ensure our code gets an INIT first thing
-                
+
                 // paranoia check:
                 if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
                     // this should never happen - but if it does, rinse and repeat
@@ -180,14 +225,14 @@ public class InitDelayingTopologyEventListener implements TopologyEventListener 
         // no delaying applicable - call delegate
         this.delegate.handleTopologyEvent(event);
     }
-    
+
     /**
      * Marks this listener as no longer active - ensures that it doesn't call the delegate
      * via any potentially pending scheduler callback.
      * <p>
      * Note that after dispose you can *still* call handleTopologyEvent and the events
-     * are passed to the delegate - but those are expected to be 'late' events and not 
-     * really part of the normal game. Hence, the caller must also ensure that the 
+     * are passed to the delegate - but those are expected to be 'late' events and not
+     * really part of the normal game. Hence, the caller must also ensure that the
      * handleTopologyEvent method isn't called anymore (which typically is automatically
      * guaranteed since the caller is typically an osgi service that gets unregistered anyway)
      */
@@ -204,7 +249,7 @@ public class InitDelayingTopologyEventListener implements TopologyEventListener 
         synchronized ( this.syncObj ) {
             // stop any future delaying
             this.delaying = false;
-            
+
             if ( this.pendingDelayedEvent == null ) {
                 // if no event received while we delayed,
                 // then we don't have to do anything later
@@ -214,25 +259,25 @@ public class InitDelayingTopologyEventListener implements TopologyEventListener 
                 // if the last delayed event was CHANGING
                 // then we must convert the next upcoming CHANGED, PROPERTIES
                 // into an INIT
-                
+
                 // and the way this is done in this class is by leving this
                 // event sit in this.pendingDelayedEvent, for grabs in handleTopologyEvent later
                 this.logger.debug("afterStartupDelay: startup delay passed, pending delayed event was CHANGING. "
                         + "Waiting for next stable topology event");
             } else {
                 // otherwise the last delayed event was either an INIT, CHANGED or PROPERTIES
-                // - but in any case we definitely never 
+                // - but in any case we definitely never
                 // processed any INIT - and our code expects an INIT
                 // as the first event ever..
-                
+
                 // so we now convert the event into an INIT
-                final TopologyEvent artificialInitEvent = 
+                final TopologyEvent artificialInitEvent =
                         new TopologyEvent(Type.TOPOLOGY_INIT, null, this.pendingDelayedEvent.getNewView());
-                
+
                 this.logger.debug("afterStartupDelay: startup delay passed, last pending delayed event was stable ({}). "
-                        + "Simulating an INIT event with that view: {}", this.pendingDelayedEvent, artificialInitEvent); 
+                        + "Simulating an INIT event with that view: {}", this.pendingDelayedEvent, artificialInitEvent);
                 this.pendingDelayedEvent = null;
-                
+
                 // call the delegate.
                 // we must do this call in the synchronized block
                 // to ensure any concurrent new event waits properly
