@@ -109,11 +109,14 @@ public class HealthCheckServletIT {
             Thread.sleep(50L);
         }
         
-        assertEquals("After adding configuration, expecting five servlets from " +  packagePrefix, 5, countServletServices(packagePrefix));
+        assertEquals("After adding configuration, expecting five servlets from " + packagePrefix, 6, countServletServices(packagePrefix));
         final List<String> paths = httpService.getPaths();
-        assertEquals("Expecting five new servlet registration", pathsBefore + 5, paths.size());
-        assertEquals("Expecting the HC servlet to be registered at " + path, path, paths.get(paths.size() - 5));
-        assertEquals("Expecting the HTML HC servlet to be registered at " + path + ".html", path + ".html", paths.get(paths.size() - 4));
-        assertEquals("Expecting the JSON HC servlet to be registered at " + path + ".json", path + ".json", paths.get(paths.size() - 3));
+        assertEquals("Expecting six new servlet registration", pathsBefore + 6, paths.size());
+        assertEquals("Expecting the HC servlet to be registered at " + path, path, paths.get(paths.size() - 6));
+        assertEquals("Expecting the HTML HC servlet to be registered at " + path + ".html", path + ".html", paths.get(paths.size() - 5));
+        assertEquals("Expecting the JSON HC servlet to be registered at " + path + ".json", path + ".json", paths.get(paths.size() - 4));
+        assertEquals("Expecting the JSONP HC servlet to be registered at " + path + ".jsonp", path + ".jsonp", paths.get(paths.size() - 3));
+        assertEquals("Expecting the TXT HC servlet to be registered at " + path + ".txt", path + ".txt", paths.get(paths.size() - 2));
+        assertEquals("Expecting the verbose TXT HC servlet to be registered at " + path + ".verbose.txt", path + ".verbose.txt", paths.get(paths.size() - 1));
     }
 }
