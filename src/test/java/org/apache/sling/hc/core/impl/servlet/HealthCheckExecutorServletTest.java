@@ -20,11 +20,13 @@ package org.apache.sling.hc.core.impl.servlet;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.contains;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -47,14 +49,17 @@ import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 public class HealthCheckExecutorServletTest {
 
-    private HealthCheckExecutorServlet healthCheckExecutorServlet;
+    @InjectMocks
+    private HealthCheckExecutorServlet healthCheckExecutorServlet = new HealthCheckExecutorServlet();
 
     @Mock
     private HttpServletRequest request;
@@ -75,6 +80,9 @@ public class HealthCheckExecutorServletTest {
     private ResultTxtSerializer txtSerializer;
 
     @Mock
+    private ResultTxtVerboseSerializer verboseTxtSerializer;
+
+    @Mock
     private ServiceReference hcServiceRef;
 
     @Mock
@@ -82,14 +90,7 @@ public class HealthCheckExecutorServletTest {
 
     @Before
     public void setup() throws IOException {
-
-        healthCheckExecutorServlet = new HealthCheckExecutorServlet();
-
-        MockitoAnnotations.initMocks(this);
-        healthCheckExecutorServlet.healthCheckExecutor = healthCheckExecutor;
-        healthCheckExecutorServlet.htmlSerializer = htmlSerializer;
-        healthCheckExecutorServlet.jsonSerializer = jsonSerializer;
-        healthCheckExecutorServlet.txtSerializer = txtSerializer;
+        initMocks(this);
 
         doReturn(500L).when(hcServiceRef).getProperty(Constants.SERVICE_ID);
         doReturn(writer).when(response).getWriter();
@@ -108,6 +109,7 @@ public class HealthCheckExecutorServletTest {
 
         verifyZeroInteractions(jsonSerializer);
         verifyZeroInteractions(txtSerializer);
+        verifyZeroInteractions(verboseTxtSerializer);
         verify(htmlSerializer)
                 .serialize(resultEquals(new Result(Result.Status.CRITICAL, "Overall Status CRITICAL")), eq(executionResults), contains("Supported URL parameters"), eq(false));
     }
@@ -130,6 +132,7 @@ public class HealthCheckExecutorServletTest {
 
         verifyZeroInteractions(htmlSerializer);
         verifyZeroInteractions(txtSerializer);
+        verifyZeroInteractions(verboseTxtSerializer);
         verify(jsonSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")), eq(executionResults), anyString(),
                 eq(false));
 
@@ -140,7 +143,7 @@ public class HealthCheckExecutorServletTest {
 
         String testTag = "testTag";
         doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
-        doReturn("txt").when(request).getParameter(HealthCheckExecutorServlet.PARAM_FORMAT.name);
+        doReturn(HealthCheckExecutorServlet.FORMAT_TXT).when(request).getParameter(HealthCheckExecutorServlet.PARAM_FORMAT.name);
         doReturn("true").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR.name);
         int timeout = 5000;
         doReturn(timeout + "").when(request).getParameter(HealthCheckExecutorServlet.PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
@@ -154,7 +157,27 @@ public class HealthCheckExecutorServletTest {
 
         verifyZeroInteractions(htmlSerializer);
         verifyZeroInteractions(jsonSerializer);
+        verifyZeroInteractions(verboseTxtSerializer);
         verify(txtSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")));
+
+    }
+
+    @Test
+    public void testDoGetVerboseTxt() throws ServletException, IOException {
+
+        String testTag = "testTag";
+        doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
+        doReturn(HealthCheckExecutorServlet.FORMAT_VERBOSE_TXT).when(request).getParameter(HealthCheckExecutorServlet.PARAM_FORMAT.name);
+
+        List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.WARN);
+        doReturn(executionResults).when(healthCheckExecutor).execute(any(HealthCheckExecutionOptions.class), eq(testTag));
+
+        healthCheckExecutorServlet.doGet(request, response);
+
+        verifyZeroInteractions(htmlSerializer);
+        verifyZeroInteractions(jsonSerializer);
+        verifyZeroInteractions(txtSerializer);
+        verify(verboseTxtSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")), eq(executionResults), eq(false));
 
     }
 

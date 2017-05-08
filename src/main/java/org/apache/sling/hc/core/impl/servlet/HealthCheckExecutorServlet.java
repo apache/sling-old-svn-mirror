@@ -38,7 +38,6 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.Result.Status;
@@ -109,6 +108,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     static final String FORMAT_JSON = "json";
     static final String FORMAT_JSONP = "jsonp";
     static final String FORMAT_TXT = "txt";
+    static final String FORMAT_VERBOSE_TXT = "verbose.txt";
 
     private static final String CONTENT_TYPE_HTML = "text/html";
     private static final String CONTENT_TYPE_TXT = "text/plain";
@@ -148,6 +148,9 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     @Reference
     ResultTxtSerializer txtSerializer;
 
+    @Reference
+    ResultTxtVerboseSerializer verboseTxtSerializer;
+
     @Activate
     protected final void activate(final ComponentContext context) {
         final Dictionary<?, ?> properties = context.getProperties();
@@ -160,7 +163,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         servletsToRegister.put(this.servletPath + "." + FORMAT_JSON, new ProxyServlet(FORMAT_JSON));
         servletsToRegister.put(this.servletPath + "." + FORMAT_JSONP, new ProxyServlet(FORMAT_JSONP));
         servletsToRegister.put(this.servletPath + "." + FORMAT_TXT, new ProxyServlet(FORMAT_TXT));
-
+        servletsToRegister.put(this.servletPath + "." + FORMAT_VERBOSE_TXT, new ProxyServlet(FORMAT_VERBOSE_TXT));
 
         if (disabled) {
             LOG.info("Health Check Servlet is disabled by configuration");
@@ -197,12 +200,13 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     }
 
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response, final String format) throws ServletException, IOException {
-        String tagsStr = StringUtils.defaultIfEmpty(StringUtils.substringBeforeLast(request.getPathInfo(), "."), "").replace("/", "");
+        String pathInfo = request.getPathInfo();
+        String tagsStr = StringUtils.removeStart(splitFormat(pathInfo)[0], "/");
         if (StringUtils.isBlank(tagsStr)) {
             // if not provided via path use parameter or default
             tagsStr = StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS.name), "");
         }
-        final String[] tags = tagsStr.split("[, ;]+");
+        final String[] tags = tagsStr.split("[,;]+");
 
         final Boolean includeDebug = Boolean.valueOf(request.getParameter(PARAM_INCLUDE_DEBUG.name));
         final Map<Result.Status, Integer> statusMapping = request.getParameter(PARAM_HTTP_STATUS.name) != null ? getStatusMapping(request
@@ -241,29 +245,44 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         } else if (FORMAT_JSONP.equals(format)) {
             String jsonpCallback = StringUtils.defaultIfEmpty(request.getParameter(PARAM_JSONP_CALLBACK.name), JSONP_CALLBACK_DEFAULT);
             sendJsonResponse(overallResult, executionResults, jsonpCallback, response, includeDebug);
-        } else if (FORMAT_TXT.equals(format)) {
-            sendTxtResponse(overallResult, response);
+        } else if (StringUtils.endsWith(format, FORMAT_TXT)) {
+            sendTxtResponse(overallResult, response, StringUtils.equals(format, FORMAT_VERBOSE_TXT), executionResults, includeDebug);
         } else {
             response.setContentType("text/plain");
-            response.getWriter().println("Invalid format " + format + " - supported formats: html|json|jsonp|txt");
+            response.getWriter().println("Invalid format " + format + " - supported formats: html|json|jsonp|txt|verbose.txt");
         }
     }
 
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        String format = StringUtils.substringAfterLast(request.getPathInfo(), ".");
+        String pathInfo = request.getPathInfo();
+        String format = splitFormat(pathInfo)[1];
         if (StringUtils.isBlank(format)) {
             // if not provided via extension use parameter or default
             format = StringUtils.defaultIfEmpty(request.getParameter(PARAM_FORMAT.name), FORMAT_HTML);
         }
-
         doGet(request, response, format);
     }
 
-    private void sendTxtResponse(final Result overallResult, final HttpServletResponse response) throws IOException {
+    private String[] splitFormat(String pathInfo) {
+        for (String format : new String[] { FORMAT_HTML, FORMAT_JSON, FORMAT_JSONP, FORMAT_VERBOSE_TXT, FORMAT_TXT }) {
+            String formatWithDot = "." + format;
+            if (StringUtils.endsWith(pathInfo, formatWithDot)) {
+                return new String[] { StringUtils.substringBeforeLast(pathInfo, formatWithDot), format };
+            }
+        }
+        return new String[] { pathInfo, null };
+    }
+
+    private void sendTxtResponse(final Result overallResult, final HttpServletResponse response, boolean verbose,
+            List<HealthCheckExecutionResult> executionResults, boolean includeDebug) throws IOException {
         response.setContentType(CONTENT_TYPE_TXT);
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(txtSerializer.serialize(overallResult));
+        if (verbose) {
+            response.getWriter().write(verboseTxtSerializer.serialize(overallResult, executionResults, includeDebug));
+        } else {
+            response.getWriter().write(txtSerializer.serialize(overallResult));
+        }
     }
 
     private void sendJsonResponse(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, final String jsonpCallback,
