@@ -23,10 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -35,13 +31,20 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * The OakBacklogClusterSyncService will wait until all instances
  * in the local cluster are no longer in any backlog state.
  */
-@Component(immediate = false)
-@Service(value = { ClusterSyncService.class, OakBacklogClusterSyncService.class })
+@Component(service = { ClusterSyncService.class, OakBacklogClusterSyncService.class },
+            property = {
+                    Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+            })
 public class OakBacklogClusterSyncService extends AbstractServiceWithBackgroundCheck implements ClusterSyncService {
 
     static enum BacklogStatus {
@@ -50,16 +53,16 @@ public class OakBacklogClusterSyncService extends AbstractServiceWithBackgroundC
         NO_BACKLOG /* when oak's discovery lite descriptor declared we're backlog-free now */
     }
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private IdMapService idMapService;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     protected DiscoveryLiteConfig commonsConfig;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     protected ResourceResolverFactory resourceResolverFactory;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     protected SlingSettingsService settingsService;
 
     private ClusterSyncHistory consistencyHistory = new ClusterSyncHistory();
@@ -203,7 +206,7 @@ public class OakBacklogClusterSyncService extends AbstractServiceWithBackgroundC
             }
 
             ClusterView cluster = view.getLocalInstance().getClusterView();
-            Set<String> slingIds = new HashSet<String>();
+            Set<String> slingIds = new HashSet<>();
             for (InstanceDescription instance : cluster.getInstances()) {
                 slingIds.add(instance.getSlingId());
             }
