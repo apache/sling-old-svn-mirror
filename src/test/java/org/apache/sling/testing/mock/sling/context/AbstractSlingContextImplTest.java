@@ -48,6 +48,9 @@ public abstract class AbstractSlingContextImplTest {
 
     @Before
     public void setUp() throws Exception {
+        // make sure ResourceResolverFactory is available immediately and not lazily
+        assertEquals(1, context.getServices(ResourceResolverFactory.class, null).length);
+
         context.addModelsForPackage("org.apache.sling.testing.mock.sling.context.models");
         
         ContentLoader contentLoader = this.context.load();
@@ -138,10 +141,4 @@ public abstract class AbstractSlingContextImplTest {
         assertTrue(newRunModes.contains("mode2"));
     }
     
-    @Test
-    public void testResourceResolverFactory() {
-        ResourceResolverFactory[] factories = context.getServices(ResourceResolverFactory.class, null);
-        assertEquals(1, factories.length);
-    }
-
 }

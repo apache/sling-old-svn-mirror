@@ -118,6 +118,12 @@ public class SlingContextImpl extends OsgiContextImpl {
             MockOsgi.setConfigForPid(bundleContext(), RESOURCERESOLVERFACTORYACTIVATOR_PID, this.resourceResolverFactoryActivatorProps);
         }
         
+        // automatically register resource resolver factory when ResourceResolverType != NONE,
+        // so the ResourceResolverFactory is available as OSGi service immediately
+        if (resourceResolverType != ResourceResolverType.NONE) {
+            resourceResolverFactory();
+        }
+        
         registerDefaultServices();
     }
     
