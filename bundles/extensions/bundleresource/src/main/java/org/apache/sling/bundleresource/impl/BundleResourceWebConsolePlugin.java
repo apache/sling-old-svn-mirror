@@ -49,7 +49,7 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
 
     private ServiceTracker providerTracker;
 
-    private List<BundleResourceProvider> provider = new ArrayList<BundleResourceProvider>();
+    private List<BundleResourceProvider> provider = new ArrayList<>();
 
     //--------- setup and shutdown
 
@@ -172,11 +172,10 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
         };
         providerTracker.open();
 
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put(Constants.SERVICE_DESCRIPTION,
             "Web Console Plugin for Bundle Resource Providers");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        props.put(Constants.SERVICE_PID, getClass().getName());
         props.put("felix.webconsole.label", LABEL);
         props.put("felix.webconsole.title", "Bundle Resource Provider");
         props.put("felix.webconsole.category", "Sling");
@@ -198,7 +197,7 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
     }
 
     private String getName(Bundle bundle) {
-        String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
+        String name = bundle.getHeaders().get(Constants.BUNDLE_NAME);
         if (name == null) {
             name = bundle.getSymbolicName();
             if (name == null) {

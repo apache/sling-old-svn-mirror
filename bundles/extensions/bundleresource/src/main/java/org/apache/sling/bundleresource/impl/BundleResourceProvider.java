@@ -47,14 +47,8 @@ public class BundleResourceProvider implements ResourceProvider {
 
     private ServiceRegistration serviceRegistration;
 
-    /**
-     * Creates Bundle resource provider accessing entries in the given Bundle an
-     * supporting resources below root paths given by the rootList which is a
-     * comma (and whitespace) separated list of absolute paths.
-     */
-    public BundleResourceProvider(Bundle bundle, String rootList) {
-        this.bundle = new BundleResourceCache(bundle);
-        List<MappedPath> prefixList = new ArrayList<MappedPath>();
+    public static MappedPath[] getRoots(final Bundle bundle, final String rootList) {
+        List<MappedPath> prefixList = new ArrayList<>();
 
         final ManifestHeader header = ManifestHeader.parse(rootList);
         for (final ManifestHeader.Entry entry : header.getEntries()) {
@@ -66,13 +60,35 @@ public class BundleResourceProvider implements ResourceProvider {
                 prefixList.add(MappedPath.create(resourceRoot));
             }
         }
-        this.roots = prefixList.toArray(new MappedPath[prefixList.size()]);
+       return prefixList.toArray(new MappedPath[prefixList.size()]);
+    }
+
+    /**
+     * Creates Bundle resource provider accessing entries in the given Bundle an
+     * supporting resources below root paths given by the rootList which is a
+     * comma (and whitespace) separated list of absolute paths.
+     */
+    public BundleResourceProvider(final Bundle bundle, final String rootList) {
+        this.bundle = new BundleResourceCache(bundle);
+        List<MappedPath> prefixList = new ArrayList<>();
+
+        final ManifestHeader header = ManifestHeader.parse(rootList);
+        for (final ManifestHeader.Entry entry : header.getEntries()) {
+            final String resourceRoot = entry.getValue();
+            final String pathDirective = entry.getDirectiveValue("path");
+            if (pathDirective != null) {
+                prefixList.add(new MappedPath(resourceRoot, pathDirective));
+            } else {
+                prefixList.add(MappedPath.create(resourceRoot));
+            }
+        }
+        this.roots = getRoots(bundle, rootList);
     }
 
     //---------- Service Registration
-    
+
     long registerService(BundleContext context) {
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put(Constants.SERVICE_DESCRIPTION,
             "Provider of bundle based resources");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
@@ -88,9 +104,10 @@ public class BundleResourceProvider implements ResourceProvider {
             serviceRegistration.unregister();
         }
     }
-    
+
     // ---------- ResourceProvider interface
 
+    @Override
     public Resource getResource(ResourceResolver resourceResolver,
             HttpServletRequest request, String path) {
         return getResource(resourceResolver, path);
@@ -101,6 +118,7 @@ public class BundleResourceProvider implements ResourceProvider {
      * bundle of this provider. The JcrResourceResolver is ignored by this
      * implementation.
      */
+    @Override
     public Resource getResource(ResourceResolver resourceResolver, String path) {
         MappedPath mappedPath = getMappedPath(path);
         if (mappedPath != null) {
@@ -111,13 +129,14 @@ public class BundleResourceProvider implements ResourceProvider {
         return null;
     }
 
+    @Override
     public Iterator<Resource> listChildren(final Resource parent)
             throws SlingException {
 
-     	if (parent instanceof BundleResource && ((BundleResource)parent).getBundle() == this.bundle) { 
+     	if (parent instanceof BundleResource && ((BundleResource)parent).getBundle() == this.bundle) {
             // bundle resources can handle this request directly when the parent
     		//  resource is in the same bundle as this provider.
-            return ((BundleResource) parent).listChildren(); 
+            return ((BundleResource) parent).listChildren();
     	}
 
         // ensure this provider may have children of the parent
