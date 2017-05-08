@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * Note that users of this facade must call dispose to avoid any async calls
  * to the delegate after startup, in case they themselves are deactivated!
  * @since 1.1.0
- */
+ **/
 public class InitDelayingTopologyEventListener implements TopologyEventListener {
 
     /** the logger used by this listener - can be set in the constructor optionally to fit better into user log structure */
