@@ -33,6 +33,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ContentType;
+import org.apache.http.protocol.HTTP;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
@@ -104,6 +105,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 Request req = Request.Post(distributionEndpoint.getUri())
                         .connectTimeout(httpConfiguration.getConnectTimeout())
                         .socketTimeout(httpConfiguration.getSocketTimeout())
+                        .addHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_CLOSE)
                         .useExpectContinue();
 
                 // add the message body digest, see https://tools.ietf.org/html/rfc3230#section-4.3.2
@@ -159,11 +161,15 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
                 return null;
             }
 
-            final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, inputStream);
-            responsePackage.getInfo().put(PACKAGE_INFO_PROPERTY_ORIGIN_URI, distributionURI);
-            log.debug("pulled package with info {}", responsePackage.getInfo());
+            try {
+                final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, inputStream);
+                responsePackage.getInfo().put(PACKAGE_INFO_PROPERTY_ORIGIN_URI, distributionURI);
+                log.debug("pulled package with info {}", responsePackage.getInfo());
 
-            return new DefaultRemoteDistributionPackage(responsePackage, executor, distributionURI);
+                return new DefaultRemoteDistributionPackage(responsePackage, executor, distributionURI);
+            } finally {
+                IOUtils.closeQuietly(inputStream);
+            }
         } catch (HttpHostConnectException e) {
             log.debug("could not connect to {} - skipping", distributionEndpoint.getUri());
         } catch (Exception ex) {

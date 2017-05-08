@@ -24,6 +24,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.protocol.HTTP;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +39,7 @@ class HttpTransportUtils {
         Request fetchReq = Request.Post(fetchUri)
                 .connectTimeout(httpConfiguration.getConnectTimeout())
                 .socketTimeout(httpConfiguration.getSocketTimeout())
+                .addHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_CLOSE)
                 .useExpectContinue();
         HttpResponse httpResponse = executor.execute(fetchReq).returnResponse();
 
