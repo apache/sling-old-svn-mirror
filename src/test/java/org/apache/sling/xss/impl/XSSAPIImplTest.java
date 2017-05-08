@@ -204,7 +204,9 @@ public class XSSAPIImplTest {
                 {"<strike>strike</strike>", "<strike>strike</strike>"},
                 {"<s>s</s>", "<s>s</s>"},
 
-                {"<a href=\"\">empty href</a>", "<a href=\"\">empty href</a>"}
+                {"<a href=\"\">empty href</a>", "<a href=\"\">empty href</a>"},
+                {"<a href=\" javascript:alert(23)\">space</a>","<a>space</a>"},
+                {"<table background=\"http://www.google.com\"></table>", "<table></table>"},
         };
 
         for (String[] aTestData : testData) {
@@ -220,6 +222,8 @@ public class XSSAPIImplTest {
         String[][] testData = {
                 //         Href                                        Expected Result
                 //
+                {"/etc/commerce/collections/中文", "/etc/commerce/collections/中文"},
+                {"/etc/commerce/collections/\u09aa\u09b0\u09c0\u0995\u09cd\u09b7\u09be\u09ae\u09c2\u09b2\u0995", "/etc/commerce/collections/\u09aa\u09b0\u09c0\u0995\u09cd\u09b7\u09be\u09ae\u09c2\u09b2\u0995"},
                 {null, ""},
                 {"", ""},
                 {"simple", "simple"},
@@ -341,6 +345,28 @@ public class XSSAPIImplTest {
     }
 
     @Test
+    public void testGetValidDouble() {
+        String[][] testData = {
+                //         Source                                        Expected Result
+                //
+                {null, "123"},
+                {"100.5", "100.5"},
+                {"0", "0"},
+
+                {"junk", "123"},
+                {"", "123"},
+                {"null", "123"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            Double expected = (aTestData[1] != null) ? new Double(aTestData[1]) : null;
+
+            TestCase.assertEquals("Validating double '" + source + "'", expected, xssAPI.getValidDouble(source, 123));
+        }
+    }
+
+    @Test
     public void testGetValidDimension() {
         String[][] testData = {
                 //         Source                                        Expected Result
@@ -378,10 +404,13 @@ public class XSSAPIImplTest {
                 {null, null},
                 {"simple", "simple"},
 
-                {"break\"out", "break\\\"out"},
-                {"break'out", "break\\'out"},
-                {"'alert(document.cookie)", "\\'alert(document.cookie)"},
-                {"2014-04-22T10:11:24.002+01:00", "2014-04-22T10:11:24.002+01:00"}
+                {"break\"out", "break\\x22out"},
+                {"break'out", "break\\x27out"},
+
+                {"</script>", "<\\/script>"},
+
+                {"'alert(document.cookie)", "\\x27alert(document.cookie)"},
+                {"2014-04-22T10:11:24.002+01:00", "2014\\u002D04\\u002D22T10:11:24.002+01:00"}
         };
 
         for (String[] aTestData : testData) {
@@ -408,7 +437,7 @@ public class XSSAPIImplTest {
                 {"\"literal string\"", "\"literal string\""},
                 {"'literal string'", "'literal string'"},
                 {"\"bad literal'", RUBBISH},
-                {"'literal'); junk'", "'literal\\'); junk'"},
+                {"'literal'); junk'", "'literal\\x27); junk'"},
 
                 {"1200", "1200"},
                 {"3.14", "3.14"},
@@ -648,6 +677,10 @@ public class XSSAPIImplTest {
                 {
                         "<t><w>xyz</t></w>",
                         RUBBISH_XML
+                },
+                {
+                        "<?xml version=\"1.0\"?><!DOCTYPE test SYSTEM \"http://nonExistentHost:1234/\"><test/>",
+                        "<?xml version=\"1.0\"?><!DOCTYPE test SYSTEM \"http://nonExistentHost:1234/\"><test/>"
                 }
         };
         for (String[] aTestData : testData) {
