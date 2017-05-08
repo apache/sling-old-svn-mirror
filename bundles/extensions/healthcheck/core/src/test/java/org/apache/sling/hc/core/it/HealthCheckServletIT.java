@@ -109,10 +109,11 @@ public class HealthCheckServletIT {
             Thread.sleep(50L);
         }
         
-        assertEquals("After adding configuration, expecting five servlets from " + packagePrefix, 6, countServletServices(packagePrefix));
+        int expectedServletCount = 6;
+        assertEquals("After adding configuration, expecting six servlets from " + packagePrefix, expectedServletCount, countServletServices(packagePrefix));
         final List<String> paths = httpService.getPaths();
-        assertEquals("Expecting six new servlet registration", pathsBefore + 6, paths.size());
-        assertEquals("Expecting the HC servlet to be registered at " + path, path, paths.get(paths.size() - 6));
+        assertEquals("Expecting six new servlet registration", pathsBefore + expectedServletCount, paths.size());
+        assertEquals("Expecting the HC servlet to be registered at " + path, path, paths.get(paths.size() - 6)); // paths list is longer, use last entries in list
         assertEquals("Expecting the HTML HC servlet to be registered at " + path + ".html", path + ".html", paths.get(paths.size() - 5));
         assertEquals("Expecting the JSON HC servlet to be registered at " + path + ".json", path + ".json", paths.get(paths.size() - 4));
         assertEquals("Expecting the JSONP HC servlet to be registered at " + path + ".jsonp", path + ".jsonp", paths.get(paths.size() - 3));
