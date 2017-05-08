@@ -68,6 +68,17 @@ public interface XSSAPI {
     Long getValidLong(@Nullable String source,long defaultValue);
 
     /**
+     * Validate a string which should contain an double, returning a default value if the source is
+     * {@code null}, empty, can't be parsed, or contains XSS risks.
+     *
+     * @param source      the source double
+     * @param defaultValue a default value if the source can't be used, is {@code null} or an empty string
+     * @return a sanitized double
+     */
+    @Nullable
+    Double getValidDouble(@Nullable String source, double defaultValue);
+
+    /**
      * Validate a string which should contain a dimension, returning a default value if the source is
      * empty, can't be parsed, or contains XSS risks.  Allows integer dimensions and the keyword "auto".
      *
