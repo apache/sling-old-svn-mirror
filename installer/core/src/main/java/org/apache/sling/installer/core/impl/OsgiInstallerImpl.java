@@ -51,6 +51,7 @@ import org.apache.sling.installer.api.info.InfoProvider;
 import org.apache.sling.installer.api.info.InstallationState;
 import org.apache.sling.installer.api.info.Resource;
 import org.apache.sling.installer.api.info.ResourceGroup;
+import org.apache.sling.installer.api.tasks.ChangeStateTask;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.InstallationContext;
@@ -314,6 +315,8 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
             }
             this.listener.suspend();
+        } catch ( final Exception fatal) {
+            logger.error("An unexpected error occured in the installer task. Installer is stopped now!", fatal);
         } finally {
             this.backgroundThread = null;
         }
@@ -669,7 +672,12 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
         for(final InstallTaskFactory factory : services) {
             if ( factory != null ) {
-                result = factory.createTask(rrg);
+                try {
+                    result = factory.createTask(rrg);
+                } catch ( final Exception fatal ) {
+                    logger.error("An exception occured while creating a task for " + rrg.getActiveResource()+ ". Resource will be ignored.", fatal);
+                    result = new ChangeStateTask(rrg, ResourceState.IGNORED);
+                }
                 if ( result != null ) {
                     break;
                 }
