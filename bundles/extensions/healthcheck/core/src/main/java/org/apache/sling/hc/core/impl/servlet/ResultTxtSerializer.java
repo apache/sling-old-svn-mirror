@@ -21,6 +21,8 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.hc.api.Result;
 
+/** Serializes health check results into a simple text message (ideal to be used by a load balancer that would discard
+ * further information). */
 @Component
 @Service(ResultTxtSerializer.class)
 public class ResultTxtSerializer {

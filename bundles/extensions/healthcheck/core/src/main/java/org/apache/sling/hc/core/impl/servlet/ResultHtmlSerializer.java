@@ -41,8 +41,7 @@ import org.osgi.service.component.ComponentContext;
 
 /** Serializes health check results into html format. */
 @Service(ResultHtmlSerializer.class)
-@Component(metatype = true, name="Apache Sling Health Check Result Serializer",
-    description="Serializer for health check results")
+@Component(metatype = true, name = "Apache Sling Health Check Result HTML Serializer", description = "Serializer for health check results in HTML format")
 public class ResultHtmlSerializer {
     private static final String CSS_STYLE_DEFAULT = "body { font-size:12px; font-family:arial,verdana,sans-serif;background-color:#FFFDF1; }\n"
             + "h1 { font-size:20px;}\n"
