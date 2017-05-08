@@ -30,11 +30,6 @@ import javax.servlet.GenericServlet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.info.InfoProvider;
 import org.apache.sling.installer.api.info.InstallationState;
@@ -44,21 +39,25 @@ import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 
-@Component
-@Service(value=javax.servlet.Servlet.class)
-@Properties({
-    @Property(name=Constants.SERVICE_DESCRIPTION, value="Apache Sling OSGi Installer Web Console Plugin"),
-    @Property(name="felix.webconsole.label", value="osgi-installer"),
-    @Property(name="felix.webconsole.title", value="OSGi Installer"),
-    @Property(name="felix.webconsole.category", value="OSGi"),
-    @Property(name="felix.webconsole.configprinter.modes", value={"zip", "txt"})
-})
+@Component(service=javax.servlet.Servlet.class,
+    property = {
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+        Constants.SERVICE_DESCRIPTION + "=Apache Sling OSGi Installer Web Console Plugin",
+        "felix.webconsole.label=osgi-installer",
+        "felix.webconsole.title=OSGi Installer",
+        "felix.webconsole.category=OSGi",
+        "felix.webconsole.configprinter.modes=zip",
+        "felix.webconsole.configprinter.modes=txt"
+    })
 @SuppressWarnings("serial")
 public class OsgiInstallerWebConsolePlugin extends GenericServlet {
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private InfoProvider installer;
 
     private String getType(final RegisteredResource rsrc) {
@@ -104,7 +103,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
         }
         return stateInfo;
     }
-    
+
     private String getError(final Resource rsrc) {
         String error = rsrc.getError();
         return error != null ? error : "";
