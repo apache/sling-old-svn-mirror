@@ -17,9 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
@@ -31,7 +29,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.hc.api</artifactId>
     <packaging>bundle</packaging>
-    <version>0.0.99-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>Apache Sling Health Check API</name>
     <inceptionYear>2013</inceptionYear>
@@ -41,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/api</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/api</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/healthcheck/api</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.api-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.api-1.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.hc.api-1.0.0</url>
     </scm>
 
     <build>
