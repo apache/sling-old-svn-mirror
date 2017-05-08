@@ -154,7 +154,7 @@ public class InitDelayingTopologyEventListener implements TopologyEventListener 
      * @param delegate The topology event listener
      * @param scheduler Scheduler to schedule the delay (not used)
      * @see #dispose()
-     * @deprecated Use {@link InitDelayingTopologyEventListener#InitDelayingTopologyEventListener(long, TopologyEventListener)
+     * @deprecated Use {@link InitDelayingTopologyEventListener#InitDelayingTopologyEventListener(long, TopologyEventListener)}
      */
     @Deprecated
     public InitDelayingTopologyEventListener(final long startupDelay,
@@ -172,7 +172,7 @@ public class InitDelayingTopologyEventListener implements TopologyEventListener 
      * @param scheduler Scheduler to schedule the delay (not used)
      * @param loggerOrNull Optional logger instance
      * @see #dispose()
-     * @deprecated Use {@link InitDelayingTopologyEventListener#InitDelayingTopologyEventListener(long, TopologyEventListener, Logger)
+     * @deprecated Use {@link InitDelayingTopologyEventListener#InitDelayingTopologyEventListener(long, TopologyEventListener, Logger)}
      */
     @Deprecated
     public InitDelayingTopologyEventListener(final long startupDelay,
