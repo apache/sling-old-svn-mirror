@@ -14,40 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.ui.nav.model;
+package org.apache.sling.ide.eclipse.core.internal;
 
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.wst.common.project.facet.core.IDelegate;
+import org.eclipse.wst.common.project.facet.core.IProjectFacetVersion;
 
-public class FileVaultMetaInfRootFolder implements RootFolder{
-
-    private final IFolder folder;
-
-    public FileVaultMetaInfRootFolder(IFolder folder) {
-        this.folder = folder;
-    }
-
-    @Override
-    public IResource[] members() throws CoreException {
-    	return folder.members();
-    }
-    
-    @Override
-    public IResource findMember(IPath path) {
-    	return folder.findMember(path);
-    }
+class EmptyDelegate implements IDelegate {
 
 	@Override
-	public IPath getProjectRelativePath() {
-		return folder.getProjectRelativePath();
-	}
-    
-    @Override
-    public String toString() {
-        return folder.getProjectRelativePath().toString();
-    }
+	public void execute(IProject arg0, IProjectFacetVersion arg1, Object arg2, IProgressMonitor arg3)
+			throws CoreException {
 
-    
+	}
 }

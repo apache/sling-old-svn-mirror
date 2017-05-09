@@ -17,31 +17,27 @@
 package org.apache.sling.ide.eclipse.ui.nav;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
-import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
-import org.apache.sling.ide.eclipse.ui.nav.model.FileVaultMetaInfRootFolder;
+import org.apache.sling.ide.eclipse.ui.nav.model.ProvisioningModelRootFolder;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.IPath;
 
-public class FileVaultMetaInfContentProvider extends BaseRootFolderContentProvider<FileVaultMetaInfRootFolder> {
+public class ProvisioningModelContentProvider extends BaseRootFolderContentProvider<ProvisioningModelRootFolder> {
 
-	private static final String FILEVAULT_METAINF_PATH = "META-INF/vault";
-	
-    public FileVaultMetaInfContentProvider() {
-		super(FileVaultMetaInfRootFolder.class);
+    public ProvisioningModelContentProvider() {
+    	super(ProvisioningModelRootFolder.class);
 	}
-
+    
     @Override
-    protected FileVaultMetaInfRootFolder findRootFolder(IProject project) {
-        if (ProjectHelper.isContentProject(project)) {
-            IFolder syncDir = ProjectUtil.getSyncDirectory(project);
-            if (syncDir != null) {
-                IFolder metaInfFolder = syncDir.getParent().getFolder(new Path(FILEVAULT_METAINF_PATH));
-                if (metaInfFolder.exists()) {
-                    return new FileVaultMetaInfRootFolder(metaInfFolder);
-                }
-            }
-        }
-        return null;    	
+    protected ProvisioningModelRootFolder findRootFolder(IProject project) {
+    
+    	IPath modelDirPath = ProjectUtil.getProvisioningModelPath(project);
+    	
+    	IFolder folder = project.getFolder(modelDirPath);
+    	if ( !folder.exists() ) {
+    		return null;
+    	}
+    	
+    	return new ProvisioningModelRootFolder(folder);
     }
 }

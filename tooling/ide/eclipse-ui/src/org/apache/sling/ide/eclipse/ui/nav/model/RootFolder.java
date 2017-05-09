@@ -16,38 +16,13 @@
  */
 package org.apache.sling.ide.eclipse.ui.nav.model;
 
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 
-public class FileVaultMetaInfRootFolder implements RootFolder{
-
-    private final IFolder folder;
-
-    public FileVaultMetaInfRootFolder(IFolder folder) {
-        this.folder = folder;
-    }
-
-    @Override
-    public IResource[] members() throws CoreException {
-    	return folder.members();
-    }
-    
-    @Override
-    public IResource findMember(IPath path) {
-    	return folder.findMember(path);
-    }
-
-	@Override
-	public IPath getProjectRelativePath() {
-		return folder.getProjectRelativePath();
-	}
-    
-    @Override
-    public String toString() {
-        return folder.getProjectRelativePath().toString();
-    }
-
-    
+public interface RootFolder {
+	
+	public IResource[] members() throws CoreException;
+	public IResource findMember(IPath path);
+	public IPath getProjectRelativePath();
 }

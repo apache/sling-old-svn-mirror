@@ -16,9 +16,9 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
-public class SlingBundleFacetInstallDelegate extends BaseFacetInstallDelegate {
+public class SlingLaunchpadFacetInstallDelegate extends BaseFacetInstallDelegate {
 
-	public SlingBundleFacetInstallDelegate() {
-		setEnableValidationBuilderAndCommand(true);
+	public SlingLaunchpadFacetInstallDelegate() {
+		setEnableValidationBuilderAndCommand(false);
 	}
 }

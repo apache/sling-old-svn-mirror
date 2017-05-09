@@ -21,33 +21,31 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 
-public class FileVaultMetaInfRootFolder implements RootFolder{
+public class ProvisioningModelRootFolder implements RootFolder {
 
     private final IFolder folder;
 
-    public FileVaultMetaInfRootFolder(IFolder folder) {
+    public ProvisioningModelRootFolder(IFolder folder) {
         this.folder = folder;
     }
 
     @Override
-    public IResource[] members() throws CoreException {
-    	return folder.members();
+    public String toString() {
+        return folder.getProjectRelativePath().toString();
     }
     
     @Override
     public IResource findMember(IPath path) {
     	return folder.findMember(path);
-    }
+    }    
 
 	@Override
 	public IPath getProjectRelativePath() {
 		return folder.getProjectRelativePath();
 	}
-    
-    @Override
-    public String toString() {
-        return folder.getProjectRelativePath().toString();
-    }
 
-    
+	@Override
+	public IResource[] members() throws CoreException {
+		return folder.members();
+	}
 }

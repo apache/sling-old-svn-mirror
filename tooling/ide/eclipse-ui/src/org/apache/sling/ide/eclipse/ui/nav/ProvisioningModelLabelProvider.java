@@ -16,7 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.ui.nav;
 
-import org.apache.sling.ide.eclipse.ui.nav.model.FileVaultMetaInfRootFolder;
+import org.apache.sling.ide.eclipse.ui.nav.model.ProvisioningModelRootFolder;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
@@ -25,17 +25,12 @@ import org.eclipse.ui.PlatformUI;
 
 /**
  * Mostly copied from org.eclipse.ui.internal.ide.dialogs.FileFolderSelectionDialog.FileLabelProvider.
- *
  */
-public class FileVaultMetaInfLabelProvider implements ILabelProvider {
+public class ProvisioningModelLabelProvider implements ILabelProvider {
 
     private static final Image IMG_FOLDER = PlatformUI.getWorkbench().getSharedImages()
             .getImage(ISharedImages.IMG_OBJ_FOLDER);
-
-    public FileVaultMetaInfLabelProvider() {
-        super();
-    }
-
+	
     @Override
     public void addListener(ILabelProviderListener listener) {
 
@@ -58,17 +53,18 @@ public class FileVaultMetaInfLabelProvider implements ILabelProvider {
 
     @Override
     public Image getImage(Object element) {
-        if (element instanceof FileVaultMetaInfRootFolder) {
-            return IMG_FOLDER;
-        }
-        return null;
+    	if ( element instanceof ProvisioningModelRootFolder ) {
+    		return IMG_FOLDER;
+    	}
+    	
+    	return null;
     }
 
     @Override
     public String getText(Object element) {
-        if (element instanceof FileVaultMetaInfRootFolder) {
-            FileVaultMetaInfRootFolder fileVaultMetaInfRootFolder = (FileVaultMetaInfRootFolder) element;
-            return fileVaultMetaInfRootFolder.getProjectRelativePath().toPortableString();
+        if (element instanceof ProvisioningModelRootFolder) {
+        	ProvisioningModelRootFolder rootFolder = (ProvisioningModelRootFolder) element;
+            return rootFolder.getProjectRelativePath().toPortableString();
         }
         return null;
     }
