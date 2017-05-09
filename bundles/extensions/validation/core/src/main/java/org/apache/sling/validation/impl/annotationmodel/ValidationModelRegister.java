@@ -29,15 +29,11 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.model.ValidationModel;
 import org.osgi.framework.Bundle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * The Validation model implementation keeps all registered validation models.
+ * The Validation model register keeps all registered validation models.
  */
-final class ValidationModelImplementation {
-
-    private static final Logger log = LoggerFactory.getLogger(ValidationModelImplementation.class);
+final class ValidationModelRegister {
 
     private final ConcurrentMap<Bundle, ConcurrentHashMap<String, List<ValidationModel>>> validationModels = new ConcurrentHashMap<>();
 

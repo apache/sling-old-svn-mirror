@@ -55,7 +55,7 @@ public class ValidationPackageBundleListenerTest {
     @Mock
     private Bundle bundle;
 
-    private ValidationModelImplementation validationModelImplementation = new ValidationModelImplementation();
+    private ValidationModelRegister validationModelImplementation = new ValidationModelRegister();
 
     private ValidationPackageBundleListener listener;
 

@@ -38,24 +38,24 @@ public class AnnotationValidationModelProviderImpl implements ValidationModelPro
     private static final Logger log = LoggerFactory.getLogger(AnnotationValidationModelProviderImpl.class);
 
     private ValidationPackageBundleListener listener;
-    private final ValidationModelImplementation validationModelImplementations = new ValidationModelImplementation();
+    private final ValidationModelRegister validationModelRegister = new ValidationModelRegister();
 
     /**
      * Activate.
      * Registers validation package bundle listener.
      *
-     * @param ctx the ctx
+     * @param ctx the component context
      */
     @Activate
     protected void activate(final ComponentContext ctx) {
-        this.listener = new ValidationPackageBundleListener(ctx.getBundleContext(), this.validationModelImplementations);
+        this.listener = new ValidationPackageBundleListener(ctx.getBundleContext(), this.validationModelRegister);
     }
 
     @Override
     @Nonnull
     public List<ValidationModel> getValidationModels(@Nonnull String relativeResourceType) throws IllegalStateException {
         log.debug("Get Validation Model for resource type: {}", relativeResourceType);
-        return validationModelImplementations.getValidationModelsByResourceType(relativeResourceType);
+        return validationModelRegister.getValidationModelsByResourceType(relativeResourceType);
 
     }
 
@@ -66,7 +66,7 @@ public class AnnotationValidationModelProviderImpl implements ValidationModelPro
     @Deactivate
     protected void deactivate() {
         this.listener.unregisterAll();
-        this.validationModelImplementations.removeAll();
+        this.validationModelRegister.removeAll();
     }
 
 }

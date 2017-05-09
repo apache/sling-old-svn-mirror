@@ -55,15 +55,15 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
 
     private final BundleTracker bundleTracker;
 
-    private final ValidationModelImplementation validationModelImplementation;
+    private final ValidationModelRegister validationModelRegister;
 
     /** Instantiates a new Validation package bundle listener.
      *
      * @param bundleContext the bundle context
      * @param validationModelImplementation the validation model implementation */
     public ValidationPackageBundleListener(BundleContext bundleContext,
-            ValidationModelImplementation validationModelImplementation) {
-        this.validationModelImplementation = validationModelImplementation;
+            ValidationModelRegister validationModelImplementation) {
+        this.validationModelRegister = validationModelImplementation;
         this.bundleTracker = new BundleTracker(bundleContext, Bundle.ACTIVE, this);
         this.bundleTracker.open();
     }
@@ -77,7 +77,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
 
     @Override
     public void removedBundle(Bundle bundle, BundleEvent event, Object object) {
-        validationModelImplementation.removeValidationModels(bundle);
+        validationModelRegister.removeValidationModels(bundle);
 
     }
 
@@ -118,7 +118,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
             }
 
             List<ValidationModel> validationModels = new AnnotationValidationModelBuilder().build(implType);
-            validationModelImplementation.registerValidationModelsByBundle(bundle, validationModels);
+            validationModelRegister.registerValidationModelsByBundle(bundle, validationModels);
 
         } catch (ClassNotFoundException e) {
             LOG.warn("Unable to load class", e);

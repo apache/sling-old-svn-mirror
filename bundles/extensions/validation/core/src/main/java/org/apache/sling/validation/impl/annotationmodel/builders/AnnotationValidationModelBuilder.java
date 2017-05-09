@@ -136,8 +136,12 @@ public class AnnotationValidationModelBuilder {
     private List<ResourceProperty> getResourceProperties(@Nonnull Class<?> clazz, DefaultInjectionStrategy defaultInjectionStrategy) {
         return Stream.of(clazz.getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(ValueMapValue.class))
-                .map(field -> new AnnotationResourcePropertyBuilder().build(defaultInjectionStrategy, field))
+                .map(field -> createResourceProperty(defaultInjectionStrategy, field))
                 .collect(Collectors.toList());
+    }
+
+    private ResourceProperty createResourceProperty(DefaultInjectionStrategy defaultInjectionStrategy, Field field) {
+        return new AnnotationResourcePropertyBuilder().build(defaultInjectionStrategy, field);
     }
 
     /**
