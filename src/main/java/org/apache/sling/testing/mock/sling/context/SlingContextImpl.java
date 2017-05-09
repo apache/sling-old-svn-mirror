@@ -32,17 +32,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.mime.MimeTypeService;
-import org.apache.sling.models.impl.FirstImplementationPicker;
 import org.apache.sling.models.impl.ModelAdapterFactory;
-import org.apache.sling.models.impl.injectors.BindingsInjector;
-import org.apache.sling.models.impl.injectors.ChildResourceInjector;
-import org.apache.sling.models.impl.injectors.OSGiServiceInjector;
-import org.apache.sling.models.impl.injectors.RequestAttributeInjector;
-import org.apache.sling.models.impl.injectors.ResourcePathInjector;
-import org.apache.sling.models.impl.injectors.SelfInjector;
-import org.apache.sling.models.impl.injectors.SlingObjectInjector;
-import org.apache.sling.models.impl.injectors.ValueMapInjector;
-import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 import org.apache.sling.resourcebuilder.api.ResourceBuilderFactory;
 import org.apache.sling.resourcebuilder.impl.ResourceBuilderFactoryService;
@@ -151,21 +141,23 @@ public class SlingContextImpl extends OsgiContextImpl {
         registerInjectActivateService(new ScriptEngineManagerFactory());
         registerInjectActivateService(new BindingsValuesProvidersByContextImpl());
         
-        // adapter factories
+        // sling models
         registerInjectActivateService(new ModelAdapterFactory());
-
-        // sling models injectors
-        registerInjectActivateService(new BindingsInjector());
-        registerInjectActivateService(new ChildResourceInjector());
-        registerInjectActivateService(new OSGiServiceInjector());
-        registerInjectActivateService(new RequestAttributeInjector());
-        registerInjectActivateService(new ResourcePathInjector());
-        registerInjectActivateService(new SelfInjector());
-        registerInjectActivateService(new SlingObjectInjector());
-        registerInjectActivateService(new ValueMapInjector());
-
-        // sling models implementation pickers
-        registerService(ImplementationPicker.class, new FirstImplementationPicker());
+        registerInjectActivateServiceByClassName(
+                "org.apache.sling.models.impl.FirstImplementationPicker",
+                "org.apache.sling.models.impl.ResourceTypeBasedResourcePicker",
+                "org.apache.sling.models.impl.injectors.BindingsInjector",
+                "org.apache.sling.models.impl.injectors.ChildResourceInjector",
+                "org.apache.sling.models.impl.injectors.OSGiServiceInjector",
+                "org.apache.sling.models.impl.injectors.RequestAttributeInjector",
+                "org.apache.sling.models.impl.injectors.ResourcePathInjector",
+                "org.apache.sling.models.impl.injectors.SelfInjector",
+                "org.apache.sling.models.impl.injectors.SlingObjectInjector",
+                "org.apache.sling.models.impl.injectors.ValueMapInjector",
+                "org.apache.sling.models.impl.via.BeanPropertyViaProvider",
+                "org.apache.sling.models.impl.via.ChildResourceViaProvider",
+                "org.apache.sling.models.impl.via.ForcedResourceTypeViaProvider",
+                "org.apache.sling.models.impl.via.ResourceSuperTypeViaProvider");
 
         // other services
         registerService(SlingSettingsService.class, new MockSlingSettingService(DEFAULT_RUN_MODES));
@@ -174,6 +166,17 @@ public class SlingContextImpl extends OsgiContextImpl {
         
         // scan for models defined via bundle headers in classpath
         ModelAdapterFactoryUtil.addModelsForManifestEntries(this.bundleContext());
+    }
+    
+    private void registerInjectActivateServiceByClassName(String... classNames) {
+        for (String className : classNames) {
+            try {
+                Class<?> clazz = Class.forName(className);
+                registerInjectActivateService(clazz.newInstance());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                // ignore - probably not the latest sling models impl version
+            }
+        }
     }
 
     /**
