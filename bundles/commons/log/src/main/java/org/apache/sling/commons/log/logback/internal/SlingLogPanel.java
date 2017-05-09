@@ -572,7 +572,7 @@ public class SlingLogPanel implements LogPanel {
                 return;
             }
         }
-        pw.printf("No appender with name [%s] found", appenderName);
+        pw.printf("No appender with name [%s] found", XmlUtil.escapeXml(appenderName));
     }
 
     private String getLinkedName(FileAppender<ILoggingEvent> appender) throws UnsupportedEncodingException {
