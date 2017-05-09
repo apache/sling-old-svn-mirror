@@ -28,7 +28,6 @@ import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import junitx.util.PrivateAccessor;
 
@@ -138,7 +137,111 @@ public class SlingAuthenticatorTest {
          */
         Assert.assertTrue(AUTH_TYPE.equals(authInfo.getAuthType()));
     }
+    
+    /**
+     * Test is OK for same node;
+     * @throws Throwable
+     */
+    @Test
+    public void test_childNodeShouldHaveAuthenticationInfo2() throws Throwable {
+        final String AUTH_TYPE = "AUTH_TYPE_TEST";
+        final String PROTECTED_PATH = "/content/en/test";
+        final String REQUEST_CHILD_NODE = "/content/en/test";
 
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+
+        PathBasedHolderCache<AbstractAuthenticationHandlerHolder> authRequiredCache = new PathBasedHolderCache<AbstractAuthenticationHandlerHolder>();
+        authRequiredCache.addHolder(buildAuthHolderForAuthTypeAndPath(AUTH_TYPE, PROTECTED_PATH));
+
+        PrivateAccessor.setField(slingAuthenticator, "authHandlerCache", authRequiredCache);
+        final HttpServletRequest request = context.mock(HttpServletRequest.class);
+        buildExpectationsForRequestPathAndAuthPath(request, REQUEST_CHILD_NODE, PROTECTED_PATH);
+
+        AuthenticationInfo authInfo = (AuthenticationInfo) PrivateAccessor.invoke(slingAuthenticator, "getAuthenticationInfo",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class}, new Object[]{request, context.mock(HttpServletResponse.class)});
+        /**
+         * The AUTH TYPE defined aboved should  be used for the path /test and his children: eg /test/childnode.
+         */
+        Assert.assertTrue(AUTH_TYPE.equals(authInfo.getAuthType()));
+    }
+    
+    /**
+     * Test is OK for same node with ending slash;
+     * @throws Throwable
+     */
+    @Test
+    public void test_childNodeShouldHaveAuthenticationInfo3() throws Throwable {
+        final String AUTH_TYPE = "AUTH_TYPE_TEST";
+        final String PROTECTED_PATH = "/content/en/test";
+        final String REQUEST_CHILD_NODE = "/content/en/test/";
+
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+
+        PathBasedHolderCache<AbstractAuthenticationHandlerHolder> authRequiredCache = new PathBasedHolderCache<AbstractAuthenticationHandlerHolder>();
+        authRequiredCache.addHolder(buildAuthHolderForAuthTypeAndPath(AUTH_TYPE, PROTECTED_PATH));
+
+        PrivateAccessor.setField(slingAuthenticator, "authHandlerCache", authRequiredCache);
+        final HttpServletRequest request = context.mock(HttpServletRequest.class);
+        buildExpectationsForRequestPathAndAuthPath(request, REQUEST_CHILD_NODE, PROTECTED_PATH);
+
+        AuthenticationInfo authInfo = (AuthenticationInfo) PrivateAccessor.invoke(slingAuthenticator, "getAuthenticationInfo",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class}, new Object[]{request, context.mock(HttpServletResponse.class)});
+        /**
+         * The AUTH TYPE defined aboved should  be used for the path /test and his children: eg /test/childnode.
+         */
+        Assert.assertTrue(AUTH_TYPE.equals(authInfo.getAuthType()));
+    }
+    
+    /**
+     * Test is OK for same node with extension
+     * @throws Throwable
+     */
+    @Test
+    public void test_childNodeShouldHaveAuthenticationInfo4() throws Throwable {
+        final String AUTH_TYPE = "AUTH_TYPE_TEST";
+        final String PROTECTED_PATH = "/content/en/test";
+        final String REQUEST_CHILD_NODE = "/content/en/test.html";
+
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+
+        PathBasedHolderCache<AbstractAuthenticationHandlerHolder> authRequiredCache = new PathBasedHolderCache<AbstractAuthenticationHandlerHolder>();
+        authRequiredCache.addHolder(buildAuthHolderForAuthTypeAndPath(AUTH_TYPE, PROTECTED_PATH));
+
+        PrivateAccessor.setField(slingAuthenticator, "authHandlerCache", authRequiredCache);
+        final HttpServletRequest request = context.mock(HttpServletRequest.class);
+        buildExpectationsForRequestPathAndAuthPath(request, REQUEST_CHILD_NODE, PROTECTED_PATH);
+
+        AuthenticationInfo authInfo = (AuthenticationInfo) PrivateAccessor.invoke(slingAuthenticator, "getAuthenticationInfo",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class}, new Object[]{request, context.mock(HttpServletResponse.class)});
+        /**
+         * The AUTH TYPE defined aboved should  be used for the path /test and his children: eg /test/childnode.
+         */
+        Assert.assertTrue(AUTH_TYPE.equals(authInfo.getAuthType()));
+    }
+
+    @Test
+    public void test_childNodeShouldHaveAuthenticationInfoRoot() throws Throwable {
+        final String AUTH_TYPE = "AUTH_TYPE_TEST";
+        final String PROTECTED_PATH = "/";
+        final String REQUEST_CHILD_NODE = "/content/en/test";
+
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+
+        PathBasedHolderCache<AbstractAuthenticationHandlerHolder> authRequiredCache = new PathBasedHolderCache<AbstractAuthenticationHandlerHolder>();
+        authRequiredCache.addHolder(buildAuthHolderForAuthTypeAndPath(AUTH_TYPE, PROTECTED_PATH));
+
+        PrivateAccessor.setField(slingAuthenticator, "authHandlerCache", authRequiredCache);
+        final HttpServletRequest request = context.mock(HttpServletRequest.class);
+        buildExpectationsForRequestPathAndAuthPath(request, REQUEST_CHILD_NODE, PROTECTED_PATH);
+
+        AuthenticationInfo authInfo = (AuthenticationInfo) PrivateAccessor.invoke(slingAuthenticator, "getAuthenticationInfo",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class}, new Object[]{request, context.mock(HttpServletResponse.class)});
+        /**
+         * The AUTH TYPE defined aboved should  be used for the path /test and his children: eg /test/childnode.
+         */
+        Assert.assertTrue(AUTH_TYPE.equals(authInfo.getAuthType()));
+    }
+    
 
     /**
      * JIRA: SLING-6053
@@ -157,7 +260,6 @@ public class SlingAuthenticatorTest {
      * @throws Throwable
      */
     @Test
-    @Ignore
     public void test_siblingNodeShouldNotHaveAuthenticationInfo() throws Throwable {
         final String AUTH_TYPE = "AUTH_TYPE_TEST";
         final String PROTECTED_PATH = "/content/en/test";
@@ -178,6 +280,78 @@ public class SlingAuthenticatorTest {
          * The AUTH TYPE defined aboved should not be used for the path /test2.
          */
         Assert.assertFalse(AUTH_TYPE.equals(authInfo.getAuthType()));
+    }
+    
+    @Test
+    public void test_childNodeAuthenticationHandlerPath() throws Throwable {
+        final String requestPath = "/content/test/test2";
+        final String handlerPath = "/content/test";
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+       
+        Assert.assertTrue( (boolean)PrivateAccessor.invoke(slingAuthenticator, "isNodeRequiresAuthHandler", new Class[] {String.class, String.class}, new Object[] {requestPath, handlerPath}));
+    }
+    
+    @Test
+    public void test_siblingNodeAuthenticationHandlerPath() throws Throwable {
+        final String requestPath = "/content/test2.html/en/2016/09/19/test.html";
+        final String handlerPath = "/content/test";
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+        
+        Assert.assertFalse( (boolean)PrivateAccessor.invoke(slingAuthenticator, "isNodeRequiresAuthHandler", new Class[] {String.class, String.class}, new Object[] {requestPath, handlerPath}));
+    }
+
+    @Test
+    public void test_actualNodeAuthenticationHandlerPath() throws Throwable {
+        final String requestPath = "/content/test";
+        final String handlerPath = "/content/test";
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+        
+        Assert.assertTrue( (boolean)PrivateAccessor.invoke(slingAuthenticator, "isNodeRequiresAuthHandler", new Class[] {String.class, String.class}, new Object[] {requestPath, handlerPath}));
+    }
+
+    @Test
+    public void test_rootNodeAuthenticationHandlerPath() throws Throwable {
+        final String requestPath = "/content/test";
+        final String handlerPath = "/";
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+        
+        Assert.assertTrue( (boolean)PrivateAccessor.invoke(slingAuthenticator, "isNodeRequiresAuthHandler", new Class[] {String.class, String.class}, new Object[] {requestPath, handlerPath}));
+    }
+
+    @Test
+    public void test_requestPathSelectorsAreTakenInConsideration() throws Throwable {
+        final String requestPath = "/content/test.selector1.selector2.html/en/2016/test.html";
+        final String handlerPath = "/content/test";
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+        
+        Assert.assertTrue( (boolean)PrivateAccessor.invoke(slingAuthenticator, "isNodeRequiresAuthHandler", new Class[] {String.class, String.class}, new Object[] {requestPath, handlerPath}));
+    }
+
+    @Test
+    public void test_requestPathSelectorsSiblingAreTakenInConsideration() throws Throwable {
+        final String requestPath = "/content/test.selector1.selector2.html/en/2016/09/19/test.html";
+        final String handlerPath = "/content/test2";
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+        
+        Assert.assertFalse( (boolean)PrivateAccessor.invoke(slingAuthenticator, "isNodeRequiresAuthHandler", new Class[] {String.class, String.class}, new Object[] {requestPath, handlerPath}));
+    }
+
+    @Test
+    public void test_requestPathBackSlash() throws Throwable {
+        final String requestPath = "/page1\\somesubepage";
+        final String handlerPath = "/page";
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+
+        Assert.assertFalse( (boolean)PrivateAccessor.invoke(slingAuthenticator, "isNodeRequiresAuthHandler", new Class[] {String.class, String.class}, new Object[] {requestPath, handlerPath}));
+    }
+
+    @Test
+    public void test_emptyNodeAuthenticationHandlerPath() throws Throwable {
+        final String requestPath = "/content/test";
+        final String handlerPath = "";
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+
+        Assert.assertTrue( (boolean)PrivateAccessor.invoke(slingAuthenticator, "isNodeRequiresAuthHandler", new Class[] {String.class, String.class}, new Object[] {requestPath, handlerPath}));
     }
 
     //---------------------------- PRIVATE METHODS -----------------------------
