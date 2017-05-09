@@ -324,6 +324,9 @@ final class AdapterImplementations {
     }
 
     private static Class<?> getClassFromResourceTypeMap(final String resourceType, final Map<String, Class<?>> map, final ResourceResolver resolver) {
+        if (resourceType == null) {
+            return null;
+        }
         Class<?> modelClass = map.get(resourceType);
         if (modelClass == null) {
             for (String searchPath : resolver.getSearchPath()) {
