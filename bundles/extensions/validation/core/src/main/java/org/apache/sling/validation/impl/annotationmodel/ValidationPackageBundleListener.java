@@ -43,9 +43,8 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * The Validation package bundle listener.
- */
+/** The Validation package bundle listener. It analyzes all the bundles upon their activation, finds Sling Models marked with
+ * ValidationStrategy.REQUIRED or ValidationStrategy.OPTIONAL and registers/unregisters validation models. */
 public class ValidationPackageBundleListener implements BundleTrackerCustomizer {
 
     static final String PACKAGE_HEADER = "Sling-Model-Packages";
@@ -58,12 +57,10 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
 
     private final ValidationModelImplementation validationModelImplementation;
 
-    /**
-     * Instantiates a new Validation package bundle listener.
+    /** Instantiates a new Validation package bundle listener.
      *
-     * @param bundleContext                 the bundle context
-     * @param validationModelImplementation the validation model implementation
-     */
+     * @param bundleContext the bundle context
+     * @param validationModelImplementation the validation model implementation */
     public ValidationPackageBundleListener(BundleContext bundleContext,
             ValidationModelImplementation validationModelImplementation) {
         this.validationModelImplementation = validationModelImplementation;
@@ -88,13 +85,15 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
     public void modifiedBundle(Bundle bundle, BundleEvent event, Object object) {
     }
 
-    /**
-     * Unregister all.
-     */
+    /** Unregister all. */
     public synchronized void unregisterAll() {
         this.bundleTracker.close();
     }
 
+    /** Extracts all the class names which are set in bundle's package headers or class headers properties.
+     * 
+     * @param bundle from which class names should be extracted
+     * @return Set of class names */
     private Set<String> getBundleClasses(@Nonnull Bundle bundle) {
         Set<String> classNames = new HashSet<>();
         classNames.addAll(getPackageHeaderClassNames(bundle));
@@ -102,6 +101,10 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
         return classNames;
     }
 
+    /** Analyses class and registers validation models for the bundle provided
+     * 
+     * @param bundle for which validation models will be registered
+     * @param className to be analysed. */
     private void analyzeClass(Bundle bundle, String className) {
         try {
             Class<?> implType = bundle.loadClass(className);
@@ -122,6 +125,10 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
         }
     }
 
+    /** Extracts Class names from Class Header parameter.
+     * 
+     * @param headers properties, which contain Classes Header
+     * @return Set of class names */
     private HashSet<String> getClassHeaderClassNames(@Nonnull Dictionary<String, String> headers) {
         return Optional.ofNullable(StringUtils.deleteWhitespace(headers.get(CLASSES_HEADER)))
                 .map(classes -> classes.split(COMMA_SEPARATOR_REGEX))
@@ -130,6 +137,10 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
                 .orElse(new HashSet<>());
     }
 
+    /** Extracts Class names from Package Header property.
+     * 
+     * @param bundle for which classes are extracted
+     * @return Set of class names. */
     private Set<String> getPackageHeaderClassNames(@Nonnull Bundle bundle) {
         return Optional.ofNullable(StringUtils.deleteWhitespace(bundle.getHeaders().get(PACKAGE_HEADER)))
                 .map(packages -> packages.split(COMMA_SEPARATOR_REGEX))
@@ -138,6 +149,11 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
                 .orElse(Collections.emptySet());
     }
 
+    /** Extracts Class names from given bundle and packages.
+     * 
+     * @param bundle in which classes will be searched
+     * @param packages packages to be checked
+     * @return Set of Class Names. */
     private Set<String> getClassNamesFromPackages(@Nonnull Bundle bundle, @Nonnull List<String> packages) {
         return packages.parallelStream()
                 .map(singlePackage -> findEntries(bundle, singlePackage))
@@ -145,6 +161,11 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
                 .collect(Collectors.toSet());
     }
 
+    /** Finds class names in a bundle from a given package.
+     * 
+     * @param bundle in which package to be searched
+     * @param singlePackage package name
+     * @return Set of class names. */
     private Set<String> findEntries(@Nonnull Bundle bundle, @Nonnull String singlePackage) {
         return Optional.ofNullable(bundle.findEntries("/" + singlePackage.replace('.', '/'), "*.class", true))
                 .map(EnumerationUtils::toList)
@@ -152,6 +173,10 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
                 .orElse(Collections.emptySet());
     }
 
+    /** Converts List of class URLs to class names
+     * 
+     * @param urls to be converted
+     * @return Set of class names */
     private Set<String> getClassesFromUrl(List<URL> urls) {
         return urls.parallelStream()
                 .map(this::toClassName)

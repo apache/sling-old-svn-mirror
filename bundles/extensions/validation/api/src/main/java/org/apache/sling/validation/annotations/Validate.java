@@ -27,18 +27,37 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * @author karolis.mackevicius@netcentric.biz
- * @since 02/04/17
+ * The Validate annotation to be used on Sling Model class fields to provide extra validation arguments.
  */
 @Target({ METHOD, FIELD, PARAMETER })
 @Retention(RUNTIME)
 public @interface Validate {
 
+    /**
+     * Validator id, with which it is registered.
+     *
+     * @return the string
+     */
     String validatorId() default "";
 
+    /**
+     * Properties array to be passed for validator.
+     *
+     * @return validator properties
+     */
     String[] properties() default {};
 
+    /**
+     * Validation Error Severity.
+     *
+     * @return the Severity
+     */
     int severity() default 0;
 
+    /**
+     * Regex string.
+     *
+     * @return regex
+     */
     String regex() default "";
 }

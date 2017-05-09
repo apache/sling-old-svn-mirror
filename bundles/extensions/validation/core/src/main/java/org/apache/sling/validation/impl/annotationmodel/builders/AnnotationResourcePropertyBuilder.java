@@ -32,17 +32,13 @@ import org.apache.sling.validation.model.ResourceProperty;
 
 /**
  * The Annotation based resource property builder.
+ * It creates Resource Property according to declared field and its' annotation.
+ * It is re-using existing ResourcePropertyBuilder functionality to create the actual Resource Property
  */
 public class AnnotationResourcePropertyBuilder extends AbstractAnnotationBuilder {
 
+    private static final int SPLIT_LENGTH = 2;
     private ResourcePropertyBuilder builder;
-
-    /**
-     * Constructor.
-     */
-    public AnnotationResourcePropertyBuilder() {
-        builder = new ResourcePropertyBuilder();
-    }
 
     /**
      * Build resource property based on field annotations.
@@ -52,6 +48,7 @@ public class AnnotationResourcePropertyBuilder extends AbstractAnnotationBuilder
      * @return the resource property
      */
     public ResourceProperty build(DefaultInjectionStrategy defaultInjectionStrategy, Field field) {
+        builder = new ResourcePropertyBuilder();
 
         if (field.isAnnotationPresent(Validate.class)) {
             addValidator(field.getAnnotation(Validate.class));
@@ -71,16 +68,20 @@ public class AnnotationResourcePropertyBuilder extends AbstractAnnotationBuilder
         return builder.build(getName());
     }
 
-    private void addValidator(Validate fieldValidate) {
+    /**
+     * Adds Validator and it's arguments for Resource Property.
+     * @param validate annotation
+     */
+    private void addValidator(Validate validate) {
 
-        if (StringUtils.isNotBlank(fieldValidate.validatorId()) && fieldValidate.properties().length > 0) {
-            Map<String, Object> arguments = Arrays.asList(fieldValidate.properties())
+        if (StringUtils.isNotBlank(validate.validatorId()) && validate.properties().length > 0) {
+            Map<String, Object> arguments = Arrays.asList(validate.properties())
                     .parallelStream()
                     .map(str -> str.split("="))
-                    .filter(str -> str.length == 2)
+                    .filter(str -> str.length == SPLIT_LENGTH)
                     .collect(Collectors.toMap(keyvalue -> keyvalue[0], keyvalue -> keyvalue[1]));
 
-            builder.validator(fieldValidate.validatorId(), fieldValidate.severity(), arguments);
+            builder.validator(validate.validatorId(), validate.severity(), arguments);
         }
 
     }

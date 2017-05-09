@@ -26,12 +26,22 @@ import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.validation.annotations.Validate;
 
-/** The Abstract annotation builder, providing common functionality for Annotation Based Builders. */
+/**
+ * The Abstract annotation builder, providing common functionality for Annotation Based Resource Property and Child Resource Builders.
+ * Common properties:
+ *  - name
+ *  - nameRegex
+ */
 abstract class AbstractAnnotationBuilder {
 
     private String nameRegex;
     private String name;
 
+    /**
+     * Sets regex from @Validate annotation.
+     *
+     * @param field the field
+     */
     void setRegex(Field field) {
         if (field.isAnnotationPresent(Validate.class)) {
             Validate validate = field.getAnnotation(Validate.class);
@@ -41,15 +51,35 @@ abstract class AbstractAnnotationBuilder {
         }
     }
 
+    /**
+     * Checks if property should be Required or Optional
+     *
+     * @param defaultInjectionStrategy the default injection strategy
+     * @param injectionStrategy        the injection strategy
+     * @return the boolean
+     */
     boolean isOptional(DefaultInjectionStrategy defaultInjectionStrategy, InjectionStrategy injectionStrategy) {
         return injectionStrategy.equals(InjectionStrategy.OPTIONAL) || (injectionStrategy.equals(InjectionStrategy.DEFAULT)
                 && defaultInjectionStrategy.equals(DefaultInjectionStrategy.OPTIONAL));
     }
 
+    /**
+     * If field is of Array | Collection type,
+     * it is considered as Multiple
+     * @param field the field
+     * @return the boolean
+     */
     boolean isMultiple(Field field) {
         return (field.getType().isArray() || Collection.class.isAssignableFrom(field.getType()));
     }
 
+    /**
+     * Extracts name from Annotation if available,
+     * otherwise it takes it from Field.
+     *
+     * @param field          the field
+     * @param annotationName the annotation name
+     */
     void setName(Field field, String annotationName) {
         if (annotationName.isEmpty()) {
             name = field.getName();
@@ -58,10 +88,20 @@ abstract class AbstractAnnotationBuilder {
         }
     }
 
+    /**
+     * Getter for name regex property.
+     *
+     * @return the name regex
+     */
     String getNameRegex() {
         return nameRegex;
     }
 
+    /**
+     * Getter for name property.
+     *
+     * @return the name
+     */
     String getName() {
         return name;
     }

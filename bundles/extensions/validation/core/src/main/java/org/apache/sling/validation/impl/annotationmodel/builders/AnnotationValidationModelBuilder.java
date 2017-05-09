@@ -44,6 +44,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The Annotation based validation model builder.
+ * It is building Validation Models from Sling Model classes.
+ * Validation Model can have:
+ *  - applicable paths, which is taken from @ValidationPaths annotation, applicable on Sling Model class level.
+ *  - resource properties, which are fields injected with @ValueMapValue annotation
+ *  - children resources, which are fields injected with @ChildResource annotation AND are Sling Model classes
  */
 public class AnnotationValidationModelBuilder {
 
@@ -51,10 +56,11 @@ public class AnnotationValidationModelBuilder {
     private static final String[] EMPTY_PATHS = {};
 
     /**
-     * Build Validation Models for given class.
+     * Build Validation Models for a given Sling Model class.
+     * Assuming, that class passed as parameter has Model annotation.
      *
-     * @param clazz the clazz
-     * @return the list
+     * @param clazz the clazz for which validation model is built
+     * @return the list of validation models for given class
      */
     public List<ValidationModel> build(@Nonnull Class<?> clazz) {
         List<ValidationModel> validationModels = new ArrayList<>();
@@ -84,18 +90,30 @@ public class AnnotationValidationModelBuilder {
         return validationModels;
     }
 
+    /**
+     * It builds Child Resources for a given class.
+     * Method filters declared @ChildResource fields which are Sling Models
+     * and builds child resource properties.
+     * @param clazz
+     * @return list of Child Resources for a given class
+     */
     private List<org.apache.sling.validation.model.ChildResource> getChildResources(@Nonnull Class<?> clazz) {
         return Stream.of(clazz.getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(ChildResource.class))
-                .filter(this::isModelClassField)
+                .filter(this::isSlingModelField)
                 .map(this::buildChildResource)
                 .collect(Collectors.toList());
     }
 
-    private boolean isModelClassField(Field field) {
+    private boolean isSlingModelField(Field field) {
         return getClass(field).isAnnotationPresent(Model.class);
     }
 
+    /**
+     * Builds Child Resource from a given Field.
+     * @param field which is a Sling Model.
+     * @return Child Resource
+     */
     private org.apache.sling.validation.model.ChildResource buildChildResource(@Nonnull Field field) {
 
         Class<?> clazz = getClass(field);
@@ -109,6 +127,12 @@ public class AnnotationValidationModelBuilder {
 
     }
 
+    /**
+     * Builds Resource Properties for given class from @ValueMapValue annotated injected fields.
+     * @param clazz
+     * @param defaultInjectionStrategy class'es default injection strategy.
+     * @return List of Resource Properties
+     */
     private List<ResourceProperty> getResourceProperties(@Nonnull Class<?> clazz, DefaultInjectionStrategy defaultInjectionStrategy) {
         return Stream.of(clazz.getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(ValueMapValue.class))
@@ -116,6 +140,11 @@ public class AnnotationValidationModelBuilder {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Get Class type from passed field. It takes into account generic types.
+     * @param field
+     * @return Class
+     */
     private Class<?> getClass(Field field) {
         Class<?> clazz = field.getType();
         if (Collection.class.isAssignableFrom(field.getType())) {

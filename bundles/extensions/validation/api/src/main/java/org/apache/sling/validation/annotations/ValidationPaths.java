@@ -25,12 +25,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * @author karolis.mackevicius@netcentric.biz
- * @since 05/04/17
+ * The Validation paths annotation to be used on Sling Model class to provide applicable validation paths.
  */
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface ValidationPaths {
 
+    /**
+     * Paths string array.
+     *
+     * @return the string [ ]
+     */
     String[] paths() default {};
 }

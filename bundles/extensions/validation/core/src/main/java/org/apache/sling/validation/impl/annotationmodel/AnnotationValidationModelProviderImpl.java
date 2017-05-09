@@ -29,7 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The Annotation validation model provider.
+ * This class provides Validation Models based on Annotations.
+ * It is responsible for creation and registering of ValidationPackageBundleListener.
  */
 @Component(immediate = true, service = ValidationModelProvider.class)
 public class AnnotationValidationModelProviderImpl implements ValidationModelProvider {

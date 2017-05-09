@@ -33,8 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The Validation model implementation.
- * It keeps all registered validation models.
+ * The Validation model implementation keeps all registered validation models.
  */
 final class ValidationModelImplementation {
 
@@ -50,7 +49,7 @@ final class ValidationModelImplementation {
     }
 
     /**
-     * Gets validation models.
+     * Gets validation models for bundle
      *
      * @param bundle the bundle
      * @return the validation models
@@ -80,22 +79,27 @@ final class ValidationModelImplementation {
     /**
      * Remove validation models.
      *
-     * @param bundle the bundle
+     * @param bundle bundle to be removed.
      */
     void removeValidationModels(Bundle bundle) {
         validationModels.remove(bundle);
     }
 
     /**
-     * Register validation models by bundle.
+     * Register collection of validation models for bundle.
      *
-     * @param bundle the bundle
-     * @param models the models
+     * @param bundle the bundle for which models will be registered
+     * @param models the models to be registered.
      */
     void registerValidationModelsByBundle(final Bundle bundle, final Collection<ValidationModel> models) {
         models.forEach(model -> registerValidationModelByBundle(bundle, model));
     }
 
+    /**
+     * Register validation model for bundle.
+     * @param bundle the bundle
+     * @param model the model to be registered.
+     */
     private void registerValidationModelByBundle(final Bundle bundle, final ValidationModel model) {
 
         ConcurrentHashMap<String, List<ValidationModel>> map = Optional.ofNullable(validationModels.get(bundle))
@@ -107,6 +111,12 @@ final class ValidationModelImplementation {
                 .add(model);
     }
 
+    /**
+     * Creates a new List of validation models for a given resourceType
+     * @param map ValidationModels container
+     * @param resourceType for which validation model list is created
+     * @return new validation model list
+     */
     private Supplier<List<ValidationModel>> supplyList(ConcurrentHashMap<String, List<ValidationModel>> map, String resourceType) {
         return () -> {
             List<ValidationModel> validationModels = new ArrayList<>();
@@ -115,6 +125,11 @@ final class ValidationModelImplementation {
         };
     }
 
+    /**
+     * Creates a new ConcurrentHashMap for passed bundle
+     * @param bundle, for which ConcurrentHashMap is created
+     * @return new ConcurrentHashMap for bundle
+     */
     private Supplier<ConcurrentHashMap<String, List<ValidationModel>>> supplyConcurrentHashMap(Bundle bundle) {
         return () -> {
             ConcurrentHashMap<String, List<ValidationModel>> cmp = new ConcurrentHashMap<>();
