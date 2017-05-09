@@ -38,9 +38,6 @@ public abstract class AbstractResourceTypeViaProvider implements ViaProvider {
         }
          if (original instanceof Resource) {
             final Resource resource = (Resource) original;
-            if (resource == null) {
-                return null;
-            }
             final String resourceType = getResourceType(resource, value);
             if (resourceType == null) {
                 log.warn("Could not determine forced resource type for {} using via value {}.", resource, value);
