@@ -40,7 +40,7 @@ Please look here: **ui.apps.slingbucks/src/main/content/jcr_root/apps/slingbucks
 The project has two modules:
 
 1. **core.slingbucks**: OSGi Bundle that contains the services and Sling Model
-2. **ui.apps.user**: JCR Package with the content
+2. **ui.apps.user**: JCR Package with the Service System User
 2. **ui.apps.slingbucks**: JCR Package with the content
 
 **Note**: to make this sample a little bit more instructive and to showcase
@@ -51,10 +51,23 @@ an issue a few times.
 
 #### Build and Installation
 
+The project is using a Service System User to provide access to the JCR
+Resources. Unfortunately the deployment of a nested package is that the
+out package's content is deployed first and with that the creation of
+the System User is done after it is used to apply permissions to the
+**private** folder.
+There are two solutions to make it work:
+1. Install the project twice
+2. Install the User Package first alone
+
 The project is built quite simple:
 
     mvn clean install
-    
+
+To install the user package first using the **autoInstallUserPackage** profile
+
+    mvn clean install -P autoInstallUserPackage
+
 To install the entire project use the project **autoInstallPackage**:
 
     mvn clean install -P autoInstallPackage
@@ -96,14 +109,13 @@ no orders show up. If you __handled__ the order you can click **Delivered -
 delete this order** button and the order will be removed from the Sling.
 
 **Attention**: if the order fails to list here then the background task
-**ConfirmedOrdersObserver** is not active. Please check the log and the
-[OSGi Console](http://localhost:8080/system/console/bundles) if the service
-is up and running. Most likely the whitelisting failed. To check go to
-the [OSGi Console Configuration Manager](http://localhost:8080/system/console/configMgr)
-and search for **Whitelist**. There should be an entry called
-**org.apache.sling.samples.slingbucks2** which the package **org.apache.sling.slingbucks2**.
-If this is in place just try to redeploy the application and check the error
-log if there is an error about this service.
+**ConfirmedOrdersObserver** failed to copy the order node from the public
+to the private node (check the sling error log). This happens when the
+**/content/slingbucks2Content** does not have the access granted to user
+**slingbucks-service-user**. You can check his out in the []Composum
+browser](http://localhost:8080/bin/browser.html) and then look at the permission
+of that node. If the service user it not listed just redeploy the entire
+project and do another order.
 
 #### Why a JCR Package instead of a Content Bundle
 

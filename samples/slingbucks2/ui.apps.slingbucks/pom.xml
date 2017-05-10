@@ -29,7 +29,7 @@
     </parent>
 
     <artifactId>ui.apps.slingbucks</artifactId>
-    <packaging>jar</packaging>
+    <packaging>content-package</packaging>
 
     <name>Apache Sling Slingbucks 2 (HTL) - sample coffee store management application - JCR Content</name>
     <description>Content Slingbucks Example Content Package</description>
@@ -50,9 +50,19 @@
 
     <build>
         <resources>
-            <!-- Copy the entire content folder -->
+            <!-- define the resources that will go into the package -->
             <resource>
-                <directory>${basedir}/src/main/content</directory>
+                <!--
+                    we want to keep some of the META-INF files and not configure
+                    everything in the plugin.
+                -->
+                <directory>${basedir}/src/main/content/META-INF</directory>
+                <targetPath>../vault-work/META-INF</targetPath>
+            </resource>
+            <!-- The WCMIO Content Plugin expects the JCR_ROOT to be found under vault-work -->
+            <resource>
+                <directory>${basedir}/src/main/content/jcr_root</directory>
+                <targetPath>../vault-work/jcr_root</targetPath>
                 <excludes>
                     <!-- exclude .vlt control files in the package -->
                     <exclude>**/.vlt</exclude>
@@ -80,57 +90,36 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.0.0</version>
+                <groupId>io.wcm.maven.plugins</groupId>
+                <artifactId>wcmio-content-package-maven-plugin</artifactId>
+                <version>1.4.3-SNAPSHOT</version>
+                <extensions>true</extensions>
                 <executions>
                     <execution>
-                        <id>copy</id>
-                        <phase>process-resources</phase>
                         <goals>
-                            <goal>copy</goal>
+                            <goal>package</goal>
                         </goals>
                         <configuration>
-                            <artifactItems>
-                                <artifactItem>
+                            <group>org.apache.sling</group>
+                            <!-- Merge the Permissions -->
+                            <acHandling>MERGE</acHandling>
+                            <embeddedTarget>/apps/slingbucks2App/install</embeddedTarget>
+                            <embeddeds>
+                                <embedded>
                                     <groupId>${project.groupId}</groupId>
                                     <artifactId>core.slingbucks</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.outputDirectory}/jcr_root/apps/slingbucks2App/install/</outputDirectory>
-                                </artifactItem>
-                                <artifactItem>
+                                    <generateFilter>true</generateFilter>
+                                </embedded>
+                            </embeddeds>
+                            <subPackages>
+                                <subPackage>
                                     <groupId>${project.groupId}</groupId>
                                     <artifactId>ui.apps.user</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>zip</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.outputDirectory}/jcr_root/etc/packages/org.apache.sling.samples.slingbucks2</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
+                                    <generateFilter>true</generateFilter>
+                                </subPackage>
+                            </subPackages>
+                            <!-- ATTENTION: Do not include this package as sub package which would yield an endless loop -->
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.0.0</version>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/assembly/zip-assembly.xml</descriptor>
-                    </descriptors>
-                    <!-- Prevent the addition of the assembly id to the file name -->
-                    <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                        <phase>package</phase> <!-- bind to the packaging phase -->
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -148,12 +137,6 @@
                         <artifactId>wcmio-content-package-maven-plugin</artifactId>
                         <version>1.4.3-SNAPSHOT</version>
                         <extensions>true</extensions>
-                        <configuration>
-                            <serviceURL>http://${sling.host}:${sling.port}/bin/cpm/</serviceURL>
-                            <userId>admin</userId>
-                            <password>admin</password>
-                            <force>true</force>
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>install-package</id>

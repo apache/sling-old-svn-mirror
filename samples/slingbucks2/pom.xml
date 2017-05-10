@@ -42,6 +42,8 @@
         <sling.password>admin</sling.password>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <vcmio.plugin.version>1.4.3-SNAPSHOT</vcmio.plugin.version>
     </properties>
 
     <modules>
@@ -202,17 +204,20 @@
                         <failOnError>true</failOnError>
                     </configuration>
                 </plugin>
-                <!--&lt;!&ndash; Content Package Plugin &ndash;&gt;-->
-                <!--<plugin>-->
-                    <!--<groupId>com.day.jcr.vault</groupId>-->
-                    <!--<artifactId>content-package-maven-plugin</artifactId>-->
-                    <!--<version>0.0.24</version>-->
-                    <!--<configuration>-->
-                        <!--<targetURL>http://${sling.host}:${sling.port}/crx/packmgr/service.jsp</targetURL>-->
-                        <!--<failOnError>true</failOnError>-->
-                        <!--<failOnMissingEmbed>true</failOnMissingEmbed>-->
-                    <!--</configuration>-->
-                <!--</plugin>-->
+                <!-- Content Package Plugin -->
+                <plugin>
+                    <groupId>io.wcm.maven.plugins</groupId>
+                    <artifactId>wcmio-content-package-maven-plugin</artifactId>
+                    <version>1.4.3-SNAPSHOT</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <serviceURL>http://${sling.host}:${sling.port}/bin/cpm/</serviceURL>
+                        <userId>${sling.user}</userId>
+                        <password>${sling.password}</password>
+                        <failOnMissingEmbed>true</failOnMissingEmbed>
+                        <force>true</force>
+                    </configuration>
+                </plugin>
                 <!-- Apache Felix Bundle Plugin -->
                 <plugin>
                     <groupId>org.apache.felix</groupId>
@@ -235,54 +240,6 @@
             </plugins>
         </pluginManagement>
     </build>
-
-    <profiles>
-        <!-- ====================================================== -->
-        <!-- A D O B E   P U B L I C   P R O F I L E                -->
-        <!-- ====================================================== -->
-        <profile>
-            <id>adobe-public</id>
-
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-
-            <properties>
-                <releaseRepository-Id>adobe-public-releases</releaseRepository-Id>
-                <releaseRepository-Name>Adobe Public Releases</releaseRepository-Name>
-                <releaseRepository-URL>https://repo.adobe.com/nexus/content/groups/public</releaseRepository-URL>
-            </properties>
-
-            <repositories>
-                <repository>
-                    <id>adobe-public-releases</id>
-                    <name>Adobe Public Repository</name>
-                    <url>https://repo.adobe.com/nexus/content/groups/public</url>
-                    <releases>
-                        <updatePolicy>never</updatePolicy>
-                    </releases>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>adobe-public-releases</id>
-                    <name>Adobe Public Repository</name>
-                    <url>https://repo.adobe.com/nexus/content/groups/public</url>
-                    <releases>
-                        <updatePolicy>never</updatePolicy>
-                    </releases>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                </pluginRepository>
-            </pluginRepositories>
-        </profile>
-    </profiles>
-
 
     <!-- ====================================================================== -->
     <!-- D E P E N D E N C I E S                                                -->

@@ -29,24 +29,29 @@
     </parent>
 
     <artifactId>ui.apps.user</artifactId>
-    <packaging>jar</packaging>
+    <packaging>content-package</packaging>
 
     <name>Apache Sling Slingbucks 2 (HTL) - sample coffee store management application - Service User</name>
     <description>Content Slingbucks Example Service User Package</description>
 
     <dependencies>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>core.slingbucks</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
     <build>
         <resources>
-            <!-- Copy the entire content folder -->
+            <!-- define the resources that will go into the package -->
             <resource>
-                <directory>${basedir}/src/main/content</directory>
+                <!--
+                    we want to keep some of the META-INF files and not configure
+                    everything in the plugin.
+                -->
+                <directory>${basedir}/src/main/content/META-INF</directory>
+                <targetPath>../vault-work/META-INF</targetPath>
+            </resource>
+            <!-- The WCMIO Content Plugin expects the JCR_ROOT to be found under vault-work -->
+            <resource>
+                <directory>${basedir}/src/main/content/jcr_root</directory>
+                <targetPath>../vault-work/jcr_root</targetPath>
                 <excludes>
                     <!-- exclude .vlt control files in the package -->
                     <exclude>**/.vlt</exclude>
@@ -65,31 +70,15 @@
 
         <plugins>
             <plugin>
-                <groupId>org.apache.rat</groupId>
-                <artifactId>apache-rat-plugin</artifactId>
-                <configuration>
-                    <excludes combine.children="append">
-                        <exclude>**/*.config</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.0.0</version>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/assembly/zip-assembly.xml</descriptor>
-                    </descriptors>
-                    <!-- Prevent the addition of the assembly id to the file name -->
-                    <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
+                <groupId>io.wcm.maven.plugins</groupId>
+                <artifactId>wcmio-content-package-maven-plugin</artifactId>
+                <version>1.4.3-SNAPSHOT</version>
+                <extensions>true</extensions>
                 <executions>
                     <execution>
-                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                        <phase>package</phase> <!-- bind to the packaging phase -->
+                        <id>package</id>
                         <goals>
-                            <goal>single</goal>
+                            <goal>package</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -98,7 +87,7 @@
     </build>
     <profiles>
         <profile>
-            <id>autoInstallPackage</id>
+            <id>autoInstallUserPackage</id>
             <build>
                 <plugins>
                     <!-- Upload the File to Sling -->
@@ -107,12 +96,6 @@
                         <artifactId>wcmio-content-package-maven-plugin</artifactId>
                         <version>1.4.3-SNAPSHOT</version>
                         <extensions>true</extensions>
-                        <configuration>
-                            <serviceURL>http://${sling.host}:${sling.port}/bin/cpm/</serviceURL>
-                            <userId>admin</userId>
-                            <password>admin</password>
-                            <force>true</force>
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>install-package</id>
