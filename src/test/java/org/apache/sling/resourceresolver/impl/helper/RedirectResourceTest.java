@@ -24,7 +24,7 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Map;
 
-import org.apache.sling.api.resource.PersistableValueMap;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ValueMap;
 import org.junit.Test;
 
@@ -53,8 +53,8 @@ public class RedirectResourceTest {
         assertEquals(status, ((Integer) valueMap.get(RedirectResource.PROP_SLING_STATUS)).intValue());
         assertEquals(status, valueMap.get(RedirectResource.PROP_SLING_STATUS, Integer.class).intValue());
 
-        final PersistableValueMap persistableValueMap = res.adaptTo(PersistableValueMap.class);
-        assertNull("Unexpected PersistableValueMap adapter",
+        final ModifiableValueMap persistableValueMap = res.adaptTo(ModifiableValueMap.class);
+        assertNull("Unexpected ModifiableValueMap adapter",
             persistableValueMap);
     }
 }
