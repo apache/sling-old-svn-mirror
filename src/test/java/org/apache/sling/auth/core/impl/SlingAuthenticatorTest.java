@@ -242,6 +242,32 @@ public class SlingAuthenticatorTest {
         Assert.assertTrue(AUTH_TYPE.equals(authInfo.getAuthType()));
     }
     
+    @Test
+    public void test_childNodeShouldHaveAuthenticationInfoLonger() throws Throwable {
+        final String AUTH_TYPE = "AUTH_TYPE_TEST";
+        final String AUTH_TYPE_LONGER = "AUTH_TYPE_LONGER_TEST";
+        final String PROTECTED_PATH = "/resource1";
+        final String PROTECTED_PATH_LONGER = "/resource1.test2";
+        final String REQUEST_CHILD_NODE = "/resource1.test2";
+
+        SlingAuthenticator slingAuthenticator = new SlingAuthenticator();
+
+        PathBasedHolderCache<AbstractAuthenticationHandlerHolder> authRequiredCache = new PathBasedHolderCache<AbstractAuthenticationHandlerHolder>();
+        authRequiredCache.addHolder(buildAuthHolderForAuthTypeAndPath(AUTH_TYPE, PROTECTED_PATH));
+        authRequiredCache.addHolder(buildAuthHolderForAuthTypeAndPath(AUTH_TYPE_LONGER, PROTECTED_PATH_LONGER));
+        
+        PrivateAccessor.setField(slingAuthenticator, "authHandlerCache", authRequiredCache);
+        final HttpServletRequest request = context.mock(HttpServletRequest.class);
+        buildExpectationsForRequestPathAndAuthPath(request, REQUEST_CHILD_NODE, PROTECTED_PATH);
+
+        AuthenticationInfo authInfo = (AuthenticationInfo) PrivateAccessor.invoke(slingAuthenticator, "getAuthenticationInfo",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class}, new Object[]{request, context.mock(HttpServletResponse.class)});
+        /**
+         * The AUTH TYPE defined aboved should  be used for the path /test and his children: eg /test/childnode.
+         */
+        Assert.assertTrue(AUTH_TYPE_LONGER.equals(authInfo.getAuthType()));
+    }
+    
 
     /**
      * JIRA: SLING-6053
