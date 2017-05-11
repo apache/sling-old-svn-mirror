@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
     service = Servlet.class,
     property = {
         Constants.SERVICE_DESCRIPTION + "=Hello World Path Servlet",
-        Constants.SERVICE_VENDOR + "=headwire.com Inc",
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
         "sling.servlet.paths=/hello-world-servlet"
     }
 )

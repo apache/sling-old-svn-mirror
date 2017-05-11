@@ -1,6 +1,27 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -37,12 +58,8 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.day.jcr.vault</groupId>
-                <artifactId>maven-vault-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <group>\${packageGroup}</group>
-                </configuration>
+                <groupId>io.wcm.maven.plugins</groupId>
+                <artifactId>wcmio-content-package-maven-plugin</artifactId>
                 <executions>
                     <execution>
                         <goals>
@@ -54,14 +71,14 @@
                                 <embedded>
                                     <groupId>\${project.groupId}</groupId>
                                     <artifactId>core</artifactId>
-                                    <filter>true</filter>
+                                    <generateFilter>true</generateFilter>
                                 </embedded>
                             </embeddeds>
                             <subPackages>
                                 <subPackage>
                                     <groupId>\${project.groupId}</groupId>
                                     <artifactId>ui.apps</artifactId>
-                                    <filter>true</filter>
+                                    <generateFilter>true</generateFilter>
                                 </subPackage>
                             </subPackages>
                             <!-- This gives the Package a recognizable name in the Package Manager by prepending the Artifact Id of the Project -->
@@ -69,19 +86,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.day.jcr.vault</groupId>
-                <artifactId>content-package-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <failOnError>true</failOnError>
-                    <targetURL>http://\${sling.host}:\${sling.port}/bin/cpm/package.service.html</targetURL>
-                    <userId>\${sling.user}</userId>
-                    <password>\${sling.password}</password>
-                    <useProxy>false</useProxy>
-                    <failOnMissingEmbed>true</failOnMissingEmbed>
-                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -92,8 +96,8 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>com.day.jcr.vault</groupId>
-                        <artifactId>content-package-maven-plugin</artifactId>
+                        <groupId>io.wcm.maven.plugins</groupId>
+                        <artifactId>wcmio-content-package-maven-plugin</artifactId>
                         <executions>
                             <execution>
                                 <id>install-package</id>

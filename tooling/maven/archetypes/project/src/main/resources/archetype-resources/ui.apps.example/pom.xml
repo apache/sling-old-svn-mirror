@@ -93,57 +93,37 @@
 
         <plugins>
             <plugin>
-                <groupId>com.day.jcr.vault</groupId>
-                <artifactId>content-package-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <targetURL>http://\${sling.host}:\${sling.port}/bin/cpm/package.service.html</targetURL>
-                    <userId>\${sling.user}</userId>
-                    <password>\${sling.password}</password>
-                    <useProxy>false</useProxy>
-                    <failOnMissingEmbed>true</failOnMissingEmbed>
-                    <failOnError>true</failOnError>
-                    <group>\${packageGroup}</group>
-                </configuration>
+                <groupId>io.wcm.maven.plugins</groupId>
+                <artifactId>wcmio-content-package-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                        <configuration>
+                            <embeddedTarget>/apps/\${appsFolderName}/install</embeddedTarget>
+                            <embeddeds>
+                                <embedded>
+                                    <groupId>\${project.groupId}</groupId>
+                                    <artifactId>core.example</artifactId>
+                                    <generateFilter>true</generateFilter>
+                                </embedded>
+                            </embeddeds>
+                            <!-- ATTENTION: Do not include this package as sub package which would yield an endless loop -->
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
-
-    <!--Commented out to avoid accidental deployment -->
-    <!--<profiles>-->
+    <profiles>
         <!--<profile>-->
             <!--<id>autoInstallPackage</id>-->
             <!--<build>-->
                 <!--<plugins>-->
                     <!--<plugin>-->
-                        <!--<groupId>com.day.jcr.vault</groupId>-->
-                        <!--<artifactId>maven-vault-plugin</artifactId>-->
-                        <!--<extensions>true</extensions>-->
-                        <!--<configuration>-->
-                            <!--<group>\${packageGroup}</group>-->
-                        <!--</configuration>-->
-                        <!--<executions>-->
-                            <!--<execution>-->
-                                <!--<goals>-->
-                                    <!--<goal>package</goal>-->
-                                <!--</goals>-->
-                                <!--<configuration>-->
-                                    <!--<embeddedTarget>/apps/\${appsFolderName}/install</embeddedTarget>-->
-                                    <!--<embeddeds>-->
-                                        <!--<embedded>-->
-                                            <!--<groupId>\${project.groupId}</groupId>-->
-                                            <!--<artifactId>core.example</artifactId>-->
-                                            <!--<filter>true</filter>-->
-                                        <!--</embedded>-->
-                                    <!--</embeddeds>-->
-                                    <!--&lt;!&ndash; ATTENTION: Do not include this package as sub package which would yield an endless loop &ndash;&gt;-->
-                                <!--</configuration>-->
-                            <!--</execution>-->
-                        <!--</executions>-->
-                    <!--</plugin>-->
-                    <!--<plugin>-->
-                        <!--<groupId>com.day.jcr.vault</groupId>-->
-                        <!--<artifactId>content-package-maven-plugin</artifactId>-->
+                        <!--<groupId>io.wcm.maven.plugins</groupId>-->
+                        <!--<artifactId>wcmio-content-package-maven-plugin</artifactId>-->
                         <!--<executions>-->
                             <!--<execution>-->
                                 <!--<id>install-package</id>-->
@@ -156,5 +136,5 @@
                 <!--</plugins>-->
             <!--</build>-->
         <!--</profile>-->
-    <!--</profiles>-->
+    </profiles>
 </project>

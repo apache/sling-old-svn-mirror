@@ -20,7 +20,8 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -62,15 +63,16 @@
         <compiler.plugin.version>3.6.1</compiler.plugin.version>
         <bundle.plugin.version>2.5.4</bundle.plugin.version>
         <clean.plugin.version>3.0.0</clean.plugin.version>
-        <installer.plguin.version>2.5.2</installer.plguin.version>
-        <surfire.plguin.version>2.20</surfire.plguin.version>
-        <failsafe.plguin.version>2.20</failsafe.plguin.version>
+        <installer.plugin.version>2.5.2</installer.plugin.version>
+        <surfire.plugin.version>2.20</surfire.plugin.version>
+        <failsafe.plugin.version>2.20</failsafe.plugin.version>
         <deploy.plugin.version>2.8.2</deploy.plugin.version>
         <sling.plugin.version>2.1.10</sling.plugin.version>
         <content.plugin.version>0.0.24</content.plugin.version>
         <vault.plugin.version>0.0.10</vault.plugin.version>
         <dependency.plugin.version>3.0.0</dependency.plugin.version>
         <build.helper.plugin.version>3.0.0</build.helper.plugin.version>
+        <vcmio.plugin.version>1.4.3-SNAPSHOT</vcmio.plugin.version>
     </properties>
 
     <build>
@@ -140,6 +142,20 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+            <!-- Content Package Plugin -->
+            <plugin>
+                <groupId>io.wcm.maven.plugins</groupId>
+                <artifactId>wcmio-content-package-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <serviceURL>http://${sling.host}:${sling.port}/bin/cpm/</serviceURL>
+                    <userId>${sling.user}</userId>
+                    <password>${sling.password}</password>
+                    <failOnMissingEmbed>true</failOnMissingEmbed>
+                    <force>true</force>
+                    <group>\${packageGroup}</group>
+                </configuration>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -186,19 +202,19 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-install-plugin</artifactId>
-                    <version>${installer.plguin.version}</version>
+                    <version>${installer.plugin.version}</version>
                 </plugin>
                 <!-- Maven Surefire Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>${surfire.plguin.version}</version>
+                    <version>${surfire.plugin.version}</version>
                 </plugin>
                 <!-- Maven Failsafe Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>${failsafe.plguin.version}</version>
+                    <version>${failsafe.plugin.version}</version>
                 </plugin>
                 <!-- Maven Deploy Plugin -->
                 <plugin>
@@ -214,24 +230,9 @@
                 </plugin>
                 <!-- Content Package Plugin -->
                 <plugin>
-                    <groupId>com.day.jcr.vault</groupId>
-                    <artifactId>content-package-maven-plugin</artifactId>
-                    <version>${content.plugin.version}</version>
-                    <configuration>
-                        <targetURL>http://\${sling.host}:\${sling.port}/bin/cpm/package.service.html</targetURL>
-                        <userId>${sling.user}</userId>
-                        <password>\${sling.password}</password>
-                        <useProxy>false</useProxy>
-                        <failOnMissingEmbed>true</failOnMissingEmbed>
-                        <failOnError>true</failOnError>
-                        <group>\${packageGroup}</group>
-                        <!--<targetURL>http://\${sling.host}:\${sling.port}/crx/packmgr/service.jsp</targetURL>-->
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>com.day.jcr.vault</groupId>
-                    <artifactId>maven-vault-plugin</artifactId>
-                    <version>${vault.plugin.version}</version>
+                    <groupId>io.wcm.maven.plugins</groupId>
+                    <artifactId>wcmio-content-package-maven-plugin</artifactId>
+                    <version>${vcmio.plugin.version}</version>
                 </plugin>
                 <!-- Apache Felix Bundle Plugin -->
                 <plugin>
@@ -255,53 +256,6 @@
             </plugins>
         </pluginManagement>
     </build>
-
-    <profiles>
-        <!-- ====================================================== -->
-        <!-- A D O B E   P U B L I C   P R O F I L E                -->
-        <!-- ====================================================== -->
-        <profile>
-            <id>adobe-public</id>
-
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-
-            <properties>
-                <releaseRepository-Id>adobe-public-releases</releaseRepository-Id>
-                <releaseRepository-Name>Adobe Public Releases</releaseRepository-Name>
-                <releaseRepository-URL>https://repo.adobe.com/nexus/content/groups/public</releaseRepository-URL>
-            </properties>
-
-            <repositories>
-                <repository>
-                    <id>adobe-public-releases</id>
-                    <name>Adobe Public Repository</name>
-                    <url>https://repo.adobe.com/nexus/content/groups/public</url>
-                    <releases>
-                        <updatePolicy>never</updatePolicy>
-                    </releases>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>adobe-public-releases</id>
-                    <name>Adobe Public Repository</name>
-                    <url>https://repo.adobe.com/nexus/content/groups/public</url>
-                    <releases>
-                        <updatePolicy>never</updatePolicy>
-                    </releases>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                </pluginRepository>
-            </pluginRepositories>
-        </profile>
-    </profiles>
 
 
     <!-- ====================================================================== -->
