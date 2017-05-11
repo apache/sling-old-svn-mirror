@@ -154,7 +154,7 @@ public class DistributionPackageBuilderFactory implements DistributionPackageBui
     )
     private static final String DIGEST_ALGORITHM = "digestAlgorithm";
 
-    private static final int DEFAULT_MONITORING_QUEUE_SIZE = 100;
+    private static final int DEFAULT_MONITORING_QUEUE_SIZE = 0;
 
     @Property(
         label="The number of items for monitoring distribution packages creation/installation",
