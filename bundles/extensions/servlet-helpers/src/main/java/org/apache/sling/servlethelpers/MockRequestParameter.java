@@ -36,6 +36,7 @@ class MockRequestParameter implements RequestParameter {
     private byte[] content;
 
     public MockRequestParameter(String name, String value) {
+        this.name = name;
         this.value = value;
         this.content = null;
     }
