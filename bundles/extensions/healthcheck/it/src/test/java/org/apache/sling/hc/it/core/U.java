@@ -32,6 +32,7 @@ import java.util.List;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.ops4j.pax.exam.Option;
 
 /** Test utilities */
@@ -47,7 +48,7 @@ public class U {
         final long timeout = System.currentTimeMillis() + 10000L;
         int count = 0;
         while(System.currentTimeMillis() < timeout) {
-            final List<HealthCheckExecutionResult> results = executor.execute(options, tags);
+            final List<HealthCheckExecutionResult> results = executor.execute(HealthCheckSelector.tags(tags), options);
             count = results.size();
             if(count== howMany) {
                 return;

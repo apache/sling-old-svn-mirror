@@ -32,11 +32,33 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface HealthCheckExecutor {
 
     /**
+     * Executes all health checks matching the supplied filter options.
+     * If no options are supplied, all health checks are executed.
+     *
+     * @param selector filter selector
+     * @return List of results. The list might be empty.
+     */
+    List<HealthCheckExecutionResult> execute(HealthCheckSelector selector);
+
+    /**
+     * Executes all health checks with the supplied filter options.
+     * If no options are supplied, all health checks are executed.
+     *
+     * @param selector filter selector
+     * @param options options for controlling execution behavior
+     *
+     * @return List of results. The list might be empty.
+     */
+    List<HealthCheckExecutionResult> execute(HealthCheckSelector selector, HealthCheckExecutionOptions options);
+
+    /**
      * Executes all health checks with the supplied list of tags.
      * If no tags are supplied, all health checks are executed.
      *
      * @return List of results. The list might be empty.
+     * @deprecated use execute(HealthCheckFilter.Options)
      */
+    @Deprecated
     List<HealthCheckExecutionResult> execute(String... tags);
 
     /**
@@ -47,7 +69,9 @@ public interface HealthCheckExecutor {
      * @param tags tags to be executed
      *
      * @return List of results. The list might be empty.
+     * @deprecated use execute(HealthCheckFilter.Options, HealthCheckExecutionOptions)
      */
+    @Deprecated
     List<HealthCheckExecutionResult> execute(HealthCheckExecutionOptions options, String... tags);
 
 }

@@ -19,6 +19,8 @@ package org.apache.sling.hc.core.impl.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -44,6 +46,7 @@ import org.apache.sling.hc.api.Result.Status;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
@@ -73,6 +76,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     private static final long serialVersionUID = 8013511523994541848L;
 
     private static final Logger LOG = LoggerFactory.getLogger(HealthCheckExecutorServlet.class);
+    public static final String PARAM_SPLIT_REGEX = "[,;]+";
 
     static class Param {
         final String name;
@@ -84,7 +88,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     }
 
     static final Param PARAM_TAGS = new Param("tags",
-            "Comma-separated list of health checks tags to select - can also be specified via path, e.g. /system/health/tag1,tag2.json");
+            "Comma-separated list of health checks tags to select - can also be specified via path, e.g. /system/health/tag1,tag2.json. Exclusions can be done by prepending '-' to the tag name");
     static final Param PARAM_FORMAT = new Param("format", "Output format, html|json|jsonp|txt - an extension in the URL overrides this");
     static final Param PARAM_HTTP_STATUS = new Param("httpStatus", "Specify HTTP result code, for example"
             + " CRITICAL:503 (status 503 if result >= CRITICAL)"
@@ -98,10 +102,12 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     static final Param PARAM_INCLUDE_DEBUG = new Param("hcDebug", "Include the DEBUG output of the Health Checks");
 
+    static final Param PARAM_NAMES = new Param("names", "Comma-separated list of health check names to select. Exclusions can be done by prepending '-' to the health check name");
+
     static final String JSONP_CALLBACK_DEFAULT = "processHealthCheckResults";
     static final Param PARAM_JSONP_CALLBACK = new Param("callback", "name of the JSONP callback function to use, defaults to " + JSONP_CALLBACK_DEFAULT);
 
-    static final Param [] PARAM_LIST = { PARAM_TAGS, PARAM_FORMAT, PARAM_HTTP_STATUS, PARAM_COMBINE_TAGS_WITH_OR,
+    static final Param [] PARAM_LIST = { PARAM_TAGS, PARAM_NAMES, PARAM_FORMAT, PARAM_HTTP_STATUS, PARAM_COMBINE_TAGS_WITH_OR,
         PARAM_FORCE_INSTANT_EXECUTION, PARAM_OVERRIDE_GLOBAL_TIMEOUT, PARAM_INCLUDE_DEBUG, PARAM_JSONP_CALLBACK};
 
     static final String FORMAT_HTML = "html";
@@ -200,27 +206,49 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     }
 
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response, final String format) throws ServletException, IOException {
+        HealthCheckSelector selector = HealthCheckSelector.empty();
         String pathInfo = request.getPathInfo();
-        String tagsStr = StringUtils.removeStart(splitFormat(pathInfo)[0], "/");
-        if (StringUtils.isBlank(tagsStr)) {
-            // if not provided via path use parameter or default
-            tagsStr = StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS.name), "");
+        String pathTokensStr = StringUtils.removeStart(splitFormat(pathInfo)[0], "/");
+
+        List<String> tags = new ArrayList<String>();
+        List<String> names = new ArrayList<String>();
+
+        if (StringUtils.isNotBlank(pathTokensStr)) {
+            String[] pathTokens = pathTokensStr.split(PARAM_SPLIT_REGEX);
+            for (String pathToken : pathTokens) {
+                if (pathToken.indexOf(' ') >= 0) {
+                    // token contains space. assume it is a name
+                    names.add(pathToken);
+                } else {
+                    tags.add(pathToken);
+                }
+            }
         }
-        final String[] tags = tagsStr.split("[,;]+");
+        if (tags.size() == 0) {
+            // if not provided via path use parameter or default
+            tags = Arrays.asList(StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS.name), "").split(PARAM_SPLIT_REGEX));
+        }
+        selector.withTags(tags.toArray(new String[0]));
+
+        if (names.size() == 0) {
+            // if not provided via path use parameter or default
+            names = Arrays.asList(StringUtils.defaultIfEmpty(request.getParameter(PARAM_NAMES.name), "").split(PARAM_SPLIT_REGEX));
+        }
+        selector.withNames(names.toArray(new String[0]));
 
         final Boolean includeDebug = Boolean.valueOf(request.getParameter(PARAM_INCLUDE_DEBUG.name));
         final Map<Result.Status, Integer> statusMapping = request.getParameter(PARAM_HTTP_STATUS.name) != null ? getStatusMapping(request
                 .getParameter(PARAM_HTTP_STATUS.name)) : null;
 
-        HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
-        options.setCombineTagsWithOr(Boolean.valueOf(StringUtils.defaultString(request.getParameter(PARAM_COMBINE_TAGS_WITH_OR.name), "true")));
-        options.setForceInstantExecution(Boolean.valueOf(request.getParameter(PARAM_FORCE_INSTANT_EXECUTION.name)));
+        HealthCheckExecutionOptions executionOptions = new HealthCheckExecutionOptions();
+        executionOptions.setCombineTagsWithOr(Boolean.valueOf(StringUtils.defaultString(request.getParameter(PARAM_COMBINE_TAGS_WITH_OR.name), "true")));
+        executionOptions.setForceInstantExecution(Boolean.valueOf(request.getParameter(PARAM_FORCE_INSTANT_EXECUTION.name)));
         String overrideGlobalTimeoutVal = request.getParameter(PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
         if (StringUtils.isNumeric(overrideGlobalTimeoutVal)) {
-            options.setOverrideGlobalTimeout(Integer.valueOf(overrideGlobalTimeoutVal));
+            executionOptions.setOverrideGlobalTimeout(Integer.valueOf(overrideGlobalTimeoutVal));
         }
 
-        List<HealthCheckExecutionResult> executionResults = this.healthCheckExecutor.execute(options, tags);
+        List<HealthCheckExecutionResult> executionResults = this.healthCheckExecutor.execute(selector, executionOptions);
 
         Result.Status mostSevereStatus = Result.Status.DEBUG;
         for (HealthCheckExecutionResult executionResult : executionResults) {

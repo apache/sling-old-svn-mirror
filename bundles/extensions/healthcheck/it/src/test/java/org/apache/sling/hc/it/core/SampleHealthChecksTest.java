@@ -28,6 +28,7 @@ import javax.management.DynamicMBean;
 
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -53,7 +54,7 @@ public class SampleHealthChecksTest {
     
     @Test
     public void testAnnotatedHC() {
-        final List<HealthCheckExecutionResult> results = executor.execute("annotation","sample");
+        final List<HealthCheckExecutionResult> results = executor.execute(HealthCheckSelector.tags("annotation","sample"));
         assertNotNull("Expecting non-null results");
         assertEquals("Expecting a single result", 1, results.size());
         final HealthCheckExecutionResult r = results.get(0);

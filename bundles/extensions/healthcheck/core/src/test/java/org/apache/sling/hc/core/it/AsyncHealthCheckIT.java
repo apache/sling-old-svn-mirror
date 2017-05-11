@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -91,14 +92,14 @@ public class AsyncHealthCheckIT {
             }
             
             // Verify that we get the right log
-            final String msg = executor.execute(id).get(0).getHealthCheckResult().iterator().next().getMessage();
+            final String msg = executor.execute(HealthCheckSelector.tags(id)).get(0).getHealthCheckResult().iterator().next().getMessage();
             assertTrue("Expecting the right message: " + msg, msg.contains("counter is now"));
             
             // And verify that calling executor lots of times doesn't increment as much
             final int previous = counter.get();
             final int n = 100;
             for(int i=0; i < n; i++) {
-                executor.execute(id);
+                executor.execute(HealthCheckSelector.tags(id));
             }
             assertTrue("Expecting counter to increment asynchronously", counter.get() < previous + n);
         } finally {

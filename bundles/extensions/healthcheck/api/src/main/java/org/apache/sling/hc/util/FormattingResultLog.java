@@ -22,9 +22,11 @@ import java.util.Locale;
 
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.osgi.annotation.versioning.ProviderType;
 import org.slf4j.helpers.MessageFormatter;
 
 /** Utility that provides a logging-like facade on a ResultLog */
+@ProviderType
 public class FormattingResultLog extends ResultLog {
     
     private ResultLog.Entry createEntry(Result.Status status, String format, Object ... args) {

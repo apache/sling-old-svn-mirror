@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.hc.api.HealthCheck;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -29,6 +30,7 @@ import org.osgi.framework.ServiceReference;
  * This class helps retrieving meta data information about a health check service.
  * @since 1.1
  */
+@ProviderType
 public class HealthCheckMetadata {
 
     private final String name;

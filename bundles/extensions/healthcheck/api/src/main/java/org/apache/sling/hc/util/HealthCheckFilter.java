@@ -25,11 +25,16 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.sling.hc.api.HealthCheck;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.sling.hc.api.execution.HealthCheckSelector.tags;
+import static org.apache.sling.hc.api.execution.HealthCheckSelector.empty;
 
 /**
  * Select from available {@link HealthCheck} services.
@@ -40,6 +45,7 @@ import org.slf4j.LoggerFactory;
  * This class is not thread safe and instances shouldn't be used concurrently
  * from different threads.
  */
+@ProviderType
 public class HealthCheckFilter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -57,13 +63,8 @@ public class HealthCheckFilter {
         bundleContext = bc;
     }
 
-    /**
-     * Get all health check services with one of the supplied tags.
-     * @return A list of services - might be the empty list if none matches
-     */
-    @SuppressWarnings("unchecked")
-    public List<HealthCheck> getTaggedHealthChecks(final String... tags) {
-        final ServiceReference [] refs = this.getTaggedHealthCheckServiceReferences(tags);
+    public List<HealthCheck> getHealthChecks(final HealthCheckSelector selector) {
+        final ServiceReference [] refs = this.getHealthCheckServiceReferences(selector);
         final List<HealthCheck> result = new ArrayList<HealthCheck>();
 
         if ( refs != null ) {
@@ -83,52 +84,14 @@ public class HealthCheckFilter {
         return result;
     }
 
-    /**
-     * Get all service references for health check services with one of the supplied tags. Uses logical "and" to combine tags.
-     * @return An array of service references - might be an empty error if none matches
-     */
-    public ServiceReference[] getTaggedHealthCheckServiceReferences(final String... tags) {
-        return getTaggedHealthCheckServiceReferences(false, tags);
+    public ServiceReference[] getHealthCheckServiceReferences(final HealthCheckSelector selector) {
+        return getHealthCheckServiceReferences(selector, false);
     }
 
-    /**
-     * Get all service references for health check services with one of the supplied tags.
-     * 
-     * @param combineWithOr If true will return all health checks that have at least one of the tags set. 
-     *        If false will return only health checks that have all given tags assigned.
-     * @param tags the tags to look for
-     * @return An array of service references - might be an empty error if none matches
-     */
-    public ServiceReference[] getTaggedHealthCheckServiceReferences(boolean combineWithOr, final String... tags) {
-        // Build service filter
-        final StringBuilder filterBuilder = new StringBuilder();
-        filterBuilder.append("(&(objectClass=").append(HealthCheck.class.getName()).append(")");
-        final int prefixLen = OMIT_PREFIX.length();
-        final StringBuilder filterBuilderForOrOperator = new StringBuilder(); // or filters
-        for(String tag : tags) {
-            tag = tag.trim();
-            if(tag.length() == 0) {
-                continue;
-            }
-            if(tag.startsWith(OMIT_PREFIX)) {
-                // ommit tags always have to be added as and-clause
-                filterBuilder.append("(!(").append(HealthCheck.TAGS).append("=").append(tag.substring(prefixLen)).append("))");
-            } else {
-                // add regular tags in the list either to outer and-clause or inner or-clause 
-                if (combineWithOr) {
-                    filterBuilderForOrOperator.append("(").append(HealthCheck.TAGS).append("=").append(tag).append(")");
-                } else {
-                    filterBuilder.append("(").append(HealthCheck.TAGS).append("=").append(tag).append(")");
-                }
-            }
-        }
-        // add "or" clause if we have accumulated any 
-        if (filterBuilderForOrOperator.length() > 0) {
-            filterBuilder.append("(|").append(filterBuilderForOrOperator).append(")");
-        }
-        filterBuilder.append(")");
+    public ServiceReference[] getHealthCheckServiceReferences(final HealthCheckSelector selector, boolean combineTagsWithOr) {
+        final CharSequence filterBuilder = selector != null ? getServiceFilter(selector, combineTagsWithOr) : getServiceFilter(empty(), combineTagsWithOr);
 
-        log.debug("OSGi service filter in getTaggedHealthCheckServiceReferences(): {}", filterBuilder);
+        log.debug("OSGi service filter in getHealthCheckServiceReferences(): {}", filterBuilder);
 
         try {
             final String filterString = filterBuilder.length() == 0 ? null : filterBuilder.toString();
@@ -149,6 +112,42 @@ public class HealthCheckFilter {
     }
 
     /**
+     * Get all health check services with one of the supplied tags.
+     * @return A list of services - might be the empty list if none matches
+     * @deprecated use getHealthChecks() instead
+     */
+    @Deprecated
+    public List<HealthCheck> getTaggedHealthChecks(final String... tags) {
+        final HealthCheckSelector selector = tags(tags);
+        return getHealthChecks(selector);
+    }
+
+    /**
+     * Get all service references for health check services with one of the supplied tags. Uses logical "and" to combine tags.
+     * @return An array of service references - might be an empty error if none matches
+     * @deprecated use getHealthCheckServiceReferences() instead
+     */
+    @Deprecated
+    public ServiceReference[] getTaggedHealthCheckServiceReferences(final String... tags) {
+        return getHealthCheckServiceReferences(tags(tags), false);
+    }
+
+    /**
+     * Get all service references for health check services with one of the supplied tags.
+     * 
+     * @param combineWithOr If true will return all health checks that have at least one of the tags set. 
+     *        If false will return only health checks that have all given tags assigned.
+     * @param tags the tags to look for
+     * @return An array of service references - might be an empty error if none matches
+     * @deprecated use getHealthCheckServiceReferences() instead
+     */
+    @Deprecated
+    public ServiceReference[] getTaggedHealthCheckServiceReferences(boolean combineWithOr, final String... tags) {
+        final HealthCheckSelector selector = tags(tags);
+        return getHealthCheckServiceReferences(selector, combineWithOr);
+    }
+
+    /**
      * Dispose all used service references
      */
     public void dispose() {
@@ -156,5 +155,67 @@ public class HealthCheckFilter {
             this.bundleContext.ungetService(ref);
         }
         this.usedReferences.clear();
+    }
+
+    CharSequence getServiceFilter(HealthCheckSelector selector, boolean combineTagsWithOr) {
+        // Build service filter
+        final StringBuilder filterBuilder = new StringBuilder();
+        filterBuilder.append("(&(objectClass=").append(HealthCheck.class.getName()).append(")");
+        final int prefixLen = HealthCheckFilter.OMIT_PREFIX.length();
+        final StringBuilder filterBuilderForOrOperator = new StringBuilder(); // or filters
+        final StringBuilder tagsBuilder = new StringBuilder();
+        int tagsAndClauses = 0;
+        if (selector.tags() != null) {
+            for (String tag : selector.tags()) {
+                tag = tag.trim();
+                if (tag.length() == 0) {
+                    continue;
+                }
+                if (tag.startsWith(HealthCheckFilter.OMIT_PREFIX)) {
+                    // ommit tags always have to be added as and-clause
+                    filterBuilder.append("(!(").append(HealthCheck.TAGS).append("=").append(tag.substring(prefixLen)).append("))");
+                } else {
+                    // add regular tags in the list either to outer and-clause or inner or-clause
+                    if (combineTagsWithOr) {
+                        filterBuilderForOrOperator.append("(").append(HealthCheck.TAGS).append("=").append(tag).append(")");
+                    } else {
+                        tagsBuilder.append("(").append(HealthCheck.TAGS).append("=").append(tag).append(")");
+                        tagsAndClauses++;
+                    }
+                }
+            }
+        }
+        boolean addedNameToOrBuilder = false;
+        if (selector.names() != null) {
+            for (String name : selector.names()) {
+                name = name.trim();
+                if (name.length() == 0) {
+                    continue;
+                }
+                if (name.startsWith(HealthCheckFilter.OMIT_PREFIX)) {
+                    // ommit tags always have to be added as and-clause
+                    filterBuilder.append("(!(").append(HealthCheck.NAME).append("=").append(name.substring(prefixLen)).append("))");
+                } else {
+                    // names are always ORd
+                    filterBuilderForOrOperator.append("(").append(HealthCheck.NAME).append("=").append(name).append(")");
+                    addedNameToOrBuilder = true;
+                }
+            }
+        }
+        if (addedNameToOrBuilder) {
+            if (tagsAndClauses > 1) {
+                filterBuilderForOrOperator.append("(&").append(tagsBuilder).append(")");
+            } else {
+                filterBuilderForOrOperator.append(tagsBuilder);
+            }
+        } else {
+            filterBuilder.append(tagsBuilder);
+        }
+        // add "or" clause if we have accumulated any
+        if (filterBuilderForOrOperator.length() > 0) {
+            filterBuilder.append("(|").append(filterBuilderForOrOperator).append(")");
+        }
+        filterBuilder.append(")");
+        return filterBuilder;
     }
 }

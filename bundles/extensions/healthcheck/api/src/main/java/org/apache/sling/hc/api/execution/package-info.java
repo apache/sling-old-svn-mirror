@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("1.1.0")
+@Version("1.2.0")
 package org.apache.sling.hc.api.execution;
 
 import org.osgi.annotation.versioning.Version;

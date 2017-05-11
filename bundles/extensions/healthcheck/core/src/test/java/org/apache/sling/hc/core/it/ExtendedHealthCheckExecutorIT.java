@@ -33,6 +33,7 @@ import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.apache.sling.hc.util.HealthCheckFilter;
 import org.junit.After;
 import org.junit.Before;
@@ -99,7 +100,7 @@ public class ExtendedHealthCheckExecutorIT {
     @Test
     public void testSingleExecution() throws Exception {
         final HealthCheckFilter filter = new HealthCheckFilter(bundleContext);
-        final ServiceReference [] refs = filter.getTaggedHealthCheckServiceReferences(testTag);
+        final ServiceReference [] refs = filter.getHealthCheckServiceReferences(HealthCheckSelector.tags(testTag));
         assertNotNull(refs);
         assertEquals(1, refs.length);
         
