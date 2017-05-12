@@ -44,6 +44,13 @@ public class SlingExtensionHealthcheckIT extends KarafTestSupport {
     }
 
     @Test
+    public void testOrgApacheSlingHealthcheckApi() {
+        final Bundle bundle = findBundle("org.apache.sling.hc.api");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
     public void testOrgApacheSlingHealthcheckCore() {
         final Bundle bundle = findBundle("org.apache.sling.hc.core");
         assertNotNull(bundle);
