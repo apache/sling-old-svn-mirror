@@ -48,7 +48,7 @@ public class WhiteboardHandler {
     /** Default logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Reference
+    @Reference(name = "first") // by using this name this reference is set first (alphabetic order -> order in XML)
     private QuartzScheduler scheduler;
 
     private final Map<Long, String> idToNameMap = new ConcurrentHashMap<>();
@@ -200,7 +200,8 @@ public class WhiteboardHandler {
      * @param reference The service reference.
      */
     void unregister(final ServiceReference<?> reference) {
-        final String name = idToNameMap.remove(getLongProperty(reference, Constants.SERVICE_ID));
+        final Long key = getLongProperty(reference, Constants.SERVICE_ID);
+        final String name = idToNameMap.remove(key);
         if ( name != null ) {
             this.scheduler.unschedule(reference.getBundle().getBundleId(), name);
         }
