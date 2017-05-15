@@ -191,9 +191,9 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     /** Cached array of post response creators used during request processing. */
     private PostResponseCreator[] cachedPostResponseCreators = new PostResponseCreator[0];
 
-    private final ImportOperation importOperation = new ImportOperation();
-
     private VersioningConfiguration baseVersioningConfiguration;
+
+    private ImportOperation importOperation;
 
     @Override
     protected void doPost(final SlingHttpServletRequest request,
@@ -416,6 +416,10 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     @Activate
     protected void activate(final BundleContext bundleContext,
             final Config configuration) {
+        // the following operations require JCR:
+        if ( JCRSupport.INSTANCE.jcrEnabled()) {
+            importOperation = new ImportOperation();
+        }
         // configure now
         this.configure(configuration);
 
@@ -490,10 +494,11 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
         this.modifyOperation.setDateParser(dateParser);
         this.modifyOperation.setDefaultNodeNameGenerator(nodeNameGenerator);
-        this.importOperation.setDefaultNodeNameGenerator(nodeNameGenerator);
         this.modifyOperation.setIgnoredParameterNamePattern(paramMatchPattern);
-        this.importOperation.setIgnoredParameterNamePattern(paramMatchPattern);
-
+        if ( this.importOperation != null ) {
+            this.importOperation.setDefaultNodeNameGenerator(nodeNameGenerator);
+            this.importOperation.setIgnoredParameterNamePattern(paramMatchPattern);
+        }
     }
 
     @Override
@@ -511,8 +516,9 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             internalOperations = null;
         }
         modifyOperation.setExtraNodeNameGenerators(null);
-        importOperation.setExtraNodeNameGenerators(null);
-        importOperation.setContentImporter(null);
+        if ( this.importOperation != null ) {
+            this.importOperation = null;
+        }
     }
 
     /**
@@ -658,7 +664,9 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         }
         this.cachedNodeNameGenerators = localCache;
         this.modifyOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
-        this.importOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
+        if ( this.importOperation != null ) {
+            this.importOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
+        }
     }
 
     /**
@@ -722,11 +730,15 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             policy = ReferencePolicy.DYNAMIC,
             policyOption = ReferencePolicyOption.GREEDY)
     protected void bindContentImporter(final Object importer) {
-        importOperation.setContentImporter(importer);
+        if ( this.importOperation != null ) {
+            importOperation.setContentImporter(importer);
+        }
     }
 
     protected void unbindContentImporter(final Object importer) {
-        importOperation.unsetContentImporter(importer);
+        if ( this.importOperation != null ) {
+            importOperation.unsetContentImporter(importer);
+        }
     }
 
     private VersioningConfiguration createBaseVersioningConfiguration(Config config) {
