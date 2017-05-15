@@ -189,14 +189,14 @@ public interface Scheduler {
     /**
      * Create a schedule options to fire a job period starting at a specific date.
      * <p>In case the scheduled time was missed due to the Scheduler not running or no thread being available at that point in time
-     * the behavior depends on the {@code times} parameter:
+     * the behavior depends on the {@code times} parameter:</p>
      * <ol>
      * <li>If {@code times} is -1 (meaning unlimited repetitions) there will be no immediate action. Instead the scheduler just waits for next scheduled interval.
      * <li>Otherwise (limited amount of repitions) the job will be executed only once, as soon as the Scheduler is running again and a thread is available for processing the job.
      * Then the scheduler waits desired interval and executes all remaining triggers.
      * Effectively the first fire time of the misfired trigger is moved to current time with no other changes.
      * </ol>
-     * </p>
+     * 
      * @param date The date this job should be run.
      * @param times The number of times this job should be started (must be higher than 1 or
      *              -1 for endless)
