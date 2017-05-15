@@ -191,7 +191,12 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         } else if (JsonRendererServlet.EXT_JSON.equals(type) ) {
             servlet = new JsonRendererServlet(jsonMaximumResults);
         } else if ( XMLRendererServlet.EXT_XML.equals(type) ) {
-            servlet = new XMLRendererServlet();
+            try {
+                servlet = new XMLRendererServlet();
+            } catch (Throwable t) {
+                logger.warn("Support for getting XML is currently disabled " +
+                        "in the servlets get module. Check whether the JCR API is available.");
+            }
         }
         if ( servlet != null ) {
             try {
