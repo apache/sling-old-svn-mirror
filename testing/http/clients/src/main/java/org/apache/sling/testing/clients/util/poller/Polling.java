@@ -86,7 +86,8 @@ public class Polling implements Callable<Boolean> {
      * <p>Tries to execute {@link #call()} until it returns true or until {@code timeout} is reached.
      * Between retries, it waits using {@code Thread.sleep(delay)}. It means the retry is not at a fixed pace,
      * but depends on the execution time of the call itself.</p>
-     *
+     * <p>The method guarantees that the call() will be executed at least once. If the timeout is 0 or less, then
+     * call() will be executed exactly once.</p>
      * <p>The timeout is adjusted using {@link TimeoutsProvider} so the final value can be changed using the
      * system property: {@value org.apache.sling.testing.timeouts.TimeoutsProvider#PROP_TIMEOUT_MULTIPLIER}</p>
      *
@@ -100,18 +101,19 @@ public class Polling implements Callable<Boolean> {
         long start = System.currentTimeMillis();
         long effectiveTimeout = TimeoutsProvider.getInstance().getTimeout(timeout);
 
-        boolean success = false;
-        while (!success && (System.currentTimeMillis() < start + effectiveTimeout)) {
+        do {
             try {
-                success = call();
+                boolean success = call();
+                if (success) {
+                    return;
+                }
                 Thread.sleep(delay);
             } catch (InterruptedException e) {
                 throw e;
             } catch (Exception e) {
                 lastException = e;
-                success = false;
             }
-        }
+        } while (System.currentTimeMillis() < start + effectiveTimeout);
 
         throw new TimeoutException(String.format(message(), effectiveTimeout, delay));
     }
@@ -124,6 +126,6 @@ public class Polling implements Callable<Boolean> {
      * @return the format string
      */
     protected String message() {
-        return "Call failed to return true in %1$ ms. Last exception was: " + lastException;
+        return "Call failed to return true in %1$d ms. Last exception was: " + lastException;
     }
 }

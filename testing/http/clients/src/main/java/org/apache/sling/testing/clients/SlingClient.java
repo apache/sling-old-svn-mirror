@@ -269,7 +269,7 @@ public class SlingClient extends AbstractSlingClient {
 
             @Override
             protected String message() {
-                return "Path " + path + " does not exist after %1$ ms";
+                return "Path " + path + " does not exist after %1$d ms";
             }
         };
 
