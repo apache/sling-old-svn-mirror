@@ -30,19 +30,20 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-
 import org.apache.sling.testing.clients.interceptors.DelayRequestInterceptor;
 import org.apache.sling.testing.clients.interceptors.TestDescriptionInterceptor;
 import org.apache.sling.testing.clients.util.FormEntityBuilder;
 import org.apache.sling.testing.clients.util.HttpUtils;
 import org.apache.sling.testing.clients.util.JsonUtils;
 import org.apache.sling.testing.clients.util.poller.AbstractPoller;
+import org.apache.sling.testing.clients.util.poller.Polling;
 import org.codehaus.jackson.JsonNode;
 
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.apache.http.HttpStatus.SC_OK;
@@ -212,12 +213,16 @@ public class SlingClient extends AbstractSlingClient {
     /**
      * <p>Checks whether a path exists or not by making a GET request to that path with the {@code json extension} </p>
      * <p>It polls the server and waits until the path exists </p>
+     *
+     * @deprecated use {@link #waitExists(String, long, long)} instead.
+     *
      * @param path path to be checked
      * @param waitMillis time to wait between retries
      * @param retryCount number of retries before throwing an exception
      * @throws ClientException if the path was not found
      * @throws InterruptedException to mark this operation as "waiting"
      */
+    @Deprecated
     public void waitUntilExists(final String path, final long waitMillis, int retryCount)
             throws ClientException, InterruptedException {
         AbstractPoller poller =  new AbstractPoller(waitMillis, retryCount) {
@@ -241,6 +246,34 @@ public class SlingClient extends AbstractSlingClient {
         if (!found) {
             throw new ClientException("path " + path + " does not exist after " + retryCount + " retries");
         }
+    }
+
+    /**
+     * <p>Waits until a path exists by making successive GET requests to that path with the {@code json extension} </p>
+     * <p>Polls the server until the path exists or until timeout is reached </p>
+     * @param path path to be checked
+     * @param timeout max total time to wait, in milliseconds
+     * @param delay time to wait between checks, in milliseconds
+     * @throws TimeoutException if the path was not found before timeout
+     * @throws InterruptedException to mark this operation as "waiting", should be rethrown by callers
+     * @since 1.1.0
+     */
+    public void waitExists(final String path, final long timeout, final long delay)
+            throws TimeoutException, InterruptedException {
+
+        Polling p = new Polling() {
+            @Override
+            public Boolean call() throws Exception {
+                return exists(path);
+            }
+
+            @Override
+            protected String message() {
+                return "Path " + path + " does not exist after %1$d ms";
+            }
+        };
+
+        p.poll(timeout, delay);
     }
 
     /**
@@ -303,12 +336,14 @@ public class SlingClient extends AbstractSlingClient {
      * Returns the JSON content of a node already mapped to a {@link org.codehaus.jackson.JsonNode}.<br>
      * Waits max 10 seconds for the node to be created.
      *
+     * @deprecated use {@link #waitExists(String, long, long)} and {@link #doGetJson(String, int, int...)} instead
      * @param path  the path to the content node
      * @param depth the number of levels to go down the tree, -1 for infinity
      * @return a {@link org.codehaus.jackson.JsonNode} mapping to the requested content node.
      * @throws ClientException if something fails during request/response processing
      * @throws InterruptedException to mark this operation as "waiting"
      */
+    @Deprecated
     public JsonNode getJsonNode(String path, int depth) throws ClientException, InterruptedException {
         return getJsonNode(path, depth, 500, 20);
     }
@@ -316,6 +351,7 @@ public class SlingClient extends AbstractSlingClient {
     /**
      * Returns JSON format of a content node already mapped to a {@link org.codehaus.jackson.JsonNode}.
      *
+     * @deprecated use {@link #waitExists(String, long, long)} and {@link #doGetJson(String, int, int...)} instead
      * @param path                 the path to the content node
      * @param depth                the number of levels to go down the tree, -1 for infinity
      * @param waitMillis           how long it should wait between requests
@@ -326,6 +362,7 @@ public class SlingClient extends AbstractSlingClient {
      * @throws ClientException if something fails during request/response cycle
      * @throws InterruptedException to mark this operation as "waiting"
      */
+    @Deprecated
     public JsonNode getJsonNode(String path, int depth, final long waitMillis, final int retryNumber, int... expectedStatus)
             throws ClientException, InterruptedException {
 
@@ -343,6 +380,31 @@ public class SlingClient extends AbstractSlingClient {
         SlingHttpResponse response = this.doGet(path);
         HttpUtils.verifyHttpStatus(response, HttpUtils.getExpectedStatus(SC_OK, expectedStatus));
 
+        return JsonUtils.getJsonNodeFromString(response.getContent());
+    }
+
+    /**
+     * Returns the {@link org.codehaus.jackson.JsonNode} object corresponding to a content node.
+     *
+     * @param path the path to the content node
+     * @param depth the number of levels to go down the tree, -1 for infinity
+     * @param expectedStatus list of allowed HTTP Status to be returned. If not set, 200 (OK) is assumed.
+     *
+     * @return a {@link org.codehaus.jackson.JsonNode} mapping to the requested content node.
+     * @throws ClientException if the path does not exist or something fails during request/response cycle
+     * @since 1.1.0
+     */
+    public JsonNode doGetJson(String path, int depth, int... expectedStatus) throws ClientException {
+
+        // check for infinity
+        if (depth == -1) {
+            path += ".infinity.json";
+        } else {
+            path += "." + depth + ".json";
+        }
+
+        // request the JSON for the node
+        SlingHttpResponse response = this.doGet(path, HttpUtils.getExpectedStatus(SC_OK, expectedStatus));
         return JsonUtils.getJsonNodeFromString(response.getContent());
     }
 
@@ -413,33 +475,31 @@ public class SlingClient extends AbstractSlingClient {
     }
 
     /**
-     * Get uuid from any repository path
+     * Get the UUID of a repository path
      *
-     * @param repPath path in repository
-     * @return uuid as String
+     * @param path path in repository
+     * @return uuid as String or null if path does not exist
      * @throws ClientException if something fails during request/response cycle
-     * @throws InterruptedException to mark this operation as "waiting"
      */
-    public String getUUID(String repPath) throws ClientException, InterruptedException {
-        // TODO review if this check is necessary. Maybe rewrite getJsonNode to wait only if requested
-        if (!exists(repPath)) {
+    public String getUUID(String path) throws ClientException {
+        if (!exists(path)) {
             return null;
         }
-        JsonNode jsonNode = getJsonNode(repPath, -1);
+        JsonNode jsonNode = doGetJson(path, -1);
         return getUUId(jsonNode);
     }
 
     /**
-     * Get uuid from any repository path
+     * Get the UUID from a node that was already parsed in a {@link JsonNode}
      *
-     * @param jsonNode {@link JsonNode} in repository
-     * @return uuid as String or null if jsonNode is null or if the uuid was not found
+     * @param jsonNode {@link JsonNode} object of the repository node
+     * @return UUID as String or null if jsonNode is null or if the UUID was not found
      * @throws ClientException if something fails during request/response cycle
      */
+    // TODO make this method static
     public String getUUId(JsonNode jsonNode) throws ClientException {
-        // TODO review if this check is necessary. Maybe rewrite getJsonNode to wait only if requested
         if (jsonNode == null) {
-            return null;  // node does not exist
+            return null;
         }
 
         JsonNode uuidNode = jsonNode.get("jcr:uuid");
