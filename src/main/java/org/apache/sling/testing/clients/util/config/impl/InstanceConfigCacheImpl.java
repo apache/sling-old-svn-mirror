@@ -103,7 +103,7 @@ public class InstanceConfigCacheImpl implements InstanceConfigCache {
 
 
     @Override
-    public InstanceConfig save() throws InstanceConfigException {
+    public InstanceConfig save() throws InstanceConfigException, InterruptedException {
         for (InstanceConfig ic : configs) {
             ic.save();
         }
@@ -111,7 +111,7 @@ public class InstanceConfigCacheImpl implements InstanceConfigCache {
     }
 
     @Override
-    public InstanceConfig restore() throws InstanceConfigException {
+    public InstanceConfig restore() throws InstanceConfigException, InterruptedException {
         for (InstanceConfig ic : configs) {
             ic.restore();
         }

@@ -19,7 +19,11 @@ package org.apache.sling.testing.clients.util.poller;
 /**
  * Abstract Poller interface.
  * Provides simple methods to implement custom pollers
+ *
+ * @deprecated use {@link Polling} instead.
+ * @see Polling for a better way to implement polling
  */
+@Deprecated
 public interface Poller {
     boolean call();
     boolean condition();

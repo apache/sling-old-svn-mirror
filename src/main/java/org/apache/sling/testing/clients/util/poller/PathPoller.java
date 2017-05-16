@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Allows polling for a resource
  */
+@Deprecated
 public class PathPoller extends AbstractPoller {
     private static final Logger LOG = LoggerFactory.getLogger(PathPoller.class);
     private final AbstractSlingClient client;

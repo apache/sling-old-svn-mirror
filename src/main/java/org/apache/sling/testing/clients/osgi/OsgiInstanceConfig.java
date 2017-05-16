@@ -24,23 +24,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 /**
  * <p>Allows saving and restoring the OSGiConfig to be used before and after altering OSGi configurations for tests</p>
  * <p>See {@link InstanceConfig}</p>
  */
 public class OsgiInstanceConfig implements InstanceConfig {
+    private static final Logger LOG = LoggerFactory.getLogger(OsgiInstanceConfig.class);
 
     /**
-     * Number of retries for retrieving the current osgi config for save() and restore()
+     * Time im ms to wait for retrieving the current osgi config for save() and restore()
      */
-    protected int waitCount = 20;
+    private static final long WAIT_TIMEOUT = 20000;  // in ms
 
-    private static final Logger LOG = LoggerFactory.getLogger(OsgiInstanceConfig.class);
     private final OsgiConsoleClient osgiClient;
     private final String configPID;
     private Map<String, Object> config;
 
+    @Deprecated
+    protected int waitCount = 20;
 
     /**
      *
@@ -50,7 +53,8 @@ public class OsgiInstanceConfig implements InstanceConfig {
      * @throws ClientException if the client cannot be initialized
      * @throws InstanceConfigException if the config cannot be saved
      */
-    public <T extends SlingClient> OsgiInstanceConfig(T client, String configPID) throws ClientException, InstanceConfigException {
+    public <T extends SlingClient> OsgiInstanceConfig(T client, String configPID)
+            throws ClientException, InstanceConfigException, InterruptedException {
         this.osgiClient = client.adaptTo(OsgiConsoleClient.class);
         this.configPID = configPID;
 
@@ -63,14 +67,14 @@ public class OsgiInstanceConfig implements InstanceConfig {
      *
      * @throws InstanceConfigException if the config cannot be saved
      */
-    public InstanceConfig save() throws InstanceConfigException {
+    public InstanceConfig save() throws InstanceConfigException, InterruptedException {
         try {
-            this.config = osgiClient.getConfigurationWithWait(waitCount, this.configPID);
+            this.config = osgiClient.waitGetConfiguration(WAIT_TIMEOUT, this.configPID);
             LOG.info("Saved OSGi config for {}. It is currently this: {}", this.configPID, this.config);
         } catch (ClientException e) {
             throw new InstanceConfigException("Error getting config", e);
-        } catch (InterruptedException e) {
-            throw new InstanceConfigException("Saving configuration was interrupted ", e);
+        } catch (TimeoutException e) {
+            throw new InstanceConfigException("Timeout of " + WAIT_TIMEOUT + " ms was reached while waiting for the configuration", e);
         }
         return this;
     }
@@ -80,14 +84,14 @@ public class OsgiInstanceConfig implements InstanceConfig {
      *
      * @throws InstanceConfigException if the config cannot be restored
      */
-    public InstanceConfig restore() throws InstanceConfigException {
+    public InstanceConfig restore() throws InstanceConfigException, InterruptedException {
         try {
-            osgiClient.editConfigurationWithWait(waitCount, this.configPID, null, config);
+            osgiClient.waitEditConfiguration(WAIT_TIMEOUT, this.configPID, null, config);
             LOG.info("restored OSGi config for {}. It is now this: {}", this.configPID, this.config);
         } catch (ClientException e) {
             throw new InstanceConfigException("Could not edit OSGi configuration", e);
-        } catch (InterruptedException e) {
-            throw new InstanceConfigException("Restoring configuration was interrupted", e);
+        } catch (TimeoutException e) {
+            throw new InstanceConfigException("Timeout of " + WAIT_TIMEOUT + " ms was reached while waiting for the configuration", e);
         }
         return this;
     }
