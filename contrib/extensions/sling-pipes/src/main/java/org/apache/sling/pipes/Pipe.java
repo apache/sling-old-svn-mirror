@@ -89,6 +89,13 @@ public interface Pipe {
      */
     Resource getInput();
 
+
+    /**
+     * get the pipe configuration resource
+     * @return
+     */
+    Resource getResource();
+
     /**
      * returns the binding output used in container pipe's expression
      * @return object, either value map or something else, that will be used in nashorn for computing expressions
