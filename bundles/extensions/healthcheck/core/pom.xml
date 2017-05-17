@@ -273,4 +273,14 @@
         <scope>test</scope>
       </dependency>
      </dependencies>
+     
+     <dependencyManagement>
+       <dependencies>
+         <dependency>
+          <groupId>org.osgi</groupId>
+          <artifactId>org.osgi.core</artifactId>
+          <version>4.3.0</version>
+         </dependency>
+       </dependencies>
+     </dependencyManagement>
 </project>

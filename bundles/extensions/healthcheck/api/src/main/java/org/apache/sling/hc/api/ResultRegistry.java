@@ -22,7 +22,7 @@ import java.util.Calendar;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.osgi.annotation.versioning.ConsumerType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * ResultRegistry is a service that can be leveraged to provide health check results.
@@ -44,7 +44,7 @@ import org.osgi.annotation.versioning.ConsumerType;
  * setting the expiration to that window can be ideal.
  *
  */
-@ConsumerType
+@ProviderType
 public interface ResultRegistry extends HealthCheck {
     /**
      * Put result which will be reported in the health check list until the expiration
@@ -60,8 +60,9 @@ public interface ResultRegistry extends HealthCheck {
      * @param result The object to report until expiration.
      * @param expiration When the system time is after this time, the result is removed from the
      *  list of health checks. If the expiration is null, the result never expires.
+     * @param tags a list of tags to apply to this result
      */
-    void put(@Nonnull String identifier, @Nonnull Result result, @Nullable Calendar expiration);
+    void put(@Nonnull String identifier, @Nonnull Result result, @Nullable Calendar expiration, @Nullable String... tags);
     
     /**
      * removes the health check information
