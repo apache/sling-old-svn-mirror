@@ -53,7 +53,7 @@ public class AnnotationResourcePropertyBuilder extends AbstractAnnotationBuilder
         if (field.isAnnotationPresent(Validate.class)) {
             addValidator(field.getAnnotation(Validate.class));
         }
-        setRegex(field);
+        setNameRegex(field);
         if (field.isAnnotationPresent(ValueMapValue.class)) {
             ValueMapValue valueMapValue = field.getAnnotation(ValueMapValue.class);
             if (isOptional(defaultInjectionStrategy, valueMapValue.injectionStrategy())) {

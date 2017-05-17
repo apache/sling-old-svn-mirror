@@ -30,39 +30,25 @@ import javax.annotation.Nonnull;
 import org.apache.sling.validation.model.ValidationModel;
 import org.osgi.framework.Bundle;
 
-/**
- * The Validation model register keeps all registered validation models.
- */
+/** The Validation model register keeps all registered validation models. */
 final class ValidationModelRegister {
 
     private final ConcurrentMap<Bundle, ConcurrentHashMap<String, List<ValidationModel>>> validationModels = new ConcurrentHashMap<>();
 
-    /**
-     * Remove all implementation mappings.
-     */
-    void removeAll() {
-        validationModels.clear();
-    }
-
-    /**
-     * Gets validation models for bundle
+    /** Register collection of validation models for bundle.
      *
-     * @param bundle the bundle
-     * @return the validation models
-     */
-    @Nonnull
-    ConcurrentMap<String, List<ValidationModel>> getValidationModels(final Bundle bundle) {
-        return validationModels.getOrDefault(bundle, new ConcurrentHashMap<>());
+     * @param bundle the bundle for which models will be registered
+     * @param models the models to be registered. */
+    void registerValidationModelsByBundle(final Bundle bundle, final Collection<ValidationModel> models) {
+        models.forEach(model -> registerValidationModelByBundle(bundle, model));
     }
 
-    /**
-     * Gets validation models by resource type.
+    /** Gets validation models by resource type.
      *
      * @param resourceType the resource type
-     * @return the validation models by resource type
-     */
+     * @return the validation models by resource type */
     @Nonnull
-    List<ValidationModel> getValidationModelsByResourceType(String resourceType) {
+    List<ValidationModel> getValidationModelsByResourceType(final String resourceType) {
         return validationModels.entrySet()
                 .parallelStream()
                 .map(Map.Entry::getValue)
@@ -72,30 +58,22 @@ final class ValidationModelRegister {
                 .collect(ArrayList::new, ArrayList::addAll, ArrayList::addAll);
     }
 
-    /**
-     * Remove validation models.
+    /** Remove validation models.
      *
-     * @param bundle bundle to be removed.
-     */
-    void removeValidationModels(Bundle bundle) {
+     * @param bundle bundle to be removed. */
+    void removeValidationModels(final Bundle bundle) {
         validationModels.remove(bundle);
     }
 
-    /**
-     * Register collection of validation models for bundle.
-     *
-     * @param bundle the bundle for which models will be registered
-     * @param models the models to be registered.
-     */
-    void registerValidationModelsByBundle(final Bundle bundle, final Collection<ValidationModel> models) {
-        models.forEach(model -> registerValidationModelByBundle(bundle, model));
+    /** Remove all implementation mappings. */
+    void removeAll() {
+        validationModels.clear();
     }
 
-    /**
-     * Register validation model for bundle.
+    /** Register validation model for bundle.
+     * 
      * @param bundle the bundle
-     * @param model the model to be registered.
-     */
+     * @param model the model to be registered. */
     private void registerValidationModelByBundle(final Bundle bundle, final ValidationModel model) {
 
         ConcurrentHashMap<String, List<ValidationModel>> map = Optional.ofNullable(validationModels.get(bundle))
@@ -107,13 +85,13 @@ final class ValidationModelRegister {
                 .add(model);
     }
 
-    /**
-     * Creates a new List of validation models for a given resourceType
+    /** Creates a new List of validation models for a given resourceType
+     * 
      * @param map ValidationModels container
      * @param resourceType for which validation model list is created
-     * @return new validation model list
-     */
-    private Supplier<List<ValidationModel>> supplyList(ConcurrentHashMap<String, List<ValidationModel>> map, String resourceType) {
+     * @return new validation model list */
+    private Supplier<List<ValidationModel>> supplyList(final ConcurrentHashMap<String, List<ValidationModel>> map,
+            final String resourceType) {
         return () -> {
             List<ValidationModel> validationModels = new ArrayList<>();
             map.put(resourceType, validationModels);
@@ -121,12 +99,11 @@ final class ValidationModelRegister {
         };
     }
 
-    /**
-     * Creates a new ConcurrentHashMap for passed bundle
+    /** Creates a new ConcurrentHashMap for passed bundle
+     * 
      * @param bundle, for which ConcurrentHashMap is created
-     * @return new ConcurrentHashMap for bundle
-     */
-    private Supplier<ConcurrentHashMap<String, List<ValidationModel>>> supplyConcurrentHashMap(Bundle bundle) {
+     * @return new ConcurrentHashMap for bundle */
+    private Supplier<ConcurrentHashMap<String, List<ValidationModel>>> supplyConcurrentHashMap(final Bundle bundle) {
         return () -> {
             ConcurrentHashMap<String, List<ValidationModel>> cmp = new ConcurrentHashMap<>();
             validationModels.put(bundle, cmp);

@@ -47,11 +47,10 @@ import org.slf4j.LoggerFactory;
  * ValidationStrategy.REQUIRED or ValidationStrategy.OPTIONAL and registers/unregisters validation models. */
 public class ValidationPackageBundleListener implements BundleTrackerCustomizer {
 
-    static final String PACKAGE_HEADER = "Sling-Model-Packages";
-    static final String CLASSES_HEADER = "Sling-Model-Classes";
+    private static final String PACKAGE_HEADER = "Sling-Model-Packages";
+    private static final String CLASSES_HEADER = "Sling-Model-Classes";
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationPackageBundleListener.class);
-    private static final String COMMA_SEPARATOR_REGEX = ",";
 
     private final BundleTracker bundleTracker;
 
@@ -96,7 +95,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
      * @return Set of class names */
     private Set<String> getBundleClasses(@Nonnull Bundle bundle) {
         Set<String> classNames = new HashSet<>();
-        classNames.addAll(getPackageHeaderClassNames(bundle));
+        classNames.addAll(extractPackageHeaderClassNames(bundle));
         classNames.addAll(getClassHeaderClassNames(bundle.getHeaders()));
         return classNames;
     }
@@ -131,7 +130,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
      * @return Set of class names */
     private HashSet<String> getClassHeaderClassNames(@Nonnull Dictionary<String, String> headers) {
         return Optional.ofNullable(StringUtils.deleteWhitespace(headers.get(CLASSES_HEADER)))
-                .map(classes -> classes.split(COMMA_SEPARATOR_REGEX))
+                .map(classes -> classes.split(","))
                 .map(Arrays::asList)
                 .map(HashSet::new)
                 .orElse(new HashSet<>());
@@ -141,11 +140,11 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
      * 
      * @param bundle for which classes are extracted
      * @return Set of class names. */
-    private Set<String> getPackageHeaderClassNames(@Nonnull Bundle bundle) {
+    private Set<String> extractPackageHeaderClassNames(@Nonnull Bundle bundle) {
         return Optional.ofNullable(StringUtils.deleteWhitespace(bundle.getHeaders().get(PACKAGE_HEADER)))
-                .map(packages -> packages.split(COMMA_SEPARATOR_REGEX))
+                .map(packages -> packages.split(","))
                 .map(Arrays::asList)
-                .map(list -> getClassNamesFromPackages(bundle, list))
+                .map(list -> extractClassNamesFromPackages(bundle, list))
                 .orElse(Collections.emptySet());
     }
 
@@ -154,7 +153,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
      * @param bundle in which classes will be searched
      * @param packages packages to be checked
      * @return Set of Class Names. */
-    private Set<String> getClassNamesFromPackages(@Nonnull Bundle bundle, @Nonnull List<String> packages) {
+    private Set<String> extractClassNamesFromPackages(@Nonnull Bundle bundle, @Nonnull List<String> packages) {
         return packages.parallelStream()
                 .map(singlePackage -> findEntries(bundle, singlePackage))
                 .flatMap(Collection::stream)
@@ -169,7 +168,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
     private Set<String> findEntries(@Nonnull Bundle bundle, @Nonnull String singlePackage) {
         return Optional.ofNullable(bundle.findEntries("/" + singlePackage.replace('.', '/'), "*.class", true))
                 .map(EnumerationUtils::toList)
-                .map(this::getClassesFromUrl)
+                .map(this::getClassNamesFromUrls)
                 .orElse(Collections.emptySet());
     }
 
@@ -177,17 +176,17 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
      * 
      * @param urls to be converted
      * @return Set of class names */
-    private Set<String> getClassesFromUrl(List<URL> urls) {
+    private Set<String> getClassNamesFromUrls(List<URL> urls) {
         return urls.parallelStream()
-                .map(this::toClassName)
+                .map(this::getClassNameFromUrl)
                 .collect(Collectors.toSet());
     }
 
     /** Convert class URL to class name */
-    private String toClassName(URL url) {
-        final String f = url.getFile();
-        final String cn = f.substring(1, f.length() - ".class".length());
-        return cn.replace('/', '.');
+    private String getClassNameFromUrl(URL url) {
+        final String file = url.getFile();
+        final String className = file.substring(1, file.length() - ".class".length());
+        return className.replace('/', '.');
     }
 
 }

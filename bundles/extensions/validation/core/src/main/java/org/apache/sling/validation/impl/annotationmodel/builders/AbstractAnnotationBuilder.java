@@ -29,20 +29,23 @@ import org.apache.sling.validation.annotations.Validate;
 /**
  * The Abstract annotation builder, providing common functionality for Annotation Based Resource Property and Child Resource Builders.
  * Common properties:
- *  - name
- *  - nameRegex
+ *
+ *  - name is taken either from @ChildResource, @ValueMapValue annotations' name property or from actual field name.
+ *  i.e. @ChildResource(name="childName") or @ValueMapValue(name="propertyName")
+ *
+ *  - nameRegex is taken from @Validate regex property i.e. @Validate(regex="*")
+ *
  */
-abstract class AbstractAnnotationBuilder {
+public abstract class AbstractAnnotationBuilder {
 
     private String nameRegex;
     private String name;
 
     /**
-     * Sets regex from @Validate annotation.
-     *
+     * Sets name regex from @Validate annotation. @Validate(regex="*")
      * @param field the field
      */
-    void setRegex(Field field) {
+    public void setNameRegex(Field field) {
         if (field.isAnnotationPresent(Validate.class)) {
             Validate validate = field.getAnnotation(Validate.class);
             if (StringUtils.isNotBlank(validate.regex())) {
@@ -52,13 +55,13 @@ abstract class AbstractAnnotationBuilder {
     }
 
     /**
-     * Checks if property should be Required or Optional
+     * Checks if property should be Required or Optional.
      *
      * @param defaultInjectionStrategy the default injection strategy
      * @param injectionStrategy        the injection strategy
      * @return the boolean
      */
-    boolean isOptional(DefaultInjectionStrategy defaultInjectionStrategy, InjectionStrategy injectionStrategy) {
+    public boolean isOptional(DefaultInjectionStrategy defaultInjectionStrategy, InjectionStrategy injectionStrategy) {
         return injectionStrategy.equals(InjectionStrategy.OPTIONAL) || (injectionStrategy.equals(InjectionStrategy.DEFAULT)
                 && defaultInjectionStrategy.equals(DefaultInjectionStrategy.OPTIONAL));
     }
@@ -69,18 +72,18 @@ abstract class AbstractAnnotationBuilder {
      * @param field the field
      * @return the boolean
      */
-    boolean isMultiple(Field field) {
+    public boolean isMultiple(Field field) {
         return (field.getType().isArray() || Collection.class.isAssignableFrom(field.getType()));
     }
 
     /**
-     * Extracts name from Annotation if available,
+     * Extracts name from Annotation name, if available,
      * otherwise it takes it from Field.
      *
      * @param field          the field
      * @param annotationName the annotation name
      */
-    void setName(Field field, String annotationName) {
+    public void setName(Field field, String annotationName) {
         if (annotationName.isEmpty()) {
             name = field.getName();
         } else {
@@ -93,7 +96,7 @@ abstract class AbstractAnnotationBuilder {
      *
      * @return the name regex
      */
-    String getNameRegex() {
+    public String getNameRegex() {
         return nameRegex;
     }
 
@@ -102,7 +105,7 @@ abstract class AbstractAnnotationBuilder {
      *
      * @return the name
      */
-    String getName() {
+    public String getName() {
         return name;
     }
 }

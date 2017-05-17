@@ -18,7 +18,6 @@
  */
 package org.apache.sling.validation.impl.annotationmodel;
 
-import static org.apache.sling.validation.impl.annotationmodel.ValidationPackageBundleListener.CLASSES_HEADER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -48,6 +47,8 @@ import org.osgi.framework.BundleContext;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ValidationPackageBundleListenerTest {
+    
+    private static final String CLASSES_HEADER = "Sling-Model-Classes";
 
     @Mock
     private BundleContext bundleContext;

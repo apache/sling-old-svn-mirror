@@ -35,7 +35,6 @@ import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.injectorspecific.ChildResource;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 import org.apache.sling.validation.annotations.ValidationPaths;
-import org.apache.sling.validation.impl.annotationmodel.ValidationPackageBundleListener;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
@@ -52,7 +51,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AnnotationValidationModelBuilder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ValidationPackageBundleListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AnnotationValidationModelBuilder.class);
     private static final String[] EMPTY_PATHS = {};
 
     /**
@@ -129,7 +128,7 @@ public class AnnotationValidationModelBuilder {
 
     /**
      * Builds Resource Properties for given class from @ValueMapValue annotated injected fields.
-     * @param clazz
+     * @param clazz class parameter
      * @param defaultInjectionStrategy class'es default injection strategy.
      * @return List of Resource Properties
      */

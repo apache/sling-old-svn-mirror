@@ -57,7 +57,7 @@ public class AnnotationChildResourceBuilder extends AbstractAnnotationBuilder {
         org.apache.sling.models.annotations.injectorspecific.ChildResource child = field
                 .getAnnotation(org.apache.sling.models.annotations.injectorspecific.ChildResource.class);
         setName(field, child.name());
-        setRegex(field);
+        setNameRegex(field);
 
         if(isMultiple(field)) {
             ChildResource childResource = new ChildResourceImpl(StringUtils.EMPTY, ANYTHING_REGEX, !isOptional(defaultInjectionStrategy, child.injectionStrategy()), resourceProperties, children);
