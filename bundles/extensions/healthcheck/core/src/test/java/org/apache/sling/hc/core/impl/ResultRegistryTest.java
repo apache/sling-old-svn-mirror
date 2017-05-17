@@ -30,6 +30,7 @@ import java.util.Dictionary;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -59,8 +60,8 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionExpireInFuture() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
         Calendar c = Calendar.getInstance();
         c.add(Calendar.HOUR, 1);
         impl.put("identifier", new Result(Result.Status.CRITICAL, "mycritical", null), c, "tag1");
@@ -74,8 +75,9 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionExpireInPast() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
+
         Calendar c = Calendar.getInstance();
         c.add(Calendar.HOUR, 1); //future lets it be stored
         impl.put("identifier", new Result(Result.Status.CRITICAL, "mycritical"), c, "tag1");
@@ -88,8 +90,8 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionChangeWithExpired() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
         Calendar c = Calendar.getInstance();
         c.add(Calendar.HOUR, 1); //future lets it be stored
         impl.put("identifier", new Result(Result.Status.CRITICAL, "mycritical"), c, "tag1");
@@ -107,8 +109,8 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionChangeFromDateToNull() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
         Calendar c = Calendar.getInstance();
         c.add(Calendar.HOUR, 1); //future lets it be stored
         impl.put("identifier", new Result(Result.Status.CRITICAL, "mycritical"), c, "tag1");
@@ -124,8 +126,8 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionChangeFromNullToDate() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
         Calendar c = Calendar.getInstance();
         c.add(Calendar.HOUR, 1); //future lets it be stored
         impl.put("identifier", new Result(Result.Status.CRITICAL, "mycritical"), null, "tag1");
@@ -142,8 +144,8 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionReplaceLessCritial() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
         Calendar c = Calendar.getInstance();
         c.add(Calendar.HOUR, 1); //future lets it be stored
         impl.put("identifier", new Result(Result.Status.CRITICAL, "mycritical"), c, "tag1");
@@ -162,8 +164,8 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionReplaceExpiredCriticalWithLessCritical() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
         Calendar c = Calendar.getInstance();
         c.add(Calendar.HOUR, 1); //future lets it be stored
         impl.put("identifier", new Result(Result.Status.CRITICAL, "mycritical"), c, "tag1");
@@ -184,8 +186,8 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionReplace() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
         Calendar c = Calendar.getInstance();
         c.add(Calendar.HOUR, 1); //future lets it be stored
         impl.put("identifier", new Result(Result.Status.WARN, "mywarn"), c, "tag1");
@@ -205,8 +207,8 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionReplaceCalendar() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
         Calendar c1 = Calendar.getInstance();
         c1.add(Calendar.HOUR, 1); //future lets it be stored
         impl.put("identifier", new Result(Result.Status.CRITICAL, "mycritical"), c1, "tag1");
@@ -228,8 +230,8 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionAdd() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
         Calendar c1 = Calendar.getInstance();
         c1.add(Calendar.HOUR, 1); //future lets it be stored
         impl.put("identifier", new Result(Result.Status.CRITICAL, "mycritical"), c1, "tag1");
@@ -250,8 +252,9 @@ public class ResultRegistryTest {
     @Test
     public void testSingleSubmissionRemove() {
         ResultRegistryImpl impl = new ResultRegistryImpl();
-        PhonyBundleContext pbc = new PhonyBundleContext();
-        impl.activate(pbc);
+        PhonyServiceRegistration pbc = new PhonyServiceRegistration();
+        impl.activate(getPhonyBundleContext(pbc));
+
         Calendar c = Calendar.getInstance();
         c.add(Calendar.HOUR, 1); //future lets it be stored
         impl.put("identifier", new Result(Result.Status.CRITICAL, "mycritical"), c, "tag1");
@@ -304,18 +307,30 @@ public class ResultRegistryTest {
         assertTrue(value + " contains " + expected, !value.contains(expected));
     }
     
-    private class PhonyServiceRegistration<S> implements ServiceRegistration<S> {
+    @SuppressWarnings("rawtypes")
+    private class PhonyServiceRegistration implements ServiceRegistration {
         @SuppressWarnings("rawtypes")
         Dictionary properties;
 
+        public String[] getTags() {
+            if(properties == null) {
+                return new String[0];
+            }
+            String[] rv = (String[]) properties.get(HealthCheck.TAGS);
+            if(rv == null) {
+                return new String[0];
+            }
+            return rv;
+        }
+        
         @Override
-        public ServiceReference<S> getReference() {
+        public ServiceReference getReference() {
             // TODO Auto-generated method stub
             return null;
         }
 
         @Override
-        public void setProperties(Dictionary<String, ?> properties) {
+        public void setProperties(Dictionary properties) {
             this.properties = properties;
         }
 
@@ -326,185 +341,10 @@ public class ResultRegistryTest {
         
     }
     
-    private class PhonyBundleContext implements BundleContext {
-        @SuppressWarnings("rawtypes")
-        PhonyServiceRegistration psr = new PhonyServiceRegistration();
-        
-        public String[] getTags() {
-            if(psr.properties == null) {
-                return new String[0];
-            }
-            String[] rv = (String[])psr.properties.get(HealthCheck.TAGS);
-            if(rv == null) {
-                return new String[0];
-            }
-            return rv;
-        }
-        
-        @Override
-        public <S> ServiceRegistration<S> registerService(Class<S> clazz,
-                S service, Dictionary<String, ?> properties) {
-            return psr;
-        }
-
-        @Override
-        public String getProperty(String key) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Bundle getBundle() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Bundle installBundle(String location, InputStream input)
-                throws BundleException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Bundle installBundle(String location) throws BundleException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Bundle getBundle(long id) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Bundle[] getBundles() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public void addServiceListener(ServiceListener listener, String filter)
-                throws InvalidSyntaxException {
-            // TODO Auto-generated method stub
-            
-        }
-
-        @Override
-        public void addServiceListener(ServiceListener listener) {
-            // TODO Auto-generated method stub
-            
-        }
-
-        @Override
-        public void removeServiceListener(ServiceListener listener) {
-            // TODO Auto-generated method stub
-            
-        }
-
-        @Override
-        public void addBundleListener(BundleListener listener) {
-            // TODO Auto-generated method stub
-            
-        }
-
-        @Override
-        public void removeBundleListener(BundleListener listener) {
-            // TODO Auto-generated method stub
-            
-        }
-
-        @Override
-        public void addFrameworkListener(FrameworkListener listener) {
-            // TODO Auto-generated method stub
-            
-        }
-
-        @Override
-        public void removeFrameworkListener(FrameworkListener listener) {
-            // TODO Auto-generated method stub
-            
-        }
-
-        @Override
-        public ServiceRegistration<?> registerService(String[] clazzes,
-                Object service, Dictionary<String, ?> properties) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public ServiceRegistration<?> registerService(String clazz,
-                Object service, Dictionary<String, ?> properties) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public ServiceReference<?>[] getServiceReferences(String clazz,
-                String filter) throws InvalidSyntaxException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public ServiceReference<?>[] getAllServiceReferences(String clazz,
-                String filter) throws InvalidSyntaxException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public ServiceReference<?> getServiceReference(String clazz) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public <S> ServiceReference<S> getServiceReference(Class<S> clazz) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public <S> Collection<ServiceReference<S>> getServiceReferences(
-                Class<S> clazz, String filter) throws InvalidSyntaxException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public <S> S getService(ServiceReference<S> reference) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public boolean ungetService(ServiceReference<?> reference) {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        @Override
-        public File getDataFile(String filename) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Filter createFilter(String filter)
-                throws InvalidSyntaxException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Bundle getBundle(String location) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-        
+    BundleContext getPhonyBundleContext(PhonyServiceRegistration psr) {
+        BundleContext phony = Mockito.mock(BundleContext.class);
+        Mockito.when(phony.registerService((Class<HealthCheck>)Mockito.any(Class.class), Mockito.any(ResultRegistryImpl.class), (Dictionary)Mockito.any())).thenReturn(psr);
+        return phony;
     }
-    
+       
 }
