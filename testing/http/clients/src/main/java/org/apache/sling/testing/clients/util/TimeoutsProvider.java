@@ -23,7 +23,11 @@ import org.slf4j.LoggerFactory;
  *  factor. Useful to cope with slower integration testing systems:
  *  use timeout constants in your code that work for usual development
  *  systems, and set a multiplier when running on a slower system.
+ *
+ *  @deprecated duplicate of {@link org.apache.sling.testing.timeouts.TimeoutsProvider}. This will be removed in the future, so switch to
+ *  the other one instead
  */
+@Deprecated
 public class TimeoutsProvider {
     private static final Logger log = LoggerFactory.getLogger(TimeoutsProvider.class);
     public static final String PROP_TIMEOUT_MULTIPLIER = "sling.testing.timeout.multiplier";

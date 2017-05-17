@@ -42,9 +42,9 @@
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <felix.shell>false</felix.shell>
         <sling.hc.samples.version>1.0.7-SNAPSHOT</sling.hc.samples.version>
-        <sling.hc.api.version>0.0.99-SNAPSHOT</sling.hc.api.version>
-        <sling.hc.core.version>1.2.7-SNAPSHOT</sling.hc.core.version>
-        <sling.johnzon.version>0.1.0-SNAPSHOT</sling.johnzon.version>
+        <sling.hc.api.version>1.0.1-SNAPSHOT</sling.hc.api.version>
+        <sling.hc.core.version>1.2.9-SNAPSHOT</sling.hc.core.version>
+        <sling.johnzon.version>1.0.0</sling.johnzon.version>
     </properties>
 
     <scm>

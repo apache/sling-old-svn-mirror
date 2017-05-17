@@ -24,14 +24,14 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.clients.ClientException;
-import org.apache.sling.testing.clients.SlingHttpResponse;
-import org.apache.sling.testing.clients.util.JsonUtils;
-import org.apache.sling.testing.clients.util.poller.AbstractPoller;
 import org.apache.sling.testing.clients.SlingClient;
 import org.apache.sling.testing.clients.SlingClientConfig;
+import org.apache.sling.testing.clients.SlingHttpResponse;
 import org.apache.sling.testing.clients.util.FormEntityBuilder;
 import org.apache.sling.testing.clients.util.HttpUtils;
+import org.apache.sling.testing.clients.util.JsonUtils;
 import org.apache.sling.testing.clients.util.poller.PathPoller;
+import org.apache.sling.testing.clients.util.poller.Polling;
 import org.codehaus.jackson.JsonNode;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
@@ -41,7 +41,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
@@ -204,10 +209,11 @@ public class OsgiConsoleClient extends SlingClient {
         }
         return props;
     }
-
     /**
      * Returns a map of all properties set for the config referenced by the PID, where the map keys
      * are the property names. The method waits until the configuration has been set.
+     *
+     * @deprecated use {@link #waitGetConfiguration(long, String, int...)}
      *
      * @param waitCount The number of maximum wait intervals of 500ms.
      *                  Between each wait interval, the method polls the backend to see if the configuration ahs been set.
@@ -217,11 +223,36 @@ public class OsgiConsoleClient extends SlingClient {
      * @throws ClientException if the response status does not match any of the expectedStatus
      * @throws InterruptedException to mark this operation as "waiting"
      */
+    @Deprecated
     public Map<String, Object> getConfigurationWithWait(long waitCount, String pid, int... expectedStatus)
             throws ClientException, InterruptedException {
-        ConfigurationPoller poller = new ConfigurationPoller(500L, waitCount, pid, expectedStatus);
-        if (!poller.callUntilCondition())
-            return getConfiguration(pid, expectedStatus);
+        ConfigurationPoller poller = new ConfigurationPoller(pid, expectedStatus);
+        try {
+            poller.poll(500L * waitCount, 500);
+        } catch (TimeoutException e) {
+            throw new ClientException("Cannot retrieve configuration.", e);
+        }
+        return poller.getConfig();
+    }
+
+    /**
+     * Returns a map of all properties set for the config referenced by the PID, where the map keys
+     * are the property names. The method waits until the configuration has been set.
+     *
+     * @param timeout Maximum time to wait for the configuration to be available, in ms.
+     * @param pid service pid
+     * @param expectedStatus expected response status
+     * @return the config properties
+     * @throws ClientException if the response status does not match any of the expectedStatus
+     * @throws InterruptedException to mark this operation as "waiting"
+     * @throws TimeoutException if the timeout was reached
+     */
+    public Map<String, Object> waitGetConfiguration(long timeout, String pid, int... expectedStatus)
+            throws ClientException, InterruptedException, TimeoutException {
+
+        ConfigurationPoller poller = new ConfigurationPoller(pid, expectedStatus);
+        poller.poll(timeout, 500);
+
         return poller.getConfig();
     }
 
@@ -277,6 +308,8 @@ public class OsgiConsoleClient extends SlingClient {
      * Sets properties of a config referenced by its PID. the properties to be edited are passed as
      * a map of property (name,value) pairs. The method waits until the configuration has been set.
      *
+     * @deprecated use {@link #waitEditConfiguration(long, String, String, Map, int...)}
+     *
      * @param waitCount The number of maximum wait intervals of 500ms.
      *                  Between each wait interval, the method polls the backend to see if the configuration ahs been set.
      * @param PID Persistent identity string
@@ -287,10 +320,33 @@ public class OsgiConsoleClient extends SlingClient {
      * @throws ClientException if the response status does not match any of the expectedStatus
      * @throws InterruptedException to mark this operation as "waiting"
      */
+    @Deprecated
     public String editConfigurationWithWait(int waitCount, String PID, String factoryPID, Map<String, Object> configProperties,
                                             int... expectedStatus) throws ClientException, InterruptedException {
         String pid = editConfiguration(PID, factoryPID, configProperties, expectedStatus);
         getConfigurationWithWait(waitCount, pid);
+        return pid;
+    }
+
+    /**
+     * Sets properties of a config referenced by its PID. the properties to be edited are passed as
+     * a map of property (name,value) pairs. The method waits until the configuration has been set.
+     *
+     * @param timeout Max time to wait for the configuration to be set, in ms
+     * @param PID Persistent identity string
+     * @param factoryPID Factory persistent identity string or {@code null}
+     * @param configProperties map of properties
+     * @param expectedStatus expected response status
+     * @return the pid
+     * @throws ClientException if the response status does not match any of the expectedStatus
+     * @throws InterruptedException to mark this operation as "waiting"
+     * @throws TimeoutException if the timeout was reached
+     */
+    public String waitEditConfiguration(long timeout, String PID, String factoryPID, Map<String, Object> configProperties,
+                                        int... expectedStatus)
+            throws ClientException, InterruptedException, TimeoutException {
+        String pid = editConfiguration(PID, factoryPID, configProperties, expectedStatus);
+        waitGetConfiguration(timeout, pid);
         return pid;
     }
 
@@ -319,7 +375,7 @@ public class OsgiConsoleClient extends SlingClient {
 
     /**
      * Uninstall a bundle
-     * @param symbolicName
+     * @param symbolicName bundle symbolic name
      * @return the sling response
      * @throws ClientException
      */
@@ -344,11 +400,11 @@ public class OsgiConsoleClient extends SlingClient {
 
     /**
      * Install a bundle using the Felix webconsole HTTP interface, with a specific start level
-     * @param f
-     * @param startBundle
-     * @param startLevel
+     * @param f bundle file
+     * @param startBundle whether to start or just install the bundle
+     * @param startLevel start level
      * @return the sling response
-     * @throws ClientException
+     * @throws ClientException if the request failed
      */
     public SlingHttpResponse installBundle(File f, boolean startBundle, int startLevel) throws ClientException {
         // Setup request for Felix Webconsole bundle install
@@ -370,7 +426,24 @@ public class OsgiConsoleClient extends SlingClient {
     }
 
     /**
+     * Check that specified bundle is installed and retries every {{waitTime}} milliseconds, until the
+     * bundle is installed or the number of retries was reached
+     * @deprecated does not respect polling practices; use {@link #waitBundleInstalled(String, long, long)} instead
+     * @param symbolicName the name of the bundle
+     * @param waitTime How many milliseconds to wait between retries
+     * @param retries the number of retries
+     * @return true if the bundle was installed until the retries stop, false otherwise
+     * @throws InterruptedException
+     */
+    @Deprecated
+    public boolean checkBundleInstalled(String symbolicName, int waitTime, int retries) throws InterruptedException {
+        final String path = getBundlePath(symbolicName, ".json");
+        return new PathPoller(this, path, waitTime, retries).callAndWait();
+    }
+
+    /**
      * Install a bundle using the Felix webconsole HTTP interface and wait for it to be installed
+     * @deprecated {@link #waitInstallBundle(File, boolean, int, long, long)}
      * @param f the bundle file
      * @param startBundle whether to start the bundle or not
      * @param startLevel the start level of the bundle. negative values mean default start level
@@ -379,6 +452,7 @@ public class OsgiConsoleClient extends SlingClient {
      * @return true if the bundle was successfully installed, false otherwise
      * @throws ClientException
      */
+    @Deprecated
     public boolean installBundleWithRetry(File f, boolean startBundle, int startLevel, int waitTime, int retries)
             throws ClientException, InterruptedException {
         installBundle(f, startBundle, startLevel);
@@ -390,24 +464,51 @@ public class OsgiConsoleClient extends SlingClient {
     }
 
     /**
-     * Check that specified bundle is installed and retries every {{waitTime}} milliseconds, until the
-     * bundle is installed or the number of retries was reached
-     * @param symbolicName the name of the bundle
-     * @param waitTime How many milliseconds to wait between retries
-     * @param retries the number of retries
-     * @return true if the bundle was installed until the retries stop, false otherwise
+     * Install a bundle using the Felix webconsole HTTP interface and wait for it to be installed
+     * @param f the bundle file
+     * @param startBundle whether to start the bundle or not
+     * @param startLevel the start level of the bundle. negative values mean default start level
+     * @param timeout how much to wait for the bundle to be installed before throwing a {@code TimeoutException}
+     * @param delay time to wait between checks of the state
+     * @throws ClientException
+     * @throws TimeoutException if the bundle did not install before timeout was reached
      * @throws InterruptedException
      */
-    public boolean checkBundleInstalled(String symbolicName, int waitTime, int retries) throws InterruptedException {
-        final String path = getBundlePath(symbolicName, ".json");
-        return new PathPoller(this, path, waitTime, retries).callAndWait();
+    public void waitInstallBundle(File f, boolean startBundle, int startLevel, long timeout, long delay)
+            throws ClientException, InterruptedException, TimeoutException {
+
+        installBundle(f, startBundle, startLevel);
+        try {
+            waitBundleInstalled(getBundleSymbolicName(f), timeout, delay);
+        } catch (IOException e) {
+            throw new ClientException("Cannot get bundle symbolic name", e);
+        }
+    }
+
+    public void waitBundleInstalled(final String symbolicName, final long timeout, final long delay)
+            throws TimeoutException, InterruptedException {
+
+        final String path = getBundlePath(symbolicName);
+        Polling p = new Polling() {
+            @Override
+            public Boolean call() throws Exception {
+                return exists(path);
+            }
+
+            @Override
+            protected String message() {
+                return "Bundle " + symbolicName + " did not install in %1$ ms";
+            }
+        };
+
+        p.poll(timeout, delay);
     }
 
     /**
      * Get the id of the bundle
-     * @param symbolicName
-     * @return
-     * @throws Exception
+     * @param symbolicName bundle symbolic name
+     * @return the id
+     * @throws ClientException if the id cannot be retrieved
      */
     public long getBundleId(String symbolicName) throws ClientException {
         final JSONObject bundle = getBundleData(symbolicName);
@@ -420,8 +521,8 @@ public class OsgiConsoleClient extends SlingClient {
 
     /**
      * Get the version of the bundle
-     * @param symbolicName
-     * @return
+     * @param symbolicName bundle symbolic name
+     * @return bundle version
      * @throws ClientException
      */
     public String getBundleVersion(String symbolicName) throws ClientException {
@@ -435,9 +536,9 @@ public class OsgiConsoleClient extends SlingClient {
 
     /**
      * Get the state of the bundle
-     * @param symbolicName
-     * @return
-     * @throws Exception
+     * @param symbolicName bundle symbolic name
+     * @return the state of the bundle
+     * @throws ClientException if the state cannot be retrieved
      */
     public String getBundleState(String symbolicName) throws ClientException {
         final JSONObject bundle = getBundleData(symbolicName);
@@ -460,19 +561,36 @@ public class OsgiConsoleClient extends SlingClient {
         this.doPost(path, FormEntityBuilder.create().addParameter("action", "start").build(), SC_OK);
     }
 
+
     /**
      * Starts a bundle and waits for it to be started
+     * @deprecated use {@link #waitStartBundle(String, long, long)}
      * @param symbolicName the name of the bundle
      * @param waitTime How many milliseconds to wait between retries
      * @param retries the number of retries
      * @throws ClientException, InterruptedException
      */
+    @Deprecated
     public void startBundlewithWait(String symbolicName, int waitTime, int retries)
             throws ClientException, InterruptedException {
         // start a bundle
         startBundle(symbolicName);
         // wait for it to be in the started state
         checkBundleInstalled(symbolicName, waitTime, retries);
+    }
+
+    /**
+     * Starts a bundle and waits for it to be started
+     * @param symbolicName the name of the bundle
+     * @param timeout max time to wait for the bundle to start, in ms
+     * @param delay time to wait between status checks, in ms
+     * @throws ClientException, InterruptedException, TimeoutException
+     */
+    public void waitStartBundle(String symbolicName, long timeout, long delay)
+            throws ClientException, InterruptedException, TimeoutException {
+        startBundle(symbolicName);
+        // FIXME this should wait for the started state
+        waitBundleInstalled(symbolicName, timeout, delay);
     }
 
     /**
@@ -499,12 +617,25 @@ public class OsgiConsoleClient extends SlingClient {
         return URL_BUNDLES + "/" + symbolicName;
     }
 
+    /**
+     * Returns a data structure like:
+     *
+     * {
+     *   "status" : "Bundle information: 173 bundles in total - all 173 bundles active.",
+     *   "s" : [173,171,2,0,0],
+     *   "data": [{
+     *     "id":0,
+     *     "name":"System Bundle",
+     *     "fragment":false,
+     *     "stateRaw":32,
+     *     "state":"Active",
+     *     "version":"3.0.7",
+     *     "symbolicName":"org.apache.felix.framework",
+     *     "category":""
+     *   }]
+     * }
+     */
     private JSONObject getBundleData(String symbolicName) throws ClientException {
-        // This returns a data structure like
-        // {"status":"Bundle information: 173 bundles in total - all 173 bundles active.","s":[173,171,2,0,0],"data":
-        //  [
-        //      {"id":0,"name":"System Bundle","fragment":false,"stateRaw":32,"state":"Active","version":"3.0.7","symbolicName":"org.apache.felix.framework","category":""},
-        //  ]}
         final String path = getBundlePath(symbolicName, ".json");
         final String content = this.doGet(path, SC_OK).getContent();
 
@@ -536,9 +667,9 @@ public class OsgiConsoleClient extends SlingClient {
     //
 
     /**
-     * Get the symbolic name from a bundle file
-     * @param bundleFile
-     * @return
+     * Get the symbolic name from a bundle file by looking at the manifest
+     * @param bundleFile bundle file
+     * @return the name extracted from the manifest
      * @throws IOException
      */
     public static String getBundleSymbolicName(File bundleFile) throws IOException {
@@ -557,9 +688,9 @@ public class OsgiConsoleClient extends SlingClient {
     }
 
     /**
-     * Get the version form a bundle file
-     * @param bundleFile
-     * @return
+     * Get the version form a bundle file by looking at the manifest
+     * @param bundleFile bundle file
+     * @return the version
      * @throws IOException
      */
     public static String getBundleVersionFromFile(File bundleFile) throws IOException {
@@ -578,32 +709,24 @@ public class OsgiConsoleClient extends SlingClient {
     }
 
 
-    class ConfigurationPoller extends AbstractPoller {
+    class ConfigurationPoller extends Polling {
 
         private final String pid;
-        int[] expectedStatus;
-        public Map<String, Object> config;
+        private final int[] expectedStatus;
+        private Map<String, Object> config;
 
-        public ConfigurationPoller(long waitInterval, long waitCount, String pid, int... expectedStatus) {
-            super(waitInterval, waitCount);
+        public ConfigurationPoller(String pid, int... expectedStatus) {
+            super();
+
             this.pid = pid;
-            this.config = null;
             this.expectedStatus = expectedStatus;
+            this.config = null;
         }
 
         @Override
-        public boolean call() {
-            try {
-                config = getConfiguration(pid, expectedStatus);
-            } catch (ClientException e) {
-                LOG.warn("Couldn't get config " + pid, e);
-            }
-            return true;
-        }
-
-        @Override
-        public boolean condition() {
-            return null != config;
+        public Boolean call() throws Exception {
+            config = getConfiguration(pid, expectedStatus);
+            return config != null;
         }
 
         public Map<String, Object> getConfig() {

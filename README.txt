@@ -22,7 +22,7 @@ See http://sling.apache.org for more information.
 Getting started
 ---------------
 
-You need a Java 7 (or higher) JDK and Maven 3 (http://maven.apache.org/,
+You need a Java 8 (or higher) JDK and Maven 3 (http://maven.apache.org/,
 version 3.3.9 or higher) to build Sling.
 
 Once you have everything in place, run
