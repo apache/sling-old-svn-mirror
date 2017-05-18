@@ -29,7 +29,7 @@
 
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.extensions.webconsolebranding</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Web Console Branding</name>
@@ -40,9 +40,9 @@
     </description>
         
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.extensions.webconsolebranding-1.0.2</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.extensions.webconsolebranding-1.0.2</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.extensions.webconsolebranding-1.0.2</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/webconsolebranding</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/webconsolebranding</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/webconsolebranding</url>
     </scm>
 
     <properties>
