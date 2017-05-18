@@ -166,6 +166,11 @@ public class MainQueueConfiguration {
             public boolean queue_keepJobs() {
                 return false;
             }
+
+            @Override
+            public String webconsole_configurationFactory_nameHint() {
+                return "Queue: {" + ConfigurationConstants.PROP_NAME + "}";
+            }
         });
     }
 
