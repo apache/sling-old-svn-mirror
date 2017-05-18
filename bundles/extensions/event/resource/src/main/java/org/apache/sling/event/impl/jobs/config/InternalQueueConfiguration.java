@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
            name="org.apache.sling.event.jobs.QueueConfiguration",
            configurationPolicy=ConfigurationPolicy.REQUIRE,
            property={
-                   "webconsole.configurationFactory.nameHint=Queue: {" + ConfigurationConstants.PROP_NAME + "}",
                    Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
            })
 @Designate(ocd = InternalQueueConfiguration.Config.class, factory = true)
@@ -122,6 +121,10 @@ public class InternalQueueConfiguration
               description="Integer value defining the ranking of this queue configuration. "
                         + "If more than one queue matches a job topic, the one with the highest ranking is used.")
          int service_ranking() default 0;
+     
+         // Internal Name hint for web console.
+         String webconsole_configurationFactory_nameHint() default "Queue: {" + ConfigurationConstants.PROP_NAME + "}";
+
      }
 
     /** Logger. */
