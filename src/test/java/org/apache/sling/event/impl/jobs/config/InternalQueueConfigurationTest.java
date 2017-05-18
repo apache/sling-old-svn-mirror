@@ -107,6 +107,11 @@ public class InternalQueueConfigurationTest {
             public int service_ranking() {
                 return 0;
             }
+
+            @Override
+            public String webconsole_configurationFactory_nameHint() {
+                return null;
+            }
         };
     }
 
