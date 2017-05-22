@@ -33,7 +33,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
@@ -164,9 +163,6 @@ public class JobManagerConfiguration {
     private QueueConfigurationManager queueConfigManager;
 
     @Reference(policyOption=ReferencePolicyOption.GREEDY)
-    private Scheduler scheduler;
-
-    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private ServiceUserMapped serviceUserMapped;
 
     /** Is this still active? */
@@ -226,7 +222,7 @@ public class JobManagerConfiguration {
                 public void handleTopologyEvent(TopologyEvent event) {
                     doHandleTopologyEvent(event);
                 }
-            }, this.scheduler, logger);
+            }, logger);
         } else {
             logger.debug("activate: job manager will start without delay. ({}:{})", config.startup_delay(), this.startupDelay);
         }
