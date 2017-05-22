@@ -1,0 +1,125 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+@mixin Cell ($size) {
+    // Specific sizing for cells in 5% increments.
+    .Cell {
+        @for $i from 1 through 20 {
+          &.#{$size}-#{$i*5} {
+            flex: 0 0 #{$i*5}#{'%'};
+          }
+        }
+    }
+}
+
+@mixin Fit ($size) {
+    // Proportionally space cells rather than wrapping
+    &.Fit-#{$size} {
+        >.Cell {
+            -webkit-box-flex: 1;
+            -webkit-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+        }
+    }
+}
+
+// Default grid behavior
+.Grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    // Add gutters to a grid
+    &.Gutter {
+        margin: 0 -1rem 0 -1rem;
+        
+        >.Cell {
+            padding: 0 1rem 0 1rem;
+        }
+    }
+
+    // Grid Vertical Alignment
+    &.Align-Top {
+        align-items: flex-start;
+    }
+    &.Align-Bottom {
+        align-items: flex-end;
+    }
+    &.Align-Center {
+        align-items: center;
+    }
+
+    // Default cell behavior
+    .Cell {
+        // Cell sizing, full-width by default for responsive
+        -webkit-box-flex: 0;
+        -webkit-flex: 0 0 100%;
+        -ms-flex: 0 0 100%;
+        flex: 0 0 100%;
+
+        // Per Cell Alignment
+        &.Align-Top {
+            align-self: flex-start;
+        }
+        &.Align-Bottom {
+            align-self: flex-end;
+        }
+        &.Align-Center {
+            align-self: center;
+        }
+    }
+
+    $display-size: "Mobile";
+    @include Fit($display-size);
+    @include Cell($display-size);    
+}
+
+// Small devices (Landscape phones, 544px)
+@media (min-width: 34em) {
+    .Grid {
+        $display-size: "Small";
+        @include Fit($display-size);
+        @include Cell($display-size);
+    }
+}
+
+// Medium devices (Tablets, 768px)
+@media (min-width: 48em) { 
+    .Grid {
+        $display-size: "Medium";
+        @include Fit($display-size);
+        @include Cell($display-size);
+    }
+}
+
+// Large devices (Desktops, 992px)
+@media (min-width: 62em) { 
+    .Grid {
+        $display-size: "Large";
+        @include Cell($display-size);
+        @include Fit($display-size);
+    }
+}
+
+// Extra large devices (Large desktops, 1200px)
+@media (min-width: 75em) { 
+    .Grid {
+        $display-size: "Extra";
+        @include Cell($display-size);
+        @include Fit($display-size);
+    }
+}
