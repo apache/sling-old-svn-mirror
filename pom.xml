@@ -53,10 +53,6 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
-                <configuration>
-                  <!-- Disable baseline check for 1.0.20 release -->
-                    <skip>true</skip>
-                </configuration>
             </plugin>
 			<!-- discovery.commons exports a few test classes for reuse.
                  In order for others to use these, the test-jar must be built/installed too.
