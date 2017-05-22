@@ -639,7 +639,8 @@ def modules = [
     ],
     [
         location: 'launchpad/content',
-        jdks: ["1.8"]
+        jdks: ["1.8"],
+        downstream: ['launchpad/builder']
     ],
     [
         location: 'launchpad/installer',
