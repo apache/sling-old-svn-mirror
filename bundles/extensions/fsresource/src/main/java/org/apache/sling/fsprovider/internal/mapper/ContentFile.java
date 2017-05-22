@@ -84,7 +84,7 @@ public final class ContentFile {
             if (subPath == null) {
                 content = rootContent;
             }
-            else {
+            else if (rootContent != null) {
                 content = rootContent.getChild(subPath);
             }
             contentInitialized = true;
