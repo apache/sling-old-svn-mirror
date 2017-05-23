@@ -275,6 +275,11 @@ public class JsonContentTest {
         assertArrayEquals(new String[] { "mix:language" }, props.get("jcr:mixinTypes", String[].class));
 
         assertNull(fsroot.getChild("folder2/folder21/file21a.txt.xml"));
+        
+        Node node = file21a.adaptTo(Node.class);
+        assertNotNull(node);
+        assertEquals("/my/super/type", node.getProperty("sling:resourceSuperType").getString());
+        assertEquals("en", node.getProperty("jcr:language").getString());
     }
 
 }
