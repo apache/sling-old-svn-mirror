@@ -195,6 +195,13 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private ImportOperation importOperation;
 
+    public SlingPostServlet() {
+        // the following operations require JCR:
+        if ( JCRSupport.INSTANCE.jcrEnabled()) {
+            importOperation = new ImportOperation();
+        }
+    }
+
     @Override
     protected void doPost(final SlingHttpServletRequest request,
             final SlingHttpServletResponse response) throws IOException {
@@ -416,10 +423,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     @Activate
     protected void activate(final BundleContext bundleContext,
             final Config configuration) {
-        // the following operations require JCR:
-        if ( JCRSupport.INSTANCE.jcrEnabled()) {
-            importOperation = new ImportOperation();
-        }
         // configure now
         this.configure(configuration);
 
