@@ -20,6 +20,7 @@ package org.apache.sling.jcr.contentparser.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -35,8 +36,11 @@ import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.CharEncoding;
 import org.apache.sling.jcr.contentparser.ContentHandler;
 import org.apache.sling.jcr.contentparser.ContentParser;
+import org.apache.sling.jcr.contentparser.JsonParserFeature;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
 
@@ -54,21 +58,56 @@ public final class JsonContentParser implements ContentParser {
      */
     private final JsonReaderFactory jsonReaderFactory;
     
+    private final boolean jsonQuoteTickets;
+    
     public JsonContentParser(ParserOptions options) {
         this.helper = new ParserHelper(options);
-        // allow comments in JSON files
+        
         Map<String,Object> jsonReaderFactoryConfig = new HashMap<>();
-        jsonReaderFactoryConfig.put("org.apache.johnzon.supports-comments", true);
+        
+        // allow comments in JSON files?
+        if (options.getJsonParserFeatures().contains(JsonParserFeature.COMMENTS)) {
+            jsonReaderFactoryConfig.put("org.apache.johnzon.supports-comments", true);
+        }
+        jsonQuoteTickets = options.getJsonParserFeatures().contains(JsonParserFeature.QUOTE_TICK);
+        
         jsonReaderFactory = Json.createReaderFactory(jsonReaderFactoryConfig);
     }
     
     @Override
     public void parse(ContentHandler handler, InputStream is) throws IOException, ParseException {
+        parse(handler, toJsonObject(is), "/");
+    }
+    
+    private JsonObject toJsonObject(InputStream is) {
+        if (jsonQuoteTickets) {
+            return toJsonObjectWithJsonTicks(is);
+        }
         try (JsonReader reader = jsonReaderFactory.createReader(is)) {
-            parse(handler, reader.readObject(), "/");
+            return reader.readObject();
         }
         catch (JsonParsingException ex) {
-            throw new ParseException("Error parsing JSON content.", ex);
+            throw new ParseException("Error parsing JSON content: " + ex.getMessage(), ex);
+        }
+    }
+
+    private JsonObject toJsonObjectWithJsonTicks(InputStream is) {
+        String jsonString;
+        try {
+            jsonString = IOUtils.toString(is, CharEncoding.UTF_8);
+        }
+        catch (IOException ex) {
+            throw new ParseException("Error getting JSON string.", ex);
+        }
+        
+        // convert ticks to double quotes
+        jsonString = JsonTicksConverter.tickToDoubleQuote(jsonString);
+        
+        try (JsonReader reader = jsonReaderFactory.createReader(new StringReader(jsonString))) {
+            return reader.readObject();
+        }
+        catch (JsonParsingException ex) {
+            throw new ParseException("Error parsing JSON content: " + ex.getMessage(), ex);
         }
     }
 

@@ -78,6 +78,12 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.johnzon</groupId>
             <artifactId>johnzon-core</artifactId>
             <version>1.0.0</version>

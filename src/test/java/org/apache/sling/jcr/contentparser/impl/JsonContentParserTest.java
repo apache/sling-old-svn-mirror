@@ -27,12 +27,14 @@ import static org.junit.Assert.assertNull;
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.sling.jcr.contentparser.ContentParser;
 import org.apache.sling.jcr.contentparser.ContentParserFactory;
 import org.apache.sling.jcr.contentparser.ContentType;
+import org.apache.sling.jcr.contentparser.JsonParserFeature;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.apache.sling.jcr.contentparser.impl.mapsupport.ContentElement;
@@ -166,6 +168,13 @@ public class JsonContentParserTest {
 
         invalidChild = content.getChild("/jcr:content");
         assertNull(invalidChild);
+    }
+
+    @Test(expected = ParseException.class)
+    public void testFailsWithoutCommentsEnabled() throws Exception {
+        ContentParser underTest = ContentParserFactory.create(ContentType.JSON,
+                new ParserOptions().jsonParserFeatures(EnumSet.noneOf(JsonParserFeature.class)));
+        parse(underTest, file);
     }
 
 }

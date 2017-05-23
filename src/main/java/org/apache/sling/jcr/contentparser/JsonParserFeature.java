@@ -16,8 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Parser for repository content serialized e.g. as JSON or JCR XML.
- */
-@org.osgi.annotation.versioning.Version("1.2.0")
 package org.apache.sling.jcr.contentparser;
+
+/**
+ * Feature flags for parsing JSON files.
+ */
+public enum JsonParserFeature {
+
+    /**
+     * Support comments (&#47;* ... *&#47;) in JSON files.
+     */
+    COMMENTS,
+    
+    /**
+     * Support ticks (') additional to double quotes (") as quoting symbol for JSON names and strings. 
+     */
+    QUOTE_TICK
+    
+}
