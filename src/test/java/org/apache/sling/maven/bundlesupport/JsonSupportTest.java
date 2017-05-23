@@ -56,6 +56,7 @@ public class JsonSupportTest {
     public void testValidateJsonStructure() {
         validateJsonStructure("{\"prop1\":123}");
         validateJsonStructure("[{\"prop1\":123}]");
+        validateJsonStructure("{'prop1':123}");
     }
 
     @Test(expected=JsonException.class)

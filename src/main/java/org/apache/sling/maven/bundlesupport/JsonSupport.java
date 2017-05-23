@@ -18,6 +18,8 @@
  */
 package org.apache.sling.maven.bundlesupport;
 
+import static org.apache.sling.jcr.contentparser.impl.JsonTicksConverter.tickToDoubleQuote;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,7 +57,7 @@ public final class JsonSupport {
      * @return JSON object
      */
     public static JsonObject parseObject(String jsonString) {
-        try (StringReader reader = new StringReader(jsonString);
+        try (StringReader reader = new StringReader(tickToDoubleQuote(jsonString));
                 JsonReader jsonReader = JSON_READER_FACTORY.createReader(reader)) {
             return jsonReader.readObject();
         }
@@ -67,7 +69,7 @@ public final class JsonSupport {
      * @return JSON array
      */
     public static JsonArray parseArray(String jsonString) {
-        try (StringReader reader = new StringReader(jsonString);
+        try (StringReader reader = new StringReader(tickToDoubleQuote(jsonString));
                 JsonReader jsonReader = JSON_READER_FACTORY.createReader(reader)) {
             return jsonReader.readArray();
         }
@@ -79,7 +81,7 @@ public final class JsonSupport {
      * @throws javax.json.JsonException when JSON structure is invalid
      */
     public static void validateJsonStructure(String jsonString) {
-        try (StringReader reader = new StringReader(jsonString);
+        try (StringReader reader = new StringReader(tickToDoubleQuote(jsonString));
                 JsonReader jsonReader = JSON_READER_FACTORY.createReader(reader)) {
             jsonReader.read();
         }
