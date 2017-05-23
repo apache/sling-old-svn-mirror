@@ -1,7 +1,7 @@
 /* Comment example */
 {
-  "jcr:primaryType": "app:Page",
-  "jcr:createdBy": "admin",
+  "jcr:primaryType": 'app:Page',
+  'jcr:createdBy': "admin",
   "jcr:created": "Thu Aug 07 2014 16:32:59 GMT+0200",
   /* Comment example */
   "jcr:content": {
