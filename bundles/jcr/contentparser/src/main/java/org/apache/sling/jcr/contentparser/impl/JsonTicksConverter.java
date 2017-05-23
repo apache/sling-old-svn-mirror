@@ -29,9 +29,13 @@ package org.apache.sling.jcr.contentparser.impl;
  *     After the conversion they are always escaped.</li>
  * </ul>
  */
-class JsonTicksConverter {
+public final class JsonTicksConverter {
     
-    static String tickToDoubleQuote(final String input) {
+    private JsonTicksConverter() {
+        // static methods only
+    }
+    
+    public static String tickToDoubleQuote(final String input) {
         final int len = input.length();
         final StringBuilder output = new StringBuilder(len);
         boolean quoted = false;
