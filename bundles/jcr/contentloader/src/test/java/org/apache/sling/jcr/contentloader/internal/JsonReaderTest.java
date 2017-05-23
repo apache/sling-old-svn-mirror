@@ -341,6 +341,37 @@ public class JsonReaderTest {
         }});
         this.parse(json);
     }
+    
+    @org.junit.Test public void testCreateAclWithTickQuotes() throws Exception {
+        String json = " { " +
+                "'security:acl' : [ " +
+                "  { " +
+                "    'principal' : 'username1'," +
+                "    'granted' : ['jcr:read','jcr:write']," +
+                "    'denied' : []" +
+                "  }," +
+                "  {" +
+                "    'principal' : 'groupname1'," +
+                "    'granted' : ['jcr:read','jcr:write']" +
+                "  }," +
+                "  {" +
+                "    'principal' : \"\\\"'groupname2'\"," +
+                "    'granted' : ['jcr:read']," +
+                "    'denied' : ['jcr:write']," +
+                "    'order' : 'first'" +
+                "  }" +
+                "]" +
+                "}";
+        this.mockery.checking(new Expectations() {{
+            allowing(creator).createNode(null, null, null); inSequence(mySequence);
+
+            allowing(creator).createAce("username1",new String[]{"jcr:read","jcr:write"},new String[]{}, null); inSequence(mySequence);
+            allowing(creator).createAce("groupname1",new String[]{"jcr:read","jcr:write"},null, null); inSequence(mySequence);
+            allowing(creator).createAce("\"'groupname2'",new String[]{"jcr:read"},new String[]{"jcr:write"}, "first"); inSequence(mySequence);
+            allowing(creator).finishNode(); inSequence(mySequence);
+        }});
+        this.parse(json);
+    }
 
     //---------- internal helper ----------------------------------------------
 

@@ -22,7 +22,10 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -160,7 +163,7 @@ public class JsonReader implements ContentReader {
             }
             Map<String, Object> config = new HashMap<>();
             config.put("org.apache.johnzon.supports-comments", true);
-            JsonObject json = Json.createReaderFactory(config).createReader(new StringReader(jsonString)).readObject();
+            JsonObject json = Json.createReaderFactory(config).createReader(new StringReader(tickToDoubleQuote(jsonString))).readObject();
             this.createNode(null, json, contentCreator);
         } catch (JsonException je) {
             throw (IOException) new IOException(je.getMessage()).initCause(je);
@@ -465,6 +468,40 @@ public class JsonReader implements ContentReader {
 
 		//do the work.
 		contentCreator.createAce(principalID, grantedPrivileges, deniedPrivileges, order);
+    }
+    
+    private static String tickToDoubleQuote(String input) {
+        char[] output = new char[input.length()];
+        boolean quoted = false;
+        boolean escaped = false;
+        for (int i = 0; i < output.length;i++) {
+            char in = input.charAt(i);
+            if (!quoted)
+            {
+                if (in == '\'') {
+                    in = '"';
+                }
+                else if (in == '"') {
+                    quoted = true;
+                }
+            }
+            else {
+                if (!escaped) {
+                    if (in == '"') {
+                        quoted = false;
+                    }
+                    else if (in == '\\') {
+                        escaped = true;
+                    }
+                }
+                else
+                {
+                    escaped = false;
+                }
+            }
+            output[i] = in;
+        }
+        return new String(output);
     }
 
 }
