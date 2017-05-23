@@ -46,6 +46,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentReader;
+import static org.apache.sling.jcr.contentparser.impl.JsonTicksConverter.tickToDoubleQuote;
 
 /**
  * The <code>JsonReader</code> Parses a Json document on content load and creates the
@@ -466,39 +467,4 @@ public class JsonReader implements ContentReader {
 		//do the work.
 		contentCreator.createAce(principalID, grantedPrivileges, deniedPrivileges, order);
     }
-    
-    private static String tickToDoubleQuote(String input) {
-        char[] output = new char[input.length()];
-        boolean quoted = false;
-        boolean escaped = false;
-        for (int i = 0; i < output.length;i++) {
-            char in = input.charAt(i);
-            if (!quoted)
-            {
-                if (in == '\'') {
-                    in = '"';
-                }
-                else if (in == '"') {
-                    quoted = true;
-                }
-            }
-            else {
-                if (!escaped) {
-                    if (in == '"') {
-                        quoted = false;
-                    }
-                    else if (in == '\\') {
-                        escaped = true;
-                    }
-                }
-                else
-                {
-                    escaped = false;
-                }
-            }
-            output[i] = in;
-        }
-        return new String(output);
-    }
-
 }
