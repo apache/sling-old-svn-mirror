@@ -76,7 +76,8 @@
               org.xmlpull.v1
             </Private-Package>
             <Embed-Dependency>
-              kxml2
+              kxml2,
+              org.apache.sling.jcr.contentparser;inline="org/apache/sling/jcr/contentparser/impl/JsonTicksConverter.class"
             </Embed-Dependency>
           </instructions>
         </configuration>
@@ -179,6 +180,18 @@
       <artifactId>org.apache.sling.jcr.api</artifactId>
       <version>2.0.6</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.jcr.contentparser</artifactId>
+      <version>1.1.1-SNAPSHOT</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+            <groupId>*</groupId>
+            <artifactId>*</artifactId>
+        </exclusion>
+    </exclusions>
     </dependency>
     <dependency>
       <!-- for security content loader (users/groups/acls) -->
