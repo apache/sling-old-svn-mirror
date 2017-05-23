@@ -28,6 +28,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jcr.Node;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -40,8 +42,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.fsprovider.internal.ContentFileExtensions;
 import org.apache.sling.fsprovider.internal.FsResourceProvider;
+import org.apache.sling.fsprovider.internal.mapper.jcr.FsNode;
 import org.apache.sling.fsprovider.internal.mapper.valuemap.ValueMapDecorator;
-import org.apache.sling.fsprovider.internal.parser.ContentElement;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.slf4j.Logger;
@@ -200,6 +202,13 @@ public final class FileResource extends AbstractResource {
         else if (type == ValueMap.class) {
             return (AdapterType) getValueMap();
         }
+        else if (type == Node.class) {
+            ContentFile contentFile = getNodeDescriptorContentFile();
+            if (contentFile != null) {
+                // support a subset of JCR API for content file resources
+                return (AdapterType)new FsNode(contentFile, getResourceResolver());
+            }
+        }
         return super.adaptTo(type);
     }
 
@@ -227,9 +236,9 @@ public final class FileResource extends AbstractResource {
                 props.put("jcr:created", lastModifed);
                 
                 // overlay properties with those from node descriptor content file, if it exists
-                ContentElement content = getNodeDescriptorContent();
-                if (content != null) {
-                    for (Map.Entry<String, Object> entry : content.getProperties().entrySet()) {
+                ContentFile contentFile = getNodeDescriptorContentFile();
+                if (contentFile != null) {
+                    for (Map.Entry<String, Object> entry : contentFile.getValueMap().entrySet()) {
                         // skip primary type if it is the default type assigned by contentparser when none is defined
                         if (StringUtils.equals(entry.getKey(), "jcr:primaryType")
                                 && StringUtils.equals((String)entry.getValue(), ParserOptions.DEFAULT_PRIMARY_TYPE)) {
@@ -245,14 +254,14 @@ public final class FileResource extends AbstractResource {
         return valueMap;
     }
     
-    private ContentElement getNodeDescriptorContent() {
+    private ContentFile getNodeDescriptorContentFile() {
         if (contentFileExtensions == null || contentFileCache == null) {
             return null;
         }
         for (String fileNameSuffix : contentFileExtensions.getSuffixes()) {
             File fileWithSuffix = new File(file.getPath() + fileNameSuffix);
             if (fileWithSuffix.exists() && fileWithSuffix.canRead()) {
-                return contentFileCache.get(resourcePath, fileWithSuffix);
+                return new ContentFile(fileWithSuffix, resourcePath, null, contentFileCache);
             }
         }
         return null;
