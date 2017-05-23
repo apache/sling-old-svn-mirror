@@ -32,11 +32,12 @@ package org.apache.sling.jcr.contentparser.impl;
 class JsonTicksConverter {
     
     static String tickToDoubleQuote(final String input) {
-        final StringBuilder output = new StringBuilder();
+        final int len = input.length();
+        final StringBuilder output = new StringBuilder(len);
         boolean quoted = false;
         boolean tickQuoted = false;
         boolean escaped = false;
-        for (int i = 0, len = input.length(); i < len; i++) {
+        for (int i = 0; i < len; i++) {
             char in = input.charAt(i);
             if (quoted || tickQuoted) {
                 if (escaped) {
