@@ -30,7 +30,7 @@
 
   <artifactId>org.apache.sling.pipes</artifactId>
   <packaging>bundle</packaging>
-  <version>0.0.11-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
 
   <name>Apache Sling Pipes</name>
   <description>bulk content changes tool</description>
@@ -136,6 +136,11 @@
       <artifactId>org.apache.sling.commons.json</artifactId>
       <version>2.0.6</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.event.api</artifactId>
+      <version>1.0.0</version>
     </dependency>
     <!-- testing -->
     <dependency>
