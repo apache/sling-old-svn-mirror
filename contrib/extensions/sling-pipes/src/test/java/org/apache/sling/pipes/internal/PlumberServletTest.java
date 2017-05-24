@@ -205,7 +205,7 @@ public class PlumberServletTest extends AbstractPipeTest {
         when(request.getParameter(PlumberServlet.PARAM_BINDINGS)).thenReturn(bindings);
         when(request.getParameter(CustomWriter.PARAM_WRITER)).thenReturn(writer);
         when(request.getParameter(BasePipe.DRYRUN_KEY)).thenReturn(dryRun);
-        when(request.getParameter(PlumberServlet.PARAM_SIZE)).thenReturn(size);
+        when(request.getParameter(OutputWriter.PARAM_SIZE)).thenReturn(size);
         return request;
     }
 

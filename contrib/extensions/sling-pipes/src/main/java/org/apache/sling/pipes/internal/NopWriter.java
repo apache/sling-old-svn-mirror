@@ -16,47 +16,32 @@
  */
 package org.apache.sling.pipes.internal;
 
-import java.io.IOException;
-
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.pipes.OutputWriter;
-import org.apache.sling.pipes.Pipe;
 
-/**
- * default output writer with size and output resources' path
- */
-public class DefaultOutputWriter extends OutputWriter {
+import java.io.IOException;
 
-    protected JSONWriter writer;
-
+public class NopWriter extends OutputWriter {
     @Override
     public boolean handleRequest(SlingHttpServletRequest request) {
-        return true;
+        return false;
     }
 
     @Override
     protected void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JSONException {
-        response.setCharacterEncoding("utf-8");
-        response.setContentType("application/json");
-        writer = new JSONWriter(response.getWriter());
-        writer.object();
-        writer.key(KEY_ITEMS);
-        writer.array();
+        //nop
     }
 
     @Override
-    public void writeItem(Resource resource) throws JSONException {
-        writer.value(resource.getPath());
+    protected void writeItem(Resource resource) throws JSONException {
+        //nop
     }
 
     @Override
     public void ends() throws JSONException {
-        writer.endArray();
-        writer.key(KEY_SIZE).value(size);
-        writer.endObject();
+        //nop
     }
 }

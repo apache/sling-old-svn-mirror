@@ -16,49 +16,75 @@
  */
 package org.apache.sling.pipes.internal;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.*;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.Distributor;
 import org.apache.sling.distribution.SimpleDistributionRequest;
-import org.apache.sling.pipes.BasePipe;
-import org.apache.sling.pipes.ContainerPipe;
-import org.apache.sling.pipes.Pipe;
-import org.apache.sling.pipes.Plumber;
-import org.apache.sling.pipes.ReferencePipe;
+import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.pipes.*;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+import javax.jcr.RepositoryException;
+
+import static org.apache.sling.api.resource.ResourceResolverFactory.SUBSERVICE;
+import static org.apache.sling.pipes.BasePipe.*;
+
 /**
- * implements plumber interface, and registers default pipes
+ * implements plumber interface, registers default pipes, and provides execution facilities
  */
-@Component(service = {Plumber.class})
-public class PlumberImpl implements Plumber {
+@Component(service = {Plumber.class, JobConsumer.class}, property = {
+        JobConsumer.PROPERTY_TOPICS +"="+PlumberImpl.SLING_EVENT_TOPIC
+})
+@Designate(ocd = PlumberImpl.Configuration.class)
+public class PlumberImpl implements Plumber, JobConsumer {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    public static final int DEFAULT_BUFFER_SIZE = 1000;
+
+    @ObjectClassDefinition(name="Apache Sling Pipes : Plumber configuration")
+    public @interface Configuration {
+        @AttributeDefinition(description="Number of iterations after which plumber should saves a pipe execution")
+        int bufferSize() default PlumberImpl.DEFAULT_BUFFER_SIZE;
+
+        @AttributeDefinition(description="Name of service user, with appropriate rights, that will be used for async execution")
+        String serviceUser();
+
+        @AttributeDefinition(description="Users allowed to register async pipes")
+        String[] authorizedUsers() default  {"admin"};
+    }
 
     Map<String, Class<? extends BasePipe>> registry;
 
-    @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
-    protected volatile Distributor distributor = null;
+    public static final String SLING_EVENT_TOPIC = "org/apache/sling/pipes/topic";
+
+    private int bufferSize;
+
+    private Map serviceUser;
+
+    private List<String> allowedUsers;
 
     @Activate
-    public void activate(){
+    public void activate(Configuration configuration){
+        bufferSize = configuration.bufferSize();
+        serviceUser = Collections.singletonMap(SUBSERVICE, configuration.serviceUser());
+        allowedUsers = Arrays.asList(configuration.authorizedUsers());
         registry = new HashMap<>();
         registerPipe(BasePipe.RESOURCE_TYPE, BasePipe.class);
         registerPipe(ContainerPipe.RESOURCE_TYPE, ContainerPipe.class);
@@ -75,7 +101,17 @@ public class PlumberImpl implements Plumber {
         registerPipe(PathPipe.RESOURCE_TYPE, PathPipe.class);
         registerPipe(FilterPipe.RESOURCE_TYPE, FilterPipe.class);
         registerPipe(NotPipe.RESOURCE_TYPE, NotPipe.class);
+
     }
+
+    @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
+    protected volatile Distributor distributor = null;
+
+    @Reference
+    JobManager jobManager;
+
+    @Reference
+    ResourceResolverFactory factory;
 
     @Override
     public Pipe getPipe(Resource resource) {
@@ -93,43 +129,84 @@ public class PlumberImpl implements Plumber {
     }
 
     @Override
-    public Set<String> execute(ResourceResolver resolver, String path, Map additionalBindings, boolean save) throws Exception {
+    public Job executeAsync(ResourceResolver resolver, String path, Map bindings) {
+        if (allowedUsers.contains(resolver.getUserID())) {
+            if (StringUtils.isBlank((String)serviceUser.get(SUBSERVICE))) {
+                log.error("please configure plumber service user");
+            }
+            final Map props = new HashMap();
+            props.put(SlingConstants.PROPERTY_PATH, path);
+            props.put(PipeBindings.NN_ADDITIONALBINDINGS, bindings);
+            return jobManager.addJob(SLING_EVENT_TOPIC, props);
+        }
+        return null;
+    }
+
+    @Override
+    public Set<String> execute(ResourceResolver resolver, String path, Map additionalBindings, OutputWriter writer, boolean save) throws Exception {
         Resource pipeResource = resolver.getResource(path);
         Pipe pipe = getPipe(pipeResource);
         if (pipe == null) {
             throw new Exception("unable to build pipe based on configuration at " + path);
         }
-        return execute(resolver, pipe, additionalBindings, save);
+        if (additionalBindings != null && (Boolean)additionalBindings.getOrDefault(BasePipe.READ_ONLY, true) && pipe.modifiesContent()) {
+            throw new Exception("This pipe modifies content, you should use a POST request");
+        }
+        return execute(resolver, pipe, additionalBindings, writer, save);
     }
 
     @Override
-    public Set<String> execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, boolean save) throws Exception {
-        if (additionalBindings != null && pipe instanceof ContainerPipe){
-            pipe.getBindings().addBindings(additionalBindings);
-        }
-
-        log.info("[{}] execution starts, save ({})", pipe, save);
-        Set<String> set = new HashSet<>();
-        for (Iterator<Resource> it = pipe.getOutput(); it.hasNext();){
-            Resource resource = it.next();
-            if (resource != null) {
-                log.debug("[{}] retrieved {}", pipe.getName(), resource.getPath());
-                set.add(resource.getPath());
+    public Set<String> execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) throws Exception {
+        try {
+            if (additionalBindings != null && pipe instanceof ContainerPipe){
+                pipe.getBindings().addBindings(additionalBindings);
             }
+            log.info("[{}] execution starts, save ({})", pipe, save);
+            writer.setPipe(pipe);
+            if (isRunning(pipe.getResource())){
+                throw new RuntimeException("Pipe is already running");
+            }
+            writeStatus(pipe, STATUS_STARTED);
+            resolver.commit();
+
+            Set<String> set = new HashSet<>();
+            for (Iterator<Resource> it = pipe.getOutput(); it.hasNext();){
+                Resource resource = it.next();
+                if (resource != null) {
+                    log.debug("[{}] retrieved {}", pipe.getName(), resource.getPath());
+                    writer.write(resource);
+                    set.add(resource.getPath());
+                    persist(resolver, pipe, set, resource);
+                }
+            }
+            if (save && pipe.modifiesContent()) {
+                persist(resolver, pipe, set, null);
+            }
+            log.info("[{}] done executing.", pipe.getName());
+            writer.ends();
+            return set;
+        } finally {
+            writeStatus(pipe, STATUS_FINISHED);
+            resolver.commit();
         }
-        if (save) {
-            persist(resolver, pipe, set);
-        }
-        log.info("[{}] done executing.", pipe.getName());
-        return set;
     }
 
-    @Override
-    public void persist(ResourceResolver resolver, Pipe pipe, Set<String> paths) throws PersistenceException {
+    /**
+     * Persists pipe change if big enough, or ended, and eventually distribute changes
+     * @param resolver
+     * @param pipe
+     * @param paths
+     * @param currentResource if running, null if ended
+     * @throws PersistenceException
+     */
+    protected void persist(ResourceResolver resolver, Pipe pipe, Set<String> paths, Resource currentResource) throws Exception {
         if  (pipe.modifiesContent() && resolver.hasChanges() && !pipe.isDryRun()){
-            log.info("[{}] saving changes...", pipe.getName());
-            resolver.commit();
-            if (distributor != null && StringUtils.isNotBlank(pipe.getDistributionAgent())) {
+            if (currentResource == null || paths.size() % bufferSize == 0){
+                log.info("[{}] saving changes...", pipe.getName());
+                writeStatus(pipe, currentResource == null ? STATUS_FINISHED : currentResource.getPath());
+                resolver.commit();
+            }
+            if (currentResource == null && distributor != null && StringUtils.isNotBlank(pipe.getDistributionAgent())) {
                 log.info("a distribution agent is configured, will try to distribute the changes");
                 DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, true, paths.toArray(new String[paths.size()]));
                 DistributionResponse response = distributor.distribute(pipe.getDistributionAgent(), resolver, request);
@@ -141,5 +218,52 @@ public class PlumberImpl implements Plumber {
     @Override
     public void registerPipe(String type, Class<? extends BasePipe> pipeClass) {
         registry.put(type, pipeClass);
+    }
+
+    /**
+     * writes the status of the pipe
+     * @param pipe
+     * @param status
+     */
+    protected void writeStatus(Pipe pipe, String status) throws RepositoryException {
+        if (StringUtils.isNotBlank(status)){
+            ModifiableValueMap vm = pipe.getResource().adaptTo(ModifiableValueMap.class);
+            vm.put(PN_STATUS, status);
+            Calendar cal = new GregorianCalendar();
+            cal.setTime(new Date());
+            vm.put(PN_STATUS_MODIFIED, cal);
+        }
+    }
+
+    @Override
+    public String getStatus(Resource pipeResource) {
+        Resource statusResource = pipeResource.getChild(PN_STATUS);
+        if (statusResource != null){
+            String status = statusResource.adaptTo(String.class);
+            if (StringUtils.isNotBlank(status)){
+                return status;
+            }
+        }
+        return STATUS_FINISHED;
+    }
+
+    @Override
+    public boolean isRunning(Resource pipeResource) {
+        return !getStatus(pipeResource).equals(STATUS_FINISHED);
+    }
+
+    @Override
+    public JobResult process(Job job) {
+        try(ResourceResolver resolver = factory.getServiceResourceResolver(serviceUser)){
+            String path = (String)job.getProperty(SlingConstants.PROPERTY_PATH);
+            Map bindings = (Map)job.getProperty(PipeBindings.NN_ADDITIONALBINDINGS);
+            execute(resolver, path, bindings, new NopWriter(), true);
+            return JobResult.OK;
+        } catch (LoginException e) {
+            log.error("unable to retrieve resolver for executing scheduled pipe", e);
+        } catch (Exception e) {
+            log.error("failed to execute the pipe", e);
+        }
+        return JobResult.FAILED;
     }
 }
