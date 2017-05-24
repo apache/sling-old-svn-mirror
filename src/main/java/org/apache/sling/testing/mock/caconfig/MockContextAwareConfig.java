@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
@@ -57,6 +58,16 @@ public final class MockContextAwareConfig {
      */
     public static void registerAnnotationClasses(SlingContextImpl context, Class... classes) {
         ConfigurationMetadataUtil.registerAnnotationClasses(context.bundleContext(), classes);
+    }
+
+    /**
+     * Search classpath for given class names to scan for and register all classes with @Configuration annotation.
+     * @param context Sling context
+     * @param packageNames Java package names
+     */
+    public static void registerAnnotationPackages(SlingContextImpl context, String... packageNames) {
+        Collection<Class> classes = ConfigurationMetadataUtil.getConfigurationClassesForPackages(StringUtils.join(packageNames, ","));
+        registerAnnotationClasses(context, classes.toArray(new Class[classes.size()]));
     }
 
     /**

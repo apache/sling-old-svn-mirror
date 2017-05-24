@@ -48,7 +48,7 @@ public class MockContextAwareConfigTest {
 
     @Before
     public void setUp() {
-        MockContextAwareConfig.registerAnnotationClasses(context, SimpleConfig.class, ListConfig.class);
+        MockContextAwareConfig.registerAnnotationPackages(context, "org.apache.sling.testing.mock.caconfig.example");
 
         context.create().resource("/content/region/site", "sling:configRef", "/conf/region/site");
 
