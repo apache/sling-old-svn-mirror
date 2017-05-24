@@ -34,17 +34,31 @@ public final class ContextResource {
     
     private final Resource resource;
     private final String configRef;
+    private final int serviceRanking;
     private final String key;
     
     /**
      * @param resource Context root resource
      * @param configRef Config reference (normally a resource path).
      *    May be null if the {@link ConfigurationResourceResolvingStrategy} has it's own concept of detecting the matching configuration.
+     * @param serviceRanking Service ranking of the context path strategy implementation
      */
-    public ContextResource(@Nonnull Resource resource, String configRef) {
+    public ContextResource(@Nonnull Resource resource, String configRef, int serviceRanking) {
         this.resource = resource;
         this.configRef = configRef;
+        this.serviceRanking = serviceRanking;
         this.key = resource.getPath() + "|" + configRef;
+    }
+
+    /**
+     * @param resource Context root resource
+     * @param configRef Config reference (normally a resource path).
+     *    May be null if the {@link ConfigurationResourceResolvingStrategy} has it's own concept of detecting the matching configuration.
+     * @deprecated Use {@link #ContextResource(Resource, String, int)}
+     */
+    @Deprecated
+    public ContextResource(@Nonnull Resource resource, String configRef) {
+        this(resource, configRef, 0);
     }
 
     /**
@@ -60,6 +74,13 @@ public final class ContextResource {
      */
     public @CheckForNull String getConfigRef() {
         return configRef;
+    }
+    
+    /**
+     * @return Service ranking of the context path strategy implementation
+     */
+    public int getServiceRanking() {
+        return serviceRanking;
     }
 
     @Override
