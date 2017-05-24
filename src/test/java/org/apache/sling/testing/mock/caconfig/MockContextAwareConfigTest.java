@@ -54,10 +54,10 @@ public class MockContextAwareConfigTest {
 
         context.currentResource(context.create().resource("/content/region/site/en"));
 
-        MockContextAwareConfig.writeConfiguration(context, "/content/region/site", SimpleConfig.class.getName(),
+        MockContextAwareConfig.writeConfiguration(context, "/content/region/site", SimpleConfig.class,
                 "stringParam", "value1");
 
-        MockContextAwareConfig.writeConfigurationCollection(context, "/content/region/site", ListConfig.class.getName(),
+        MockContextAwareConfig.writeConfigurationCollection(context, "/content/region/site", ListConfig.class,
                 ImmutableList.of((Map<String, Object>) ImmutableMap.<String, Object> of("stringParam", "value1"),
                         (Map<String, Object>) ImmutableMap.<String, Object> of("stringParam", "value2")));
     }

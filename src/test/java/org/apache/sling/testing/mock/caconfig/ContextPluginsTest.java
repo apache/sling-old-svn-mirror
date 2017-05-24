@@ -34,7 +34,7 @@ import org.junit.Test;
 
 public class ContextPluginsTest {
     
-    private static final String CONFIG_NAME = SimpleConfig.class.getName();
+    private static final String CONFIG_NAME = "testConfig";
     
     @Rule
     public SlingContext context = new SlingContextBuilder()
@@ -52,7 +52,7 @@ public class ContextPluginsTest {
         MockContextAwareConfig.registerAnnotationClasses(context, SimpleConfig.class);
 
         // write config
-        MockContextAwareConfig.writeConfiguration(context, contextResource.getPath(), CONFIG_NAME, 
+        MockContextAwareConfig.writeConfiguration(context, contextResource.getPath(), SimpleConfig.class, 
                         "stringParam", "value1",
                         "intParam", 123,
                         "boolParam", true);
