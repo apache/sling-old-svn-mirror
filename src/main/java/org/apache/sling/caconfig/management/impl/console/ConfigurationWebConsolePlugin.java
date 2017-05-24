@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -41,6 +42,8 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.caconfig.management.ConfigurationData;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.management.ValueInfo;
+import org.apache.sling.caconfig.management.multiplexer.ContextPathStrategyMultiplexer;
+import org.apache.sling.caconfig.resource.spi.ContextResource;
 import org.apache.sling.xss.XSSAPI;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
@@ -70,6 +73,9 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
 
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private ConfigurationManager configurationManager;
+
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
+    private ContextPathStrategyMultiplexer contextPathStrategyMultiplexer;
 
     @Reference(policyOption = ReferencePolicyOption.GREEDY)
     private XSSAPI xss;
@@ -161,7 +167,22 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
             pw.println("<br/>");
 
             if (contentResource != null) {
+                
+                // context paths
+                Iterator<ContextResource> contextResources = contextPathStrategyMultiplexer.findContextResources(contentResource);
+                tableStart(pw, "Context paths", 2);
+                pw.println("<th>Context path</th>");
+                pw.println("<th>Config reference</th>");
+                while (contextResources.hasNext()) {
+                    ContextResource contextResource = contextResources.next();
+                    tableRows(pw);
+                    pw.println("<td>" + xss.encodeForHTML(contextResource.getResource().getPath()) + "</td>");
+                    pw.println("<td>" + xss.encodeForHTML(contextResource.getConfigRef()) + "</td>");
+                }
+                tableEnd(pw);                
 
+                pw.println("<br/>");
+                
                 // resolve configuration
                 Collection<ConfigurationData> configDatas;
                 if (resourceCollection) {
@@ -176,7 +197,7 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
                         configDatas = Collections.emptyList();
                     }
                 }
-
+                
                 tableStart(pw, "Result", 6);
                 
                 if (configDatas.size() == 0) {
