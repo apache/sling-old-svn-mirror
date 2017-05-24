@@ -20,7 +20,7 @@ package org.apache.sling.testing.mock.caconfig.example;
 
 import org.apache.sling.caconfig.annotation.Configuration;
 
-@Configuration
+@Configuration(name = "testConfig")
 public @interface SimpleConfig {
 
     String stringParam();

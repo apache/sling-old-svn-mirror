@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.caconfig.annotation.Configuration;
 import org.apache.sling.caconfig.management.ConfigurationManager;
 import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
@@ -75,6 +76,19 @@ public final class MockContextAwareConfig {
      * provider.
      * @param context Sling context
      * @param contextPath Configuration id
+     * @param configClass Configuration class
+     * @param values Configuration values
+     */
+    public static void writeConfiguration(SlingContextImpl context, String contextPath, Class<?> configClass,
+            Map<String, Object> values) {
+        writeConfiguration(context, contextPath, getConfigurationName(configClass), values);
+    }
+    
+    /**
+     * Writes configuration parameters using the primary configured persistence
+     * provider.
+     * @param context Sling context
+     * @param contextPath Configuration id
      * @param configName Config name
      * @param values Configuration values
      */
@@ -83,6 +97,18 @@ public final class MockContextAwareConfig {
         ConfigurationManager configManager = context.getService(ConfigurationManager.class);
         Resource contextResource = context.resourceResolver().getResource(contextPath);
         configManager.persistConfiguration(contextResource, configName, new ConfigurationPersistData(values));
+    }
+
+    /**
+     * Writes configuration parameters using the primary configured persistence
+     * provider.
+     * @param context Sling context
+     * @param contextPath Configuration id
+     * @param configClass Configuration class
+     * @param values Configuration values
+     */
+    public static void writeConfiguration(SlingContextImpl context, String contextPath, Class<?> configClass, Object... values) {
+        writeConfiguration(context, contextPath, getConfigurationName(configClass), values);
     }
 
     /**
@@ -102,6 +128,19 @@ public final class MockContextAwareConfig {
      * configured persistence provider.
      * @param context Sling context
      * @param contextPath Configuration id
+     * @param configClass Configuration class
+     * @param values Configuration values
+     */
+    public static void writeConfigurationCollection(SlingContextImpl context, String contextPath,  Class<?> configClass,
+            Collection<Map<String, Object>> values) {
+        writeConfigurationCollection(context, contextPath, getConfigurationName(configClass), values);
+    }
+    
+    /**
+     * Writes a collection of configuration parameters using the primary
+     * configured persistence provider.
+     * @param context Sling context
+     * @param contextPath Configuration id
      * @param configName Config name
      * @param values Configuration values
      */
@@ -116,6 +155,14 @@ public final class MockContextAwareConfig {
         }
         configManager.persistConfigurationCollection(contextResource, configName,
                 new ConfigurationCollectionPersistData(items));
+    }
+    
+    private static String getConfigurationName(Class<?> configClass) {
+        Configuration annotation = configClass.getAnnotation(Configuration.class);
+        if (annotation != null && StringUtils.isNotBlank(annotation.name())) {
+            return annotation.name();
+        }
+        return configClass.getName();
     }
 
 }
