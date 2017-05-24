@@ -44,22 +44,23 @@ public class ContextResourceTest {
 
     @Test
     public void testGetter() {
-        ContextResource r1 = new ContextResource(resource1, "/conf/test");
+        ContextResource r1 = new ContextResource(resource1, "/conf/test", 20);
         assertEquals("/content/test1", r1.getResource().getPath());
         assertEquals("/conf/test", r1.getConfigRef());
+        assertEquals(20, r1.getServiceRanking());
     }
 
     @Test
     public void testEquals() {
-        assertTrue(new ContextResource(resource1, "/conf/test").equals(new ContextResource(resource1, "/conf/test")));
-        assertTrue(new ContextResource(resource1, null).equals(new ContextResource(resource1, null)));
+        assertTrue(new ContextResource(resource1, "/conf/test", 0).equals(new ContextResource(resource1, "/conf/test", 10)));
+        assertTrue(new ContextResource(resource1, null, 0).equals(new ContextResource(resource1, null, 0)));
     }
 
     @Test
     public void testNotEquals() {
-        assertFalse(new ContextResource(resource1, "/conf/test").equals(new ContextResource(resource2, "/conf/test")));
-        assertFalse(new ContextResource(resource1, "/conf/test1").equals(new ContextResource(resource1, "/conf/test2")));
-        assertFalse(new ContextResource(resource1, null).equals(new ContextResource(resource1, "/conf/test")));
+        assertFalse(new ContextResource(resource1, "/conf/test", 0).equals(new ContextResource(resource2, "/conf/test", 0)));
+        assertFalse(new ContextResource(resource1, "/conf/test1", 0).equals(new ContextResource(resource1, "/conf/test2", 0)));
+        assertFalse(new ContextResource(resource1, null, 0).equals(new ContextResource(resource1, "/conf/test", 0)));
     }
 
 }
