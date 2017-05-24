@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.jcr.contentparser</artifactId>
     <packaging>bundle</packaging>
-    <version>1.2.0</version>
+    <version>1.2.1-SNAPSHOT</version>
 
     <name>Apache Sling JCR Content Parser</name>
     <description>
@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.contentparser-1.2.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.contentparser-1.2.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.jcr.contentparser-1.2.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/contentparser</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/contentparser</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/contentparser</url>
     </scm>
 
     <build>
