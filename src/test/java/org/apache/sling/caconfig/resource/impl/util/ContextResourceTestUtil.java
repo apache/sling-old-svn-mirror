@@ -57,7 +57,7 @@ public final class ContextResourceTestUtil {
             @Override
             public Object transform(Object input) {
                 Resource resource = (Resource)input;
-                return new ContextResource(resource, "/conf-test" + resource.getPath());
+                return new ContextResource(resource, "/conf-test" + resource.getPath(), 0);
             }
         });
     }

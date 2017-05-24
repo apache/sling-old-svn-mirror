@@ -49,11 +49,11 @@ public class ResourceEliminateDuplicatesIteratorTest {
         
         ResourceResolver rr = context.resourceResolver();
         List<ContextResource> list = ImmutableList.of(
-                new ContextResource(rr.getResource("/content/a"), "/conf/a"), 
-                new ContextResource(rr.getResource("/content/a/b"), "/conf/a/b"),
-                new ContextResource(rr.getResource("/content/a"), "/conf/a"),
-                new ContextResource(rr.getResource("/content/a"), null),
-                new ContextResource(rr.getResource("/content/a/b/c"), "/conf/a/b"));
+                new ContextResource(rr.getResource("/content/a"), "/conf/a", 0), 
+                new ContextResource(rr.getResource("/content/a/b"), "/conf/a/b", 0),
+                new ContextResource(rr.getResource("/content/a"), "/conf/a", 0),
+                new ContextResource(rr.getResource("/content/a"), null, 0),
+                new ContextResource(rr.getResource("/content/a/b/c"), "/conf/a/b", 0));
         
         Iterator<Resource> result = toResourceIterator(new ResourceEliminateDuplicatesIterator(list.iterator()));
         assertThat(result, ResourceIteratorMatchers.paths(

@@ -170,14 +170,16 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
                 
                 // context paths
                 Iterator<ContextResource> contextResources = contextPathStrategyMultiplexer.findContextResources(contentResource);
-                tableStart(pw, "Context paths", 2);
+                tableStart(pw, "Context paths", 3);
                 pw.println("<th>Context path</th>");
                 pw.println("<th>Config reference</th>");
+                pw.println("<th>Ranking</th>");
                 while (contextResources.hasNext()) {
                     ContextResource contextResource = contextResources.next();
                     tableRows(pw);
                     pw.println("<td>" + xss.encodeForHTML(contextResource.getResource().getPath()) + "</td>");
                     pw.println("<td>" + xss.encodeForHTML(contextResource.getConfigRef()) + "</td>");
+                    pw.println("<td>" + contextResource.getServiceRanking() + "</td>");
                 }
                 tableEnd(pw);                
 
