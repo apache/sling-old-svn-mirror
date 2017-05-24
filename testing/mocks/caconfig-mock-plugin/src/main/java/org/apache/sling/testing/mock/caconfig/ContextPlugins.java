@@ -23,6 +23,7 @@ import org.apache.sling.caconfig.impl.ConfigurationResolverImpl;
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
 import org.apache.sling.caconfig.impl.metadata.AnnotationClassConfigurationMetadataProvider;
 import org.apache.sling.caconfig.management.impl.ConfigurationManagerImpl;
+import org.apache.sling.caconfig.management.impl.ContextPathStrategyMultiplexerImpl;
 import org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolverImpl;
 import org.apache.sling.caconfig.resource.impl.def.DefaultConfigurationResourceResolvingStrategy;
 import org.apache.sling.caconfig.resource.impl.def.DefaultContextPathStrategy;
@@ -33,7 +34,7 @@ import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Mock context plugins.
- * The plugin supports all versions from 1.0 to the most recent versions of the Impl/SPI.
+ * The plugin supports all versions from 1.2 to the most recent versions of the Impl/SPI.
  */
 @ProviderType
 public final class ContextPlugins {
@@ -77,10 +78,7 @@ public final class ContextPlugins {
      */
     private static void registerConfigurationResourceResolver(SlingContextImpl context) {
         
-        if (!registerByClassName(context, "org.apache.sling.caconfig.management.impl.ContextPathStrategyMultiplexerImpl")) {
-            // fallback to impl 1.1
-            registerByClassName(context, "org.apache.sling.caconfig.resource.impl.ContextPathStrategyMultiplexer");
-        }
+        context.registerInjectActivateService(new ContextPathStrategyMultiplexerImpl());
         
         if (!registerByClassName(context, "org.apache.sling.caconfig.resource.impl.ConfigurationResourceResolvingStrategyMultiplexerImpl")) {
             // fallback to impl 1.2

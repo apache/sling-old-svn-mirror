@@ -32,14 +32,14 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
-
 public class ContextPluginsTest {
     
-    private static final String CONFIG_NAME = "testConfig";
+    private static final String CONFIG_NAME = SimpleConfig.class.getName();
     
     @Rule
-    public SlingContext context = new SlingContextBuilder().plugin(CACONFIG).build();
+    public SlingContext context = new SlingContextBuilder()
+            .plugin(CACONFIG)
+            .build();
     
     private Resource contextResource;
 
@@ -52,10 +52,10 @@ public class ContextPluginsTest {
         MockContextAwareConfig.registerAnnotationClasses(context, SimpleConfig.class);
 
         // write config
-        CompatibilityUtil.writeConfig(context, contextResource, CONFIG_NAME, ImmutableMap.<String, Object>of(
+        MockContextAwareConfig.writeConfiguration(context, contextResource.getPath(), CONFIG_NAME, 
                         "stringParam", "value1",
                         "intParam", 123,
-                        "boolParam", true));
+                        "boolParam", true);
     }
     
     @Test

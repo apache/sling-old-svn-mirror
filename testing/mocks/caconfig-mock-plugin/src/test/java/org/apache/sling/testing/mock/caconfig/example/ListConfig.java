@@ -16,8 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Apache Sling Context-Aware Configuration Mock Plugin
- */
-@org.osgi.annotation.versioning.Version("1.1.0")
-package org.apache.sling.testing.mock.caconfig;
+package org.apache.sling.testing.mock.caconfig.example;
+
+import org.apache.sling.caconfig.annotation.Configuration;
+
+@Configuration(collection = true)
+public @interface ListConfig {
+
+    String stringParam();
+    
+    int intParam() default 5;
+    
+    boolean boolParam();
+    
+}
