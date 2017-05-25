@@ -35,7 +35,6 @@ import org.apache.sling.hc.annotations.SlingHealthCheck;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.FormattingResultLog;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,8 +63,7 @@ public class ThreadUsageHealthCheck implements HealthCheck {
     private boolean cpuTimeThresholdWarnIsConfigured;
 
     @Activate
-    protected final void activate(final ComponentContext componentContext) {
-        final Dictionary<String, Object> properties = componentContext.getProperties();
+    protected final void activate(final Map<String, Object> properties) {
         this.samplePeriodInMs = PropertiesUtil.toLong(properties.get(PROP_SAMPLE_PERIOD_IN_MS), DEFAULT_SAMPLE_PERIOD_IN_MS);
 
         this.availableProcessors = Runtime.getRuntime().availableProcessors();
