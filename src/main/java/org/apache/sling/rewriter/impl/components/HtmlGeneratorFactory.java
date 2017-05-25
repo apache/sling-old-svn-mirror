@@ -21,15 +21,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.html.HtmlParser;
 import org.apache.sling.rewriter.Generator;
 import org.apache.sling.rewriter.GeneratorFactory;
 import org.apache.sling.rewriter.ProcessingComponentConfiguration;
 import org.apache.sling.rewriter.ProcessingContext;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -38,9 +36,10 @@ import org.xml.sax.SAXException;
  * starting point for html pipelines.
  *
  */
-@Component
-@Service(value=GeneratorFactory.class)
-@Property(name="pipeline.type",value="html-generator")
+@Component(service = GeneratorFactory.class,
+    property = {
+            "pipeline.type=html-generator"
+    })
 public class HtmlGeneratorFactory implements GeneratorFactory {
 
     @Reference
