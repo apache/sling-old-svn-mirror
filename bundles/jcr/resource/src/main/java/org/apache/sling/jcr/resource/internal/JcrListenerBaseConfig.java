@@ -122,7 +122,7 @@ public class JcrListenerBaseConfig implements Closeable {
             }
 
             // external
-            filter.setNoExternal(config.includeExternal());
+            filter.setNoExternal(!config.includeExternal());
 
             // types
             filter.setEventTypes(this.getTypes(config));
