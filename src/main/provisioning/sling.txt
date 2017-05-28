@@ -54,7 +54,7 @@
     org.apache.sling/org.apache.sling.i18n/2.5.8
     org.apache.sling/org.apache.sling.installer.console/1.0.2
     org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.26
-    org.apache.sling/org.apache.sling.jcr.contentloader/2.2.0
+    org.apache.sling/org.apache.sling.jcr.contentloader/2.2.2
     org.apache.sling/org.apache.sling.jcr.resource/3.0.0
     org.apache.sling/org.apache.sling.launchpad.content/2.0.13-SNAPSHOT
     org.apache.sling/org.apache.sling.models.api/1.3.4
