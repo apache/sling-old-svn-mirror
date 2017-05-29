@@ -162,7 +162,6 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
     private void addResource() {
         final String ourRsrcPath = this.outputDirectory.getAbsolutePath();
         boolean found = false;
-        @SuppressWarnings("unchecked")
         final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
         while (!found && rsrcIterator.hasNext()) {
             final Resource rsrc = rsrcIterator.next();

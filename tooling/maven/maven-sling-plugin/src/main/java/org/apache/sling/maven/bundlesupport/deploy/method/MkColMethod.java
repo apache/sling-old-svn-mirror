@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.maven.bundlesupport;
+package org.apache.sling.maven.bundlesupport.deploy.method;
 
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 
@@ -24,7 +24,7 @@ import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
  * @see <a href="http://www.webdav.org/specs/rfc4918.html#METHOD_MKCOL">RFC 4918, $9.3</a>
  *
  */
-public class MkColMethod extends EntityEnclosingMethod {
+final class MkColMethod extends EntityEnclosingMethod {
 
     /**
      * Constructor specifying a URI.
