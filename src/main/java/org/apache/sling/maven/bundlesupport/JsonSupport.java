@@ -57,7 +57,7 @@ public final class JsonSupport {
      * @return JSON object
      */
     public static JsonObject parseObject(String jsonString) {
-        try (StringReader reader = new StringReader(tickToDoubleQuote(jsonString));
+        try (StringReader reader = new StringReader(jsonString);
                 JsonReader jsonReader = JSON_READER_FACTORY.createReader(reader)) {
             return jsonReader.readObject();
         }
@@ -69,7 +69,7 @@ public final class JsonSupport {
      * @return JSON array
      */
     public static JsonArray parseArray(String jsonString) {
-        try (StringReader reader = new StringReader(tickToDoubleQuote(jsonString));
+        try (StringReader reader = new StringReader(jsonString);
                 JsonReader jsonReader = JSON_READER_FACTORY.createReader(reader)) {
             return jsonReader.readArray();
         }
@@ -80,8 +80,12 @@ public final class JsonSupport {
      * @param jsonString JSON string
      * @throws javax.json.JsonException when JSON structure is invalid
      */
-    public static void validateJsonStructure(String jsonString) {
-        try (StringReader reader = new StringReader(tickToDoubleQuote(jsonString));
+    public static void validateJsonStructure(String jsonString, boolean tickToDoubleQuote) {
+        String transformedJsonString = jsonString;
+        if (tickToDoubleQuote) {
+            transformedJsonString = tickToDoubleQuote(jsonString);
+        }
+        try (StringReader reader = new StringReader(transformedJsonString);
                 JsonReader jsonReader = JSON_READER_FACTORY.createReader(reader)) {
             jsonReader.read();
         }
