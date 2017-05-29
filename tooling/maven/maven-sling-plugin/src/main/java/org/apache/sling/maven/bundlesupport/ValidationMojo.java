@@ -64,7 +64,7 @@ public class ValidationMojo extends AbstractMojo {
     /**
      * Whether to accept quote ticks in JSON files or not. 
      */
-    @Parameter(property = "sling.validation.jsonQuoteTick", defaultValue = "false", required = true)
+    @Parameter(property = "sling.validation.jsonQuoteTick", defaultValue = "false", required = false)
     private boolean jsonQuoteTick;
 
     /**
