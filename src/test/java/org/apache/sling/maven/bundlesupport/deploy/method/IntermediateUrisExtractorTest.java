@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.maven.bundlesupport;
+package org.apache.sling.maven.bundlesupport.deploy.method;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.sling.maven.bundlesupport.deploy.method.IntermediateUrisExtractor;
 import org.junit.Test;
 
 public class IntermediateUrisExtractorTest {

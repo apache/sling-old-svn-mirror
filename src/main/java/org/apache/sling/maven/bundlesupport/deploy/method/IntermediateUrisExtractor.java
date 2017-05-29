@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.maven.bundlesupport;
+package org.apache.sling.maven.bundlesupport.deploy.method;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -22,9 +22,12 @@ import java.util.List;
 
 /**
  * Helper which extracts intermediate URIs from an URI 
- *
  */
-abstract class IntermediateUrisExtractor {
+final class IntermediateUrisExtractor {
+
+    private IntermediateUrisExtractor() {
+        // static methods only
+    }
 
     /**
      * Extracts a list of intermediate paths from an URL.
@@ -68,7 +71,4 @@ abstract class IntermediateUrisExtractor {
         return paths;
     }
     
-    private IntermediateUrisExtractor() {
-        
-    }
 }

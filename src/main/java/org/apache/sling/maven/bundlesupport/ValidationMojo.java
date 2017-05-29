@@ -70,7 +70,6 @@ public class ValidationMojo extends AbstractMojo {
             getLog().info("Validation is skipped.");
             return;
         }
-        @SuppressWarnings("unchecked")
         final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
         while ( rsrcIterator.hasNext() ) {
             final Resource rsrc = rsrcIterator.next();
