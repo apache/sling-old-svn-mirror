@@ -52,7 +52,7 @@ public final class ParserOptions {
      * List of JSON parser features activated by default.
      */
     public static final EnumSet<JsonParserFeature> DEFAULT_JSON_PARSER_FEATURES
-        = EnumSet.of(JsonParserFeature.COMMENTS, JsonParserFeature.QUOTE_TICK);
+        = EnumSet.of(JsonParserFeature.COMMENTS);
     
     private String defaultPrimaryType = DEFAULT_PRIMARY_TYPE;
     private boolean detectCalendarValues;
