@@ -54,14 +54,19 @@ public class JsonSupportTest {
 
     @Test
     public void testValidateJsonStructure() {
-        validateJsonStructure("{\"prop1\":123}");
-        validateJsonStructure("[{\"prop1\":123}]");
-        validateJsonStructure("{'prop1':123}");
+        validateJsonStructure("{\"prop1\":123}", false);
+        validateJsonStructure("[{\"prop1\":123}]", false);
+        validateJsonStructure("{'prop1':123}", true);
     }
 
     @Test(expected=JsonException.class)
     public void testValidateJsonStructure_Invalid() {
-        validateJsonStructure("wurstbrot");
+        validateJsonStructure("wurstbrot", false);
+    }
+
+    @Test(expected=JsonException.class)
+    public void testValidateJsonStructure_InvalidQuoteTick() {
+        validateJsonStructure("{'prop1':123}", false);
     }
 
     @Test
