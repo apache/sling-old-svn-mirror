@@ -20,6 +20,8 @@ package org.apache.sling.maven.bundlesupport;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.json.JsonArray;
 import javax.json.JsonException;
@@ -40,6 +42,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.repository.RepositorySystem;
+import org.apache.sling.maven.bundlesupport.BundlePrerequisite.Bundle;
 import org.apache.sling.maven.bundlesupport.deploy.BundleDeploymentMethod;
 import org.apache.sling.maven.bundlesupport.deploy.DeployContext;
 import org.apache.sling.maven.bundlesupport.fsresource.FileVaultXmlMounter;
@@ -52,10 +55,15 @@ import org.apache.sling.maven.bundlesupport.fsresource.SlingInitialContentMounte
 @Mojo(name = "fsmount", requiresProject = true)
 public class FsMountMojo extends AbstractFsMountMojo {
     
-    private static final String FS_BUNDLE_GROUP_ID = "org.apache.sling"; 
+    private static final String BUNDLE_GROUP_ID = "org.apache.sling"; 
+
     private static final String FS_BUNDLE_ARTIFACT_ID = "org.apache.sling.fsresource"; 
-    private static final String FS_BUNDLE_SYMBOLIC_NAME = FS_BUNDLE_ARTIFACT_ID; 
+    private static final String FS_BUNDLE_DEFAULT_VERSION = "2.1.2"; 
+    private static final String FS_BUNDLE_LEGACY_DEFAULT_VERSION = "1.4.2"; 
     
+    private static final String RESOURCE_RESOLVER_BUNDLE_ARTIFACT_ID = "org.apache.sling.resourceresolver"; 
+    private static final String RESOURCE_RESOLVER_BUNDLE_MIN_VERSION = "1.5.18"; 
+
     /**
      * Bundle deployment method. One of the following three values are allowed
      * <ol>
@@ -72,20 +80,51 @@ public class FsMountMojo extends AbstractFsMountMojo {
      * 
      * This has precedence over the deprecated parameter {@link #usePut}.
      */
-    @Parameter(property="sling.deploy.method", required = true, defaultValue = "WebConsole")
+    @Parameter(property="sling.deploy.method", required = false, defaultValue = "WebConsole")
     private BundleDeploymentMethod deploymentMethod;
     
     /**
      * Deploy <code>org.apache.sling.fsresource</code> to Sling instance bundle when it is not deployed already.
      */
-    @Parameter(required = true, defaultValue = "true")
+    @Parameter(required = false, defaultValue = "true")
     private boolean deployFsResourceBundle;
     
     /**
-     * Minimum version of <code>org.apache.sling.fsresource</code> bundle. If an older version is installed this version is deployed. 
+     * Bundles that have to be installed as prerequisites to execute this goal.
+     * With multiple entries in the list different bundles with different preconditions can be defined.<br/>
+     * <strong>Default value is:</strong>:
+     * <pre>
+     * &lt;deployFsResourceBundlePrerequisites&gt;
+     *   &lt;bundlePrerequisite&gt;
+     *     &lt;bundles&gt;
+     *       &lt;bundle&gt;
+     *         &lt;groupId&gt;org.apache.sling&lt;/groupId&gt;
+     *         &lt;artifactId&gt;org.apache.sling.fsresource&lt;/artifactId&gt;
+     *         &lt;version&gt;2.1.2&lt;/version&gt;
+     *       &lt;/bundle&gt;
+     *     &lt;/bundles&gt;
+     *     &lt;preconditions&gt;
+     *       &lt;bundle&gt;
+     *         &lt;groupId&gt;org.apache.sling&lt;/groupId&gt;
+     *         &lt;artifactId&gt;org.apache.sling.resourceresolver&lt;/artifactId&gt;
+     *         &lt;version&gt;1.5.18&lt;/version&gt;
+     *       &lt;/bundle&gt;
+     *     &lt;/preconditions&gt;
+     *   &lt;/bundlePrerequisite&gt;
+     *   &lt;bundlePrerequisite&gt;
+     *     &lt;bundles&gt;
+     *       &lt;bundle&gt;
+     *         &lt;groupId&gt;org.apache.sling&lt;/groupId&gt;
+     *         &lt;artifactId&gt;org.apache.sling.fsresource&lt;/artifactId&gt;
+     *         &lt;version&gt;1.4.2&lt;/version&gt;
+     *       &lt;/bundle&gt;
+     *     &lt;/bundles&gt;
+     *   &lt;/bundlePrerequisite&gt;
+     * &lt;/deployFsResourceBundlePrerequisites&gt;
+     * </pre>
      */
-    @Parameter(required = true, defaultValue = "2.1.2")
-    private String minimumFsResourceVersion;
+    @Parameter(required = false)
+    private List<BundlePrerequisite> deployFsResourceBundlePrerequisites;
 
     @Component
     private RepositorySystem repository;
@@ -93,6 +132,13 @@ public class FsMountMojo extends AbstractFsMountMojo {
     private ArtifactRepository localRepository;
     @Parameter(property = "project.remoteArtifactRepositories", required = true, readonly = true)
     private java.util.List<ArtifactRepository> remoteRepositories;
+    
+    public void addDeployFsResourceBundlePrerequisite(BundlePrerequisite item) {
+        if (this.deployFsResourceBundlePrerequisites == null) {
+            this.deployFsResourceBundlePrerequisites = new ArrayList<>();
+        }
+        this.deployFsResourceBundlePrerequisites.add(item);
+    }
 
     @Override
     protected void configureSlingInitialContent(final String targetUrl, final File bundleFile) throws MojoExecutionException {
@@ -110,28 +156,61 @@ public class FsMountMojo extends AbstractFsMountMojo {
             return;
         }
         
-        boolean deployRequired = false;       
-        String fsBundleVersion = getFsResourceBundleInstalledVersion(targetUrl);
-        if (StringUtils.isBlank(fsBundleVersion)) {
-            deployRequired = true;
+        if (deployFsResourceBundlePrerequisites == null) {
+            BundlePrerequisite latest = new BundlePrerequisite();
+            latest.addBundle(new Bundle(BUNDLE_GROUP_ID, FS_BUNDLE_ARTIFACT_ID, FS_BUNDLE_DEFAULT_VERSION));
+            latest.addPrecondition(new Bundle(BUNDLE_GROUP_ID, RESOURCE_RESOLVER_BUNDLE_ARTIFACT_ID, RESOURCE_RESOLVER_BUNDLE_MIN_VERSION));
+            addDeployFsResourceBundlePrerequisite(latest);
+            
+            BundlePrerequisite legacy = new BundlePrerequisite();
+            legacy.addBundle(new Bundle(BUNDLE_GROUP_ID, FS_BUNDLE_ARTIFACT_ID, FS_BUNDLE_LEGACY_DEFAULT_VERSION));
+            addDeployFsResourceBundlePrerequisite(legacy);
         }
-        else {
-            DefaultArtifactVersion deployedVersion = new DefaultArtifactVersion(fsBundleVersion);
-            DefaultArtifactVersion requiredVersion = new DefaultArtifactVersion(minimumFsResourceVersion);
-            deployRequired = (deployedVersion.compareTo(requiredVersion) < 0);
+        
+        for (BundlePrerequisite bundlePrerequisite : deployFsResourceBundlePrerequisites) {
+            if (isBundlePrerequisitesPreconditionsMet(bundlePrerequisite, targetUrl)) {
+                for (Bundle bundle : bundlePrerequisite.getBundles()) {
+                    deployBundle(bundle, targetUrl);
+                }
+                break;
+            }
         }
-        if (!deployRequired) {
-            getLog().info("Bundle " + FS_BUNDLE_SYMBOLIC_NAME + " " + fsBundleVersion + " already installed, skipping deployment.");
+    }
+    
+    private void deployBundle(Bundle bundle, String targetUrl) throws MojoExecutionException {
+        if (isBundleInstalled(bundle, targetUrl)) {
+            getLog().debug("Bundle " + bundle.getSymbolicName() + " " + bundle.getVersion() + " (or higher) already installed.");
             return;
         }
         
-        getLog().info("Deploying bundle " + FS_BUNDLE_SYMBOLIC_NAME + " " + minimumFsResourceVersion + " ...");
+        getLog().info("Installing Bundle " + bundle.getSymbolicName() + " " + bundle.getVersion() + " to "
+                    + targetUrl + " via " + deploymentMethod);
         
-        File file = getArtifactFile(FS_BUNDLE_GROUP_ID, FS_BUNDLE_ARTIFACT_ID, minimumFsResourceVersion, "jar");
-        deploymentMethod.execute().deploy(targetUrl, file, FS_BUNDLE_SYMBOLIC_NAME, new DeployContext()
+        File file = getArtifactFile(bundle, "jar");
+        deploymentMethod.execute().deploy(targetUrl, file, bundle.getSymbolicName(), new DeployContext()
                 .log(getLog())
                 .httpClient(getHttpClient())
                 .failOnError(failOnError));
+    }
+    
+    private boolean isBundlePrerequisitesPreconditionsMet(BundlePrerequisite bundlePrerequisite, String targetUrl) throws MojoExecutionException {
+        for (Bundle precondition : bundlePrerequisite.getPreconditions()) {
+            if (!isBundleInstalled(precondition, targetUrl)) {
+                getLog().debug("Bundle " + precondition.getSymbolicName() + " " + precondition.getVersion() + " (or higher) is not installed.");
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    private boolean isBundleInstalled(Bundle bundle, String targetUrl) throws MojoExecutionException {
+        String installedVersionString = getBundleInstalledVersion(bundle.getSymbolicName(), targetUrl);
+        if (StringUtils.isBlank(installedVersionString)) {
+            return false;
+        }
+        DefaultArtifactVersion installedVersion = new DefaultArtifactVersion(installedVersionString);
+        DefaultArtifactVersion requiredVersion = new DefaultArtifactVersion(bundle.getVersion());
+        return (installedVersion.compareTo(requiredVersion) >= 0);
     }
 
     /**
@@ -140,8 +219,8 @@ public class FsMountMojo extends AbstractFsMountMojo {
      * @return Version number or null if non installed
      * @throws MojoExecutionException
      */
-    public String getFsResourceBundleInstalledVersion(final String targetUrl) throws MojoExecutionException {
-        final String getUrl = targetUrl + "/bundles/" + FS_BUNDLE_SYMBOLIC_NAME + ".json";
+    private String getBundleInstalledVersion(final String bundleSymbolicName, final String targetUrl) throws MojoExecutionException {
+        final String getUrl = targetUrl + "/bundles/" + bundleSymbolicName + ".json";
         final GetMethod get = new GetMethod(getUrl);
 
         try {
@@ -180,9 +259,8 @@ public class FsMountMojo extends AbstractFsMountMojo {
         return null;
     }
    
-    private File getArtifactFile(String groupId, String artifactId, String version, String type)
-            throws MojoExecutionException {
-        Artifact artifactObject = repository.createArtifact(groupId, artifactId, version, type);
+    private File getArtifactFile(Bundle bundle, String type) throws MojoExecutionException {
+        Artifact artifactObject = repository.createArtifact(bundle.getGroupId(), bundle.getArtifactId(), bundle.getVersion(), type);
         ArtifactResolutionRequest request = new ArtifactResolutionRequest();
         request.setArtifact(artifactObject);
         request.setLocalRepository(localRepository);
