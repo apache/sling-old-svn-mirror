@@ -41,7 +41,7 @@ public class JsonContentParserTicksTest {
     @Before
     public void setUp() {
         underTest = ContentParserFactory.create(ContentType.JSON,
-                new ParserOptions().jsonParserFeatures(JsonParserFeature.QUOTE_TICK));
+                new ParserOptions().jsonParserFeatures(JsonParserFeature.QUOTE_TICK, JsonParserFeature.COMMENTS));
     }
 
     @Test
@@ -57,6 +57,16 @@ public class JsonContentParserTicksTest {
     @Test
     public void testJsonWithTicksMixed() throws Exception {
         ContentElement content = parse(underTest, "{\"prop1\":'value1','prop2':123,'obj':{'prop3':\"value2\"}}");
+
+        Map<String, Object> props = content.getProperties();
+        assertEquals("value1", props.get("prop1"));
+        assertEquals(123L, props.get("prop2"));
+        assertEquals("value2", content.getChild("obj").getProperties().get("prop3"));
+    }
+
+    @Test
+    public void testJsonWithTicksMixedWithComment() throws Exception {
+        ContentElement content = parse(underTest, "{/*a'b\"c*/\"prop1\":'value1','prop2':123,'obj':{'prop3':\"value2\"}}");
 
         Map<String, Object> props = content.getProperties();
         assertEquals("value1", props.get("prop1"));
