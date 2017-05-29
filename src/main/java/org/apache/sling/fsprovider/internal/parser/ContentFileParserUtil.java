@@ -27,11 +27,14 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.EnumSet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.jcr.contentparser.ContentParser;
 import org.apache.sling.jcr.contentparser.ContentParserFactory;
 import org.apache.sling.jcr.contentparser.ContentType;
+import org.apache.sling.jcr.contentparser.JsonParserFeature;
+import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +51,9 @@ class ContentFileParserUtil {
         ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(ContentFileParserUtil.class.getClassLoader());
-            JSON_PARSER = ContentParserFactory.create(ContentType.JSON);
+            // support comments and tick quotes for JSON parsing - same as in JCR content loader 
+            JSON_PARSER = ContentParserFactory.create(ContentType.JSON, new ParserOptions()
+                    .jsonParserFeatures(EnumSet.of(JsonParserFeature.COMMENTS, JsonParserFeature.QUOTE_TICK)));
         }
         finally {
             Thread.currentThread().setContextClassLoader(oldClassLoader);
