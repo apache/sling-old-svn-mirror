@@ -69,4 +69,9 @@ public class JsonTicksConverterTest {
         assertEquals("{\"p\":\"\\u03A9\\u03A6\\u00A5\"}", tickToDoubleQuote("{'p':\"\\u03A9\\u03A6\\u00A5\"}"));
     }
 
+    @Test
+    public void testTickToQuoteWithDoubleBackslash() {
+        assertEquals("{\"p\":\"aa\\\\bb\"}", tickToDoubleQuote("{'p':\"aa\\\\bb\"}"));
+    }
+
 }

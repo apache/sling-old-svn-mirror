@@ -50,6 +50,9 @@ public final class JsonTicksConverter {
                     if (in != '\'') {
                         output.append("\\");
                     }
+                    if (in == '\\') {
+                        output.append("\\");
+                    }
                     escaped = false;
                 }
                 else {
