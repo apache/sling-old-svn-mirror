@@ -41,6 +41,8 @@ public final class JsonTicksConverter {
         boolean quoted = false;
         boolean tickQuoted = false;
         boolean escaped = false;
+        boolean comment = false;
+        char lastChar = ' ';
         for (int i = 0; i < len; i++) {
             char in = input.charAt(i);
             if (quoted || tickQuoted) {
@@ -71,18 +73,29 @@ public final class JsonTicksConverter {
                 }
             }
             else {
-                if (in == '\'') {
-                    in = '"';
-                    tickQuoted = true;
+                if (comment) {
+                    if (lastChar == '*' && in == '/') {
+                        comment = false;
+                    }
                 }
-                else if (in == '"') {
-                    quoted = true;
+                else {
+                    if (lastChar == '/' && in == '*') {
+                        comment = true;
+                    }
+                    else if (in == '\'') {
+                        in = '"';
+                        tickQuoted = true;
+                    }
+                    else if (in == '"') {
+                        quoted = true;
+                    }
                 }
             }
             if (in == '\\') {
                 continue;
             }
             output.append(in);
+            lastChar = in;
         }
         return output.toString();
     }

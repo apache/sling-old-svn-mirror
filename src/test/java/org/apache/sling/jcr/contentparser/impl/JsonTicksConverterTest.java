@@ -43,6 +43,17 @@ public class JsonTicksConverterTest {
     }
 
     @Test
+    public void testTickToQuoteMixedWithComment() {
+        assertEquals("{ /* abc */ \"p\":\"v\"}", tickToDoubleQuote("{ /* abc */ 'p':\"v\"}"));
+        assertEquals("{ /* ab'c */ \"p\":\"v\"}", tickToDoubleQuote("{ /* ab'c */ 'p':\"v\"}"));
+        assertEquals("{ /* ab'c' */ \"p\":\"v\"}", tickToDoubleQuote("{ /* ab'c' */ 'p':\"v\"}"));
+        assertEquals("{ /* ab\"c */ \"p\":\"v\"}", tickToDoubleQuote("{ /* ab\"c */ 'p':\"v\"}"));
+        assertEquals("{ /* ab\"c\" */ \"p\":\"v\"}", tickToDoubleQuote("{ /* ab\"c\" */ 'p':\"v\"}"));
+        assertEquals("{ /* ab'c\" */ \"p\":\"v\"}", tickToDoubleQuote("{ /* ab'c\" */ 'p':\"v\"}"));
+        assertEquals("{/*ab'c\"*/\"p\":\"v\"/*ab'c\"*/}", tickToDoubleQuote("{/*ab'c\"*/'p':\"v\"/*ab'c\"*/}"));
+    }
+    
+    @Test
     public void testTicksDoubleQuotesInDoubleQuotes() {
         assertEquals("{\"p\":\"'\\\"'\\\"\"}", tickToDoubleQuote("{\"p\":\"'\\\"'\\\"\"}"));
     }
