@@ -20,9 +20,6 @@ package org.apache.sling.testing.clients.osgi;
 import org.apache.http.Header;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.clients.ClientException;
 import org.apache.sling.testing.clients.SlingClient;
 import org.apache.sling.testing.clients.SlingClientConfig;
@@ -511,12 +508,14 @@ public class OsgiConsoleClient extends SlingClient {
      * @throws ClientException if the id cannot be retrieved
      */
     public long getBundleId(String symbolicName) throws ClientException {
-        final JSONObject bundle = getBundleData(symbolicName);
-        try {
-            return bundle.getLong(JSON_KEY_ID);
-        } catch (JSONException e) {
-            throw new ClientException("Cannot get id from json", e);
+        final JsonNode bundle = getBundleData(symbolicName);
+        final JsonNode idNode = bundle.get(JSON_KEY_ID);
+
+        if (idNode == null) {
+            throw new ClientException("Cannot get id from bundle json");
         }
+
+        return idNode.getLongValue();
     }
 
     /**
@@ -526,12 +525,14 @@ public class OsgiConsoleClient extends SlingClient {
      * @throws ClientException
      */
     public String getBundleVersion(String symbolicName) throws ClientException {
-        final JSONObject bundle = getBundleData(symbolicName);
-        try {
-            return bundle.getString(JSON_KEY_VERSION);
-        } catch (JSONException e) {
-            throw new ClientException("Cannot get version from json", e);
+        final JsonNode bundle = getBundleData(symbolicName);
+        final JsonNode versionNode = bundle.get(JSON_KEY_VERSION);
+
+        if (versionNode == null) {
+            throw new ClientException("Cannot get version from bundle json");
         }
+
+        return versionNode.getTextValue();
     }
 
     /**
@@ -541,12 +542,14 @@ public class OsgiConsoleClient extends SlingClient {
      * @throws ClientException if the state cannot be retrieved
      */
     public String getBundleState(String symbolicName) throws ClientException {
-        final JSONObject bundle = getBundleData(symbolicName);
-        try {
-            return bundle.getString(JSON_KEY_STATE);
-        } catch (JSONException e) {
-            throw new ClientException("Cannot get state from json", e);
+        final JsonNode bundle = getBundleData(symbolicName);
+        final JsonNode stateNode = bundle.get(JSON_KEY_STATE);
+
+        if (stateNode == null) {
+            throw new ClientException("Cannot get state from bundle json");
         }
+
+        return stateNode.getTextValue();
     }
 
     /**
@@ -635,31 +638,26 @@ public class OsgiConsoleClient extends SlingClient {
      *   }]
      * }
      */
-    private JSONObject getBundleData(String symbolicName) throws ClientException {
+    private JsonNode getBundleData(String symbolicName) throws ClientException {
         final String path = getBundlePath(symbolicName, ".json");
         final String content = this.doGet(path, SC_OK).getContent();
+        final JsonNode root = JsonUtils.getJsonNodeFromString(content);
 
-        try {
-            final JSONObject root = new JSONObject(content);
-
-            if (!root.has(JSON_KEY_DATA)) {
-                throw new ClientException(path + " does not provide '" + JSON_KEY_DATA + "' element, JSON content=" + content);
-            }
-
-            final JSONArray data = root.getJSONArray(JSON_KEY_DATA);
-            if (data.length() < 1) {
-                throw new ClientException(path + "." + JSON_KEY_DATA + " is empty, JSON content=" + content);
-            }
-
-            final JSONObject bundle = data.getJSONObject(0);
-            if (!bundle.has(JSON_KEY_STATE)) {
-                throw new ClientException(path + ".data[0].state missing, JSON content=" + content);
-            }
-
-            return bundle;
-        } catch (JSONException e) {
-            throw new ClientException("Cannot get json", e);
+        if (root.get(JSON_KEY_DATA) == null) {
+            throw new ClientException(path + " does not provide '" + JSON_KEY_DATA + "' element, JSON content=" + content);
         }
+
+        Iterator<JsonNode> data = root.get(JSON_KEY_DATA).getElements();
+        if (!data.hasNext()) {
+            throw new ClientException(path + "." + JSON_KEY_DATA + " is empty, JSON content=" + content);
+        }
+
+        final JsonNode bundle = data.next();
+        if (bundle.get(JSON_KEY_STATE) == null) {
+            throw new ClientException(path + ".data[0].state missing, JSON content=" + content);
+        }
+
+        return bundle;
     }
 
     //
