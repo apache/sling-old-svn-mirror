@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<jcr:root xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:app="http://sample.com/jcr/app/1.0" xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:sling="http://sling.apache.org/jcr/sling/1.0"
+    jcr:primaryType="app:Page">
+  <jcr:content
+      app:template="samples/sample-app/templates/content/content"
+      jcr:primaryType="app:PageContent"
+      jcr:title="Conference"
+      sling:resourceType="samples/sample-app/components/content/page/content"
+      includeAside="{Boolean}true"
+      includeAsideBar="{Boolean}true"
+      includeTeaserBar="{Boolean}true"
+      includeTeaserbar="{Boolean}false"
+      inheritAside="{Boolean}false"
+      inheritTeaserBar="{Boolean}true"
+      inheritTeaserbar="{Boolean}false"
+      navTitle="CONFERENCE">
+    <content
+        jcr:primaryType="nt:unstructured"
+        sling:resourceType="sample/wcm/parsys/components/parsys">
+      <contentheadline
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/common/contentHeadline"
+          headline="About adaptTo() 2013" />
+      <contentrichtext
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/common/contentRichText"
+          text="&lt;p&gt;adaptTo() is a technical meetup focused on the technical stack of &lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;external&amp;quot;,&amp;quot;linkExternalRef&amp;quot;:&amp;quot;http://sling.apache.org/&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_blank&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;Apache Sling&lt;/a&gt; including &lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;external&amp;quot;,&amp;quot;linkExternalRef&amp;quot;:&amp;quot;http://jackrabbit.apache.org/&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_blank&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;Apache Jackrabbit&lt;/a&gt; and &lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;external&amp;quot;,&amp;quot;linkExternalRef&amp;quot;:&amp;quot;http://felix.apache.org/&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_blank&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;Apache Felix&lt;/a&gt; and is addressed to all developers using this stack or parts of it.&lt;/p&gt;&#xA;&lt;p&gt;2013 we'll have the third edition of adaptTo() and will again be located in Berlin, Germany. adaptTo() was successful in 2012 and will take place at a new location this year. The popular Kulturbrauerei offers more space to improve your experience. The location and the support of our main sponsor Adobe will again give you a platform to get in touch with some of the most experienced Sling, Jackrabbit and Felix developers and share your own experience with the community.&lt;/p&gt;&#xA;&lt;p&gt;Additional sessions will cover commercial implementations like &lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;external&amp;quot;,&amp;quot;linkExternalRef&amp;quot;:&amp;quot;http://www.adobe.com/products/app.html&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_blank&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;Adobe app&lt;/a&gt; and CRX, with particular focus on how these products leverage the architecture.&lt;/p&gt;&#xA;&lt;p&gt;&lt;strong&gt;Date&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;p&gt;23.-25.September 2013&lt;/p&gt;&#xA;&lt;p&gt;&lt;strong&gt;Location&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;p&gt;Kulturbrauerei Berlin&lt;br&gt;&lt;/br&gt;&#xA;&lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;internal&amp;quot;,&amp;quot;linkContentRef&amp;quot;:&amp;quot;/content/samples/handler/en/venue&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_self&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;More info on location&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;strong&gt;Ticketprice&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;p&gt;149,95€&lt;/p&gt;&#xA;&lt;p&gt;&lt;strong&gt;Next steps&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;p&gt;Call for papers is ending 6. May 2013&lt;br&gt;&lt;/br&gt;&#xA;&lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;internal&amp;quot;,&amp;quot;linkContentRef&amp;quot;:&amp;quot;/content/samples/handler/en/conference/call-for-papers&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_self&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;Submit your paper here&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;strong&gt;Registration&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;internal&amp;quot;,&amp;quot;linkContentRef&amp;quot;:&amp;quot;/content/samples/handler/en/tickets&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_self&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;Register for tickets here&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;strong&gt;Sponsors&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;p&gt;This event is sponsored by &lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;external&amp;quot;,&amp;quot;linkExternalRef&amp;quot;:&amp;quot;http://www.adobe.com&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_blank&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;Adobe Systems&lt;/a&gt; and &lt;a data=&quot;{&amp;quot;linkType&amp;quot;:&amp;quot;external&amp;quot;,&amp;quot;linkExternalRef&amp;quot;:&amp;quot;http://www.pro-vision.de/&amp;quot;,&amp;quot;linkWindowTarget&amp;quot;:&amp;quot;_blank&amp;quot;,&amp;quot;linkWindowFeatures&amp;quot;:&amp;quot;default&amp;quot;}&quot; href=&quot;#&quot;&gt;pro!vision GmbH&lt;/a&gt; which also acts as host.&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;/p&gt;&#xA;" />
+    </content>
+    <aside
+        jcr:primaryType="nt:unstructured"
+        sling:resourceType="samples/sample-app/components/content/aside/asideParsys">
+      <asideteaser
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/aside/asideTeaser"
+          teaserContent="&lt;p&gt;Submit your paper to attend the conference as speaker&lt;/p&gt;&#xA;"
+          title="Call for Papers">
+        <links
+            jcr:primaryType="nt:unstructured"
+            sling:resourceType="samples/sample-app/components/framework/parsys/linkListParsys">
+          <linkItem
+              jcr:primaryType="nt:unstructured"
+              sling:resourceType="samples/sample-app/components/framework/item/linkItem"
+              linkContentRef="/content/samples/en/conference/call-for-papers"
+              linkMediaDownload="{Boolean}false"
+              linkTitle="Call for Papers"
+              linkType="internal"
+              linkWindowFeatures="default"
+              linkWindowTarget="_self" />
+        </links>
+      </asideteaser>
+      <asidesponsorteaser
+          jcr:primaryType="nt:unstructured"
+          sling:resourceType="samples/sample-app/components/content/aside/asideSponsorTeaser"
+          title="Sponsors">
+        <images
+            jcr:primaryType="nt:unstructured"
+            sling:resourceType="samples/sample-app/components/content/aside/asideSponsorTeaserParsys">
+          <asidesponsorteaserit_0
+              jcr:primaryType="nt:unstructured"
+              sling:resourceType="samples/sample-app/components/content/aside/asideSponsorTeaserItem"
+              linkExternalRef="http://www.pro-vision.de"
+              linkMediaDownload="{Boolean}false"
+              linkType="external"
+              linkWindowFeatures="default"
+              linkWindowTarget="_blank"
+              mediaRef="/content/dam/samples/content/provision-logo.png" />
+        </images>
+      </asidesponsorteaser>
+    </aside>
+  </jcr:content>
+</jcr:root>
