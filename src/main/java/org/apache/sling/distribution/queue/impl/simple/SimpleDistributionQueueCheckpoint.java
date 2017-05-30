@@ -26,8 +26,10 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
 
+import javax.json.Json;
+import javax.json.stream.JsonGenerator;
+
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueEntry;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -66,23 +68,24 @@ class SimpleDistributionQueueCheckpoint implements Runnable {
                 DistributionQueueItem item = queueEntry.getItem();
                 String packageId = item.getPackageId();
                 StringWriter w = new StringWriter();
-                JSONWriter jsonWriter = new JSONWriter(w);
-                jsonWriter.object();
+                JsonGenerator jsonWriter = Json.createGenerator(w);
+                jsonWriter.writeStartObject();
                 for (Map.Entry<String, Object> entry : item.entrySet()) {
-                    jsonWriter.key(entry.getKey());
+                    
                     Object value = entry.getValue();
                     boolean isArray = value instanceof String[];
                     if (isArray) {
-                        jsonWriter.array();
+                        jsonWriter.writeStartArray(entry.getKey());
                         for (String s : ((String[]) value)) {
-                            jsonWriter.value(s);
+                            jsonWriter.write(s);
                         }
-                        jsonWriter.endArray();
+                        jsonWriter.writeEnd();
                     } else {
-                        jsonWriter.value(value);
+                        jsonWriter.write(entry.getKey(), (String) value);
                     }
                 }
-                jsonWriter.endObject();
+                jsonWriter.writeEnd();
+                jsonWriter.close();
                 lines.add(packageId + " " + w.toString());
             }
             log.debug("parsed {} items", lines.size());
