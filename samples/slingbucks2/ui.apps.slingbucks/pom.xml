@@ -92,7 +92,6 @@
             <plugin>
                 <groupId>io.wcm.maven.plugins</groupId>
                 <artifactId>wcmio-content-package-maven-plugin</artifactId>
-                <version>1.4.3-SNAPSHOT</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -135,7 +134,6 @@
                     <plugin>
                         <groupId>io.wcm.maven.plugins</groupId>
                         <artifactId>wcmio-content-package-maven-plugin</artifactId>
-                        <version>1.4.3-SNAPSHOT</version>
                         <extensions>true</extensions>
                         <executions>
                             <execution>

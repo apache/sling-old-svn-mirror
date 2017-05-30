@@ -208,7 +208,7 @@
                 <plugin>
                     <groupId>io.wcm.maven.plugins</groupId>
                     <artifactId>wcmio-content-package-maven-plugin</artifactId>
-                    <version>1.4.3-SNAPSHOT</version>
+                    <version>1.5.0</version>
                     <extensions>true</extensions>
                     <configuration>
                         <serviceURL>http://${sling.host}:${sling.port}/bin/cpm/</serviceURL>
