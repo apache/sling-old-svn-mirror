@@ -60,3 +60,13 @@ Until this project is fully released in the public Maven Repo this is how to use
 * Select this Archetype from a given list
 * Provide the requested properties
 
+#### Build and Install Integration Test
+
+There is a simple integration test setup with this archetype.
+You can run this one using the attached Unix shell script:
+
+    sh build.run.and.deploy.test.sh
+
+The properties for the integration test can be found under
+**/test/resources/projects/basic/archetype.properties**.
+
