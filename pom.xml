@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.fsresource</artifactId>
     <packaging>bundle</packaging>
-    <version>1.4.5-SNAPSHOT</version>
+    <version>1.4.3-SNAPSHOT</version>
 
     <name>Apache Sling File System Resource Provider</name>
     <description>
@@ -148,7 +148,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.contentparser</artifactId>
-            <version>1.2.2</version>
+            <version>1.2.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
