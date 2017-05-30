@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.fsresource</artifactId>
     <packaging>bundle</packaging>
-    <version>1.4.5-SNAPSHOT</version>
+    <version>1.4.3-SNAPSHOT</version>
 
     <name>Apache Sling File System Resource Provider</name>
     <description>
