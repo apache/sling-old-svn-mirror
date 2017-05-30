@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>maven-sling-plugin</artifactId>
-    <version>2.3.1-SNAPSHOT</version>
+    <version>2.2.3-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Sling Maven Sling Plugin</name>
