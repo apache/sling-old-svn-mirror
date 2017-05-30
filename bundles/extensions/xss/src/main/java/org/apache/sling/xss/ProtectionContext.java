@@ -38,7 +38,7 @@ public enum ProtectionContext {
     /**
      * The name of the protection context
      */
-    private String name;
+    private final String name;
 
     private ProtectionContext(String name) {
         this.name = name;

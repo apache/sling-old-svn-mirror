@@ -33,10 +33,7 @@ import org.slf4j.LoggerFactory;
 @Designate(factory=true, ocd=MappingConfigAmendment.Config.class)
 @Component(name = "org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended",
            configurationPolicy=ConfigurationPolicy.REQUIRE,
-           service={MappingConfigAmendment.class},
-           property= {
-                   "webconsole.configurationFactory.nameHint=Mapping: {user.mapping}",
-           })
+           service={MappingConfigAmendment.class})
 public class MappingConfigAmendment implements Comparable<MappingConfigAmendment> {
 
     @ObjectClassDefinition(name ="Apache Sling Service User Mapper Service Amendment",
@@ -54,6 +51,10 @@ public class MappingConfigAmendment implements Comparable<MappingConfigAmendment
                 + "where bundleId and subServiceName identify the service and userName "
                 + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.")
         String[] user_mapping() default {};
+
+        // Internal Name hint for web console.
+        String webconsole_configurationFactory_nameHint() default "Mapping: {user.mapping}";
+
     }
 
     /** default logger */

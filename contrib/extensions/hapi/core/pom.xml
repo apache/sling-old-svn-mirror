@@ -61,7 +61,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Category>sling</Bundle-Category>
-                        <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
+                        <Sling-Initial-Content>SLING-INF/libs/sling/hapi/; path:=/libs/sling/hapi; overwrite:=true; uninstall:=false</Sling-Initial-Content>
                     </instructions>
                 </configuration>
             </plugin>

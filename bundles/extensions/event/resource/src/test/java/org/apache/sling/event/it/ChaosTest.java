@@ -45,7 +45,6 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
-import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +61,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
 
     /** Duration for firing jobs in seconds. */
     private static final long DURATION = 1 * 60;
-    
+
     private static final int NUM_ORDERED_THREADS = 3;
     private static final int NUM_PARALLEL_THREADS = 6;
     private static final int NUM_ROUND_THREADS = 6;
@@ -98,7 +97,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
 
         // create ordered test queue
         final org.osgi.service.cm.Configuration orderedConfig = this.configAdmin.createFactoryConfiguration("org.apache.sling.event.jobs.QueueConfiguration", null);
-        final Dictionary<String, Object> orderedProps = new Hashtable<String, Object>();
+        final Dictionary<String, Object> orderedProps = new Hashtable<>();
         orderedProps.put(ConfigurationConstants.PROP_NAME, "chaos-ordered");
         orderedProps.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.ORDERED.name());
         orderedProps.put(ConfigurationConstants.PROP_TOPICS, ORDERED_TOPICS);
@@ -108,7 +107,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
 
         // create round robin test queue
         final org.osgi.service.cm.Configuration rrConfig = this.configAdmin.createFactoryConfiguration("org.apache.sling.event.jobs.QueueConfiguration", null);
-        final Dictionary<String, Object> rrProps = new Hashtable<String, Object>();
+        final Dictionary<String, Object> rrProps = new Hashtable<>();
         rrProps.put(ConfigurationConstants.PROP_NAME, "chaos-roundrobin");
         rrProps.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.TOPIC_ROUND_ROBIN.name());
         rrProps.put(ConfigurationConstants.PROP_TOPICS, ROUND_TOPICS);
@@ -239,7 +238,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
      */
     private void setupChaosThreads(final List<Thread> threads,
             final AtomicLong finishedThreads) {
-        final List<TopologyView> views = new ArrayList<TopologyView>();
+        final List<TopologyView> views = new ArrayList<>();
         // register topology listener
         final ServiceRegistration<TopologyEventListener> reg = this.bc.registerService(TopologyEventListener.class, new TopologyEventListener() {
 
@@ -313,10 +312,10 @@ public class ChaosTest extends AbstractJobHandlingTest {
         // setup added, created and finished map
         // added and finished are filled by notifications
         // created is filled by the threads starting jobs
-        final Map<String, AtomicLong> added = new HashMap<String, AtomicLong>();
-        final Map<String, AtomicLong> created = new HashMap<String, AtomicLong>();
-        final Map<String, AtomicLong> finished = new HashMap<String, AtomicLong>();
-        final List<String> topics = new ArrayList<String>();
+        final Map<String, AtomicLong> added = new HashMap<>();
+        final Map<String, AtomicLong> created = new HashMap<>();
+        final Map<String, AtomicLong> finished = new HashMap<>();
+        final List<String> topics = new ArrayList<>();
         for(int i=0;i<NUM_ORDERED_TOPICS;i++) {
             added.put(ORDERED_TOPICS[i], new AtomicLong());
             created.put(ORDERED_TOPICS[i], new AtomicLong());
@@ -336,7 +335,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
             topics.add(ROUND_TOPICS[i]);
         }
 
-        final List<Thread> threads = new ArrayList<Thread>();
+        final List<Thread> threads = new ArrayList<>();
         final AtomicLong finishedThreads = new AtomicLong();
 
         this.registerEventHandler("org/apache/sling/event/notification/job/*",
@@ -379,7 +378,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
         }
 
         System.out.println("Waiting for job handling to finish...");
-        final Set<String> allTopics = new HashSet<String>(topics);
+        final Set<String> allTopics = new HashSet<>(topics);
         while ( !allTopics.isEmpty() ) {
             final Iterator<String> iter = allTopics.iterator();
             while ( iter.hasNext() ) {

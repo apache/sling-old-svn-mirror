@@ -41,6 +41,7 @@ import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.HttpConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,8 +108,10 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
 
         DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.EXPORTER, exporterName, RemoteDistributionPackageExporter.class, DefaultDistributionLog.LogLevel.ERROR);
 
-
-        exporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, endpoints, pollItems);
+        // default to 10s, we can expose it if needed
+        HttpConfiguration httpConfiguration = new HttpConfiguration(10000);
+        exporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider,
+                endpoints, pollItems, httpConfiguration);
     }
 
 

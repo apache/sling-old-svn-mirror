@@ -41,4 +41,9 @@ public class FsUnMountMojo extends AbstractFsMountMojo {
         new FileVaultXmlMounter(getLog(), getHttpClient(), project).unmount(targetUrl, jcrRootFile, filterXmlFile);
     }
 
+    @Override
+    protected void ensureBundlesInstalled(String targetUrl) throws MojoExecutionException {
+        // nothing to do on uninstall
+    }
+
 }

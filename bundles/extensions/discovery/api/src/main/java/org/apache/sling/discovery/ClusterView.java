@@ -20,7 +20,8 @@ package org.apache.sling.discovery;
 
 import java.util.List;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
+
 
 /**
  * A ClusterView represents the instances of a cluster that are
@@ -50,7 +51,7 @@ public interface ClusterView {
      * <p>
      * Note: When instances part from a cluster (eg due to a network
      * partitioning) the cluster id is retained. This results in
-     * potentially multiple clusters with the same id. This 
+     * potentially multiple clusters with the same id. This
      * fact could be used to detect such partitioning/split brain
      * situations. It also implies though that the cluster id
      * is not guaranteed to be unique in a topology!

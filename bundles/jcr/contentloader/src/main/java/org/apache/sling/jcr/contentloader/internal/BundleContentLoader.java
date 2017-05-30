@@ -432,7 +432,7 @@ public class BundleContentLoader extends BaseImportLoader {
             }
             // if we have a descriptor, which has not been processed yet,
             // process it
-            if (nodeDescriptor != null && processedEntries.containsKey(nodeDescriptor.toString())) {
+            if (nodeDescriptor != null && !processedEntries.containsKey(nodeDescriptor.toString())) {
                 try {
                     contentCreator.setIgnoreOverwriteFlag(true);
                     node = createNode(parent, name, nodeDescriptor, contentCreator, configuration);

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import java.util.Collections;
+import java.lang.annotation.Annotation;
 
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
@@ -34,10 +34,34 @@ import org.osgi.framework.ServiceReference;
 
 public class JobConsumerManagerTest {
 
+    private JobConsumerManager.Config getDefaultConfig() {
+        return new JobConsumerManager.Config() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return JobConsumerManager.Config.class;
+            }
+
+            @Override
+            public boolean org_apache_sling_installer_configuration_persist() {
+                return false;
+            }
+
+            @Override
+            public String[] job_consumermanager_whitelist() {
+                return new String[] {"*"};
+            }
+
+            @Override
+            public String[] job_consumermanager_blacklist() {
+                return null;
+            }
+        };
+    }
     @Test public void testSimpleMappingConsumer() {
         final BundleContext bc = Mockito.mock(BundleContext.class);
         final JobConsumerManager jcs = new JobConsumerManager();
-        jcs.activate(bc, Collections.EMPTY_MAP);
+        jcs.activate(bc, getDefaultConfig());
 
         final JobConsumer jc1 = Mockito.mock(JobConsumer.class);
         final ServiceReference ref1 = Mockito.mock(ServiceReference.class);
@@ -56,7 +80,7 @@ public class JobConsumerManagerTest {
     @Test public void testCategoryMappingConsumer() {
         final BundleContext bc = Mockito.mock(BundleContext.class);
         final JobConsumerManager jcs = new JobConsumerManager();
-        jcs.activate(bc, Collections.EMPTY_MAP);
+        jcs.activate(bc, getDefaultConfig());
 
         final JobConsumer jc1 = Mockito.mock(JobConsumer.class);
         final ServiceReference ref1 = Mockito.mock(ServiceReference.class);
@@ -75,7 +99,7 @@ public class JobConsumerManagerTest {
     @Test public void testSubCategoryMappingConsumer() {
         final BundleContext bc = Mockito.mock(BundleContext.class);
         final JobConsumerManager jcs = new JobConsumerManager();
-        jcs.activate(bc, Collections.EMPTY_MAP);
+        jcs.activate(bc, getDefaultConfig());
 
         final JobConsumer jc1 = Mockito.mock(JobConsumer.class);
         final ServiceReference ref1 = Mockito.mock(ServiceReference.class);
@@ -94,7 +118,7 @@ public class JobConsumerManagerTest {
     @Test public void testSimpleMappingExecutor() {
         final BundleContext bc = Mockito.mock(BundleContext.class);
         final JobConsumerManager jcs = new JobConsumerManager();
-        jcs.activate(bc, Collections.EMPTY_MAP);
+        jcs.activate(bc, getDefaultConfig());
 
         final JobExecutor jc1 = Mockito.mock(JobExecutor.class);
         final ServiceReference ref1 = Mockito.mock(ServiceReference.class);
@@ -113,7 +137,7 @@ public class JobConsumerManagerTest {
     @Test public void testCategoryMappingExecutor() {
         final BundleContext bc = Mockito.mock(BundleContext.class);
         final JobConsumerManager jcs = new JobConsumerManager();
-        jcs.activate(bc, Collections.EMPTY_MAP);
+        jcs.activate(bc, getDefaultConfig());
 
         final JobExecutor jc1 = Mockito.mock(JobExecutor.class);
         final ServiceReference ref1 = Mockito.mock(ServiceReference.class);
@@ -132,7 +156,7 @@ public class JobConsumerManagerTest {
     @Test public void testSubCategoryMappingExecutor() {
         final BundleContext bc = Mockito.mock(BundleContext.class);
         final JobConsumerManager jcs = new JobConsumerManager();
-        jcs.activate(bc, Collections.EMPTY_MAP);
+        jcs.activate(bc, getDefaultConfig());
 
         final JobExecutor jc1 = Mockito.mock(JobExecutor.class);
         final ServiceReference ref1 = Mockito.mock(ServiceReference.class);
@@ -151,7 +175,7 @@ public class JobConsumerManagerTest {
     @Test public void testRanking() {
         final BundleContext bc = Mockito.mock(BundleContext.class);
         final JobConsumerManager jcs = new JobConsumerManager();
-        jcs.activate(bc, Collections.EMPTY_MAP);
+        jcs.activate(bc, getDefaultConfig());
 
         final JobExecutor jc1 = Mockito.mock(JobExecutor.class);
         final JobExecutor jc2 = Mockito.mock(JobExecutor.class);

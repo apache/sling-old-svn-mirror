@@ -23,8 +23,7 @@
  *
  * @version 1.0
  */
-@Version("1.0.2")
+@org.osgi.annotation.versioning.Version("1.0.3")
 package org.apache.sling.discovery;
 
-import aQute.bnd.annotation.Version;
 

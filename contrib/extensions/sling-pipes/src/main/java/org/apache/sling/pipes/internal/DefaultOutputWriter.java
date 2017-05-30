@@ -29,11 +29,9 @@ import org.apache.sling.pipes.Pipe;
 /**
  * default output writer with size and output resources' path
  */
-public class DefaultOutputWriter implements OutputWriter {
+public class DefaultOutputWriter extends OutputWriter {
 
     protected JSONWriter writer;
-
-    protected Pipe pipe;
 
     @Override
     public boolean handleRequest(SlingHttpServletRequest request) {
@@ -41,11 +39,10 @@ public class DefaultOutputWriter implements OutputWriter {
     }
 
     @Override
-    public void init(SlingHttpServletRequest request, SlingHttpServletResponse response, Pipe pipe) throws IOException, JSONException {
+    protected void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JSONException {
         response.setCharacterEncoding("utf-8");
         response.setContentType("application/json");
         writer = new JSONWriter(response.getWriter());
-        this.pipe = pipe;
         writer.object();
         writer.key(KEY_ITEMS);
         writer.array();
@@ -57,7 +54,7 @@ public class DefaultOutputWriter implements OutputWriter {
     }
 
     @Override
-    public void ends(int size) throws JSONException {
+    public void ends() throws JSONException {
         writer.endArray();
         writer.key(KEY_SIZE).value(size);
         writer.endObject();

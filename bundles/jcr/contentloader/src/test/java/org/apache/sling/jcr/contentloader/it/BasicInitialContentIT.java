@@ -40,6 +40,9 @@ public class BasicInitialContentIT extends ContentBundleTestBase {
     protected TinyBundle setupTestBundle(TinyBundle b) throws IOException {
         b.set(SLING_INITIAL_CONTENT_HEADER, DEFAULT_PATH_IN_BUNDLE + ";path:=" + contentRootPath);
         addContent(b, DEFAULT_PATH_IN_BUNDLE, "basic-content.json");
+        addContent(b, DEFAULT_PATH_IN_BUNDLE, "simple-folder/test1.txt");
+        addContent(b, DEFAULT_PATH_IN_BUNDLE, "folder-with-descriptor.json");
+        addContent(b, DEFAULT_PATH_IN_BUNDLE, "folder-with-descriptor/test2.txt");
         return b;
     }
     
@@ -58,4 +61,29 @@ public class BasicInitialContentIT extends ContentBundleTestBase {
         assertTrue("Expecting initial content to be installed", session.itemExists(testNodePath)); 
         assertEquals("Expecting foo=bar", "bar", session.getNode(testNodePath).getProperty("foo").getString()); 
     }
+
+    @Test
+    @Retry(intervalMsec=RETRY_INTERVAL, timeoutMsec=RETRY_TIMEOUT)
+    public void folderWithoutDescriptor() throws RepositoryException {
+        final String folderPath = contentRootPath + "/simple-folder"; 
+        assertTrue("folder node " + folderPath + " exists", session.itemExists(folderPath)); 
+        assertEquals("folder has node type 'sling:Folder'", "sling:Folder", session.getNode(folderPath).getPrimaryNodeType().getName()); 
+
+        final String filePath = contentRootPath + "/simple-folder/test1.txt"; 
+        assertTrue("file node " + filePath + " exists", session.itemExists(filePath)); 
+        assertEquals("file has node type 'nt:file'", "nt:file", session.getNode(filePath).getPrimaryNodeType().getName()); 
+    }
+
+    @Test
+    @Retry(intervalMsec=RETRY_INTERVAL, timeoutMsec=RETRY_TIMEOUT)
+    public void folderWithDescriptor() throws RepositoryException {
+        final String folderPath = contentRootPath + "/folder-with-descriptor"; 
+        assertTrue("folder node " + folderPath + " exists", session.itemExists(folderPath)); 
+        assertEquals("folder has node type 'sling:OrderedFolder'", "sling:OrderedFolder", session.getNode(folderPath).getPrimaryNodeType().getName()); 
+
+        final String filePath = contentRootPath + "/folder-with-descriptor/test2.txt"; 
+        assertTrue("file node " + filePath + " exists", session.itemExists(filePath)); 
+        assertEquals("file has node type 'nt:file'", "nt:file", session.getNode(filePath).getPrimaryNodeType().getName()); 
+    }
+
 }

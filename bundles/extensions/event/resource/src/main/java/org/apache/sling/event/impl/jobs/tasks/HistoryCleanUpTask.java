@@ -24,10 +24,6 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -39,6 +35,9 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +51,11 @@ import org.slf4j.LoggerFactory;
  *           The value should either be a string or an array of string. Allowed values are:
  *           SUCCEEDED, STOPPED, GIVEN_UP, ERROR, DROPPED
  */
-@Component
-@Service(value = JobExecutor.class)
-@Property(name = JobExecutor.PROPERTY_TOPICS, value = "org/apache/sling/event/impl/jobs/tasks/HistoryCleanUpTask")
+@Component(service = JobExecutor.class,
+    property = {
+        JobExecutor.PROPERTY_TOPICS + "=org/apache/sling/event/impl/jobs/tasks/HistoryCleanUpTask",
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+})
 public class HistoryCleanUpTask implements JobExecutor {
 
     private static final String PROPERTY_AGE = "age";
@@ -88,7 +89,7 @@ public class HistoryCleanUpTask implements JobExecutor {
 
         final List<String> stateList;
         if ( states != null ) {
-            stateList = new ArrayList<String>();
+            stateList = new ArrayList<>();
             for(final String s : states) {
                 stateList.add(s);
             }

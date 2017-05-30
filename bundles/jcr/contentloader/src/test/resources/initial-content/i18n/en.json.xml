@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Set language node and mixing for i18n json file -->
+<node>
+  <name>en.json</name>
+  <mixinNodeType>mix:language</mixinNodeType>
+  <property>
+    <name>jcr:language</name>
+    <value>en</value>
+    <type>String</type>
+  </property>
+</node>

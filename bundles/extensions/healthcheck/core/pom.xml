@@ -31,7 +31,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.hc.core</artifactId>
     <packaging>bundle</packaging>
-    <version>1.2.7-SNAPSHOT</version>
+    <version>1.2.9-SNAPSHOT</version>
 
     <name>Apache Sling Health Check Core</name>
     <inceptionYear>2013</inceptionYear>
@@ -46,6 +46,9 @@
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <felix.shell>false</felix.shell>
         <project.bundle.file>${project.build.directory}/${project.build.finalName}.jar</project.bundle.file>
+
+        <!-- temporarily until next release -->
+        <baseline.skip>true</baseline.skip>
     </properties>
     
     <scm>
@@ -127,6 +130,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.hc.api</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -217,16 +226,16 @@
             <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>        
-    <dependency>
+        <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-json_1.0_spec</artifactId>
             <version>1.0-alpha-1</version>
             <scope>provided</scope>
         </dependency>
-    <dependency>
+        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.johnzon</artifactId>    
-            <version>0.1.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency> 
         

@@ -37,6 +37,7 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.apache.sling.hc.core.impl.executor.HealthCheckFuture.Callback;
 import org.apache.sling.hc.util.HealthCheckFilter;
 import org.apache.sling.hc.util.HealthCheckMetadata;
@@ -77,7 +78,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
         int count = 0;
         HealthCheckFilter healthCheckFilter = new HealthCheckFilter(bundleContext);
-        final ServiceReference[] healthCheckReferences = healthCheckFilter.getTaggedHealthCheckServiceReferences(new String[0]);
+        final ServiceReference[] healthCheckReferences = healthCheckFilter.getHealthCheckServiceReferences(HealthCheckSelector.empty());
         for (ServiceReference serviceReference : healthCheckReferences) {
             HealthCheckMetadata healthCheckMetadata = new HealthCheckMetadata(serviceReference);
             if (isAsync(healthCheckMetadata)) {

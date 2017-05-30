@@ -36,6 +36,7 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.HttpConfiguration;
 import org.junit.Test;
 
 /**
@@ -49,7 +50,7 @@ public class RemoteDistributionPackageExporterTest {
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         String[] endpoints = new String[0];
         RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
-                packageBuilder, distributionTransportSecretProvider, endpoints, 1);
+                packageBuilder, distributionTransportSecretProvider, endpoints, 1, new HttpConfiguration(10000));
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         final List<DistributionPackage> distributionPackages = new ArrayList<DistributionPackage>();
@@ -84,7 +85,7 @@ public class RemoteDistributionPackageExporterTest {
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         String[] endpoints = new String[0];
         RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
-                packageBuilder, distributionTransportSecretProvider, endpoints, 1);
+                packageBuilder, distributionTransportSecretProvider, endpoints, 1, new HttpConfiguration(10000));
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = remotedistributionPackageExporter.getPackage(resourceResolver, "123");

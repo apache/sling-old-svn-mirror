@@ -64,8 +64,9 @@ public class WritePipe extends BasePipe {
         resourceExpression = getPath();
     }
 
+
     /**
-     * convert the configured value (can be an expression) in a value that can be written in a resource.
+     * convert the configured string value (can be an expression) in a value that can be written in a resource.
      * also handles patch for multivalue properties like <code>+[value]</code> in which case <code>value</code>
      * is added to the MV property
      * @param resource resource to which value will be written
@@ -73,28 +74,39 @@ public class WritePipe extends BasePipe {
      * @param expression configured value to write
      * @return actual value to write to the resource
      */
+    protected Object computeValue(Resource resource, String key, String expression){
+        Object value = bindings.instantiateObject((String) expression);
+        if (value != null && value instanceof String) {
+            //in that case we treat special case like MV or patches
+            String sValue = (String)value;
+            Matcher patch = addPatch.matcher(sValue);
+            if (patch.matches()) {
+                String newValue = patch.group(1);
+                String[] actualValues = resource.adaptTo(ValueMap.class).get(key, String[].class);
+                List<String> newValues = actualValues != null ? new LinkedList<>(Arrays.asList(actualValues)) : new ArrayList<String>();
+                if (!newValues.contains(newValue)) {
+                    newValues.add(newValue);
+                }
+                return newValues.toArray(new String[newValues.size()]);
+            }
+            Matcher multiMatcher = multi.matcher(sValue);
+            if (multiMatcher.matches()) {
+                return multiMatcher.group(1).split(",");
+            }
+        }
+        return value;
+    }
+
+
     protected Object computeValue(Resource resource, String key, Object expression) {
         if (expression instanceof String) {
-            Object value = bindings.instantiateObject((String) expression);
-            if (value != null && value instanceof String) {
-                //in that case we treat special case like MV or patches
-                String sValue = (String)value;
-                Matcher patch = addPatch.matcher(sValue);
-                if (patch.matches()) {
-                    String newValue = patch.group(1);
-                    String[] actualValues = resource.adaptTo(ValueMap.class).get(key, String[].class);
-                    List<String> newValues = actualValues != null ? new LinkedList<>(Arrays.asList(actualValues)) : new ArrayList<String>();
-                    if (!newValues.contains(newValue)) {
-                        newValues.add(newValue);
-                    }
-                    return newValues.toArray(new String[newValues.size()]);
-                }
-                Matcher multiMatcher = multi.matcher(sValue);
-                if (multiMatcher.matches()) {
-                    return multiMatcher.group(1).split(",");
-                }
+            return computeValue(resource, key, (String)expression);
+        } else if (expression instanceof String[]){
+            List<String> values = new ArrayList<>();
+            for (String expr : (String[])expression){
+                values.add((String)computeValue(resource, key, expr));
             }
-            return value;
+            return values.toArray(new String[values.size()]);
         }
         return expression;
     }

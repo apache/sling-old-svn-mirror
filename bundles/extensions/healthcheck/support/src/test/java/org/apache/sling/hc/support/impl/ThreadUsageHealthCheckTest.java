@@ -26,37 +26,30 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Dictionary;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.support.impl.ThreadUsageHealthCheck.ThreadTimeInfo;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.osgi.service.component.ComponentContext;
-
-import org.apache.sling.hc.support.impl.ThreadUsageHealthCheck.ThreadTimeInfo;
 
 public class ThreadUsageHealthCheckTest {
 
     @Spy
     ThreadUsageHealthCheck threadsHealthCheck;
 
-    @Mock
-    ComponentContext componentContext;
 
     @Mock
-    Dictionary<String, Object> componentConfig;
+    Map<String, Object> componentConfig;
 
     @Before
     public void setup() {
         initMocks(this);
-
-        doReturn(componentConfig).when(componentContext).getProperties();
         doNothing().when(threadsHealthCheck).checkForDeadlock(any(FormattingResultLog.class), any(ThreadMXBean.class));
-
     }
 
     @Test
@@ -104,7 +97,7 @@ public class ThreadUsageHealthCheckTest {
     private void setupExpectations(long samplePeriod, int processorsAvailable, List<ThreadTimeInfo> resultListOk) {
         doReturn(processorsAvailable * 90).when(componentConfig).get(ThreadUsageHealthCheck.PROP_CPU_TIME_THRESHOLD_WARN);
         doReturn(samplePeriod).when(componentConfig).get(ThreadUsageHealthCheck.PROP_SAMPLE_PERIOD_IN_MS);
-        threadsHealthCheck.activate(componentContext);
+        threadsHealthCheck.activate(componentConfig);
         doReturn(resultListOk).when(threadsHealthCheck).collectThreadTimeInfos(any(FormattingResultLog.class), any(ThreadMXBean.class));
     }
 

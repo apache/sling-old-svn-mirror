@@ -60,4 +60,12 @@ public class ContentFileParserUtilTest {
         assertNull(content);
     }
 
+    @Test
+    public void testParseXml() {
+        File file = new File("src/test/resources/fs-test/folder2/folder21.xml");
+        ContentElement content = ContentFileParserUtil.parse(file);
+        assertNotNull(content);
+        assertEquals("sling:OrderedFolder", content.getProperties().get("jcr:primaryType"));
+    }
+
 }

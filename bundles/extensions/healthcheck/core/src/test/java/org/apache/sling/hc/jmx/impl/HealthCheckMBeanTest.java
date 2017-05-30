@@ -32,6 +32,7 @@ import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.apache.sling.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.apache.sling.hc.util.SimpleConstraintChecker;
@@ -105,6 +106,7 @@ public class HealthCheckMBeanTest {
         };
         final HealthCheckMBean mbean = new HealthCheckMBean(ref, new ExtendedHealthCheckExecutor() {
 
+            @SuppressWarnings("deprecation")
             @Override
             public List<HealthCheckExecutionResult> execute(String... tags) {
                 return null;
@@ -147,8 +149,19 @@ public class HealthCheckMBeanTest {
                 };
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public List<HealthCheckExecutionResult> execute(HealthCheckExecutionOptions options, String... tags) {
+                return null;
+            }
+
+            @Override
+            public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector) {
+                return null;
+            }
+
+            @Override
+            public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector, HealthCheckExecutionOptions options) {
                 return null;
             }
         });

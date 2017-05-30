@@ -20,7 +20,9 @@ package org.apache.sling.testing.mock.osgi;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -173,26 +175,35 @@ final class OsgiMetadataUtil {
     }
     
     private static void parseMetadataDocuments(Map<String,Document> cacheMap, String resourcePath, XPathExpression xpathExpression) {
-        try (InputStream fileStream = OsgiMetadataUtil.class.getClassLoader().getResourceAsStream(resourcePath)) {
-            if (fileStream != null) {
-                Document metadata = toXmlDocument(fileStream, resourcePath);
-                NodeList nodes = (NodeList)xpathExpression.evaluate(metadata, XPathConstants.NODESET);
-                if (nodes != null) {
-                    for (int i = 0; i < nodes.getLength(); i++) {
-                        Node node = nodes.item(i);
-                        String implementationClass = getImplementationClassName(node);
-                        if (implementationClass != null) {
-                            cacheMap.put(implementationClass, metadata);
-                        }
-                    }
-                }                            
+        try {
+            Enumeration<URL> resourceUrls = OsgiMetadataUtil.class.getClassLoader().getResources(resourcePath);
+            while (resourceUrls.hasMoreElements()) {
+                URL resourceUrl = resourceUrls.nextElement();
+                try (InputStream fileStream = resourceUrl.openStream()) {
+                    parseMetadataDocument(cacheMap, resourcePath, fileStream, xpathExpression);
+                }
             }
         }
-        catch (Throwable ex) {
+        catch (Exception ex) {
             log.warn("Error reading SCR metadata XML document from " + resourcePath, ex);
         }
     }
     
+    private static void parseMetadataDocument(Map<String,Document> cacheMap, String resourcePath,
+            InputStream fileStream, XPathExpression xpathExpression) throws XPathExpressionException {
+        Document metadata = toXmlDocument(fileStream, resourcePath);
+        NodeList nodes = (NodeList)xpathExpression.evaluate(metadata, XPathConstants.NODESET);
+        if (nodes != null) {
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                String implementationClass = getImplementationClassName(node);
+                if (implementationClass != null) {
+                    cacheMap.put(implementationClass, metadata);
+                }
+            }
+        }                            
+    }
+
     private static String getImplementationClassName(Node componentNode) {
         NodeList childNodes = componentNode.getChildNodes();
         for (int j = 0; j < childNodes.getLength(); j++) {

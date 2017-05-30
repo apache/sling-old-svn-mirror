@@ -61,20 +61,20 @@ public class PreparePackageMojoTest {
         PreparePackageMojo ppm = getMojoUnderTest(
                 "org.apache.sling/org.apache.sling.commons.classloader/1.3.2",
                 "org.apache.sling/org.apache.sling.commons.classloader/1.3.2/app",
-                "org.apache.sling/org.apache.sling.commons.json/2.0.12");
+                "org.apache.sling/org.apache.sling.commons.johnzon/1.0.0");
         try {
             String modelTxt = "[feature name=:launchpad]\n" +
                     "[artifacts]\n" +
                     "  org.apache.sling/org.apache.sling.commons.classloader/1.3.2\n" +
                     "" +
                     "[feature name=rename_test]\n" +
-                    "  org.apache.sling/org.apache.sling.commons.json/2.0.12 [bundle:rename-bsn=r-foo.bar.renamed.sling.commons.json]\n";
+                    "  org.apache.sling/org.apache.sling.commons.johnzon/1.0.0 [bundle:rename-bsn=r-foo.bar.renamed.sling.commons.johnzon]\n";
 
             Model model = ModelReader.read(new StringReader(modelTxt), null);
             ppm.execute(model);
 
-            File orgJar = getMavenArtifactFile(getMavenRepoRoot(), "org.apache.sling", "org.apache.sling.commons.json", "2.0.12");
-            File generatedJar = new File(ppm.getTmpDir() + "/r-foo.bar.renamed.sling.commons.json-2.0.12.jar");
+            File orgJar = getMavenArtifactFile(getMavenRepoRoot(), "org.apache.sling", "org.apache.sling.commons.johnzon", "1.0.0");
+            File generatedJar = new File(ppm.getTmpDir() + "/r-foo.bar.renamed.sling.commons.johnzon-1.0.0.jar");
 
             compareJarContents(orgJar, generatedJar);
 
@@ -93,7 +93,7 @@ public class PreparePackageMojoTest {
                         assertEquals("Should have recorded the original Bundle-SymbolicName",
                                 orgVal, newAttrs.getValue("X-Original-Bundle-SymbolicName"));
 
-                        assertEquals("r-foo.bar.renamed.sling.commons.json", newVal);
+                        assertEquals("r-foo.bar.renamed.sling.commons.johnzon", newVal);
                     } else {
                         assertEquals("Different keys: " + key, orgVal, newVal);
                     }
@@ -142,7 +142,7 @@ public class PreparePackageMojoTest {
                 "org.apache.sling/org.apache.sling.commons.classloader/1.3.2",
                 "org.apache.sling/org.apache.sling.commons.classloader/1.3.2/app",
                 "org.apache.sling/org.apache.sling.commons.contentdetection/1.0.2",
-                "org.apache.sling/org.apache.sling.commons.json/2.0.12",
+                "org.apache.sling/org.apache.sling.commons.johnzon/1.0.0",
                 "org.apache.sling/org.apache.sling.commons.mime/2.1.8",
                 "org.apache.sling/org.apache.sling.commons.osgi/2.3.0",
                 "org.apache.sling/org.apache.sling.commons.threads/3.2.0");
@@ -164,7 +164,7 @@ public class PreparePackageMojoTest {
                     "  org.apache.sling/org.apache.sling.commons.osgi/2.3.0\n" +
                     "" +
                     "[artifacts startLevel=10]\n" +
-                    "  org.apache.sling/org.apache.sling.commons.json/2.0.12\n" +
+                    "  org.apache.sling/org.apache.sling.commons.johnzon/1.0.0\n" +
                     "  org.apache.sling/org.apache.sling.commons.mime/2.1.8\n" +
                     "" +
                     "[artifacts startLevel=20 runModes=foo,bar,:blah]\n" +
@@ -181,7 +181,7 @@ public class PreparePackageMojoTest {
                 Manifest mf = jf.getManifest();
                 Attributes attrs = mf.getMainAttributes();
                 String expected = "Potential_Bundles/0/org.apache.sling.commons.osgi-2.3.0.jar|"
-                        + "Potential_Bundles/10/org.apache.sling.commons.json-2.0.12.jar|"
+                        + "Potential_Bundles/10/org.apache.sling.commons.johnzon-1.0.0.jar|"
                         + "Potential_Bundles/10/org.apache.sling.commons.mime-2.1.8.jar";
                 assertEquals(expected, attrs.getValue("_all_"));
                 assertEquals("Potential_Bundles/20/org.apache.sling.commons.threads-3.2.0.jar", attrs.getValue("foo"));
@@ -209,8 +209,8 @@ public class PreparePackageMojoTest {
                     assertArtifactsEqual(soj, is);
                 }
 
-                File sjj = getMavenArtifactFile(mrr, "org.apache.sling", "org.apache.sling.commons.json", "2.0.12");
-                ZipEntry sjZE = jf.getEntry("Potential_Bundles/10/org.apache.sling.commons.json-2.0.12.jar");
+                File sjj = getMavenArtifactFile(mrr, "org.apache.sling", "org.apache.sling.commons.johnzon", "1.0.0");
+                ZipEntry sjZE = jf.getEntry("Potential_Bundles/10/org.apache.sling.commons.johnzon-1.0.0.jar");
                 try (InputStream is = jf.getInputStream(sjZE)) {
                     assertArtifactsEqual(sjj, is);
                 }

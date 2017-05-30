@@ -62,6 +62,12 @@ public class ValidationMojo extends AbstractMojo {
     private boolean skipJson;
 
     /**
+     * Whether to accept quote ticks in JSON files or not. 
+     */
+    @Parameter(property = "sling.validation.jsonQuoteTick", defaultValue = "false", required = false)
+    private boolean jsonQuoteTick;
+
+    /**
      * @see org.apache.maven.plugin.AbstractMojo#execute()
      */
     public void execute()
@@ -70,7 +76,6 @@ public class ValidationMojo extends AbstractMojo {
             getLog().info("Validation is skipped.");
             return;
         }
-        @SuppressWarnings("unchecked")
         final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
         while ( rsrcIterator.hasNext() ) {
             final Resource rsrc = rsrcIterator.next();
@@ -120,7 +125,7 @@ public class ValidationMojo extends AbstractMojo {
                 }
                 // validate JSON
                 try {
-                    JsonSupport.validateJsonStructure(json);
+                    JsonSupport.validateJsonStructure(json, jsonQuoteTick);
                 } catch (JsonException e) {
                     throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", e);
                 }

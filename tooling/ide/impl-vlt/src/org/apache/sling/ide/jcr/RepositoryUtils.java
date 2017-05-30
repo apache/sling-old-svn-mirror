@@ -36,7 +36,15 @@ import org.apache.sling.ide.transport.RepositoryInfo;
 public abstract class RepositoryUtils {
 
     private static final Object SYNC = new Object();
-    private static final String[] WEBDAV_URL_LOCATIONS = new String[] { "server/-/jcr:root", "crx/-/jcr:root" };
+    /** 
+     *  Path of DavEx server (by default listens on {@code /server}, for AEM below {@code /crx/server}), followed by workspace name.
+     *  Must not start with a slash.
+     *  Always give explicit workspace name to workaround the faulty fix from  https://issues.apache.org/jira/browse/JCRVLT-144.
+     *  The original issue is https://issues.apache.org/jira/browse/JCR-4120, as soon as that one is fixed, 
+     *  the default workspace name does no longer need to be explicitly listed here.
+     *  @see RepositoryAddress
+     */
+    static final String[] WEBDAV_URL_LOCATIONS = new String[] { "server/default/jcr:root", "crx/server/crx.default/jcr:root" };
     private static final RepositoryFactory FACTORY = new DAVExRepositoryFactory();
     private static final Map<RepositoryAddress, Repository> REGISTERED_REPOSITORIES = new HashMap<>();
     

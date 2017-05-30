@@ -22,17 +22,15 @@ See http://sling.apache.org for more information.
 Getting started
 ---------------
 
-You need a Java 6 (or higher) JDK and Maven 3 (http://maven.apache.org/,
-version 3.0.4 or higher) to build Sling.
+You need a Java 8 (or higher) JDK and Maven 3 (http://maven.apache.org/,
+version 3.3.9 or higher) to build Sling.
 
 Once you have everything in place, run
 
-    export MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=256M" 
     mvn clean install
 
-in this directory (on 64bit platforms you might want to use 512M instead
-of 256M). This will build, test and install the Sling modules in your local
-Maven repository.
+in this directory. This will build, test and install the Sling modules in 
+your local Maven repository.
 
 Some modules might not be listed in the pom.xml found in this directory,
 those won't be built by the above command. If you need one of these 

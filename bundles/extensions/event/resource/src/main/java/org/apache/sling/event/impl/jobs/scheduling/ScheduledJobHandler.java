@@ -277,7 +277,7 @@ public class ScheduledJobHandler implements Runnable {
             } else {
                 logger.debug("Storing new scheduled job {} at {}", properties, path);
             }
-            ResourceHelper.getOrCreateResource(resolver,
+            ResourceHelper.createAndCommitResource(resolver,
                     path,
                     properties);
             // put back real schedule infos

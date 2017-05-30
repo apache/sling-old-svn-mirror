@@ -37,6 +37,7 @@ import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.Result.Status;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.apache.sling.hc.util.HealthCheckFilter;
 import org.apache.sling.hc.util.HealthCheckMetadata;
@@ -118,7 +119,7 @@ public class CompositeHealthCheck implements HealthCheck {
         }
 
         FormattingResultLog resultLog = new FormattingResultLog();
-        List<HealthCheckExecutionResult> executionResults = healthCheckExecutor.execute(filterTags);
+        List<HealthCheckExecutionResult> executionResults = healthCheckExecutor.execute(HealthCheckSelector.tags(filterTags));
         resultLog.debug("Executing {} HealthChecks selected by tags {}", executionResults.size(), Arrays.asList(filterTags));
         result = new CompositeResult(resultLog, executionResults);
 
@@ -155,7 +156,7 @@ public class CompositeHealthCheck implements HealthCheck {
         }
 
         // check each sub composite check
-        ServiceReference[] hcRefsOfCompositeCheck = healthCheckFilter.getTaggedHealthCheckServiceReferences(tagsForIncludedChecksArr);
+        ServiceReference[] hcRefsOfCompositeCheck = healthCheckFilter.getHealthCheckServiceReferences(HealthCheckSelector.tags(tagsForIncludedChecksArr));
         for (ServiceReference hcRefOfCompositeCheck : hcRefsOfCompositeCheck) {
             if (CompositeHealthCheck.class.getName().equals(hcRefOfCompositeCheck.getProperty(ComponentConstants.COMPONENT_NAME))) {
                 log.debug("Checking sub composite HC {}, {}", hcRefOfCompositeCheck, hcRefOfCompositeCheck.getProperty(ComponentConstants.COMPONENT_NAME));

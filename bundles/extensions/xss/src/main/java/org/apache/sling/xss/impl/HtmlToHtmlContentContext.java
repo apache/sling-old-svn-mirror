@@ -36,11 +36,12 @@ public class HtmlToHtmlContentContext implements XSSFilterRule {
     /**
      * Logger
      */
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
      * @see XSSFilterRule#check(PolicyHandler, String)
      */
+    @Override
     public boolean check(final PolicyHandler policyHandler, final String str) {
         try {
             return policyHandler.getAntiSamy().scan(str).getNumberOfErrors() == 0;
@@ -54,6 +55,7 @@ public class HtmlToHtmlContentContext implements XSSFilterRule {
     /**
      * @see XSSFilterRule#filter(PolicyHandler, java.lang.String)
      */
+    @Override
     public String filter(final PolicyHandler policyHandler, final String str) {
         try {
             log.debug("Protecting (HTML -> HTML) :\n{}", str);
@@ -77,6 +79,7 @@ public class HtmlToHtmlContentContext implements XSSFilterRule {
     /**
      * @see XSSFilterRule#supportsPolicy()
      */
+    @Override
     public boolean supportsPolicy() {
         return true;
     }

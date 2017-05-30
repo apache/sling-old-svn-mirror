@@ -22,9 +22,9 @@
 [artifacts]
     org.apache.sling/org.apache.sling.discovery.api/1.0.4
     org.apache.sling/org.apache.sling.discovery.support/1.0.0
-    org.apache.sling/org.apache.sling.discovery.commons/1.0.19-SNAPSHOT
-    org.apache.sling/org.apache.sling.discovery.base/1.1.7-SNAPSHOT
-    org.apache.sling/org.apache.sling.discovery.oak/1.2.17-SNAPSHOT
+    org.apache.sling/org.apache.sling.discovery.commons/1.0.20
+    org.apache.sling/org.apache.sling.discovery.base/2.0.0
+    org.apache.sling/org.apache.sling.discovery.oak/1.2.18
 
 [:repoinit]
     create service user sling-discovery

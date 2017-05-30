@@ -20,15 +20,19 @@ package org.apache.sling.hc.core.impl.servlet;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.contains;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -41,20 +45,22 @@ import org.apache.sling.hc.api.Result.Status;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.apache.sling.hc.core.impl.executor.ExecutionResult;
 import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 public class HealthCheckExecutorServletTest {
 
-    private HealthCheckExecutorServlet healthCheckExecutorServlet;
+    @InjectMocks
+    private HealthCheckExecutorServlet healthCheckExecutorServlet = new HealthCheckExecutorServlet();
 
     @Mock
     private HttpServletRequest request;
@@ -75,6 +81,9 @@ public class HealthCheckExecutorServletTest {
     private ResultTxtSerializer txtSerializer;
 
     @Mock
+    private ResultTxtVerboseSerializer verboseTxtSerializer;
+
+    @Mock
     private ServiceReference hcServiceRef;
 
     @Mock
@@ -82,14 +91,7 @@ public class HealthCheckExecutorServletTest {
 
     @Before
     public void setup() throws IOException {
-
-        healthCheckExecutorServlet = new HealthCheckExecutorServlet();
-
-        MockitoAnnotations.initMocks(this);
-        healthCheckExecutorServlet.healthCheckExecutor = healthCheckExecutor;
-        healthCheckExecutorServlet.htmlSerializer = htmlSerializer;
-        healthCheckExecutorServlet.jsonSerializer = jsonSerializer;
-        healthCheckExecutorServlet.txtSerializer = txtSerializer;
+        initMocks(this);
 
         doReturn(500L).when(hcServiceRef).getProperty(Constants.SERVICE_ID);
         doReturn(writer).when(response).getWriter();
@@ -98,16 +100,39 @@ public class HealthCheckExecutorServletTest {
     @Test
     public void testDoGetHtml() throws ServletException, IOException {
 
-        String testTag = "testTag";
+        final String testTag = "testTag";
         doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
         doReturn("false").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR.name);
-        List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.CRITICAL);
-        doReturn(executionResults).when(healthCheckExecutor).execute(new HealthCheckExecutionOptions(), testTag);
+        final List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.CRITICAL);
+        doReturn(executionResults).when(healthCheckExecutor).execute(selector(new String[] { testTag }, new String[0]), eq(new HealthCheckExecutionOptions()));
         
         healthCheckExecutorServlet.doGet(request, response);
 
         verifyZeroInteractions(jsonSerializer);
         verifyZeroInteractions(txtSerializer);
+        verifyZeroInteractions(verboseTxtSerializer);
+        verify(htmlSerializer)
+                .serialize(resultEquals(new Result(Result.Status.CRITICAL, "Overall Status CRITICAL")), eq(executionResults), contains("Supported URL parameters"), eq(false));
+    }
+
+    @Test
+    public void testDoGetNameAndTagInPath() throws ServletException, IOException {
+
+        final String testTag = "testTag";
+        final String testName = "test name";
+
+        doReturn(testTag + "," + testName).when(request).getPathInfo();
+        doReturn("false").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR.name);
+        final List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.CRITICAL);
+        doReturn(executionResults).when(healthCheckExecutor).execute(selector(new String[] { testTag }, new String[] { testName }), eq(new HealthCheckExecutionOptions()));
+
+        healthCheckExecutorServlet.doGet(request, response);
+
+        verify(request, never()).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
+        verify(request, never()).getParameter(HealthCheckExecutorServlet.PARAM_NAMES.name);
+        verifyZeroInteractions(jsonSerializer);
+        verifyZeroInteractions(txtSerializer);
+        verifyZeroInteractions(verboseTxtSerializer);
         verify(htmlSerializer)
                 .serialize(resultEquals(new Result(Result.Status.CRITICAL, "Overall Status CRITICAL")), eq(executionResults), contains("Supported URL parameters"), eq(false));
     }
@@ -115,21 +140,22 @@ public class HealthCheckExecutorServletTest {
     @Test
     public void testDoGetJson() throws ServletException, IOException {
 
-        String testTag = "testTag";
+        final String testTag = "testTag";
         doReturn("true").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR.name);
         int timeout = 5000;
         doReturn(timeout + "").when(request).getParameter(HealthCheckExecutorServlet.PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
         doReturn("/" + testTag + ".json").when(request).getPathInfo();
-        List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.WARN);
+        final List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.WARN);
         HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
         options.setCombineTagsWithOr(true);
         options.setOverrideGlobalTimeout(timeout);
-        doReturn(executionResults).when(healthCheckExecutor).execute(options, testTag);
+        doReturn(executionResults).when(healthCheckExecutor).execute(selector(new String[] { testTag }, new String[0]), eq(options));
 
         healthCheckExecutorServlet.doGet(request, response);
 
         verifyZeroInteractions(htmlSerializer);
         verifyZeroInteractions(txtSerializer);
+        verifyZeroInteractions(verboseTxtSerializer);
         verify(jsonSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")), eq(executionResults), anyString(),
                 eq(false));
 
@@ -138,23 +164,44 @@ public class HealthCheckExecutorServletTest {
     @Test
     public void testDoGetTxt() throws ServletException, IOException {
 
-        String testTag = "testTag";
+        final String testTag = "testTag";
         doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
-        doReturn("txt").when(request).getParameter(HealthCheckExecutorServlet.PARAM_FORMAT.name);
+        doReturn(HealthCheckExecutorServlet.FORMAT_TXT).when(request).getParameter(HealthCheckExecutorServlet.PARAM_FORMAT.name);
         doReturn("true").when(request).getParameter(HealthCheckExecutorServlet.PARAM_COMBINE_TAGS_WITH_OR.name);
         int timeout = 5000;
         doReturn(timeout + "").when(request).getParameter(HealthCheckExecutorServlet.PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
-        List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.WARN);
+        final List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.WARN);
         HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
         options.setCombineTagsWithOr(true);
         options.setOverrideGlobalTimeout(timeout);
-        doReturn(executionResults).when(healthCheckExecutor).execute(options, testTag);
+
+        doReturn(executionResults).when(healthCheckExecutor).execute(selector(new String[] { testTag }, new String[0]), eq(options));
 
         healthCheckExecutorServlet.doGet(request, response);
 
         verifyZeroInteractions(htmlSerializer);
         verifyZeroInteractions(jsonSerializer);
+        verifyZeroInteractions(verboseTxtSerializer);
         verify(txtSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")));
+
+    }
+
+    @Test
+    public void testDoGetVerboseTxt() throws ServletException, IOException {
+
+        String testTag = "testTag";
+        doReturn(testTag).when(request).getParameter(HealthCheckExecutorServlet.PARAM_TAGS.name);
+        doReturn(HealthCheckExecutorServlet.FORMAT_VERBOSE_TXT).when(request).getParameter(HealthCheckExecutorServlet.PARAM_FORMAT.name);
+
+        List<HealthCheckExecutionResult> executionResults = getExecutionResults(Result.Status.WARN);
+        doReturn(executionResults).when(healthCheckExecutor).execute(selector(new String[] { testTag }, new String[0]), any(HealthCheckExecutionOptions.class));
+
+        healthCheckExecutorServlet.doGet(request, response);
+
+        verifyZeroInteractions(htmlSerializer);
+        verifyZeroInteractions(jsonSerializer);
+        verifyZeroInteractions(txtSerializer);
+        verify(verboseTxtSerializer).serialize(resultEquals(new Result(Result.Status.WARN, "Overall Status WARN")), eq(executionResults), eq(false));
 
     }
 
@@ -231,6 +278,21 @@ public class HealthCheckExecutorServletTest {
         public void describeTo(Description description) {
             description.appendText(expectedResult == null ? null : expectedResult.toString());
         }
+    }
+
+    HealthCheckSelector selector(final String[] tags, final String[] names) {
+        return argThat(new ArgumentMatcher<HealthCheckSelector>() {
+            @Override
+            public boolean matches(Object actual) {
+                if (actual instanceof HealthCheckSelector) {
+                    HealthCheckSelector actualSelector = (HealthCheckSelector) actual;
+                    return Arrays.equals(actualSelector.tags(), tags.length == 0 ? new String[] { "" } : tags) &&
+                            Arrays.equals(actualSelector.names(), names.length == 0 ? new String[] { "" } : names);
+                } else {
+                    return false;
+                }
+            }
+        });
     }
 
 

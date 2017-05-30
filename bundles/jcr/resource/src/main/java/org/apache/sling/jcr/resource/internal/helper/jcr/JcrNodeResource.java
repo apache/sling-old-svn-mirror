@@ -35,12 +35,10 @@ import javax.jcr.RepositoryException;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.resource.ModifiableValueMap;
-import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.HelperData;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.JcrValueMap;
@@ -51,7 +49,6 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("deprecation")
 @Adaptable(adaptableClass=Resource.class, adapters={
         @Adapter({Node.class, Map.class, Item.class, ValueMap.class}),
-        @Adapter(value=PersistableValueMap.class, condition="If the resource is a JcrNodeResource and the user has set property privileges on the node."),
         @Adapter(value=InputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node.")
 })
 class JcrNodeResource extends JcrItemResource<Node> { // this should be package private, see SLING-1414
@@ -134,27 +131,6 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
             return (Type) getInputStream(); // unchecked cast
         } else if (type == Map.class || type == ValueMap.class) {
             return (Type) new JcrValueMap(getNode(), this.helper); // unchecked cast
-        } else if (type == PersistableValueMap.class ) {
-            if ( LOG_DEPRECATED_MAP ) {
-                LOG_DEPRECATED_MAP = false;
-                LOGGER.warn("DEPRECATION WARNING: PersistableValueMap is deprecated, a JcrResource should not be adapted to this anymore. Please switch to ModifiableValueMap.");
-            }
-            // check write
-            try {
-                getNode().getSession().checkPermission(getPath(),
-                    "set_property");
-                return (Type) new JcrModifiablePropertyMap(getNode(), this.helper.getDynamicClassLoader());
-            } catch (AccessControlException ace) {
-                // the user has no write permission, cannot adapt
-                LOGGER.debug(
-                    "adaptTo(PersistableValueMap): Cannot set properties on {}",
-                    this);
-            } catch (RepositoryException e) {
-                // some other problem, cannot adapt
-                LOGGER.debug(
-                    "adaptTo(PersistableValueMap): Unexpected problem for {}",
-                    this);
-            }
         } else if (type == ModifiableValueMap.class ) {
             // check write
             try {

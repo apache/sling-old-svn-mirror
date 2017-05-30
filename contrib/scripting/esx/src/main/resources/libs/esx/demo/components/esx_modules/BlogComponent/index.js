@@ -15,68 +15,72 @@
  * limitations under the License.
  */
 
-var Handlebars = require("handlebars");
-var marked = require("marked");
-var URL = require("url");
+import Handlebars from "handlebars";
+import marked from "marked";
+import URL from "url";
+import pathInfo from "pathinfo";
 
-var renderer = new marked.Renderer();
-renderer.blockquote = function (quote) {
-  return "<blockquote class='blockquote'>" + quote + "</blockquote>";
-}
+export default class BlogComponent {
+  constructor() {
 
-function resolveTitle(res) {
-   return  res.properties.navTitle || res.properties.title || res.properties["jcr:title"] || res.name;
-
-}
-
-function BlogComponent () {
-  this.templateURL = "../../hbstemplates/layout.html"
-  this.basePath = URL.getAbsoluteParent(currentNode.resource.path, 4);
-  this.baseResource = require("resource!" + this.basePath);
-  this.stylesheet = "";
-  this.partialContentTemplateURL = "../../hbstemplates/content.html";
-  this.model = currentNode;
-  this.model.title = currentNode.properties.pageTitle || currentNode.properties.title || currentNode.properties["jcr:title"] || currentNode.resource.name;
-}
-
-BlogComponent.prototype.transformMarkdown = function (content) {
-  return marked(content, { renderer: renderer});
-}
-BlogComponent.prototype.pages = function () {
-  var pages = [];
-  var homePage =
-    pages.push({
-        path: this.basePath,
-        title: resolveTitle(this.baseResource),
-        active: (currentNode.resource.path === this.basePath ? 'active' : '')
-    });
-
-  var rootPage = require("resource!" + this.basePath + "/pages");
-   var children = rootPage.simpleResource.children;
-
-    for(var key in children) {
-        var child =  children[key];
-        var nav = {};
-        nav.path =child.path;
-        nav.title =  resolveTitle(child) ;
-        nav.active = (currentNode.resource.path === child.path ? 'active' : '');
-        pages.push(nav);
+    this.renderer = new marked.Renderer();
+    this.renderer.blockquote = function (quote) {
+      return "<blockquote class='blockquote'>" + quote + "</blockquote>";
     }
 
-  return pages;
+
+    this.templateURL = "../../hbstemplates/layout.html"
+    this.basePath = URL.getAbsoluteParent(currentNode.resource.path, 4);
+    this.baseResource = require("resource!" + this.basePath);
+    this.stylesheet = "";
+    this.partialContentTemplateURL = "../../hbstemplates/content.html";
+    this.model = currentNode;
+    this.model.viewTypeSmall = pathInfo.hasSelector("small");
+    this.model.title = currentNode.properties.pageTitle || currentNode.properties.title || currentNode.properties["jcr:title"] || currentNode.resource.name;
+  }
+
+  resolveTitle(res) {
+    return  res.properties.navTitle || res.properties.title || res.properties["jcr:title"] || res.name;
+  }
+
+  transformMarkdown(content) {
+    var self = this;
+    return marked(content, { renderer: self.renderer});
+  }
+
+  pages() {
+    var self = this;
+    var pages = [];
+    var homePage =
+    pages.push({
+      path: pathInfo.hasSelector("small") ? this.basePath + ".small": this.basePath,
+      title: self.resolveTitle(this.baseResource),
+      active: ((currentNode.resource.path.indexOf(this.basePath + "/posts")===0 || currentNode.resource.path === this.basePath )? 'active' : '')
+    });
+    
+    var rootPage = require("resource!" + this.basePath + "/pages");
+    var children = rootPage.children;
+
+    children.forEach(function(child){
+      var nav = {
+        path: pathInfo.hasSelector("small") ? child.path + ".small": child.path,
+        title: self.resolveTitle(child),
+        active: (currentNode.resource.path === child.path ? 'active' : '')
+      };
+      pages.push(nav);
+    });
+
+    return pages;
+  }
+
+  render() {
+    this.init();
+    Handlebars.registerPartial('content',require("text!" + this.partialContentTemplateURL));
+    var templateSource= require("text!" + this.templateURL);
+    var template = Handlebars.compile(templateSource);
+    this.model.style = this.stylesheet;
+    this.model.pagesNav = this.pages();
+
+    return template(this.model);
+  }
 }
-
-BlogComponent.prototype.render = function () {
-  this.init();
-  Handlebars.registerPartial('content',require("text!" + this.partialContentTemplateURL));
-
-
-  var templateSource= require("text!" + this.templateURL);
-  var template = Handlebars.compile(templateSource);
-  this.model.style = this.stylesheet;
-  this.model.pagesNav = this.pages();
-
-  return template(this.model);
-}
-
-module.exports = BlogComponent;

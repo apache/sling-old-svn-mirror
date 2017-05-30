@@ -25,14 +25,10 @@ public abstract class ConfigurationConstants {
 
     public static final int NUMBER_OF_PROCESSORS = Runtime.getRuntime().availableProcessors();
 
-    public static final String DEFAULT_TYPE = "UNORDERED";
     public static final String DEFAULT_PRIORITY = "NORM";
     public static final int DEFAULT_RETRIES = 10;
     public static final long DEFAULT_RETRY_DELAY = 2000;
     public static final int DEFAULT_MAX_PARALLEL = 15;
-    public static final boolean DEFAULT_KEEP_JOBS = false;
-    public static final int DEFAULT_THREAD_POOL_SIZE = 0;
-    public static final boolean DEFAULT_PREFER_RUN_ON_CREATION_INSTANCE = false;
 
     public static final String PROP_NAME = "queue.name";
     public static final String PROP_TYPE = "queue.type";

@@ -30,6 +30,8 @@ import org.osgi.service.http.HttpService;
 class MockHttpService implements HttpService {
 
     private List<String> paths = new ArrayList<String>();
+
+    private List<String> classNames = new ArrayList<String>();
             
     @Override
     public void registerResources(String alias, String name, HttpContext context) {
@@ -38,6 +40,7 @@ class MockHttpService implements HttpService {
     @Override
     public void registerServlet(String alias, Servlet servlet, Dictionary initparams, HttpContext context) {
         paths.add(alias);
+        classNames.add(servlet.getClass().getName());
     }
 
     public void unregister(String alias) {
@@ -51,5 +54,9 @@ class MockHttpService implements HttpService {
     
     List<String> getPaths() {
         return Collections.unmodifiableList(paths);
+    }
+
+    List<String> getServletClassNames() {
+        return Collections.unmodifiableList(classNames);
     }
 }

@@ -18,22 +18,21 @@ package org.apache.sling.ide.eclipse.ui.nav;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
-import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.nav.model.FileVaultMetaInfRootFolder;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.Viewer;
 
-public class FileVaultMetaInfContentProvider implements ITreeContentProvider {
+public class FileVaultMetaInfContentProvider extends BaseRootFolderContentProvider<FileVaultMetaInfRootFolder> {
 
-    private static final String FILEVAULT_METAINF_PATH = "META-INF/vault";
-    private static final Object[] NO_CHILDREN = new Object[0];
+	private static final String FILEVAULT_METAINF_PATH = "META-INF/vault";
+	
+    public FileVaultMetaInfContentProvider() {
+		super(FileVaultMetaInfRootFolder.class);
+	}
 
-    private FileVaultMetaInfRootFolder getFileVaultMetaInfFolder(IProject project) {
+    @Override
+    protected FileVaultMetaInfRootFolder findRootFolder(IProject project) {
         if (ProjectHelper.isContentProject(project)) {
             IFolder syncDir = ProjectUtil.getSyncDirectory(project);
             if (syncDir != null) {
@@ -43,62 +42,6 @@ public class FileVaultMetaInfContentProvider implements ITreeContentProvider {
                 }
             }
         }
-        return null;
+        return null;    	
     }
-
-    @Override
-    public void dispose() {
-    }
-
-    @Override
-    public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-    }
-
-    @Override
-    public Object[] getElements(Object inputElement) {
-        return null;
-    }
-
-    @Override
-    public Object[] getChildren(Object parentElement) {
-        final Object[] children;
-        // expose the filevault meta-inf directly below the project
-        if (parentElement instanceof IProject) {
-            IProject project = (IProject) parentElement;
-            FileVaultMetaInfRootFolder folder = getFileVaultMetaInfFolder(project);
-            if (folder != null) {
-                children = new Object[1];
-                children[0] = folder;
-                return children;
-            }
-        } else if (parentElement instanceof FileVaultMetaInfRootFolder) {
-            FileVaultMetaInfRootFolder fileVaultMetaInfRootFolder = (FileVaultMetaInfRootFolder) parentElement;
-            try {
-                return fileVaultMetaInfRootFolder.getFolder().members();
-            } catch (CoreException e) {
-                Activator.getDefault().getPluginLogger().error(
-                        "Could not list members of folder " + fileVaultMetaInfRootFolder.getFolder().getName(), e);
-            }
-        }
-        return NO_CHILDREN;
-    }
-
-    @Override
-    public Object getParent(Object element) {
-        if (element instanceof IResource) {
-            IResource resource = (IResource) element;
-            FileVaultMetaInfRootFolder fileVaultMetaInfoFolder = getFileVaultMetaInfFolder(resource.getProject());
-            if (fileVaultMetaInfoFolder != null) {
-                return fileVaultMetaInfoFolder.getFolder().findMember(resource.getFullPath()) != null;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public boolean hasChildren(Object parentElement) {
-        // the getChildren is not expensive, therefore we leverage that here
-        return getChildren(parentElement) != null;
-    }
-
 }

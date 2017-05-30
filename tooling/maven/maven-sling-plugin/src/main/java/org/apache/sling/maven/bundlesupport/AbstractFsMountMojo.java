@@ -67,6 +67,9 @@ abstract class AbstractFsMountMojo extends AbstractBundlePostMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         String targetUrl = getConsoleTargetURL();
         
+        // ensure required bundles are installed
+        ensureBundlesInstalled(targetUrl);
+        
         // check for Sling-Initial-Content
         File bundleFile = new File(bundleFileName);
         if (bundleFile.exists()) {
@@ -97,7 +100,6 @@ abstract class AbstractFsMountMojo extends AbstractBundlePostMojo {
         getLog().info("No Bundle with initial content or FileVault content package found - skipping.");
     }
 
-    @SuppressWarnings("unchecked")
     private File detectJcrRootFile() {
         List<Resource> resources = project.getResources();
         if (resources != null) {
@@ -112,7 +114,6 @@ abstract class AbstractFsMountMojo extends AbstractBundlePostMojo {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     private File detectFilterXmlFile() {
         List<Resource> resources = project.getResources();
         if (resources != null) {
@@ -145,11 +146,14 @@ abstract class AbstractFsMountMojo extends AbstractBundlePostMojo {
         }
         return null;
     }
-
+    
     protected abstract void configureSlingInitialContent(final String targetUrl, final File bundleFile)
             throws MojoExecutionException;
 
     protected abstract void configureFileVaultXml(final String targetUrl, final File jcrRootFile, final File filterXmlFile)
+            throws MojoExecutionException;
+    
+    protected abstract void ensureBundlesInstalled(final String targetUrl)
             throws MojoExecutionException;
 
 }

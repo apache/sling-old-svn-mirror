@@ -18,21 +18,7 @@
  */
 package org.apache.sling.distribution.agent.impl;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyOption;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.*;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -56,11 +42,14 @@ import org.apache.sling.distribution.queue.impl.ErrorQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.HttpConfiguration;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
+
+import java.util.*;
 
 /**
  * An OSGi service factory for "synchronizing agents" that synchronize (pull and push) resources between remote instances.
@@ -77,7 +66,7 @@ import org.osgi.framework.BundleContext;
 @Reference(name = "triggers", referenceInterface = DistributionTrigger.class,
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
-@Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
+@Property(name = "webconsole.configurationFactory.nameHint", value = "Agent name: {name}")
 public class SyncDistributionAgentFactory extends AbstractDistributionAgentFactory<SyncDistributionAgentMBean> {
 
     @Property(label = "Name", description = "The name of the agent.")
@@ -136,12 +125,17 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
     @Property(intValue = 100, label = "Retry attempts", description = "The number of times to retry until the retry strategy is applied.")
     private static final String RETRY_ATTEMPTS = "retry.attempts";
 
-
     /**
      * no. of items to poll property
      */
     @Property(intValue = 100, label = "Pull Items", description = "Number of subsequent pull requests to make.")
     private static final String PULL_ITEMS = "pull.items";
+
+    /**
+     * timeout for HTTP requests
+     */
+    @Property(label = "HTTP connection timeout", intValue = 10, description = "The connection timeout for HTTP requests (in seconds).")
+    public static final String HTTP = "http.conn.timeout";
 
     @Reference
     private Packaging packaging;
@@ -155,9 +149,7 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
     @Property(name = "transportSecretProvider.target", label = "Transport Secret Provider", description = "The target reference for the DistributionTransportSecretProvider used to obtain the credentials used for accessing the remote endpoints, " +
             "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "transportSecretProvider")
-    private
-    DistributionTransportSecretProvider transportSecretProvider;
-
+    private DistributionTransportSecretProvider transportSecretProvider;
 
     @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
             "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
@@ -221,11 +213,9 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
         String[] exporterEndpoints = PropertiesUtil.toStringArray(exporterEndpointsValue, new String[0]);
         exporterEndpoints = SettingsUtils.removeEmptyEntries(exporterEndpoints);
 
-
         Map<String, String> importerEndpointsMap = SettingsUtils.toUriMap(importerEndpointsValue);
 
         int pullItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
-
 
         DistributionQueueDispatchingStrategy exportQueueStrategy;
         DistributionQueueDispatchingStrategy importQueueStrategy = null;
@@ -240,9 +230,15 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
 
         String[] queueNames = queuesMap.toArray(new String[queuesMap.size()]);
         exportQueueStrategy = new MultipleQueueDispatchingStrategy(queueNames);
-        packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap);
 
-        DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, exporterEndpoints, pullItems);
+        Integer timeout = PropertiesUtil.toInteger(HTTP, 10) * 1000;
+        HttpConfiguration httpConfiguration = new HttpConfiguration(timeout);
+
+        packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider,
+                importerEndpointsMap, httpConfiguration);
+
+        DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder,
+                transportSecretProvider, exporterEndpoints, pullItems, httpConfiguration);
         DistributionQueueProvider queueProvider = new MonitoringDistributionQueueProvider(new JobHandlingDistributionQueueProvider(agentName, jobManager, context), context);
         DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.PULL};
 

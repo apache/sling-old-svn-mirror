@@ -21,7 +21,7 @@
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
   # this is necessary to execute the tests
-  org.apache.sling/org.apache.sling.junit.core/1.0.17-SNAPSHOT
+  org.apache.sling/org.apache.sling.junit.core/1.0.24-SNAPSHOT
 
 # additional configuration for testing
 [configurations]

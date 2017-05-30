@@ -31,11 +31,6 @@ import java.util.Map;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
@@ -48,19 +43,23 @@ import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This is a inventory plugin displaying the active queues, some statistics
  * and the configurations.
  * @since 3.2
  */
-@Component
-@Service(value={InventoryPrinter.class})
-@Properties({
-    @Property(name=InventoryPrinter.NAME, value="slingjobs"),
-    @Property(name=InventoryPrinter.TITLE, value="Sling Jobs"),
-    @Property(name=InventoryPrinter.FORMAT, value={"TEXT", "JSON"}),
-    @Property(name=InventoryPrinter.WEBCONSOLE, boolValue=false)
+@Component(service={InventoryPrinter.class},
+    property = {
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+        InventoryPrinter.NAME + "=slingjobs",
+        InventoryPrinter.TITLE + "=Sling Jobs",
+        InventoryPrinter.FORMAT + "=TEXT",
+        InventoryPrinter.FORMAT + "=JSON",
+        InventoryPrinter.WEBCONSOLE + ":Boolean=false"
 })
 public class InventoryPlugin implements InventoryPrinter {
 
@@ -325,7 +324,7 @@ public class InventoryPlugin implements InventoryPrinter {
             final Iterator<Map.Entry<String, List<InstanceDescription>>> iter = instanceCaps.entrySet().iterator();
             while ( iter.hasNext() ) {
                 final Map.Entry<String, List<InstanceDescription>> entry = iter.next();
-                final List<String> instances = new ArrayList<String>();
+                final List<String> instances = new ArrayList<>();
                 for(final InstanceDescription id : entry.getValue()) {
                     if ( id.isLocal() ) {
                         instances.add("local");

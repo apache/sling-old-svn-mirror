@@ -114,6 +114,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
         final boolean deprecated = PropertiesUtil.toBoolean(reference.getProperty(ADAPTER_DEPRECATED), false);
         final String[] adaptables = PropertiesUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
         final List<AdaptableDescription> descriptions = new ArrayList<>(adaptables.length);
+        final boolean allowedInPrivatePackage = PropertiesUtil.toBoolean(reference.getProperty(AdapterManagerImpl.ALLOWED_IN_PRIVATE), false);
         for (final String adaptable : adaptables) {
             descriptions.add(new AdaptableDescription(reference.getBundle(), adaptable, adapters, condition, deprecated));
         }

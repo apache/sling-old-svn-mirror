@@ -22,7 +22,7 @@
     </parent>
 
     <artifactId>org.apache.sling.provisioning.model</artifactId>
-    <version>1.8.1-SNAPSHOT</version>
+    <version>1.8.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Provisioning Model</name>

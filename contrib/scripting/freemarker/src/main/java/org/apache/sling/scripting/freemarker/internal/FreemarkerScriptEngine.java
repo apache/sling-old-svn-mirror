@@ -24,23 +24,19 @@ import javax.script.ScriptContext;
 import javax.script.ScriptException;
 
 import freemarker.log.Logger;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-
-/**
- * A ScriptEngine that uses <a href="http://freemarker.org/">FreeMarker</a> templates
- * to render a Resource in HTML.
- */
 public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
-    private static final Logger log = Logger.getLogger(FreemarkerScriptEngine.class.getName());
 
     private final Configuration configuration;
 
     private final FreemarkerScriptEngineFactory freemarkerScriptEngineFactory;
+
+    private final Logger logger = Logger.getLogger(FreemarkerScriptEngine.class.getName());
 
     public FreemarkerScriptEngine(final FreemarkerScriptEngineFactory freemarkerScriptEngineFactory) {
         super(freemarkerScriptEngineFactory);
@@ -49,10 +45,9 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
         configuration.setDefaultEncoding(StandardCharsets.UTF_8.name());
     }
 
-    public Object eval(Reader reader, ScriptContext scriptContext)
-            throws ScriptException {
-        Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
-        SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
+    public Object eval(Reader reader, ScriptContext scriptContext) throws ScriptException {
+        final Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
+        final SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
         if (helper == null) {
             throw new ScriptException("SlingScriptHelper missing from bindings");
         }
@@ -63,16 +58,17 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
                 "FreeMarker templates only support GET requests");
         }
 
-        String scriptName = helper.getScript().getScriptResource().getPath();
+        freemarkerScriptEngineFactory.getTemplateModels().forEach(bindings::put);
+
+        final String scriptName = helper.getScript().getScriptResource().getPath();
 
         try {
-            Template tmpl = new Template(scriptName, reader, configuration);
-            freemarkerScriptEngineFactory.getTemplateModels().forEach(bindings::put);
-            tmpl.process(bindings, scriptContext.getWriter());
+            final Template template = new Template(scriptName, reader, configuration);
+            template.process(bindings, scriptContext.getWriter());
         } catch (Throwable t) {
-            log.error("Failure running Freemarker script.", t);
-            throw new ScriptException("Failure running FreeMarker script "
-                + scriptName);
+            final String message = String.format("Failure processing FreeMarker template %s.", scriptName);
+            logger.error(message, t);
+            throw new ScriptException(message);
         }
 
         return null;

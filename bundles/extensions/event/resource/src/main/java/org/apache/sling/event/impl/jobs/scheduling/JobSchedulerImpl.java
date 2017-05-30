@@ -88,7 +88,7 @@ public class JobSchedulerImpl
     private final ScheduledJobHandler scheduledJobHandler;
 
     /** All scheduled jobs, by scheduler name */
-    private final Map<String, ScheduledJobInfoImpl> scheduledJobs = new HashMap<String, ScheduledJobInfoImpl>();
+    private final Map<String, ScheduledJobInfoImpl> scheduledJobs = new HashMap<>();
 
     /**
      * Create the scheduler
@@ -241,7 +241,7 @@ public class JobSchedulerImpl
                             break;
                     }
                     // Create configuration for scheduled job
-                    final Map<String, Serializable> config = new HashMap<String, Serializable>();
+                    final Map<String, Serializable> config = new HashMap<>();
                     config.put(PROPERTY_READ_JOB, info);
                     config.put(PROPERTY_SCHEDULE_INDEX, index);
                     this.scheduler.schedule(this, options.name(name).config(config).canRunConcurrently(false));
@@ -305,7 +305,7 @@ public class JobSchedulerImpl
                 this.scheduledJobHandler.remove(info);
             } else {
                 // update schedule list
-                final List<ScheduleInfo> infos = new ArrayList<ScheduleInfo>();
+                final List<ScheduleInfo> infos = new ArrayList<>();
                 for(final ScheduleInfo i : info.getSchedules() ) {
                     if ( i != si ) { // no need to use equals
                         infos.add(i);
@@ -424,7 +424,7 @@ public class JobSchedulerImpl
     public Collection<ScheduledJobInfo> getScheduledJobs(final String topic,
             final long limit,
             final Map<String, Object>... templates) {
-        final List<ScheduledJobInfo> jobs = new ArrayList<ScheduledJobInfo>();
+        final List<ScheduledJobInfo> jobs = new ArrayList<>();
         long count = 0;
         synchronized ( this.scheduledJobs ) {
             for(final ScheduledJobInfoImpl job : this.scheduledJobs.values() ) {
@@ -504,7 +504,7 @@ public class JobSchedulerImpl
             final boolean isSuspended,
             final List<ScheduleInfoImpl> scheduleInfos,
             final List<String> errors) {
-        final List<String> msgs = new ArrayList<String>();
+        final List<String> msgs = new ArrayList<>();
         if ( scheduleName == null || scheduleName.length() == 0 ) {
             msgs.add("Schedule name not specified");
         }

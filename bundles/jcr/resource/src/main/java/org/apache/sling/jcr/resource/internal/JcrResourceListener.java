@@ -159,7 +159,7 @@ public class JcrResourceListener implements EventListener, Closeable {
     private ResourceChange createResourceChange(final Event event,
             final String path,
             final ChangeType changeType) {
-        final String fullPath = this.baseConfig.getPathMapper().mapJCRPathToResourcePath(path);
+        final String fullPath = path;
         final boolean isExternal = this.isExternal(event);
         final String userId;
         if (!isExternal) {

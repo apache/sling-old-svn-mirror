@@ -19,10 +19,12 @@
 package org.apache.sling.jcr.contentparser.impl;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import org.apache.commons.lang3.CharEncoding;
 import org.apache.sling.jcr.contentparser.ContentParser;
 import org.apache.sling.jcr.contentparser.impl.mapsupport.ContentElement;
 import org.apache.sling.jcr.contentparser.impl.mapsupport.ContentElementHandler;
@@ -38,6 +40,14 @@ public final class TestUtils {
                 BufferedInputStream bis = new BufferedInputStream(fis)) {
             ContentElementHandler handler = new ContentElementHandler();
             contentParser.parse(handler, bis);
+            return handler.getRoot();
+        }
+    }
+    
+    public static ContentElement parse(ContentParser contentParser, String jsonContent) throws IOException {
+        try (ByteArrayInputStream is = new ByteArrayInputStream(jsonContent.getBytes(CharEncoding.UTF_8))) {
+            ContentElementHandler handler = new ContentElementHandler();
+            contentParser.parse(handler, is);
             return handler.getRoot();
         }
     }

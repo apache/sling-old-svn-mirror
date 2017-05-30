@@ -20,6 +20,7 @@ package org.apache.sling.jcr.contentparser;
 
 import org.apache.sling.jcr.contentparser.impl.JcrXmlContentParser;
 import org.apache.sling.jcr.contentparser.impl.JsonContentParser;
+import org.apache.sling.jcr.contentparser.impl.XmlContentParser;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -51,6 +52,8 @@ public final class ContentParserFactory {
         switch (type) {
             case JSON:
                 return new JsonContentParser(options);
+            case XML:
+                return new XmlContentParser(options);
             case JCR_XML:
                 return new JcrXmlContentParser(options);
             default:

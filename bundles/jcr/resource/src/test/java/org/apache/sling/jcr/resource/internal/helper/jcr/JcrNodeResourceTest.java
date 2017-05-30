@@ -33,14 +33,13 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.HelperData;
-import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 
 public class JcrNodeResourceTest extends JcrItemResourceTestBase {
 
     private HelperData getHelperData() throws Exception {
-        return new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl());
+        return new HelperData(new AtomicReference<DynamicClassLoaderManager>());
     }
 
     public void testLinkedFile() throws Exception {

@@ -16,12 +16,18 @@
  */
 package org.apache.sling.ide.eclipse.m2e.internal;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Resource;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 public class MavenProjectUtils {
 
@@ -52,6 +58,36 @@ public class MavenProjectUtils {
         }
         
         return DEFAULT_SERVLET_API_VERSION;
+    }
+    
+    /**
+     * Returns a set of candidate locations for the project's model directory
+     * 
+     * <p>The heuristics are based on the logic from <tt>org.apache.sling.maven.slingstart.ModelPreprocessor</tt>.
+     * The returned values may or may not exist on the filesystem, it is up to the client to check that.
+     * The values are ordered from the most likely to the least likely, so clients should iterate
+     * the returned candidates in order and pick the first one that exists.</p>
+     * 
+     * @param mavenProject the project, must not be null
+     * @return an ordered set of candidates, never empty
+     */
+    public static Set<String> getModelDirectoryCandidateLocations(MavenProject mavenProject) {
+    	
+    	List<String> candidates = new ArrayList<>();
+    	candidates.add("src/main/provisioning");
+    	candidates.add("src/test/provisioning");
+    	
+    	Plugin slingstartPlugin = mavenProject.getPlugin("org.apache.sling:slingstart-maven-plugin");
+    	if ( slingstartPlugin != null && slingstartPlugin.getConfiguration() instanceof Xpp3Dom ) {
+			Xpp3Dom config = (Xpp3Dom) slingstartPlugin.getConfiguration();
+			Xpp3Dom modelDir = config.getChild("modelDirectory");
+			if ( modelDir != null ) {
+				 candidates.add(0, modelDir.getValue());
+			}    		
+    	}
+    	
+    	return new LinkedHashSet<>(candidates);
+    	
     }
     
     private MavenProjectUtils() {

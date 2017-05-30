@@ -37,6 +37,7 @@ import org.apache.sling.fsprovider.internal.mapper.FileResourceMapper;
 import org.apache.sling.fsprovider.internal.mapper.FileVaultResourceMapper;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 import org.apache.sling.fsprovider.internal.parser.ContentFileTypes;
+import org.apache.sling.jcr.contentparser.ContentType;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ProviderContext;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -188,9 +189,9 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         else {
             // Sling-Initial-Content: mount folder/files an content files
             askParentResourceProvider = this.overlayParentResourceProvider;
-            rsrc = contentFileMapper.getResource(resolver, path);
+            rsrc = fileMapper.getResource(resolver, path);
             if (rsrc == null) {
-                rsrc = fileMapper.getResource(resolver, path);
+                rsrc = contentFileMapper.getResource(resolver, path);
             }
         }
         
@@ -235,7 +236,7 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
             }
         }
         else {
-            // Sling-Initial-Content: get all matchind folders/files and content files
+            // Sling-Initial-Content: get all matching folders/files and content files
             askParentResourceProvider = this.overlayParentResourceProvider;
             children = contentFileMapper.getChildren(resolver, parent);
             if (children != null) {
@@ -322,11 +323,14 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         }
         else if (fsMode == FsMode.INITIAL_CONTENT) {
             overlayParentResourceProvider = !options.isOverwrite();
-            if (!options.getIgnoreImportProviders().contains("json")) {
+            if (!options.getIgnoreImportProviders().contains(ContentType.JSON.getExtension())) {
                 contentFileSuffixes.add(ContentFileTypes.JSON_SUFFIX);
             }
-            if (!options.getIgnoreImportProviders().contains("jcr.xml")) {
+            if (!options.getIgnoreImportProviders().contains(ContentType.JCR_XML.getExtension())) {
                 contentFileSuffixes.add(ContentFileTypes.JCR_XML_SUFFIX);
+            }
+            if (!options.getIgnoreImportProviders().contains(ContentType.XML.getExtension())) {
+                contentFileSuffixes.add(ContentFileTypes.XML_SUFFIX);
             }
         }
         ContentFileExtensions contentFileExtensions = new ContentFileExtensions(contentFileSuffixes);
@@ -336,7 +340,7 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
             this.fileVaultMapper = new FileVaultResourceMapper(this.providerFile, filterXmlFile, this.contentFileCache);
         }
         else {
-            this.fileMapper = new FileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions);
+            this.fileMapper = new FileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions, this.contentFileCache);
             this.contentFileMapper = new ContentFileResourceMapper(this.providerRoot, this.providerFile,
                     contentFileExtensions, this.contentFileCache);
         }

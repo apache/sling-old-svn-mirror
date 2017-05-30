@@ -91,7 +91,7 @@ public class KryoContentSerializer implements DistributionContentSerializer {
         kryo.addDefaultSerializer(InputStream.class, new InputStreamSerializer());
         try {
             Input input = new Input(stream);
-            LinkedList<Resource> resources = (LinkedList<Resource>) kryo.readObject(input, LinkedList.class);
+            @SuppressWarnings("unchecked") LinkedList<Resource> resources = (LinkedList<Resource>) kryo.readObject(input, LinkedList.class);
             input.close();
             for (Resource resource : resources) {
                 persistResource(resourceResolver, resource);
@@ -158,7 +158,7 @@ public class KryoContentSerializer implements DistributionContentSerializer {
             output.writeString(resource.getPath());
             output.writeString(resource.getResourceType());
 
-            HashMap map = new HashMap<String, Object>();
+            HashMap<String, Object> map = new HashMap<String, Object>();
             for (Map.Entry<String, Object> entry : valueMap.entrySet()) {
                 if (propertyFilter == null || propertyFilter.matches(entry.getKey())) {
                     map.put(entry.getKey(), entry.getValue());
@@ -174,7 +174,7 @@ public class KryoContentSerializer implements DistributionContentSerializer {
             String path = input.readString();
             String resourceType = input.readString();
 
-            final HashMap<String, Object> map = kryo.readObjectOrNull(input, HashMap.class);
+            @SuppressWarnings("unchecked") final HashMap<String, Object> map = kryo.readObjectOrNull(input, HashMap.class);
 
             return new SyntheticResource(null, path, resourceType) {
                 @Override

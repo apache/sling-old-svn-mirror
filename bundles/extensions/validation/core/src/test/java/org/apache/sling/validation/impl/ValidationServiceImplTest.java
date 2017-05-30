@@ -56,7 +56,7 @@ import org.apache.sling.validation.model.ChildResource;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
 import org.apache.sling.validation.model.spi.ValidationModelRetriever;
-import org.apache.sling.validation.spi.ValidationContext;
+import org.apache.sling.validation.spi.ValidatorContext;
 import org.apache.sling.validation.spi.Validator;
 import org.apache.sling.validation.spi.support.DefaultValidationFailure;
 import org.apache.sling.validation.spi.support.DefaultValidationResult;
@@ -176,7 +176,7 @@ public class ValidationServiceImplTest {
     public void testValidateNeverCalledWithNullValues() throws Exception {
         Validator<String> myValidator = new Validator<String>() {
             @Override
-            public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
+            public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidatorContext context, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
                 Assert.assertNotNull("data parameter for validate should never be null", data);
                 Assert.assertNotNull("location of context parameter for validate should never be null", context.getLocation());
@@ -394,7 +394,7 @@ public class ValidationServiceImplTest {
         Validator<String> extendedValidator = new Validator<String>() {
             @Override
             @Nonnull
-            public ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
+            public ValidationResult validate(@Nonnull String data, @Nonnull ValidatorContext context, @Nonnull ValueMap arguments)
                     throws SlingValidationException {
                 Resource resource = context.getResource();
                 if (resource == null) {

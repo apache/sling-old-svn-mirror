@@ -54,19 +54,16 @@ public class WhiteboardHandlerTest {
 
         //Injecting quartzScheduler to WhiteboardHandler
         schedulerField.set(handler, quartzScheduler);
-
-        handler.activate(context);
     }
 
     @Test
     public void testAddingService() throws SchedulerException {
         Thread service = new Thread();
-        String serviceName = "serviceName";
         String schedulerName = "testScheduler";
         Long period = 1L;
         Integer times = 2;
 
-        Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
+        Dictionary<String, Object> serviceProps = new Hashtable<>();
         serviceProps.put(Scheduler.PROPERTY_SCHEDULER_RUN_ON, Scheduler.VALUE_RUN_ON_LEADER);
         serviceProps.put(Scheduler.PROPERTY_SCHEDULER_CONCURRENT, Boolean.FALSE);
         serviceProps.put(Scheduler.PROPERTY_SCHEDULER_IMMEDIATE, Boolean.FALSE);
@@ -76,8 +73,9 @@ public class WhiteboardHandlerTest {
         serviceProps.put(Constants.SERVICE_PID, "1");
         serviceProps.put(Constants.SERVICE_ID, 1L);
 
-        final ServiceRegistration<?> reg = context.registerService(serviceName, service, serviceProps);
-        ServiceReference<?> reference = reg.getReference();
+        final ServiceRegistration<?> reg = context.registerService(Runnable.class.getName(), service, serviceProps);
+        final ServiceReference<?> reference = reg.getReference();
+        handler.register(reference, service);
         JobKey jobKey = JobKey.jobKey(schedulerName + "." + reference.getProperty(Constants.SERVICE_ID));
 
         assertNotNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
@@ -86,12 +84,11 @@ public class WhiteboardHandlerTest {
     @Test
     public void testUnregisterService() throws SchedulerException {
         Thread service = new Thread();
-        String serviceName = "serviceName";
         String schedulerName = "testScheduler";
         Long period = 1L;
         Integer times = 2;
 
-        Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
+        Dictionary<String, Object> serviceProps = new Hashtable<>();
         serviceProps.put(Scheduler.PROPERTY_SCHEDULER_RUN_ON, Scheduler.VALUE_RUN_ON_LEADER);
         serviceProps.put(Scheduler.PROPERTY_SCHEDULER_EXPRESSION, "0 * * * * ?");
         serviceProps.put(Scheduler.PROPERTY_SCHEDULER_CONCURRENT, Boolean.FALSE);
@@ -104,19 +101,20 @@ public class WhiteboardHandlerTest {
 
         //Register service only to get a reference of it.
         //This reference is needed to test our method.
-        final ServiceRegistration<?> reg = context.registerService(serviceName, service, serviceProps);
+        final ServiceRegistration<?> reg = context.registerService(Runnable.class.getName(), service, serviceProps);
         ServiceReference<?> reference = reg.getReference();
+        handler.register(reference, service);
         JobKey jobKey = JobKey.jobKey(schedulerName + "." + reference.getProperty(Constants.SERVICE_ID));
 
         assertNotNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
 
         reg.unregister();
+        handler.unregister(reference);
         assertNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
     }
 
     @After
     public void deactivateScheduler() {
-        handler.deactivate();
         quartzScheduler.deactivate(context);
     }
 }

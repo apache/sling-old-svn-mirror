@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.jcr.base</artifactId>
     <packaging>bundle</packaging>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.0.3-SNAPSHOT</version>
 
     <name>Apache Sling JCR Base Bundle</name>
     <description>

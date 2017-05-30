@@ -140,6 +140,10 @@ public class ProjectHelper {
 		return FacetHelper.containsFacet(project, SlingContentModuleFactory.SLING_CONTENT_FACET_ID);
 	}
 
+	public static boolean isLaunchpadProject(IProject project) {
+		return FacetHelper.containsFacet(project, "sling.launchpad");
+	}
+
 	public static IJavaProject asJavaProject(IProject project) {
 		return JavaCore.create(project);
 	}

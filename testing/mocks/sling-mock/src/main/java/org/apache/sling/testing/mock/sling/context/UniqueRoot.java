@@ -18,8 +18,6 @@
  */
 package org.apache.sling.testing.mock.sling.context;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
-
 import java.util.UUID;
 
 import org.apache.jackrabbit.JcrConstants;
@@ -81,7 +79,7 @@ public class UniqueRoot {
      */
     public final String content() {
         if (contentRoot == null) {
-            contentRoot = getOrCreateResource("/content/" + uniquePathPart, NT_SLING_ORDERED_FOLDER);
+            contentRoot = getOrCreateResource("/content/" + uniquePathPart, "sling:OrderedFolder");
         }
         return contentRoot.getPath();
     }
@@ -93,7 +91,7 @@ public class UniqueRoot {
      */
     public final String apps() {
         if (appsRoot == null) {
-            appsRoot = getOrCreateResource("/apps/" + uniquePathPart, NT_SLING_ORDERED_FOLDER);
+            appsRoot = getOrCreateResource("/apps/" + uniquePathPart, "sling:OrderedFolder");
         }
         return appsRoot.getPath();
     }
@@ -105,7 +103,7 @@ public class UniqueRoot {
      */
     public final String libs() {
         if (libsRoot == null) {
-            libsRoot = getOrCreateResource("/libs/" + uniquePathPart, NT_SLING_ORDERED_FOLDER);
+            libsRoot = getOrCreateResource("/libs/" + uniquePathPart, "sling:OrderedFolder");
         }
         return libsRoot.getPath();
     }

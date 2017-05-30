@@ -30,7 +30,6 @@ import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.MockNode;
 import org.apache.sling.commons.testing.jcr.MockNodeIterator;
 import org.apache.sling.jcr.resource.internal.HelperData;
-import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
 
 import junit.framework.TestCase;
@@ -38,7 +37,7 @@ import junit.framework.TestCase;
 public class JcrNodeResourceIteratorTest extends TestCase {
 
     private HelperData getHelperData() {
-        return new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl());
+        return new HelperData(new AtomicReference<DynamicClassLoaderManager>());
     }
 
     public void testEmpty() {

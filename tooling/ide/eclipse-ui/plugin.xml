@@ -230,6 +230,7 @@
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.javaEEFilter" />
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorJcrContent" />
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorVaultMetaInf" />
+				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorProvisioningModel" />
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.linkHelper"/>	
 			</includes>
 		</viewerContentBinding>
@@ -350,7 +351,38 @@
              </and>
           </possibleChildren>
       </navigatorContent>
-   </extension>
+  	  <!-- content provider for provisioning model -->
+      <navigatorContent id="org.apache.sling.ide.eclipse-ui.navigatorProvisioningModel" 
+           name="Provisioning Model"
+           appearsBefore="org.eclipse.jst.jee.ui.ejb"
+           contentProvider="org.apache.sling.ide.eclipse.ui.nav.ProvisioningModelContentProvider"
+           labelProvider="org.apache.sling.ide.eclipse.ui.nav.ProvisioningModelLabelProvider"
+           icon="icons/obj16/sling_misc.gif">
+          <triggerPoints>
+              <and>
+                  <!-- only trigger for Sling Launchpad Projects -->
+                  <adapt type="org.eclipse.core.resources.IResource">
+                      <test property="org.eclipse.wst.common.project.facet.core.projectFacet" value="sling.launchpad"/>
+                  </adapt>
+                  <or>
+                      <!-- and either IProject or ProvisioningModelRootFolder -->
+                      <instanceof value="org.eclipse.core.resources.IProject" />
+                      <instanceof value="org.apache.sling.ide.eclipse.ui.nav.model.ProvisioningModelRootFolder" />
+                  </or>
+              </and>
+          </triggerPoints>
+          <possibleChildren>
+              <and>
+                  <!-- only trigger for Sling Launchpad Projects -->
+                  <adapt type="org.eclipse.core.resources.IResource">
+                      <test property="org.eclipse.wst.common.project.facet.core.projectFacet" value="sling.launchpad"/>
+                  </adapt>         
+	              <instanceof 
+	                     value="org.eclipse.core.resources.IResource" /> 
+             </and>
+          </possibleChildren>
+      </navigatorContent>
+   </extension>   
    <extension
          point="org.eclipse.core.runtime.adapters">
       <factory
@@ -407,6 +439,9 @@
               	<test
 	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
     				value="sling.bundle"/>
+              	<test
+	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+    				value="sling.launchpad"/>
     		  </or>
 			</not>               
          </definition>

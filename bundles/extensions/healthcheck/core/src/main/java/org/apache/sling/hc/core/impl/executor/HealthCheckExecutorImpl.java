@@ -52,6 +52,7 @@ import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.apache.sling.hc.util.HealthCheckFilter;
 import org.apache.sling.hc.util.HealthCheckMetadata;
@@ -171,9 +172,29 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         }
     }
 
+    @Override
+    public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector) {
+        return execute(selector, new HealthCheckExecutionOptions());
+    }
+
+    @Override
+    public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector, HealthCheckExecutionOptions options) {
+        logger.debug("Starting executing checks for filter selector {} and execution options {}", selector, options);
+
+        final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
+        try {
+            final ServiceReference[] healthCheckReferences = filter.getHealthCheckServiceReferences(selector, options.isCombineTagsWithOr());
+
+            return this.execute(healthCheckReferences, options);
+        } finally {
+            filter.dispose();
+        }
+    }
+
     /**
      * @see org.apache.sling.hc.api.execution.HealthCheckExecutor#execute(String[])
      */
+    @SuppressWarnings("deprecation")
     @Override
     public List<HealthCheckExecutionResult> execute(final String... tags) {
         return execute(/*default options*/new HealthCheckExecutionOptions(), tags);
@@ -182,18 +203,10 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     /**
      * @see org.apache.sling.hc.api.execution.HealthCheckExecutor#execute(HealthCheckExecutionOptions, String...)
      */
+    @SuppressWarnings("deprecation")
     @Override
     public List<HealthCheckExecutionResult> execute(HealthCheckExecutionOptions options, final String... tags) {
-        logger.debug("Starting executing checks for tags {} and execution options {}", tags == null ? "*" : tags, options);
-
-        final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
-        try {
-            final ServiceReference[] healthCheckReferences = filter.getTaggedHealthCheckServiceReferences(options.isCombineTagsWithOr(), tags);
-
-            return this.execute(healthCheckReferences, options);
-        } finally {
-            filter.dispose();
-        }
+        return execute(HealthCheckSelector.tags(tags), options);
     }
 
     /**

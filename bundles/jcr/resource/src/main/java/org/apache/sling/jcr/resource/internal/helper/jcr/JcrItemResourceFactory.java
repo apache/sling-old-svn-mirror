@@ -65,7 +65,7 @@ public class JcrItemResourceFactory {
      */
     public JcrItemResource<?> createResource(final ResourceResolver resourceResolver, final String resourcePath,
             final Resource parent, final Map<String, String> parameters) throws RepositoryException {
-        final String jcrPath = helper.pathMapper.mapResourcePathToJCRPath(resourcePath);
+        final String jcrPath = resourcePath;
         if (jcrPath == null) {
             log.debug("createResource: {} maps to an empty JCR path", resourcePath);
             return null;

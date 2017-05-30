@@ -20,6 +20,7 @@ package org.apache.sling.distribution.serialization.impl.vlt;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -83,5 +84,33 @@ public class VltUtilsTest {
         PathFilter filter = propFilter.getEntries().get(0).getFilter();
         assertTrue(filter.matches("/foo/bar/prop1"));
         assertTrue(filter.matches("/foo/prop1"));
+    }
+
+    @Test
+    public void testFilterParsing() throws Exception {
+        Map<String, List<String>> filters = VltUtils.parseFilters(
+                new String[]{"/some/path|-.*/foo"});
+        assertNotNull(filters);
+        assertEquals(1, filters.size());
+        List<String> filtersForSomePath = filters.get("/some/path");
+        assertNotNull(filtersForSomePath);
+        assertEquals(1, filtersForSomePath.size());
+        assertEquals("-.*/foo", filtersForSomePath.get(0));
+    }
+
+    /**
+     * see SLING-6781
+     */
+    @Test
+    public void testFilterParsingWithSamePath() throws Exception {
+        Map<String, List<String>> filters = VltUtils.parseFilters(
+                new String[]{"/some/path|-.*/foo","/some/path|-.*/bar"});
+        assertNotNull(filters);
+        assertEquals(1, filters.size());
+        List<String> filtersForSomePath = filters.get("/some/path");
+        assertNotNull(filtersForSomePath);
+        assertEquals(2, filtersForSomePath.size());
+        assertEquals("-.*/foo", filtersForSomePath.get(0));
+        assertEquals("-.*/bar", filtersForSomePath.get(1));
     }
 }

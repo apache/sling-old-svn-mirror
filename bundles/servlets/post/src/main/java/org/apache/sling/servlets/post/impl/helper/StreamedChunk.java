@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 import javax.servlet.ServletContext;
 import javax.servlet.http.Part;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -64,20 +65,13 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class StreamedChunk {
-    private static final String NT_RESOURCE = "nt:resource";
-    private static final String JCR_LASTMODIFIED = "jcr:lastModified";
-    private static final String JCR_MIMETYPE = "jcr:mimeType";
-    private static final String JCR_DATA = "jcr:data";
-    private static final String JCR_CONTENT = "jcr:content";
-    private static final String JCR_PRIMARY_TYPE = "jcr:primaryType";
     private static final String SLING_CHUNKS_LENGTH = "sling:length";
     private static final String SLING_FILE_LENGTH = "sling:fileLength";
-    private static final String JCR_MIXIN_TYPES = "jcr:mixinTypes";
     private static final String SLING_CHUNK_MIXIN = "sling:chunks";
     private static final String SLING_CHUNK_NT = "sling:chunk";
     private static final String SLING_OFFSET = "sling:offset";
     private static final String MT_APP_OCTET = "application/octet-stream";
-    private static final Logger LOGGER = LoggerFactory.getLogger(StreamedChunk.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(StreamedChunk.class);
 
     private final long offset;
     private final long chunkLength;
@@ -150,7 +144,7 @@ public class StreamedChunk {
      * @throws PersistenceException
      */
     public Resource store(Resource fileResource, List<Modification> changes) throws PersistenceException {
-        Resource result = fileResource.getChild(JCR_CONTENT);
+        Resource result = fileResource.getChild(JcrConstants.JCR_CONTENT);
         if (result != null) {
             updateState(result, changes);
         } else {
@@ -182,8 +176,8 @@ public class StreamedChunk {
         if ( vm == null ) {
             throw new PersistenceException("Resource at " + contentResource.getPath() + " is not modifiable.");
         }
-        vm.put(JCR_LASTMODIFIED, Calendar.getInstance());
-        vm.put(JCR_MIMETYPE, getContentType(part));
+        vm.put(JcrConstants.JCR_LASTMODIFIED, Calendar.getInstance());
+        vm.put(JcrConstants.JCR_MIMETYPE, getContentType(part));
         if (chunked) {
             if ( vm.containsKey(SLING_FILE_LENGTH)) {
                 long previousFileLength = vm.get(SLING_FILE_LENGTH, Long.class);
@@ -199,10 +193,10 @@ public class StreamedChunk {
                 }
             }
             vm.put(SLING_CHUNKS_LENGTH, previousChunksLength + chunkLength);
-            vm.put(JCR_MIXIN_TYPES, SLING_CHUNK_MIXIN);
+            vm.put(JcrConstants.JCR_MIXINTYPES, SLING_CHUNK_MIXIN);
         } else {
             try {
-                vm.put(JCR_DATA, part.getInputStream());
+                vm.put(JcrConstants.JCR_DATA, part.getInputStream());
             } catch (IOException e) {
                 throw new PersistenceException("Error while retrieving inputstream from request part.", e);
             }
@@ -218,25 +212,25 @@ public class StreamedChunk {
      */
     private Resource initState(Resource fileResource, List<Modification> changes) throws PersistenceException {
         Map<String, Object> resourceProps = new HashMap<>();
-        resourceProps.put(JCR_PRIMARY_TYPE, NT_RESOURCE);
-        resourceProps.put(JCR_LASTMODIFIED, Calendar.getInstance());
-        resourceProps.put(JCR_MIMETYPE, getContentType(part));
+        resourceProps.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_RESOURCE);
+        resourceProps.put(JcrConstants.JCR_LASTMODIFIED, Calendar.getInstance());
+        resourceProps.put(JcrConstants.JCR_MIMETYPE, getContentType(part));
 
         if (chunked) {
             resourceProps.put(SLING_CHUNKS_LENGTH, chunkLength);
             resourceProps.put(SLING_FILE_LENGTH, fileLength);
-            resourceProps.put(JCR_MIXIN_TYPES, SLING_CHUNK_MIXIN);
+            resourceProps.put(JcrConstants.JCR_MIXINTYPES, SLING_CHUNK_MIXIN);
             // add a zero size file to satisfy JCR constraints.
-            resourceProps.put(JCR_DATA, new ByteArrayInputStream(new byte[0]));
+            resourceProps.put(JcrConstants.JCR_DATA, new ByteArrayInputStream(new byte[0]));
         } else {
             try {
-                resourceProps.put(JCR_DATA, part.getInputStream());
+                resourceProps.put(JcrConstants.JCR_DATA, part.getInputStream());
             } catch (IOException e) {
                 throw new PersistenceException("Error while retrieving inputstream from request part.", e);
             }
         }
 
-        Resource result = fileResource.getResourceResolver().create(fileResource, JCR_CONTENT, resourceProps);
+        Resource result = fileResource.getResourceResolver().create(fileResource, JcrConstants.JCR_CONTENT, resourceProps);
         for( String key : resourceProps.keySet()) {
             changes.add(Modification.onModified(result.getPath() + '/' + key));
         }
@@ -252,10 +246,10 @@ public class StreamedChunk {
     private void storeChunk(Resource contentResource, List<Modification> changes) throws PersistenceException {
         if (chunked) {
             Map<String, Object> chunkProperties = new HashMap<>();
-            chunkProperties.put(JCR_PRIMARY_TYPE, SLING_CHUNK_NT);
+            chunkProperties.put(JcrConstants.JCR_PRIMARYTYPE, SLING_CHUNK_NT);
             chunkProperties.put(SLING_OFFSET, offset);
             try {
-                chunkProperties.put(JCR_DATA, part.getInputStream());
+                chunkProperties.put(JcrConstants.JCR_DATA, part.getInputStream());
             } catch (IOException e) {
                 throw new PersistenceException("Error while retrieving inputstream from request part.", e);
             }
