@@ -58,8 +58,8 @@ public class FsMountMojo extends AbstractFsMountMojo {
     private static final String BUNDLE_GROUP_ID = "org.apache.sling"; 
 
     private static final String FS_BUNDLE_ARTIFACT_ID = "org.apache.sling.fsresource"; 
-    private static final String FS_BUNDLE_DEFAULT_VERSION = "2.1.2"; 
-    private static final String FS_BUNDLE_LEGACY_DEFAULT_VERSION = "1.4.2"; 
+    private static final String FS_BUNDLE_DEFAULT_VERSION = "2.1.4"; 
+    private static final String FS_BUNDLE_LEGACY_DEFAULT_VERSION = "1.4.4"; 
     
     private static final String RESOURCE_RESOLVER_BUNDLE_ARTIFACT_ID = "org.apache.sling.resourceresolver"; 
     private static final String RESOURCE_RESOLVER_BUNDLE_MIN_VERSION = "1.5.18"; 
@@ -100,7 +100,7 @@ public class FsMountMojo extends AbstractFsMountMojo {
      *       &lt;bundle&gt;
      *         &lt;groupId&gt;org.apache.sling&lt;/groupId&gt;
      *         &lt;artifactId&gt;org.apache.sling.fsresource&lt;/artifactId&gt;
-     *         &lt;version&gt;2.1.2&lt;/version&gt;
+     *         &lt;version&gt;2.1.4&lt;/version&gt;
      *       &lt;/bundle&gt;
      *     &lt;/bundles&gt;
      *     &lt;preconditions&gt;
@@ -116,7 +116,7 @@ public class FsMountMojo extends AbstractFsMountMojo {
      *       &lt;bundle&gt;
      *         &lt;groupId&gt;org.apache.sling&lt;/groupId&gt;
      *         &lt;artifactId&gt;org.apache.sling.fsresource&lt;/artifactId&gt;
-     *         &lt;version&gt;1.4.2&lt;/version&gt;
+     *         &lt;version&gt;1.4.4&lt;/version&gt;
      *       &lt;/bundle&gt;
      *     &lt;/bundles&gt;
      *   &lt;/bundlePrerequisite&gt;
