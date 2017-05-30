@@ -19,22 +19,26 @@
 package org.apache.sling.distribution.queue.impl.simple;
 
 import javax.annotation.Nonnull;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonString;
+import javax.json.JsonValue;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FilenameFilter;
+import java.io.StringReader;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.JSONTokener;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.queue.DistributionQueue;
@@ -133,20 +137,24 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
                             String id = split[0];
                             String infoString = split[1];
                             Map<String, Object> info = new HashMap<String, Object>();
-                            JSONTokener jsonTokener = new JSONTokener(infoString);
-                            JSONObject jsonObject = new JSONObject(jsonTokener);
-                            Iterator<String> keys = jsonObject.keys();
-                            while (keys.hasNext()) {
-                                String key = keys.next();
-                                JSONArray v = jsonObject.optJSONArray(key);
-                                if (v != null) {
-                                    String[] a = new String[v.length()];
+                            JsonReader reader = Json.createReader(new StringReader(infoString));
+                            JsonObject jsonObject = reader.readObject();
+                            for (Map.Entry<String, JsonValue> entry : jsonObject.entrySet()) {
+                                if (entry.getValue().getValueType().equals(JsonValue.ValueType.ARRAY))
+                                {
+                                    JsonArray value = jsonObject.getJsonArray(entry.getKey());
+                                    String[] a = new String[value.size()];
                                     for (int i = 0; i < a.length; i++) {
-                                        a[i] = v.getString(i);
+                                        a[i] = value.getString(i);
                                     }
-                                    info.put(key, a);
-                                } else {
-                                    info.put(key, jsonObject.getString(key));
+                                    info.put(entry.getKey(), a);
+                                }
+                                else if (JsonValue.NULL.equals(entry.getValue())) {
+                                    info.put(entry.getKey(), null);
+                                }
+                                else
+                                {
+                                    info.put(entry.getKey(), ((JsonString) entry.getValue()).getString());
                                 }
                             }
                             queue.add(new DistributionQueueItem(id, info));
@@ -154,7 +162,7 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
                         log.info("recovered {} items from queue {}", queue.getStatus().getItemsCount(), queueName);
                     } catch (FileNotFoundException e) {
                         log.warn("could not read checkpoint file {}", qf.getAbsolutePath());
-                    } catch (JSONException e) {
+                    } catch (JsonException e) {
                         log.warn("could not parse info from checkpoint file {}", qf.getAbsolutePath());
                     }
                 }
