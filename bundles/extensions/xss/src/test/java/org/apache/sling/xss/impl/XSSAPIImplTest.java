@@ -68,11 +68,6 @@ public class XSSAPIImplTest {
                     return url.replaceAll("jcr:", "_jcr_");
                 }
             });
-
-            SlingHttpServletRequest mockRequest = mock(SlingHttpServletRequest.class);
-            when(mockRequest.getResourceResolver()).thenReturn(mockResolver);
-
-            xssAPI = xssAPI.getRequestSpecificAPI(mockRequest);
         } catch (Exception e) {
             e.printStackTrace();
         }

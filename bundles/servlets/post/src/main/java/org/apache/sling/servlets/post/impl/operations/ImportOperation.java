@@ -49,10 +49,16 @@ public class ImportOperation extends AbstractCreateOperation {
     /**
      * Reference to the content importer service
      */
-    private ContentImporter contentImporter;
+    private Object contentImporter;
 
-    public void setContentImporter(ContentImporter importer) {
+    public void setContentImporter(Object importer) {
         this.contentImporter = importer;
+    }
+
+    public void unsetContentImporter(Object importer) {
+        if ( this.contentImporter == importer ) {
+            this.contentImporter = null;
+        }
     }
 
     private String getRequestParamAsString(SlingHttpServletRequest request, String key) {
@@ -67,7 +73,7 @@ public class ImportOperation extends AbstractCreateOperation {
     protected void doRun(SlingHttpServletRequest request, PostResponse response, final List<Modification> changes)
             throws PersistenceException {
         try {
-            ContentImporter importer = contentImporter;
+            Object importer = contentImporter;
             if (importer == null) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                         "Missing content importer for import");
@@ -166,7 +172,7 @@ public class ImportOperation extends AbstractCreateOperation {
                             "Missing content for import");
                     return;
                 } else {
-                    importer.importContent(node, contentRootName, contentStream,
+                    ((ContentImporter)importer).importContent(node, contentRootName, contentStream,
                             new ImportOptions() {
 
                                 @Override

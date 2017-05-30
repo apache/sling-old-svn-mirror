@@ -54,7 +54,7 @@ public class ValidationModelRetrieverImpl implements ValidationModelRetriever {
      * List of validation providers, Declarative Services 1.3 takes care that the list is ordered according to {@link ServiceReference#compareTo(Object)}.
      * Highest ranked service is the last one in the list.
      * 
-     * @see OSGi R6 Comp, 112.3.8.1
+     * @see "OSGi R6 Comp, 112.3.8.1"
      */
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY, fieldOption = FieldOption.REPLACE)
     protected volatile List<ValidationModelProvider> modelProviders;

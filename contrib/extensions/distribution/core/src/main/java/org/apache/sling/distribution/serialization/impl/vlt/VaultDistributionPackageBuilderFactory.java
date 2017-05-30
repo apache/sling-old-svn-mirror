@@ -18,23 +18,7 @@
  */
 package org.apache.sling.distribution.serialization.impl.vlt;
 
-import java.io.InputStream;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyOption;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.*;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.packaging.Packaging;
@@ -58,6 +42,13 @@ import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.Memo
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import java.io.InputStream;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
+
 /**
  * A package builder for Apache Jackrabbit FileVault based implementations.
  */
@@ -69,7 +60,7 @@ import org.osgi.framework.ServiceRegistration;
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionPackageBuilder.class)
-@Property(name="webconsole.configurationFactory.nameHint", value="Builder name: {name}")
+@Property(name = "webconsole.configurationFactory.nameHint", value = "Builder name: {name}")
 public class VaultDistributionPackageBuilderFactory implements DistributionPackageBuilder {
 
     /**
@@ -130,16 +121,16 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     @Property(label = "Temp Filesystem Folder", description = "The filesystem folder where the temporary files should be saved.")
     private static final String TEMP_FS_FOLDER = "tempFsFolder";
 
-    @Property(label="Use Binary References", description = "If activated, it avoids sending binaries in the distribution package.", boolValue = false)
+    @Property(label = "Use Binary References", description = "If activated, it avoids sending binaries in the distribution package.", boolValue = false)
     public static final String USE_BINARY_REFERENCES = "useBinaryReferences";
 
-    @Property(label="Autosave threshold", description = "The value after which autosave is triggered for intermediate changes.", intValue = -1)
+    @Property(label = "Autosave threshold", description = "The value after which autosave is triggered for intermediate changes.", intValue = -1)
     public static final String AUTOSAVE_THRESHOLD = "autoSaveThreshold";
 
     private static final long DEFAULT_PACKAGE_CLEANUP_DELAY = 60L;
 
     @Property(
-            label="The delay in seconds between two runs of the cleanup phase for resource persisted packages.",
+            label = "The delay in seconds between two runs of the cleanup phase for resource persisted packages.",
             description = "The resource persisted packages are cleaned up periodically (asynchronously) since SLING-6503." +
                     "The delay between two runs of the cleanup phase can be configured with this setting. 60 seconds by default",
             longValue = DEFAULT_PACKAGE_CLEANUP_DELAY
@@ -150,60 +141,60 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     private static final int DEFAULT_FILE_THRESHOLD_VALUE = 1;
 
     @Property(
-        label="File threshold (in bytes)",
-        description = "Once the data reaches the configurable size value, buffering to memory switches to file buffering.",
-        intValue = DEFAULT_FILE_THRESHOLD_VALUE
+            label = "File threshold (in bytes)",
+            description = "Once the data reaches the configurable size value, buffering to memory switches to file buffering.",
+            intValue = DEFAULT_FILE_THRESHOLD_VALUE
     )
     public static final String FILE_THRESHOLD = "fileThreshold";
 
     private static final String DEFAULT_MEMORY_UNIT = "MEGA_BYTES";
 
     @Property(
-        label = "The memory unit for the file threshold",
-        description = "The memory unit for the file threshold, Megabytes by default",
-        value = DEFAULT_MEMORY_UNIT,
-        options = {
-                @PropertyOption(name = "BYTES", value = "Bytes"),
-                @PropertyOption(name = "KILO_BYTES", value = "Kilobytes"),
-                @PropertyOption(name = "MEGA_BYTES", value = "Megabytes"),
-                @PropertyOption(name = "GIGA_BYTES", value = "Gigabytes")
-        }
+            label = "The memory unit for the file threshold",
+            description = "The memory unit for the file threshold, Megabytes by default",
+            value = DEFAULT_MEMORY_UNIT,
+            options = {
+                    @PropertyOption(name = "BYTES", value = "Bytes"),
+                    @PropertyOption(name = "KILO_BYTES", value = "Kilobytes"),
+                    @PropertyOption(name = "MEGA_BYTES", value = "Megabytes"),
+                    @PropertyOption(name = "GIGA_BYTES", value = "Gigabytes")
+            }
     )
     private static final String MEMORY_UNIT = "MEGA_BYTES";
 
     private static final boolean DEFAULT_USE_OFF_HEAP_MEMORY = false;
 
     @Property(
-        label="Flag to enable/disable the off-heap memory",
-        description = "Flag to enable/disable the off-heap memory, false by default",
-        boolValue = DEFAULT_USE_OFF_HEAP_MEMORY
+            label = "Flag to enable/disable the off-heap memory",
+            description = "Flag to enable/disable the off-heap memory, false by default",
+            boolValue = DEFAULT_USE_OFF_HEAP_MEMORY
     )
     public static final String USE_OFF_HEAP_MEMORY = "useOffHeapMemory";
 
     private static final String DEFAULT_DIGEST_ALGORITHM = "NONE";
 
     @Property(
-        label = "The digest algorithm to calculate the package checksum",
-        description = "The digest algorithm to calculate the package checksum, Megabytes by default",
-        value = DEFAULT_DIGEST_ALGORITHM,
-        options = {
-            @PropertyOption(name = DEFAULT_DIGEST_ALGORITHM, value = "Do not send digest"),
-            @PropertyOption(name = "MD2", value = "md2"),
-            @PropertyOption(name = "MD5", value = "md5"),
-            @PropertyOption(name = "SHA-1", value = "sha1"),
-            @PropertyOption(name = "SHA-256", value = "sha256"),
-            @PropertyOption(name = "SHA-384", value = "sha384"),
-            @PropertyOption(name = "SHA-512", value = "sha512")
-        }
+            label = "The digest algorithm to calculate the package checksum",
+            description = "The digest algorithm to calculate the package checksum, Megabytes by default",
+            value = DEFAULT_DIGEST_ALGORITHM,
+            options = {
+                    @PropertyOption(name = DEFAULT_DIGEST_ALGORITHM, value = "Do not send digest"),
+                    @PropertyOption(name = "MD2", value = "md2"),
+                    @PropertyOption(name = "MD5", value = "md5"),
+                    @PropertyOption(name = "SHA-1", value = "sha1"),
+                    @PropertyOption(name = "SHA-256", value = "sha256"),
+                    @PropertyOption(name = "SHA-384", value = "sha384"),
+                    @PropertyOption(name = "SHA-512", value = "sha512")
+            }
     )
     private static final String DIGEST_ALGORITHM = "digestAlgorithm";
 
-    private static final int DEFAULT_MONITORING_QUEUE_SIZE = 100;
+    private static final int DEFAULT_MONITORING_QUEUE_SIZE = 0;
 
     @Property(
-        label="The number of items for monitoring distribution packages creation/installation",
-        description = "The number of items for monitoring distribution packages creation/installation, 100 by default",
-        intValue = DEFAULT_MONITORING_QUEUE_SIZE
+            label = "The number of items for monitoring distribution packages creation/installation",
+            description = "The number of items for monitoring distribution packages creation/installation, 100 by default",
+            intValue = DEFAULT_MONITORING_QUEUE_SIZE
     )
     private static final String MONITORING_QUEUE_SIZE = "monitoringQueueSize";
 

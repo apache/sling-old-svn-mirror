@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import junit.framework.Assert;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
@@ -71,9 +70,8 @@ public class DistributionUtils {
                 .assertContentType("application/json").getContent();
 
         // Parse JSON response for more precise testing
-        final JSONObject json = new JSONObject(new JSONTokener(content));
 
-        return json;
+        return new JSONObject(new JSONTokener(content));
     }
 
     public static String assertPostResourceWithParameters(SlingInstance slingInstance,
@@ -118,7 +116,7 @@ public class DistributionUtils {
             parameters.add(value);
         }
 
-        assertPostResourceWithParameters(slingInstance, 200, resource, parameters.toArray(new String[0]));
+        assertPostResourceWithParameters(slingInstance, 200, resource, parameters.toArray(new String[parameters.size()]));
 
     }
 

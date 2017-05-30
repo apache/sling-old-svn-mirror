@@ -40,13 +40,14 @@ public class Activator implements BundleActivator, BundleListener {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private Map<Long, BundleResourceProvider> bundleResourceProviderMap = new HashMap<Long, BundleResourceProvider>();
+    private final Map<Long, BundleResourceProvider[]> bundleResourceProviderMap = new HashMap<>();
 
-    private BundleContext bundleContext;
+    private volatile BundleContext bundleContext;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
+    @Override
     public void start(final BundleContext context) throws Exception {
 
         this.bundleContext = context;
@@ -54,8 +55,8 @@ public class Activator implements BundleActivator, BundleListener {
         context.addBundleListener(this);
 
         try {
-            Bundle[] bundles = context.getBundles();
-            for (Bundle bundle : bundles) {
+            final Bundle[] bundles = context.getBundles();
+            for (final Bundle bundle : bundles) {
                 if (bundle.getState() == Bundle.ACTIVE) {
                     // add bundle resource provider for active bundles
                     addBundleResourceProvider(bundle);
@@ -73,6 +74,7 @@ public class Activator implements BundleActivator, BundleListener {
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
+    @Override
     public void stop(final BundleContext context) throws Exception {
         BundleResourceWebConsolePlugin.destroyPlugin();
 
@@ -88,7 +90,8 @@ public class Activator implements BundleActivator, BundleListener {
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
-    public void bundleChanged(BundleEvent event) {
+    @Override
+    public void bundleChanged(final BundleEvent event) {
         switch (event.getType()) {
             case BundleEvent.STARTED:
                 // register resource provider for the started bundle
@@ -104,8 +107,8 @@ public class Activator implements BundleActivator, BundleListener {
 
     // ---------- Bundle provided resources -----------------------------------
 
-    private void addBundleResourceProvider(Bundle bundle) {
-        String prefixes = (String) bundle.getHeaders().get(
+    private void addBundleResourceProvider(final Bundle bundle) {
+        final String prefixes = bundle.getHeaders().get(
             BUNDLE_RESOURCE_ROOTS);
         if (prefixes != null) {
             log.debug(
@@ -113,22 +116,31 @@ public class Activator implements BundleActivator, BundleListener {
                 new Object[] { prefixes, bundle.getSymbolicName(),
                     bundle.getBundleId() });
 
-            BundleResourceProvider brp = new BundleResourceProvider(bundle,
-                prefixes);
-            long id = brp.registerService(bundleContext);
-            bundleResourceProviderMap.put(bundle.getBundleId(), brp);
+            final MappedPath[] roots = BundleResourceProvider.getRoots(bundle, prefixes);
+            final BundleResourceProvider[] providers = new BundleResourceProvider[roots.length];
 
-            log.debug("addBundleResourceProvider: Service ID = {}", id);
+            int index = 0;
+            for(final MappedPath path : roots) {
+                final BundleResourceProvider brp = new BundleResourceProvider(bundle, path);
+                final long id = brp.registerService(bundleContext);
+                providers[index] = brp;
+                bundleResourceProviderMap.put(bundle.getBundleId(), providers);
+
+                log.debug("addBundleResourceProvider: Service ID = {}", id);
+                index++;
+            }
         }
     }
 
-    private void removeBundleResourceProvider(Bundle bundle) {
-        BundleResourceProvider brp = bundleResourceProviderMap.remove(bundle.getBundleId());
+    private void removeBundleResourceProvider(final Bundle bundle) {
+        final BundleResourceProvider[] brp = bundleResourceProviderMap.remove(bundle.getBundleId());
         if (brp != null) {
             log.debug(
                 "removeBundleResourceProvider: Unregistering resources for bundle {}/{}",
                 new Object[] { bundle.getSymbolicName(), bundle.getBundleId() });
-            brp.unregisterService();
+            for(final BundleResourceProvider provider : brp) {
+                provider.unregisterService();
+            }
         }
     }
 }

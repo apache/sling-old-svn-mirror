@@ -52,6 +52,7 @@ public class ConfigurationPersistenceStrategyMultiplexerImplTest {
     
     @Before
     public void setUp() {
+        context.registerInjectActivateService(new ConfigurationManagementSettingsImpl());
         underTest = context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexerImpl());
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyBridge());
         resource1 = context.create().resource("/conf/test1");

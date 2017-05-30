@@ -83,7 +83,6 @@
     org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.0/jar
     org.apache.felix/org.apache.felix.webconsole.plugins.event/1.0.2/jar
     org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.4/jar
-    org.apache.sling/org.apache.sling.commons.json/2.0.8/jar
     org.apache.felix/org.apache.felix.bundlerepository/1.6.4/jar
     org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2/jar
     org.apache.sling/org.apache.sling.jcr.webconsole/1.0.1-SNAPSHOT/jar

@@ -30,6 +30,8 @@ import org.quartz.TriggerBuilder;
  */
 public class InternalScheduleOptions implements ScheduleOptions {
 
+    public String providedName;
+
     public String name;
 
     public String threadPoolName;

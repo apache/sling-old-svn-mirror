@@ -18,7 +18,7 @@
  */
 package org.apache.sling.discovery;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Used to filter InstanceDescriptions in a TopologyView.

@@ -17,55 +17,55 @@
 -->
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.apache.sling.ide</groupId>
-    <artifactId>reactor</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
-  </parent>
-  <artifactId>org.apache.sling.ide.vlt-wrapper</artifactId>
-  <packaging>eclipse-plugin</packaging>
-  <name>Sling IDE Tools: FileVault wrapper</name>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling.ide</groupId>
+        <artifactId>reactor</artifactId>
+        <version>1.1.1-SNAPSHOT</version>
+    </parent>
+    <artifactId>org.apache.sling.ide.vlt-wrapper</artifactId>
+    <packaging>eclipse-plugin</packaging>
+    <name>Sling IDE Tools: FileVault wrapper</name>
 
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/vlt-wrapper</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/vlt-wrapper</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/vlt-wrapper</url>
-  </scm>
-  <build>
-    <!-- ensure that extra files are picked up by the maven-source-plugin -->
-    <resources>
-        <resource>
-            <directory>.</directory>
-            <includes>
-                <include>build.properties</include>
-                <include>META-INF/*</include>
-            </includes>
-        </resource>
-    </resources>
-    <plugins>
-        <plugin>
-            <artifactId>maven-clean-plugin</artifactId>
-            <configuration>
-                <filesets>
-                    <fileset>
-                        <directory>lib</directory>
-                        <includes>
-                            <include>**/*.jar</include>
-                        </includes>
-                    </fileset>
-                </filesets>
-            </configuration>
-        </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <configuration>
-                <archive>
-                    <manifestFile>META-INF/MANIFEST.MF</manifestFile>
-                </archive>
-            </configuration>
-        </plugin>        
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/vlt-wrapper</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/vlt-wrapper</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/vlt-wrapper</url>
+    </scm>
+    <build>
+        <!-- ensure that extra files are picked up by the maven-source-plugin -->
+        <resources>
+            <resource>
+                <directory>.</directory>
+                <includes>
+                    <include>build.properties</include>
+                    <include>META-INF/*</include>
+                </includes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>lib</directory>
+                            <includes>
+                                <include>**/*.jar</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestFile>META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -78,7 +78,7 @@
                             <version>2.0</version>
                         </artifactItem>
                         <!-- END JCR dependencies -->
-                                                    
+
                         <!-- START Apache Jackrabbit dependencies -->
                         <artifactItem>
                             <groupId>org.apache.jackrabbit</groupId>
@@ -100,7 +100,7 @@
                             <artifactId>jackrabbit-jcr-commons</artifactId>
                             <version>${jackrabbit.version}</version>
                         </artifactItem>
-                        <!--  transitive dependency of jackrabbit-jcr-commons -->
+                        <!-- transitive dependency of jackrabbit-jcr-commons -->
                         <artifactItem>
                             <groupId>com.google.guava</groupId>
                             <artifactId>guava</artifactId>
@@ -126,8 +126,23 @@
                             <artifactId>jackrabbit-spi2dav</artifactId>
                             <version>${jackrabbit.version}</version>
                         </artifactItem>
+                        <artifactItem>
+                            <groupId>org.apache.httpcomponents</groupId>
+                            <artifactId>httpmime</artifactId>
+                            <version>4.5.3</version>
+                        </artifactItem>
+                        <artifactItem>
+                            <groupId>org.apache.httpcomponents</groupId>
+                            <artifactId>httpclient</artifactId>
+                            <version>4.5.3</version>
+                        </artifactItem>
+                        <artifactItem>
+                            <groupId>org.apache.httpcomponents</groupId>
+                            <artifactId>httpcore</artifactId>
+                            <version>4.4.6</version>
+                        </artifactItem>
                         <!-- END Apache Jackrabbit dependencies -->
-                        
+
                         <!-- START Apache Jackrabbit FileVault dependencies -->
                         <artifactItem>
                             <groupId>org.apache.jackrabbit.vault</groupId>
@@ -139,8 +154,8 @@
                             <artifactId>org.apache.jackrabbit.vault</artifactId>
                             <version>${vault.version}</version>
                         </artifactItem>
-                        <!-- END Apache Jackrabbit FileVault dependencies -->                                
-                        
+                        <!-- END Apache Jackrabbit FileVault dependencies -->
+
                     </artifactItems>
                     <outputDirectory>lib</outputDirectory>
                 </configuration>
@@ -157,7 +172,7 @@
 
     <properties>
         <!-- must match the version being referenced in the pom.xml of filevault -->
-        <jackrabbit.version>2.11.3</jackrabbit.version>
-        <vault.version>3.1.30</vault.version>
+        <jackrabbit.version>2.14.0</jackrabbit.version>
+        <vault.version>3.1.38</vault.version>
     </properties>
 </project>

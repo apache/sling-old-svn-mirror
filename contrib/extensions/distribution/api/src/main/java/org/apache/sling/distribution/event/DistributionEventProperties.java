@@ -30,21 +30,21 @@ public interface DistributionEventProperties {
     /**
      * property containing the name of component generating the event
      */
-    public static final String DISTRIBUTION_COMPONENT_NAME = "distribution.component.name";
+    String DISTRIBUTION_COMPONENT_NAME = "distribution.component.name";
 
 
     /**
      * property containing the kind of the component generating the event
      */
-    public static final String DISTRIBUTION_COMPONENT_KIND= "distribution.component.kind";
+    String DISTRIBUTION_COMPONENT_KIND= "distribution.component.kind";
 
     /**
      * property containing the type of the distribution request
      */
-    public static final String DISTRIBUTION_TYPE = "distribution.type";
+    String DISTRIBUTION_TYPE = "distribution.type";
 
     /**
      * property containing the type of the distribution paths
      */
-    public static final String DISTRIBUTION_PATHS= "distribution.paths";
+    String DISTRIBUTION_PATHS= "distribution.paths";
 }

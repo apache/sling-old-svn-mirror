@@ -17,22 +17,15 @@
 
 package org.apache.sling.servlets.post.impl.operations;
 
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.regex.Pattern;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeType;
-import javax.servlet.ServletException;
-
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
@@ -135,16 +128,16 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     }
 
     /**
-     * Create node(s) according to current request
+     * Create resource(s) according to current request
      *
-     * @throws RepositoryException if a repository error occurs
+     * @throws PersistenceException if a resource error occurs
      */
     protected void processCreate(final ResourceResolver resolver,
             final Map<String, RequestProperty> reqProperties,
             final PostResponse response,
             final List<Modification> changes,
             final VersioningConfiguration versioningConfiguration)
-    throws PersistenceException, RepositoryException {
+    throws PersistenceException {
 
         final String path = response.getPath();
         final Resource resource = resolver.getResource(path);
@@ -159,29 +152,25 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
         }
     }
 
-    private boolean isVersionable(final Node node) throws RepositoryException {
-        return node.isNodeType("mix:versionable");
-    }
-
     protected void updateNodeType(final ResourceResolver resolver,
                     final String path,
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,
                     final VersioningConfiguration versioningConfiguration)
-    throws PersistenceException, RepositoryException {
+    throws PersistenceException {
         final String nodeType = getPrimaryType(reqProperties, path);
         if (nodeType != null) {
             final Resource rsrc = resolver.getResource(path);
             final ModifiableValueMap mvm = rsrc.adaptTo(ModifiableValueMap.class);
             if ( mvm != null ) {
-                final Node node = rsrc.adaptTo(Node.class);
-                final boolean wasVersionable = (node == null ? false : isVersionable(node));
+                final Object node = this.jcrSsupport.getNode(rsrc);
+                final boolean wasVersionable = (node == null ? false : this.jcrSsupport.isVersionable(rsrc));
 
                 if ( node != null ) {
                     this.jcrSsupport.checkoutIfNecessary(rsrc, changes, versioningConfiguration);
-                    node.setPrimaryType(nodeType);
+                    this.jcrSsupport.setPrimaryNodeType(node, nodeType);
                 } else {
-                    mvm.put("jcr:primaryType", nodeType);
+                    mvm.put(JcrConstants.JCR_PRIMARYTYPE, nodeType);
                 }
 
                 if ( node != null ) {
@@ -189,7 +178,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     // the mix:versionable mixin does an implicit checkout
                     if (!wasVersionable &&
                             versioningConfiguration.isCheckinOnNewVersionableNode() &&
-                            isVersionable(node)) {
+                            this.jcrSsupport.isVersionable(rsrc)) {
                         changes.add(Modification.onCheckout(path));
                     }
                 }
@@ -202,42 +191,24 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,
                     final VersioningConfiguration versioningConfiguration)
-    throws PersistenceException, RepositoryException {
+    throws PersistenceException {
         final String[] mixins = getMixinTypes(reqProperties, path);
         if (mixins != null) {
 
             final Resource rsrc = resolver.getResource(path);
             final ModifiableValueMap mvm = rsrc.adaptTo(ModifiableValueMap.class);
             if ( mvm != null ) {
-                final Node node = rsrc.adaptTo(Node.class);
+                this.jcrSsupport.checkoutIfNecessary(rsrc, changes, versioningConfiguration);
+                mvm.put(JcrConstants.JCR_MIXINTYPES, mixins);
 
-                final Set<String> newMixins = new HashSet<>();
-                newMixins.addAll(Arrays.asList(mixins));
-
-                // clear existing mixins first
-                if ( node != null ) {
-                    this.jcrSsupport.checkoutIfNecessary(rsrc, changes, versioningConfiguration);
-                    for (NodeType mixin : node.getMixinNodeTypes()) {
-                        String mixinName = mixin.getName();
-                        if (!newMixins.remove(mixinName)) {
-                            node.removeMixin(mixinName);
-                        }
+                for(final String mixin : mixins) {
+                    // this is a bit of a cheat; there isn't a formal checkout, but assigning
+                    // the mix:versionable mixin does an implicit checkout
+                    if (mixin.equals(JcrConstants.MIX_VERSIONABLE) &&
+                            versioningConfiguration.isCheckinOnNewVersionableNode()) {
+                        changes.add(Modification.onCheckout(path));
                     }
-
-                    // add new mixins
-                    for (String mixin : newMixins) {
-                        node.addMixin(mixin);
-                        // this is a bit of a cheat; there isn't a formal checkout, but assigning
-                        // the mix:versionable mixin does an implicit checkout
-                        if (mixin.equals("mix:versionable") &&
-                                versioningConfiguration.isCheckinOnNewVersionableNode()) {
-                            changes.add(Modification.onCheckout(path));
-                        }
-                    }
-                } else {
-                    mvm.put("jcr:mixinTypes", mixins);
                 }
-
             }
         }
     }
@@ -245,9 +216,6 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     /**
      * Collects the properties that form the content to be written back to the
      * resource tree.
-     *
-     * @throws RepositoryException if a repository error occurs
-     * @throws ServletException if an internal error occurs
      */
     protected Map<String, RequestProperty> collectContent(
             final SlingHttpServletRequest request,
@@ -555,7 +523,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,
                     final VersioningConfiguration versioningConfiguration)
-    throws PersistenceException, RepositoryException {
+    throws PersistenceException {
         if (log.isDebugEnabled()) {
             log.debug("Deep-creating resource '{}'", path);
         }
@@ -667,7 +635,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
 
     protected String generateName(SlingHttpServletRequest request, String basePath)
-    	throws RepositoryException {
+    	throws PersistenceException {
 
 		// SLING-1091: If a :name parameter is supplied, the (first) value of this parameter is used unmodified as the name
 		//    for the new node. If the name is illegally formed with respect to JCR name requirements, an exception will be
@@ -683,7 +651,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
 		        // if the resulting path already exists then report an error
 	            if (request.getResourceResolver().getResource(basePath) != null) {
-	    		    throw new RepositoryException(
+	    		    throw new PersistenceException(
 	    			        "Collision in node names for path=" + basePath);
 	            }
 
@@ -717,7 +685,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     }
 
     /** Generate a unique path in case the node name generator didn't */
-    private String ensureUniquePath(SlingHttpServletRequest request, String basePath) throws RepositoryException {
+    private String ensureUniquePath(SlingHttpServletRequest request, String basePath) throws PersistenceException {
 		// if resulting path exists, add a suffix until it's not the case
 		// anymore
         final ResourceResolver resolver = request.getResourceResolver();
@@ -738,7 +706,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
 	        // Give up after MAX_TRIES
 	        if (resolver.getResource(basePath) != null ) {
-	            throw new RepositoryException(
+	            throw new PersistenceException(
 	                "Collision in generated node names under " + basePath + ", generated path " + basePath + " already exists");
 	        }
 		}

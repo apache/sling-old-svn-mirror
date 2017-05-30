@@ -40,6 +40,7 @@ import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.SlingPostProcessor;
 import org.apache.sling.servlets.post.VersioningConfiguration;
+import org.apache.sling.servlets.post.impl.helper.JCRSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

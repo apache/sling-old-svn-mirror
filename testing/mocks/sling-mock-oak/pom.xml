@@ -37,7 +37,7 @@
     <properties>
         <oak.version>1.4.1</oak.version>
         <jackrabbit.version>2.12.1</jackrabbit.version>
-        <sling-mock.version>2.2.7-SNAPSHOT</sling-mock.version>
+        <sling-mock.version>2.2.8</sling-mock.version>
     </properties>
 
     <scm>

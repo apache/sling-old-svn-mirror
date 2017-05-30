@@ -1,6 +1,6 @@
 {
-  "jcr:primaryType": "app:Page",
-  "jcr:createdBy": "admin",
+  "jcr:primaryType": 'app:Page',
+  'jcr:createdBy': "admin",
   "jcr:created": "Thu Aug 07 2014 16:32:59 GMT+0200",
   "jcr:content": {
     "jcr:primaryType": "app:PageContent",

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <name>file21a.txt</name>
+  <mixinNodeType>mix:language</mixinNodeType>
+  <property>
+    <name>jcr:language</name>
+    <value>en</value>
+    <type>String</type>
+  </property>
+  <property>
+    <name>sling:resourceSuperType</name>
+    <value>/my/super/type</value>
+    <type>String</type>
+  </property>
+</node>

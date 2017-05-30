@@ -27,17 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.References;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
@@ -53,55 +42,62 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * This component manages/keeps track of all job consumer services.
  */
-@Component(label="Apache Sling Job Consumer Manager",
-           description="The consumer manager controls the job consumer (= processors). "
-                     + "It can be used to temporarily disable job processing on the current instance. Other instances "
-                     + "in a cluster are not affected.",
-           metatype=true)
-@Service(value=JobConsumerManager.class)
-@References({
-    @Reference(referenceInterface=JobConsumer.class,
-            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
-            policy=ReferencePolicy.DYNAMIC),
-    @Reference(referenceInterface=JobExecutor.class,
-            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
-            policy=ReferencePolicy.DYNAMIC)
-})
-@Property(name="org.apache.sling.installer.configuration.persist", boolValue=false,
-          label="Distribute config",
-          description="If this is disabled, the configuration is not persisted on save in the cluster and is "
-                    + "only used on the current instance. This option should always be disabled!")
+@Component(service = JobConsumerManager.class,
+    property = {
+          Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    })
+@Designate(ocd = JobConsumerManager.Config.class)
 public class JobConsumerManager {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    @ObjectClassDefinition(name = "Apache Sling Job Consumer Manager",
+           description="The consumer manager controls the job consumer (= processors). "
+                     + "It can be used to temporarily disable job processing on the current instance. Other instances "
+                     + "in a cluster are not affected.")
+    public @interface Config {
 
-    @Property(unbounded=PropertyUnbounded.ARRAY, value = "*",
-              label="Topic Whitelist",
+        @AttributeDefinition(name = "Distribute config",
+          description="If this is disabled, the configuration is not persisted on save in the cluster and is "
+                    + "only used on the current instance. This option should always be disabled!")
+        boolean org_apache_sling_installer_configuration_persist() default false;
+
+        @AttributeDefinition(name = "Topic Whitelist",
               description="This is a list of topics which currently should be "
                         + "processed by this instance. Leaving it empty, all job consumers are disabled. Putting a '*' as "
                         + "one entry, enables all job consumers. Adding separate topics enables job consumers for exactly "
                         + "this topic.")
-    private static final String PROPERTY_WHITELIST = "job.consumermanager.whitelist";
+        String[] job_consumermanager_whitelist() default "*";
 
-    @Property(unbounded=PropertyUnbounded.ARRAY,
-              label="Topic Blacklist",
+        @AttributeDefinition(name = "Topic Blacklist",
               description="This is a list of topics which currently shouldn't be "
                         + "processed by this instance. Leaving it empty, all job consumers are enabled. Putting a '*' as "
                         + "one entry, disables all job consumers. Adding separate topics disables job consumers for exactly "
                         + "this topic.")
-    private static final String PROPERTY_BLACKLIST = "job.consumermanager.blacklist";
+        String[] job_consumermanager_blacklist();
+    }
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** The map with the consumers, keyed by topic, sorted by service ranking. */
-    private final Map<String, List<ConsumerInfo>> topicToConsumerMap = new HashMap<String, List<ConsumerInfo>>();
+    private final Map<String, List<ConsumerInfo>> topicToConsumerMap = new HashMap<>();
 
     /** ServiceRegistration for propagation. */
-    private ServiceRegistration propagationService;
+    private ServiceRegistration<PropertyProvider> propagationService;
 
     private String topics;
 
@@ -113,10 +109,10 @@ public class JobConsumerManager {
 
     private BundleContext bundleContext;
 
-    private final Map<String, Object[]> listenerMap = new HashMap<String, Object[]>();
+    private final Map<String, Object[]> listenerMap = new HashMap<>();
 
     private Dictionary<String, Object> getRegistrationProperties() {
-        final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
+        final Dictionary<String, Object> serviceProps = new Hashtable<>();
         serviceProps.put(PropertyProvider.PROPERTY_PROPERTIES, TopologyCapabilities.PROPERTY_TOPICS);
         // we add a changing property to the service registration
         // to make sure a modification event is really sent
@@ -127,16 +123,16 @@ public class JobConsumerManager {
     }
 
     @Activate
-    protected void activate(final BundleContext bc, final Map<String, Object> props) {
+    protected void activate(final BundleContext bc, final Config config) {
         this.bundleContext = bc;
-        this.modified(bc, props);
+        this.modified(bc, config);
     }
 
     @Modified
-    protected void modified(final BundleContext bc, final Map<String, Object> props) {
+    protected void modified(final BundleContext bc, final Config config) {
         final boolean wasEnabled = this.propagationService != null;
-        this.whitelistMatchers = TopicMatcherHelper.buildMatchers(PropertiesUtil.toStringArray(props.get(PROPERTY_WHITELIST)));
-        this.blacklistMatchers = TopicMatcherHelper.buildMatchers(PropertiesUtil.toStringArray(props.get(PROPERTY_BLACKLIST)));
+        this.whitelistMatchers = TopicMatcherHelper.buildMatchers(config.job_consumermanager_whitelist());
+        this.blacklistMatchers = TopicMatcherHelper.buildMatchers(config.job_consumermanager_blacklist());
 
         final boolean enable = this.whitelistMatchers != null && this.blacklistMatchers != TopicMatcherHelper.MATCH_ALL;
         if ( wasEnabled != enable ) {
@@ -145,7 +141,7 @@ public class JobConsumerManager {
             }
             if ( enable ) {
                 logger.debug("Registering property provider with: {}", this.topics);
-                this.propagationService = bc.registerService(PropertyProvider.class.getName(),
+                this.propagationService = bc.registerService(PropertyProvider.class,
                         new PropertyProvider() {
 
                             @Override
@@ -240,7 +236,10 @@ public class JobConsumerManager {
      * Bind a new consumer
      * @param serviceReference The service reference to the consumer.
      */
-    protected void bindJobConsumer(final ServiceReference serviceReference) {
+    @Reference(service=JobConsumer.class,
+            cardinality=ReferenceCardinality.MULTIPLE,
+            policy=ReferencePolicy.DYNAMIC)
+    protected void bindJobConsumer(final ServiceReference<JobConsumer> serviceReference) {
         this.bindService(serviceReference, true);
     }
 
@@ -248,7 +247,7 @@ public class JobConsumerManager {
      * Unbind a consumer
      * @param serviceReference The service reference to the consumer.
      */
-    protected void unbindJobConsumer(final ServiceReference serviceReference) {
+    protected void unbindJobConsumer(final ServiceReference<JobConsumer> serviceReference) {
         this.unbindService(serviceReference, true);
     }
 
@@ -256,7 +255,10 @@ public class JobConsumerManager {
      * Bind a new executor
      * @param serviceReference The service reference to the executor.
      */
-    protected void bindJobExecutor(final ServiceReference serviceReference) {
+    @Reference(service=JobExecutor.class,
+            cardinality=ReferenceCardinality.MULTIPLE,
+            policy=ReferencePolicy.DYNAMIC)
+    protected void bindJobExecutor(final ServiceReference<JobExecutor> serviceReference) {
         this.bindService(serviceReference, false);
     }
 
@@ -264,7 +266,7 @@ public class JobConsumerManager {
      * Unbind a executor
      * @param serviceReference The service reference to the executor.
      */
-    protected void unbindJobExecutor(final ServiceReference serviceReference) {
+    protected void unbindJobExecutor(final ServiceReference<JobExecutor> serviceReference) {
         this.unbindService(serviceReference, false);
     }
 
@@ -273,7 +275,7 @@ public class JobConsumerManager {
      * @param serviceReference The service reference to the consumer or executor.
      * @param isConsumer Indicating whether this is a JobConsumer or JobExecutor
      */
-    private void bindService(final ServiceReference serviceReference, final boolean isConsumer) {
+    private void bindService(final ServiceReference<?> serviceReference, final boolean isConsumer) {
         final String[] topics = PropertiesUtil.toStringArray(serviceReference.getProperty(JobConsumer.PROPERTY_TOPICS));
         if ( topics != null && topics.length > 0 ) {
             final ConsumerInfo info = new ConsumerInfo(serviceReference, isConsumer);
@@ -285,7 +287,7 @@ public class JobConsumerManager {
                         if ( topic.length() > 0 ) {
                             List<ConsumerInfo> consumers = this.topicToConsumerMap.get(topic);
                             if ( consumers == null ) {
-                                consumers = new ArrayList<JobConsumerManager.ConsumerInfo>();
+                                consumers = new ArrayList<>();
                                 this.topicToConsumerMap.put(topic, consumers);
                                 changed = true;
                             }
@@ -310,7 +312,7 @@ public class JobConsumerManager {
      * @param serviceReference The service reference to the consumer or executor.
      * @param isConsumer Indicating whether this is a JobConsumer or JobExecutor
      */
-    private void unbindService(final ServiceReference serviceReference, final boolean isConsumer) {
+    private void unbindService(final ServiceReference<?> serviceReference, final boolean isConsumer) {
         final String[] topics = PropertiesUtil.toStringArray(serviceReference.getProperty(JobConsumer.PROPERTY_TOPICS));
         if ( topics != null && topics.length > 0 ) {
             final ConsumerInfo info = new ConsumerInfo(serviceReference, isConsumer);
@@ -367,7 +369,7 @@ public class JobConsumerManager {
         if ( enabled ) {
             // create a sorted list - this ensures that the property value
             // is always the same for the same topics.
-            final List<String> topicList = new ArrayList<String>();
+            final List<String> topicList = new ArrayList<>();
             for(final String topic : this.topicToConsumerMap.keySet() ) {
                 // check whitelist
                 if ( this.match(topic, this.whitelistMatchers) ) {
@@ -400,13 +402,13 @@ public class JobConsumerManager {
      */
     private final static class ConsumerInfo implements Comparable<ConsumerInfo> {
 
-        public final ServiceReference serviceReference;
+        public final ServiceReference<?> serviceReference;
         private final boolean isConsumer;
         public JobExecutor executor;
         public final int ranking;
         public final long serviceId;
 
-        public ConsumerInfo(final ServiceReference serviceReference, final boolean isConsumer) {
+        public ConsumerInfo(final ServiceReference<?> serviceReference, final boolean isConsumer) {
             this.serviceReference = serviceReference;
             this.isConsumer = isConsumer;
             final Object sr = serviceReference.getProperty(Constants.SERVICE_RANKING);

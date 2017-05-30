@@ -162,7 +162,7 @@ public abstract class ModelUtility {
      * @return A map with errors or {@code null} if valid.
      */
     public static Map<Traceable, String> validate(final Model model) {
-        final Map<Traceable, String> errors = new HashMap<Traceable, String>();
+        final Map<Traceable, String> errors = new HashMap<>();
 
         for(final Feature feature : model.getFeatures() ) {
             // validate feature
@@ -178,10 +178,10 @@ public abstract class ModelUtility {
                 }
             }
             for(final RunMode runMode : feature.getRunModes()) {
+                boolean hasRemove = false;
                 final String[] rm = runMode.getNames();
                 if ( rm != null ) {
                     int hasSpecial = 0;
-                    boolean hasRemove = false;
                     for(final String m : rm) {
                         if ( m.startsWith(":") ) {
                             if ( hasSpecial > 0 ) {
@@ -242,7 +242,7 @@ public abstract class ModelUtility {
                     if ( c.isSpecial() && c.getFactoryPid() != null ) {
                         error = (error != null ? error + ", " : "") + "factory pid not allowed for special configuration";
                     }
-                    if ( c.getProperties().isEmpty() ) {
+                    if ( c.getProperties().isEmpty() && !hasRemove ) {
                         error = (error != null ? error + ", " : "") + "configuration properties missing";
                     }
                     if (error != null) {
@@ -271,7 +271,7 @@ public abstract class ModelUtility {
     public static Model applyVariables(final Model model, final VariableResolver resolver) {
 
         // define delegating resolver that collects all variable names and value per feature
-        final Map<String,Map<String,String>> collectedVars = new HashMap<String, Map<String,String>>();
+        final Map<String,Map<String,String>> collectedVars = new HashMap<>();
         VariableResolver variableCollector = new VariableResolver() {
             @Override
             public String resolve(Feature feature, String name) {
@@ -279,7 +279,7 @@ public abstract class ModelUtility {
                 if (value != null) {
                     Map<String,String> featureVars = collectedVars.get(feature.getName());
                     if (featureVars == null) {
-                        featureVars = new HashMap<String, String>();
+                        featureVars = new HashMap<>();
                         collectedVars.put(feature.getName(), featureVars);
                     }
                     featureVars.put(name, value);
@@ -295,7 +295,7 @@ public abstract class ModelUtility {
         ModelProcessor variablesUpdater = new ModelProcessor() {
             @Override
             protected KeyValueMap<String> processVariables(KeyValueMap<String> variables, Feature newFeature) {
-                KeyValueMap<String> newVariables = new KeyValueMap<String>();
+                KeyValueMap<String> newVariables = new KeyValueMap<>();
                 Map<String,String> featureVars = collectedVars.get(newFeature.getName());
                 if (featureVars != null) {
                     for (Map.Entry<String, String> entry : featureVars.entrySet()) {

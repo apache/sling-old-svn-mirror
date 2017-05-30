@@ -65,6 +65,10 @@
                 id="org.apache.sling.ide.eclipse.m2e.configurator"
                 class="org.apache.sling.ide.eclipse.m2e.internal.ContentPackageProjectConfigurator"
                 name="Sling Content Package Configurator" />
+        <configurator 
+                id="org.apache.sling.ide.eclipse.m2e.slingstartConfigurator"
+                class="org.apache.sling.ide.eclipse.m2e.internal.SlingstartProjectConfigurator"
+                name="Sling Launchpad Configurator" />
     </extension>
     
     <!-- generic error marker (not bound to any quick fixes) for errors in any project configurators -->

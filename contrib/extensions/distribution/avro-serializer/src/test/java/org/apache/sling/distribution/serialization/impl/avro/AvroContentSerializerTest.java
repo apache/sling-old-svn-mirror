@@ -48,13 +48,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class AvroContentSerializerTest {
 
-    private MockHelper helper;
     private ResourceResolver resourceResolver;
 
     @Before
     public void setUp() throws Exception {
         resourceResolver = new MockResourceResolverFactory().getResourceResolver(null);
-        helper = MockHelper.create(resourceResolver).resource("/libs").p("prop", "value")
+        MockHelper helper = MockHelper.create(resourceResolver).resource("/libs").p("prop", "value")
                 .resource("sub").p("sub", "hello")
                 .resource(".sameLevel")
                 .resource("/apps").p("foo", "baa");

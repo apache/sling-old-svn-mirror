@@ -26,7 +26,7 @@ import java.util.ResourceBundle;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
-import org.apache.sling.validation.spi.ValidationContext;
+import org.apache.sling.validation.spi.ValidatorContext;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -52,7 +52,7 @@ public final class DefaultValidationFailure implements ValidationFailure, Serial
     * @param messageKey the key to look up in the resource bundle
     * @param messageArguments the arguments to be used with the looked up value from the resource bundle (given in {@link #getMessage(ResourceBundle)}
     */
-   public DefaultValidationFailure(@Nonnull ValidationContext validationContext, @Nonnull String messageKey, Object... messageArguments) {
+   public DefaultValidationFailure(@Nonnull ValidatorContext validationContext, @Nonnull String messageKey, Object... messageArguments) {
        this.location = validationContext.getLocation();
        this.severity = validationContext.getSeverity();
        this.defaultResourceBundle = validationContext.getDefaultResourceBundle();

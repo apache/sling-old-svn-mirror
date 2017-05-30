@@ -18,27 +18,13 @@
  */
 package org.apache.sling.maven.bundlesupport;
 
-import static org.apache.sling.maven.bundlesupport.JsonSupport.JSON_MIME_TYPE;
-
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.FileRequestEntity;
-import org.apache.commons.httpclient.methods.HeadMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.FilePartSource;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.sling.maven.bundlesupport.deploy.BundleDeploymentMethod;
+import org.apache.sling.maven.bundlesupport.deploy.DeployContext;
 import org.apache.sling.maven.bundlesupport.fsresource.SlingInitialContentMounter;
 
 abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
@@ -52,22 +38,6 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      */
     @Parameter(property="sling.usePut", defaultValue = "false")
     protected boolean usePut;
-
-    /**
-     * Possible methodologies for deploying (installing and uninstalling)
-     * bundles from the remote server.
-     * Use camel-case values because those are used when you configure the plugin (and uppercase with separators "_" just looks ugly in that context)
-     */
-    enum BundleDeploymentMethod {
-        /** Via POST to Felix Web Console */
-        WebConsole,
-
-        /** Via WebDAV */
-        WebDAV,
-
-        /** Via POST to Sling directly */
-        SlingPostServlet;
-    }
 
     /**
      * Bundle deployment method. One of the following three values are allowed
@@ -135,15 +105,6 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
     protected abstract String getBundleFileName() throws MojoExecutionException;
 
-    /**
-     * Returns the URL with the filename appended to it.
-     * @param targetURL the original requested targetURL to append fileName to
-     * @param fileName the name of the file to append to the targetURL.
-     */
-    protected String getURLWithFilename(String targetURL, String fileName) {
-        return targetURL + (targetURL.endsWith("/") ? "" : "/") + fileName;
-    }
-
     @Override
     public void execute() throws MojoExecutionException {
 
@@ -171,21 +132,14 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             "Installing Bundle " + bundleName + "(" + bundleFile + ") to "
                 + targetURL + " via " + deploymentMethod);
 
-
-        switch (deploymentMethod) {
-        case SlingPostServlet:
-            postToSling(targetURL, bundleFile);
-            break;
-        case WebConsole:
-            postToFelix(targetURL, bundleFile);
-            break;
-        case WebDAV:
-            putViaWebDav(targetURL, bundleFile);
-            break;
-        // sanity check to make sure it gets handled in some fashion
-        default:
-            throw new MojoExecutionException("Unrecognized BundleDeployMethod " + deploymentMethod);
-        }
+        deploymentMethod.execute().deploy(targetURL, bundleFile, bundleName, new DeployContext()
+                .log(getLog())
+                .httpClient(getHttpClient())
+                .failOnError(failOnError)
+                .bundleStartLevel(bundleStartLevel)
+                .bundleStart(bundleStart)
+                .mimeType(mimeType)
+                .refreshPackages(refreshPackages));
 
         if ( mountByFS ) {
             configure(getConsoleTargetURL(), bundleFile);
@@ -210,232 +164,6 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             }
         } else {
             return deploymentMethod;
-        }
-    }
-
-    /**
-     * Install the bundle via POST to the Felix Web Console
-     * @param targetURL the URL to the Felix Web Console Bundles listing
-     * @param file the file to POST
-     * @throws MojoExecutionException
-     * @see <a href="http://felix.apache.org/documentation/subprojects/apache-felix-web-console/web-console-restful-api.html#post-requests">Webconsole RESTful API</a>
-     * @see <a href="https://github.com/apache/felix/blob/trunk/webconsole/src/main/java/org/apache/felix/webconsole/internal/core/BundlesServlet.java">BundlesServlet@Github</a>
-     */
-    protected void postToFelix(String targetURL, File file)
-            throws MojoExecutionException {
-
-        // append pseudo path after root URL to not get redirected for nothing
-        final PostMethod filePost = new PostMethod(targetURL + "/install");
-
-        try {
-            // set referrer
-            filePost.setRequestHeader("referer", "about:blank");
-
-            List<Part> partList = new ArrayList<Part>();
-            partList.add(new StringPart("action", "install"));
-            partList.add(new StringPart("_noredir_", "_noredir_"));
-            partList.add(new FilePart("bundlefile", new FilePartSource(
-                file.getName(), file)));
-            partList.add(new StringPart("bundlestartlevel", bundleStartLevel));
-
-            if (bundleStart) {
-                partList.add(new StringPart("bundlestart", "start"));
-            }
-
-            if (refreshPackages) {
-                partList.add(new StringPart("refreshPackages", "true"));
-            }
-
-            Part[] parts = partList.toArray(new Part[partList.size()]);
-
-            filePost.setRequestEntity(new MultipartRequestEntity(parts,
-                filePost.getParams()));
-
-            int status = getHttpClient().executeMethod(filePost);
-            if (status == HttpStatus.SC_OK) {
-                getLog().info("Bundle installed");
-            } else {
-                String msg = "Installation failed, cause: "
-                    + HttpStatus.getStatusText(status);
-                if (failOnError) {
-                    throw new MojoExecutionException(msg);
-                } else {
-                    getLog().error(msg);
-                }
-            }
-        } catch (Exception ex) {
-            throw new MojoExecutionException("Installation on " + targetURL
-                + " failed, cause: " + ex.getMessage(), ex);
-        } finally {
-            filePost.releaseConnection();
-        }
-    }
-
-    /**
-     * Perform the operation via POST to SlingPostServlet
-     * @param targetURL the URL of the Sling instance to post the file to.
-     * @param file the file being interacted with the POST to Sling.
-     * @throws MojoExecutionException
-     */
-    protected void postToSling(String targetURL, File file) throws MojoExecutionException {
-
-        /* truncate off trailing slash as this has special behaviorisms in
-         * the SlingPostServlet around created node name conventions */
-        if (targetURL.endsWith("/")) {
-            targetURL = targetURL.substring(0, targetURL.length()-1);
-        }
-        // append pseudo path after root URL to not get redirected for nothing
-        final PostMethod filePost = new PostMethod(targetURL);
-
-        try {
-
-            Part[] parts = new Part[2];
-            // Add content type to force the configured mimeType value
-            parts[0] = new FilePart("*", new FilePartSource(
-                file.getName(), file), mimeType, null);
-            // Add TypeHint to have jar be uploaded as file (not as resource)
-            parts[1] = new StringPart("*@TypeHint", "nt:file");
-
-            /* Request JSON response from Sling instead of standard HTML, to
-             * reduce the payload size (if the PostServlet supports it). */
-            filePost.setRequestHeader("Accept", JSON_MIME_TYPE);
-            filePost.setRequestEntity(new MultipartRequestEntity(parts,
-                filePost.getParams()));
-
-            int status = getHttpClient().executeMethod(filePost);
-            // SlingPostServlet may return 200 or 201 on creation, accept both
-            if (status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED) {
-                getLog().info("Bundle installed");
-            } else {
-                String msg = "Installation failed, cause: "
-                    + HttpStatus.getStatusText(status);
-                if (failOnError) {
-                    throw new MojoExecutionException(msg);
-                } else {
-                    getLog().error(msg);
-                }
-            }
-        } catch (Exception ex) {
-            throw new MojoExecutionException("Installation on " + targetURL
-                + " failed, cause: " + ex.getMessage(), ex);
-        } finally {
-            filePost.releaseConnection();
-        }
-    }
-
-    /**
-     * Puts the file via PUT (leveraging WebDAV). Creates the intermediate folders as well.
-     * @param targetURL
-     * @param file
-     * @throws MojoExecutionException
-     * @see <a href="https://tools.ietf.org/html/rfc4918#section-9.7.1">RFC 4918</a>
-     */
-    protected void putViaWebDav(String targetURL, File file) throws MojoExecutionException {
-
-        boolean success = false;
-        int status;
-
-        try {
-            status = performPut(targetURL, file);
-            if (status >= 200 && status < 300) {
-                success = true;
-            } else if (status == HttpStatus.SC_CONFLICT) {
-
-                getLog().debug("Bundle not installed due missing parent folders. Attempting to create parent structure.");
-                createIntermediaryPaths(targetURL);
-
-                getLog().debug("Re-attempting bundle install after creating parent folders.");
-                status = performPut(targetURL, file);
-                if (status >= 200 && status < 300) {
-                    success = true;
-                }
-            }
-
-            if (!success) {
-                String msg = "Installation failed, cause: "
-                    + HttpStatus.getStatusText(status);
-                if (failOnError) {
-                    throw new MojoExecutionException(msg);
-                } else {
-                    getLog().error(msg);
-                }
-            }
-        } catch (Exception ex) {
-            throw new MojoExecutionException("Installation on " + targetURL
-                + " failed, cause: " + ex.getMessage(), ex);
-        }
-    }
-
-    private int performPut(String targetURL, File file) throws HttpException, IOException {
-        PutMethod filePut = new PutMethod(getURLWithFilename(targetURL, file.getName()));
-        try {
-            filePut.setRequestEntity(new FileRequestEntity(file, mimeType));
-            return getHttpClient().executeMethod(filePut);
-        } finally {
-            filePut.releaseConnection();
-        }
-    }
-
-    private int performHead(String uri) throws HttpException, IOException {
-        HeadMethod head = new HeadMethod(uri);
-        try {
-            return getHttpClient().executeMethod(head);
-        } finally {
-            head.releaseConnection();
-        }
-    }
-
-    private int performMkCol(String uri) throws IOException {
-        MkColMethod mkCol = new MkColMethod(uri);
-        try {
-            return getHttpClient().executeMethod(mkCol);
-        } finally {
-            mkCol.releaseConnection();
-        }
-    }
-
-    private void createIntermediaryPaths(String targetURL) throws HttpException, IOException, MojoExecutionException {
-        // extract all intermediate URIs (longest one first)
-        List<String> intermediateUris = IntermediateUrisExtractor.extractIntermediateUris(targetURL);
-
-        // 1. go up to the node in the repository which exists already (HEAD request towards the root node)
-        String existingIntermediateUri = null;
-        // go through all intermediate URIs (longest first)
-        for (String intermediateUri : intermediateUris) {
-            // until one is existing
-            int result = performHead(intermediateUri) ;
-            if (result == HttpStatus.SC_OK) {
-                existingIntermediateUri = intermediateUri;
-                break;
-            } else if (result != HttpStatus.SC_NOT_FOUND) {
-                throw new MojoExecutionException("Failed getting intermediate path at " + intermediateUri + "."
-                        + " Reason: " + HttpStatus.getStatusText(result));
-            }
-        }
-
-        if (existingIntermediateUri == null) {
-            throw new MojoExecutionException(
-                    "Could not find any intermediate path up until the root of " + targetURL + ".");
-        }
-
-        // 2. now create from that level on each intermediate node individually towards the target path
-        int startOfInexistingIntermediateUri = intermediateUris.indexOf(existingIntermediateUri);
-        if (startOfInexistingIntermediateUri == -1) {
-            throw new IllegalStateException(
-                    "Could not find intermediate uri " + existingIntermediateUri + " in the list");
-        }
-
-        for (int index = startOfInexistingIntermediateUri - 1; index >= 0; index--) {
-            // use MKCOL to create the intermediate paths
-            String intermediateUri = intermediateUris.get(index);
-            int result = performMkCol(intermediateUri);
-            if (result == HttpStatus.SC_CREATED || result == HttpStatus.SC_OK) {
-                getLog().debug("Intermediate path at " + intermediateUri + " successfully created");
-                continue;
-            } else {
-                throw new MojoExecutionException("Failed creating intermediate path at '" + intermediateUri + "'."
-                        + " Reason: " + HttpStatus.getStatusText(result));
-            }
         }
     }
 

@@ -78,7 +78,7 @@
                                 <artifactItem>
                                     <groupId>org.apache.sling</groupId>
                                     <artifactId>org.apache.sling.tooling.support.source</artifactId>
-                                    <version>1.0.0</version>
+                                    <version>1.0.2</version>
                                     <outputDirectory>${project.build.directory}/artifacts/sling-tooling-support-source</outputDirectory>
                                 </artifactItem>
                             </artifactItems>

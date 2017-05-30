@@ -18,7 +18,6 @@
  */
 package org.apache.sling.event.impl.jobs.queues;
 
-import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
@@ -40,8 +39,6 @@ public class QueueServices {
     public EventAdmin eventAdmin;
 
     public ThreadPoolManager threadPoolManager;
-
-    public Scheduler scheduler;
 
     public StatisticsManager statisticsManager;
 

@@ -18,14 +18,15 @@
  */
 package org.apache.sling.event.impl;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * Environment component. This component provides "global settings"
@@ -35,18 +36,21 @@ import org.apache.sling.settings.SlingSettingsService;
  * This component needs to be immediate to set the global variables
  * (application id and thread pool).
  */
-@Component(immediate=true)
-@Service(value=EnvironmentComponent.class)
+@Component(immediate=true,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    },
+    service={EnvironmentComponent.class})
 public class EnvironmentComponent {
 
     /**
      * Our thread pool.
      */
-    @Reference(referenceInterface=EventingThreadPool.class)
+    @Reference(service=EventingThreadPool.class, policyOption=ReferencePolicyOption.GREEDY)
     private ThreadPool threadPool;
 
     /** Sling settings service. */
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private SlingSettingsService settingsService;
 
     /**

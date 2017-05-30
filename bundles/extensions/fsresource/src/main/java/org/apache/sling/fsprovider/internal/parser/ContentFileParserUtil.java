@@ -20,17 +20,21 @@ package org.apache.sling.fsprovider.internal.parser;
 
 import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JCR_XML_SUFFIX;
+import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.XML_SUFFIX;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JSON_SUFFIX;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.EnumSet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.jcr.contentparser.ContentParser;
 import org.apache.sling.jcr.contentparser.ContentParserFactory;
 import org.apache.sling.jcr.contentparser.ContentType;
+import org.apache.sling.jcr.contentparser.JsonParserFeature;
+import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,13 +51,16 @@ class ContentFileParserUtil {
         ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(ContentFileParserUtil.class.getClassLoader());
-            JSON_PARSER = ContentParserFactory.create(ContentType.JSON);
+            // support comments and tick quotes for JSON parsing - same as in JCR content loader 
+            JSON_PARSER = ContentParserFactory.create(ContentType.JSON, new ParserOptions()
+                    .jsonParserFeatures(EnumSet.of(JsonParserFeature.COMMENTS, JsonParserFeature.QUOTE_TICK)));
         }
         finally {
             Thread.currentThread().setContextClassLoader(oldClassLoader);
         }
     }
     private static final ContentParser JCR_XML_PARSER = ContentParserFactory.create(ContentType.JCR_XML);
+    private static final ContentParser XML_PARSER = ContentParserFactory.create(ContentType.XML);
     
     private ContentFileParserUtil() {
         // static methods only
@@ -74,6 +81,9 @@ class ContentFileParserUtil {
             }
             else if (StringUtils.equals(file.getName(), DOT_CONTENT_XML) || StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
                 return parse(JCR_XML_PARSER, file);
+            }
+            else if (StringUtils.endsWith(file.getName(), XML_SUFFIX) && !StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
+                return parse(XML_PARSER, file);
             }
         }
         catch (Throwable ex) {

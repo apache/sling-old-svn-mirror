@@ -27,9 +27,16 @@ import org.osgi.annotation.versioning.ProviderType;
 public enum ContentType {
 
     /**
-     * JSON content.
+     * JSON content descriptor file.
+     * @see <a href="https://sling.apache.org/documentation/bundles/content-loading-jcr-contentloader.html#json-descriptor-files">JCR ContentLoader JSON descriptor files</a>
      */
     JSON("json"),
+
+    /**
+     * XML content descriptor file.
+     * @see <a href="https://sling.apache.org/documentation/bundles/content-loading-jcr-contentloader.html#xml-descriptor-files">JCR ContentLoader XML descriptor files</a>
+     */
+    XML("xml"),
 
     /**
      * JCR XML content (FileVault XML). Also known as extended document view XML.

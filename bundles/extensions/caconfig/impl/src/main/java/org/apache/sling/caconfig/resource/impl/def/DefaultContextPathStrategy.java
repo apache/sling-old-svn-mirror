@@ -58,6 +58,10 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
                 description = "Additional property names to " + PROPERTY_CONFIG_REF + " to look up a configuration reference. The names are used in the order defined, "
                             + "always starting with " + PROPERTY_CONFIG_REF + ". Once a property with a value is found, that value is used and the following property names are skipped.")
         String[] configRefPropertyNames();
+
+        @AttributeDefinition(name = "Service Ranking",
+                description = "Priority of persistence strategy (higher = higher priority).")
+            int service_ranking() default 0;
     }
 
     private static final Logger log = LoggerFactory.getLogger(DefaultContextPathStrategy.class);
@@ -121,7 +125,7 @@ public class DefaultContextPathStrategy implements ContextPathStrategy {
                 String configRef = getConfigRef(resource);
                 if (configRef != null) {
                     log.trace("+ Found context path {}, configRef {}", resource.getPath(), configRef);
-                    return new ContextResource(resource, configRef);
+                    return new ContextResource(resource, configRef, config.service_ranking());
                 }
                 // if getParent() returns null, stop
                 resource = resource.getParent();

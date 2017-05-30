@@ -52,12 +52,11 @@ import org.slf4j.LoggerFactory;
 )
 public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
 
-    /** The name of the FreeMarker language (value is "FreeMarker"). */
-    private static final String FREEMARKER_NAME = "FreeMarker";
-
     private BundleContext bundleContext;
 
     private SortingServiceTracker<TemplateModel> templateModelTracker;
+
+    private static final String FREEMARKER_NAME = "FreeMarker";
 
     private final Logger logger = LoggerFactory.getLogger(FreemarkerScriptEngineFactory.class);
 

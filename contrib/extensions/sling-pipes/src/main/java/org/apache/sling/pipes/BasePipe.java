@@ -37,6 +37,11 @@ public class BasePipe implements Pipe {
 
     public static final String RESOURCE_TYPE = "slingPipes/base";
     public static final String DRYRUN_KEY = "dryRun";
+    public static final String READ_ONLY = "readOnly";
+    public static final String PN_STATUS = "status";
+    public static final String PN_STATUS_MODIFIED = "statusModified";
+    public static final String STATUS_STARTED = "started";
+    public static final String STATUS_FINISHED = "finished";
     protected static final String DRYRUN_EXPR = "${" + DRYRUN_KEY + "}";
 
     protected ResourceResolver resolver;
@@ -61,6 +66,11 @@ public class BasePipe implements Pipe {
     @Override
     public void setParent(ContainerPipe parent) {
         this.parent = parent;
+    }
+
+    @Override
+    public Resource getResource() {
+        return resource;
     }
 
     protected Plumber plumber;

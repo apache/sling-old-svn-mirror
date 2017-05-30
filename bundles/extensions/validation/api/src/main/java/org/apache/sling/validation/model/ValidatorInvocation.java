@@ -40,7 +40,7 @@ public interface ValidatorInvocation {
 
     /**
      * 
-     * @return the parameterization of the {@link Validator#validate(Object, org.apache.sling.validation.spi.ValidationContext, ValueMap)} call (never {@code null}, but might be empty map)
+     * @return the parameterization of the {@link Validator#validate(Object, org.apache.sling.validation.spi.ValidatorContext, ValueMap)} call (never {@code null}, but might be empty map)
      */
     @Nonnull ValueMap getParameters();
 

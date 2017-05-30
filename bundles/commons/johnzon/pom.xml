@@ -21,7 +21,7 @@
 
     <artifactId>org.apache.sling.commons.johnzon</artifactId>
     <packaging>bundle</packaging>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <name>Apache Johnzon Wrapper Library</name>
     <description>Apache Johnzon powered javax.json library</description>

@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.ArtifactRepositoryFactory;
 import org.apache.maven.artifact.repository.ArtifactRepositoryPolicy;
@@ -97,8 +96,9 @@ public class BundleInstallFileMojo extends AbstractBundleInstallMojo {
     @Parameter(property = "sling.repoUrl")
     private String repositoryUrl;
 
+    @SuppressWarnings("deprecation")
     @Component
-    private ArtifactFactory artifactFactory;
+    private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
     @Component
     private ArtifactResolver artifactResolver;
@@ -126,7 +126,7 @@ public class BundleInstallFileMojo extends AbstractBundleInstallMojo {
         return fileName;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
     private String resolveBundleFileFromArtifact() throws MojoExecutionException {
         if (artifactId == null && artifact == null) {
             return null;

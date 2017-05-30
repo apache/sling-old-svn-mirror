@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.testing.tools</artifactId>
-    <version>1.0.15-SNAPSHOT</version>
+    <version>1.0.17-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Test Tools</name>

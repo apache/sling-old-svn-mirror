@@ -43,7 +43,9 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -53,11 +55,14 @@ import org.slf4j.LoggerFactory;
 
 /** Our default {@link BindingsValuesProvidersByContext} implementation */
 @Component(
-    service = BindingsValuesProvidersByContext.class
+    service = BindingsValuesProvidersByContext.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
 )
 public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvidersByContext, ServiceTrackerCustomizer {
 
-    private final Map<String, ContextBvpCollector> customizers = new HashMap<String, ContextBvpCollector>();
+    private final Map<String, ContextBvpCollector> customizers = new HashMap<>();
     public static final String [] DEFAULT_CONTEXT_ARRAY = new String [] { DEFAULT_CONTEXT };
 
     private static final String TOPIC_CREATED = "org/apache/sling/scripting/core/BindingsValuesProvider/CREATED";
@@ -68,13 +73,15 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
     private ServiceTracker mapsTracker;
     private BundleContext bundleContext;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final List<ServiceReference> pendingRefs = new ArrayList<ServiceReference>();
+    private final List<ServiceReference> pendingRefs = new ArrayList<>();
 
     @Reference
     private SlingScriptEngineManager scriptEngineManager;
 
     @Reference(
-        policy = ReferencePolicy.DYNAMIC
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY,
+        cardinality = ReferenceCardinality.OPTIONAL
     )
     private volatile EventAdmin eventAdmin;
 
@@ -129,7 +136,7 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
     public Collection<BindingsValuesProvider> getBindingsValuesProviders(
             ScriptEngineFactory scriptEngineFactory,
             String context) {
-        final List<BindingsValuesProvider> results = new ArrayList<BindingsValuesProvider>();
+        final List<BindingsValuesProvider> results = new ArrayList<>();
         if(context == null) {
             context = DEFAULT_CONTEXT;
         }

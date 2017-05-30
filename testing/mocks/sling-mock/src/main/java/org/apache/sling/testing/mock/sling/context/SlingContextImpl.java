@@ -32,17 +32,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.mime.MimeTypeService;
-import org.apache.sling.models.impl.FirstImplementationPicker;
 import org.apache.sling.models.impl.ModelAdapterFactory;
-import org.apache.sling.models.impl.injectors.BindingsInjector;
-import org.apache.sling.models.impl.injectors.ChildResourceInjector;
-import org.apache.sling.models.impl.injectors.OSGiServiceInjector;
-import org.apache.sling.models.impl.injectors.RequestAttributeInjector;
-import org.apache.sling.models.impl.injectors.ResourcePathInjector;
-import org.apache.sling.models.impl.injectors.SelfInjector;
-import org.apache.sling.models.impl.injectors.SlingObjectInjector;
-import org.apache.sling.models.impl.injectors.ValueMapInjector;
-import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
 import org.apache.sling.resourcebuilder.api.ResourceBuilderFactory;
 import org.apache.sling.resourcebuilder.impl.ResourceBuilderFactoryService;
@@ -118,7 +108,12 @@ public class SlingContextImpl extends OsgiContextImpl {
             MockOsgi.setConfigForPid(bundleContext(), RESOURCERESOLVERFACTORYACTIVATOR_PID, this.resourceResolverFactoryActivatorProps);
         }
         
-        this.resourceResolverFactory = newResourceResolverFactory();
+        // automatically register resource resolver factory when ResourceResolverType != NONE,
+        // so the ResourceResolverFactory is available as OSGi service immediately
+        if (resourceResolverType != ResourceResolverType.NONE) {
+            resourceResolverFactory();
+        }
+        
         registerDefaultServices();
     }
     
@@ -128,6 +123,13 @@ public class SlingContextImpl extends OsgiContextImpl {
      */
     protected ResourceResolverFactory newResourceResolverFactory() {
         return ContextResourceResolverFactory.get(this.resourceResolverType, bundleContext());
+    }
+    
+    private ResourceResolverFactory resourceResolverFactory() {
+        if (this.resourceResolverFactory == null) {
+            this.resourceResolverFactory = newResourceResolverFactory();
+        }
+        return this.resourceResolverFactory;
     }
 
     /**
@@ -139,21 +141,23 @@ public class SlingContextImpl extends OsgiContextImpl {
         registerInjectActivateService(new ScriptEngineManagerFactory());
         registerInjectActivateService(new BindingsValuesProvidersByContextImpl());
         
-        // adapter factories
+        // sling models
         registerInjectActivateService(new ModelAdapterFactory());
-
-        // sling models injectors
-        registerInjectActivateService(new BindingsInjector());
-        registerInjectActivateService(new ChildResourceInjector());
-        registerInjectActivateService(new OSGiServiceInjector());
-        registerInjectActivateService(new RequestAttributeInjector());
-        registerInjectActivateService(new ResourcePathInjector());
-        registerInjectActivateService(new SelfInjector());
-        registerInjectActivateService(new SlingObjectInjector());
-        registerInjectActivateService(new ValueMapInjector());
-
-        // sling models implementation pickers
-        registerService(ImplementationPicker.class, new FirstImplementationPicker());
+        registerInjectActivateServiceByClassName(
+                "org.apache.sling.models.impl.FirstImplementationPicker",
+                "org.apache.sling.models.impl.ResourceTypeBasedResourcePicker",
+                "org.apache.sling.models.impl.injectors.BindingsInjector",
+                "org.apache.sling.models.impl.injectors.ChildResourceInjector",
+                "org.apache.sling.models.impl.injectors.OSGiServiceInjector",
+                "org.apache.sling.models.impl.injectors.RequestAttributeInjector",
+                "org.apache.sling.models.impl.injectors.ResourcePathInjector",
+                "org.apache.sling.models.impl.injectors.SelfInjector",
+                "org.apache.sling.models.impl.injectors.SlingObjectInjector",
+                "org.apache.sling.models.impl.injectors.ValueMapInjector",
+                "org.apache.sling.models.impl.via.BeanPropertyViaProvider",
+                "org.apache.sling.models.impl.via.ChildResourceViaProvider",
+                "org.apache.sling.models.impl.via.ForcedResourceTypeViaProvider",
+                "org.apache.sling.models.impl.via.ResourceSuperTypeViaProvider");
 
         // other services
         registerService(SlingSettingsService.class, new MockSlingSettingService(DEFAULT_RUN_MODES));
@@ -162,6 +166,17 @@ public class SlingContextImpl extends OsgiContextImpl {
         
         // scan for models defined via bundle headers in classpath
         ModelAdapterFactoryUtil.addModelsForManifestEntries(this.bundleContext());
+    }
+    
+    private void registerInjectActivateServiceByClassName(String... classNames) {
+        for (String className : classNames) {
+            try {
+                Class<?> clazz = Class.forName(className);
+                registerInjectActivateService(clazz.newInstance());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                // ignore - probably not the latest sling models impl version
+            }
+        }
     }
 
     /**
@@ -202,6 +217,7 @@ public class SlingContextImpl extends OsgiContextImpl {
         this.contentBuilder = null;
         this.resourceBuilder = null;
         this.uniqueRoot = null;
+        this.resourceResolverFactory = null;
         
         super.tearDown();
     }
@@ -212,7 +228,7 @@ public class SlingContextImpl extends OsgiContextImpl {
     public final ResourceResolverType resourceResolverType() {
         return this.resourceResolverType;
     }
-
+    
     /**
      * Returns the singleton resource resolver bound to this context.
      * It is automatically closed after the test.
@@ -221,7 +237,7 @@ public class SlingContextImpl extends OsgiContextImpl {
     public final ResourceResolver resourceResolver() {
         if (this.resourceResolver == null) {
             try {
-                this.resourceResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+                this.resourceResolver = this.resourceResolverFactory().getAdministrativeResourceResolver(null);
             } catch (LoginException ex) {
                 throw new RuntimeException("Creating resource resolver failed.", ex);
             }

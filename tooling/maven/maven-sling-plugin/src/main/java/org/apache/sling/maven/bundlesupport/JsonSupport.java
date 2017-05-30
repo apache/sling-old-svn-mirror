@@ -18,6 +18,8 @@
  */
 package org.apache.sling.maven.bundlesupport;
 
+import static org.apache.sling.jcr.contentparser.impl.JsonTicksConverter.tickToDoubleQuote;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,8 +80,12 @@ public final class JsonSupport {
      * @param jsonString JSON string
      * @throws javax.json.JsonException when JSON structure is invalid
      */
-    public static void validateJsonStructure(String jsonString) {
-        try (StringReader reader = new StringReader(jsonString);
+    public static void validateJsonStructure(String jsonString, boolean tickToDoubleQuote) {
+        String transformedJsonString = jsonString;
+        if (tickToDoubleQuote) {
+            transformedJsonString = tickToDoubleQuote(jsonString);
+        }
+        try (StringReader reader = new StringReader(transformedJsonString);
                 JsonReader jsonReader = JSON_READER_FACTORY.createReader(reader)) {
             jsonReader.read();
         }

@@ -55,7 +55,9 @@ import org.objectweb.asm.tree.ClassNode;
 import org.scannotation.AnnotationDB;
 
 /**
- * Build Adapter Metadata from Annotated Classes
+ * Build  <a href="http://sling.apache.org/documentation/the-sling-engine/adapters.html">adapter metadata (JSON)</a> for the Web Console Plugin at {@code /system/console/status-adapters} and
+ * {@code /system/console/adapters} from classes annotated with 
+ * <a href="http://svn.apache.org/viewvc/sling/trunk/tooling/maven/adapter-annotations/">adapter annotations</a>.
  */
 @Mojo(name="generate-adapter-metadata", defaultPhase = LifecyclePhase.PROCESS_CLASSES, 
     threadSafe = true, requiresDependencyResolution = ResolutionScope.COMPILE)
@@ -160,7 +162,6 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
     private void addResource() {
         final String ourRsrcPath = this.outputDirectory.getAbsolutePath();
         boolean found = false;
-        @SuppressWarnings("unchecked")
         final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
         while (!found && rsrcIterator.hasNext()) {
             final Resource rsrc = rsrcIterator.next();

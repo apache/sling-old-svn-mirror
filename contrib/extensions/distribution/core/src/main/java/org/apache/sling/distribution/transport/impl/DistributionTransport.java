@@ -43,7 +43,8 @@ public interface DistributionTransport {
      * @throws DistributionException if the {@link DistributionPackage}
      *                                        fails to be delivered to the target instance (e.g. because of network, I/O issues)
      */
-    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage, @Nonnull DistributionTransportContext context) throws DistributionException;
+    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage,
+                        @Nonnull DistributionTransportContext context) throws DistributionException;
 
     /**
      * Retrieve {@link DistributionPackage}s from a target Sling instance, which
@@ -58,6 +59,7 @@ public interface DistributionTransport {
      *                                        fail to be retrieved from the target instance
      */
     @Nullable
-    RemoteDistributionPackage retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request, @Nonnull DistributionTransportContext context) throws DistributionException;
+    RemoteDistributionPackage retrievePackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request,
+                                              @Nonnull DistributionTransportContext context) throws DistributionException;
 
 }

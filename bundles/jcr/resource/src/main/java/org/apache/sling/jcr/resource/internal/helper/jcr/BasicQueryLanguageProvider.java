@@ -129,7 +129,7 @@ public class BasicQueryLanguageProvider implements QueryLanguageProvider<JcrProv
                     while ( result == null && rows.hasNext() ) {
                         try {
                             final Row jcrRow = rows.nextRow();
-                            final String resourcePath = ctx.getProviderState().getHelperData().pathMapper.mapJCRPathToResourcePath(jcrRow.getPath());
+                            final String resourcePath = jcrRow.getPath();
                             if ( resourcePath != null && providerContext.getExcludedPaths().matches(resourcePath) == null) {
                                 final Map<String, Object> row = new HashMap<String, Object>();
 
@@ -144,8 +144,7 @@ public class BasicQueryLanguageProvider implements QueryLanguageProvider<JcrProv
                                             JcrResourceUtil.toJavaObject(values[i]));
                                         if (colName.equals(QUERY_COLUMN_PATH)) {
                                             didPath = true;
-                                            row.put(colName,
-                                                    ctx.getProviderState().getHelperData().pathMapper.mapJCRPathToResourcePath(JcrResourceUtil.toJavaObject(values[i]).toString()));
+                                            row.put(colName, JcrResourceUtil.toJavaObject(values[i]).toString());
                                         }
                                         if (colName.equals(QUERY_COLUMN_SCORE)) {
                                             didScore = true;
@@ -153,7 +152,7 @@ public class BasicQueryLanguageProvider implements QueryLanguageProvider<JcrProv
                                     }
                                 }
                                 if (!didPath) {
-                                    row.put(QUERY_COLUMN_PATH, ctx.getProviderState().getHelperData().pathMapper.mapJCRPathToResourcePath(jcrRow.getPath()));
+                                    row.put(QUERY_COLUMN_PATH, jcrRow.getPath());
                                 }
                                 if (!didScore) {
                                     row.put(QUERY_COLUMN_SCORE, jcrRow.getScore());

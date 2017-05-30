@@ -19,8 +19,11 @@ package org.apache.sling.hc.core.impl.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,13 +40,13 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.Result.Status;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
@@ -66,14 +69,14 @@ import org.slf4j.LoggerFactory;
  * Useful in combination with load balancers.
  * <p>
  * NOTE: This servlet registers directly (low-level) at the HttpService and is not processed by sling (better performance, fewer dependencies, no authentication required, 503 can be sent without the progress tracker information). */
-@Service
 @Component(label = "Apache Sling Health Check Executor Servlet",
         description = "Serializes health check results into html or json format",
-        policy = ConfigurationPolicy.REQUIRE, metatype = true, immediate = true)
+        policy = ConfigurationPolicy.REQUIRE, metatype = true)
 public class HealthCheckExecutorServlet extends HttpServlet {
     private static final long serialVersionUID = 8013511523994541848L;
 
     private static final Logger LOG = LoggerFactory.getLogger(HealthCheckExecutorServlet.class);
+    public static final String PARAM_SPLIT_REGEX = "[,;]+";
 
     static class Param {
         final String name;
@@ -85,7 +88,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     }
 
     static final Param PARAM_TAGS = new Param("tags",
-            "Comma-separated list of health checks tags to select - can also be specified via path, e.g. /system/health/tag1,tag2.json");
+            "Comma-separated list of health checks tags to select - can also be specified via path, e.g. /system/health/tag1,tag2.json. Exclusions can be done by prepending '-' to the tag name");
     static final Param PARAM_FORMAT = new Param("format", "Output format, html|json|jsonp|txt - an extension in the URL overrides this");
     static final Param PARAM_HTTP_STATUS = new Param("httpStatus", "Specify HTTP result code, for example"
             + " CRITICAL:503 (status 503 if result >= CRITICAL)"
@@ -99,16 +102,19 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     static final Param PARAM_INCLUDE_DEBUG = new Param("hcDebug", "Include the DEBUG output of the Health Checks");
 
+    static final Param PARAM_NAMES = new Param("names", "Comma-separated list of health check names to select. Exclusions can be done by prepending '-' to the health check name");
+
     static final String JSONP_CALLBACK_DEFAULT = "processHealthCheckResults";
     static final Param PARAM_JSONP_CALLBACK = new Param("callback", "name of the JSONP callback function to use, defaults to " + JSONP_CALLBACK_DEFAULT);
 
-    static final Param [] PARAM_LIST = { PARAM_TAGS, PARAM_FORMAT, PARAM_HTTP_STATUS, PARAM_COMBINE_TAGS_WITH_OR,
+    static final Param [] PARAM_LIST = { PARAM_TAGS, PARAM_NAMES, PARAM_FORMAT, PARAM_HTTP_STATUS, PARAM_COMBINE_TAGS_WITH_OR,
         PARAM_FORCE_INSTANT_EXECUTION, PARAM_OVERRIDE_GLOBAL_TIMEOUT, PARAM_INCLUDE_DEBUG, PARAM_JSONP_CALLBACK};
 
     static final String FORMAT_HTML = "html";
     static final String FORMAT_JSON = "json";
     static final String FORMAT_JSONP = "jsonp";
     static final String FORMAT_TXT = "txt";
+    static final String FORMAT_VERBOSE_TXT = "verbose.txt";
 
     private static final String CONTENT_TYPE_HTML = "text/html";
     private static final String CONTENT_TYPE_TXT = "text/plain";
@@ -125,6 +131,8 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     @Property(name = PROPERTY_SERVLET_PATH, label = "Path",
             description = "Servlet path (defaults to " + SERVLET_PATH_DEFAULT + " in order to not be accessible via Apache/Internet)", value = SERVLET_PATH_DEFAULT)
     private String servletPath;
+
+    private String[] servletPaths;
 
     public static final String PROPERTY_DISABLED = "disabled";
     @Property(name = PROPERTY_DISABLED, label = "Disabled",
@@ -146,69 +154,101 @@ public class HealthCheckExecutorServlet extends HttpServlet {
     @Reference
     ResultTxtSerializer txtSerializer;
 
+    @Reference
+    ResultTxtVerboseSerializer verboseTxtSerializer;
+
     @Activate
     protected final void activate(final ComponentContext context) {
         final Dictionary<?, ?> properties = context.getProperties();
-        this.servletPath = (String) properties.get(PROPERTY_SERVLET_PATH);
+        this.servletPath = PropertiesUtil.toString(properties.get(PROPERTY_SERVLET_PATH), SERVLET_PATH_DEFAULT);
         this.disabled = PropertiesUtil.toBoolean(properties.get(PROPERTY_DISABLED), false);
+
+        Map<String, HttpServlet> servletsToRegister = new LinkedHashMap<String, HttpServlet>();
+        servletsToRegister.put(this.servletPath, this);
+        servletsToRegister.put(this.servletPath + "." + FORMAT_HTML, new ProxyServlet(FORMAT_HTML));
+        servletsToRegister.put(this.servletPath + "." + FORMAT_JSON, new ProxyServlet(FORMAT_JSON));
+        servletsToRegister.put(this.servletPath + "." + FORMAT_JSONP, new ProxyServlet(FORMAT_JSONP));
+        servletsToRegister.put(this.servletPath + "." + FORMAT_TXT, new ProxyServlet(FORMAT_TXT));
+        servletsToRegister.put(this.servletPath + "." + FORMAT_VERBOSE_TXT, new ProxyServlet(FORMAT_VERBOSE_TXT));
 
         if (disabled) {
             LOG.info("Health Check Servlet is disabled by configuration");
             return;
         }
 
-        try {
-            LOG.debug("Registering {} to path {}", getClass().getSimpleName(), this.servletPath);
-            this.httpService.registerServlet(this.servletPath, this, null, null);
-        } catch (Exception e) {
-            LOG.error("Could not register health check servlet: " + e, e);
+        for (final Map.Entry<String, HttpServlet> servlet : servletsToRegister.entrySet()) {
+            try {
+                LOG.debug("Registering {} to path {}", getClass().getSimpleName(), servlet.getKey());
+                this.httpService.registerServlet(servlet.getKey(), servlet.getValue(), null, null);
+            } catch (Exception e) {
+                LOG.error("Could not register health check servlet: " + e, e);
+            }
         }
+        this.servletPaths = servletsToRegister.keySet().toArray(new String[0]);
 
     }
 
     @Deactivate
     public void deactivate(final ComponentContext componentContext) {
-        if (disabled) {
+        if (disabled || this.servletPaths == null) {
             return;
         }
 
-        try {
-            LOG.debug("Unregistering path {}", this.servletPath);
-            this.httpService.unregister(this.servletPath);
-        } catch (Exception e) {
-            LOG.error("Could not unregister health check servlet: "+e, e);
+        for (final String servletPath : this.servletPaths) {
+            try {
+                LOG.debug("Unregistering path {}", servletPath);
+                this.httpService.unregister(servletPath);
+            } catch (Exception e) {
+                LOG.error("Could not unregister health check servlet: " + e, e);
+            }
         }
+        this.servletPaths = null;
     }
 
-    @Override
-    protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response, final String format) throws ServletException, IOException {
+        HealthCheckSelector selector = HealthCheckSelector.empty();
+        String pathInfo = request.getPathInfo();
+        String pathTokensStr = StringUtils.removeStart(splitFormat(pathInfo)[0], "/");
 
-        String tagsStr = StringUtils.defaultIfEmpty(StringUtils.substringBeforeLast(request.getPathInfo(), "."), "").replace("/", "");
-        if (StringUtils.isBlank(tagsStr)) {
+        List<String> tags = new ArrayList<String>();
+        List<String> names = new ArrayList<String>();
+
+        if (StringUtils.isNotBlank(pathTokensStr)) {
+            String[] pathTokens = pathTokensStr.split(PARAM_SPLIT_REGEX);
+            for (String pathToken : pathTokens) {
+                if (pathToken.indexOf(' ') >= 0) {
+                    // token contains space. assume it is a name
+                    names.add(pathToken);
+                } else {
+                    tags.add(pathToken);
+                }
+            }
+        }
+        if (tags.size() == 0) {
             // if not provided via path use parameter or default
-            tagsStr = StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS.name), "");
+            tags = Arrays.asList(StringUtils.defaultIfEmpty(request.getParameter(PARAM_TAGS.name), "").split(PARAM_SPLIT_REGEX));
         }
-        final String[] tags = tagsStr.split("[, ;]+");
+        selector.withTags(tags.toArray(new String[0]));
 
-        String format = StringUtils.substringAfterLast(request.getPathInfo(), ".");
-        if (StringUtils.isBlank(format)) {
-            // if not provided via extension use parameter or default
-            format = StringUtils.defaultIfEmpty(request.getParameter(PARAM_FORMAT.name), FORMAT_HTML);
+        if (names.size() == 0) {
+            // if not provided via path use parameter or default
+            names = Arrays.asList(StringUtils.defaultIfEmpty(request.getParameter(PARAM_NAMES.name), "").split(PARAM_SPLIT_REGEX));
         }
+        selector.withNames(names.toArray(new String[0]));
 
         final Boolean includeDebug = Boolean.valueOf(request.getParameter(PARAM_INCLUDE_DEBUG.name));
         final Map<Result.Status, Integer> statusMapping = request.getParameter(PARAM_HTTP_STATUS.name) != null ? getStatusMapping(request
                 .getParameter(PARAM_HTTP_STATUS.name)) : null;
 
-        HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
-        options.setCombineTagsWithOr(Boolean.valueOf(StringUtils.defaultString(request.getParameter(PARAM_COMBINE_TAGS_WITH_OR.name), "true")));
-        options.setForceInstantExecution(Boolean.valueOf(request.getParameter(PARAM_FORCE_INSTANT_EXECUTION.name)));
+        HealthCheckExecutionOptions executionOptions = new HealthCheckExecutionOptions();
+        executionOptions.setCombineTagsWithOr(Boolean.valueOf(StringUtils.defaultString(request.getParameter(PARAM_COMBINE_TAGS_WITH_OR.name), "true")));
+        executionOptions.setForceInstantExecution(Boolean.valueOf(request.getParameter(PARAM_FORCE_INSTANT_EXECUTION.name)));
         String overrideGlobalTimeoutVal = request.getParameter(PARAM_OVERRIDE_GLOBAL_TIMEOUT.name);
         if (StringUtils.isNumeric(overrideGlobalTimeoutVal)) {
-            options.setOverrideGlobalTimeout(Integer.valueOf(overrideGlobalTimeoutVal));
+            executionOptions.setOverrideGlobalTimeout(Integer.valueOf(overrideGlobalTimeoutVal));
         }
 
-        List<HealthCheckExecutionResult> executionResults = this.healthCheckExecutor.execute(options, tags);
+        List<HealthCheckExecutionResult> executionResults = this.healthCheckExecutor.execute(selector, executionOptions);
 
         Result.Status mostSevereStatus = Result.Status.DEBUG;
         for (HealthCheckExecutionResult executionResult : executionResults) {
@@ -233,19 +273,44 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         } else if (FORMAT_JSONP.equals(format)) {
             String jsonpCallback = StringUtils.defaultIfEmpty(request.getParameter(PARAM_JSONP_CALLBACK.name), JSONP_CALLBACK_DEFAULT);
             sendJsonResponse(overallResult, executionResults, jsonpCallback, response, includeDebug);
-        } else if (FORMAT_TXT.equals(format)) {
-            sendTxtResponse(overallResult, response);
+        } else if (StringUtils.endsWith(format, FORMAT_TXT)) {
+            sendTxtResponse(overallResult, response, StringUtils.equals(format, FORMAT_VERBOSE_TXT), executionResults, includeDebug);
         } else {
             response.setContentType("text/plain");
-            response.getWriter().println("Invalid format " + format + " - supported formats: html|json|jsonp|txt");
+            response.getWriter().println("Invalid format " + format + " - supported formats: html|json|jsonp|txt|verbose.txt");
         }
-
     }
 
-    private void sendTxtResponse(final Result overallResult, final HttpServletResponse response) throws IOException {
+    @Override
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        String pathInfo = request.getPathInfo();
+        String format = splitFormat(pathInfo)[1];
+        if (StringUtils.isBlank(format)) {
+            // if not provided via extension use parameter or default
+            format = StringUtils.defaultIfEmpty(request.getParameter(PARAM_FORMAT.name), FORMAT_HTML);
+        }
+        doGet(request, response, format);
+    }
+
+    private String[] splitFormat(String pathInfo) {
+        for (String format : new String[] { FORMAT_HTML, FORMAT_JSON, FORMAT_JSONP, FORMAT_VERBOSE_TXT, FORMAT_TXT }) {
+            String formatWithDot = "." + format;
+            if (StringUtils.endsWith(pathInfo, formatWithDot)) {
+                return new String[] { StringUtils.substringBeforeLast(pathInfo, formatWithDot), format };
+            }
+        }
+        return new String[] { pathInfo, null };
+    }
+
+    private void sendTxtResponse(final Result overallResult, final HttpServletResponse response, boolean verbose,
+            List<HealthCheckExecutionResult> executionResults, boolean includeDebug) throws IOException {
         response.setContentType(CONTENT_TYPE_TXT);
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(txtSerializer.serialize(overallResult));
+        if (verbose) {
+            response.getWriter().write(verboseTxtSerializer.serialize(overallResult, executionResults, includeDebug));
+        } else {
+            response.getWriter().write(txtSerializer.serialize(overallResult));
+        }
     }
 
     private void sendJsonResponse(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, final String jsonpCallback,
@@ -312,6 +377,20 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             statusMapping.put(Result.Status.HEALTH_CHECK_ERROR, statusMapping.get(Result.Status.CRITICAL));
         }
         return statusMapping;
+    }
+
+    private class ProxyServlet extends HttpServlet {
+
+        private final String format;
+
+        private ProxyServlet(final String format) {
+            this.format = format;
+        }
+
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            HealthCheckExecutorServlet.this.doGet(req, resp, format);
+        }
     }
 
 

@@ -101,9 +101,6 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     @Reference(name = REPOSITORY_REFERNENCE_NAME, service = SlingRepository.class)
     private ServiceReference<SlingRepository> repositoryReference;
 
-    @Reference
-    private PathMapper pathMapper;
-
     /** The JCR listener base configuration. */
     private volatile JcrListenerBaseConfig listenerConfig;
 
@@ -131,7 +128,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.repository = repository;
 
         this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository,
-                classLoaderManagerReference, pathMapper);
+                classLoaderManagerReference);
     }
 
     @Deactivate
@@ -190,7 +187,6 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
             logger.debug("Registering resource listeners...");
             try {
                 this.listenerConfig = new JcrListenerBaseConfig(this.getProviderContext().getObservationReporter(),
-                    this.pathMapper,
                     this.repository);
                 for(final ObserverConfiguration config : this.getProviderContext().getObservationReporter().getObserverConfigurations()) {
                     logger.debug("Registering listener for {}", config.getPaths());
@@ -406,7 +402,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
                 nodeType = null;
             }
         }
-        final String jcrPath = pathMapper.mapResourcePathToJCRPath(path);
+        final String jcrPath = path;
         if ( jcrPath == null ) {
             throw new PersistenceException("Unable to create node at " + path, null, path, null);
         }
@@ -463,7 +459,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         Item item = resource.adaptTo(Item.class);
         try {
             if ( item == null ) {
-                final String jcrPath = pathMapper.mapResourcePathToJCRPath(resource.getPath());
+                final String jcrPath = resource.getPath();
                 if (jcrPath == null) {
                     logger.debug("delete: {} maps to an empty JCR path", resource.getPath());
                     throw new PersistenceException("Unable to delete resource", null, resource.getPath(), null);
@@ -552,8 +548,8 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     public boolean move(final  @Nonnull ResolveContext<JcrProviderState> ctx,
             final String srcAbsPath,
             final String destAbsPath) throws PersistenceException {
-        final String srcNodePath = pathMapper.mapResourcePathToJCRPath(srcAbsPath);
-        final String dstNodePath = pathMapper.mapResourcePathToJCRPath(destAbsPath + '/' + ResourceUtil.getName(srcAbsPath));
+        final String srcNodePath = srcAbsPath;
+        final String dstNodePath = destAbsPath + '/' + ResourceUtil.getName(srcAbsPath);
         try {
             ctx.getProviderState().getSession().move(srcNodePath, dstNodePath);
             return true;

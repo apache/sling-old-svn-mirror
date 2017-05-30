@@ -23,6 +23,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import javax.annotation.Nonnull;
 import javax.management.ObjectName;
@@ -51,7 +52,7 @@ public final class MonitoringDistributionPackageBuilder implements DistributionP
         this.context = context;
         this.queueCapacity = queueCapacity;
 
-        mBeans = new ArrayBlockingQueue<ServiceRegistration>(queueCapacity);
+        mBeans = new LinkedBlockingDeque<ServiceRegistration>();
     }
 
     @Override
@@ -64,7 +65,9 @@ public final class MonitoringDistributionPackageBuilder implements DistributionP
     public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionException {
         long start = System.currentTimeMillis();
         DistributionPackage distributionPackage = wrapped.createPackage(resourceResolver, request);
-        registerDistributionPackageMBean(start, distributionPackage);
+        if (queueCapacity > 0) {
+            registerDistributionPackageMBean(start, distributionPackage);
+        }
         return distributionPackage;
     }
 

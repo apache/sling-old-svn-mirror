@@ -244,6 +244,16 @@ public class AdapterImplementationsTest {
         assertNull(underTest.getModelClassForResource(resource));
     }
     
+    @Test
+    public void testResourceTypeRegistrationForResourceWithoutResourceType() {
+        when(resource.getResourceType()).thenReturn(null);
+        when(resource.getResourceResolver()).thenReturn(resourceResolver);
+        when(resourceResolver.getSearchPath()).thenReturn(new String[] { "/apps/", "/libs/" });
+
+        // ensure we don't have any registrations and no exception is thrown
+        assertNull(underTest.getModelClassForResource(resource));
+    }
+    
     static final class NoneImplementationPicker implements ImplementationPicker {
         @Override
         public Class<?> pick(Class<?> adapterType, Class<?>[] implementationsTypes, Object adaptable) {

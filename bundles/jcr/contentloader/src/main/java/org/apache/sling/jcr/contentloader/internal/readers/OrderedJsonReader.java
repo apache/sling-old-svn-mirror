@@ -39,7 +39,7 @@ import javax.json.JsonValue;
 /**
  * Specific <code>JsonReader</code>, <code>OrderedJsonReader</code> parse json document exactly the same,
  * but does specific look up for SLING:ordered : [{SLING:name: "first", ...},{SLING:name: "second", ...}]
- * type of structure that will force import of an orderable node with first & second
+ * type of structure that will force import of an orderable node with first and second
  * children, in that order.
  * Note that this is the reponsability of the json file to set appropriate node type / mixins.
  */

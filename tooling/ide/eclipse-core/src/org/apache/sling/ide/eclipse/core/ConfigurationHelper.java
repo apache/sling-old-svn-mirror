@@ -55,4 +55,17 @@ public class ConfigurationHelper {
 		aBundleProject.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 	}
 
+	public static void convertToLaunchpadProject(IProject project, IPath modelsDirectoryPath) throws CoreException {
+
+		IProjectFacet facet = ProjectFacetsManager.getProjectFacet("sling.launchpad");
+		IFacetedProject fp2 = ProjectFacetsManager.create(project, true, null);
+		fp2.installProjectFacet(facet.getLatestVersion(), null, null);
+		project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+		
+		if ( modelsDirectoryPath != null ) {
+			ProjectUtil.setProvisioningModelPath(project, modelsDirectoryPath);
+		}
+		
+
+	}
 }

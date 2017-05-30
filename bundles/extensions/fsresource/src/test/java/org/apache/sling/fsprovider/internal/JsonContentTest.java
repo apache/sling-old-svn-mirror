@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,8 +54,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 /**
  * Test access to files and folders and JSON content from file system.
@@ -247,7 +248,8 @@ public class JsonContentTest {
     @Test
     public void testFolder2ChildNodes() throws RepositoryException {
         Resource folder2 = fsroot.getChild("folder2");
-        List<Resource> children = ImmutableList.copyOf(folder2.listChildren());
+        List<Resource> children = Lists.newArrayList(folder2.listChildren());
+        Collections.sort(children, new ResourcePathComparator());
         
         assertEquals(2, children.size());
         Resource child1 = children.get(0);
@@ -257,7 +259,27 @@ public class JsonContentTest {
 
         Resource child2 = children.get(1);
         assertEquals("folder21", child2.getName());
-        assertEquals("nt:folder", child2.getValueMap().get("jcr:primaryType", String.class));
+        assertEquals("sling:OrderedFolder", child2.getValueMap().get("jcr:primaryType", String.class));
+    }
+
+    @Test
+    public void testFile21aNodeDescriptor() throws RepositoryException {
+        Resource file21a = fsroot.getChild("folder2/folder21/file21a.txt");
+        assertEquals("nt:file", file21a.getResourceType());
+        assertEquals("/my/super/type", file21a.getResourceSuperType());
+        
+        ValueMap props = file21a.getValueMap();
+        assertEquals("nt:file", props.get("jcr:primaryType", String.class));
+        assertEquals("/my/super/type", props.get("sling:resourceSuperType", String.class));
+        assertEquals("en", props.get("jcr:language", String.class));
+        assertArrayEquals(new String[] { "mix:language" }, props.get("jcr:mixinTypes", String[].class));
+
+        assertNull(fsroot.getChild("folder2/folder21/file21a.txt.xml"));
+        
+        Node node = file21a.adaptTo(Node.class);
+        assertNotNull(node);
+        assertEquals("/my/super/type", node.getProperty("sling:resourceSuperType").getString());
+        assertEquals("en", node.getProperty("jcr:language").getString());
     }
 
 }

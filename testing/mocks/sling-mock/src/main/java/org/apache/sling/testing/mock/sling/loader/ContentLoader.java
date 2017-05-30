@@ -20,6 +20,7 @@ package org.apache.sling.testing.mock.sling.loader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +35,7 @@ import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.contentparser.ContentParser;
 import org.apache.sling.jcr.contentparser.ContentParserFactory;
 import org.apache.sling.jcr.contentparser.ContentType;
+import org.apache.sling.jcr.contentparser.JsonParserFeature;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.osgi.framework.BundleContext;
@@ -65,7 +67,8 @@ public final class ContentLoader {
     private static ContentParser JSON_PARSER = ContentParserFactory.create(ContentType.JSON, new ParserOptions()
             .detectCalendarValues(true)
             .ignorePropertyNames(IGNORED_NAMES)
-            .ignoreResourceNames(IGNORED_NAMES));
+            .ignoreResourceNames(IGNORED_NAMES)
+            .jsonParserFeatures(EnumSet.of(JsonParserFeature.COMMENTS, JsonParserFeature.QUOTE_TICK)));
 
     private final ResourceResolver resourceResolver;
     private final BundleContext bundleContext;

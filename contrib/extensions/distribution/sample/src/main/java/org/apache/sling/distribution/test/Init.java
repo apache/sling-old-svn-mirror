@@ -45,7 +45,7 @@ import javax.jcr.Session;
 @Component(immediate = true)
 public class Init {
 
-    Logger log = LoggerFactory.getLogger(getClass());
+    final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
     SlingRepository slingRepository;
@@ -90,7 +90,7 @@ public class Init {
             if (defaultAgentUser != null) {
                 AccessControlUtils.addAccessControlEntry(session, "/var/sling/distribution/packages", defaultAgentUser.getPrincipal(), new String[]{ Privilege.JCR_ALL }, true);
                 ((User) distributorUser).getImpersonation().grantImpersonation(defaultAgentUser.getPrincipal());
-                ((User) serviceUser).getImpersonation().grantImpersonation(defaultAgentUser.getPrincipal());
+                serviceUser.getImpersonation().grantImpersonation(defaultAgentUser.getPrincipal());
             }
 
             session.save();

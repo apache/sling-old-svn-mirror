@@ -16,24 +16,9 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
-import org.apache.sling.ide.log.Logger;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.wst.common.project.facet.core.IDelegate;
-import org.eclipse.wst.common.project.facet.core.IProjectFacetVersion;
+public class SlingBundleFacetInstallDelegate extends BaseFacetInstallDelegate {
 
-public class SlingBundleFacetInstallDelegate implements IDelegate {
-
-    @Override
-    public void execute(IProject project, IProjectFacetVersion facetVersion, Object config, IProgressMonitor monitor)
-            throws CoreException {
-
-        Logger pluginLogger = Activator.getDefault().getPluginLogger();
-
-        pluginLogger.trace("Installing facet {0} on project {1}", facetVersion, project);
-
-        new ProjectDescriptionManager(pluginLogger).enableValidationBuilderAndCommand(project, monitor);
-    }
-
+	public SlingBundleFacetInstallDelegate() {
+		setEnableValidationBuilderAndCommand(true);
+	}
 }

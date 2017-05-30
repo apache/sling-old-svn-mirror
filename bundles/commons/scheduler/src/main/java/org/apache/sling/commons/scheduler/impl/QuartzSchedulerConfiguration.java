@@ -38,4 +38,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     )
     String[] allowedPoolNames();
 
+    @AttributeDefinition(
+            name = "Force Leader for Single",
+            description="If a job is to be run on a single instance only, disable distribution and always run on leader."
+        )
+    boolean scheduler_useleaderforsingle() default false;
 }

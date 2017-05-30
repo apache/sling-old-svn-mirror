@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -32,8 +33,11 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.caconfig.annotation.Configuration;
 import org.apache.sling.testing.mock.osgi.ManifestScanner;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.framework.Bundle;
@@ -42,6 +46,7 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.reflections.Reflections;
 
 /**
  * Helper methods for registering Configuration annotation classes from the classpath.
@@ -49,12 +54,16 @@ import org.osgi.framework.Version;
 final class ConfigurationMetadataUtil {
     
     private static final String[] CONFIGURATION_CLASSES_FROM_MANIFEST;
-    
+    private static final ConcurrentMap<String, List<Class>> CONFIGURATION_CLASSES_FOR_PACKAGES = new ConcurrentHashMap<String, List<Class>>();
+        
     static {
+        // suppress log entries from Reflections library
+        Reflections.log = null;
+        
         // scan classpath for configuration classes bundle header entries only once
         CONFIGURATION_CLASSES_FROM_MANIFEST = toArray(ManifestScanner.getValues(CONFIGURATION_CLASSES_HEADER));
     }
-    
+
     private ConfigurationMetadataUtil() {
         // static methods only
     }
@@ -97,7 +106,29 @@ final class ConfigurationMetadataUtil {
         }
     }
     
-
+    /**
+     * Get configuration classes in list of packages (and subpackages), and cache result in static map.
+     * @param packageNames Package names
+     * @return List of classes
+     */
+    public static Collection<Class> getConfigurationClassesForPackages(String packageNames) {
+        List<Class> classes = CONFIGURATION_CLASSES_FOR_PACKAGES.get(packageNames);
+        if (classes == null) {
+            classes = new ArrayList<Class>();
+            String[] packageNameArray = StringUtils.split(packageNames, ",");
+            // add "." to each package name because it's a prefix, not a package name
+            Object[] prefixArray = new Object[packageNameArray.length];
+            for (int i = 0; i < packageNameArray.length; i++) {
+                prefixArray[i] = packageNameArray[i] + ".";
+            }
+            Reflections reflections = new Reflections(prefixArray);
+            classes.addAll(reflections.getTypesAnnotatedWith(Configuration.class));
+            CONFIGURATION_CLASSES_FOR_PACKAGES.putIfAbsent(packageNames, classes);
+        }
+        return classes;
+    }
+    
+    
     private static class RegisterConfigurationMetadataBundle implements Bundle {
         
         private final BundleContext bundleContext;

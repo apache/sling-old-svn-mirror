@@ -17,12 +17,12 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>30</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.paxexam.util</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Pax Exam Utilities</name>

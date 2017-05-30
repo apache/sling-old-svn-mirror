@@ -43,6 +43,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
@@ -68,8 +69,11 @@ class MockBundleContext implements BundleContext {
     private final Queue<BundleListener> bundleListeners = new ConcurrentLinkedQueue<BundleListener>();
     private final ConfigurationAdmin configAdmin = new MockConfigurationAdmin();
     private File dataFileBaseDir;
+    
+    private final Bundle systemBundle;
 
     public MockBundleContext() {
+        this.systemBundle = new MockBundle(this, Constants.SYSTEM_BUNDLE_ID);
         this.bundle = new MockBundle(this);
         
         // register configuration admin by default
@@ -118,6 +122,12 @@ class MockBundleContext implements BundleContext {
         handleRefsUpdateOnRegister(registration);
         notifyServiceListeners(ServiceEvent.REGISTERED, registration.getReference());
         return registration;
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, ServiceFactory<S> factory, Dictionary<String, ?> properties) {
+        return registerService(clazz.getName(), factory, properties);
     }
     
     /**
@@ -433,6 +443,24 @@ class MockBundleContext implements BundleContext {
         }
     }
 
+    @Override
+    public Bundle getBundle(final long bundleId) {
+        if (bundleId == Constants.SYSTEM_BUNDLE_ID) {
+            return systemBundle;
+        }
+        // otherwise return null - no bundle found
+        return null;
+    }
+
+    @Override
+    public Bundle getBundle(String location) {
+        if (StringUtils.equals(location, Constants.SYSTEM_BUNDLE_LOCATION)) {
+            return systemBundle;
+        }
+        // otherwise return null - no bundle found
+        return null;
+    }
+
     // --- unsupported operations ---
     @Override
     public Bundle installBundle(final String s) {
@@ -441,21 +469,6 @@ class MockBundleContext implements BundleContext {
 
     @Override
     public Bundle installBundle(final String s, final InputStream inputStream) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Bundle getBundle(final long l) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Bundle getBundle(String location) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S> ServiceRegistration<S> registerService(Class<S> clazz, ServiceFactory<S> factory, Dictionary<String, ?> properties) {
         throw new UnsupportedOperationException();
     }
 

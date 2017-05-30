@@ -28,6 +28,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.caconfig.impl.def.DefaultConfigurationPersistenceStrategy;
+import org.apache.sling.caconfig.management.impl.ConfigurationManagementSettingsImpl;
 import org.apache.sling.caconfig.management.impl.ConfigurationPersistenceStrategyMultiplexerImpl;
 import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.caconfig.spi.metadata.ConfigurationMetadata;
@@ -49,6 +50,7 @@ public class ConfigurationMetadataProviderMultiplexerImplTest {
 
     @Before
     public void setUp() {
+        context.registerInjectActivateService(new ConfigurationManagementSettingsImpl());
         context.registerInjectActivateService(new ConfigurationPersistenceStrategyMultiplexerImpl());
         context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         underTest = context.registerInjectActivateService(new ConfigurationMetadataProviderMultiplexerImpl());

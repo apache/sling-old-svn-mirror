@@ -29,11 +29,10 @@ import javax.json.JsonReaderFactory;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.xss.ProtectionContext;
 import org.apache.sling.xss.XSSAPI;
 import org.apache.sling.xss.XSSFilter;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -46,19 +45,24 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
-@Component
+@Component(service = XSSAPI.class,
+           property = {
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+           })
+
 public class XSSAPIImpl implements XSSAPI {
-    private static final Logger LOGGER = LoggerFactory.getLogger(XSSAPIImpl.class);
+
+    private final Logger LOGGER = LoggerFactory.getLogger(XSSAPIImpl.class);
 
     @Reference
-    private XSSFilter xssFilter = null;
+    private XSSFilter xssFilter;
 
-    private Validator validator = ESAPI.validator();
+    private final Validator validator = ESAPI.validator();
 
     private static final Pattern PATTERN_AUTO_DIMENSION = Pattern.compile("['\"]?auto['\"]?");
 
     private SAXParserFactory factory;
-    
+
     private volatile JsonReaderFactory jsonReaderFactory;
 
     @Activate
@@ -461,25 +465,5 @@ public class XSSAPIImpl implements XSSAPI {
     @Nonnull
     public String filterHTML(String source) {
         return xssFilter.filter(ProtectionContext.HTML_HTML_CONTENT, source);
-    }
-
-    // =============================================================================================
-    // JCR-NAMESPACE MANGLING
-    //
-
-    /**
-     * @see org.apache.sling.xss.XSSAPI#getRequestSpecificAPI(org.apache.sling.api.SlingHttpServletRequest)
-     */
-    @Override
-    public XSSAPI getRequestSpecificAPI(final SlingHttpServletRequest request) {
-        return this;
-    }
-
-    /**
-     * @see org.apache.sling.xss.XSSAPI#getResourceResolverSpecificAPI(org.apache.sling.api.resource.ResourceResolver)
-     */
-    @Override
-    public XSSAPI getResourceResolverSpecificAPI(final ResourceResolver resourceResolver) {
-        return this;
     }
 }

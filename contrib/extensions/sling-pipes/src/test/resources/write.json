@@ -31,7 +31,8 @@
         "conf":{
           "jcr:primaryType":"nt:unstructured",
           "fruits": "+[${fruit.name}]",
-          "fixedVegetables":"[cabbage,carrot]"
+          "fixedVegetables":"[cabbage,carrot]",
+          "computedVegetables":["${'cabbage'}","${'carrot'}"]
         }
       }
     }

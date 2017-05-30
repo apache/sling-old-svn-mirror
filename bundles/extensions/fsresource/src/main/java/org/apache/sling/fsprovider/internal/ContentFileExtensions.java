@@ -18,6 +18,9 @@
  */
 package org.apache.sling.fsprovider.internal;
 
+import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JCR_XML_SUFFIX;
+import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.XML_SUFFIX;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -43,8 +46,15 @@ public final class ContentFileExtensions {
     public String getSuffix(File file) {
         String fileName = "/" + file.getName();
         for (String suffix : contentFileSuffixes) {
-            if (StringUtils.endsWith(fileName, suffix)) {
-                return suffix;
+            if (StringUtils.equals(suffix, XML_SUFFIX)) {
+                if (StringUtils.endsWith(fileName, XML_SUFFIX) && !StringUtils.endsWith(fileName, JCR_XML_SUFFIX)) {
+                    return suffix;
+                }
+            }
+            else {
+                if (StringUtils.endsWith(fileName, suffix)) {
+                    return suffix;
+                }
             }
         }
         return null;

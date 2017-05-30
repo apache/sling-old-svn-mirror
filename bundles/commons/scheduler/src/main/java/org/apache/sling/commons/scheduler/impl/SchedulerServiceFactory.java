@@ -23,10 +23,12 @@ import java.util.NoSuchElementException;
 
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * This is a proxy implementation of the scheduler service.
@@ -36,7 +38,10 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
     service = Scheduler.class,
-    servicefactory = true
+    scope = ServiceScope.BUNDLE,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
 )
 public class SchedulerServiceFactory implements Scheduler {
 
@@ -110,7 +115,6 @@ public class SchedulerServiceFactory implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#addJob(java.lang.String, java.lang.Object, java.util.Map, java.lang.String, boolean)
      */
     @Override
-    @SuppressWarnings("deprecation")
     public void addJob(final String name, final Object job,
             final Map<String, Serializable> config, final String schedulingExpression,
             final boolean canRunConcurrently) throws Exception {
@@ -121,7 +125,6 @@ public class SchedulerServiceFactory implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean)
      */
     @Override
-    @SuppressWarnings("deprecation")
     public void addPeriodicJob(final String name, final Object job,
             final Map<String, Serializable> config, final long period,
             final boolean canRunConcurrently) throws Exception {
@@ -132,7 +135,6 @@ public class SchedulerServiceFactory implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean, boolean)
      */
     @Override
-    @SuppressWarnings("deprecation")
     public void addPeriodicJob(final String name, final Object job,
             final Map<String, Serializable> config, final long period,
             final boolean canRunConcurrently, final boolean startImmediate)
@@ -144,7 +146,6 @@ public class SchedulerServiceFactory implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map)
      */
     @Override
-    @SuppressWarnings("deprecation")
     public void fireJob(final Object job, final Map<String, Serializable> config)
             throws Exception {
         this.scheduler.fireJob(this.bundleId, null, job, config);
@@ -154,7 +155,6 @@ public class SchedulerServiceFactory implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map, int, long)
      */
     @Override
-    @SuppressWarnings("deprecation")
     public boolean fireJob(final Object job, final Map<String, Serializable> config,
             final int times, final long period) {
         return this.scheduler.fireJob(this.bundleId, null, job, config, times, period);
@@ -164,7 +164,6 @@ public class SchedulerServiceFactory implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
      */
     @Override
-    @SuppressWarnings("deprecation")
     public void fireJobAt(final String name, final Object job,
             final Map<String, Serializable> config, final Date date) throws Exception {
         this.scheduler.fireJobAt(this.bundleId, null, name, job, config, date);
@@ -174,7 +173,6 @@ public class SchedulerServiceFactory implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date, int, long)
      */
     @Override
-    @SuppressWarnings("deprecation")
     public boolean fireJobAt(final String name, final Object job,
             final Map<String, Serializable> config, final Date date, final int times, final long period) {
         return this.scheduler.fireJobAt(this.bundleId, null, name, job, config, date, times, period);
@@ -184,7 +182,6 @@ public class SchedulerServiceFactory implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#removeJob(java.lang.String)
      */
     @Override
-    @SuppressWarnings("deprecation")
     public void removeJob(final String name) throws NoSuchElementException {
         this.scheduler.removeJob(this.bundleId, name);
     }

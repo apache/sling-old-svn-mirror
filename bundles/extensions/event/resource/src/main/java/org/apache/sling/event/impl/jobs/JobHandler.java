@@ -124,7 +124,7 @@ public class JobHandler {
                     if ( keepJobInHistory ) {
                         final ValueMap vm = ResourceHelper.getValueMap(jobResource);
                         newPath = this.configuration.getStoragePath(job.getTopic(), job.getId(), isSuccess);
-                        final Map<String, Object> props = new HashMap<String, Object>(vm);
+                        final Map<String, Object> props = new HashMap<>(vm);
                         props.put(JobImpl.PROPERTY_FINISHED_STATE, state.name());
                         if ( isSuccess ) {
                             // we set the finish date to start date + duration
@@ -181,7 +181,7 @@ public class JobHandler {
                     final ValueMap vm = ResourceHelper.getValueMap(jobResource);
                     final String newPath = this.configuration.getUniquePath(targetId, job.getTopic(), job.getId(), job.getProperties());
 
-                    final Map<String, Object> props = new HashMap<String, Object>(vm);
+                    final Map<String, Object> props = new HashMap<>(vm);
                     props.remove(Job.PROPERTY_JOB_QUEUE_NAME);
                     if ( targetId == null ) {
                         props.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);

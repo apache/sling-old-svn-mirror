@@ -32,26 +32,26 @@ import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
 import javax.management.StandardEmitterMBean;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
 import org.apache.sling.event.jobs.jmx.StatisticsMBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 
-@Component
-@Service(value = { QueuesMBean.class })
-@Property(name = "jmx.objectname", value = "org.apache.sling:type=queues,name=QueueNames")
+@Component(service =  QueuesMBean.class,
+property = {
+        "jmx.objectname=org.apache.sling:type=queues,name=QueueNames",
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+})
 public class QueuesMBeanImpl extends StandardEmitterMBean implements QueuesMBean {
 
     private static final String QUEUE_NOTIFICATION = "org.apache.sling.event.queue";
     private static final String[] NOTIFICATION_TYPES = { QUEUE_NOTIFICATION };
-    private Map<String, QueueMBeanHolder> queues = new ConcurrentHashMap<String, QueueMBeanHolder>();
+    private Map<String, QueueMBeanHolder> queues = new ConcurrentHashMap<>();
     private String[] names;
     private AtomicLong sequence = new AtomicLong(System.currentTimeMillis());
     private BundleContext bundleContext;
@@ -147,7 +147,7 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements QueuesMBean
 
     private QueueMBeanHolder add(Queue queue) {
         QueueMBeanImpl queueMBean = new QueueMBeanImpl(queue);
-        ServiceRegistration serviceRegistration = bundleContext
+        ServiceRegistration<?> serviceRegistration = bundleContext
                 .registerService(StatisticsMBean.class.getName(), queueMBean,
                         createProperties(
                                 "jmx.objectname","org.apache.sling:type=queues,name="+queue.getName(),
@@ -160,7 +160,7 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements QueuesMBean
     }
 
     private Dictionary<String, Object> createProperties(Object ... values) {
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         for ( int i = 0; i < values.length; i+=2) {
             props.put((String) values[i], values[i+1]);
         }
@@ -175,7 +175,7 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements QueuesMBean
     @Override
     public String[] getQueueNames() {
         if (names == null) {
-            List<String> lnames = new ArrayList<String>(queues.keySet());
+            List<String> lnames = new ArrayList<>(queues.keySet());
             Collections.sort(lnames);
             names = lnames.toArray(new String[lnames.size()]);
         }

@@ -1,0 +1,4 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+    "sling:resourceSuperType" : "htlblog/public/page"
+}

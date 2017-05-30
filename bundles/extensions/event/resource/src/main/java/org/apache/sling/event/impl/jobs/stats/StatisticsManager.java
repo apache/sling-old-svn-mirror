@@ -22,19 +22,21 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.event.impl.jobs.InternalJobState;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The statistics manager keeps track of all statistics related tasks.
  */
-@Component
-@Service(value=StatisticsManager.class)
+@Component(service=StatisticsManager.class,
+    property = {
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+})
 public class StatisticsManager {
 
     /** The job manager configuration. */
@@ -56,10 +58,10 @@ public class StatisticsManager {
     };
 
     /** Statistics per topic. */
-    private final ConcurrentMap<String, TopicStatistics> topicStatistics = new ConcurrentHashMap<String, TopicStatistics>();
+    private final ConcurrentMap<String, TopicStatistics> topicStatistics = new ConcurrentHashMap<>();
 
     /** Statistics per queue. */
-    private final ConcurrentMap<String, Statistics> queueStatistics = new ConcurrentHashMap<String, Statistics>();
+    private final ConcurrentMap<String, Statistics> queueStatistics = new ConcurrentHashMap<>();
 
     /**
      * Get the global statistics.

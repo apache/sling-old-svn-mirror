@@ -81,9 +81,9 @@ public class ResourcePathCollatingIteratorTest {
         
         ResourceResolver rr = context.resourceResolver();
         List<ContextResource> list1 = ImmutableList.of(
-                new ContextResource(rr.getResource("/content/a"), "/conf/z"));
+                new ContextResource(rr.getResource("/content/a"), "/conf/z", 0));
         List<ContextResource> list2 = ImmutableList.of(
-                new ContextResource(rr.getResource("/content/a"), "/conf/a"));
+                new ContextResource(rr.getResource("/content/a"), "/conf/a", 0));
         
         Iterator<ContextResource> result = new ResourcePathCollatingIterator(ImmutableList.of(list1.iterator(), list2.iterator()));
         ContextResource item1 = result.next();
@@ -95,6 +95,33 @@ public class ResourcePathCollatingIteratorTest {
 
         assertEquals("/content/a", item2.getResource().getPath());
         assertEquals("/conf/z", item2.getConfigRef());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testWithConfigRefAndServiceRanking() {
+        context.build()
+            .resource("/content/a")
+            .resource("/content/a/b")
+            .resource("/content/a/b/c")
+            .resource("/content/a/b/c/d");
+        
+        ResourceResolver rr = context.resourceResolver();
+        List<ContextResource> list1 = ImmutableList.of(
+                new ContextResource(rr.getResource("/content/a"), "/conf/z", 500));
+        List<ContextResource> list2 = ImmutableList.of(
+                new ContextResource(rr.getResource("/content/a"), "/conf/a", 100));
+        
+        Iterator<ContextResource> result = new ResourcePathCollatingIterator(ImmutableList.of(list1.iterator(), list2.iterator()));
+        ContextResource item1 = result.next();
+        ContextResource item2 = result.next();
+        assertFalse(result.hasNext());
+        
+        assertEquals("/content/a", item1.getResource().getPath());
+        assertEquals("/conf/z", item1.getConfigRef());
+
+        assertEquals("/content/a", item2.getResource().getPath());
+        assertEquals("/conf/a", item2.getConfigRef());
     }
 
 }

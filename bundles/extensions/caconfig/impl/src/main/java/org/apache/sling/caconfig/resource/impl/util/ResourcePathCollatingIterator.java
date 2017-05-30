@@ -40,7 +40,12 @@ public class ResourcePathCollatingIterator extends CollatingIterator {
             Integer length2 = o2.getResource().getPath().length();
             int result = length2.compareTo(length1);
             if (result == 0) {
-                result = StringUtils.defaultString(o1.getConfigRef()).compareTo(StringUtils.defaultString(o2.getConfigRef()));
+                Integer ranking1 = o1.getServiceRanking();
+                Integer ranking2 = o2.getServiceRanking();
+                result = ranking2.compareTo(ranking1);
+                if (result == 0) {
+                    result = StringUtils.defaultString(o1.getConfigRef()).compareTo(StringUtils.defaultString(o2.getConfigRef()));
+                }
             }
             return result;
         }

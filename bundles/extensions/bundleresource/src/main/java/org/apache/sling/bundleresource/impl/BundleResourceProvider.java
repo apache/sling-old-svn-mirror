@@ -25,36 +25,31 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.ManifestHeader;
+import org.apache.sling.spi.resource.provider.ResolveContext;
+import org.apache.sling.spi.resource.provider.ResourceContext;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
-public class BundleResourceProvider implements ResourceProvider {
+public class BundleResourceProvider extends ResourceProvider<Object> {
+
+    public static final String PROP_BUNDLE = BundleResourceProvider.class.getName();
 
     /** The bundle providing the resources */
     private final BundleResourceCache bundle;
 
-    /** The root paths */
-    private final MappedPath[] roots;
+    /** The root path */
+    private final MappedPath root;
 
-    private ServiceRegistration serviceRegistration;
+    @SuppressWarnings("rawtypes")
+    private volatile ServiceRegistration<ResourceProvider> serviceRegistration;
 
-    /**
-     * Creates Bundle resource provider accessing entries in the given Bundle an
-     * supporting resources below root paths given by the rootList which is a
-     * comma (and whitespace) separated list of absolute paths.
-     */
-    public BundleResourceProvider(Bundle bundle, String rootList) {
-        this.bundle = new BundleResourceCache(bundle);
-        List<MappedPath> prefixList = new ArrayList<MappedPath>();
+    public static MappedPath[] getRoots(final Bundle bundle, final String rootList) {
+        List<MappedPath> prefixList = new ArrayList<>();
 
         final ManifestHeader header = ManifestHeader.parse(rootList);
         for (final ManifestHeader.Entry entry : header.getEntries()) {
@@ -66,19 +61,30 @@ public class BundleResourceProvider implements ResourceProvider {
                 prefixList.add(MappedPath.create(resourceRoot));
             }
         }
-        this.roots = prefixList.toArray(new MappedPath[prefixList.size()]);
+       return prefixList.toArray(new MappedPath[prefixList.size()]);
+    }
+
+    /**
+     * Creates Bundle resource provider accessing entries in the given Bundle an
+     * supporting resources below root paths given by the rootList which is a
+     * comma (and whitespace) separated list of absolute paths.
+     */
+    public BundleResourceProvider(final Bundle bundle, final MappedPath root) {
+        this.bundle = new BundleResourceCache(bundle);
+        this.root = root;
     }
 
     //---------- Service Registration
-    
-    long registerService(BundleContext context) {
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+
+    long registerService(final BundleContext context) {
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put(Constants.SERVICE_DESCRIPTION,
             "Provider of bundle based resources");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        props.put(ROOTS, getRoots());
+        props.put(ResourceProvider.PROPERTY_ROOT, getRoot());
+        props.put(PROP_BUNDLE, this.bundle.getBundle().getBundleId());
 
-        serviceRegistration = context.registerService(SERVICE_NAME, this, props);
+        serviceRegistration = context.registerService(ResourceProvider.class, this, props);
         return (Long) serviceRegistration.getReference().getProperty(
             Constants.SERVICE_ID);
     }
@@ -88,36 +94,33 @@ public class BundleResourceProvider implements ResourceProvider {
             serviceRegistration.unregister();
         }
     }
-    
-    // ---------- ResourceProvider interface
 
-    public Resource getResource(ResourceResolver resourceResolver,
-            HttpServletRequest request, String path) {
-        return getResource(resourceResolver, path);
-    }
+    // ---------- ResourceProvider interface
 
     /**
      * Returns a BundleResource for the path if such an entry exists in the
-     * bundle of this provider. The JcrResourceResolver is ignored by this
-     * implementation.
+     * bundle of this provider.
      */
-    public Resource getResource(ResourceResolver resourceResolver, String path) {
-        MappedPath mappedPath = getMappedPath(path);
+    @Override
+    public Resource getResource(final ResolveContext<Object> ctx,
+            final String path,
+            final ResourceContext resourceContext,
+            final Resource parent) {
+        final MappedPath mappedPath = getMappedPath(path);
         if (mappedPath != null) {
-            return BundleResource.getResource(resourceResolver, bundle,
+            return BundleResource.getResource(ctx.getResourceResolver(), bundle,
                 mappedPath, path);
         }
 
         return null;
     }
 
-    public Iterator<Resource> listChildren(final Resource parent)
-            throws SlingException {
-
-     	if (parent instanceof BundleResource && ((BundleResource)parent).getBundle() == this.bundle) { 
+    @Override
+    public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
+     	if (parent instanceof BundleResource && ((BundleResource)parent).getBundle() == this.bundle) {
             // bundle resources can handle this request directly when the parent
     		//  resource is in the same bundle as this provider.
-            return ((BundleResource) parent).listChildren(); 
+            return ((BundleResource) parent).listChildren();
     	}
 
         // ensure this provider may have children of the parent
@@ -140,26 +143,20 @@ public class BundleResourceProvider implements ResourceProvider {
         return bundle;
     }
 
-    MappedPath[] getMappedPaths() {
-        return roots;
+    MappedPath getMappedPath() {
+        return root;
     }
 
     // ---------- internal
 
-    /** Returns the root paths */
-    private String[] getRoots() {
-        String[] rootPaths = new String[roots.length];
-        for (int i = 0; i < roots.length; i++) {
-            rootPaths[i] = roots[i].getResourceRoot();
-        }
-        return rootPaths;
+    /** Returns the root path */
+    private String getRoot() {
+        return this.root.getResourceRoot();
     }
 
     private MappedPath getMappedPath(String resourcePath) {
-        for (MappedPath mappedPath : roots) {
-            if (mappedPath.isChild(resourcePath)) {
-                return mappedPath;
-            }
+        if (this.root.isChild(resourcePath)) {
+            return root;
         }
 
         return null;
