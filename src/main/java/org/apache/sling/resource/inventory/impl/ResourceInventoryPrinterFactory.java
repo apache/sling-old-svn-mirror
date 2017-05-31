@@ -19,6 +19,11 @@
 package org.apache.sling.resource.inventory.impl;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
+
+import javax.json.Json;
+import javax.json.JsonException;
+import javax.json.stream.JsonGenerator;
 
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
@@ -26,7 +31,6 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.json.JSONException;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -84,12 +88,13 @@ public class ResourceInventoryPrinterFactory implements InventoryPrinter {
             if ( rootResource != null ) {
                 final ResourceTraversor rt = new ResourceTraversor(rootResource);
                 rt.collectResources();
-                printWriter.write(rt.getJSONObject().toString(2));
-
+                StringWriter writer = new StringWriter();
+                Json.createGenerator(writer).write(rt.getJsonObject()).close();
+                printWriter.write(writer.toString());
             }
         } catch (final LoginException e) {
             // ignore
-        } catch (final JSONException ignore) {
+        } catch (final JsonException ignore) {
             LoggerFactory.getLogger(this.getClass()).warn("Unable to create resource json", ignore);
         } finally {
             if ( resolver != null ) {
