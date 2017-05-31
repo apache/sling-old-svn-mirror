@@ -50,7 +50,7 @@
                             /libs/sling/logtail-plugin/css, /libs/sling/logtail-plugin/js
                         </Sling-Bundle-Resources>
                         <Embed-Dependency>
-                                org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter,
+                                org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter.class
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
