@@ -16,10 +16,10 @@
  */
 package org.apache.sling.pipes;
 
+import static org.junit.Assert.assertFalse;
+
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
 
 /**
  * testing references

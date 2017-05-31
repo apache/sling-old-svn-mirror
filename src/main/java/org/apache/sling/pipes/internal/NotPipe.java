@@ -16,12 +16,12 @@
  */
 package org.apache.sling.pipes.internal;
 
+import java.util.Collections;
+import java.util.Iterator;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.ReferencePipe;
-
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * executes a pipe referred in the configuration, but invert output:

@@ -16,10 +16,21 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.io.StringWriter;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 import javax.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,22 +39,12 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ContainerPipeTest;
 import org.apache.sling.pipes.OutputWriter;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * testing the servlet logic (parameters & output)
@@ -81,15 +82,15 @@ public class PlumberServletTest extends AbstractPipeTest {
         }
     }
 
-    private void assertDummyTree(int size) throws JSONException {
+    private void assertDummyTree(int size) {
         String finalResponse = stringResponse.toString();
         assertFalse("There should be a response", StringUtils.isBlank(finalResponse));
-        JSONObject object = new JSONObject(finalResponse);
+        JsonObject object = Json.createReader(new StringReader(finalResponse)).readObject();
         assertEquals("response should be an obj with size value equals to " + DUMMYTREE_TEST_SIZE, object.getInt(OutputWriter.KEY_SIZE), DUMMYTREE_TEST_SIZE);
-        assertEquals("response should be an obj with items value equals to a " + size + " valued array", object.getJSONArray(OutputWriter.KEY_ITEMS).length(), size);
+        assertEquals("response should be an obj with items value equals to a " + size + " valued array", object.getJsonArray(OutputWriter.KEY_ITEMS).size(), size);
     }
 
-    private void assertDummyTree() throws JSONException {
+    private void assertDummyTree()  {
         assertDummyTree(DUMMYTREE_TEST_SIZE);
     }
 
@@ -139,23 +140,23 @@ public class PlumberServletTest extends AbstractPipeTest {
         String testBindingLength = testBinding + "Length";
         String bindingValue = "testBindingValue";
         String pathLengthParam = "pathLength";
-        JSONObject bindings = new JSONObject("{'" + testBinding + "':'" + bindingValue + "'}");
-        JSONObject respObject = new JSONObject("{'" + pathLengthParam + "':'${path.get(\"dummyGrandChild\").length}','" + testBindingLength + "':'${" + testBinding + ".length}'}");
+        String bindings = "{\"" + testBinding + "\":\"" + bindingValue + "\"}";
+        String respObject = "{\"" + pathLengthParam + "\":\"${path.get(\\\"dummyGrandChild\\\").length}\",\"" + testBindingLength + "\":\"${" + testBinding + ".length}\"}";
         SlingHttpServletRequest request =
                 mockPlumberServletRequest(context.resourceResolver(), dummyTreePath, null, bindings.toString(), respObject.toString(), null, null);
         servlet.execute(request, response, false);
         assertDummyTree();
-        JSONObject response = new JSONObject(stringResponse.toString());
-        JSONArray array = response.getJSONArray(OutputWriter.KEY_ITEMS);
-        for (int i = 0; i < array.length(); i++) {
-            JSONObject object = array.optJSONObject(i);
+        JsonObject response = Json.createReader(new StringReader(stringResponse.toString())).readObject();
+        JsonArray array = response.getJsonArray(OutputWriter.KEY_ITEMS);
+        for (int i = 0; i < array.size(); i++) {
+            JsonObject object = array.getJsonObject(i);
             assertNotNull("there should be an object returned at each time", object);
-            String path = object.optString(CustomWriter.PATH_KEY);
+            String path = object.getString(CustomWriter.PATH_KEY);
             assertNotNull("the string path should be returned for each item, containing the path of the resource");
-            String pathLength = object.optString(pathLengthParam);
+            String pathLength = object.getString(pathLengthParam);
             assertNotNull("there should be a pathLength param, as specified in the writer", pathLength);
             assertEquals("Pathlength should be the string representation of the path length", path.length() + "", pathLength);
-            String testBindingLengthValue = object.optString(testBindingLength);
+            String testBindingLengthValue = object.getString(testBindingLength);
             assertNotNull("testBindingLength should be there", testBindingLengthValue);
             assertEquals("testBindingLength should be the string representation of the additional binding length",
                     bindingValue.length() + "", testBindingLengthValue);

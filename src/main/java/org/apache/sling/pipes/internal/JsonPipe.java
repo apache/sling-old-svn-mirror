@@ -20,6 +20,11 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Iterator;
 
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonStructure;
+import javax.json.JsonValue.ValueType;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpState;
@@ -30,10 +35,6 @@ import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.JSONTokener;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
@@ -48,7 +49,7 @@ public class JsonPipe extends BasePipe {
 
     HttpClient client;
 
-    JSONArray array;
+    JsonArray array;
     Object binding;
     int index = -1;
 
@@ -128,21 +129,33 @@ public class JsonPipe extends BasePipe {
         String jsonString = retrieveJSONString();
         if (StringUtils.isNotBlank(jsonString)){
             try {
-                JSONTokener tokener = new JSONTokener(jsonString);
-                char firstChar = tokener.next();
-                if (firstChar == '[') {
-                    binding = array = new JSONArray(jsonString);
+                JsonStructure json; 
+                try {
+                    json = JsonUtil.parse(jsonString);
+                } catch (JsonException ex) {
+                    json = null;
+                }
+                if (json == null) {
+                    binding = jsonString.trim();
+                    output = super.getOutput();
+                } 
+                else if (json.getValueType() != ValueType.ARRAY) {
+                    binding = JsonUtil.unbox(json);
+                    output = super.getOutput();
+                }
+                else {
+                    binding = array = (JsonArray) json;
                     index = 0;
                     output = new Iterator<Resource>() {
                         @Override
                         public boolean hasNext() {
-                            return index < array.length();
+                            return index < array.size();
                         }
 
                         @Override
                         public Resource next() {
                             try {
-                                binding = array.get(index);
+                                binding = JsonUtil.unbox(array.get(index));
                             } catch(Exception e){
                                 logger.error("Unable to retrieve {}nth item of jsonarray", index, e);
                             }
@@ -150,15 +163,8 @@ public class JsonPipe extends BasePipe {
                             return getInput();
                         }
                     };
-                } else if (firstChar == '{') {
-                    binding = new JSONObject(jsonString);
-                    output = super.getOutput();
-                } else {
-                    //simple string
-                    binding = jsonString;
-                    output = super.getOutput();
-                }
-            } catch (JSONException e) {
+                } 
+            } catch (JsonException e) {
                 logger.error("unable to parse JSON {} ", jsonString, e);
             }
         }
