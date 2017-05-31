@@ -19,12 +19,14 @@
 
 package org.apache.sling.tracer.internal;
 
+import java.io.StringReader;
 import java.io.StringWriter;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletRequest;
 
 import ch.qos.logback.classic.Level;
-import org.apache.sling.commons.json.JSONObject;
 import org.junit.Test;
 import org.slf4j.MDC;
 import org.slf4j.helpers.FormattingTuple;
@@ -59,11 +61,11 @@ public class JSONRecordingTest {
         r.done();
         r.render(sw);
 
-        JSONObject json = new JSONObject(sw.toString());
-        assertEquals("GET", json.get("method"));
-        assertTrue(json.has("time"));
-        assertTrue(json.has("timestamp"));
-        assertEquals(1, json.getJSONArray("queries").length());
+        JsonObject json = Json.createReader(new StringReader(sw.toString())).readObject();
+        assertEquals("GET", json.getString("method"));
+        assertTrue(json.containsKey("time"));
+        assertTrue(json.containsKey("timestamp"));
+        assertEquals(1, json.getJsonArray("queries").size());
     }
 
     @Test
@@ -76,8 +78,8 @@ public class JSONRecordingTest {
         r.done();
         r.render(sw);
 
-        JSONObject json = new JSONObject(sw.toString());
-        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
+        JsonObject json = Json.createReader(new StringReader(sw.toString())).readObject();
+        assertEquals(2, json.getJsonArray("requestProgressLogs").size());
     }
 
     @Test
@@ -94,19 +96,19 @@ public class JSONRecordingTest {
         r.done();
         r.render(sw);
 
-        JSONObject json = new JSONObject(sw.toString());
-        assertEquals(3, json.getJSONArray("logs").length());
+        JsonObject json = Json.createReader(new StringReader(sw.toString())).readObject();
+        assertEquals(3, json.getJsonArray("logs").size());
 
-        JSONObject l1 = json.getJSONArray("logs").getJSONObject(0);
+        JsonObject l1 = json.getJsonArray("logs").getJsonObject(0);
         assertEquals("INFO", l1.getString("level"));
         assertEquals("foo", l1.getString("logger"));
         assertEquals(tp1.getMessage(), l1.getString("message"));
-        assertEquals(1, l1.getJSONArray("params").length());
-        assertFalse(l1.has("exception"));
-        assertFalse(l1.has("caller"));
-        assertTrue(l1.has("timestamp"));
+        assertEquals(1, l1.getJsonArray("params").size());
+        assertFalse(l1.containsKey("exception"));
+        assertFalse(l1.containsKey("caller"));
+        assertTrue(l1.containsKey("timestamp"));
 
-        JSONObject l3 = json.getJSONArray("logs").getJSONObject(2);
+        JsonObject l3 = json.getJsonArray("logs").getJsonObject(2);
         assertNotNull(l3.get("exception"));
     }
 
@@ -122,10 +124,10 @@ public class JSONRecordingTest {
         r.done();
         r.render(sw);
 
-        JSONObject json = new JSONObject(sw.toString());
-        JSONObject l1 = json.getJSONArray("logs").getJSONObject(0);
-        assertTrue(l1.has("caller"));
-        assertTrue(l1.getJSONArray("caller").length() > 0);
+        JsonObject json = Json.createReader(new StringReader(sw.toString())).readObject();
+        JsonObject l1 = json.getJsonArray("logs").getJsonObject(0);
+        assertTrue(l1.containsKey("caller"));
+        assertTrue(l1.getJsonArray("caller").size() > 0);
     }
 
     private static FormattingTuple tuple(String msg){

@@ -46,9 +46,8 @@ import javax.servlet.http.HttpServletRequest;
 import ch.qos.logback.classic.Level;
 import com.google.common.primitives.Longs;
 import org.apache.commons.io.IOUtils;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.api.request.RequestProgressTracker;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.FormattingTuple;
@@ -158,8 +157,6 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
                 queries.clear();
                 logs.clear();
             }
-        } catch (JSONException e) {
-            log.warn("Error occurred while converting the log data for request {} to JSON", requestId, e);
         } catch (UnsupportedEncodingException e) {
             log.warn("Error occurred while converting the log data for request {} to JSON", requestId, e);
         } catch (IOException e) {
@@ -167,7 +164,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         }
     }
 
-    private byte[] toJSON() throws JSONException, IOException {
+    private byte[] toJSON() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         OutputStream os = baos;
         if (compress) {
@@ -175,7 +172,6 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         }
         OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
         JSONWriter jw = new JSONWriter(osw);
-        jw.setTidy(true);
         jw.object();
         jw.key("method").value(method);
 
@@ -196,7 +192,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         return baos.toByteArray();
     }
 
-    private void addLoggerNames(JSONWriter jw) throws JSONException {
+    private void addLoggerNames(JSONWriter jw) throws IOException {
         List<String> sortedNames = new ArrayList<String>(loggerNames);
         Collections.sort(sortedNames);
         jw.key("loggerNames");
@@ -207,7 +203,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         jw.endArray();
     }
 
-    private void addRequestProgressLogs(JSONWriter jw) throws JSONException {
+    private void addRequestProgressLogs(JSONWriter jw) throws IOException {
         if (tracker != null) {
             jw.key("requestProgressLogs");
             jw.array();
@@ -223,7 +219,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         }
     }
 
-    private void addJson(JSONWriter jw, String name, List<? extends JsonEntry> entries) throws JSONException {
+    private void addJson(JSONWriter jw, String name, List<? extends JsonEntry> entries) throws IOException {
         jw.key(name);
         jw.array();
         for (JsonEntry je : entries) {
@@ -254,7 +250,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
     }
 
     private interface JsonEntry {
-        void toJson(JSONWriter jw) throws JSONException;
+        void toJson(JSONWriter jw) throws IOException;
     }
 
     private static class LogEntry implements JsonEntry {
@@ -306,7 +302,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         }
 
         @Override
-        public void toJson(JSONWriter jw) throws JSONException {
+        public void toJson(JSONWriter jw) throws IOException {
             jw.key("timestamp").value(timestamp);
             jw.key("level").value(level.levelStr);
             jw.key("logger").value(logger);
@@ -351,7 +347,7 @@ class JSONRecording implements Recording, Comparable<JSONRecording> {
         }
 
         @Override
-        public void toJson(JSONWriter jw) throws JSONException {
+        public void toJson(JSONWriter jw) throws IOException {
             jw.key("query").value(query);
             jw.key("plan").value(plan);
             jw.key("caller").value(caller);
