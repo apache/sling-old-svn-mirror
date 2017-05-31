@@ -16,18 +16,19 @@
  */
 package org.apache.sling.pipes.internal;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.Value;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Property;
-import javax.jcr.PropertyType;
-import javax.jcr.Value;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * reads input MV property, outputs N times the input parent node resource, where N is the number of

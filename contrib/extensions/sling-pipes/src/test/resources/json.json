@@ -25,7 +25,7 @@
         "weather": {
           "jcr:primaryType": "nt:unstructured",
           "sling:resourceType": "slingPipes/json",
-          "expr": "{'query':{'ro':{'city':'Bucharest','temp':'12°'}, 'fr':{'city':'Paris','temp':'13°'}}}}"
+          "expr": "{'query':{'ro':{'city':'Bucharest','temp':'12°'}, 'fr':{'city':'Paris','temp':'13°'}}}"
         },
         "write": {
           "jcr:primaryType": "nt:unstructured",

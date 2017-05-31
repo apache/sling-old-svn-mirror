@@ -17,8 +17,11 @@
 package org.apache.sling.pipes.internal;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.json.JsonException;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -26,15 +29,15 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.servlets.ServletResolverConstants;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.pipes.*;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.ContainerPipe;
+import org.apache.sling.pipes.OutputWriter;
+import org.apache.sling.pipes.Plumber;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,11 +121,7 @@ public class PlumberServlet extends SlingAllMethodsServlet {
         String paramBindings = request.getParameter(PARAM_BINDINGS);
         if (StringUtils.isNotBlank(paramBindings)){
             try {
-                JSONObject bindingJSON = new JSONObject(paramBindings);
-                for (Iterator<String> keys = bindingJSON.keys(); keys.hasNext();){
-                    String key = keys.next();
-                    bindings.put(key, bindingJSON.get(key));
-                }
+                bindings.putAll(JsonUtil.unbox(JsonUtil.parseObject(paramBindings)));
             } catch (Exception e){
                 log.error("Unable to retrieve bindings information", e);
             }
@@ -131,7 +130,7 @@ public class PlumberServlet extends SlingAllMethodsServlet {
         return bindings;
     }
 
-    OutputWriter getWriter(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JSONException {
+    OutputWriter getWriter(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException {
         OutputWriter[] candidates = new OutputWriter[]{new CustomJsonWriter(), new CustomWriter(), new DefaultOutputWriter()};
         for (OutputWriter candidate : candidates) {
             if (candidate.handleRequest(request)) {

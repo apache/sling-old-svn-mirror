@@ -19,10 +19,12 @@ package org.apache.sling.pipes.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.json.JsonException;
+import javax.json.JsonValue;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.pipes.BasePipe;
 
 /**
@@ -51,13 +53,18 @@ public class CustomWriter extends DefaultOutputWriter {
     }
 
     @Override
-    public void writeItem(Resource resource) throws JSONException {
-        writer.object();
-        writer.key(PATH_KEY).value(resource.getPath());
+    public void writeItem(Resource resource) throws JsonException {
+        writer.writeStartObject();
+        writer.write(PATH_KEY,resource.getPath());
         for (Map.Entry<String, Object> entry : customOutputs.entrySet()){
             Object o = pipe.getBindings().instantiateObject((String)entry.getValue());
-            writer.key(entry.getKey()).value(o);
+            if ( o instanceof JsonValue ) {
+               writer.write(entry.getKey(),(JsonValue) o);
+            }
+            else {
+                writer.write(entry.getKey(), o.toString());
+            }
         }
-        writer.endObject();
+        writer.writeEnd();
     }
 }

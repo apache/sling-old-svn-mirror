@@ -16,16 +16,16 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.apache.sling.query.SlingQuery.$;
+
+import java.util.Iterator;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.query.SlingQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.sling.query.SlingQuery.$;
-
-import java.util.Iterator;
 
 /**
  * this pipe uses SlingQuery to filters children (filter defined in expr property) of

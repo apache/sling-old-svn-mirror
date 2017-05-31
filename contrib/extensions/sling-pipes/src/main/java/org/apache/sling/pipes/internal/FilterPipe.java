@@ -16,18 +16,19 @@
  */
 package org.apache.sling.pipes.internal;
 
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.regex.Pattern;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.regex.Pattern;
 
 /**
  * intends to output the input only if configured conditions are fulfilled

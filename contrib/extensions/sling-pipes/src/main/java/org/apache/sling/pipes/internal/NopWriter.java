@@ -16,13 +16,12 @@
  */
 package org.apache.sling.pipes.internal;
 
+import java.io.IOException;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.pipes.OutputWriter;
-
-import java.io.IOException;
 
 public class NopWriter extends OutputWriter {
     @Override
@@ -31,17 +30,17 @@ public class NopWriter extends OutputWriter {
     }
 
     @Override
-    protected void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JSONException {
+    protected void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         //nop
     }
 
     @Override
-    protected void writeItem(Resource resource) throws JSONException {
+    protected void writeItem(Resource resource){
         //nop
     }
 
     @Override
-    public void ends() throws JSONException {
+    public void ends() {
         //nop
     }
 }

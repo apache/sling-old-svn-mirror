@@ -75,5 +75,5 @@
       "jcr:primaryType":"nt:unstructured",
       "slingPipesFilter_test":"${false}"
     }
-  },
+  }
 }

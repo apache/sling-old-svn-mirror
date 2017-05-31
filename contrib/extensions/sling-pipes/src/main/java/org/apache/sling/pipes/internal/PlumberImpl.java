@@ -16,11 +16,34 @@
  */
 package org.apache.sling.pipes.internal;
 
-import java.util.*;
+import static org.apache.sling.api.resource.ResourceResolverFactory.SUBSERVICE;
+import static org.apache.sling.pipes.BasePipe.PN_STATUS;
+import static org.apache.sling.pipes.BasePipe.PN_STATUS_MODIFIED;
+import static org.apache.sling.pipes.BasePipe.STATUS_FINISHED;
+import static org.apache.sling.pipes.BasePipe.STATUS_STARTED;
+
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.*;
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.DistributionResponse;
@@ -29,7 +52,13 @@ import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
-import org.apache.sling.pipes.*;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.ContainerPipe;
+import org.apache.sling.pipes.OutputWriter;
+import org.apache.sling.pipes.Pipe;
+import org.apache.sling.pipes.PipeBindings;
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.pipes.ReferencePipe;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -40,12 +69,6 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import javax.jcr.RepositoryException;
-
-import static org.apache.sling.api.resource.ResourceResolverFactory.SUBSERVICE;
-import static org.apache.sling.pipes.BasePipe.*;
 
 /**
  * implements plumber interface, registers default pipes, and provides execution facilities

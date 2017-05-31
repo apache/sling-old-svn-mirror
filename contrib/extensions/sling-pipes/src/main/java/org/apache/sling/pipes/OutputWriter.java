@@ -16,12 +16,13 @@
  */
 package org.apache.sling.pipes;
 
+import java.io.IOException;
+
+import javax.json.JsonException;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.json.JSONException;
-
-import java.io.IOException;
 
 /**
  * defines how pipe's output get written to a servlet response
@@ -56,7 +57,7 @@ public abstract class OutputWriter {
      * @throws IOException error handling streams
      * @throws JSONException in case invalid json is written
      */
-    public void init(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JSONException{
+    public void init(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException {
         max = request.getParameter(PARAM_SIZE) != null ? Integer.parseInt(request.getParameter(PARAM_SIZE)) : NB_MAX;
         if (max < 0) {
             max = Integer.MAX_VALUE;
@@ -71,14 +72,14 @@ public abstract class OutputWriter {
      * @throws IOException error handling streams
      * @throws JSONException in case invalid json is written
      */
-    protected abstract void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JSONException;
+    protected abstract void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException;
 
     /**
      * Write a given resource
      * @param resource resource that will be written
      * @throws JSONException in case write fails
      */
-    public void write(Resource resource) throws JSONException{
+    public void write(Resource resource) throws JsonException {
         if (size++ < max) {
             writeItem(resource);
         }
@@ -89,14 +90,14 @@ public abstract class OutputWriter {
      * @param resource resource that will be written
      * @throws JSONException in case write fails
      */
-    protected abstract void writeItem(Resource resource) throws JSONException;
+    protected abstract void writeItem(Resource resource) throws JsonException;
 
     /**
      * writes the end of the output
      * @throws JSONException in case invalid json is written
      */
 
-    public abstract void ends() throws JSONException;
+    public abstract void ends() throws JsonException;
 
     /**
      *

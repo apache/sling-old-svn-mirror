@@ -16,6 +16,13 @@
  */
 package org.apache.sling.pipes.internal;
 
+import java.util.Collections;
+import java.util.Iterator;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
@@ -23,14 +30,10 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * pipe that outputs an authorizable resource based on the id set in expr
@@ -165,8 +168,8 @@ public class AuthorizablePipe extends BasePipe {
             if (auth.isGroup()) {
                 Group group = (Group)auth;
                 String uids = bindings.instantiateExpression(addMembers);
-                JSONArray array = new JSONArray(uids);
-                for (int index = 0; index < array.length(); index ++){
+                JsonArray array = JsonUtil.parseArray(uids);
+                for (int index = 0; index < array.size(); index ++){
                     String uid = array.getString(index);
                     Authorizable member = userManager.getAuthorizable(uid);
                     if (member != null) {
@@ -195,11 +198,11 @@ public class AuthorizablePipe extends BasePipe {
             if (auth.isGroup()){
                 Group group = (Group)auth;
                 Iterator<Authorizable> memberIterator = group.getMembers();
-                JSONArray array = new JSONArray();
+                JsonArrayBuilder array = Json.createArrayBuilder();
                 while (memberIterator.hasNext()){
-                    array.put(memberIterator.next().getID());
+                    array.add(memberIterator.next().getID());
                 }
-                outputBinding = array.toString();
+                outputBinding = JsonUtil.toString(array);
             } else {
                 logger.error("{} is not a group, unable to bind members", auth.getID());
             }

@@ -16,6 +16,10 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Iterator;
 
 import org.apache.commons.lang3.StringUtils;
@@ -26,10 +30,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * testing different kind of filters

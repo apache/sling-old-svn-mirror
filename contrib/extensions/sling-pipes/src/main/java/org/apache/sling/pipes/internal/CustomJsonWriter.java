@@ -16,12 +16,8 @@
  */
 package org.apache.sling.pipes.internal;
 
-import java.util.HashMap;
-import java.util.Iterator;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.commons.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +33,7 @@ public class CustomJsonWriter extends CustomWriter {
         String writerParam = request.getParameter(PARAM_WRITER);
         if (StringUtils.isNotBlank(writerParam)){
             try {
-                JSONObject object = new JSONObject(writerParam);
-                customOutputs = new HashMap<>();
-                for (Iterator<String> keys = object.keys(); keys.hasNext();){
-                    String key = keys.next();
-                    customOutputs.put(key, object.getString(key));
-                }
+                customOutputs = JsonUtil.unbox(JsonUtil.parseObject(writerParam));
                 return true;
             } catch(Exception e){
                 log.error("requested json writer can't be parsed", e);

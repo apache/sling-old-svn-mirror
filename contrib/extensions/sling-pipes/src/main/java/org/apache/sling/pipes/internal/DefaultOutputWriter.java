@@ -18,20 +18,21 @@ package org.apache.sling.pipes.internal;
 
 import java.io.IOException;
 
+import javax.json.Json;
+import javax.json.JsonException;
+import javax.json.stream.JsonGenerator;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.pipes.OutputWriter;
-import org.apache.sling.pipes.Pipe;
 
 /**
  * default output writer with size and output resources' path
  */
 public class DefaultOutputWriter extends OutputWriter {
 
-    protected JSONWriter writer;
+    protected JsonGenerator writer;
 
     @Override
     public boolean handleRequest(SlingHttpServletRequest request) {
@@ -39,24 +40,24 @@ public class DefaultOutputWriter extends OutputWriter {
     }
 
     @Override
-    protected void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JSONException {
+    protected void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException {
         response.setCharacterEncoding("utf-8");
         response.setContentType("application/json");
-        writer = new JSONWriter(response.getWriter());
-        writer.object();
-        writer.key(KEY_ITEMS);
-        writer.array();
+        writer = Json.createGenerator(response.getWriter());
+        writer.writeStartObject();
+        writer.writeStartArray(KEY_ITEMS);
     }
 
     @Override
-    public void writeItem(Resource resource) throws JSONException {
-        writer.value(resource.getPath());
+    public void writeItem(Resource resource) throws JsonException {
+        writer.write(resource.getPath());
     }
 
     @Override
-    public void ends() throws JSONException {
-        writer.endArray();
-        writer.key(KEY_SIZE).value(size);
-        writer.endObject();
+    public void ends() throws JsonException {
+        writer.writeEnd();
+        writer.write(KEY_SIZE,size);
+        writer.writeEnd();
+        writer.flush();
     }
 }
