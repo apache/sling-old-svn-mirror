@@ -18,10 +18,11 @@ package org.apache.sling.resource.inventory.impl;
 
 import java.util.Collections;
 
+import javax.json.JsonObject;
+
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResource;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
@@ -52,19 +53,19 @@ public class ResourceTraversorTest {
         Resource resource = resolver.getResource("/some");
         ResourceTraversor traversor = new ResourceTraversor(resource);
         traversor.collectResources();
-        JSONObject json = traversor.getJSONObject();
-        assertEquals("v1", json.get("p1"));
-        JSONObject path = json.getJSONObject("path");
+        JsonObject json = traversor.getJsonObject();
+        assertEquals("v1", json.getString("p1"));
+        JsonObject path = json.getJsonObject("path");
         assertNotNull(path);
-        assertEquals("v2", path.get("p2"));
+        assertEquals("v2", path.getString("p2"));
 
     }
 
     @Test
     public void testGetJSONObject() throws Exception {
         Resource resource = new MockResource("/some/path", Collections.<String, Object>singletonMap("p1", "v1"), resolver);
-        JSONObject json = new ResourceTraversor(resource).getJSONObject();
-        assertEquals("v1", json.get("p1"));
+        JsonObject json = new ResourceTraversor(resource).getJsonObject();
+        assertEquals("v1", json.getString("p1"));
 
     }
 

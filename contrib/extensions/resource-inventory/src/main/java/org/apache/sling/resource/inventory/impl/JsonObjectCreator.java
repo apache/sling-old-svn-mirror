@@ -20,18 +20,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -41,8 +44,7 @@ import org.slf4j.LoggerFactory;
 public abstract class JsonObjectCreator {
 
     /** Dump given resource in JSON, optionally recursing into its objects */
-    public static JSONObject create(final Resource resource)
-    throws JSONException {
+    public static JsonObjectBuilder create(final Resource resource) {
         final ValueMap valueMap = resource.adaptTo(ValueMap.class);
 
         @SuppressWarnings("unchecked")
@@ -50,7 +52,7 @@ public abstract class JsonObjectCreator {
                 ? valueMap
                 : resource.adaptTo(Map.class);
 
-        final JSONObject obj = new JSONObject();
+        final JsonObjectBuilder obj = Json.createObjectBuilder();
 
         if (propertyMap == null) {
 
@@ -59,22 +61,26 @@ public abstract class JsonObjectCreator {
             if (value != null) {
 
                 // single value property or just plain String resource or...
-                obj.put(resource.getName(), value);
+                obj.add(resource.getName(), value);
 
             } else {
 
                 // Try multi-value "property"
                 final String[] values = resource.adaptTo(String[].class);
                 if (values != null) {
-                    obj.put(resource.getName(), new JSONArray(Arrays.asList(values)));
+                    JsonArrayBuilder array = Json.createArrayBuilder();
+                    for (String v : values) {
+                        array.add(v);
+                    }
+                    obj.add(resource.getName(), array);
                 }
 
             }
             if ( resource.getResourceType() != null ) {
-                obj.put("sling:resourceType", resource.getResourceType());
+                obj.add("sling:resourceType", resource.getResourceType());
             }
             if ( resource.getResourceSuperType() != null ) {
-                obj.put("sling:resourceSuperType", resource.getResourceSuperType());
+                obj.add("sling:resourceSuperType", resource.getResourceSuperType());
             }
 
         } else {
@@ -117,35 +123,36 @@ public abstract class JsonObjectCreator {
     }
 
     /** Dump only a value in the correct format */
-    private static Object getValue(final Object value) {
+    private static JsonValue getValue(final Object value) {
+        JsonObjectBuilder builder = Json.createObjectBuilder();
         if ( value instanceof InputStream ) {
             // input stream is already handled
-            return 0;
+            builder.add("key", 0);
         } else if ( value instanceof Calendar ) {
-            return format((Calendar)value);
+            builder.add("key",format((Calendar)value));
         } else if ( value instanceof Boolean ) {
-            return value;
+            builder.add("key", (Boolean) value);
         } else if ( value instanceof Long ) {
-            return value;
+            builder.add("key", (Long) value);
         } else if ( value instanceof Integer ) {
-            return value;
+            builder.add("key", (Integer) value);
         } else if ( value != null ) {
-            return value.toString();
+            builder.add("key", value.toString());
         } else {
-            return ""; // assume empty string
+            builder.add("key", ""); // assume empty string
         }
+        return builder.build().get("key");
     }
 
     /** Dump a single node */
-    private static void createSingleResource(final Resource n, final JSONObject parent)
-            throws JSONException {
-        parent.put(n.getName(), create(n));
+    private static void createSingleResource(final Resource n, final JsonObjectBuilder parent) {
+        parent.add(n.getName(), create(n));
     }
 
     /**
      * Write a single property
      */
-    private static void createProperty(final JSONObject obj,
+    private static void createProperty(final JsonObjectBuilder obj,
                                  final ValueMap valueMap,
                                  final String key,
                                  final Object value) {
@@ -174,11 +181,7 @@ public abstract class JsonObjectCreator {
             }
             // write out empty array
             if ( values.length == 0 ) {
-                try {
-                    obj.put(key, new JSONArray());
-                } catch ( final JSONException ignore ) {
-                    // we ignore this
-                }
+                obj.add(key, Json.createArrayBuilder());
                 return;
             }
         }
@@ -192,15 +195,15 @@ public abstract class JsonObjectCreator {
             // in the name, and the value should be the size of the binary data
             try {
                 if (values == null) {
-                    obj.put(":" + key, getLength(valueMap, -1, key, (InputStream)value));
+                    obj.add(":" + key, getLength(valueMap, -1, key, (InputStream)value));
                 } else {
-                    final JSONArray result = new JSONArray();
+                    final JsonArrayBuilder result = Json.createArrayBuilder();
                     for (int i = 0; i < values.length; i++) {
-                        result.put(getLength(valueMap, i, key, (InputStream)values[i]));
+                        result.add(getLength(valueMap, i, key, (InputStream)values[i]));
                     }
-                    obj.put(":" + key, result);
+                    obj.add(":" + key, result);
                 }
-            } catch ( final JSONException ignore ) {
+            } catch ( final JsonException ignore ) {
                 // we ignore this
                 LoggerFactory.getLogger(JsonObjectCreator.class).warn("Unable to create JSON value", ignore);
             }
@@ -209,15 +212,15 @@ public abstract class JsonObjectCreator {
 
         try {
             if (!value.getClass().isArray()) {
-                obj.put(key, getValue(value));
+                obj.add(key, getValue(value));
             } else {
-                final JSONArray result = new JSONArray();
+                final JsonArrayBuilder result = Json.createArrayBuilder();
                 for (Object v : values) {
-                    result.put(getValue(v));
+                    result.add(getValue(v));
                 }
-                obj.put(key, result);
+                obj.add(key, result);
             }
-        } catch ( final JSONException ignore ) {
+        } catch ( final JsonException ignore ) {
             // we ignore this
             LoggerFactory.getLogger(JsonObjectCreator.class).warn("Unable to create JSON value", ignore);
         }
