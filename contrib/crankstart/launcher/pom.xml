@@ -203,8 +203,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-          <groupId>org.apache.johnzon</groupId>
-          <artifactId>johnzon-core</artifactId>
+          <groupId>org.apache.sling</groupId>
+          <artifactId>org.apache.sling.commons.johnzon</artifactId>
           <version>1.0.0</version>
           <scope>test</scope>
         </dependency>
