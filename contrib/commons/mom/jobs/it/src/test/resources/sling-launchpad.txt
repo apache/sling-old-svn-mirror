@@ -49,13 +49,14 @@
 # TODO remove those once nested test-bundles model works
 [artifacts startLevel=2]
   org.apache.sling/org.apache.sling.servlets.compat/1.0.2
-  org.apache.sling/org.apache.sling.junit.core/1.0.11-SNAPSHOT
+  org.apache.sling/org.apache.sling.junit.core/1.0.25-SNAPSHOT
   org.apache.sling/org.apache.sling.junit.remote/1.0.11-SNAPSHOT
   org.apache.sling/org.apache.sling.junit.scriptable/1.0.11-SNAPSHOT
   org.apache.sling/org.apache.sling.launchpad.test-fragment/2.0.9-SNAPSHOT
   org.apache.sling/org.apache.sling.launchpad.test-services-war/2.0.8/war
   org.apache.sling/org.apache.sling.launchpad.test-services/2.0.9-SNAPSHOT
-    
+  org.apache.sling/org.apache.sling.commons.johnzon/1.0.0
+  
 [configurations]
   integrationTestsConfig
     message="This test config should be loaded at startup"
