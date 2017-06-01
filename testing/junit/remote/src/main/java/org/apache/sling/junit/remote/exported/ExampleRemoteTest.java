@@ -17,6 +17,7 @@
 package org.apache.sling.junit.remote.exported;
 
 import static org.junit.Assert.fail;
+
 import org.apache.sling.junit.remote.ide.SlingRemoteExecutionRule;
 import org.apache.sling.testing.tools.http.Request;
 import org.junit.Rule;
