@@ -37,8 +37,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.felix.utils.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleRevision;
@@ -141,12 +140,12 @@ public class SourceReferencesServlet extends HttpServlet {
             }
             
             w.endArray();
-        } catch (JSONException e) {
+        } catch (IOException e) {
             throw new ServletException(e);
         }
     }
 
-    private void collectMavenSourceReferences(JSONWriter w, Bundle bundle) throws IOException, JSONException {
+    private void collectMavenSourceReferences(JSONWriter w, Bundle bundle) throws IOException {
         
         Enumeration<?> entries = bundle.findEntries("/META-INF/maven", "pom.properties", true);
         
@@ -162,7 +161,7 @@ public class SourceReferencesServlet extends HttpServlet {
         }
     }
     
-    private void writeMavenGav(JSONWriter w, String groupId, String artifactId, String version) throws JSONException {
+    private void writeMavenGav(JSONWriter w, String groupId, String artifactId, String version) throws IOException {
         
         w.object();
         w.key(KEY_TYPE).value(VALUE_TYPE_MAVEN);
@@ -172,7 +171,7 @@ public class SourceReferencesServlet extends HttpServlet {
         w.endObject();
     }
     
-    private void writeMavenGav(JSONWriter w, InputStream in) throws IOException, JSONException {
+    private void writeMavenGav(JSONWriter w, InputStream in) throws IOException {
         
         Properties p = new Properties();
         p.load(in);
@@ -203,7 +202,7 @@ public class SourceReferencesServlet extends HttpServlet {
         return embeddedJars;
     }
     
-    private void collectMavenSourceRerefences(JSONWriter w, URL entry) throws IOException, JSONException {
+    private void collectMavenSourceRerefences(JSONWriter w, URL entry) throws IOException {
         
         InputStream wrappedIn = entry.openStream();
         try {
