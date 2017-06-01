@@ -25,14 +25,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,7 +72,7 @@ public class CreateUserTest {
 		</form>
 	 */
 	@Test 
-	public void testCreateUser() throws IOException, JSONException {
+	public void testCreateUser() throws IOException, JsonException {
 	    testUserId = "testUser" + random.nextInt() + System.currentTimeMillis();
         String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user.create.html";
 		final List<NameValuePair> postParams = new ArrayList<NameValuePair>();
@@ -87,11 +88,11 @@ public class CreateUserTest {
 	        final String getUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".json";
 	        final String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 	        assertNotNull(json);
-	        final JSONObject jsonObj = new JSONObject(json);
+	        final JsonObject jsonObj = JsonUtil.parseObject(json);
 	        assertEquals(testUserId, jsonObj.getString("marker"));
-	        assertFalse(jsonObj.has(":name"));
-	        assertFalse(jsonObj.has("pwd"));
-	        assertFalse(jsonObj.has("pwdConfirm"));
+	        assertFalse(jsonObj.containsKey(":name"));
+	        assertFalse(jsonObj.containsKey("pwd"));
+	        assertFalse(jsonObj.containsKey("pwdConfirm"));
 		}
 		
         {
@@ -100,7 +101,7 @@ public class CreateUserTest {
             final String getUrl = HttpTest.HTTP_BASE_URL + "/system/sling/info.sessionInfo.json";
             final String json = H.getAuthenticatedContent(newUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
             assertNotNull(json);
-            final JSONObject jsonObj = new JSONObject(json);
+            final JsonObject jsonObj = JsonUtil.parseObject(json);
             assertEquals(testUserId, jsonObj.getString("userID"));
         }
 	}
@@ -165,7 +166,7 @@ public class CreateUserTest {
 	</form>
 	*/
 	@Test 
-	public void testCreateUserWithExtraProperties() throws IOException, JSONException {
+	public void testCreateUserWithExtraProperties() throws IOException, JsonException {
         String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user.create.html";
 
 		testUserId = "testUser" + random.nextInt();
@@ -183,13 +184,13 @@ public class CreateUserTest {
 		String getUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".json";
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertEquals(testUserId, jsonObj.getString("marker"));
 		assertEquals("My Test User", jsonObj.getString("displayName"));
 		assertEquals("http://www.apache.org", jsonObj.getString("url"));
-		assertFalse(jsonObj.has(":name"));
-		assertFalse(jsonObj.has("pwd"));
-		assertFalse(jsonObj.has("pwdConfirm"));
+		assertFalse(jsonObj.containsKey(":name"));
+		assertFalse(jsonObj.containsKey("pwd"));
+		assertFalse(jsonObj.containsKey("pwdConfirm"));
 	}
 
 	/**
@@ -215,7 +216,7 @@ public class CreateUserTest {
 	 * Test for SLING-1677
 	 */
 	@Test 
-	public void testCreateUserResponseAsJSON() throws IOException, JSONException {
+	public void testCreateUserResponseAsJSON() throws IOException, JsonException {
         String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user.create.json";
 
 		testUserId = "testUser" + random.nextInt();
@@ -228,7 +229,7 @@ public class CreateUserTest {
 		String json = H.getAuthenticatedPostContent(creds, postUrl, HttpTest.CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
 
 		//make sure the json response can be parsed as a JSON object
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertNotNull(jsonObj);
 	}
 }

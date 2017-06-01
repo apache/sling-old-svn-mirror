@@ -27,9 +27,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.JSONTokener;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+
 import org.apache.sling.junit.remote.httpclient.RemoteTestHttpClient;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.jarexec.JarExecutor;
@@ -76,14 +76,16 @@ public class ServerSideTestClient extends SlingClient {
         final RequestExecutor executor = testClient.runTests(testPackageOrClassName, null, "json", options);
         executor.assertContentType("application/json");
         String content = executor.getContent();
-        final JSONArray json = new JSONArray(new JSONTokener(content));
-
-        for(int i = 0 ; i < json.length(); i++) {
-            final JSONObject obj = json.getJSONObject(i);
-            if("test".equals(obj.getString("INFO_TYPE"))) {
-                r.testCount++;
-                if(obj.has("failure")) {
-                    r.failures.add(obj.get("failure").toString());
+        if (!content.trim().isEmpty()) {
+            final JsonArray json = JsonUtil.parseArray(content);
+    
+            for(int i = 0 ; i < json.size(); i++) {
+                final JsonObject obj = json.getJsonObject(i);
+                if("test".equals(obj.getString("INFO_TYPE"))) {
+                    r.testCount++;
+                    if(obj.containsKey("failure")) {
+                        r.failures.add(JsonUtil.toString(obj.get("failure")));
+                    }
                 }
             }
         }

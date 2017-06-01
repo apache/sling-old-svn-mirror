@@ -20,14 +20,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 
 /**
  * Tests for the 'updateAuthorizable' Sling Post Operation on
@@ -58,7 +59,7 @@ public class UpdateGroupTest extends UserManagerTestUtil {
 		super.tearDown();
 	}
 
-	public void testUpdateGroup() throws IOException, JSONException {
+	public void testUpdateGroup() throws IOException, JsonException {
 		testGroupId = createTestGroup();
 
         String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.html";
@@ -75,23 +76,23 @@ public class UpdateGroupTest extends UserManagerTestUtil {
 		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertEquals("My Updated Test Group", jsonObj.getString("displayName"));
 		assertEquals("http://www.apache.org/updated", jsonObj.getString("url"));
 	}
 
-	public void testUpdateGroupMembers() throws IOException, JSONException {
+	public void testUpdateGroupMembers() throws IOException, JsonException {
 		testGroupId = createTestGroup();
 		testUserId = createTestUser();
 
         Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 
 		// verify that the members array exists, but is empty
-		JSONArray members = getTestGroupMembers(creds);
-        assertEquals(0, members.length());
+		JsonArray members = getTestGroupMembers(creds);
+        assertEquals(0, members.size());
 
-        JSONArray memberships = getTestUserMemberships(creds);
-        assertEquals(0, memberships.length());
+        JsonArray memberships = getTestUserMemberships(creds);
+        assertEquals(0, memberships.size());
 
         String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.html";
 
@@ -101,11 +102,11 @@ public class UpdateGroupTest extends UserManagerTestUtil {
         assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
         members = getTestGroupMembers(creds);
-        assertEquals(1, members.length());
+        assertEquals(1, members.size());
         assertEquals("/system/userManager/user/" + testUserId, members.getString(0));
 
         memberships = getTestUserMemberships(creds);
-        assertEquals(1, memberships.length());
+        assertEquals(1, memberships.size());
         assertEquals("/system/userManager/group/" + testGroupId, memberships.getString(0));
 
         // delete a group member
@@ -114,37 +115,37 @@ public class UpdateGroupTest extends UserManagerTestUtil {
         assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
         members = getTestGroupMembers(creds);
-        assertEquals(0, members.length());
+        assertEquals(0, members.size());
 
         memberships = getTestUserMemberships(creds);
-        assertEquals(0, memberships.length());
+        assertEquals(0, memberships.size());
 
 	}
 
-	JSONArray getTestUserMemberships(Credentials creds) throws IOException, JSONException {
+	JsonArray getTestUserMemberships(Credentials creds) throws IOException, JsonException {
 	    String getUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".json";
         assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
         String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
         assertNotNull(json);
-        JSONObject jsonObj = new JSONObject(json);
-        JSONArray memberships = jsonObj.getJSONArray("memberOf");
+        JsonObject jsonObj = JsonUtil.parseObject(json);
+        JsonArray memberships = jsonObj.getJsonArray("memberOf");
         return memberships;
     }
 
-    JSONArray getTestGroupMembers(Credentials creds) throws IOException, JSONException {
+    JsonArray getTestGroupMembers(Credentials creds) throws IOException, JsonException {
         String getUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".json";
 		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
         String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
         assertNotNull(json);
-        JSONObject jsonObj = new JSONObject(json);
-        JSONArray members = jsonObj.getJSONArray("members");
+        JsonObject jsonObj = JsonUtil.parseObject(json);
+        JsonArray members = jsonObj.getJsonArray("members");
         return members;
     }
 
 	/**
 	 * Test for SLING-1677
 	 */
-	public void testUpdateGroupResponseAsJSON() throws IOException, JSONException {
+	public void testUpdateGroupResponseAsJSON() throws IOException, JsonException {
 		testGroupId = createTestGroup();
 
         String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.json";
@@ -157,7 +158,7 @@ public class UpdateGroupTest extends UserManagerTestUtil {
 		String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
 
 		//make sure the json response can be parsed as a JSON object
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertNotNull(jsonObj);
 	}	
 }

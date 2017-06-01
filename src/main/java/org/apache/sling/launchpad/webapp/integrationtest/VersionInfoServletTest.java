@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
+
 import org.apache.commons.httpclient.HttpException;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 public class VersionInfoServletTest extends HttpTestBase {
@@ -53,25 +55,25 @@ public class VersionInfoServletTest extends HttpTestBase {
         return location;
     }
 
-    public void testDisabledServlet() throws IOException, JSONException, InterruptedException {
+    public void testDisabledServlet() throws IOException, JsonException, InterruptedException {
         deleteConfiguration();
         waitUntilSlingIsStable();
         getContent(createVersionableNode() + ".V.json", CONTENT_TYPE_HTML, null, 400);
     }
 
-    public void testStandardVersionsList() throws IOException, JSONException, InterruptedException {
+    public void testStandardVersionsList() throws IOException, JsonException, InterruptedException {
         createConfiguration("V");
         waitUntilSlingIsStable();
-        final JSONObject versions = new JSONObject(getContent(createVersionableNode() + ".V.json", CONTENT_TYPE_JSON));
-        assertTrue("Expecting versions subtree", versions.has("versions"));
-        assertTrue("Expecting root version", versions.getJSONObject("versions").has("jcr:rootVersion"));
-        assertTrue("Expecting version 1.0", versions.getJSONObject("versions").has("1.0"));
+        final JsonObject versions = JsonUtil.parseObject(getContent(createVersionableNode() + ".V.json", CONTENT_TYPE_JSON));
+        assertTrue("Expecting versions subtree", versions.containsKey("versions"));
+        assertTrue("Expecting root version", versions.getJsonObject("versions").containsKey("jcr:rootVersion"));
+        assertTrue("Expecting version 1.0", versions.getJsonObject("versions").containsKey("1.0"));
 
-        final JSONObject oneZero = versions.getJSONObject("versions").getJSONObject("1.0");
-        assertTrue("Expecting non-empty creation date", oneZero.get("created").toString().length() > 0);
-        assertEquals("Expecting no successors", 0, oneZero.getJSONArray("successors").length());
-        assertEquals("Expecting root version predecessor", "jcr:rootVersion", oneZero.getJSONArray("predecessors").getString(0));
-        assertEquals("Expecting no labels", 0, oneZero.getJSONArray("labels").length());
+        final JsonObject oneZero = versions.getJsonObject("versions").getJsonObject("1.0");
+        assertTrue("Expecting non-empty creation date", oneZero.getString("created").length() > 0);
+        assertEquals("Expecting no successors", 0, oneZero.getJsonArray("successors").size());
+        assertEquals("Expecting root version predecessor", "jcr:rootVersion", oneZero.getJsonArray("predecessors").getString(0));
+        assertEquals("Expecting no labels", 0, oneZero.getJsonArray("labels").size());
         assertEquals("Expecting true baseVersion", "true", oneZero.getString("baseVersion"));
     }
 
@@ -81,10 +83,10 @@ public class VersionInfoServletTest extends HttpTestBase {
         createConfiguration("V");
         waitForSlingStartup();
         waitUntilSlingIsStable();
-        final JSONObject versions = new JSONObject(getContent(createVersionableNode() + ".V.harray.json", CONTENT_TYPE_JSON));
-        assertTrue("Expecting children array", versions.has("__children__"));
+        final JsonObject versions = JsonUtil.parseObject(getContent(createVersionableNode() + ".V.harray.json", CONTENT_TYPE_JSON));
+        assertTrue("Expecting children array", versions.containsKey("__children__"));
         assertEquals("Expecting versions object", "versions",
-                versions.getJSONArray("__children__").getJSONObject(0).get("__name__"));
+                versions.getJsonArray("__children__").getJsonObject(0).getString("__name__"));
     }
 
     private void createConfiguration(final String selector) throws IOException {

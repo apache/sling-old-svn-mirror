@@ -26,14 +26,15 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.junit.After;
 import org.junit.Before;
@@ -96,7 +97,7 @@ public class AccessPrivilegesInfoTest {
 	 * testuser granted read / denied write
 	 */
 	@Test 
-	public void testDeniedWriteForUser() throws IOException, JSONException {
+	public void testDeniedWriteForUser() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		testFolderUrl = H.createTestFolder();
 		
@@ -119,7 +120,7 @@ public class AccessPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		assertEquals(false, jsonObj.getBoolean("canAddChildren"));
 		assertEquals(false, jsonObj.getBoolean("canDeleteChildren"));
@@ -133,7 +134,7 @@ public class AccessPrivilegesInfoTest {
 	 * testuser granted read / granted write
 	 */
 	@Test 
-	public void testGrantedWriteForUser() throws IOException, JSONException {
+	public void testGrantedWriteForUser() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		testFolderUrl = H.createTestFolder();
 		
@@ -157,7 +158,7 @@ public class AccessPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		assertEquals(true, jsonObj.getBoolean("canAddChildren"));
 		assertEquals(true, jsonObj.getBoolean("canDeleteChildren"));
@@ -180,7 +181,7 @@ public class AccessPrivilegesInfoTest {
 		String childGetUrl = childFolderUrl + ".privileges-info.json";
 		String childJson = H.getAuthenticatedContent(testUserCreds, childGetUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(childJson);
-		JSONObject childJsonObj = new JSONObject(childJson);
+		JsonObject childJsonObj = JsonUtil.parseObject(childJson);
 		assertEquals(true, childJsonObj.getBoolean("canDelete"));
 	}
 
@@ -190,7 +191,7 @@ public class AccessPrivilegesInfoTest {
 	 * group testuser granted read / denied write
 	 */
 	@Test 
-	public void testDeniedWriteForGroup() throws IOException, JSONException {
+	public void testDeniedWriteForGroup() throws IOException, JsonException {
 		testGroupId = H.createTestGroup();
 		testUserId = H.createTestUser();
 		testFolderUrl = H.createTestFolder();
@@ -221,7 +222,7 @@ public class AccessPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		assertEquals(false, jsonObj.getBoolean("canAddChildren"));
 		assertEquals(false, jsonObj.getBoolean("canDeleteChildren"));
@@ -235,7 +236,7 @@ public class AccessPrivilegesInfoTest {
 	 * group testuser granted read / granted write
 	 */
 	@Test 
-	public void testGrantedWriteForGroup() throws IOException, JSONException {
+	public void testGrantedWriteForGroup() throws IOException, JsonException {
 		testGroupId = H.createTestGroup();
 		testUserId = H.createTestUser();
 		testFolderUrl = H.createTestFolder();
@@ -267,7 +268,7 @@ public class AccessPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		assertEquals(true, jsonObj.getBoolean("canAddChildren"));
 		assertEquals(true, jsonObj.getBoolean("canDeleteChildren"));
@@ -291,7 +292,7 @@ public class AccessPrivilegesInfoTest {
 		String childGetUrl = childFolderUrl + ".privileges-info.json";
 		String childJson = H.getAuthenticatedContent(testUserCreds, childGetUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(childJson);
-		JSONObject childJsonObj = new JSONObject(childJson);
+		JsonObject childJsonObj = JsonUtil.parseObject(childJson);
 		assertEquals(true, childJsonObj.getBoolean("canDelete"));
 	}
 	
@@ -327,7 +328,7 @@ public class AccessPrivilegesInfoTest {
 		Credentials testUserCreds = new UsernamePasswordCredentials(testUserId, "testPwd");
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertEquals(true, jsonObj.getBoolean("canDelete"));
 	}
 }

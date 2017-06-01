@@ -30,15 +30,16 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.commons.testing.integration.NameValuePairList;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test content import via the MicrojaxPostServlet */
@@ -95,27 +96,27 @@ public class PostServletImportTest extends HttpTestBase {
     	return tempFile;
     }
 
-    protected void assertExpectedJSON(JSONObject expectedJson, JSONObject actualJson) throws JSONException {
-    	Iterator<String> keys = expectedJson.keys();
+    protected void assertExpectedJSON(JsonObject expectedJson, JsonObject actualJson) throws JsonException {
+    	Iterator<String> keys = expectedJson.keySet().iterator();
     	while (keys.hasNext()) {
     		String key = keys.next();
 
     		Object object = expectedJson.get(key);
     		Object object2 = actualJson.get(key);
-			if (object instanceof JSONObject) {
-				assertTrue(object instanceof JSONObject);
-    			assertExpectedJSON((JSONObject)object, (JSONObject)object2);
-			} else if (object instanceof JSONArray) {
+			if (object instanceof JsonObject) {
+				assertTrue(object2 instanceof JsonObject);
+    			assertExpectedJSON((JsonObject)object, (JsonObject)object2);
+			} else if (object instanceof JsonArray) {
 				//compare the array
-				assertTrue(object2 instanceof JSONArray);
-				JSONArray actualArray = (JSONArray)object2;
+				assertTrue(object2 instanceof JsonArray);
+				JsonArray actualArray = (JsonArray)object2;
 				Set<Object> actualValuesSet = new HashSet<Object>();
-				for (int i=0; i < actualArray.length(); i++) {
+				for (int i=0; i < actualArray.size(); i++) {
 					actualValuesSet.add(actualArray.get(i));
 				}
 
-				JSONArray expectedArray = (JSONArray)object;
-				for (int i=0; i < expectedArray.length(); i++) {
+				JsonArray expectedArray = (JsonArray)object;
+				for (int i=0; i < expectedArray.size(); i++) {
 					assertTrue(actualValuesSet.contains(expectedArray.get(i)));
 				}
     		} else {
@@ -127,7 +128,7 @@ public class PostServletImportTest extends HttpTestBase {
     /**
      * Test import operation which replaces existing content
      */
-    public void testImportReplace() throws IOException, JSONException {
+    public void testImportReplace() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -155,20 +156,20 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl2 + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
-		assertNull(jsonObj.optString("propTest", null)); //test property should be gone.
+		assertNull(jsonObj.get("propTest")); //test property should be gone.
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
     /**
      * SLING-1627: test import of content over existing content with the ':replaceProperties"
      * parameter set and the ":replace" property not set.
      */
-    public void testImportReplaceProperties() throws IOException, JSONException {
+    public void testImportReplaceProperties() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -190,12 +191,12 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
 
 
 		//2. Second, import on top of the node from #1 to replace some properties.
@@ -215,18 +216,18 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content2 = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj2 = new JSONObject(content2);
+		JsonObject jsonObj2 = JsonUtil.parseObject(content2);
 		assertNotNull(jsonObj2);
 
 		//assert the imported content is there.
         String expectedJsonContent2 = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimport_replaceProps.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent2), jsonObj2);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent2), jsonObj2);
     }
 
     /**
      * Test import operation which checks in versionable nodes.
      */
-    public void testImportCheckinNodes() throws IOException, JSONException {
+    public void testImportCheckinNodes() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -248,7 +249,7 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert that the versionable node is checked in.
@@ -273,7 +274,7 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content2 = getContent(importedNodeUrl2 + ".json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj2 = new JSONObject(content2);
+		JsonObject jsonObj2 = JsonUtil.parseObject(content2);
 		assertNotNull(jsonObj2);
 
 		//assert that the versionable node is checked in.
@@ -283,7 +284,7 @@ public class PostServletImportTest extends HttpTestBase {
     /**
      * SLING-2108 Test import operation which auto checks out versionable nodes.
      */
-    public void testImportAutoCheckoutNodes() throws IOException, JSONException {
+    public void testImportAutoCheckoutNodes() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -306,7 +307,7 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert that the versionable node is checked in.
@@ -337,15 +338,15 @@ public class PostServletImportTest extends HttpTestBase {
         HttpMethod post = assertPostStatus(importedNodeUrl, HttpServletResponse.SC_CREATED, postParams, "Expected 201 status");
         
         String responseBodyAsString = post.getResponseBodyAsString();
-		JSONObject responseJSON = new JSONObject(responseBodyAsString);
-        JSONArray changes = responseJSON.getJSONArray("changes");
-        JSONObject checkoutChange = changes.getJSONObject(0);
+		JsonObject responseJSON = JsonUtil.parseObject(responseBodyAsString);
+        JsonArray changes = responseJSON.getJsonArray("changes");
+        JsonObject checkoutChange = changes.getJsonObject(0);
         assertEquals("checkout", checkoutChange.getString("type"));
 		
         // assert content at new location
         String content2 = getContent(importedNodeUrl + ".json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj2 = new JSONObject(content2);
+		JsonObject jsonObj2 = JsonUtil.parseObject(content2);
 		assertNotNull(jsonObj2);
 		
 		//make sure it was really updated
@@ -358,7 +359,7 @@ public class PostServletImportTest extends HttpTestBase {
     /**
      * Test import operation for a posted json file
      */
-    public void testImportJSONFromFile() throws IOException, JSONException {
+    public void testImportJSONFromFile() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -379,18 +380,18 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
     /**
      * Test import operation for a posted json file without the optional name
      */
-    public void testImportJSONFromFileWithoutOptionalName() throws IOException, JSONException {
+    public void testImportJSONFromFileWithoutOptionalName() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -412,18 +413,18 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
     /**
      * Test import operation for a posted json string
      */
-    public void testImportJSONFromRequestParam() throws IOException, JSONException {
+    public void testImportJSONFromRequestParam() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -444,18 +445,18 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
     /**
      * Test import operation for a posted json string without the optional name
      */
-    public void testImportJSONFromRequestParamWithoutOptionalName() throws IOException, JSONException {
+    public void testImportJSONFromRequestParamWithoutOptionalName() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -477,15 +478,15 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
-    public void testImportXMLFromFile() throws IOException, JSONException {
+    public void testImportXMLFromFile() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -506,15 +507,15 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
-    public void testImportXMLFromFileWithoutOptionalName() throws IOException, JSONException {
+    public void testImportXMLFromFileWithoutOptionalName() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -536,15 +537,15 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
-    public void testImportXMLFromRequestParam() throws IOException, JSONException {
+    public void testImportXMLFromRequestParam() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -565,15 +566,15 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
-    public void testImportXMLFromRequestParamWithoutOptionalName() throws IOException, JSONException {
+    public void testImportXMLFromRequestParamWithoutOptionalName() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -595,16 +596,16 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
 
-    public void testImportZipFromFile() throws IOException, JSONException {
+    public void testImportZipFromFile() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -625,15 +626,15 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimportzip.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
-    public void testImportJarFromFile() throws IOException, JSONException {
+    public void testImportJarFromFile() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -654,16 +655,16 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/testimportzip.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
 
-    public void testImportJCRXMLFromFile() throws IOException, JSONException {
+    public void testImportJCRXMLFromFile() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -684,18 +685,18 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
     }
 
 
 
 
-    protected String importNodeWithExactName(String testNodeName) throws IOException, JSONException {
+    protected String importNodeWithExactName(String testNodeName) throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -715,12 +716,12 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(location + ".3.json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
         String expectedJsonContent = getStreamAsString(getClass().getResourceAsStream("/integration-test/servlets/post/importresults.json"));
-		assertExpectedJSON(new JSONObject(expectedJsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(expectedJsonContent), jsonObj);
 
     	assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
@@ -737,7 +738,7 @@ public class PostServletImportTest extends HttpTestBase {
     /**
      * SLING-1091: test create node with an exact node name (no filtering)
      */
-    public void testImportNodeWithExactName() throws IOException, JSONException {
+    public void testImportNodeWithExactName() throws IOException, JsonException {
     	importNodeWithExactName("exactNodeName");
     }
 
@@ -768,7 +769,7 @@ public class PostServletImportTest extends HttpTestBase {
      * SLING-1091: test error reporting when attempting to import a node with an
      * already used node name.
      */
-    public void testImportNodeWithAlreadyUsedExactName() throws IOException, JSONException {
+    public void testImportNodeWithAlreadyUsedExactName() throws IOException, JsonException {
     	String testNodeName = "alreadyUsedExactNodeName";
     	String location = importNodeWithExactName(testNodeName);
 
@@ -785,7 +786,7 @@ public class PostServletImportTest extends HttpTestBase {
     /**
      * SLING-2143: test import where json is in a UTF-8 charset
      */
-    public void testImportJSONWithUTF8Content() throws IOException, JSONException {
+    public void testImportJSONWithUTF8Content() throws IOException, JsonException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -807,11 +808,11 @@ public class PostServletImportTest extends HttpTestBase {
         // assert content at new location
         String content = getContent(importedNodeUrl + ".json", CONTENT_TYPE_JSON);
 
-		JSONObject jsonObj = new JSONObject(content);
+		JsonObject jsonObj = JsonUtil.parseObject(content);
 		assertNotNull(jsonObj);
 
 		//assert the imported content is there.
-		assertExpectedJSON(new JSONObject(jsonContent), jsonObj);
+		assertExpectedJSON(JsonUtil.parseObject(jsonContent), jsonObj);
     }
 
 }

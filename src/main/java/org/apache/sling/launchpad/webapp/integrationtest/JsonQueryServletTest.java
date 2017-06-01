@@ -22,8 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.json.JsonException;
+
 import org.apache.commons.httpclient.NameValuePair;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 
@@ -162,7 +163,7 @@ public class JsonQueryServletTest extends HttpTestBase {
     /**
      * Test for SLING-1632: tidy rendering of query results
      */
-    public void testTidyResultFormat() throws IOException, JSONException {
+    public void testTidyResultFormat() throws IOException, JsonException {
     	boolean tidy = true;
     	//query should function the same when the output is tidy'ed.
         String statement = "/" + testPath + "/folderA/*";
