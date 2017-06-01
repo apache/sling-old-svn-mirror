@@ -114,11 +114,15 @@ public class JspcMojo extends AbstractMojo implements Options {
 
     /**
      * Comma separated list of extensions of files to be compiled by the plugin.
+     * @deprecated Use the {@link #includes} filter instead.
      */
     @Deprecated
     @Parameter ( property = "jspc.jspFileExtensions", defaultValue = "jsp,jspx")
     private String jspFileExtensions;
 
+    /**
+     * @deprecated Due to internal refactoring, this is not longer supported.
+     */
     @Deprecated
     @Parameter ( property = "jspc.servletPackage", defaultValue = "org.apache.jsp")
     private String servletPackage;
