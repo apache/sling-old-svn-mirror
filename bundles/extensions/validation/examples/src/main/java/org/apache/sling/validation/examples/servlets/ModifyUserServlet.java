@@ -27,14 +27,12 @@ import javax.servlet.ServletException;
 
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
@@ -69,22 +67,19 @@ public class ModifyUserServlet extends SlingAllMethodsServlet {
                     request.getRequestDispatcher(request.getResource(), options).forward(request, response);
                 } else {
                     response.setContentType("application/json");
-                    JSONObject json = new JSONObject();
-                    try {
-                        json.put("success", false);
-                        JSONArray failures = new JSONArray();
-                        for (ValidationFailure failure : vr.getFailures()) {
-                            JSONObject failureJson = new JSONObject();
-                            failureJson.put("message", failure.getMessage(request.getResourceBundle(Locale.US)));
-                            failureJson.put("location", failure.getLocation());
-                            failures.put(failureJson);
-                        }
-                        json.put("failures", failures);
-                        response.getWriter().print(json.toString());
-                        response.setStatus(400);
-                    } catch (JSONException e) {
-                        throw new IOException(e);
+                    JSONWriter writer = new JSONWriter(response.getWriter());
+                    writer.object();
+                    writer.key("success").value(false);
+                    writer.key("failures").array();
+                    for (ValidationFailure failure : vr.getFailures()) {
+                        writer.object();
+                        writer.key("message").value(failure.getMessage(request.getResourceBundle(Locale.US)));
+                        writer.key("location").value(failure.getLocation());
+                        writer.endObject();
                     }
+                    writer.endArray();
+                    writer.endObject();
+                    response.setStatus(400);
                 }
             }
         }
