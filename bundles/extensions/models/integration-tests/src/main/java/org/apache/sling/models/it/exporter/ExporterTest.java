@@ -17,6 +17,7 @@
 package org.apache.sling.models.it.exporter;
 
 import java.io.InputStream;
+import java.io.StringReader;
 import java.io.ByteArrayInputStream;
 import java.text.Format;
 import java.util.Calendar;
@@ -25,6 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.sling.api.SlingConstants;
@@ -32,7 +36,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
 import org.apache.sling.junit.annotations.TestReference;
@@ -151,15 +154,15 @@ public class ExporterTest {
             Assert.assertTrue("JSON Data should contain the property value",
                     StringUtils.contains(jsonData, "baseTESTValue"));
 
-            JSONObject parsed = new JSONObject(jsonData);
-            JSONObject resource = parsed.getJSONObject("resource");
-            Assert.assertEquals(3, resource.getJSONArray("sampleArray").length());
-            Assert.assertEquals(1.0d, resource.getDouble("sampleDoubleValue"), .1);
-            Assert.assertEquals(2, resource.getJSONArray(":sampleBinaryArray").length());
+            JsonObject parsed = Json.createReader(new StringReader(jsonData)).readObject();
+            JsonObject resource = parsed.getJsonObject("resource");
+            Assert.assertEquals(3, resource.getJsonArray("sampleArray").size());
+            Assert.assertEquals(1.0d, resource.getJsonNumber("sampleDoubleValue").doubleValue(), .1);
+            Assert.assertEquals(2, resource.getJsonArray(":sampleBinaryArray").size());
             Assert.assertTrue(resource.getBoolean("sampleBooleanValue"));
-            Assert.assertEquals(1, resource.getLong("sampleLongValue"));
-            Assert.assertEquals(3, resource.getLong(":sampleBinary"));
-            Assert.assertEquals(0, resource.getJSONArray("sampleEmptyArray").length());
+            Assert.assertEquals(1, resource.getInt("sampleLongValue"));
+            Assert.assertEquals(3, resource.getInt(":sampleBinary"));
+            Assert.assertEquals(0, resource.getJsonArray("sampleEmptyArray").size());
 
             final Resource extendedComponentResource = resolver.getResource(extendedComponentPath);
             Assert.assertNotNull(extendedComponentResource);
@@ -227,21 +230,21 @@ public class ExporterTest {
             resolver = rrFactory.getAdministrativeResourceResolver(null);
             FakeResponse response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(baseComponentPath + ".model.json"), response, resolver);
-            JSONObject obj = new JSONObject(response.getStringWriter().toString());
+            JsonObject obj = Json.createReader(new StringReader((response.getStringWriter().toString()))).readObject();
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals("BASETESTVALUE", obj.getString("UPPER"));
             Assert.assertEquals(baseComponentPath, obj.getString("id"));
 
             response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(extendedComponentPath + ".model.json"), response, resolver);
-            obj = new JSONObject(response.getStringWriter().toString());
+            obj = Json.createReader(new StringReader((response.getStringWriter().toString()))).readObject();
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals(extendedComponentPath, obj.getString("id"));
-            Assert.assertEquals(testDate.getTimeInMillis(), obj.getLong("date"));
+            Assert.assertEquals(testDate.getTimeInMillis(), obj.getJsonNumber("date").longValue());
 
             response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(interfaceComponentPath + ".model.json"), response, resolver);
-            obj = new JSONObject(response.getStringWriter().toString());
+            obj = Json.createReader(new StringReader((response.getStringWriter().toString()))).readObject();
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals(interfaceComponentPath, obj.getString("id"));
             Assert.assertEquals("interfaceTESTValue", obj.getString("sampleValue"));
@@ -263,27 +266,27 @@ public class ExporterTest {
 
             Assert.assertTrue(stringOutput.startsWith("{\"UPPER\":"));
 
-            JSONObject obj = new JSONObject(stringOutput);
+            JsonObject obj = Json.createReader(new StringReader(stringOutput)).readObject();
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals("BASETESTVALUE", obj.getString("UPPER"));
-            Assert.assertTrue(obj.has("testBindingsObject"));
-            JSONObject testBindingsObject = obj.getJSONObject("testBindingsObject");
+            Assert.assertTrue(obj.containsKey("testBindingsObject"));
+            JsonObject testBindingsObject = obj.getJsonObject("testBindingsObject");
             Assert.assertEquals("value", testBindingsObject.getString("name"));
-            Assert.assertTrue(obj.has("testBindingsObject2"));
-            JSONObject testBindingsObject2 = obj.getJSONObject("testBindingsObject2");
+            Assert.assertTrue(obj.containsKey("testBindingsObject2"));
+            JsonObject testBindingsObject2 = obj.getJsonObject("testBindingsObject2");
             Assert.assertEquals("value2", testBindingsObject2.getString("name2"));
             Assert.assertEquals(baseRequestComponentPath, obj.getString("id"));
 
             response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(extendedRequestComponentPath + ".model.json"), response, resolver);
-            obj = new JSONObject(response.getStringWriter().toString());
+            obj = Json.createReader(new StringReader((response.getStringWriter().toString()))).readObject();
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals(extendedRequestComponentPath, obj.getString("id"));
             Assert.assertEquals(dateFormat.format(testDate), obj.getString("date"));
 
             response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(interfaceRequestComponentPath + ".model.json"), response, resolver);
-            obj = new JSONObject(response.getStringWriter().toString());
+            obj = Json.createReader(new StringReader((response.getStringWriter().toString()))).readObject();
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals(interfaceRequestComponentPath, obj.getString("id"));
             Assert.assertEquals("interfaceTESTValue", obj.getString("sampleValue"));
@@ -302,13 +305,13 @@ public class ExporterTest {
             FakeResponse response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(doubledComponentPath + ".firstmodel.json"), response, resolver);
 
-            JSONObject obj = new JSONObject(response.getStringWriter().toString());
+            JsonObject obj = Json.createReader(new StringReader((response.getStringWriter().toString()))).readObject();
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals("first", obj.getString("value"));
 
             response = new FakeResponse();
             slingRequestProcessor.processRequest(new FakeRequest(doubledComponentPath + ".secondmodel.json"), response, resolver);
-            obj = new JSONObject(response.getStringWriter().toString());
+            obj = Json.createReader(new StringReader((response.getStringWriter().toString()))).readObject();
             Assert.assertEquals("application/json", response.getContentType());
             Assert.assertEquals("second", obj.getString("value"));
         } finally {

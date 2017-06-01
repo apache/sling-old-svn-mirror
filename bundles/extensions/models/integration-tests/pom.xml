@@ -257,6 +257,7 @@
                         -->
                         <sling.additional.bundle.1>org.apache.sling.junit.core</sling.additional.bundle.1>
                         <sling.additional.bundle.2>geronimo-atinject_1.0_spec</sling.additional.bundle.2>
+                        <sling.additional.bundle.3>org.apache.sling.commons.johnzon</sling.additional.bundle.3>
                         <sling.additional.bundle.10>org.apache.sling.models.api</sling.additional.bundle.10>
                         <sling.additional.bundle.11>org.apache.sling.models.impl</sling.additional.bundle.11>
                         <sling.additional.bundle.12>org.apache.sling.models.jacksonexporter</sling.additional.bundle.12>
@@ -285,19 +286,25 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
-            <version>1.0.8</version>
+            <version>1.0.25-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.remote</artifactId>
-            <version>1.0.8</version>
+            <version>1.0.11-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.sling</groupId>
+          <artifactId>org.apache.sling.commons.johnzon</artifactId>
+          <version>1.0.0</version>
+          <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.12</version>
+            <version>1.0.17-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -386,11 +393,6 @@
             <artifactId>commons-lang</artifactId>
             <version>2.5</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
