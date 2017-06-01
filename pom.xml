@@ -60,6 +60,9 @@
                             *
                         </Import-Package>
                         <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
+                        <Embed-Dependency>
+                                org.apache.sling.jcr.contentparser;inline="org/apache/sling/jcr/contentparser/impl/JsonTicksConverter.class"
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -110,5 +113,17 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
         </dependency>
+        <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.jcr.contentparser</artifactId>
+      <version>1.2.3-SNAPSHOT</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+            <groupId>*</groupId>
+            <artifactId>*</artifactId>
+        </exclusion>
+    </exclusions>
+    </dependency>
     </dependencies>
 </project>

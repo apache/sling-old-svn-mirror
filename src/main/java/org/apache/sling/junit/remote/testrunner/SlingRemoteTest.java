@@ -36,7 +36,7 @@ class SlingRemoteTest {
     
     SlingRemoteTest(Class<?> testClass, JsonObject json) throws JsonException {
         this.testClass = testClass;
-        description = json.getString(DESCRIPTION);
+        description = json.containsKey(DESCRIPTION) ? json.getString(DESCRIPTION) : null;
         failure = json.containsKey(FAILURE) ? json.getString(FAILURE) : null;
         if (failure != null) {
             trace = json.containsKey(TRACE) ? json.getString(TRACE) : null;
