@@ -86,8 +86,8 @@
     </dependency>
     <!-- JSR 353 (JSON-P 1.0) implementation -->
     <dependency>
-      <groupId>org.apache.johnzon</groupId>
-      <artifactId>johnzon-core</artifactId>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.johnzon</artifactId>
       <version>1.0.0</version>
       <!-- this dependency is necessary at test execution time from dependent modules 
            and must therefore be available transitively 
