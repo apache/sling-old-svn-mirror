@@ -4,6 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.io.StringReader;
+
+import javax.json.Json;
+import javax.json.JsonException;
+import javax.json.JsonObject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -15,8 +20,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.crankstart.junit.CrankstartSetup;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
@@ -52,15 +55,14 @@ public class U {
     }
 
     /** Get JSON bundle data from webconsole */ 
-    static JSONObject getBundleData(CrankstartSetup C, DefaultHttpClient client, String symbolicName) 
-            throws ClientProtocolException, IOException, JSONException {
+    static JsonObject getBundleData(CrankstartSetup C, DefaultHttpClient client, String symbolicName) 
+            throws ClientProtocolException, IOException, JsonException {
         final RequestBuilder b = new RequestBuilder(C.getBaseUrl());
         final RequestExecutor e = new RequestExecutor(client);
-        return new JSONObject(e.execute(
+        return Json.createReader(new StringReader((e.execute(
                 b.buildGetRequest("/system/console/bundles/" + symbolicName + ".json")
-                .withCredentials(U.ADMIN, U.ADMIN)
-        ).assertStatus(200)
-        .getContent());
+                .withCredentials(U.ADMIN, U.ADMIN))
+            ).assertStatus(200).getContent())).readObject();
     }
     
     public static String getContent(HttpResponse response) throws IOException{
