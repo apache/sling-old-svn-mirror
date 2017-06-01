@@ -29,11 +29,10 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -80,7 +79,6 @@ public class GetConfigServlet extends SlingSafeMethodsServlet {
         final Enumeration<?> keys = props.keys();
         try {
             final JSONWriter w = new JSONWriter(response.getWriter());
-            w.setTidy(Arrays.asList(request.getRequestPathInfo().getSelectors()).contains("tidy"));
             w.object();
             w.key("source").value(getClass().getName());
             w.key("pid").value(pid);
@@ -95,7 +93,7 @@ public class GetConfigServlet extends SlingSafeMethodsServlet {
             }
             w.endObject();
             w.endObject();
-        } catch(JSONException je) {
+        } catch(IOException je) {
             throw (IOException)new IOException("JSONException in doGet").initCause(je);
         }
     }
