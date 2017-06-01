@@ -18,30 +18,18 @@ package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.ObservationManager;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.testing.integration.NameValuePairList;
 import org.apache.sling.launchpad.webapp.integrationtest.AuthenticatedTestUtil;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test node updates via the MicrojaxPostServlet */
@@ -147,7 +135,7 @@ public void testPostPathIsUnique() throws IOException {
         assertTrue(content.indexOf("\"g\":\"456\"") > 0);
     }
 
-    public void testMixinTypes() throws IOException, JSONException {
+    public void testMixinTypes() throws IOException, JsonException {
         
         // create a node without mixin node types
         final Map <String, String> props = new HashMap <String, String> ();
@@ -156,8 +144,8 @@ public void testPostPathIsUnique() throws IOException {
         
         // assert no mixins
         String content = getContent(location + ".json", CONTENT_TYPE_JSON);
-        JSONObject json = new JSONObject(content);
-        assertFalse("jcr:mixinTypes not expected to be set", json.has("jcr:mixinTypes"));
+        JsonObject json = JsonUtil.parseObject(content);
+        assertFalse("jcr:mixinTypes not expected to be set", json.containsKey("jcr:mixinTypes"));
         
         // add mixin
         props.clear();
@@ -165,15 +153,15 @@ public void testPostPathIsUnique() throws IOException {
         testClient.createNode(location, props);
         
         content = getContent(location + ".json", CONTENT_TYPE_JSON);
-        json = new JSONObject(content);
-        assertTrue("jcr:mixinTypes expected after setting them", json.has("jcr:mixinTypes"));
+        json = JsonUtil.parseObject(content);
+        assertTrue("jcr:mixinTypes expected after setting them", json.containsKey("jcr:mixinTypes"));
         
         Object mixObject = json.get("jcr:mixinTypes");
-        assertTrue("jcr:mixinTypes must be an array", mixObject instanceof JSONArray);
+        assertTrue("jcr:mixinTypes must be an array", mixObject instanceof JsonArray);
         
-        JSONArray mix = (JSONArray) mixObject;
-        assertTrue("jcr:mixinTypes must have a single entry", mix.length() == 1);
-        assertEquals("jcr:mixinTypes must have correct value", "mix:versionable", mix.get(0));
+        JsonArray mix = (JsonArray) mixObject;
+        assertTrue("jcr:mixinTypes must have a single entry", mix.size() == 1);
+        assertEquals("jcr:mixinTypes must have correct value", "mix:versionable", mix.getString(0));
 
         // remove mixin
         props.clear();
@@ -181,12 +169,12 @@ public void testPostPathIsUnique() throws IOException {
         testClient.createNode(location, props);
 
         content = getContent(location + ".json", CONTENT_TYPE_JSON);
-        json = new JSONObject(content);
-        final boolean noMixins = !json.has("jcr:mixinTypes") || json.getJSONArray("jcr:mixinTypes").length() == 0;
+        json = JsonUtil.parseObject(content);
+        final boolean noMixins = !json.containsKey("jcr:mixinTypes") || json.getJsonArray("jcr:mixinTypes").size() == 0;
         assertTrue("no jcr:mixinTypes expected after clearing it", noMixins);
     }
 
-    public void testUpdatingNodetype() throws IOException, JSONException {
+    public void testUpdatingNodetype() throws IOException, JsonException {
         
         // create a node without mixin node types
         final Map <String, String> props = new HashMap <String, String> ();
@@ -195,7 +183,7 @@ public void testPostPathIsUnique() throws IOException {
         
         // assert correct nodetype
         String content = getContent(location + ".json", CONTENT_TYPE_JSON);
-        JSONObject json = new JSONObject(content);
+        JsonObject json = JsonUtil.parseObject(content);
         assertTrue("jcr:primaryType isn't set correctly", json.getString("jcr:primaryType").equals("nt:unstructured"));
         
         // change nodetype
@@ -205,7 +193,7 @@ public void testPostPathIsUnique() throws IOException {
         
         // assert correct nodetype
         content = getContent(location + ".json", CONTENT_TYPE_JSON);
-        json = new JSONObject(content);
+        json = JsonUtil.parseObject(content);
         assertTrue("jcr:primaryType isn't set correctly", json.getString("jcr:primaryType").equals("sling:Folder"));
     }
 }

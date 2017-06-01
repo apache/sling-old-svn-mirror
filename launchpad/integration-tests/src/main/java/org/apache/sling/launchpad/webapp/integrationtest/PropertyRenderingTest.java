@@ -18,8 +18,10 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
 
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.JsonObject;
+
 import org.apache.sling.commons.testing.integration.NameValuePairList;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,8 +71,8 @@ public class PropertyRenderingTest extends RenderingTestBase {
 
     public void testTextJson() throws Exception {
         final String json = getContent(displayUrl + "/text.json", CONTENT_TYPE_JSON);
-        final JSONObject obj = new JSONObject(json);
-        assertEquals(testText, obj.get("text"));
+        final JsonObject obj = JsonUtil.parseObject(json);
+        assertEquals(testText, obj.getString("text"));
     }
 
     public void testTextHtml() throws IOException {
@@ -90,8 +92,8 @@ public class PropertyRenderingTest extends RenderingTestBase {
 
     public void testMultiValuedTextJson() throws Exception {
         final String json = getContent(displayUrl + "/multiText.json", CONTENT_TYPE_JSON);
-        final JSONObject obj = new JSONObject(json);
-        assertEquals("[\"" + testMultiText1 + "\",\""+ testMultiText2 + "\"]", obj.get("multiText").toString());
+        final JsonObject obj = JsonUtil.parseObject(json);
+        assertEquals("[\"" + testMultiText1 + "\",\""+ testMultiText2 + "\"]", JsonUtil.toString(obj.getJsonArray("multiText")));
     }
 
     public void testMultiValuedTextHtml() throws IOException {

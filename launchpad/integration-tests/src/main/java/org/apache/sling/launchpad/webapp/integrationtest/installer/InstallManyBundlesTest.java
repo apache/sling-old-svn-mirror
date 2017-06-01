@@ -24,11 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -84,7 +85,7 @@ public class InstallManyBundlesTest {
                 .build();
     }
 
-    private void assertActiveBundle(String bsn, String expectedState, String expectedVersion) throws IOException, JSONException {
+    private void assertActiveBundle(String bsn, String expectedState, String expectedVersion) throws IOException, JsonException {
         final String consoleUrl = HttpTest.HTTP_BASE_URL + "/system/console/bundles/" + bsn + ".json";
 
         String state = null;
@@ -95,9 +96,9 @@ public class InstallManyBundlesTest {
         while(System.currentTimeMillis() < endTime) {
             try {
                 final String jsonStr = H.getContent(consoleUrl, HttpTest.CONTENT_TYPE_JSON);
-                final JSONObject json = new JSONObject(jsonStr);
-                state = json.getJSONArray("data").getJSONObject(0).getString("state");
-                version = json.getJSONArray("data").getJSONObject(0).getString("version");
+                final JsonObject json = JsonUtil.parseObject(jsonStr);
+                state = json.getJsonArray("data").getJsonObject(0).getString("state");
+                version = json.getJsonArray("data").getJsonObject(0).getString("version");
                 if(expectedState.equalsIgnoreCase(state) && expectedVersion.equalsIgnoreCase(version)) {
                     return;
                 }
@@ -136,7 +137,7 @@ public class InstallManyBundlesTest {
         return false;
     }
 
-    private void installAndCheckBundle(String bsn, int filenameVariant, String version) throws IOException, JSONException {
+    private void installAndCheckBundle(String bsn, int filenameVariant, String version) throws IOException, JsonException {
         final String filename = bsn + "." + filenameVariant + ".jar";
         final String url = HttpTest.HTTP_BASE_URL + INSTALL_PATH + "/" + filename;
         H.getTestClient().upload(url, getBundleStream(bsn, version));
@@ -144,7 +145,7 @@ public class InstallManyBundlesTest {
     }
 
     @Test
-    public void installAndUpgradeBundleManyTimes() throws IOException, JSONException {
+    public void installAndUpgradeBundleManyTimes() throws IOException, JsonException {
         final String bsn = BASE_BSN + "_upgradetest";
         int i = 0;
         try {
@@ -162,7 +163,7 @@ public class InstallManyBundlesTest {
     }
 
     @Test
-    public void installManyBundles() throws IOException, JSONException {
+    public void installManyBundles() throws IOException, JsonException {
         final List<String> bsns = new ArrayList<String>();
         int i = 0;
         try {

@@ -20,13 +20,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 
 /**
  * Tests for the 'removeAuthorizable' Sling Post Operation
@@ -118,7 +119,7 @@ public class RemoveAuthorizablesTest extends UserManagerTestUtil {
 	/**
 	 * Test for SLING-1677
 	 */
-	public void testRemoveAuthorizablesResponseAsJSON() throws IOException, JSONException {
+	public void testRemoveAuthorizablesResponseAsJSON() throws IOException, JsonException {
 		String userId = createTestUser();
 		String groupId = createTestGroup();
 		
@@ -131,7 +132,7 @@ public class RemoveAuthorizablesTest extends UserManagerTestUtil {
 		String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
 
 		//make sure the json response can be parsed as a JSON object
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertNotNull(jsonObj);
 	}	
 }

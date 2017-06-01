@@ -24,15 +24,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +65,7 @@ public class UpdateUserTest {
 	}
 
 	@Test 
-	public void testUpdateUser() throws IOException, JSONException {
+	public void testUpdateUser() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
         String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".update.html";
@@ -82,7 +83,7 @@ public class UpdateUserTest {
 		H.assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertEquals("My Updated Test User", jsonObj.getString("displayName"));
 		assertEquals("http://www.apache.org/updated", jsonObj.getString("url"));
 		// get path (SLING-6753)
@@ -92,7 +93,7 @@ public class UpdateUserTest {
 		getUrl = HttpTest.HTTP_BASE_URL + path + "/nested.json";
 		json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
         assertNotNull(json);
-        jsonObj = new JSONObject(json);
+        jsonObj = JsonUtil.parseObject(json);
         assertEquals("value", jsonObj.getString("param"));
 	}
 	
@@ -147,7 +148,7 @@ public class UpdateUserTest {
 	 * Test for SLING-1677
 	 */
 	@Test 
-	public void testUpdateUserResponseAsJSON() throws IOException, JSONException {
+	public void testUpdateUserResponseAsJSON() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
         String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".update.json";
@@ -159,7 +160,7 @@ public class UpdateUserTest {
 		String json = H.getAuthenticatedPostContent(creds, postUrl, HttpTest.CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
 
 		//make sure the json response can be parsed as a JSON object
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertNotNull(jsonObj);
 	}	
 	

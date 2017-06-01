@@ -21,13 +21,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 
 /**
  * Tests for the 'createGroup' Sling Post Operation
@@ -49,7 +50,7 @@ public class CreateGroupTest extends UserManagerTestUtil {
 		super.tearDown();
 	}
 
-	public void testCreateGroup() throws IOException, JSONException {
+	public void testCreateGroup() throws IOException, JsonException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
 		testGroupId = "testGroup" + random.nextInt();
@@ -63,7 +64,7 @@ public class CreateGroupTest extends UserManagerTestUtil {
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertEquals(testGroupId, jsonObj.getString("marker"));
 	}
 
@@ -86,7 +87,7 @@ public class CreateGroupTest extends UserManagerTestUtil {
 		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
 
-	public void testCreateGroupWithExtraProperties() throws IOException, JSONException {
+	public void testCreateGroupWithExtraProperties() throws IOException, JsonException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
 		testGroupId = "testGroup" + random.nextInt();
@@ -102,7 +103,7 @@ public class CreateGroupTest extends UserManagerTestUtil {
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertEquals(testGroupId, jsonObj.getString("marker"));
 		assertEquals("My Test Group", jsonObj.getString("displayName"));
 		assertEquals("http://www.apache.org", jsonObj.getString("url"));
@@ -112,7 +113,7 @@ public class CreateGroupTest extends UserManagerTestUtil {
 	/**
 	 * Test for SLING-1677
 	 */
-	public void testCreateGroupResponseAsJSON() throws IOException, JSONException {
+	public void testCreateGroupResponseAsJSON() throws IOException, JsonException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.json";
 
 		testGroupId = "testGroup" + random.nextInt();
@@ -123,7 +124,7 @@ public class CreateGroupTest extends UserManagerTestUtil {
 		String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
 
 		//make sure the json response can be parsed as a JSON object
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		assertNotNull(jsonObj);
 	}	
 }

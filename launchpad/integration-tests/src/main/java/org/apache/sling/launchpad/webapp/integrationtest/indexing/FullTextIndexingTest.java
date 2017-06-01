@@ -27,9 +27,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+
 import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.apache.sling.testing.tools.retry.RetryLoop.Condition;
 import org.junit.After;
@@ -79,16 +81,16 @@ public class FullTextIndexingTest {
             public boolean isTrue() throws Exception {
                 String result = H.getContent(queryUrl, HttpTest.CONTENT_TYPE_JSON);
 
-                JSONArray results = new JSONArray(result);
+                JsonArray results = JsonUtil.parseArray(result);
 
-                if (results.length() == 0) {
+                if (results.size() == 0) {
                     return false;
                 }
 
                 String expectedPath = HttpTest.SERVLET_CONTEXT + uploadPath + "/" + fileName + "/jcr:content";
 
-                for (int i = 0; i < results.length(); i++) {
-                    JSONObject object = results.getJSONObject(i);
+                for (int i = 0; i < results.size(); i++) {
+                    JsonObject object = results.getJsonObject(i);
                     if (expectedPath.equals(object.getString("jcr:path"))) {
                         return true;
                     }
