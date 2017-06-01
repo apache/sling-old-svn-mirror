@@ -93,6 +93,7 @@ public class GetConfigServlet extends SlingSafeMethodsServlet {
             }
             w.endObject();
             w.endObject();
+            w.flush();
         } catch(IOException je) {
             throw (IOException)new IOException("JSONException in doGet").initCause(je);
         }

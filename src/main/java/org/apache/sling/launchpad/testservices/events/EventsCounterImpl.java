@@ -92,6 +92,7 @@ public class EventsCounterImpl extends SlingSafeMethodsServlet implements EventH
                 w.key(entry.getKey()).value(entry.getValue());
             }
             w.endObject();
+            w.flush();
         } catch(IOException je) {
             throw (IOException)new IOException("JSONException in doGet").initCause(je);
         }
