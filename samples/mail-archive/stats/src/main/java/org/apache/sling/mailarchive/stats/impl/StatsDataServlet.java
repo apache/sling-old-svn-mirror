@@ -27,13 +27,12 @@ import java.util.TreeSet;
 import javax.servlet.ServletException;
 
 import org.apache.felix.scr.annotations.sling.SlingServlet;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 
 @SuppressWarnings("serial")
 @SlingServlet(
@@ -85,7 +84,6 @@ public class StatsDataServlet extends SlingSafeMethodsServlet {
             // from those that have the stats data resource type
             {
                 final JSONWriter w = new JSONWriter(response.getWriter());
-                w.setTidy(true);
                 out.write("var statsData = ");
                 w.array();
                 dumpStatsData(request.getResource(), w, layers);
@@ -97,7 +95,6 @@ public class StatsDataServlet extends SlingSafeMethodsServlet {
             // Output the layers array in JSON
             {
                 final JSONWriter w = new JSONWriter(response.getWriter());
-                w.setTidy(true);
                 out.write("var layers = ");
                 w.array();
                 for(String layer : layers) {
@@ -107,7 +104,7 @@ public class StatsDataServlet extends SlingSafeMethodsServlet {
                 out.write(";");
             }
             
-        } catch(JSONException je) {
+        } catch(IOException je) {
             throw new ServletException("JSONException in doGet", je);
         }
     }
@@ -115,7 +112,7 @@ public class StatsDataServlet extends SlingSafeMethodsServlet {
     /** Dump stats data to w if r is a stats data resource,
      *  and recurse into children
      */
-    private void dumpStatsData(Resource r, JSONWriter w, Set<String> layers) throws JSONException {
+    private void dumpStatsData(Resource r, JSONWriter w, Set<String> layers) throws IOException {
         if(MailStatsProcessorImpl.DATA_RESOURCE_TYPE.equals(r.getResourceType())) {
             final ValueMap m = r.adaptTo(ValueMap.class);
             if(m != null) {
