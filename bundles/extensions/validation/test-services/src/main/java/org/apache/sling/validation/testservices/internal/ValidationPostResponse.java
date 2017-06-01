@@ -25,9 +25,7 @@ import java.util.ResourceBundle;
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
@@ -52,27 +50,28 @@ public class ValidationPostResponse extends AbstractPostResponse {
     protected void doSend(HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
         PrintWriter printWriter = response.getWriter();
-        JSONObject jsonResponse = new JSONObject();
+        JSONWriter writer = new JSONWriter(printWriter);
+        writer.object();
         boolean validationError = false;
         if (validationResult != null) {
             try {
-                jsonResponse.put("valid", validationResult.isValid());
-                JSONArray failures = new JSONArray();
+                writer.key("valid").value(validationResult.isValid());
+                writer.key("failures").array();
                 for (ValidationFailure failure : validationResult.getFailures()) {
-                    JSONObject failureJson = new JSONObject();
-                    failureJson.put("message", failure.getMessage(resourceBundle));
-                    failureJson.put("location", failure.getLocation());
-                    failureJson.put("severity", failure.getSeverity());
-                    failures.put(failureJson);
+                    writer.object();
+                    writer.key("message").value(failure.getMessage(resourceBundle));
+                    writer.key("location").value(failure.getLocation());
+                    writer.key("severity").value(failure.getSeverity());
+                    writer.endObject();
                 }
-                jsonResponse.put("failures", failures);
-            } catch (JSONException e) {
+                writer.endArray();
+            } catch (IOException e) {
                 LOG.error("JSON error during response send operation.", e);
             }
         } else {
             validationError = true;
         }
-        printWriter.write(jsonResponse.toString());
+        writer.endObject();
         if (validationError) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
