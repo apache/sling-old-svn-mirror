@@ -368,9 +368,11 @@ public class JspcMojo extends AbstractMojo implements Options {
             }
         }
 
-        getLog().info("Compiler classpath:");
-        for (URL u: classPath) {
-            getLog().info("  " + u);
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("Compiler classpath:");
+            for (URL u: classPath) {
+                getLog().debug("  " + u);
+            }
         }
 
         // this is dangerous to use this classloader as parent as the compilation will depend on the classes provided
