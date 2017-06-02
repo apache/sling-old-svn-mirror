@@ -139,7 +139,7 @@
             <plugin>
 				<groupId>org.apache.sling</groupId>
 				<artifactId>maven-sling-plugin</artifactId>
-				<version>2.1.9-SNAPSHOT</version>
+				<version>2.3.0</version>
             </plugin>		
 		</plugins>
 		<extensions>
