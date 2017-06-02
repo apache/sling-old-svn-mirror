@@ -19,10 +19,6 @@
 # Additional bundles for the Sling launchpad tests
 [feature name=launchpad-test-bundles]
 
-[artifacts startLevel=1]
-  org.apache.sling/org.apache.sling.servlets.compat/1.0.2
-  org.apache.sling/org.apache.sling.commons.json/2.0.20
-
 [artifacts]
   org.apache.sling/org.apache.sling.junit.core/1.0.25-SNAPSHOT
   org.apache.sling/org.apache.sling.junit.remote/1.0.11-SNAPSHOT
