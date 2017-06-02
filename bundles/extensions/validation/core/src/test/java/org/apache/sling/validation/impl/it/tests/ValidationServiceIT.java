@@ -19,12 +19,15 @@
 package org.apache.sling.validation.impl.it.tests;
 
 import java.io.IOException;
+import java.io.StringReader;
+
+import javax.json.Json;
+import javax.json.JsonException;
+import javax.json.JsonObject;
 
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
@@ -59,7 +62,7 @@ public class ValidationServiceIT extends ValidationTestSupport {
     }
 
     @Test
-    public void testValidRequestModel1() throws IOException, JSONException {
+    public void testValidRequestModel1() throws IOException, JsonException {
         final String url = String.format("http://localhost:%s", httpPort());
         final RequestBuilder requestBuilder = new RequestBuilder(url);
         MultipartEntity entity = new MultipartEntity();
@@ -70,12 +73,12 @@ public class ValidationServiceIT extends ValidationTestSupport {
         RequestExecutor re = requestExecutor.execute(requestBuilder.buildPostRequest
                 ("/validation/testing/fakeFolder1/resource").withEntity(entity)).assertStatus(200);
         String content = re.getContent();
-        JSONObject jsonResponse = new JSONObject(content);
+        JsonObject jsonResponse = Json.createReader(new StringReader(content)).readObject();
         assertTrue(jsonResponse.getBoolean("valid"));
     }
 
     @Test
-    public void testInvalidRequestModel1() throws IOException, JSONException {
+    public void testInvalidRequestModel1() throws IOException, JsonException {
         MultipartEntity entity = new MultipartEntity();
         entity.addPart("sling:resourceType", new StringBody("validation/test/resourceType1"));
         entity.addPart("field1", new StringBody("Hello World"));
@@ -85,20 +88,20 @@ public class ValidationServiceIT extends ValidationTestSupport {
         RequestExecutor re = requestExecutor.execute(requestBuilder.buildPostRequest
                 ("/validation/testing/fakeFolder1/resource").withEntity(entity)).assertStatus(200);
         String content = re.getContent();
-        JSONObject jsonResponse = new JSONObject(content);
+        JsonObject jsonResponse = Json.createReader(new StringReader(content)).readObject();
         assertFalse(jsonResponse.getBoolean("valid"));
-        JSONObject failure = jsonResponse.getJSONArray("failures").getJSONObject(0);
-        assertEquals("Property does not match the pattern \"^\\p{Upper}+$\".", failure.get("message"));
-        assertEquals("field1", failure.get("location"));
-        assertEquals(10, failure.get("severity"));
-        failure = jsonResponse.getJSONArray("failures").getJSONObject(1);
-        assertEquals("Missing required property with name \"field2\".", failure.get("message"));
-        assertEquals("", failure.get("location")); // location is empty as the property is not found (property name is part of the message rather)
-        assertEquals(0, failure.get("severity"));
+        JsonObject failure = jsonResponse.getJsonArray("failures").getJsonObject(0);
+        assertEquals("Property does not match the pattern \"^\\p{Upper}+$\".", failure.getString("message"));
+        assertEquals("field1", failure.getString("location"));
+        assertEquals(10, failure.getInt("severity"));
+        failure = jsonResponse.getJsonArray("failures").getJsonObject(1);
+        assertEquals("Missing required property with name \"field2\".", failure.getString("message"));
+        assertEquals("", failure.getString("location")); // location is empty as the property is not found (property name is part of the message rather)
+        assertEquals(0, failure.getInt("severity"));
     }
     
     @Test
-    public void testPostProcessorWithInvalidModel() throws IOException, JSONException {
+    public void testPostProcessorWithInvalidModel() throws IOException, JsonException {
         MultipartEntity entity = new MultipartEntity();
         entity.addPart("sling:resourceType", new StringBody("validation/test/resourceType1"));
         entity.addPart("field1", new StringBody("Hello World"));
@@ -108,8 +111,9 @@ public class ValidationServiceIT extends ValidationTestSupport {
         RequestExecutor re = requestExecutor.execute(requestBuilder.buildPostRequest
                 ("/content/validated/invalidresource").withEntity(entity).withHeader("Accept", "application/json").withCredentials("admin", "admin")).assertStatus(500);
         String content = re.getContent();
-        JSONObject jsonResponse = new JSONObject(content);
-        JSONObject error = jsonResponse.getJSONObject("error");
+        JsonObject jsonResponse = Json.createReader(new StringReader(content)).readObject();
+        
+        JsonObject error = jsonResponse.getJsonObject("error");
         assertEquals("org.apache.sling.validation.impl.postprocessor.InvalidResourcePostProcessorException", error.getString("class"));
         assertEquals("Validation errors: field1 : Property does not match the pattern \"^\\p{Upper}+$\"., Missing required property with name \"field2\".", error.getString("message"));
     }
