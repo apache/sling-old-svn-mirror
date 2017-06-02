@@ -20,7 +20,8 @@ package org.apache.sling.distribution.it;
 
 import java.io.IOException;
 
-import org.apache.sling.commons.json.JSONException;
+import javax.json.JsonException;
+
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
@@ -125,7 +126,7 @@ public abstract class DistributionIntegrationTestBase {
 
 
     @After
-    public void checkNoPackagesLeft() throws IOException, JSONException, InterruptedException {
+    public void checkNoPackagesLeft() throws IOException, JsonException, InterruptedException {
 
         Thread.sleep(5000);
 

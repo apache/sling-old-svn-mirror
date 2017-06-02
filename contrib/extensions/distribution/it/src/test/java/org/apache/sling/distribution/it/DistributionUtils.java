@@ -20,6 +20,7 @@
 package org.apache.sling.distribution.it;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,15 +28,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonString;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.jackrabbit.util.Text;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.JSONTokener;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.sling.SlingClient;
@@ -56,7 +59,7 @@ public class DistributionUtils {
     private static final String DISTRIBUTOR_PASSWORD = "123";
 
 
-    public static JSONObject getResource(SlingInstance slingInstance, String path) throws IOException, JSONException {
+    public static JsonObject getResource(SlingInstance slingInstance, String path) throws IOException, JsonException {
         if (!path.endsWith(JSON_SELECTOR)) {
             path += JSON_SELECTOR;
         }
@@ -71,7 +74,7 @@ public class DistributionUtils {
 
         // Parse JSON response for more precise testing
 
-        return new JSONObject(new JSONTokener(content));
+        return Json.createReader(new StringReader(content)).readObject();
     }
 
     public static String assertPostResourceWithParameters(SlingInstance slingInstance,
@@ -290,7 +293,7 @@ public class DistributionUtils {
     }
 
 
-    public static void assertEmptyFolder(SlingInstance instance, SlingClient client, String path) throws IOException, JSONException {
+    public static void assertEmptyFolder(SlingInstance instance, SlingClient client, String path) throws IOException, JsonException {
 
         if (client.exists(path)) {
             List<String> children = getChildrenForFolder(instance, path);
@@ -301,10 +304,10 @@ public class DistributionUtils {
     }
 
 
-    public static List<String> getChildrenForFolder(SlingInstance instance, String path) throws IOException, JSONException {
+    public static List<String> getChildrenForFolder(SlingInstance instance, String path) throws IOException, JsonException {
         List<String> result = new ArrayList<String>();
-        JSONObject authorJson = getResource(instance, path + ".1.json");
-        Iterator<String> it = authorJson.keys();
+        JsonObject authorJson = getResource(instance, path + ".1.json");
+        Iterator<String> it = authorJson.keySet().iterator();
         while (it.hasNext()) {
             String key = it.next();
 
@@ -315,21 +318,21 @@ public class DistributionUtils {
         return result;
     }
 
-    public static Map<String, Map<String, Object>> getQueues(SlingInstance instance, String agentName) throws IOException, JSONException {
+    public static Map<String, Map<String, Object>> getQueues(SlingInstance instance, String agentName) throws IOException, JsonException {
         Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
 
-        JSONObject json = getResource(instance, queueUrl(agentName) + ".infinity");
+        JsonObject json = getResource(instance, queueUrl(agentName) + ".infinity");
 
-        JSONArray items = json.getJSONArray("items");
+        JsonArray items = json.getJsonArray("items");
 
-        for(int i=0; i < items.length(); i++) {
+        for(int i=0; i < items.size(); i++) {
             String queueName = items.getString(i);
 
             Map<String, Object> queueProperties = new HashMap<String, Object>();
 
-            JSONObject queue = json.getJSONObject(queueName);
+            JsonObject queue = json.getJsonObject(queueName);
             queueProperties.put("empty", queue.getBoolean("empty"));
-            queueProperties.put("itemsCount", queue.get("itemsCount"));
+            queueProperties.put("itemsCount", queue.getInt("itemsCount"));
 
             result.put(queueName, queueProperties);
         }
@@ -337,27 +340,43 @@ public class DistributionUtils {
         return result;
     }
 
-    public static List<Map<String, Object>> getQueueItems(SlingInstance instance, String queueUrl) throws IOException, JSONException {
+    public static List<Map<String, Object>> getQueueItems(SlingInstance instance, String queueUrl) throws IOException, JsonException {
         List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
 
-        JSONObject json = getResource(instance, queueUrl + ".infinity");
+        JsonObject json = getResource(instance, queueUrl + ".infinity");
 
 
-        Iterator<String> keys = json.keys();
+        Iterator<String> keys = json.keySet().iterator();
         while (keys.hasNext()) {
             String key = keys.next();
-            JSONObject queueItem = json.optJSONObject(key);
-            if (queueItem != null && queueItem.optString("id") != null) {
+            JsonObject queueItem;
+            Object item = json.get(key);
+            if (item instanceof JsonObject)
+            {
+                queueItem = (JsonObject) item;
+            }
+            else if (item instanceof JsonString) {
+                try {
+                    queueItem = Json.createReader(new StringReader(((JsonString) item).getString())).readObject();
+                } catch (JsonException ex) {
+                    queueItem = null;
+                }
+            }
+            else {
+                queueItem = null;
+            }
+                
+            if (queueItem != null && queueItem.containsKey("id")) {
 
                 Map<String, Object> itemProperties = new HashMap<String, Object>();
 
-                itemProperties.put("id", queueItem.get("id"));
-                itemProperties.put("paths", queueItem.get("paths"));
-                itemProperties.put("action", queueItem.get("action"));
-                itemProperties.put("userid", queueItem.get("userid"));
-                itemProperties.put("attempts", queueItem.get("attempts"));
-                itemProperties.put("time", queueItem.get("time"));
-                itemProperties.put("state", queueItem.get("state"));
+                itemProperties.put("id", queueItem.getString("id"));
+                itemProperties.put("paths", JsonUtil.unbox(queueItem.get("paths")));
+                itemProperties.put("action", JsonUtil.unbox(queueItem.get("action")));
+                itemProperties.put("userid", JsonUtil.unbox(queueItem.get("userid")));
+                itemProperties.put("attempts", JsonUtil.unbox(queueItem.get("attempts")));
+                itemProperties.put("time", JsonUtil.unbox(queueItem.get("time")));
+                itemProperties.put("state", JsonUtil.unbox(queueItem.get("state")));
 
                 result.add(itemProperties);
             }
