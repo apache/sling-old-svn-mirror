@@ -27,7 +27,6 @@ import me.prettyprint.hector.api.exceptions.HInvalidRequestException;
 import me.prettyprint.hector.api.query.QueryResult;
 import org.apache.sling.cassandra.resource.provider.CassandraResourceProvider;
 import org.apache.sling.cassandra.resource.provider.util.CassandraResourceProviderUtil;
-import org.apache.sling.commons.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.UnsupportedEncodingException;
