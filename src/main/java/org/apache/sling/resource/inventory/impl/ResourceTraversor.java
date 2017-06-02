@@ -39,7 +39,7 @@ public class ResourceTraversor {
     /**
      * Recursive descent from startResource, collecting JSONObjects into
      * startObject.
-     * @throws JSONException
+     * @throws JsonException
      */
     public void collectResources() throws JsonException {
         collectChildren(startResource, this.startObject);
@@ -48,7 +48,7 @@ public class ResourceTraversor {
     /**
      * @param resource
      * @param currentLevel
-     * @throws JSONException
+     * @throws JsonException
      */
     private void collectChildren(final Resource resource,
             final JsonObjectBuilder jsonObj)
