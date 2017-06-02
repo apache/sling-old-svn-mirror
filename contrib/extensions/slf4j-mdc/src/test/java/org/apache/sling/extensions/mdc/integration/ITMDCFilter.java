@@ -25,7 +25,6 @@ import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestCustomizer;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.retry.RetryLoop;
-import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,7 +38,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.concurrent.TimeUnit;
+
+import javax.json.Json;
+import javax.json.JsonObject;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
@@ -85,7 +88,7 @@ public class ITMDCFilter {
         RequestExecutor result = executor.execute(
                 rb.buildGetRequest("/mdc","foo","bar"));
 
-        JSONObject jb = new JSONObject(result.getContent());
+        JsonObject jb = Json.createReader(new StringReader(result.getContent())).readObject();
         assertEquals("/mdc", jb.getString("req.requestURI"));
         assertEquals("foo=bar", jb.getString("req.queryString"));
         assertEquals(ServerConfiguration.getServerUrl() + "/mdc", jb.getString("req.requestURL"));
@@ -113,7 +116,7 @@ public class ITMDCFilter {
                         .withHeader("mdc-test-header", "foo-test-header")
         );
 
-        JSONObject jb = new JSONObject(result.getContent());
+        JsonObject jb = Json.createReader(new StringReader(result.getContent())).readObject();
         log.info("Response  {}",result.getContent());
 
         assertEquals("/mdc", jb.getString("req.requestURI"));
@@ -124,7 +127,7 @@ public class ITMDCFilter {
         assertEquals("foo-test-cookie", jb.getString("mdc-test-cookie"));
 
         //Only configured params must be returned
-        assertFalse(jb.has("ignored-param"));
+        assertFalse(jb.containsKey("ignored-param"));
     }
 
 

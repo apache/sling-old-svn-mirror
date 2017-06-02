@@ -18,7 +18,6 @@
  */
 package org.apache.sling.extensions.mdc.integration.servlet;
 
-import org.json.JSONObject;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;
@@ -26,6 +25,9 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.MDC;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.stream.JsonGenerator;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -33,9 +35,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Map.Entry;
 
 public class MDCStateServlet extends HttpServlet implements BundleActivator{
     private ServiceTracker configAdminTracker;
@@ -62,8 +67,17 @@ public class MDCStateServlet extends HttpServlet implements BundleActivator{
             return;
         }
 
-        JSONObject jb = new JSONObject(MDC.getCopyOfContextMap());
-        pw.print(jb.toString());
+        Map<String, String> copyOfContextMap = MDC.getCopyOfContextMap();
+        JsonGenerator json = Json.createGenerator(pw);
+        json.writeStartObject();
+        if (copyOfContextMap != null) {
+            for (Entry<String, String> entry : copyOfContextMap.entrySet())
+            {
+                json.write(entry.getKey(), entry.getValue());
+            }
+        }
+        json.writeEnd();
+        json.flush();
     }
 
     private void createTestConfig() throws IOException {
