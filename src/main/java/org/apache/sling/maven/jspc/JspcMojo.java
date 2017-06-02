@@ -17,19 +17,14 @@
 package org.apache.sling.maven.jspc;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.jar.JarFile;
 
 import javax.servlet.ServletContext;
 
@@ -44,17 +39,17 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.compiler.JavaCompiler;
+import org.apache.sling.commons.compiler.impl.EclipseJavaCompiler;
+import org.apache.sling.scripting.jsp.jasper.IOProvider;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
 import org.apache.sling.scripting.jsp.jasper.Options;
-import org.apache.sling.scripting.jsp.jasper.compiler.Compiler;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspConfig;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
-import org.apache.sling.scripting.jsp.jasper.compiler.OriginalTldLocationsCache;
 import org.apache.sling.scripting.jsp.jasper.compiler.TagPluginManager;
 import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
-import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
-import org.apache.sling.scripting.jsp.jasper.xmlparser.TreeNode;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 /**
@@ -63,7 +58,7 @@ import org.codehaus.plexus.util.DirectoryScanner;
  * descriptor for Declarative Services to use the JSP with the help of the
  * appropriate adapter as component.
  */
-@Mojo( name = "jspc", defaultPhase = LifecyclePhase.COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE)
+@Mojo(name = "jspc", defaultPhase = LifecyclePhase.COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class JspcMojo extends AbstractMojo implements Options {
 
     /**
@@ -119,10 +114,16 @@ public class JspcMojo extends AbstractMojo implements Options {
 
     /**
      * Comma separated list of extensions of files to be compiled by the plugin.
+     * @deprecated Use the {@link #includes} filter instead.
      */
+    @Deprecated
     @Parameter ( property = "jspc.jspFileExtensions", defaultValue = "jsp,jspx")
     private String jspFileExtensions;
 
+    /**
+     * @deprecated Due to internal refactoring, this is not longer supported.
+     */
+    @Deprecated
     @Parameter ( property = "jspc.servletPackage", defaultValue = "org.apache.jsp")
     private String servletPackage;
 
@@ -138,10 +139,6 @@ public class JspcMojo extends AbstractMojo implements Options {
     @Parameter
     private String[] excludes;
 
-    private Set<String> jspFileExtensionSet;
-
-    private boolean compile = true;
-
     private String uriSourceRoot;
 
     private List<String> pages = new ArrayList<String>();
@@ -151,8 +148,6 @@ public class JspcMojo extends AbstractMojo implements Options {
     private JspRuntimeContext rctxt;
 
     private URLClassLoader loader = null;
-
-    private Map<String, TreeNode> tldCache;
 
     /**
      * Cache for the TLD locations
@@ -216,7 +211,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * Locate all jsp files in the webapp. Used if no explicit jsps are
      * specified.
      */
-    public void scanFiles(File base) {
+    private void scanFiles(File base) {
 
         DirectoryScanner scanner = new DirectoryScanner();
         scanner.setBasedir(base);
@@ -224,9 +219,7 @@ public class JspcMojo extends AbstractMojo implements Options {
         scanner.setExcludes(excludes);
         scanner.scan();
 
-        for (String included : scanner.getIncludedFiles()) {
-            pages.add(included);
-        }
+        Collections.addAll(pages, scanner.getIncludedFiles());
     }
 
     /**
@@ -298,39 +291,16 @@ public class JspcMojo extends AbstractMojo implements Options {
     }
 
     private void processFile(final String file) throws JasperException {
-        ClassLoader originalClassLoader = null;
-
         try {
             final String jspUri = file.replace('\\', '/');
-            final JspServletWrapper wrapper = new JspServletWrapper(new JspCServletConfig(context), this, jspUri,
-                    false, rctxt);
+            final JspCompilationContext clctxt = new JspCompilationContext(jspUri, false, this, context, rctxt, false);
 
-            final JspCompilationContext clctxt = new JspCompilationContext(jspUri,
-                false, this, context, wrapper, rctxt);
-
-            // write to a specific servlet package
-            clctxt.setServletPackageName(servletPackage);
-
-            originalClassLoader = Thread.currentThread().getContextClassLoader();
-            if (loader == null) {
-                initClassLoader();
+            JasperException error = clctxt.compile();
+            if (error != null) {
+                throw error;
             }
-            Thread.currentThread().setContextClassLoader(loader);
-
-            Compiler clc = clctxt.createCompiler();
-
-            // If compile is set, generate both .java and .class, if
-            // .jsp file is newer than .class file;
-            // Otherwise only generate .java, if .jsp file is newer than
-            // the .java file
-            if (clc.isOutDated(compile)) {
-                clc.compile(compile, true);
-
-                if (showSuccess) {
-                    getLog().info("Built File: " + file);
-                }
-            } else if (showSuccess) {
-                getLog().info("File up to date: " + file);
+            if (showSuccess) {
+                getLog().info("Built File: " + file);
             }
 
         } catch (final JasperException je) {
@@ -352,75 +322,80 @@ public class JspcMojo extends AbstractMojo implements Options {
             getLog().error(je.getMessage());
 
         } catch (Exception e) {
-            if ((e instanceof FileNotFoundException)
-                && getLog().isWarnEnabled()) {
-                getLog().warn("Missing file: " + e.getMessage());
-            }
             throw new JasperException(e);
-        } finally {
-            if (originalClassLoader != null) {
-                Thread.currentThread().setContextClassLoader(
-                    originalClassLoader);
-            }
         }
     }
 
     // ---------- Additional Settings ------------------------------------------
 
-    private Set<String> getExtensions() {
-        if (jspFileExtensionSet == null) {
-            jspFileExtensionSet = new HashSet<String>();
-
-            // fallback default value, should actually be set by Maven
-            if (jspFileExtensions == null) {
-                jspFileExtensions = "jsp,jspx";
-            }
-
-            StringTokenizer st = new StringTokenizer(jspFileExtensions, ",");
-            while (st.hasMoreTokens()) {
-                String ext = st.nextToken().trim();
-                if (ext.length() > 0) {
-                    jspFileExtensionSet.add(ext);
-                }
-            }
+    private void initServletContext() throws IOException, DependencyResolutionRequiredException {
+        if (loader == null) {
+            initClassLoader();
         }
 
-        return jspFileExtensionSet;
-    }
+        context = new JspCServletContext(getLog(), new URL("file:" + uriSourceRoot.replace('\\', '/') + '/'));
+        tldLocationsCache = new JspCTldLocationsCache(context, true, loader);
 
-    private void initServletContext() {
-        try {
-            context = new JspCServletContext(getLog(), new URL("file:"
-                + uriSourceRoot.replace('\\', '/') + '/'));
-            tldLocationsCache = new OriginalTldLocationsCache(context, true);
-        } catch (MalformedURLException me) {
-            getLog().error("Cannot setup ServletContext", me);
-        }
-
-        rctxt = new JspRuntimeContext(context, this);
+        JavaCompiler compiler = new EclipseJavaCompiler();
+        ClassLoaderWriter writer = new JspCClassLoaderWriter(loader, new File(outputDirectory));
+        IOProvider ioProvider = new JspCIOProvider(loader, compiler, writer);
+        rctxt = new JspRuntimeContext(context, this, ioProvider);
         jspConfig = new JspConfig(context);
         tagPluginManager = new TagPluginManager(context);
     }
+
 
     /**
      * Initializes the classloader as/if needed for the given compilation
      * context.
      *
-     * @param clctxt The compilation context
      * @throws IOException If an error occurs
      */
     private void initClassLoader() throws IOException,
             DependencyResolutionRequiredException {
-        List artifacts = project.getCompileArtifacts();
-        URL[] path = new URL[artifacts.size() + 1];
-        int i = 0;
-        for (Iterator ai=artifacts.iterator(); ai.hasNext(); ) {
-            Artifact a = (Artifact) ai.next();
-            path[i++] = a.getFile().toURI().toURL();
-        }
+        List<URL> classPath = new ArrayList<URL>();
+
+        // add output directory to classpath
         final String targetDirectory = project.getBuild().getOutputDirectory();
-        path[path.length - 1] = new File(targetDirectory).toURI().toURL();
-        loader = new URLClassLoader(path, this.getClass().getClassLoader());
+        classPath.add(new File(targetDirectory).toURI().toURL());
+
+        // add artifacts from project
+        Set<Artifact> artifacts = project.getDependencyArtifacts();
+        for (Artifact a: artifacts) {
+            final String scope = a.getScope();
+            if ("provided".equals(scope) || "runtime".equals(scope) || "compile".equals(scope)) {
+                // we need to exclude the javax.servlet.jsp API, otherwise the taglib parser causes problems (see note below)
+                if (containsProblematicPackage(a.getFile())) {
+                    continue;
+                }
+                classPath.add(a.getFile().toURI().toURL());
+            }
+        }
+
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("Compiler classpath:");
+            for (URL u: classPath) {
+                getLog().debug("  " + u);
+            }
+        }
+
+        // this is dangerous to use this classloader as parent as the compilation will depend on the classes provided
+        // in the plugin dependencies. but if we omit this, we get errors by not being able to load the TagExtraInfo classes.
+        // this is because this plugin uses classes from the javax.servlet.jsp that are also loaded via the TLDs.
+        loader = new URLClassLoader(classPath.toArray(new URL[classPath.size()]), this.getClass().getClassLoader());
+    }
+
+    /**
+     * Checks if the given jar file contains a problematic java API that should be excluded from the classloader.
+     * @param file the file to check
+     * @return {@code true} if it contains a problematic package
+     * @throws IOException if an error occurrs.
+     */
+    private boolean containsProblematicPackage(File file) throws IOException {
+        JarFile jar = new JarFile(file);
+        boolean isJSPApi = jar.getEntry("/javax/servlet/jsp/JspPage.class") != null;
+        jar.close();
+        return isJSPApi;
     }
 
     // ---------- Options interface --------------------------------------------
@@ -437,51 +412,10 @@ public class JspcMojo extends AbstractMojo implements Options {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.jasper.Options#isCaching()
-     */
-    public boolean isCaching() {
-        return true;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.jasper.Options#getCache()
-     */
-    public Map<String, TreeNode> getCache() {
-        if (tldCache == null) {
-            tldCache = new HashMap<String, TreeNode>();
-        }
-
-        return tldCache;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.jasper.Options#getCheckInterval()
-     */
-    public int getCheckInterval() {
-        return 0;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
      * @see org.apache.jasper.Options#getClassDebugInfo()
      */
     public boolean getClassDebugInfo() {
         return jasperClassDebugInfo;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.jasper.Options#getClassPath()
-     */
-    public String getClassPath() {
-        // no extra classpath
-        return null;
     }
 
     /*
@@ -515,15 +449,6 @@ public class JspcMojo extends AbstractMojo implements Options {
      */
     public String getCompilerTargetVM() {
         return compilerTargetVM;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.jasper.Options#getDevelopment()
-     */
-    public boolean getDevelopment() {
-        return false;
     }
 
     /*
@@ -567,15 +492,6 @@ public class JspcMojo extends AbstractMojo implements Options {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.jasper.Options#getJspClassLoader()
-     */
-    public ClassLoader getJspClassLoader() {
-        return this.loader;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
      * @see org.apache.jasper.Options#getJspConfig()
      */
     public JspConfig getJspConfig() {
@@ -598,15 +514,6 @@ public class JspcMojo extends AbstractMojo implements Options {
      */
     public boolean getMappedFile() {
         return jasperMappedFile;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.jasper.Options#getModificationTestInterval()
-     */
-    public int getModificationTestInterval() {
-        return 0;
     }
 
     /*
