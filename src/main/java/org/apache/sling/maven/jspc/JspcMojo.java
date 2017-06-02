@@ -19,11 +19,15 @@ package org.apache.sling.maven.jspc;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import javax.servlet.ServletContext;
@@ -51,6 +55,7 @@ import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.compiler.TagPluginManager;
 import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
 import org.codehaus.plexus.util.DirectoryScanner;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * The <code>JspcMojo</code> is implements the Sling Maven JspC goal
@@ -113,6 +118,12 @@ public class JspcMojo extends AbstractMojo implements Options {
     private String compilerSourceVM;
 
     /**
+     * Prints a compilation report by listing all the packages and dependencies that were used during processing the JSPs.
+     */
+    @Parameter ( property = "jspc.printCompilationReport", defaultValue = "false")
+    private boolean printCompilationReport;
+
+    /**
      * Comma separated list of extensions of files to be compiled by the plugin.
      * @deprecated Use the {@link #includes} filter instead.
      */
@@ -147,16 +158,18 @@ public class JspcMojo extends AbstractMojo implements Options {
 
     private JspRuntimeContext rctxt;
 
-    private URLClassLoader loader = null;
+    private TrackingClassLoader loader;
+
+    private List<Artifact> jspcCompileArtifacts;
 
     /**
      * Cache for the TLD locations
      */
-    private TldLocationsCache tldLocationsCache = null;
+    private TldLocationsCache tldLocationsCache;
 
-    private JspConfig jspConfig = null;
+    private JspConfig jspConfig;
 
-    private TagPluginManager tagPluginManager = null;
+    private TagPluginManager tagPluginManager;
 
     /*
      * (non-Javadoc)
@@ -189,10 +202,11 @@ public class JspcMojo extends AbstractMojo implements Options {
         String oldValue = System.getProperty(LogFactoryImpl.LOG_PROPERTY);
         try {
             // ensure the JSP Compiler does not try to use Log4J
-            System.setProperty(LogFactoryImpl.LOG_PROPERTY,
-                SimpleLog.class.getName());
-
+            System.setProperty(LogFactoryImpl.LOG_PROPERTY, SimpleLog.class.getName());
             executeInternal();
+            if (printCompilationReport) {
+                printCompilationReport();
+            }
         } catch (JasperException je) {
             getLog().error("Compilation Failure", je);
             throw new MojoExecutionException(je.getMessage(), je);
@@ -354,13 +368,13 @@ public class JspcMojo extends AbstractMojo implements Options {
     private void initClassLoader() throws IOException,
             DependencyResolutionRequiredException {
         List<URL> classPath = new ArrayList<URL>();
-
         // add output directory to classpath
         final String targetDirectory = project.getBuild().getOutputDirectory();
         classPath.add(new File(targetDirectory).toURI().toURL());
 
         // add artifacts from project
         Set<Artifact> artifacts = project.getDependencyArtifacts();
+        jspcCompileArtifacts = new ArrayList<Artifact>(artifacts.size());
         for (Artifact a: artifacts) {
             final String scope = a.getScope();
             if ("provided".equals(scope) || "runtime".equals(scope) || "compile".equals(scope)) {
@@ -369,6 +383,7 @@ public class JspcMojo extends AbstractMojo implements Options {
                     continue;
                 }
                 classPath.add(a.getFile().toURI().toURL());
+                jspcCompileArtifacts.add(a);
             }
         }
 
@@ -382,7 +397,7 @@ public class JspcMojo extends AbstractMojo implements Options {
         // this is dangerous to use this classloader as parent as the compilation will depend on the classes provided
         // in the plugin dependencies. but if we omit this, we get errors by not being able to load the TagExtraInfo classes.
         // this is because this plugin uses classes from the javax.servlet.jsp that are also loaded via the TLDs.
-        loader = new URLClassLoader(classPath.toArray(new URL[classPath.size()]), this.getClass().getClassLoader());
+        loader = new TrackingClassLoader(classPath.toArray(new URL[classPath.size()]), this.getClass().getClassLoader());
     }
 
     /**
@@ -396,6 +411,119 @@ public class JspcMojo extends AbstractMojo implements Options {
         boolean isJSPApi = jar.getEntry("/javax/servlet/jsp/JspPage.class") != null;
         jar.close();
         return isJSPApi;
+    }
+
+    /**
+     * Prints the dependency report.
+     */
+    private void printCompilationReport() {
+        if (loader == null) {
+            return;
+        }
+
+        // first scan all the dependencies for their classes
+        Map<String, Set<String>> artifactsByPackage = new HashMap<String, Set<String>>();
+        Set<String> usedDependencies = new HashSet<String>();
+        for (Artifact a: jspcCompileArtifacts) {
+            scanArtifactPackages(artifactsByPackage, a);
+            usedDependencies.add(a.getId());
+        }
+
+        // create the report
+        StringBuilder report = new StringBuilder("JSP compilation report:\n\n");
+        List<String> packages = new ArrayList<String>(loader.getPackageNames());
+        int pad = 10;
+        for (String packageName: artifactsByPackage.keySet()) {
+            pad = Math.max(pad, packageName.length());
+        }
+        pad += 2;
+        report.append(StringUtils.rightPad("Package", pad)).append("Dependency");
+        report.append("\n---------------------------------------------------------------\n");
+        Collections.sort(packages);
+        for (String packageName: packages) {
+            report.append(StringUtils.rightPad(packageName, pad));
+            Set<String> a = artifactsByPackage.get(packageName);
+            if (a == null || a.isEmpty()) {
+                report.append("n/a");
+            } else {
+                StringBuilder ids = new StringBuilder();
+                for (String id: a) {
+                    usedDependencies.remove(id);
+                    if (ids.length() > 0) {
+                        ids.append(", ");
+                    }
+                    ids.append(id);
+                }
+                report.append(ids);
+            }
+            report.append("\n");
+        }
+
+        // print the unused dependencies
+        report.append("\n");
+        report.append(usedDependencies.size()).append(" dependencies not used by JSPs:\n");
+        if (!usedDependencies.isEmpty()) {
+            report.append("---------------------------------------------------------------\n");
+            for (String id: usedDependencies) {
+                report.append(id).append("\n");
+            }
+        }
+
+        // create the package list that are double defined
+        int doubleDefined = 0;
+        StringBuilder msg = new StringBuilder();
+        packages = new ArrayList<String>(artifactsByPackage.keySet());
+        Collections.sort(packages);
+        for (String packageName: packages) {
+            Set<String> a = artifactsByPackage.get(packageName);
+            if (a != null && a.size() > 1) {
+                doubleDefined++;
+                msg.append(StringUtils.rightPad(packageName, pad));
+                msg.append(StringUtils.join(a.iterator(), ", ")).append("\n");
+            }
+        }
+        report.append("\n");
+        report.append(doubleDefined).append(" packages are multiply defined by dependencies:\n");
+        if (doubleDefined > 0) {
+            report.append("---------------------------------------------------------------\n");
+            report.append(msg);
+        }
+
+        getLog().info(report);
+    }
+
+    /**
+     * Scans the given artifact for classes and add their packages to the given map.
+     * @param artifactsByPackage the package to artifact lookup map
+     * @param a the artifact to scan
+     */
+    private void scanArtifactPackages(Map<String, Set<String>> artifactsByPackage, Artifact a) {
+        try {
+            JarFile jar = new JarFile(a.getFile());
+            Enumeration<JarEntry> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry e = entries.nextElement();
+                if (e.isDirectory()) {
+                    continue;
+                }
+                String path = e.getName();
+                if (path.endsWith(".class")) {
+                    path = StringUtils.chomp(path, "/");
+                    if (path.charAt(0) == '/') {
+                        path = path.substring(1);
+                    }
+                    String packageName = path.replaceAll("/", ".");
+                    Set<String> artifacts = artifactsByPackage.get(packageName);
+                    if (artifacts == null) {
+                        artifacts = new HashSet<String>();
+                        artifactsByPackage.put(packageName, artifacts);
+                    }
+                    artifacts.add(a.getId());
+                }
+            }
+        } catch (IOException e) {
+            getLog().error("Error while accessing jar file: " + e.getMessage());
+        }
     }
 
     // ---------- Options interface --------------------------------------------
