@@ -99,7 +99,6 @@ public class U {
                     mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
                     mavenBundle("org.apache.sling", "org.apache.sling.hc.samples", samplesVersion),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
-                    mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.10"),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.1.0"),
