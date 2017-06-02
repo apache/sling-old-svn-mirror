@@ -21,6 +21,7 @@
 [artifacts]
   org.apache.sling/org.apache.sling.launchpad/8/slingstart
   org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/slingfeature
+  org.apache.sling/org.apache.sling.commons.johnzon/1.0.0
 
 # SLING-2760 Do not include auth/selector in contrib build to avoid missing artifact dependency on http://dyuproject.googlecode.com/svn/repos/maven2
 # Auth 

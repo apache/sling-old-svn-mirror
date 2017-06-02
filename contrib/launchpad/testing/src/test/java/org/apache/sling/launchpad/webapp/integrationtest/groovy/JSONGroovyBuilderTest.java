@@ -17,12 +17,15 @@
 package org.apache.sling.launchpad.webapp.integrationtest.groovy;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+
 import org.apache.sling.launchpad.webapp.integrationtest.RenderingTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.slf4j.Logger;
@@ -56,40 +59,40 @@ public class JSONGroovyBuilderTest extends RenderingTestBase {
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
     }
 
-    public void testObject() throws IOException, JSONException {
+    public void testObject() throws IOException, JsonException {
         final String toDelete = uploadTestScript("builder_object.groovy","json.groovy");
         try {
             final String content = getContent(displayUrl + ".json", CONTENT_TYPE_JSON);
-            JSONObject jo = new JSONObject(content);
-            assertEquals("Content contained wrong number of items", 1, jo.length());
-            assertEquals("Content contained wrong key", "text", jo.keys().next());
-            assertEquals("Content contained wrong data", testText, jo.get("text"));
+            JsonObject jo = Json.createReader(new StringReader(content)).readObject();
+            assertEquals("Content contained wrong number of items", 1, jo.size());
+            assertEquals("Content contained wrong key", "text", jo.keySet().iterator().next());
+            assertEquals("Content contained wrong data", testText, jo.getString("text"));
         } finally {
             testClient.delete(toDelete);
         }
     }
     
-    public void testRichObject() throws IOException, JSONException {
+    public void testRichObject() throws IOException, JsonException {
         final String toDelete = uploadTestScript("builder_rich_object.groovy","json.groovy");
         try {
             final String content = getContent(displayUrl + ".json", CONTENT_TYPE_JSON);
             log.debug("{} content: {}", displayUrl, content);
-            JSONObject jo = new JSONObject(content);
-            assertEquals("Content contained wrong number of items", 2, jo.length());
-            assertEquals("Content contained wrong data", testText, jo.get("text"));
-            assertEquals("Content contained wrong data", "bar", ((JSONObject) jo.get("obj")).get("foo"));
+            JsonObject jo = Json.createReader(new StringReader(content)).readObject();
+            assertEquals("Content contained wrong number of items", 2, jo.size());
+            assertEquals("Content contained wrong data", testText, jo.getString("text"));
+            assertEquals("Content contained wrong data", "bar", ((JsonObject) jo.getJsonObject("obj")).getString("foo"));
         } finally {
             testClient.delete(toDelete);
         }
     }
 
-    public void testArray() throws IOException, JSONException {
+    public void testArray() throws IOException, JsonException {
         final String toDelete = uploadTestScript("builder_array.groovy","json.groovy");
         try {
             final String content = getContent(displayUrl + ".json", CONTENT_TYPE_JSON);
-            JSONArray jo = new JSONArray(content);
-            assertEquals("Content contained wrong number of items", 1, jo.length());
-            assertEquals("Content contained wrong data", testText, jo.get(0));
+            JsonArray jo = Json.createReader(new StringReader(content)).readArray();
+            assertEquals("Content contained wrong number of items", 1, jo.size());
+            assertEquals("Content contained wrong data", testText, jo.getString(0));
         } finally {
             testClient.delete(toDelete);
         }
