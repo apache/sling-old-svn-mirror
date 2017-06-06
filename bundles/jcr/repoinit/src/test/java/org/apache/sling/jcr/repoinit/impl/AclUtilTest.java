@@ -71,6 +71,32 @@ public class AclUtilTest {
         
         assertIsContained(acl, U.username, new String[]{ Privilege.JCR_READ, Privilege.JCR_WRITE }, true);
     }
+
+    @Test
+    public void testDeclaredAggregatePrivilegesAreContained() throws Exception {
+        String [] privileges = new String[]{
+          //JCR_READ
+                "rep:readNodes","rep:readProperties",
+          // JCR_WRITE
+                Privilege.JCR_ADD_CHILD_NODES,Privilege.JCR_MODIFY_PROPERTIES,
+                Privilege.JCR_REMOVE_CHILD_NODES, Privilege.JCR_REMOVE_NODE
+        };
+        assertIsContained(acl, U.username, privileges, true);
+    }
+
+    @Test
+    public void testAllAggregatePrivilegesAreContained() throws Exception {
+        String [] privileges = new String[]{
+                //JCR_READ
+                "rep:readNodes","rep:readProperties",
+                // JCR_WRITE
+                Privilege.JCR_ADD_CHILD_NODES,"rep:addProperties",
+                "rep:alterProperties","rep:removeProperties",
+                Privilege.JCR_REMOVE_CHILD_NODES, Privilege.JCR_REMOVE_NODE
+        };
+        assertIsContained(acl, U.username, privileges, true);
+    }
+
     
     @Test
     public void entryWithFewerPrivilegesIsContained() throws Exception {
@@ -86,11 +112,11 @@ public class AclUtilTest {
     }
     
     @Test
-    public void entryWithPartiallyMatchingPrivilegesIsNotContained() throws Exception {
+    public void entryWithPartiallyMatchingPrivilegesIsContained() throws Exception {
         // validates that an exact match of the username and isAllow but with privileges partially overlapping is contained
         // existing: JCR_READ, JCR_WRITE 
         // new: JCR_READ, JCR_MODIFY_PROPERTIES
-        assertIsNotContained(acl, U.username, new String[]{ Privilege.JCR_READ, Privilege.JCR_MODIFY_PROPERTIES }, true);
+        assertIsContained(acl, U.username, new String[]{Privilege.JCR_READ, Privilege.JCR_MODIFY_PROPERTIES }, true);
     }    
     
     @Test

@@ -136,14 +136,26 @@ public class AclUtil {
                     ( other.getRestrictionNames() == null || 
                         other.getRestrictionNames().length == 0 );
         }
-        
+        private Set<Privilege> expandPrivileges(Privilege[] privileges){
+            Set<Privilege> expandedSet = new HashSet<>();
+
+            if(privileges != null){
+                for(Privilege privilege : privileges){
+                    if(privilege.isAggregate()){
+                        expandedSet.addAll(Arrays.asList(privilege.getAggregatePrivileges()));
+                    } else {
+                        expandedSet.add(privilege);
+                    }
+                }
+            }
+
+            return expandedSet;
+        }
         private boolean contains(Privilege[] first, Privilege[] second) {
             // we need to ensure that the privilege order is not taken into account, so we use sets
-            Set<Privilege> set1 = new HashSet<Privilege>();
-            set1.addAll(Arrays.asList(first));
+            Set<Privilege> set1 = expandPrivileges(first);
             
-            Set<Privilege> set2 = new HashSet<Privilege>();
-            set2.addAll(Arrays.asList(second));
+            Set<Privilege> set2 = expandPrivileges(second);
             
             return set1.containsAll(set2);
         }
