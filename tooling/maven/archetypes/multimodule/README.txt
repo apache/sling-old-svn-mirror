@@ -1,4 +1,4 @@
-Sling Multim-odule Maven Archetype
+Sling Multi-module Maven Archetype
 
 Maven archetype for Sling Multi-module Project.
 
