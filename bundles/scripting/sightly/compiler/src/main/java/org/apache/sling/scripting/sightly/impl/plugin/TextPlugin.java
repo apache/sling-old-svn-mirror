@@ -18,8 +18,11 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.plugin;
 
+import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.compiler.commands.OutputVariable;
+import org.apache.sling.scripting.sightly.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.compiler.expression.MarkupContext;
+import org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall;
 import org.apache.sling.scripting.sightly.impl.compiler.Patterns;
 import org.apache.sling.scripting.sightly.compiler.commands.VariableBinding;
 import org.apache.sling.scripting.sightly.impl.compiler.PushStream;
@@ -45,7 +48,7 @@ public class TextPlugin extends AbstractPlugin {
             public void beforeChildren(PushStream stream) {
                 String variable = compilerContext.generateVariable("textContent");
                 stream.write(new VariableBinding.Start(variable,
-                        compilerContext.adjustToContext(expression, MarkupContext.TEXT, ExpressionContext.TEXT).getRoot()));
+                        adjustContext(compilerContext, expression, MarkupContext.TEXT, ExpressionContext.TEXT).getRoot()));
                 stream.write(new OutputVariable(variable));
                 stream.write(VariableBinding.END);
                 Patterns.beginStreamIgnore(stream);
@@ -56,5 +59,17 @@ public class TextPlugin extends AbstractPlugin {
                 Patterns.endStreamIgnore(stream);
             }
         };
+    }
+
+    private Expression adjustContext(CompilerContext compilerContext, Expression expression, MarkupContext markupContext,
+                                     ExpressionContext expressionContext) {
+        ExpressionNode root = expression.getRoot();
+        if (root instanceof RuntimeCall) {
+            RuntimeCall runtimeCall = (RuntimeCall) root;
+            if (runtimeCall.getFunctionName().equals(RuntimeFunction.XSS)) {
+                return expression;
+            }
+        }
+        return compilerContext.adjustToContext(expression, markupContext, expressionContext);
     }
 }
