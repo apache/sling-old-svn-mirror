@@ -67,14 +67,15 @@ class ImportingDistributionPackageProcessor implements DistributionPackageProces
     @Override
     public void process(DistributionPackage distributionPackage) {
         final long startTime = System.currentTimeMillis();
+        ResourceResolver agentResourceResolver = null;
         try {
             // set up original calling RR
-            ResourceResolver resourceResolver = DistributionUtils.getResourceResolver(callingUser, authenticationInfo.getAgentService(),
+            agentResourceResolver = DistributionUtils.getResourceResolver(callingUser, authenticationInfo.getAgentService(),
                     authenticationInfo.getSlingRepository(), authenticationInfo.getSubServiceName(),
                     authenticationInfo.getResourceResolverFactory());
 
             // perform importing
-            distributionPackageImporter.importPackage(resourceResolver, distributionPackage);
+            distributionPackageImporter.importPackage(agentResourceResolver, distributionPackage);
 
             // collect stats
             packagesSize.addAndGet(distributionPackage.getSize());
@@ -90,6 +91,8 @@ class ImportingDistributionPackageProcessor implements DistributionPackageProces
         } catch (DistributionException e) {
             log.error("an error happened during package import", e);
             allResponses.add(new SimpleDistributionResponse(DistributionRequestState.DROPPED, e.toString()));
+        } finally {
+            DistributionUtils.ungetResourceResolver(agentResourceResolver);
         }
     }
 
