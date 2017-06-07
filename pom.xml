@@ -31,6 +31,12 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>slingfeature</packaging>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/test-bundles</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/test-bundles</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/test-bundles</url>
+    </scm>
+
     <name>Apache Sling Launchpad Test Bundles</name>
     <description>Bundles required for testing Apache Sling</description>
 
