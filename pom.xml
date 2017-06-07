@@ -67,6 +67,11 @@
                 <configuration>
                     <!-- Export SCR metadata to classpath to have them available in unit tests -->
                     <exportScr>true</exportScr>
+                    <instructions>
+                        <Provide-Capability>
+                            osgi.implementation;osgi.implementation="org.apache.sling.jcr.repoinit";version:Version="1.0"
+                        </Provide-Capability>
+                    </instructions>
                  </configuration>
             </plugin>
             <plugin>
