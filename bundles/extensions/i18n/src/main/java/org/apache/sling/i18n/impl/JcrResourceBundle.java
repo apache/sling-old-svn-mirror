@@ -20,9 +20,11 @@ package org.apache.sling.i18n.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -240,8 +242,10 @@ public class JcrResourceBundle extends ResourceBundle {
         log.info("Loading json dictionary: {}", resource.getPath());
 
         // use streaming parser (we don't need the dict in memory twice)
+        // convert json object hierarchy to keys separated by "."
         JsonParser parser = new JsonParser(new JsonHandler() {
 
+            private Deque<String> prefix = new ArrayDeque<>();
             private String key;
 
             @Override
@@ -251,13 +255,24 @@ public class JcrResourceBundle extends ResourceBundle {
 
             @Override
             public void value(String value) throws IOException {
-                targetDictionary.put(key, value);
+                targetDictionary.put(prefix.peek() + key, value);
             }
 
             @Override
-            public void object() throws IOException {}
+            public void object() throws IOException {
+                if (key == null) {
+                    prefix.push("");
+                }
+                else {
+                    prefix.push(prefix.peek() + key + ".");
+                }
+            }
             @Override
-            public void endObject() throws IOException {}
+            public void endObject() throws IOException {
+                prefix.pop();
+                key = null;
+            }
+            
             @Override
             public void array() throws IOException {}
             @Override
