@@ -57,6 +57,7 @@ public class HtmlParserImpl implements HtmlParser {
     public void parse(InputStream stream, String encoding, ContentHandler ch)
     throws SAXException {
         final Parser parser = new Parser();
+        parser.setProperty("http://www.ccil.org/~cowan/tagsoup/properties/schema", new HTMLExtendedSchema());
         if ( ch instanceof LexicalHandler ) {
             parser.setProperty("http://xml.org/sax/properties/lexical-handler", ch);
         }
@@ -87,6 +88,7 @@ public class HtmlParserImpl implements HtmlParser {
 
         try {
             parser.setProperty("http://xml.org/sax/properties/lexical-handler", builder);
+            parser.setProperty("http://www.ccil.org/~cowan/tagsoup/properties/schema", new HTMLExtendedSchema());
             for (String feature : features.keySet()) {
                 parser.setProperty(feature, features.get(feature));
             }
