@@ -24,12 +24,12 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>30</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.launchpad.testing-war</artifactId>
     <packaging>slingstart</packaging>
-    <version>9-SNAPSHOT</version>
+    <version>9</version>
 
     <name>Apache Sling Launchpad Testing WAR version</name>
     <description>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/testing-war</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/testing-war</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/testing-war</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.testing-war-9</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.testing-war-9</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.launchpad.testing-war-9</url>
     </scm>
 
     <properties>
@@ -57,7 +57,7 @@
         <test.host>localhost</test.host>
 
         <!-- optionally exclude some integration tests  -->
-        <failsafe.exclude></failsafe.exclude>
+        <failsafe.exclude />
 
         <slf4j.version>1.7.6</slf4j.version>
         <logback.version>1.1.2</logback.version>
