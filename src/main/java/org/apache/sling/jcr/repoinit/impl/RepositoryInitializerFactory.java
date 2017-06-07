@@ -32,7 +32,9 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * SlingRepositoryInitializer Factory that executes repoinit statements read
  * from a configurable URL.
  */
-@Designate(ocd = RepositoryInitializer.Config.class, factory=true)
+@Designate(ocd = RepositoryInitializerFactory.Config.class, factory=true)
 @Component(service = SlingRepositoryInitializer.class,
     configurationPolicy=ConfigurationPolicy.REQUIRE,
     configurationPid = "org.apache.sling.jcr.repoinit.RepositoryInitializer",
@@ -52,6 +54,22 @@ import org.slf4j.LoggerFactory;
     })
 public class RepositoryInitializerFactory implements SlingRepositoryInitializer {
 
+    @ObjectClassDefinition(name = "Apache Sling Repository Initializer Factory",
+            description="Initializes the JCR content repository using repoinit statements.")
+        public @interface Config {
+
+            @AttributeDefinition(name="References",
+                description=
+                     "References to the source text that provides repoinit statements."
+                    + " format is a raw URL.")
+            String[] references() default {};
+
+            @AttributeDefinition(name="Scripts",
+                    description=
+                         "Contents of a repo init script.")
+            String[] scripts() default {};
+    }
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 
@@ -61,32 +79,46 @@ public class RepositoryInitializerFactory implements SlingRepositoryInitializer 
     @Reference
     private JcrRepoInitOpsProcessor processor;
 
-    private RepositoryInitializer.Config config;
+    private RepositoryInitializerFactory.Config config;
 
     @Activate
-    public void activate(final RepositoryInitializer.Config config) {
+    public void activate(final RepositoryInitializerFactory.Config config) {
         this.config = config;
         log.debug("Activated: {}", this.toString());
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ", references=" + Arrays.toString(config.references());
+        return getClass().getSimpleName()
+                + ", references=" + Arrays.toString(config.references())
+                + ", scripts=" + (config.scripts() != null ? config.scripts().length : 0);
     }
 
     @Override
-    public void processRepository(SlingRepository repo) throws Exception {
-        if ( config.references() != null && config.references().length > 0 ) {
+    public void processRepository(final SlingRepository repo) throws Exception {
+        if ( (config.references() != null && config.references().length > 0)
+           || (config.scripts() != null && config.scripts().length > 0 )) {
+
             // loginAdministrative is ok here, definitely an admin operation
             final Session s = repo.loginAdministrative(null);
             try {
-                final RepoinitTextProvider p = new RepoinitTextProvider();
-                for(String reference : config.references()) {
-                    final String repoinitText = p.getRepoinitText(reference);
-                    final List<Operation> ops = parser.parse(new StringReader(repoinitText));
-                    log.info("Executing {} repoinit operations", ops.size());
-                    processor.apply(s, ops);
-                    s.save();
+                if ( config.references() != null ) {
+                    final RepoinitTextProvider p = new RepoinitTextProvider();
+                    for(final String reference : config.references()) {
+                        final String repoinitText = p.getRepoinitText("raw:" + reference);
+                        final List<Operation> ops = parser.parse(new StringReader(repoinitText));
+                        log.info("Executing {} repoinit operations", ops.size());
+                        processor.apply(s, ops);
+                        s.save();
+                    }
+                }
+                if ( config.scripts() != null ) {
+                    for(final String script : config.scripts()) {
+                        final List<Operation> ops = parser.parse(new StringReader(script));
+                        log.info("Executing {} repoinit operations", ops.size());
+                        processor.apply(s, ops);
+                        s.save();
+                    }
                 }
             } finally {
                 s.logout();
