@@ -28,13 +28,13 @@
     </parent>
 
     <artifactId>org.apache.sling.launchpad.test-bundles</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3-SNAPSHOT</version>
     <packaging>slingfeature</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.test-bundles-0.0.2</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.test-bundles-0.0.2</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.launchpad.test-bundles-0.0.2</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/test-bundles</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/test-bundles</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/test-bundles</url>
     </scm>
 
     <name>Apache Sling Launchpad Test Bundles</name>
