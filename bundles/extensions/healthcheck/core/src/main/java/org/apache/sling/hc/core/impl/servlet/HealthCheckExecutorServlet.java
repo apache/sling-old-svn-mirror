@@ -139,6 +139,12 @@ public class HealthCheckExecutorServlet extends HttpServlet {
             description = "Allows to disable the servlet if required for security reasons", boolValue = false)
     private boolean disabled;
 
+    private static final String CORS_ORIGIN_HEADER_NAME = "Access-Control-Allow-Origin";
+    public static final String CORS_ORIGIN_HEADER_DEFAULT_VALUE = "*";
+    public static final String PROPERTY_CORS_ORIGIN_HEADER_VALUE = "cors.accessControlAllowOrigin";
+    @Property(name = PROPERTY_CORS_ORIGIN_HEADER_VALUE, label = "CORS Access-Control-Allow-Origin", description = "Sets the Access-Control-Allow-Origin CORS header. If blank no header is sent.", value = CORS_ORIGIN_HEADER_DEFAULT_VALUE)
+    private String corsAccessControlAllowOrigin;
+
     @Reference
     private HttpService httpService;
 
@@ -162,6 +168,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         final Dictionary<?, ?> properties = context.getProperties();
         this.servletPath = PropertiesUtil.toString(properties.get(PROPERTY_SERVLET_PATH), SERVLET_PATH_DEFAULT);
         this.disabled = PropertiesUtil.toBoolean(properties.get(PROPERTY_DISABLED), false);
+        this.corsAccessControlAllowOrigin = PropertiesUtil.toString(properties.get(PROPERTY_CORS_ORIGIN_HEADER_VALUE), CORS_ORIGIN_HEADER_DEFAULT_VALUE);
 
         Map<String, HttpServlet> servletsToRegister = new LinkedHashMap<String, HttpServlet>();
         servletsToRegister.put(this.servletPath, this);
@@ -260,6 +267,7 @@ public class HealthCheckExecutorServlet extends HttpServlet {
         Result overallResult = new Result(mostSevereStatus, "Overall status " + mostSevereStatus);
 
         sendNoCacheHeaders(response);
+        sendCorsHeaders(response);
 
         if (statusMapping != null) {
             Integer httpStatus = statusMapping.get(overallResult.getStatus());
@@ -339,6 +347,12 @@ public class HealthCheckExecutorServlet extends HttpServlet {
 
     private void sendNoCacheHeaders(final HttpServletResponse response) {
         response.setHeader(CACHE_CONTROL_KEY, CACHE_CONTROL_VALUE);
+    }
+
+    private void sendCorsHeaders(final HttpServletResponse response) {
+        if (StringUtils.isNotBlank(corsAccessControlAllowOrigin)) {
+            response.setHeader(CORS_ORIGIN_HEADER_NAME, corsAccessControlAllowOrigin);
+        }
     }
 
     private String getHtmlHelpText() {
