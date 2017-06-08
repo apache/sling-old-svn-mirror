@@ -49,6 +49,8 @@ public class HealthCheckMetadata {
 
     private final Long resultCacheTtlInMs;
 
+    private final Long warningsStickForMinutes;
+
     public HealthCheckMetadata(final ServiceReference ref) {
         this.serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
         this.name = (String) ref.getProperty(HealthCheck.NAME);
@@ -57,6 +59,7 @@ public class HealthCheckMetadata {
         this.tags = arrayPropertyToListOfStr(ref.getProperty(HealthCheck.TAGS));
         this.asyncCronExpression = (String) ref.getProperty(HealthCheck.ASYNC_CRON_EXPRESSION);
         this.resultCacheTtlInMs = (Long)ref.getProperty(HealthCheck.RESULT_CACHE_TTL_IN_MS);
+        this.warningsStickForMinutes = (Long) ref.getProperty(HealthCheck.WARNINGS_STICK_FOR_MINUTES);
         this.serviceReference = ref;
     }
 
@@ -126,6 +129,15 @@ public class HealthCheckMetadata {
      */
     public Long getResultCacheTtlInMs() {
         return resultCacheTtlInMs;
+    }
+
+    /**
+     * Make warnings stick for the given amount of time.
+     *
+     * @return Time to make warn results sticky in minutes.
+     */
+    public Long getWarningsStickForMinutes() {
+        return warningsStickForMinutes;
     }
 
     @Override

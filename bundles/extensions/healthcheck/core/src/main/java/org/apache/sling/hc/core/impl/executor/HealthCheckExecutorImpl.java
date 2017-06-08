@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -249,7 +250,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     }
 
     private void createResultsForDescriptors(final List<HealthCheckMetadata> healthCheckDescriptors,
-            final Collection<HealthCheckExecutionResult> results, HealthCheckExecutionOptions options) {
+            final List<HealthCheckExecutionResult> results, HealthCheckExecutionOptions options) {
         // -- All methods below check if they can transform a healthCheckDescriptor into a result
         // -- if yes the descriptor is removed from the list and the result added
 
@@ -269,6 +270,22 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         // wait for futures at most until timeout (but will return earlier if all futures are finished)
         waitForFuturesRespectingTimeout(futures, options);
         collectResultsFromFutures(futures, results);
+
+        // respect sticky results if configured via HealthCheck.WARNINGS_STICK_FOR_MINUTES
+        appendStickyResultLogIfConfigured(results);
+
+    }
+
+    private void appendStickyResultLogIfConfigured(List<HealthCheckExecutionResult> results) {
+        ListIterator<HealthCheckExecutionResult> resultsIt = results.listIterator();
+        while (resultsIt.hasNext()) {
+            HealthCheckExecutionResult result = resultsIt.next();
+            Long warningsStickForMinutes = result.getHealthCheckMetadata().getWarningsStickForMinutes();
+            if (warningsStickForMinutes != null && warningsStickForMinutes > 0) {
+                result = healthCheckResultCache.createExecutionResultWithStickyResults(result);
+                resultsIt.set(result);
+            }
+        }
     }
 
     private HealthCheckExecutionResult createResultsForDescriptor(final HealthCheckMetadata metadata) {

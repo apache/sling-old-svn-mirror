@@ -17,6 +17,10 @@
  */
 package org.apache.sling.hc.core.impl.executor;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -26,6 +30,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.Result.Status;
+import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.ResultLog.Entry;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.slf4j.Logger;
@@ -36,15 +44,23 @@ import org.slf4j.LoggerFactory;
  */
 public class HealthCheckResultCache {
 
-    /**
-     * The logger.
-     */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    private static final List<Status> NOT_OK_STATUS_VALUES = Arrays.asList(Status.WARN, Status.CRITICAL, Status.HEALTH_CHECK_ERROR);
 
     /**
      * The map holding the cached results.
      */
     private final Map<Long, HealthCheckExecutionResult> cache = new ConcurrentHashMap<Long, HealthCheckExecutionResult>();
+
+    @SuppressWarnings("serial")
+    private final Map<Result.Status, Map<Long, HealthCheckExecutionResult>> cacheOfNotOkResults = new ConcurrentHashMap<Result.Status, Map<Long, HealthCheckExecutionResult>>() {
+        {
+            for (Status status : NOT_OK_STATUS_VALUES) {
+                put(status, new ConcurrentHashMap<Long, HealthCheckExecutionResult>());
+            }
+        }
+    };
 
     /**
      * Update the cache with the result
@@ -52,6 +68,11 @@ public class HealthCheckResultCache {
     public void updateWith(HealthCheckExecutionResult result) {
         final ExecutionResult executionResult = (ExecutionResult) result;
         cache.put(executionResult.getServiceId(), result);
+
+        Status status = executionResult.getHealthCheckResult().getStatus();
+        if (status.ordinal() >= Result.Status.WARN.ordinal()) {
+            cacheOfNotOkResults.get(status).put(executionResult.getServiceId(), result);
+        }
     }
 
     /**
@@ -132,10 +153,65 @@ public class HealthCheckResultCache {
     }
 
     /**
+     * Creates a new execution result 
+     * @param origResult
+     * @return
+     */
+    public HealthCheckExecutionResult createExecutionResultWithStickyResults(HealthCheckExecutionResult origResult) {
+        HealthCheckExecutionResult result = origResult;
+
+        HealthCheckMetadata healthCheckMetadata = origResult.getHealthCheckMetadata();
+        Long warningsStickForMinutes = healthCheckMetadata.getWarningsStickForMinutes();
+        if (warningsStickForMinutes != null) {
+            logger.debug("Taking into account sticky results (up to {} min old) for health check ", warningsStickForMinutes, healthCheckMetadata.getName());
+            List<HealthCheckExecutionResult> nonOkResultsFromPast = new ArrayList<HealthCheckExecutionResult>();
+            long cutOffTime = System.currentTimeMillis() - (warningsStickForMinutes * 60 * 1000);
+            for (Status status : NOT_OK_STATUS_VALUES) {
+                long hcServiceId = ((ExecutionResult) origResult).getServiceId();
+                HealthCheckExecutionResult nonOkResultFromPast = cacheOfNotOkResults.get(status).get(hcServiceId);
+                if (nonOkResultFromPast == null 
+                        || nonOkResultFromPast == origResult /* the origResult has been added to cache already */) {
+                    continue;
+                }
+                long pastHcTime = nonOkResultFromPast.getFinishedAt().getTime();
+                logger.debug("Time of old {} result: {}", status, pastHcTime);
+                logger.debug("Cut off time: {}", cutOffTime);
+                if (pastHcTime > cutOffTime) {
+                    logger.debug("Found sticky result: {}", nonOkResultFromPast);
+                    nonOkResultsFromPast.add(nonOkResultFromPast);
+                }
+            }
+
+            if (!nonOkResultsFromPast.isEmpty()) {
+                ResultLog resultLog = new ResultLog();
+                resultLog.add(new Entry(Result.Status.INFO, "*** Current Result ***"));
+                for (ResultLog.Entry entry : origResult.getHealthCheckResult()) {
+                    resultLog.add(entry);
+                }
+                DateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
+                for (HealthCheckExecutionResult nonOkResultFromPast : nonOkResultsFromPast) {
+                    Status status = nonOkResultFromPast.getHealthCheckResult().getStatus();
+                    resultLog.add(
+                            new Entry(Result.Status.INFO, "*** Sticky Result " + status + " from " + df.format(nonOkResultFromPast.getFinishedAt()) + " ***"));
+                    for (ResultLog.Entry entry : nonOkResultFromPast.getHealthCheckResult()) {
+                        resultLog.add(entry);
+                    }
+                }
+                result = new ExecutionResult(healthCheckMetadata, new Result(resultLog), origResult.getElapsedTimeInMs());
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Clear the whole cache
      */
     public void clear() {
         this.cache.clear();
+        for (Status status : NOT_OK_STATUS_VALUES) {
+            cacheOfNotOkResults.get(status).clear();
+        }
     }
 
     /**
@@ -143,6 +219,9 @@ public class HealthCheckResultCache {
      */
     public void removeCachedResult(final Long serviceId) {
         this.cache.remove(serviceId);
+        for (Status status : NOT_OK_STATUS_VALUES) {
+            cacheOfNotOkResults.get(status).remove(serviceId);
+        }
     }
 
     @Override

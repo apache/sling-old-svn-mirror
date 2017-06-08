@@ -74,6 +74,17 @@ public interface HealthCheck {
     String RESULT_CACHE_TTL_IN_MS = "hc.resultCacheTtlInMs";
 
     /**
+     * Optional service property: If given, warning results (that is WARN, 
+     * CRITICAL or HEALTH_CHECK_ERROR) from the past executions will be 
+     * taken into account as well for the given minutes (use 
+     * Integer.MAX_VALUE for indefinitely). Useful for unhealthy system 
+     * states that disappear but might leave the system at an inconsistent
+     * state (e.g. an event queue overflow).  
+     * 
+     */
+    String WARNINGS_STICK_FOR_MINUTES = "hc.warningsStickForMinutes";
+
+    /**
      * Execute this health check and return a {@link Result}
      * This is meant to execute quickly, access to external
      * systems, for example, should be managed asynchronously.

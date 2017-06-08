@@ -55,6 +55,14 @@ public @interface SlingHealthCheck {
      */
     long resultCacheTtlInMs() default -1;
     
+    /**
+     * If given, warning results (that is WARN,  CRITICAL or HEALTH_CHECK_ERROR) from the past executions 
+     * will be taken into account as well for the given minutes (use  Integer.MAX_VALUE for indefinitely). 
+     * Useful for unhealthy system states that disappear but might leave the system at an inconsistent
+     * state (e.g. an event queue overflow).  
+     */
+    long warningsStickForMinutes() default -1;
+
     // handling of service and component properties (optional)
 
     /** Whether to generate a default SCR component tag. If set to false, a {@link org.apache.felix.scr.annotations.Component} annotation can be added manually
