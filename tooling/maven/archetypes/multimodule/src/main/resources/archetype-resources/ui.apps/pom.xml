@@ -76,9 +76,9 @@
                                     <goal>install</goal>
                                 </goals>
                                 <configuration>
-                                    <slingUrl>http://${sling.host}:${sling.port}/system/console</slingUrl>
-                                    <user>${sling.user}</user>
-                                    <password>${sling.password}</password>
+                                    <slingUrl>http://localhost:8080/system/console</slingUrl>
+                                    <user>admin</user>
+                                    <password>admin</password>
                                 </configuration>
                             </execution>
                         </executions>

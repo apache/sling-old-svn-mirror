@@ -50,10 +50,11 @@
         <archetype.version>2.2</archetype.version>
 
         <!-- Apache Sling configurations -->
-        <sling.host>localhost</sling.host>
-        <sling.port>8080</sling.port>
-        <sling.user>admin</sling.user>
-        <sling.password>admin</sling.password>
+        <!-- <host>localhost</host>
+        <port>8080</port> -->
+        <slingUrl>http://localhost:8080/system/console</slingUrl>
+        <user>admin</user>
+        <password>admin</password>
     </properties>
 
     <modules>
