@@ -71,6 +71,7 @@ public class HealthCheckResultCache {
 
         Status status = executionResult.getHealthCheckResult().getStatus();
         if (status.ordinal() >= Result.Status.WARN.ordinal()) {
+            logger.debug("Caching {} result for HC {}", status, executionResult.getServiceId());
             cacheOfNotOkResults.get(status).put(executionResult.getServiceId(), result);
         }
     }
@@ -169,8 +170,12 @@ public class HealthCheckResultCache {
             for (Status status : NOT_OK_STATUS_VALUES) {
                 long hcServiceId = ((ExecutionResult) origResult).getServiceId();
                 HealthCheckExecutionResult nonOkResultFromPast = cacheOfNotOkResults.get(status).get(hcServiceId);
-                if (nonOkResultFromPast == null 
-                        || nonOkResultFromPast == origResult /* the origResult has been added to cache already */) {
+                if (nonOkResultFromPast == null) {
+                    logger.debug("no sticky result in cache for HC {}", hcServiceId);
+                    continue;
+                } 
+                if(nonOkResultFromPast == origResult) {
+                    logger.debug("result already in cache: {} for HC {}, not adding sticky result", origResult, hcServiceId);
                     continue;
                 }
                 long pastHcTime = nonOkResultFromPast.getFinishedAt().getTime();
@@ -192,7 +197,7 @@ public class HealthCheckResultCache {
                 for (HealthCheckExecutionResult nonOkResultFromPast : nonOkResultsFromPast) {
                     Status status = nonOkResultFromPast.getHealthCheckResult().getStatus();
                     resultLog.add(
-                            new Entry(Result.Status.INFO, "*** Sticky Result " + status + " from " + df.format(nonOkResultFromPast.getFinishedAt()) + " ***"));
+                            new Entry(Result.Status.WARN, "*** Sticky Result " + status + " from " + df.format(nonOkResultFromPast.getFinishedAt()) + " ***"));
                     for (ResultLog.Entry entry : nonOkResultFromPast.getHealthCheckResult()) {
                         resultLog.add(entry);
                     }
