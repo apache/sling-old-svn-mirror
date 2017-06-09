@@ -167,7 +167,8 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
     }
 
-    void collectAsyncResults(List<HealthCheckMetadata> healthCheckDescriptors, Collection<HealthCheckExecutionResult> results) {
+    /** Called by the main Executor to get results from async HCs */
+    void collectAsyncResults(List<HealthCheckMetadata> healthCheckDescriptors, Collection<HealthCheckExecutionResult> results, HealthCheckResultCache cache) {
         Iterator<HealthCheckMetadata> checksIt = healthCheckDescriptors.iterator();
 
         Set<ExecutionResult> asyncResults = new TreeSet<ExecutionResult>();
@@ -187,6 +188,12 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
                 checksIt.remove();
             }
         }
+        
+        LOG.debug("Caching {} results from async results", asyncResults.size());
+        for(ExecutionResult result : asyncResults) {
+            cache.updateWith(result);
+        }
+        
         LOG.debug("Adding {} results from async results", asyncResults.size());
         results.addAll(asyncResults);
 

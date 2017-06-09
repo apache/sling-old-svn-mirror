@@ -256,7 +256,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
         // get async results
         if (!options.isForceInstantExecution()) {
-            asyncHealthCheckExecutor.collectAsyncResults(healthCheckDescriptors, results);
+            asyncHealthCheckExecutor.collectAsyncResults(healthCheckDescriptors, results, healthCheckResultCache);
         }
         
         // reuse cached results where possible
