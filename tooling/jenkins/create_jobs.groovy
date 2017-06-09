@@ -752,6 +752,9 @@ def modules = [
         location: 'samples/workspacepicker'
     ],
     [
+        location: 'email/testing'
+    ],
+    [
         location: 'testing/junit/core',
         downstream: ["launchpad/test-bundles"]
     ],
