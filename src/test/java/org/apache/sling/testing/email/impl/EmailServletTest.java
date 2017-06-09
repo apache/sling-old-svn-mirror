@@ -122,6 +122,47 @@ public class EmailServletTest {
 		String readBody = JsonPath.read(new ByteArrayInputStream(out), "$.messages[0].['-Content-']");
 		assertThat("body", readBody, equalTo(body1));
 	}
+	
+	@Test
+	public void getMessages_empty() throws ServletException, IOException {
+		
+		// SLING-6947
+		MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(ctx.resourceResolver()) {
+			@Override
+			public String getPathInfo() {
+				return "/messages";
+			}
+		};
+		
+		MockSlingHttpServletResponse response = new MockSlingHttpServletResponse();
+		servlet.service(request, response);
+		
+		assertEquals("response.status", HttpServletResponse.SC_OK, response.getStatus());
+		
+		// SLING-6948
+		byte[] out = response.getOutputAsString().getBytes();
+		int messageCount = JsonPath.read(new ByteArrayInputStream(out), "$.messages.length()");
+		
+		assertThat("messages.length", messageCount, Matchers.equalTo(0));
+	}
+	
+	@Test
+	public void deleteMessages() throws MessagingException, ServletException, IOException {
+		
+		// send an email
+		sendEmail("Test email", "A long message \r\nbody");
+		
+		// delete all messages
+		MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(ctx.resourceResolver());
+		request.setMethod("DELETE");
+		MockSlingHttpServletResponse response = new MockSlingHttpServletResponse();
+		servlet.service(request, response);
+		
+		assertEquals("response.status", HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+		
+		// validate that no messages are stored
+		getMessages_empty();
+	}
 
 	private void sendEmail(String subject, String body) throws MessagingException, AddressException {
 		

@@ -46,6 +46,7 @@ import org.osgi.service.component.annotations.Reference;
  * 	a JSON object containing the configuration properties of the {@link SmtpServerWrapper}</li>
  * <li><tt>GET /system/sling/testing/email/messages</tt>, which returns the messages
  *  currently held by the {@link SmtpServerWrapper}</li>
+ *  <li><tt>DELETE /system/sling/testing/email</tt>, which removes all messages.</li>
  * </ol>
  */
 @Component(service = Servlet.class, 
@@ -103,7 +104,13 @@ public class EMailServlet extends HttpServlet {
 				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				break;
 		}
-		
+	}
+	
+	@Override
+	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
+		wiser.clearMessages();
+		
+		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 }
