@@ -164,7 +164,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         final StringBuilder status = new StringBuilder();
 
         status.append("Tags: ").append(exResult.getHealthCheckMetadata().getTags());
-        status.append(" Finished: ").append(new SimpleDateFormat("yyyy-MM-dd mm:ss").format(exResult.getFinishedAt()) + " after "
+        status.append(" Finished: ").append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(exResult.getFinishedAt()) + " after "
                 + msHumanReadable(exResult.getElapsedTimeInMs()));
 
         c.titleHtml(exResult.getHealthCheckMetadata().getTitle(), null);
