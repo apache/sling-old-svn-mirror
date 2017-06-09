@@ -16,16 +16,17 @@
  */
 package ${package};
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 /**
  * Unit test for By Path Servlet.
  */
-public class ByPathServletTest extends TestCase {
+public class ByPathServletTest {
 
     /**
      * Rigourous Test :-)
      */
+    @Test
     public void testByPathServlet() {
         assertTrue(true);
     }

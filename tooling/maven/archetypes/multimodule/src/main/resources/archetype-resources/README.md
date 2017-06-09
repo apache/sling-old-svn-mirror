@@ -7,7 +7,7 @@ This is a project template for apache Sling based applications. It is built with
 The main parts of the project are:
 
 * core: Java bundle containing the core functionality such as servlets.
-* ui.apps: contains the /apps (and /etc) parts of the project, ie Javascript, CSS, fonts, clientlibs and sample html files. This module has in-built HTML5Boilerplate files.
+* ui.apps: contains the /apps (and /etc) parts of the project, ie Javascript, CSS, fonts, clientlibs and sample html files. This module has built-in HTML5Boilerplate files.
 
 ## How to build
 

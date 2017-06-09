@@ -23,33 +23,25 @@ import java.io.Writer;
 
 import javax.servlet.ServletException;
 
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.sling.SlingServlet;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.framework.Constants;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Hello World Servlet registered by path
- * 
- * Annotations below are short version of:
- * 
- * @Component
- * @Service(Servlet.class)
- * @Properties({
- *     @Property(name="service.description", value="Hello World Path Servlet"),
- *     @Property(name="service.vendor", value="The Apache Software Foundation"),
- *     @Property(name="sling.servlet.paths", value="/hello-world-servlet")
- * })
- */
-@SlingServlet(paths="/hello-world-servlet")
-@Properties({
-    @Property(name="service.description", value="Hello World Path Servlet"),
-    @Property(name="service.vendor", value="The Apache Software Foundation")
-})
+
+@Component(
+    service = ByPathServlet.class,
+    property = {
+            Constants.SERVICE_DESCRIPTION + "=Hello World Path Servlet",
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            "sling.servlet.paths=/hello-world-servlet",
+            "sling.servlet.methods=GET"
+    }
+)
 @SuppressWarnings("serial")
 public class ByPathServlet extends SlingSafeMethodsServlet {
     

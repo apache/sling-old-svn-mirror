@@ -58,11 +58,6 @@
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-sling-plugin</artifactId>
                 <version>${slingplugin.version}</version>
-                <configuration>
-                    <slingUrl>http://{sling.host}:{sling.port}/system/console</slingUrl>
-                    <user>admin</user>
-                    <password>admin</password>
-                </configuration>                
             </plugin>
         </plugins>
     </build>
@@ -80,6 +75,11 @@
                                 <goals>
                                     <goal>install</goal>
                                 </goals>
+                                <configuration>
+                                    <slingUrl>http://${sling.host}:${sling.port}/system/console</slingUrl>
+                                    <user>${sling.user}</user>
+                                    <password>${sling.password}</password>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

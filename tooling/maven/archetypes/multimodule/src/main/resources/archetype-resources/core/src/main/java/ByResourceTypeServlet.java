@@ -23,9 +23,9 @@ import java.io.Writer;
 
 import javax.servlet.ServletException;
 
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.sling.SlingServlet;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.framework.Constants;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
@@ -33,26 +33,17 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Hello World Servlet registered by resource type
- *
- * Annotations below are short version of:
- * 
- * @Component
- * @Service(Servlet.class)
- * @Properties({
- *    @Property(name="service.description", value="Hello World Type Servlet"),
- *    @Property(name="service.vendor", value="The Apache Software Foundation"),
- *    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
- *    @Property(name="sling.servlet.selectors", value="hello"),
- *    @Property(name="sling.servlet.extensions", value="html")
- * })
- */
-@SlingServlet(resourceTypes="sling/servlet/default", selectors="hello", extensions="html")
-@Properties({
-    @Property(name="service.description", value="Hello World Type Servlet"),
-    @Property(name="service.vendor", value="The Apache Software Foundation")
-})
+@Component(
+        service = ByResourceTypeServlet.class,
+        property = {
+                Constants.SERVICE_DESCRIPTION + "=Hello World Type Servlet",
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+                "sling.servlet.resourceTypes=sling/servlet/default",
+                "sling.servlet.selectors=hello",
+                "sling.servlet.extensions=html",
+                "sling.servlet.methods=GET"
+        }
+)
 @SuppressWarnings("serial")
 public class ByResourceTypeServlet extends SlingSafeMethodsServlet {
     

@@ -27,30 +27,21 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.felix.scr.annotations.sling.SlingFilter;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.framework.Constants;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * A Simple Filter
- * 
- * Annotations below are short version of:
- * 
- * @Component
- * @Service(Filter.class)
- * @Properties({
- *     @Property(name="service.description", value="A Simple Filter"),
- *     @Property(name="service.vendor", value="The Apache Software Foundation"),
- *     @Property(name="sling.filter.scope", value="REQUEST"),
- *     @Property(name="service.ranking", intValue=1)
- * })
- */
-@SlingFilter(order=1, description="A Simple Filter")
-@Property(name="service.vendor", value="The Apache Software Foundation")
+@Component(
+        service = SimpleFilter.class,
+        property = {
+                Constants.SERVICE_DESCRIPTION + "=A Simple Filter",
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+                "sling.filter.scope=REQUEST",
+                "service.ranking=1"
+        }
+)
 public class SimpleFilter implements Filter {
     
     private final Logger log = LoggerFactory.getLogger(SimpleFilter.class);
