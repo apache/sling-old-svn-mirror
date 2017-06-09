@@ -59,10 +59,20 @@ public class HealthCheckMetadata {
         this.tags = arrayPropertyToListOfStr(ref.getProperty(HealthCheck.TAGS));
         this.asyncCronExpression = (String) ref.getProperty(HealthCheck.ASYNC_CRON_EXPRESSION);
         this.resultCacheTtlInMs = (Long)ref.getProperty(HealthCheck.RESULT_CACHE_TTL_IN_MS);
-        this.warningsStickForMinutes = (Long) ref.getProperty(HealthCheck.WARNINGS_STICK_FOR_MINUTES);
+        this.warningsStickForMinutes = toLong(ref.getProperty(HealthCheck.WARNINGS_STICK_FOR_MINUTES));
         this.serviceReference = ref;
     }
 
+    private Long toLong(Object configValue) {
+        if(configValue == null) {
+            return null;
+        }
+        if(configValue instanceof Long) {
+            return (Long)configValue;
+        }
+        return Long.valueOf(configValue.toString());
+    }
+    
     /**
      * The name of the health check as defined through the {@link HealthCheck#NAME}
      * property.
