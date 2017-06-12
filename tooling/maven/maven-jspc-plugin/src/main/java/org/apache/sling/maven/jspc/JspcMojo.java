@@ -73,13 +73,13 @@ public class JspcMojo extends AbstractMojo implements Options {
     private MavenProject project;
 
     /**
-     * Location of JSP source files.
+     * Location of the JSP source file. 
      */
     @Parameter( property = "jspc.sourceDirectory", defaultValue = "${project.build.scriptSourceDirectory}")
     private File sourceDirectory;
 
     /**
-     * Target folder for the compiled classes.
+     * Target directory for the compiled JSP classes.
      */
     @Parameter ( property = "jspc.outputDirectory", defaultValue = "${project.build.outputDirectory}")
     private String outputDirectory;
@@ -111,9 +111,15 @@ public class JspcMojo extends AbstractMojo implements Options {
     @Parameter ( property = "jspc.showSuccess", defaultValue = "false")
     private boolean showSuccess;
 
+    /**
+     * The Target Virtual Machine Version to generate class files for.
+     */
     @Parameter ( property = "jspc.compilerTargetVM", defaultValue = "1.5")
     private String compilerTargetVM;
 
+    /**
+     * The Compiler Source Version of the Java source generated from the JSP files before compiling into classes.
+     */
     @Parameter ( property = "jspc.compilerSourceVM", defaultValue = "1.5")
     private String compilerSourceVM;
 
