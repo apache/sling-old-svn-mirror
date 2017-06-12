@@ -1,4 +1,4 @@
-FROM java:8
+FROM openjdk:8-jre-alpine
 MAINTAINER dev@sling.apache.org
 COPY org.apache.sling.launchpad.jar /opt/sling/
 WORKDIR /opt/sling/
