@@ -50,7 +50,7 @@
     <distributionManagement>
         <site>
             <id>apache.website</id>
-            <url>scm:svn:https://svn.apache.org/repos/infra/websites/production/sling/content/components/${maven.site.path}</url>
+            <url>scm:svn:https://svn.apache.org/repos/asf/sling/site/trunk/content/components/${maven.site.path}</url>
         </site>
     </distributionManagement>
 
