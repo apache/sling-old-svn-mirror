@@ -43,41 +43,50 @@ public class DecoratedTest {
 
     @TestReference
     private ModelFactory modelFactory;
-    
-    private String value;
+
     private ResourceResolver resolver;
-    private Resource resource;
-    private Node createdNode;
+    private Resource resourceWithDefaultWrapperBehavior;
+    private Resource resourceWithCustomAdaptToWrapper;
     
     @Before
     public void setUp() throws Exception {
-        value = RandomStringUtils.randomAlphanumeric(10);
 
         resolver = rrFactory.getAdministrativeResourceResolver(null);
         Session session = resolver.adaptTo(Session.class);
         Node rootNode = session.getRootNode();
-        createdNode = rootNode.addNode("test_" + RandomStringUtils.randomAlphanumeric(10));
-        createdNode.setProperty("testProperty", value);
+        Node createdNode = rootNode.addNode("test_" + RandomStringUtils.randomAlphanumeric(10));
         createdNode.setProperty("decorate", true);
         session.save();
 
-        resource = resolver.getResource(createdNode.getPath());
+        resourceWithDefaultWrapperBehavior = resolver.getResource(createdNode.getPath());
+
+        createdNode = rootNode.addNode("test_" + RandomStringUtils.randomAlphanumeric(10));
+        createdNode.setProperty("decorate", "customAdaptTo");
+        session.save();
+
+        resourceWithCustomAdaptToWrapper = resolver.getResource(createdNode.getPath());
     }
 
     @After
     public void tearDown() throws Exception {
-        if (createdNode != null) {
-            createdNode.remove();
-        }
-        if (resolver != null) {
-            resolver.close();
-        }
+        resolver.delete(resourceWithDefaultWrapperBehavior);
+        resolver.delete(resourceWithCustomAdaptToWrapper);
+        resolver.close();
     }
 
     @Test
-    public void testInjectDecoratedResource() {
-        SelfModel model = modelFactory.createModel(resource, SelfModel.class);
-        assertTrue("Resource is not wrapped", resource instanceof ResourceWrapper);
+    public void testInjectDecoratedResourceUsingCreateModel() {
+        assertTrue("Resource is not wrapped", resourceWithDefaultWrapperBehavior instanceof ResourceWrapper);
+        SelfModel model = modelFactory.createModel(resourceWithDefaultWrapperBehavior, SelfModel.class);
+
+        assertNotNull("Model is null", model);
+        assertTrue("Model is not wrapped", model.getResource() instanceof ResourceWrapper);
+    }
+
+    @Test
+    public void testInjectDecoratedResourceUsingAdaptTo() {
+        assertTrue("Resource is not wrapped", resourceWithCustomAdaptToWrapper instanceof ResourceWrapper);
+        SelfModel model = resourceWithCustomAdaptToWrapper.adaptTo(SelfModel.class);
     
         assertNotNull("Model is null", model);
         assertTrue("Model is not wrapped", model.getResource() instanceof ResourceWrapper);
