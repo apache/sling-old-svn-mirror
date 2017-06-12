@@ -76,8 +76,8 @@ public class DecoratedTest {
 
     @Test
     public void testInjectDecoratedResource() {
-        assertTrue("Resource is wrapped", resource instanceof ResourceWrapper);
         SelfModel model = modelFactory.createModel(resource, SelfModel.class);
+        assertTrue("Resource is not wrapped", resource instanceof ResourceWrapper);
     
         assertNotNull("Model is null", model);
         assertTrue("Model is not wrapped", model.getResource() instanceof ResourceWrapper);
