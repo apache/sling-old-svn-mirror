@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-VERSION=8
+VERSION=9
 WORKDIR=out
-ALLOW_SNAPSHOT=1
+ALLOW_SNAPSHOT=0
 
 # create work directory
 if [ ! -d $WORKDIR ] ; then
