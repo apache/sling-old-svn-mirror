@@ -168,6 +168,34 @@ public class AclUtil {
                 ", isAllow: " + entry.isAllow() + ", restrictionNames: " + entry.getRestrictionNames()  + "]";
     }
 
+    /** Compare arrays a and b, which do not need to be ordered
+     *  but are expected to be small.
+     *  @param a might be sorted by this method
+     *  @param b might be sorted by this method
+     *  @return true if both arrays contain the same elements,
+     *      in whatever order. Also true if both arrays are null
+     *      or empty.
+     */
+    static boolean compareArrays(Object[] a, Object[] b) {
+        if(a== null && b == null){
+            return true;
+        }
+        if(a== null  || b == null){
+            return false;
+        }
+        if(a.length != b.length){
+            return false;
+        }
+        Arrays.sort(a);
+        Arrays.sort(b);
+        for(int i=0;i<a.length;i++){
+            if(!a[i].equals(b[i])){
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Helper class which allows easy comparison of a local (proposed) access control entry with an existing one
      */
@@ -230,13 +258,8 @@ public class AclUtil {
                         continue;
                     }
 
-                    if(newValues.length != oldValues.length){
+                    if(!compareArrays(newValues, oldValues)) {
                         return false;
-                    }
-                    for(int i=0;i<newValues.length;i++){
-                        if(!newValues[i].equals(oldValues[i])){
-                            return false;
-                        }
                     }
                 }
                 return true;
