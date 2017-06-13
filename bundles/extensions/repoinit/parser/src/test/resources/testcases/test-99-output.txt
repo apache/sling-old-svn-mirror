@@ -16,6 +16,11 @@ SetAclPrincipals for alice bob fred
   AclLine ALLOW {paths=[/content, /var], privileges=[jcr:read]}
   AclLine DENY {paths=[/content/example.com], privileges=[jcr:write]}
   AclLine DENY {nodetypes=[example:Page], paths=[/], privileges=[jcr:all]}
+SetAclPrincipals for restrictions_examples 
+  AclLine DENY {nodetypes=[sling:Folder, nt:unstructured], paths=[/apps, /content], privileges=[jcr:modifyProperties]} restrictions=[rep:itemNames=[prop1, prop2]]
+  AclLine ALLOW {paths=[/apps], privileges=[jcr:addChildNodes]} restrictions=[rep:ntNames=[sling:Folder, nt:unstructured]]
+  AclLine ALLOW {paths=[/apps], privileges=[jcr:modifyProperties]} restrictions=[rep:ntNames=[sling:Folder, nt:unstructured], rep:itemNames=[prop1, prop2]]
+  AclLine ALLOW {paths=[/apps, /content], privileges=[jcr:addChildNodes]} restrictions=[rep:glob=[/cat/*, */cat, *cat/*]]
 RegisterNamespace (NSprefix) uri:someURI/v1.42
 RegisterNodetypes:
     <slingevent='http://sling.apache.org/jcr/event/1.0'>
