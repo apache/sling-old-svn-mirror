@@ -3,9 +3,6 @@ Apache Sling Launchpad - Docker integration
 The Launchpad Docker integration project is a helper aimed to make it
 simple to build an 'official' Sling docker image.
 
-The Dockerfile expects a org.apache.sling.launchpad.jar file present in the
-root directory.
-
 Building a Docker image
 ---------------------------------------------
 
