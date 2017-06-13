@@ -207,7 +207,7 @@ public class ReferrerFilter implements Filter {
     }
 
     /**
-     * Create Patterns out of the regexp referrer list
+     * Create Patterns out of the regular expression referrer list
      */
     private Pattern[] createRegexPatterns(final String[] regexps) {
         final List<Pattern> patterns = new ArrayList<Pattern>();
