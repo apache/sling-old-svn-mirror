@@ -30,6 +30,8 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subethamail.smtp.server.SMTPServer;
 import org.subethamail.wiser.Wiser;
 import org.subethamail.wiser.WiserMessage;
@@ -39,6 +41,8 @@ import org.subethamail.wiser.WiserMessage;
 @Component(service = SmtpServerWrapper.class, immediate = true)
 @Designate(ocd = SmtpServerWrapper.Config.class)
 public class SmtpServerWrapper {
+	
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	@ObjectClassDefinition(name="Apache Sling Testing SMTP Server Wrapper")
 	public @interface Config {
@@ -65,6 +69,8 @@ public class SmtpServerWrapper {
 		}
 		
 		effectiveBindPort = bindPort;
+		
+		logger.info("Started, Wiser listening on port {}", effectiveBindPort);
 	}
 
 	private int reflectiveGetEffectiveBindPort(SMTPServer server) throws ReflectiveOperationException {
