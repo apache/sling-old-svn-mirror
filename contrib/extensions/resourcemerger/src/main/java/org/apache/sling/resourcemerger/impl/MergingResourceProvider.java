@@ -117,7 +117,8 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
                                 onlyUnderlying = false;
                             }
                             final ExcludeEntry entry = new ExcludeEntry(value, onlyUnderlying);
-                            final Boolean hides = hides(entry, previousAncestorName, true);
+                            // check if this entry is applicable at all (always assuming the worst case, i.e. non local resource)
+                            final Boolean hides = hides(entry, previousAncestorName, false);
                             if (hides != null && hides.booleanValue() == true) {
                                 this.entries.add(new ExcludeEntry("*", entry.onlyUnderlying));
                                 break;

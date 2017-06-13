@@ -109,7 +109,7 @@ public class CommonMergedResourceProviderTest {
         base = this.resolver.getResource("/apps/base");
         overlay = this.resolver.getResource("/apps/overlay");
         
-        this.provider = new CRUDMergingResourceProvider("/merged", new SimpleMergedResourcePicker(), false);
+        this.provider = new CRUDMergingResourceProvider("/merged", new SimpleMergedResourcePicker(), true);
     }
 
     @Test
@@ -119,10 +119,10 @@ public class CommonMergedResourceProviderTest {
             .resource("/apps/base/child1").p("property1", "frombase")
             .resource("/apps/base/child2").p("property1", "frombase")
             .resource("/apps/base/child1/grandchild").p("propertygrandchild1", "frombase")
-            .resource("/apps/base/child1/grandchild/grandgrandchild").p("propertygrandgrandchild1", "frombase")
+            .resource("/apps/base/child1/grandchild/grandgrandchildfrombase").p("propertygrandgrandchild1", "frombase")
             .resource("/apps/overlay/child1").p("property1", "fromoverlay")
             .resource("/apps/overlay/child1/grandchild").p("propertygrandchild1", "fromoverlay")
-            .resource("/apps/overlay/child1/grandchild/grandgrandchild").p("propertygrandgrandchild1", "fromoverlay")
+            .resource("/apps/overlay/child1/grandchild/grandgrandchildfromoverlay").p("propertygrandgrandchild1", "fromoverlay")
             .resource("/apps/overlay/child1/grandchild1").p("propertygrandchild1", "fromoverlay")
             .resource("/apps/overlay/child1/grandchild1/grandgrandchild1").p("propertygrandgrandchild1", "fromoverlay")
             .resource("/apps/overlay/child3").p("property1", "fromoverlay")
@@ -163,7 +163,7 @@ public class CommonMergedResourceProviderTest {
         
         // all overlay resource are still exposed, because hiding children by wildcard only hides children from underlying resources
         Assert.assertThat(iterableGrandGrandchildren, Matchers.contains(
-                ResourceMatchers.nameAndProps("grandgrandchild", Collections.singletonMap("propertygrandgrandchild1", (Object)"fromoverlay")))
+                ResourceMatchers.nameAndProps("grandgrandchildfromoverlay", Collections.singletonMap("propertygrandgrandchild1", (Object)"fromoverlay")))
         );
         
         // go down two levels (in node which is only available in overlay!)
