@@ -30,6 +30,7 @@ import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.After;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -138,6 +139,36 @@ public class AclUtilTest {
         assertIsNotContained(acl, U.username, new String[]{ Privilege.JCR_READ, Privilege.JCR_WRITE }, false);
     }
     
+    private void assertArrayCompare(Object[] a, Object[] b, boolean expected) {
+        final boolean actual = AclUtil.compareArrays(a, b);
+        assertEquals("Expecting compareArrays to return " + expected, actual, expected);
+    }
+
+    @Test
+    public void compareArraysTest() {
+        final String[] a1 = { "a", "b" };
+        final String[] a2 = { "a", "b" };
+        final String[] a3 = { "b", "c" };
+        final String[] a4 = { "a", "b", "c" };
+        final String[] a5 = { "b", "a" };
+        final String[] a6 = { "b", "a", "c" };
+        final String[] emptyA = {};
+        final String[] emptyB = {};
+
+        assertArrayCompare(null, null, true);
+        assertArrayCompare(null, a1, false);
+        assertArrayCompare(a2, null, false);
+        assertArrayCompare(a1, a2, true);
+        assertArrayCompare(a1, a3, false);
+        assertArrayCompare(a3, a1, false);
+        assertArrayCompare(a1, a3, false);
+        assertArrayCompare(a1, a4, false);
+        assertArrayCompare(a4, a4, true);
+        assertArrayCompare(a1, a5, true);
+        assertArrayCompare(a4, a6, true);
+        assertArrayCompare(emptyA, emptyB, true);
+    }
+
     private void assertIsContained(JackrabbitAccessControlList acl, String username, String[] privilegeNames, boolean isAllow) throws RepositoryException {
         assertIsContained0(acl, username, privilegeNames, isAllow, true);
     }
