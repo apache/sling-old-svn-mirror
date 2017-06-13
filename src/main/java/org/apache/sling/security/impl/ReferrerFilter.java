@@ -115,6 +115,12 @@ public class ReferrerFilter implements Filter {
     @Property(unbounded=PropertyUnbounded.ARRAY, value={"POST", "PUT", "DELETE"})
     private static final String PROP_METHODS = "filter.methods";
 
+    private static final String[] DEFAULT_PROP_AGENTS = {};
+
+    /** Excluded regexp user agents property */
+    @Property(unbounded = PropertyUnbounded.ARRAY)
+    private static final String PROP_EXCLUDED_AGENTS_REGEX = "exclude.agents.regexp";
+
 
 
     /** Do we allow empty referrer? */
@@ -128,6 +134,9 @@ public class ReferrerFilter implements Filter {
 
     /** Methods to be filtered. */
     private String[] filterMethods;
+
+    /** Paths to be excluded */
+    private Pattern[] excludedRegexUserAgents;
 
     private ServiceRegistration<Object> configPrinterRegistration;
 
@@ -200,7 +209,7 @@ public class ReferrerFilter implements Filter {
     /**
      * Create Patterns out of the regexp referrer list
      */
-    private Pattern[] createReferrerPatterns(final String[] regexps) {
+    private Pattern[] createRegexPatterns(final String[] regexps) {
         final List<Pattern> patterns = new ArrayList<Pattern>();
         for(final String regexp : regexps) {
             try {
@@ -222,7 +231,11 @@ public class ReferrerFilter implements Filter {
 
         final String[] allowRegexHosts = defaultIfEmpty(PropertiesUtil.toStringArray(props.get(PROP_HOSTS_REGEX),
                 DEFAULT_PROP_HOSTS), DEFAULT_PROP_HOSTS);
-        this.allowedRegexReferrers = createReferrerPatterns(allowRegexHosts);
+        this.allowedRegexReferrers = createRegexPatterns(allowRegexHosts);
+
+        final String[] excludedUserAgents = defaultIfEmpty(PropertiesUtil.toStringArray(props.get(PROP_EXCLUDED_AGENTS_REGEX),
+                DEFAULT_PROP_AGENTS), DEFAULT_PROP_AGENTS);
+        this.excludedRegexUserAgents = createRegexPatterns(excludedUserAgents);
 
         final Set<String> allowUriReferrers = getDefaultAllowedReferrers();
         final String[] allowHosts = defaultIfEmpty(PropertiesUtil.toStringArray(props.get(PROP_HOSTS),
@@ -421,6 +434,20 @@ public class ReferrerFilter implements Filter {
     }
 
     /**
+     * Returns <code>true</code> if the provided user agent matches any present exclusion regexp pattern.
+     * @param userAgent The user agent string to check
+     * @return <code>true</code> if the user agent matches any exclusion pattern.
+     */
+    private boolean isExcludedRegexUserAgent(String userAgent) {
+        for(final Pattern pattern : this.excludedRegexUserAgents) {
+            if (pattern.matcher(userAgent).matches()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @return The <code>defaultProperties</code> if <code>properties</code> contains a single empty string,
      *         <code>properties</code> otherwise.
      */
@@ -444,12 +471,11 @@ public class ReferrerFilter implements Filter {
      * @return <code>true</code> if the request is assumed to be sent by a
      *         browser.
      */
-    private boolean isBrowserRequest(final HttpServletRequest request) {
+    protected boolean isBrowserRequest(final HttpServletRequest request) {
         final String userAgent = request.getHeader(USER_AGENT);
-        if (userAgent != null && (userAgent.contains(BROWSER_CLASS_MOZILLA) || userAgent.contains(BROWSER_CLASS_OPERA))) {
-            return true;
-        }
-        return false;
+        return userAgent != null
+                && (userAgent.contains(BROWSER_CLASS_MOZILLA) || userAgent.contains(BROWSER_CLASS_OPERA))
+                && !isExcludedRegexUserAgent(userAgent);
     }
 
     public class ConfigurationPrinter {
