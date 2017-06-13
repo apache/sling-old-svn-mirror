@@ -25,7 +25,14 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+import javax.jcr.security.AccessControlEntry;
 
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.sling.jcr.repoinit.impl.TestUtil;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
@@ -35,6 +42,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 /** Various ACL-related tests */
 public class GeneralAclTest {
@@ -157,18 +166,35 @@ public class GeneralAclTest {
    private void verifyAddChildNode(String username,String nodeName, boolean successExpected) throws RepositoryException {
        Session userSession = U.loginService(username);
        try {
-           Node rootNode = userSession.getRootNode();
-           rootNode.addNode(nodeName);
-           userSession.save();
-           assertTrue(successExpected);
-       } catch(Exception e) {
-           assertTrue(!successExpected);
+           verifyAddChildNode(userSession,nodeName,successExpected);
        } finally {
            if(userSession != null) {
                userSession.logout();
            }
        }
    }
+
+    /**
+     * Verifies success/failure of adding a child
+     */
+    private void verifyAddChildNode(Session userSession, String nodeName, boolean successExpected) throws RepositoryException{
+        Node  rootNode = userSession.getRootNode();
+        verifyAddChildNode(rootNode, nodeName, successExpected);
+    }
+
+    /**
+     * Verifies success/failure of adding a child
+     */
+    private void verifyAddChildNode(Node node, String nodeName, boolean successExpected) throws RepositoryException{
+        try {
+            node.addNode(nodeName);
+            node.getSession().save();
+            assertTrue("Added child node succeeded "+nodeName,successExpected);
+        } catch(Exception e) {
+            node.getSession().refresh(false);
+            assertTrue("Error adding " + nodeName + " to " + node + e.getMessage(), !successExpected);
+        }
+    }
 
     /**
      * Verifies success/failure of adding a properties
@@ -181,13 +207,7 @@ public class GeneralAclTest {
     private void verifyAddProperty(String username,String nodeName,String propertyName, boolean successExpected) throws RepositoryException {
         Session userSession = U.loginService(username);
         try {
-            Node rootNode = userSession.getRootNode();
-            Node node = rootNode.getNode(nodeName);
-            node.setProperty(propertyName,"test");
-            userSession.save();
-            assertTrue(successExpected);
-        } catch(Exception e) {
-            assertTrue(!successExpected);
+            verifyAddProperty(userSession, nodeName, propertyName, successExpected);
         } finally {
             if(userSession != null) {
                 userSession.logout();
@@ -195,6 +215,26 @@ public class GeneralAclTest {
         }
     }
 
+    /**
+     * Verifies success/failure of adding a properties
+     * @param userSession
+     * @param nodeName
+     * @param propertyName
+     * @param successExpected
+     * @throws RepositoryException
+     */
+    private void verifyAddProperty(Session userSession,String nodeName,String propertyName,boolean successExpected) throws RepositoryException{
+        try {
+            Node rootNode = userSession.getRootNode();
+            Node node = rootNode.getNode(nodeName);
+            node.setProperty(propertyName,"test");
+            userSession.save();
+            assertTrue(successExpected);
+        } catch(Exception e) {
+            userSession.refresh(false); // remove changes causing failure
+            assertTrue("Error " + e.getMessage(), !successExpected);
+        }
+    }
 
 
    /**
@@ -400,4 +440,144 @@ public class GeneralAclTest {
         verifyAddChildNode(userA, "A2_" + U.id, true);
         verifyAddChildNode(userB, "B2_" + U.id, true);
     }
+
+    /**
+     * Tests use of glob restriction in set ACL
+     * @throws Exception
+     */
+    @Test
+    public void globRestrictionTest() throws Exception {
+
+        final String allowedNodeName = "testxyz_" + U.id;
+        final String notAllowedNodeName = "testabc_" + U.id;
+
+        U.adminSession.getRootNode().addNode(allowedNodeName);
+        U.adminSession.getRootNode().addNode(notAllowedNodeName);
+        U.adminSession.save();
+
+
+        final String nodeName = "test_" + U.id;
+
+        final String aclSetup =
+                "set ACL for " + U.username + "\n"
+                        + "allow jcr:all on / \n"
+                        + "deny jcr:addChildNodes on / restriction(rep:glob,*abc*)\n"
+                        + "end"
+                ;
+
+        U.parseAndExecute(aclSetup);
+
+        try {
+            verifyAddChildNode(s.getRootNode().getNode(allowedNodeName), nodeName, true);
+            verifyAddChildNode(s.getRootNode().getNode(notAllowedNodeName), nodeName, false);
+
+        } finally {
+            s.logout();
+        }
+    }
+
+
+    /**
+     * Tests use of rep:itemNames restriction in set ACL
+     * @throws Exception
+     */
+    @Test
+    public void itemNamesRestrictionTest() throws Exception {
+        final String nodename = "test_" + U.id;
+        final String propName = "test2_" + U.id;
+
+        final String aclSetup =
+                "set ACL for " + U.username + "\n"
+                        + "allow jcr:all on / \n"
+                        + "deny jcr:modifyProperties on / restriction(rep:itemNames,"+propName+")\n"
+                        + "end"
+                ;
+
+        U.parseAndExecute(aclSetup);
+
+        try {
+
+            verifyAddChildNode(s, nodename, true);
+            verifyAddProperty(s, nodename, "someotherproperty", true);
+            verifyAddProperty(s, nodename, propName, false); // adding property propName should fail
+
+        } finally {
+            s.logout();
+        }
+    }
+
+    /**
+     * Tests default merging of acls with restrictions
+     * @throws Exception
+     */
+    @Test
+    public void multiRestrictionMergeTest() throws Exception {
+        final String nodeName = "test_" + U.id;
+        final String nodeName2 = "test2_" + U.id;
+        final String nodeName3 = "test3_" + U.id;
+        final String propName  = "propName"  + U.id;
+
+
+        U.adminSession.getRootNode().addNode(nodeName);
+        U.adminSession.getRootNode().addNode(nodeName2);
+        U.adminSession.getRootNode().addNode(nodeName3);
+        U.adminSession.save();
+
+
+        final String aclSetup =
+                "set ACL for " + U.username + "\n"
+                        + "allow jcr:all on / \n"
+                        + "deny jcr:addChildNodes on / restriction(rep:glob,"+nodeName2+")\n"
+                        + "end"
+                ;
+
+        U.parseAndExecute(aclSetup);
+
+       final String aclSetup2 =
+                "set ACL for " + U.username + "\n"
+                        + "deny jcr:addChildNodes on / restriction(rep:glob,"+nodeName3+")\n"
+                        + "end"
+                ;
+
+        U.parseAndExecute(aclSetup2);
+
+        final String aclSetup3 =
+                "set ACL for " + U.username + "\n"
+                        + "deny jcr:modifyProperties on / restriction(rep:itemNames,"+propName+")\n"
+                        + "end"
+                ;
+
+        U.parseAndExecute(aclSetup3);
+
+        try {
+
+            // now verify add child nodes perm
+
+            verifyAddChildNode(s.getRootNode().getNode(nodeName), nodeName, true);
+
+            verifyAddChildNode(s.getRootNode().getNode(nodeName2), nodeName, false);
+            verifyAddChildNode(s.getRootNode().getNode(nodeName3), nodeName, false);
+
+            // verify property restriction
+            verifyAddProperty(s, nodeName, "someotherproperty", true);
+            verifyAddProperty(s, nodeName, propName, false); // adding property propName should fail
+
+        } finally {
+            s.logout();
+        }
+    }
+
+
+    @Test
+    public void emptyRestrictionTest() throws Exception {
+        final String aclSetup =
+                "set ACL for " + U.username + "\n"
+                        + "allow jcr:all on / \n"
+                        + "deny jcr:modifyProperties on / restriction(rep:itemNames)\n"
+                        + "end"
+                ;
+        U.parseAndExecute(aclSetup);
+    }
+
+
 }
