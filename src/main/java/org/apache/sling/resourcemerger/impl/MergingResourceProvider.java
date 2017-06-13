@@ -110,10 +110,16 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
                     final String[] ancestorChildrenToHideArray = ancestorProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
                     if (ancestorChildrenToHideArray != null) {
                         for (final String value : ancestorChildrenToHideArray) {
-                            final ExcludeEntry entry = new ExcludeEntry(value, false);
+                            final boolean onlyUnderlying;
+                            if (value.equals("*")) {
+                                onlyUnderlying = true;
+                            } else {
+                                onlyUnderlying = false;
+                            }
+                            final ExcludeEntry entry = new ExcludeEntry(value, onlyUnderlying);
                             final Boolean hides = hides(entry, previousAncestorName, true);
                             if (hides != null && hides.booleanValue() == true) {
-                                this.entries.add(new ExcludeEntry("*", false));
+                                this.entries.add(new ExcludeEntry("*", entry.onlyUnderlying));
                                 break;
                             }
                         }
