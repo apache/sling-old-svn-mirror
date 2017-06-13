@@ -222,9 +222,6 @@ public class ReferrerFilter implements Filter {
         return patterns.toArray(new Pattern[patterns.size()]);
     }
 
-    /**
-     * Activate
-     */
     @Activate
     protected void activate(final BundleContext context, final Map<String, Object> props) {
         this.allowEmpty = PropertiesUtil.toBoolean(props.get(PROP_ALLOW_EMPTY), DEFAULT_ALLOW_EMPTY);
@@ -483,6 +480,7 @@ public class ReferrerFilter implements Filter {
         /**
          * Print out the allowedReferrers
          * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
+         * @param pw the PrintWriter object
          */
         public void printConfiguration(final PrintWriter pw) {
             pw.println("Current Apache Sling Referrer Filter Allowed Referrers:");
