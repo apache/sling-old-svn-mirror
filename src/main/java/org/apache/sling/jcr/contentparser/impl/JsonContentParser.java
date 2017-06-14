@@ -117,15 +117,28 @@ public final class JsonContentParser implements ContentParser {
         Map<String,JsonObject> children = new LinkedHashMap<>();
         for (Map.Entry<String, JsonValue> entry : object.entrySet()) {
             String childName = entry.getKey();
-            Object value = convertValue(entry.getValue());
-            boolean isResource = (value instanceof JsonObject);
+            Object value = null;
             boolean ignore = false;
-            if (isResource) {
-                ignore = helper.ignoreResource(childName);
+            try {
+                value = convertValue(entry.getValue());
             }
-            else {
-                childName = helper.cleanupPropertyName(childName);
-                ignore = helper.ignoreProperty(childName);
+            catch (ParseException ex) {
+                if (helper.ignoreResource(childName) || helper.ignoreProperty(helper.cleanupPropertyName(childName))) {
+                    ignore = true;
+                }
+                else {
+                    throw ex;
+                }
+            }
+            boolean isResource = (value instanceof JsonObject);
+            if (!ignore) {
+                if (isResource) {
+                    ignore = helper.ignoreResource(childName);
+                }
+                else {
+                    childName = helper.cleanupPropertyName(childName);
+                    ignore = helper.ignoreProperty(childName);
+                }
             }
             if (!ignore) {
                 if (isResource) {
