@@ -105,7 +105,7 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
                         @Option(value="FILES_FOLDERS", label="FILES_FOLDERS - "
                                 + "Support only files and folders (classic mode)"),
                         @Option(value="INITIAL_CONTENT", label="INITIAL_CONTENT - "
-                                + "Sling-Initial-Content file system layout, supports file and folders ant content files in JSON and jcr.xml format"),
+                                + "Sling-Initial-Content file system layout, supports file and folders ant content files in JSON, xml and jcr.xml format"),
                         @Option(value="FILEVAULT_XML", label="FILEVAULT_XML - "
                                 + "FileVault XML format (expanded content package)"),
                 })
