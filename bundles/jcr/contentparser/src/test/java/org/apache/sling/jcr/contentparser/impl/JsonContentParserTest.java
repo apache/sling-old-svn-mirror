@@ -137,7 +137,7 @@ public class JsonContentParserTest {
     @Test
     public void testIgnoreResourcesProperties() throws Exception {
         ContentParser underTest = ContentParserFactory.create(ContentType.JSON,
-                new ParserOptions().ignoreResourceNames(ImmutableSet.of("header", "newslist"))
+                new ParserOptions().ignoreResourceNames(ImmutableSet.of("header", "newslist", "security:acl", "security:principals"))
                         .ignorePropertyNames(ImmutableSet.of("jcr:title")));
         ContentElement content = parse(underTest, file);
         ContentElement child = content.getChild("jcr:content");

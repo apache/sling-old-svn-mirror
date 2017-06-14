@@ -20,6 +20,16 @@
     "utf8Property": "äöüß€",
     "jcr:reference:refpro1": "abc",
     "jcr:path:pathprop1": "def",
+    /* should be ignored */
+    "security:acl": [
+        { "principal": "TestGroup1", "granted": ["jcr:read","jcr:write"] },
+        { "principal": "TestUser1", "granted": ["jcr:read"], "denied": ["jcr:write"] }
+    ],
+    /* should be ignored */
+    "security:principals": [
+        { "name": "TestUser1", "password": "mypassword", "extraProp1": "extraProp1Value" },
+        { "name": "TestGroup1", "isgroup": "true", "members": ["TestUser1"], "extraProp1": "extraProp1Value" }
+    ],
     "par": {
       "jcr:primaryType": "nt:unstructured",
       "sling:resourceType": "foundation/components/parsys",

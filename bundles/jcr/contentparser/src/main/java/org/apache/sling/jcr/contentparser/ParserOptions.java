@@ -49,6 +49,15 @@ public final class ParserOptions {
           )));
     
     /**
+     * Default list of resource names that should be ignored.
+     */
+    public static final Set<String> DEFAULT_IGNORE_RESOURCE_NAMES
+        = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            "security:acl",
+            "security:principals"
+          )));
+    
+    /**
      * List of JSON parser features activated by default.
      */
     public static final EnumSet<JsonParserFeature> DEFAULT_JSON_PARSER_FEATURES
@@ -57,7 +66,7 @@ public final class ParserOptions {
     private String defaultPrimaryType = DEFAULT_PRIMARY_TYPE;
     private boolean detectCalendarValues;
     private Set<String> ignorePropertyNames;
-    private Set<String> ignoreResourceNames;
+    private Set<String> ignoreResourceNames = DEFAULT_IGNORE_RESOURCE_NAMES;
     private Set<String> removePropertyNamePrefixes = DEFAULT_REMOVE_PROPERTY_NAME_PREFIXES;
     private EnumSet<JsonParserFeature> jsonParserFeatures = DEFAULT_JSON_PARSER_FEATURES;
     
