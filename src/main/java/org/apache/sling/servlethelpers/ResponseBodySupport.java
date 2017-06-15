@@ -81,6 +81,9 @@ class ResponseBodySupport {
     }
 
     public byte[] getOutput() {
+        if (printWriter != null) {
+            printWriter.flush();
+        }
         if (servletOutputStream != null) {
             try {
                 servletOutputStream.flush();
@@ -92,9 +95,6 @@ class ResponseBodySupport {
     }
 
     public String getOutputAsString(String charset) {
-        if (printWriter != null) {
-            printWriter.flush();
-        }
         try {
             return new String(getOutput(), defaultCharset(charset));
         } catch (UnsupportedEncodingException ex) {
