@@ -18,11 +18,21 @@
  */
 package org.apache.sling.testing.clients.email;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Holds information retrieved from the mock SMTP server deployed in Sling
  *
  */
 public final class EmailMessage {
+	
+	public static final String HEADER_FROM = "From";
+	public static final String HEADER_TO = "To";
+	public static final String HEADER_SUBJECT = "Subject";
+	
+	private Map<String, String> headers = new LinkedHashMap<>();
 	
 	private String content;
 
@@ -30,6 +40,40 @@ public final class EmailMessage {
 		this.content = content;
 	}
 	
+	/**
+	 * Adds a new header to this email message
+	 * 
+	 * @param key the header name
+	 * @param value the header value
+	 */
+	public void addHeader(String key, String value) {
+		headers.put(key, value);
+	}
+	
+	/**
+	 * Returns the value of one of the headers of this email
+	 * 
+	 * @param key the header name
+	 * @return the value of the header, possibly <code>null</code>
+	 */
+	public String getHeader(String key) {
+		return headers.get(key);
+	}
+	
+	/**
+	 * Returns an unmodifiable view over the email headers
+	 * 
+	 * @return the headers
+	 */
+	public Map<String, String> getHeaders() {
+		return Collections.unmodifiableMap(headers);
+	}
+	
+	/**
+	 * Returns the contents of the email
+	 * 
+	 * @return the email content
+	 */
 	public String getContent() {
 		return content;
 	}
