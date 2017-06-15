@@ -88,6 +88,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private String serverName = "localhost";
     private int serverPort = 80;
     private String servletPath = StringUtils.EMPTY;
+    private String pathInfo = null;
     private String method = HttpConstants.METHOD_GET;
     private final HeaderSupport headerSupport = new HeaderSupport();
     private final CookieSupport cookieSupport = new CookieSupport();
@@ -645,6 +646,10 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public String getPathInfo() {
+        if (this.pathInfo != null) {
+            return this.pathInfo; 
+        }
+        
         RequestPathInfo requestPathInfo = this.getRequestPathInfo();
 
         if (StringUtils.isEmpty(requestPathInfo.getResourcePath())) {
@@ -670,6 +675,10 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
 
         return pathInfo.toString();
+    }
+    
+    public void setPathInfo(String pathInfo) {
+        this.pathInfo = pathInfo;
     }
 
     @Override
