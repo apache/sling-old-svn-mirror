@@ -387,4 +387,21 @@ public class MockSlingHttpServletRequestTest {
         assertEquals(1234, request.getRemotePort());
     }
 
+    @Test
+    public void testServletPathWithPathInfo() throws Exception {
+        request.setServletPath("/my/path");
+        request.setPathInfo("/myinfo");;
+
+        assertEquals("/my/path", request.getServletPath());
+        assertEquals("/myinfo", request.getPathInfo());
+    }
+
+    @Test
+    public void testServletPathWithOutPathInfo() throws Exception {
+        request.setServletPath("/my/path");
+
+        assertEquals("/my/path", request.getServletPath());
+        assertNull(request.getPathInfo());
+    }
+
 }
