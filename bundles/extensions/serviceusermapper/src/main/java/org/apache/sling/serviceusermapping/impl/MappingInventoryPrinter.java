@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.google.common.collect.Iterables;
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.utils.json.JSONWriter;
@@ -62,6 +63,10 @@ public class MappingInventoryPrinter implements InventoryPrinter {
         return m.map(m.getServiceName(), m.getSubServiceName());
     }
 
+    private String[] getMappedPrincipalNames(Mapping m) {
+        return Iterables.toArray(m.mapPrincipals(m.getServiceName(), m.getSubServiceName()), String.class);
+    }
+
     private SortedMap<String, List<Mapping>> getMappingsByUser(List<Mapping> mappings) {
         SortedMap<String, List<Mapping>> result = new TreeMap<String, List<Mapping>>();
         for(Mapping m : mappings) {
@@ -81,6 +86,7 @@ public class MappingInventoryPrinter implements InventoryPrinter {
         w.key("serviceName").value(m.getServiceName());
         w.key("subServiceName").value(m.getSubServiceName());
         w.key("user").value(getMappedUser(m));
+        w.key("principals").value(getMappedPrincipalNames(m));
         w.endObject();
     }
 

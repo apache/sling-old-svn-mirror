@@ -18,6 +18,10 @@
  */
 package org.apache.sling.jcr.base;
 
+import java.security.Principal;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+import java.util.Set;
 import javax.jcr.Credentials;
 import javax.jcr.GuestCredentials;
 import javax.jcr.LoginException;
@@ -27,7 +31,13 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
+import javax.security.auth.Subject;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import org.apache.jackrabbit.api.security.principal.JackrabbitPrincipal;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.annotation.versioning.ProviderType;
@@ -90,7 +100,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
         if(usingBundle == null) {
             throw new IllegalArgumentException("usingBundle is null");
         }
-     }
+    }
 
     /**
      * @return The {@link AbstractSlingRepositoryManager} controlling this
@@ -168,6 +178,60 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
                 admin.logout();
             }
         }
+    }
+
+    /**
+     * Creates a service-session for the service's {@code servicePrincipalNames}
+     * using a pre-authenticated {@link Subject}.
+     * <p>
+     * Implementations of this class may overwrite this method to meet additional
+     * needs wrt the the nature of the principals, the {@code Subject} or additional
+     * attributes passed to the repository login.
+     *
+     * @param servicePrincipalNames The names of the service principals to create the session for
+     * @param workspace The workspace to access or {@code null} to access the {@link #getDefaultWorkspace() default workspace}
+     * @return A new service session
+     * @throws RepositoryException If a general error occurs while creating the session.
+     */
+    protected Session createServiceSession(final Iterable<String> servicePrincipalNames, final String workspaceName) throws RepositoryException {
+        Set<? extends Principal> principals = ImmutableSet.copyOf(Iterables.transform(Iterables.filter(servicePrincipalNames, Predicates.notNull()), new Function<String, Principal>() {
+            @Override
+            public Principal apply(final String input) {
+                return new JackrabbitPrincipal() {
+                    @Override
+                    public String getName() {
+                        return input;
+                    }
+                };
+            }
+        }));
+        Subject subject = new Subject(true, principals, ImmutableSet.of(), ImmutableSet.of());
+        try {
+            return Subject.doAsPrivileged(subject, new PrivilegedExceptionAction<Session>() {
+                @Override
+                public Session run() throws Exception {
+                    return AbstractSlingRepository2.this.getRepository().login(null, workspaceName);
+                }
+            }, null);
+        } catch (PrivilegedActionException e) {
+            throw new RepositoryException("failed to retrieve service session.", e);
+        }
+    }
+
+    private Session createServiceSession(Bundle usingBundle, String subServiceName, String workspaceName) throws RepositoryException {
+        final ServiceUserMapper serviceUserMapper = this.getSlingRepositoryManager().getServiceUserMapper();
+        if (serviceUserMapper != null) {
+            final Iterable<String> principalNames = serviceUserMapper.getServicePrincipalNames(usingBundle, subServiceName);
+            if (principalNames != null) {
+                return createServiceSession(principalNames, workspaceName);
+            }
+
+            final String userName = serviceUserMapper.getServiceUserID(usingBundle, subServiceName);
+            if (userName != null) {
+                return createServiceSession(userName, workspaceName);
+            }
+        }
+        return null;
     }
 
     // login implementations (may be overwritten)
@@ -250,7 +314,7 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      */
     @Override
     public Session login(Credentials credentials, String workspace)
-    throws LoginException, NoSuchWorkspaceException, RepositoryException {
+            throws LoginException, NoSuchWorkspaceException, RepositoryException {
 
         if (credentials == null) {
             credentials = new GuestCredentials();
@@ -303,15 +367,13 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      */
     @Override
     public final Session loginService(final String subServiceName, final String workspace)
-    throws LoginException, RepositoryException {
-        final ServiceUserMapper serviceUserMapper = this.getSlingRepositoryManager().getServiceUserMapper();
-        final String userName = (serviceUserMapper != null) ? serviceUserMapper.getServiceUserID(this.usingBundle,
-            subServiceName) : null;
-        if (userName == null) {
-            throw new LoginException("Cannot derive user name for bundle " + usingBundle + " and sub service "
-                + subServiceName);
+            throws LoginException, RepositoryException {
+        Session s = createServiceSession(usingBundle, subServiceName, workspace);
+        if (s != null) {
+            return s;
+        } else {
+            throw new LoginException("Can neither derive user name nor principal names for bundle " + usingBundle + " and sub service " + subServiceName);
         }
-        return createServiceSession(userName, workspace);
     }
 
     /**
@@ -337,15 +399,12 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
     @Override
     public Session impersonateFromService(final String subServiceName, final Credentials credentials, final String workspaceName)
             throws LoginException, RepositoryException {
-        final ServiceUserMapper serviceUserMapper = this.getSlingRepositoryManager().getServiceUserMapper();
-        final String userName = (serviceUserMapper != null) ? serviceUserMapper.getServiceUserID(this.usingBundle,
-                subServiceName) : null;
-        if (userName == null) {
-            throw new LoginException("Cannot derive user name for bundle " + usingBundle + " and sub service " + subServiceName);
-        }
         Session serviceSession = null;
         try {
-            serviceSession = createServiceSession(userName, workspaceName);
+            serviceSession = createServiceSession(usingBundle, subServiceName, workspaceName);
+            if (serviceSession == null) {
+                throw new LoginException("Cannot create service session for bundle " + usingBundle + " and sub service " + subServiceName);
+            }
             return serviceSession.impersonate(credentials);
         } finally {
             if (serviceSession != null) {
