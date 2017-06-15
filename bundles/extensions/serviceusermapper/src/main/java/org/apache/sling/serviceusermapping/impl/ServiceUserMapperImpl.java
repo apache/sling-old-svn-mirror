@@ -35,7 +35,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.google.common.collect.Iterables;
 import org.apache.sling.serviceusermapping.ServicePrincipalsValidator;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
@@ -428,8 +427,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private boolean isValidUser(final String userId, final String serviceName, final String subServiceName) {
         if (userId == null) {
-            log.debug("isValidUser: userId is null -> nothing to validate");
-            return true;
+            log.debug("isValidUser: userId is null -> invalid");
+            return false;
         }
         if ( !userValidators.isEmpty() ) {
             for (final ServiceUserValidator validator : userValidators) {
@@ -448,8 +447,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private boolean areValidPrincipals(final Iterable<String> principalNames, final String serviceName, final String subServiceName) {
         if (principalNames == null) {
-            log.debug("areValidPrincipals: principalNames are null -> nothing to validate");
-            return true;
+            log.debug("areValidPrincipals: principalNames are null -> invalid");
+            return false;
         }
         if ( !principalsValidators.isEmpty() ) {
             for (final ServicePrincipalsValidator validator : principalsValidators) {
@@ -474,7 +473,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         for (final Mapping mapping : this.activeMappings) {
             final Iterable<String> principalNames = mapping.mapPrincipals(serviceName, subServiceName);
             if (principalNames != null) {
-                log.debug("Got principalNames [{}] from {}/{}", new Object[] {Iterables.toString(principalNames), serviceName, subServiceName });
+                log.debug("Got principalNames [{}] from {}/{}", new Object[] {principalNames, serviceName, subServiceName });
                 return principalNames;
             }
         }
@@ -487,7 +486,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         for (Mapping mapping : this.activeMappings) {
             final Iterable<String> principalNames = mapping.mapPrincipals(serviceName, subServiceName);
             if (principalNames != null) {
-                log.debug("Got principalNames [{}] from {}/{}", new Object[] {Iterables.toString(principalNames), serviceName, subServiceName });
+                log.debug("Got principalNames [{}] from {}/{}", new Object[] {principalNames, serviceName, subServiceName });
                 return principalNames;
             }
         }

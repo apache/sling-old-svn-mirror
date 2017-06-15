@@ -21,12 +21,13 @@ package org.apache.sling.serviceusermapping.impl;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.google.common.collect.Iterables;
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.utils.json.JSONWriter;
@@ -64,7 +65,16 @@ public class MappingInventoryPrinter implements InventoryPrinter {
     }
 
     private String[] getMappedPrincipalNames(Mapping m) {
-        return Iterables.toArray(m.mapPrincipals(m.getServiceName(), m.getSubServiceName()), String.class);
+        Iterable<String> principalNames = m.mapPrincipals(m.getServiceName(), m.getSubServiceName());
+        if (principalNames == null) {
+            return new String[0];
+        } else {
+            List<String> l = new ArrayList<>();
+            for (String pName : principalNames) {
+                l.add(pName);
+            }
+            return l.toArray(new String[l.size()]);
+        }
     }
 
     private SortedMap<String, List<Mapping>> getMappingsByUser(List<Mapping> mappings) {

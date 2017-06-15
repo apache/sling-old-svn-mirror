@@ -21,6 +21,8 @@ package org.apache.sling.jcr.base;
 import java.security.Principal;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import javax.jcr.Credentials;
 import javax.jcr.GuestCredentials;
@@ -33,11 +35,6 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import javax.security.auth.Subject;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import org.apache.jackrabbit.api.security.principal.JackrabbitPrincipal;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.annotation.versioning.ProviderType;
@@ -194,18 +191,18 @@ public abstract class AbstractSlingRepository2 implements SlingRepository {
      * @throws RepositoryException If a general error occurs while creating the session.
      */
     protected Session createServiceSession(final Iterable<String> servicePrincipalNames, final String workspaceName) throws RepositoryException {
-        Set<? extends Principal> principals = ImmutableSet.copyOf(Iterables.transform(Iterables.filter(servicePrincipalNames, Predicates.notNull()), new Function<String, Principal>() {
-            @Override
-            public Principal apply(final String input) {
-                return new JackrabbitPrincipal() {
+        Set<Principal> principals = new HashSet<>();
+        for (final String pName : servicePrincipalNames) {
+            if (pName != null && !pName.isEmpty()) {
+                principals.add(new Principal() {
                     @Override
                     public String getName() {
-                        return input;
+                        return pName;
                     }
-                };
+                });
             }
-        }));
-        Subject subject = new Subject(true, principals, ImmutableSet.of(), ImmutableSet.of());
+        };
+        Subject subject = new Subject(true, principals, Collections.emptySet(), Collections.emptySet());
         try {
             return Subject.doAsPrivileged(subject, new PrivilegedExceptionAction<Session>() {
                 @Override

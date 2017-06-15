@@ -18,10 +18,8 @@
  */
 package org.apache.sling.serviceusermapping.impl;
 
+import java.util.HashSet;
 import java.util.Set;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * The <code>Mapping</code> class defines the mapping of a service's name and
@@ -89,14 +87,14 @@ class Mapping implements Comparable<Mapping> {
 
     static Set<String> extractPrincipalNames(String s) {
         String[] sArr = s.substring(1, s.length() - 1).split(",");
-        ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+        Set<String> set = new HashSet<>();
         for (String name : sArr) {
-            String n = Strings.emptyToNull(name.trim());
-            if (n != null) {
-                builder.add(n);
+            String n = name.trim();
+            if (n != null && !n.isEmpty()) {
+                set.add(n);
             }
         }
-        return builder.build();
+        return set;
     }
 
     /**

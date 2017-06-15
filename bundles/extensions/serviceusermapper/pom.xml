@@ -117,12 +117,6 @@
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>15.0</version>
-        </dependency>
-
         <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
