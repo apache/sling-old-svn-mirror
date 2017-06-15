@@ -61,6 +61,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
 	private Label adjustJcrRootText;
     private IFolder importRoot;
     private Composite adjustComposite;
+    boolean hasValidFilter;
 
 	/**
 	 * Creates an import wizard page for importing from a Sling Repository. If
@@ -93,6 +94,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
         if (importRoot != null) {
             project = importRoot.getProject();
         }
+        hasValidFilter = false;
 	}
 	
     public IResource getResource() {
@@ -326,12 +328,10 @@ public class ImportWizardPage extends WizardDataTransferPage {
 
             if (filterFile != null && filterFile.exists()) {
                 importLabel.setText("Will apply import filter from /" + filterFile.getProjectRelativePath() + ".");
-            } else {
-                importLabel.setText("No filter definition found, will import all resources.");
+                hasValidFilter = true;
             }
             importLabel.setVisible(true);
         }
-        importLabel.setVisible(importRoot != null);
         importLabel.getParent().layout();
     }
 
@@ -355,6 +355,10 @@ public class ImportWizardPage extends WizardDataTransferPage {
 			// still under construction
 			return true;
 		}
+		if (!hasValidFilter) {
+            setErrorMessage("No valid filter found in this project!");
+            return false;
+        }
         if (adjustJcrRootText != null) {
             adjustJcrRootText();
             adjustJcrRootText.getParent().pack();
@@ -370,7 +374,6 @@ public class ImportWizardPage extends WizardDataTransferPage {
             setErrorMessage(repositoryError);
             return false;
         }
-
         return true;
 	}
 

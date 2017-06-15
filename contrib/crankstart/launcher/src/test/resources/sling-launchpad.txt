@@ -19,13 +19,6 @@
 
 # Start the Sling Launchpad including whatever is required to
 # run the Sling integration tests.
-#
-# Currently all those 529 tests pass if started with
-#  java  -Xmx1G  -XX:MaxPermSize=256m \
-#   -Dsling.run.modes=:standalone,jackrabbit -Dsling.home=CRANKSTART \
-#   -jar target/org.apache.sling.crankstart.launcher-1.9.9-SNAPSHOT.jar \
-#   src/test/resources/crankstart-model.txt \
-#   src/test/resources/sling-launchpad.txt
  
 [feature name=sling.launchpad]
 
@@ -33,28 +26,21 @@
   org.apache.sling.commons.log.julenabled=true
   
 [artifacts]
-  # karaf bunde provides Sling Launchpad startup services
-  org.apache.sling/org.apache.sling.launchpad.karaf/0.1.1-SNAPSHOT
-  
-  # artifacts that are usually provided by the Sling launchpad
+   # artifacts that are usually provided by the Sling launchpad
    org.apache.sling/org.apache.sling.launchpad.api/1.1.0
   
   # The launchpad itself
   org.apache.sling/org.apache.sling.launchpad/8/txt/slingfeature
   
-  # Sling integration tests support
-  # TODO problem with the test-service bundles with 2 run modes
-  # org.apache.sling/org.apache.sling.launchpad.test-bundles/0.0.1-SNAPSHOT/txt
-  
 # TODO remove those once nested test-bundles model works
 [artifacts startLevel=2]
-  org.apache.sling/org.apache.sling.servlets.compat/1.0.3-SNAPSHOT
-  org.apache.sling/org.apache.sling.junit.core/1.0.11-SNAPSHOT
-  org.apache.sling/org.apache.sling.junit.remote/1.0.11-SNAPSHOT
-  org.apache.sling/org.apache.sling.junit.scriptable/1.0.11-SNAPSHOT
-  org.apache.sling/org.apache.sling.launchpad.test-fragment/2.0.9-SNAPSHOT
+  org.apache.sling/org.apache.sling.servlets.compat/1.0.2
+  org.apache.sling/org.apache.sling.junit.core/1.0.10
+  org.apache.sling/org.apache.sling.junit.remote/1.0.10
+  org.apache.sling/org.apache.sling.junit.scriptable/1.0.10
+  org.apache.sling/org.apache.sling.launchpad.test-fragment/2.0.8
   org.apache.sling/org.apache.sling.launchpad.test-services-war/2.0.8/war
-  org.apache.sling/org.apache.sling.launchpad.test-services/2.0.9-SNAPSHOT
+  org.apache.sling/org.apache.sling.launchpad.test-services/2.0.10
     
 [configurations]
   integrationTestsConfig

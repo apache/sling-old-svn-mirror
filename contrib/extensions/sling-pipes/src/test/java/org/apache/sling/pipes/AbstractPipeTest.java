@@ -16,9 +16,18 @@
  */
 package org.apache.sling.pipes;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Iterator;
+
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.dummies.DummyNull;
 import org.apache.sling.pipes.dummies.DummySearch;
-import org.apache.sling.pipes.impl.PlumberImpl;
+import org.apache.sling.pipes.internal.PlumberImpl;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
@@ -37,7 +46,8 @@ public class AbstractPipeTest {
     protected static final String NN_SIMPLE = "simple";
     protected static final String NN_COMPLEX = "complex";
     protected static final String PN_INDEX = "/index";
-    Plumber plumber;
+
+    protected Plumber plumber;
 
     @Rule
     public SlingContext context = new SlingContext(ResourceResolverType.JCR_MOCK);
@@ -45,11 +55,36 @@ public class AbstractPipeTest {
     @Before
     public void setup(){
         PlumberImpl plumberImpl = new PlumberImpl();
-        plumberImpl.activate();
+        PlumberImpl.Configuration configuration = mock(PlumberImpl.Configuration.class);
+        when(configuration.authorizedUsers()).thenReturn(new String[]{});
+        when(configuration.serviceUser()).thenReturn(null);
+        when(configuration.bufferSize()).thenReturn(PlumberImpl.DEFAULT_BUFFER_SIZE);
+        plumberImpl.activate(configuration);
         plumberImpl.registerPipe("slingPipes/dummyNull", DummyNull.class);
         plumberImpl.registerPipe("slingPipes/dummySearch", DummySearch.class);
         plumber = plumberImpl;
         context.load().json("/fruits.json", PATH_FRUITS);
     }
 
+    protected Pipe getPipe(String path){
+        Resource resource = context.resourceResolver().getResource(path);
+        return plumber.getPipe(resource);
+    }
+
+    protected Iterator<Resource> getOutput(String path){
+        Pipe pipe = getPipe(path);
+        assertNotNull("pipe should be found", pipe);
+        return pipe.getOutput();
+    }
+
+    /**
+     * tests given pipe (pipePath) outputs at least one resource, which path is resourcepath
+     * @param pipePath
+     * @param resourcePath
+     */
+    protected void testOneResource(String pipePath, String resourcePath){
+        Iterator<Resource> it = getOutput(pipePath);
+        assertTrue("pipe should have results", it.hasNext());
+        assertEquals("return result should be the one expected", resourcePath, it.next().getPath());
+    }
 }

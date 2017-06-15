@@ -31,6 +31,13 @@ set ACL for alice, bob,fred
     
 end
 
+set ACL for restrictions_examples
+    deny jcr:modifyProperties on /apps, /content nodetypes sling:Folder, nt:unstructured restriction(rep:itemNames,prop1,prop2)
+    allow jcr:addChildNodes on /apps restriction(rep:ntNames,sling:Folder,nt:unstructured)
+    allow jcr:modifyProperties on /apps restriction(rep:ntNames,sling:Folder,nt:unstructured) restriction(rep:itemNames,prop1,prop2)
+    allow jcr:addChildNodes on /apps,/content restriction(rep:glob,/cat/*,*/cat,*cat/*)
+end
+
 register namespace ( NSprefix ) uri:someURI/v1.42
 
 register nodetypes
@@ -42,4 +49,6 @@ register nodetypes
       - slingevent:properties (binary)
 ===>>
 
+create user userE with password {someEncoding} afdgwdsdf
+create user one_with-more-chars.ok:/123456 with password {encoding_with.ok-:/12345} pw-with.ok-:/13456
 create service user the-last-one

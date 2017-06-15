@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("1.3.1")
+@Version("1.4.0")
 package org.apache.sling.commons.classloader;
 
 import org.osgi.annotation.versioning.Version;

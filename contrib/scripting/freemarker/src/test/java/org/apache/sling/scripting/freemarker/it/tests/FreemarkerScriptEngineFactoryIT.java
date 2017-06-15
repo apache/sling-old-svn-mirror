@@ -20,6 +20,8 @@ package org.apache.sling.scripting.freemarker.it.tests;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
@@ -34,6 +36,13 @@ import static org.junit.Assert.assertThat;
 @ExamReactorStrategy(PerClass.class)
 public class FreemarkerScriptEngineFactoryIT extends FreemarkerTestSupport {
 
+    @Configuration
+    public Option[] configuration() {
+        return new Option[]{
+            baseConfiguration()
+        };
+    }
+
     @Test
     public void testScriptEngineFactory() {
         assertNotNull(scriptEngineFactory);
@@ -41,17 +50,17 @@ public class FreemarkerScriptEngineFactoryIT extends FreemarkerTestSupport {
 
     @Test
     public void testScriptEngineFactoryEngineName() {
-        assertThat("Apache Sling Scripting FreeMarker", is(scriptEngineFactory.getEngineName()));
+        assertThat(scriptEngineFactory.getEngineName(), is("Apache Sling Scripting FreeMarker"));
     }
 
     @Test
     public void testScriptEngineFactoryLanguageName() {
-        assertThat("FreeMarker", is(scriptEngineFactory.getLanguageName()));
+        assertThat(scriptEngineFactory.getLanguageName(), is("FreeMarker"));
     }
 
     @Test
     public void testScriptEngineFactoryLanguageVersion() {
-        assertThat(scriptEngineFactory.getLanguageVersion(), startsWith("2.3"));
+        assertThat(scriptEngineFactory.getLanguageVersion(), startsWith("2.3."));
     }
 
     @Test

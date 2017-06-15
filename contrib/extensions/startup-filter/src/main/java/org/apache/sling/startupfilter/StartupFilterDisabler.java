@@ -18,6 +18,9 @@
  */
 package org.apache.sling.startupfilter;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
+@ConsumerType
 public interface StartupFilterDisabler {
     /** Indicate why the StartupFilter should be disabled */
     String getReason();

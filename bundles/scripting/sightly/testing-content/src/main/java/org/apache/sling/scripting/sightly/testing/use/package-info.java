@@ -15,7 +15,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-@Version("1.0.0")
+@Version("1.1.0")
 package org.apache.sling.scripting.sightly.testing.use;
 
-import aQute.bnd.annotation.Version;
+import org.osgi.annotation.versioning.Version;

@@ -21,17 +21,29 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonString;
+import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runners.model.MultipleFailureException;
@@ -45,6 +57,23 @@ class TeleporterHttpClient {
     private final String baseUrl;
     private String credentials = null;
     private final String testServletPath;
+    
+    static final class SimpleHttpResponse {
+        private final int status;
+        private final String body;
+
+        public SimpleHttpResponse(int status, String body) {
+            super();
+            this.status = status;
+            this.body = body;
+        }
+        public int getStatus() {
+            return status;
+        }
+        public String getBody() {
+            return body;
+        }
+    }
     
     TeleporterHttpClient(String baseUrl, String testServletPath) {
         this.baseUrl = baseUrl;
@@ -66,16 +95,16 @@ class TeleporterHttpClient {
     }
 
     /** Wait until specified URL returns specified status */
-    public void waitForStatus(String url, int expectedStatus, int timeoutMsec) throws IOException {
+    public String waitForStatus(String url, int expectedStatus, int timeoutMsec) throws IOException {
         final long end = System.currentTimeMillis() + timeoutMsec;
         final Set<Integer> statusSet = new HashSet<Integer>();
         final ExponentialBackoffDelay d = new ExponentialBackoffDelay(50,  250);
         while(System.currentTimeMillis() < end) {
             try {
-                final int status = getHttpGetStatus(url);
-                statusSet.add(status);
-                if(status == expectedStatus) {
-                    return;
+                final SimpleHttpResponse response = getHttpGetStatus(url);
+                statusSet.add(response.getStatus());
+                if(response.getStatus() == expectedStatus) {
+                    return response.getBody();
                 }
                 d.waitNextDelay();
             } catch(Exception ignore) {
@@ -108,6 +137,61 @@ class TeleporterHttpClient {
             cleanup(c);
         }
     }
+    
+    void verifyCorrectBundleState(String bundleSymbolicName, int timeoutInSeconds) throws IOException {
+        final String url = baseUrl + "/system/console/bundles/" + bundleSymbolicName + ".json";
+        
+        final long end = System.currentTimeMillis() + timeoutInSeconds * 1000;
+        final ExponentialBackoffDelay d = new ExponentialBackoffDelay(50,  250);
+        while(System.currentTimeMillis() < end) {
+            
+            String jsonBody = waitForStatus(url, 200, timeoutInSeconds * 1000);
+            // deserialize json (https://issues.apache.org/jira/browse/SLING-6536)
+            try (JsonReader jsonReader = Json.createReader(new StringReader(jsonBody))) {
+                // extract state
+                JsonArray jsonArray = jsonReader.readObject().getJsonArray("data");
+                if (jsonArray == null) {
+                    throw new JsonException("Could not find 'data' array");
+                }
+                JsonObject bundleObject = jsonArray.getJsonObject(0);
+                String state = bundleObject.getString("state");
+                if ("Active".equals(state)) {
+                    return;
+                }
+                // otherwise evaluate the import section
+                JsonArray propsArray = bundleObject.getJsonArray("props");
+                if (propsArray == null) {
+                    throw new JsonException("Could not find 'props' object");
+                }
+                // iterate through all of them until key="Imported Packages" is found
+                for (JsonValue propValue : propsArray) {
+                    if (propValue.getValueType().equals(ValueType.OBJECT)) {
+                        JsonObject propObject = (JsonObject)propValue;
+                        if ("Imported Packages".equals(propObject.getString("key"))) {
+                            JsonArray importedPackagesArray = propObject.getJsonArray("value");
+                            String reason = null;
+                            for (JsonValue importedPackageValue : importedPackagesArray) {
+                                if (importedPackageValue.getValueType().equals(ValueType.STRING)) {
+                                    String importedPackage = ((JsonString)importedPackageValue).getString();
+                                    if (importedPackage.startsWith("ERROR:")) {
+                                        reason = importedPackage;
+                                    }
+                                }
+                            }
+                            // only if ERROR is found there is no more need to wait for the bundle to become active, otherwise it might just be started in the background
+                            if (reason != null) {
+                                throw new IllegalStateException("The test bundle '" + bundleSymbolicName + "' is in state '" + state +"'. This is due to unresolved import-packages: " + reason);
+                            }
+                        }
+                    }
+                }
+            } catch (JsonException|IndexOutOfBoundsException e) {
+                throw new IllegalArgumentException("Test bundle '" + bundleSymbolicName +"' not correctly installed. Could not parse JSON response though to expose further information: " + jsonBody, e);
+            }
+            d.waitNextDelay();
+        }
+        throw new IOException("Bundle '" + bundleSymbolicName + "' was not started after " + timeoutInSeconds + " seconds. The check at " + url + " was not successfull. Probably some dependent bundle was not started.");
+    }
 
     void uninstallBundle(String bundleSymbolicName, int webConsoleReadyTimeoutSeconds) throws MalformedURLException, IOException {
         // equivalent of
@@ -131,7 +215,7 @@ class TeleporterHttpClient {
         }
     }
     
-    public int getHttpGetStatus(String url) throws MalformedURLException, IOException {
+    public SimpleHttpResponse getHttpGetStatus(String url) throws MalformedURLException, IOException {
         final HttpURLConnection c = (HttpURLConnection)new URL(url).openConnection();
         setConnectionCredentials(c);
         c.setUseCaches(false);
@@ -139,16 +223,22 @@ class TeleporterHttpClient {
         c.setDoInput(true);
         c.setInstanceFollowRedirects(false);
         boolean gotStatus = false;
-        int result = 0;
+        int status = 0;
         try {
-            result = c.getResponseCode();
+            status = c.getResponseCode();
             gotStatus = true;
+            //4xx: client error, 5xx: server error. See: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html.
+            boolean isError = status >= 400;
+            //In HTTP error cases, HttpURLConnection only gives you the input stream via #getErrorStream().
+            InputStream is = isError ? c.getErrorStream() : c.getInputStream();
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(is, writer, StandardCharsets.UTF_8);
+            return new SimpleHttpResponse(status, writer.toString());
         } finally {
             // If we didn't get a status, do not attempt
             // to get input streams as this would retry connecting
             cleanup(c, gotStatus);
         }
-        return result;
     }
 
     void runTests(String testSelectionPath, int testReadyTimeoutSeconds) throws MalformedURLException, IOException, MultipleFailureException {
@@ -158,7 +248,7 @@ class TeleporterHttpClient {
         final long timeout = System.currentTimeMillis() + (testReadyTimeoutSeconds * 1000L);
         final ExponentialBackoffDelay delay = new ExponentialBackoffDelay(25, 1000);
         while(true) {
-            if(getHttpGetStatus(testUrl) == 200) {
+            if(getHttpGetStatus(testUrl).getStatus() == 200) {
                 break;
             }
             if(System.currentTimeMillis() > timeout) {

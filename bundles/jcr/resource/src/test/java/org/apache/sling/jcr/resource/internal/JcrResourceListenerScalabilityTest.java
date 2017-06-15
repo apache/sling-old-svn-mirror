@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -50,7 +51,10 @@ import org.osgi.framework.InvalidSyntaxException;
  */
 public class JcrResourceListenerScalabilityTest {
 
+    private JcrListenerBaseConfig config;
+
     private JcrResourceListener jcrResourceListener;
+
     private EventIterator events;
 
     @SuppressWarnings("deprecation")
@@ -67,7 +71,10 @@ public class JcrResourceListenerScalabilityTest {
         SlingRepository repository = mock(SlingRepository.class);
         when(repository.loginAdministrative(null)).thenReturn(session);
 
-        jcrResourceListener = new JcrResourceListener(new SimpleProviderContext(), "/", new PathMapperImpl(), RepositoryUtil.getRepository());
+        final ProviderContext ctx = new SimpleProviderContext();
+        this.config = new JcrListenerBaseConfig(ctx.getObservationReporter(),
+                RepositoryUtil.getRepository());
+        jcrResourceListener = new JcrResourceListener(this.config, ctx.getObservationReporter().getObserverConfigurations().get(0));
 
         Event event = mock(MockEvent.class);
         events = mock(EventIterator.class);
@@ -102,6 +109,11 @@ public class JcrResourceListenerScalabilityTest {
                 }
 
                 @Override
+                public void reportChanges(ObserverConfiguration config, Iterable<ResourceChange> changes,
+                        boolean distribute) {
+                }
+
+                @Override
                 public List<ObserverConfiguration> getObserverConfigurations() {
                     ObserverConfiguration config = new ObserverConfiguration() {
 
@@ -128,6 +140,11 @@ public class JcrResourceListenerScalabilityTest {
                         @Override
                         public boolean matches(String path) {
                             return true;
+                        }
+
+                        @Override
+                        public Set<String> getPropertyNamesHint() {
+                            return new HashSet<String>();
                         }
                     };
                     return Collections.singletonList(config);

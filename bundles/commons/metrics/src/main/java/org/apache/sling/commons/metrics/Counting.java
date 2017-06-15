@@ -19,7 +19,8 @@
 
 package org.apache.sling.commons.metrics;
 
-import aQute.bnd.annotation.ProviderType;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 @ProviderType
 public interface Counting {

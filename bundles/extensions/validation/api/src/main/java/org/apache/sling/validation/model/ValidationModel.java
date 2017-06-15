@@ -22,7 +22,8 @@ import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
+
 
 /**
  * A {@code ValidationModel} defines the validation rules that a resource tree has to pass.
@@ -40,18 +41,18 @@ public interface ValidationModel {
     /**
      * Returns the type of resource this model validates.
      *
-     * @return the validated resource type, never {@code null}
+     * @return the resource type to be validated, never {@code null}
      */
-    @Nonnull String getValidatedResourceType();
+    @Nonnull String getValidatingResourceType();
 
     /**
      * Returns the paths under which resources will be validated by this model. 
      * Might return a single element array containing only the empty string, 
      * in which case the validation model has no path restriction.
      *
-     * @return a path array. Is never {@code null} nor an empty array
+     * @return a path array. Is never {@code null} nor an empty collection.
      */
-    @Nonnull String[] getApplicablePaths();
+    @Nonnull Collection<String> getApplicablePaths();
 
     /**
      * Returns the expected children for a resource validated by this model.
@@ -59,5 +60,11 @@ public interface ValidationModel {
      * @return the children list (can be empty if there are no children), never {@code null}
      */
     @Nonnull Collection<ChildResource> getChildren();
+
+    /**
+     * 
+     * @return a string indicating the original source of this validation model, e.g. a resource path
+     */
+    @Nonnull String getSource();
 
 }

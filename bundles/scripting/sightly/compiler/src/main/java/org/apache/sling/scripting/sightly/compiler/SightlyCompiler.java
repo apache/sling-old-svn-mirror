@@ -25,8 +25,6 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.compiler.backend.BackendCompiler;
 import org.apache.sling.scripting.sightly.compiler.commands.CommandStream;
 import org.apache.sling.scripting.sightly.impl.compiler.CompilationResultImpl;
@@ -61,16 +59,18 @@ import org.apache.sling.scripting.sightly.impl.plugin.TestPlugin;
 import org.apache.sling.scripting.sightly.impl.plugin.TextPlugin;
 import org.apache.sling.scripting.sightly.impl.plugin.UnwrapPlugin;
 import org.apache.sling.scripting.sightly.impl.plugin.UsePlugin;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * <p>
- * The {@link SightlyCompiler} interprets a Sightly script and transforms it internally into a {@link CommandStream}. The
+ * The {@link SightlyCompiler} interprets a HTL script and transforms it internally into a {@link CommandStream}. The
  * {@link CommandStream} can be fed to a {@link BackendCompiler} for transforming the stream into executable code, either by
  * transpiling the commands to a JVM supported language or by directly executing them.
  * </p>
  */
-@Component
-@Service(SightlyCompiler.class)
+@Component(
+        service = SightlyCompiler.class
+)
 public final class SightlyCompiler {
 
     private StreamTransformer optimizer;
@@ -103,8 +103,8 @@ public final class SightlyCompiler {
 
         // register filters
         final List<Filter> filters = new ArrayList<>(5);
-        filters.add(FormatFilter.getInstance());
         filters.add(I18nFilter.getInstance());
+        filters.add(FormatFilter.getInstance());
         filters.add(JoinFilter.getInstance());
         filters.add(URIManipulationFilter.getInstance());
         filters.add(XSSFilter.getInstance());
@@ -145,8 +145,8 @@ public final class SightlyCompiler {
                 backendCompiler.handle(optimizedStream);
             }
             frontend.compile(stream, scriptSource);
-            for (PushStream.Warning w : stream.getWarnings()) {
-                ScriptError warning = getScriptError(scriptSource, w.getCode(), 0, 0, w.getMessage());
+            for (PushStream.StreamMessage w : stream.getWarnings()) {
+                ScriptError warning = getScriptError(scriptSource, w.getCode(), 1, 0, w.getMessage());
                 compilationResult.getWarnings().add(new CompilerMessageImpl(scriptName, warning.errorMessage, warning.lineNumber, warning
                         .column));
             }
@@ -161,26 +161,31 @@ public final class SightlyCompiler {
         return compilationResult;
     }
 
-    private ScriptError getScriptError(String documentFragment, String offendingInput, int lineOffset, int column, String message) {
+    private ScriptError getScriptError(String documentFragment, String offendingInput, int lineOffset, int columnOffset, String message) {
         if (StringUtils.isNotEmpty(offendingInput)) {
             int offendingInputIndex = documentFragment.indexOf(offendingInput);
             if (offendingInputIndex > -1) {
                 String textBeforeError = documentFragment.substring(0, offendingInputIndex);
-                int line = 1;
-                int newLine = 0;
-                while (textBeforeError.length() > 0 && newLine != -1) {
-                    newLine = textBeforeError.indexOf(System.lineSeparator());
-                    if (newLine != -1) {
-                        line++;
-                        textBeforeError = textBeforeError.substring(newLine + 1, textBeforeError.length());
+                int line = lineOffset;
+                int lastNewLineIndex = 0;
+                for (String s : new String[] {"\r\n", "\r", "\n"}) {
+                    int l = textBeforeError.split(s, -1).length - 1;
+                    if (l + lineOffset > line) {
+                        line = l + lineOffset;
+                        int ix = textBeforeError.lastIndexOf(s);
+                        if (ix > 0) {
+                            lastNewLineIndex = ix + s.length() - 1;
+                        }
                     }
                 }
-                line = line + lineOffset;
-                column = textBeforeError.length() + column + 1;
+                int column = textBeforeError.substring(lastNewLineIndex).length();
+                if (column != columnOffset) {
+                    column +=columnOffset;
+                }
                 return new ScriptError(line, column, offendingInput + ": " + message);
             }
         }
-        return new ScriptError(lineOffset, column, message);
+        return new ScriptError(lineOffset, columnOffset, message);
     }
 
     private static class ScriptError {

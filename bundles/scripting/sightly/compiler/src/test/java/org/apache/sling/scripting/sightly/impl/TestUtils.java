@@ -25,7 +25,7 @@ import java.io.Reader;
 import org.apache.sling.scripting.sightly.compiler.CompilationUnit;
 
 /**
- * Testing static utilities that simplify writing tests for the Sightly compiler.
+ * Testing static utilities that simplify writing tests for the HTL compiler.
  */
 public class TestUtils {
 

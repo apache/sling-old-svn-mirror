@@ -1,0 +1,6 @@
+DeleteUser userB
+CreateUser userB
+CreateUser userC (with password), password=some_password
+CreateUser userD (with encoded password), password=dc460da4ad72c, passwordEncoding=SHA-256
+CreateUser userE (with encoded password), password=afdgwdsdf, passwordEncoding=someEncoding
+CreateUser one_with-more-chars.ok:/123456 (with encoded password), password=pw-with.ok-:/13456, passwordEncoding=encoding_with.ok-:/12345

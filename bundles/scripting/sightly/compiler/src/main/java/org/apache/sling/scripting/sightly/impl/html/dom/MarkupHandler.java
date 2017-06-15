@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
+import org.apache.sling.scripting.sightly.compiler.SightlyCompilerException;
 import org.apache.sling.scripting.sightly.compiler.commands.Conditional;
 import org.apache.sling.scripting.sightly.compiler.commands.OutText;
 import org.apache.sling.scripting.sightly.compiler.commands.OutputVariable;
@@ -34,6 +36,7 @@ import org.apache.sling.scripting.sightly.compiler.expression.nodes.BinaryOperat
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.BinaryOperator;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.BooleanConstant;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.Identifier;
+import org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.StringConstant;
 import org.apache.sling.scripting.sightly.impl.compiler.Patterns;
 import org.apache.sling.scripting.sightly.impl.compiler.PushStream;
@@ -203,36 +206,64 @@ public class MarkupHandler {
         String isTrueVar = symbolGenerator.next("isTrueAttr"); // holds the comparison (attrValue == true)
         String shouldDisplayAttr = symbolGenerator.next("shouldDisplayAttr");
         MarkupContext markupContext = getAttributeMarkupContext(name);
-        Expression contentExpression = valueExpression.withNode(new Identifier(attrValue));
+        boolean alreadyEscaped = false;
+        if (valueExpression.getRoot() instanceof RuntimeCall) {
+            RuntimeCall rc = (RuntimeCall) valueExpression.getRoot();
+            if (RuntimeFunction.XSS.equals(rc.getFunctionName())) {
+                alreadyEscaped = true;
+            }
+        }
         ExpressionNode node = valueExpression.getRoot();
         stream.write(new VariableBinding.Start(attrValue, node)); //attrContent = <expr>
-        stream.write(new VariableBinding.Start(attrContent, expressionWrapper.adjustToContext(contentExpression, markupContext,
-                ExpressionContext.ATTRIBUTE).getRoot()));
-        stream.write(
-                new VariableBinding.Start(
-                        shouldDisplayAttr,
-                        new BinaryOperation(
-                                BinaryOperator.OR,
-                                new Identifier(attrContent),
-                                new BinaryOperation(BinaryOperator.EQ, new StringConstant("false"), new Identifier(attrValue))
-                        )
-                )
-        );
+        if (!alreadyEscaped) {
+            Expression contentExpression = valueExpression.withNode(new Identifier(attrValue));
+            stream.write(new VariableBinding.Start(attrContent, adjustContext(compilerContext, contentExpression, markupContext,
+                    ExpressionContext.ATTRIBUTE).getRoot()));
+            stream.write(
+                    new VariableBinding.Start(
+                            shouldDisplayAttr,
+                            new BinaryOperation(
+                                    BinaryOperator.OR,
+                                    new Identifier(attrContent),
+                                    new BinaryOperation(BinaryOperator.EQ, new StringConstant("false"), new Identifier(attrValue))
+                            )
+                    )
+            );
+
+        } else {
+            stream.write(
+                    new VariableBinding.Start(
+                            shouldDisplayAttr,
+                            new BinaryOperation(
+                                    BinaryOperator.OR,
+                                    new Identifier(attrValue),
+                                    new BinaryOperation(BinaryOperator.EQ, new StringConstant("false"), new Identifier(attrValue))
+                            )
+                    )
+            );
+        }
         stream.write(new Conditional.Start(shouldDisplayAttr, true)); // if (attrContent)
+
         emitAttributeStart(name);   //write("attrName");
         invoke.beforeAttributeValue(stream, name, node);
         stream.write(new VariableBinding.Start(isTrueVar, //isTrueAttr = (attrValue == true)
                 new BinaryOperation(BinaryOperator.EQ, new Identifier(attrValue), BooleanConstant.TRUE)));
         stream.write(new Conditional.Start(isTrueVar, false)); //if (!isTrueAttr)
         emitAttributeValueStart(quoteChar); // write("='");
-        stream.write(new OutputVariable(attrContent)); //write(attrContent)
+        if (!alreadyEscaped) {
+            stream.write(new OutputVariable(attrContent)); //write(attrContent)
+        } else {
+            stream.write(new OutputVariable(attrValue)); // write(attrValue)
+        }
         emitAttributeEnd(quoteChar); //write("'");
         stream.write(Conditional.END); //end if isTrueAttr
         stream.write(VariableBinding.END); //end scope for isTrueAttr
         invoke.afterAttributeValue(stream, name);
         stream.write(Conditional.END); //end if attrContent
-        stream.write(VariableBinding.END);
         stream.write(VariableBinding.END); //end scope for attrContent
+        if (!alreadyEscaped) {
+            stream.write(VariableBinding.END);
+        }
         stream.write(VariableBinding.END); //end scope for attrValue
     }
 
@@ -333,7 +364,7 @@ public class MarkupHandler {
                     String currentTag = currentElementTag();
                     String warningMessage = String.format("Element %s requires that all expressions have an explicit context specified. " +
                             "The expression will be replaced with an empty string.", currentTag);
-                    stream.write(new PushStream.Warning(warningMessage, fragment.getExpression().getRawText()));
+                    stream.warn(new PushStream.StreamMessage(warningMessage, fragment.getExpression().getRawText()));
                     addedFragment = new Fragment.Expr(new Expression(StringConstant.EMPTY));
                 }
             }
@@ -354,7 +385,7 @@ public class MarkupHandler {
                 if (!expression.containsOption(Syntax.CONTEXT_OPTION)) {
                     String warningMessage = String.format("Expressions within the value of attribute %s need to have an explicit context " +
                             "option. The expression will be replaced with an empty string.", attributeName);
-                    stream.write(new PushStream.Warning(warningMessage, expression.getRawText()));
+                    stream.warn(new PushStream.StreamMessage(warningMessage, expression.getRawText()));
                     addedFragment = new Fragment.Text("");
                 }
             }
@@ -403,7 +434,8 @@ public class MarkupHandler {
     private Plugin obtainPlugin(String name) {
         Plugin plugin = pluginRegistry.get(name);
         if (plugin == null) {
-            throw new UnsupportedOperationException(String.format("Plugin %s does not exist", name));
+            throw new SightlyCompilerException(String.format("None of the registered plugins can handle the data-sly-%s block element.",
+                    name), "data-sly-" + name);
         }
         return plugin;
     }
@@ -426,5 +458,17 @@ public class MarkupHandler {
     private boolean isExplicitContextRequired(String parentElementName) {
         return parentElementName != null &&
                 ("script".equals(parentElementName) || "style".equals(parentElementName));
+    }
+
+    private Expression adjustContext(CompilerContext compilerContext, Expression expression, MarkupContext markupContext,
+                                     ExpressionContext expressionContext) {
+        ExpressionNode root = expression.getRoot();
+        if (root instanceof RuntimeCall) {
+            RuntimeCall runtimeCall = (RuntimeCall) root;
+            if (runtimeCall.getFunctionName().equals(RuntimeFunction.XSS)) {
+                return expression;
+            }
+        }
+        return compilerContext.adjustToContext(expression, markupContext, expressionContext);
     }
 }

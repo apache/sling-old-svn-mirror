@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,12 +32,16 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>PackageAdminClassLoader</code> loads
  * classes and resources through the package admin service.
  */
 class PackageAdminClassLoader extends ClassLoader {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PackageAdminClassLoader.class);
 
     /** The package admin service. */
     private final PackageAdmin packageAdmin;
@@ -50,12 +55,14 @@ class PackageAdminClassLoader extends ClassLoader {
     /** Negative class cache. */
     private Set<String> negativeClassCache = Collections.synchronizedSet(new HashSet<String>());
 
+    private Map<String, Bundle> packageProviders = new ConcurrentHashMap<>();
+
     /** A cache for resolved urls. */
     private Map<String, URL> urlCache = new ConcurrentHashMap<String, URL>();
 
     public PackageAdminClassLoader(final PackageAdmin pckAdmin,
-                                   final ClassLoader parent,
-                                   final DynamicClassLoaderManagerFactory factory) {
+            final ClassLoader parent,
+            final DynamicClassLoaderManagerFactory factory) {
         super(parent);
         this.packageAdmin = pckAdmin;
         this.factory = factory;
@@ -98,16 +105,20 @@ class PackageAdminClassLoader extends ClassLoader {
      * @param pckName The package name.
      * @return The bundle or <code>null</code>
      */
-    private Bundle findBundleForPackage(final String pckName) {
-        final ExportedPackage exportedPackage = this.packageAdmin.getExportedPackage(pckName);
-        Bundle bundle = null;
-        if (exportedPackage != null && !exportedPackage.isRemovalPending() ) {
-            bundle = exportedPackage.getExportingBundle();
-            if ( !this.isBundleActive(bundle) ) {
-                bundle = null;
+    private Set<Bundle> findBundlesForPackage(final String pckName) {
+        final ExportedPackage[] exportedPackages = this.packageAdmin.getExportedPackages(pckName);
+        Set<Bundle> bundles = new LinkedHashSet<>();
+        if (exportedPackages != null) {
+            for (ExportedPackage exportedPackage : exportedPackages) {
+                if (!exportedPackage.isRemovalPending()) {
+                    Bundle bundle = exportedPackage.getExportingBundle();
+                    if (isBundleActive(bundle)) {
+                        bundles.add(bundle);
+                    }
+                }
             }
         }
-        return bundle;
+        return bundles;
     }
 
     /**
@@ -123,7 +134,7 @@ class PackageAdminClassLoader extends ClassLoader {
 
     /**
      * Return the package from a class.
-     * @param resource The class name.
+     * @param name The class name.
      * @return The package name.
      */
     private String getPackageFromClassName(final String name) {
@@ -135,13 +146,28 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#getResources(java.lang.String)
      */
-    @SuppressWarnings("unchecked")
+    @Override
     public Enumeration<URL> getResources(final String name) throws IOException {
         Enumeration<URL> e = super.getResources(name);
         if ( e == null || !e.hasMoreElements() ) {
-            final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
-            if ( bundle != null ) {
-                e = bundle.getResources(name);
+            String packageName = getPackageFromResource(name);
+            Bundle providingBundle = packageProviders.get(packageName);
+            if (providingBundle == null) {
+                for (Bundle bundle : findBundlesForPackage(getPackageFromResource(name))) {
+                    e = bundle.getResources(name);
+                    if (e != null) {
+                        packageProviders.put(packageName, bundle);
+                        LOGGER.debug("Marking bundle {}:{} as the provider for API package {}.", bundle.getSymbolicName(), bundle
+                                .getVersion().toString(), packageName);
+                        return e;
+                    }
+                }
+            } else {
+                e = providingBundle.getResources(name);
+                if (e == null) {
+                    LOGGER.debug("Cannot find resources {} in bundle {}:{} which was marked as the provider for package {}.", name,
+                            providingBundle.getSymbolicName(), providingBundle.getVersion().toString(), packageName);
+                }
             }
         }
         return e;
@@ -150,6 +176,7 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#findResource(java.lang.String)
      */
+    @Override
     public URL findResource(final String name) {
         final URL cachedURL = urlCache.get(name);
         if ( cachedURL != null ) {
@@ -157,11 +184,25 @@ class PackageAdminClassLoader extends ClassLoader {
         }
         URL url = super.findResource(name);
         if ( url == null ) {
-            final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
-            if ( bundle != null ) {
-                url = bundle.getResource(name);
-                if ( url != null ) {
-                    urlCache.put(name, url);
+            String packageName = getPackageFromResource(name);
+            Bundle providingBundle = packageProviders.get(packageName);
+            if (providingBundle == null) {
+                Set<Bundle> bundles = findBundlesForPackage(getPackageFromResource(name));
+                for (Bundle bundle : bundles) {
+                    url = bundle.getResource(name);
+                    if (url != null) {
+                        urlCache.put(name, url);
+                        packageProviders.put(packageName, bundle);
+                        LOGGER.debug("Marking bundle {}:{} as the provider for API package {}.", bundle.getSymbolicName(), bundle
+                                .getVersion().toString(), packageName);
+                        return url;
+                    }
+                }
+            } else {
+                url = providingBundle.getResource(name);
+                if (url == null) {
+                    LOGGER.debug("Cannot find resource {} in bundle {}:{} which was marked as the provider for package {}.", name,
+                            providingBundle.getSymbolicName(), providingBundle.getVersion().toString(), packageName);
                 }
             }
         }
@@ -171,19 +212,20 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#findClass(java.lang.String)
      */
+    @Override
     public Class<?> findClass(final String name) throws ClassNotFoundException {
         final Class<?> cachedClass = this.classCache.get(name);
         if ( cachedClass != null ) {
             return cachedClass;
         }
-        Class<?> clazz = null;
+        Class<?> clazz;
         try {
             clazz = super.findClass(name);
         } catch (ClassNotFoundException cnfe) {
-            final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
-            if ( bundle != null ) {
-                clazz = bundle.loadClass(name);
-                this.factory.addUsedBundle(bundle);
+            try {
+                clazz = getClassFromBundles(name);
+            } catch (ClassNotFoundException innerCNFE) {
+                throw innerCNFE;
             }
         }
         if ( clazz == null ) {
@@ -196,6 +238,7 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#loadClass(java.lang.String, boolean)
      */
+    @Override
     protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
         final Class<?> cachedClass = this.classCache.get(name);
         if ( cachedClass != null ) {
@@ -204,30 +247,55 @@ class PackageAdminClassLoader extends ClassLoader {
         if ( negativeClassCache.contains(name) ) {
             throw new ClassNotFoundException("Class not found " + name);
         }
-        Class<?> clazz = null;
+        String packageName = getPackageFromClassName(name);
+        Class<?> clazz;
         try {
             clazz = super.loadClass(name, resolve);
         } catch (final ClassNotFoundException cnfe) {
-            final String pckName = getPackageFromClassName(name);
-            final Bundle bundle = this.findBundleForPackage(pckName);
-            if ( bundle != null ) {
-                try {
-                    clazz = bundle.loadClass(name);
-                    this.factory.addUsedBundle(bundle);
-                } catch (final ClassNotFoundException inner) {
-                    negativeClassCache.add(name);
-                    this.factory.addUnresolvedPackage(pckName);
-                    throw inner;
-                }
+            try {
+                clazz = getClassFromBundles(name);
+            } catch (ClassNotFoundException innerCNFE) {
+                negativeClassCache.add(name);
+                this.factory.addUnresolvedPackage(packageName);
+                throw innerCNFE;
             }
         }
         if ( clazz == null ) {
             negativeClassCache.add(name);
-            final String pckName = getPackageFromClassName(name);
-            this.factory.addUnresolvedPackage(pckName);
+            this.factory.addUnresolvedPackage(packageName);
             throw new ClassNotFoundException("Class not found " + name);
         }
         this.classCache.put(name, clazz);
+        return clazz;
+    }
+
+    private Class<?> getClassFromBundles(String name) throws ClassNotFoundException {
+        Class<?> clazz = null;
+        String packageName = getPackageFromClassName(name);
+        Bundle providingBundle = packageProviders.get(packageName);
+        if (providingBundle == null) {
+            Set<Bundle> bundles = findBundlesForPackage(packageName);
+            for (Bundle bundle : bundles) {
+                try {
+                    clazz = bundle.loadClass(name);
+                    this.factory.addUsedBundle(bundle);
+                    packageProviders.put(packageName, bundle);
+                    LOGGER.debug("Marking bundle {}:{} as the provider for API package {}.", bundle.getSymbolicName(), bundle
+                            .getVersion().toString(), packageName);
+                    break;
+                } catch (ClassNotFoundException innerCNFE) {
+                    // do nothing; we need to loop over the bundles providing the class' package
+                }
+            }
+        } else {
+            try {
+                clazz = providingBundle.loadClass(name);
+                this.factory.addUsedBundle(providingBundle);
+            } catch (ClassNotFoundException icnfe) {
+                throw new ClassNotFoundException(String.format("Cannot find class %s in bundle %s:%s which was marked as the provider for" +
+                        " package %s.", name, providingBundle.getSymbolicName(), providingBundle.getVersion().toString(), packageName), icnfe);
+            }
+        }
         return clazz;
     }
 }

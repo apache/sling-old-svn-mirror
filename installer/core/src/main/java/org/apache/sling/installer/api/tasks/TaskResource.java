@@ -18,9 +18,10 @@
  */
 package org.apache.sling.installer.api.tasks;
 
-import org.osgi.framework.Version;
+import javax.annotation.CheckForNull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
+import org.osgi.framework.Version;
 
 
 /**
@@ -52,6 +53,7 @@ public interface TaskResource extends RegisteredResource {
      * @param key The name of the attribute
      * @return The value of the attribute or <code>null</code>
      */
+    @CheckForNull
     Object getAttribute(String key);
 
     /**
@@ -63,14 +65,24 @@ public interface TaskResource extends RegisteredResource {
 
     /**
      * Get the current state of the resource.
+     * @return The state of the resource.
      */
     ResourceState getState();
+
+    /**
+     * In case the resource was not successfully processed this might expose the related error description
+     *
+     * @return an error string or {@code null}
+     */
+    @CheckForNull
+    String getError();
 
     /**
      * Get the value of a temporary attribute.
      * @param key The name of the attribute
      * @return The value of the attribute or <code>null</code>
      */
+    @CheckForNull
     Object getTemporaryAttribute(String key);
 
     /**
@@ -85,5 +97,6 @@ public interface TaskResource extends RegisteredResource {
      * @return The version of the artifact or <code>null</code>
      * @since 1.2
      */
+    @CheckForNull
     Version getVersion();
 }

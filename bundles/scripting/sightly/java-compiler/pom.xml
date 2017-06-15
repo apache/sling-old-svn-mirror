@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
@@ -31,13 +31,13 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.scripting.sightly.compiler.java</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.11-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Scripting Sightly Java Compiler</name>
+    <name>Apache Sling Scripting HTL Java Compiler</name>
 
     <description>
-        The Apache Sling Scripting Sightly Java Compiler provides support for transpiling the Abstract Syntax Tree produced by the
+        The Apache Sling Scripting HTL Java Compiler provides support for transpiling the Abstract Syntax Tree produced by the
         org.apache.sling.scripting.sightly.compiler module into Java source code.
     </description>
 
@@ -48,7 +48,7 @@
     </scm>
 
     <properties>
-        <sling.java.version>7</sling.java.version>
+        <jacoco.maven.plugin.version>0.7.6.201602180812</jacoco.maven.plugin.version>
     </properties>
 
     <!-- ======================================================================= -->
@@ -58,35 +58,26 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>javax.jcr</groupId>
-                        <artifactId>jcr</artifactId>
-                        <version>2.0</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>scr-metadata</id>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
+                    <exportScr>true</exportScr>
                     <instructions>
                         <Provide-Capability>
-                            io.sightly.java; version:Version=1.0,
-                            io.sightly.java; version:Version=1.1,
-                            io.sightly.java; version:Version=1.2
+                            io.sightly.compiler.java; version:Version=1.0,
+                            io.sightly.compiler.java; version:Version=1.1,
+                            io.sightly.compiler.java; version:Version=1.2,
+                            io.sightly.compiler.java; version:Version=1.3
                         </Provide-Capability>
                     </instructions>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <stylesheet>maven</stylesheet>
-                    <excludePackageNames>*.impl:*.internal:${site.javadoc.exclude}</excludePackageNames>
                 </configuration>
             </plugin>
             <plugin>
@@ -107,30 +98,55 @@
                     </execution>
                 </executions>
             </plugin>
-        </plugins>
-    </build>
-
-    <!-- ======================================================================= -->
-    <!-- R E P O R T I N G                                                       -->
-    <!-- ======================================================================= -->
-    <reporting>
-        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <groups>
-                        <group>
-                            <title>Apache Sling Scriptin Sightly Java Compiler</title>
-                            <packages>org.apache.sling.scripting.sightly.compiler.java</packages>
-                        </group>
-                    </groups>
-                    <doctitle>${project.name} Documentation (Version: ${project.version})</doctitle>
-                    <windowtitle>${project.name} Documentation (Version: ${project.version})</windowtitle>
+                    <!-- No javadocs -->
+                    <excludePackageNames>
+                        org.apache.sling.scripting.sightly.java.compiler.impl
+                    </excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>
-    </reporting>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>coverage-report</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.maven.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>default-prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>default-report</id>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <includes>
+                                        <include>org/apache/sling/scripting/sightly/**/*</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <!-- ======================================================================= -->
     <!-- D E P E N D E N C I E S                                                 -->
@@ -140,7 +156,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.4</version>
             <scope>provided</scope>
         </dependency>
 
@@ -169,25 +185,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>1.9.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <version>1.5.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.5.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

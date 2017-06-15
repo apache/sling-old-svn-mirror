@@ -22,12 +22,12 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>26</version>
+    <version>30</version>
     <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.junit.teleporter</artifactId>
-  <version>1.0.7-SNAPSHOT</version>
+  <version>1.0.15-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Apache Sling JUnit Tests Teleporter</name>
   <description>Client-side implementation of the Teleporter mechanism for server-side JUnit tests</description>
@@ -82,29 +82,29 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.junit.core</artifactId>
-      <version>1.0.17-SNAPSHOT</version>
+      <version>1.0.25-SNAPSHOT</version>
     </dependency>
+    <!-- JSR 353 (JSON-P 1.0) implementation -->
     <dependency>
       <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.testing.tools</artifactId>
-      <version>1.0.12</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-        </exclusion>
-      </exclusions>
+      <artifactId>org.apache.sling.commons.johnzon</artifactId>
+      <version>1.0.0</version>
+      <!-- this dependency is necessary at test execution time from dependent modules 
+           and must therefore be available transitively 
+           (https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope) -->
+      <scope>runtime</scope> 
+    </dependency>
+    <!-- JSR 353 API -->
+    <dependency>
+       <groupId>org.apache.geronimo.specs</groupId>
+       <artifactId>geronimo-json_1.0_spec</artifactId>
+       <version>1.0-alpha-1</version>
+       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.4</version>
-      <scope>test</scope>
+      <version>2.5</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -118,7 +118,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.github.tomakehurst</groupId>
@@ -130,6 +129,13 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
       <version>1.10.19</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.testing.clients</artifactId>
+      <version>1.1.0-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   

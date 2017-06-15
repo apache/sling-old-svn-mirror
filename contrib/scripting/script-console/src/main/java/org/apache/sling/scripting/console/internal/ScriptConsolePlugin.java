@@ -39,6 +39,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
@@ -46,8 +47,6 @@ import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,15 +155,14 @@ public class ScriptConsolePlugin extends SimpleWebConsolePlugin {
     private String getScriptConfig() {
         try {
             return getScriptConfig0();
-        } catch (JSONException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private String getScriptConfig0() throws JSONException {
+    private String getScriptConfig0() throws IOException {
         StringWriter sw = new StringWriter();
         JSONWriter jw = new JSONWriter(sw);
-        jw.setTidy(true);
         jw.array();
 
         for(ScriptEngineFactory sef : scriptEngineManager.getEngineFactories()){

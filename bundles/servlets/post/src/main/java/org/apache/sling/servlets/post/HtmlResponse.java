@@ -101,7 +101,6 @@ public class HtmlResponse extends AbstractPostResponse {
      * the pattern is not modified.
      *
      * @param response to send to
-     * @param setStatus whether to set the status code on the response
      * @throws IOException if an i/o exception occurs
      */
     @Override

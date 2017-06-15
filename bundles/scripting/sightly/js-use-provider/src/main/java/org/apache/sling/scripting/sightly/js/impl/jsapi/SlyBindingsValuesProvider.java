@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.Bindings;
@@ -31,14 +30,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.SimpleBindings;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -55,36 +47,51 @@ import org.apache.sling.scripting.sightly.js.impl.async.TimingFunction;
 import org.apache.sling.scripting.sightly.js.impl.cjs.CommonJsModule;
 import org.apache.sling.scripting.sightly.js.impl.rhino.HybridObject;
 import org.apache.sling.scripting.sightly.js.impl.rhino.JsValueAdapter;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Provides the {@code sightly} namespace for usage in Sightly &amp; JS scripts called from Sightly
+ * Provides the {@code sightly} namespace for usage in HTL &amp; JS scripts called from Sightly
  */
-@Component(metatype = true, label = "Apache Sling Scripting Sightly JavaScript Bindings Provider",
-        description = "The Apache Sling Scripting Sightly JavaScript Bindings Provider loads the JS Use-API and makes it available in the" +
-                " bindings map.")
-@Service(SlyBindingsValuesProvider.class)
-@Properties({
-        @Property(
-                name = SlyBindingsValuesProvider.SCR_PROP_JS_BINDING_IMPLEMENTATIONS,
-                value = {
-                    "sightly:" + SlyBindingsValuesProvider.SLING_NS_PATH
-                },
-                unbounded = PropertyUnbounded.ARRAY,
-                label = "Script Factories",
-                description = "Script factories to load in the bindings map. The entries should be in the form " +
-                        "'namespace:/path/from/repository'."
-        )
-})
+@Component(
+        service = SlyBindingsValuesProvider.class,
+        configurationPid = "org.apache.sling.scripting.sightly.js.impl.jsapi.SlyBindingsValuesProvider"
+)
+@Designate(
+        ocd = SlyBindingsValuesProvider.Configuration.class
+)
 @SuppressWarnings("unused")
 public class SlyBindingsValuesProvider {
+
+    @ObjectClassDefinition(
+            name = "Apache Sling Scripting HTL JavaScript Use-API Factories Configuration",
+            description = "HTL JavaScript Use-API Factories configuration options"
+    )
+    @interface Configuration {
+
+        @AttributeDefinition(
+                name = "Script Factories",
+                description = "Script factories to load in the bindings map. The entries should be in the form " +
+                        "'namespace:/path/from/repository'."
+
+        )
+        String[] org_apache_sling_scripting_sightly_js_bindings() default "sightly:" + SlyBindingsValuesProvider.SLING_NS_PATH;
+
+    }
 
     public static final String SCR_PROP_JS_BINDING_IMPLEMENTATIONS = "org.apache.sling.scripting.sightly.js.bindings";
 
@@ -101,11 +108,14 @@ public class SlyBindingsValuesProvider {
     @Reference
     private ResourceResolverFactory rrf = null;
 
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
+
     private final AsyncExtractor asyncExtractor = new AsyncExtractor();
     private final JsValueAdapter jsValueAdapter = new JsValueAdapter(asyncExtractor);
 
-    private Map<String, String> scriptPaths = new HashMap<String, String>();
-    private Map<String, Function> factories = new HashMap<String, Function>();
+    private Map<String, String> scriptPaths = new HashMap<>();
+    private Map<String, Function> factories = new HashMap<>();
 
     private Script qScript;
     private final ScriptableObject qScope = createQScope();
@@ -142,10 +152,12 @@ public class SlyBindingsValuesProvider {
     }
 
     @Activate
-    protected void activate(ComponentContext componentContext) {
-        Dictionary properties = componentContext.getProperties();
-        String[] factories = PropertiesUtil.toStringArray(properties.get(SCR_PROP_JS_BINDING_IMPLEMENTATIONS), new String[]{SLING_NS_PATH});
-        scriptPaths = new HashMap<String, String>(factories.length);
+    protected void activate(Configuration configuration) {
+        String[] factories = PropertiesUtil.toStringArray(
+                configuration.org_apache_sling_scripting_sightly_js_bindings(),
+                new String[]{SLING_NS_PATH}
+        );
+        scriptPaths = new HashMap<>(factories.length);
         for (String f : factories) {
             String[] parts = f.split(":");
             if (parts.length == 2) {
@@ -186,6 +198,7 @@ public class SlyBindingsValuesProvider {
 
     private void ensureFactoriesLoaded(Bindings bindings) {
         JsEnvironment jsEnvironment = null;
+        ResourceResolver resolver = null;
         try {
             ScriptEngine scriptEngine = obtainEngine();
             if (scriptEngine == null) {
@@ -193,41 +206,35 @@ public class SlyBindingsValuesProvider {
             }
             jsEnvironment = new JsEnvironment(scriptEngine);
             jsEnvironment.initialize();
-            factories = new HashMap<String, Function>(scriptPaths.size());
+            resolver = rrf.getServiceResourceResolver(null);
+            factories = new HashMap<>(scriptPaths.size());
             for (Map.Entry<String, String> entry : scriptPaths.entrySet()) {
-                factories.put(entry.getKey(), loadFactory(jsEnvironment, entry.getValue(), bindings));
+                factories.put(entry.getKey(), loadFactory(resolver, jsEnvironment, entry.getValue(), bindings));
             }
-            qScript = loadQScript();
+            qScript = loadQScript(resolver);
+        } catch (LoginException e) {
+            LOGGER.error("Cannot load HTL Use-API factories.", e);
         } finally {
             if (jsEnvironment != null) {
                 jsEnvironment.cleanup();
             }
-        }
-    }
-
-    private Function loadFactory(JsEnvironment jsEnvironment, String path, Bindings bindings) {
-        ResourceResolver resolver = null;
-        try {
-            resolver = rrf.getAdministrativeResourceResolver(null);
-            Resource resource = resolver.getResource(path);
-            if (resource == null) {
-                throw new SightlyException("Sly namespace loader could not find the following script: " + path);
-
-            }
-            AsyncContainer container = jsEnvironment.runResource(resource, createBindings(bindings), new SimpleBindings());
-            Object obj = container.getResult();
-            if (!(obj instanceof Function)) {
-                throw new SightlyException("Script " + path + " was expected to return a function.");
-            }
-            return (Function) obj;
-        } catch (LoginException e) {
-            LOGGER.error("Cannot evaluate script " + path, e);
-            return null;
-        } finally {
             if (resolver != null) {
                 resolver.close();
             }
         }
+    }
+
+    private Function loadFactory(ResourceResolver resolver, JsEnvironment jsEnvironment, String path, Bindings bindings) {
+        Resource resource = resolver.getResource(path);
+        if (resource == null) {
+            throw new SightlyException("Sly namespace loader could not find the following script: " + path);
+        }
+        AsyncContainer container = jsEnvironment.runResource(resource, createBindings(bindings), new SimpleBindings());
+        Object obj = container.getResult();
+        if (!(obj instanceof Function)) {
+            throw new SightlyException("Script " + path + " was expected to return a function.");
+        }
+        return (Function) obj;
     }
 
     private Bindings createBindings(Bindings global) {
@@ -280,15 +287,13 @@ public class SlyBindingsValuesProvider {
         return module.getExports();
     }
 
-    private Script loadQScript() {
-        ResourceResolver resourceResolver = null;
+    private Script loadQScript(ResourceResolver resolver) {
         Context context = Context.enter();
         context.initStandardObjects();
         context.setOptimizationLevel(9);
         InputStream reader = null;
         try {
-            resourceResolver = rrf.getAdministrativeResourceResolver(null);
-            Resource resource = resourceResolver.getResource(Q_PATH);
+            Resource resource = resolver.getResource(Q_PATH);
             if (resource == null) {
                 LOGGER.warn("Could not load Q library at path: " + Q_PATH);
                 return null;
@@ -299,22 +304,13 @@ public class SlyBindingsValuesProvider {
                 return null;
             }
             return context.compileReader(new InputStreamReader(reader), Q_PATH, 0, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        } catch (IOException e) {
+            LOGGER.error("Unable to compile the Q library at path " + Q_PATH + ".", e);
         } finally {
             Context.exit();
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    LOGGER.error("Error while closing reader", e);
-                }
-            }
-            if (resourceResolver != null) {
-                resourceResolver.close();
-            }
+            IOUtils.closeQuietly(reader);
         }
+        return null;
     }
 
 }

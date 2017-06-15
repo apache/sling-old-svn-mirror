@@ -32,13 +32,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.adapter.Adaption;
 import org.apache.sling.adapter.internal.AdapterFactoryDescriptor;
 import org.apache.sling.adapter.internal.AdapterFactoryDescriptorMap;
@@ -51,6 +44,10 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
@@ -62,15 +59,13 @@ import org.slf4j.LoggerFactory;
  * break the {@link ThreadsafeMockAdapterManagerWrapper} concept.
  * Additionally the reference to PackageAdmin is disabled.
  */
-@Component(immediate=true)
-@Service
-@Properties({
-    @Property(name=Constants.SERVICE_DESCRIPTION, value="Sling Adapter Manager"),
-    @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation")
-
-})
-@Reference(name="AdapterFactory", referenceInterface=AdapterFactory.class,
-cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
+@Component(immediate=true, service=AdapterManager.class,
+        property={Constants.SERVICE_DESCRIPTION + "=Sling Adapter Manager",
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation"},
+        reference = @Reference(name="AdapterFactory", service=AdapterFactory.class,
+                cardinality=ReferenceCardinality.MULTIPLE, policy=ReferencePolicy.DYNAMIC,
+                bind="bindAdapterFactory", unbind="unbindAdapterFactory")
+)
 public class MockAdapterManagerImpl implements AdapterManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -113,7 +108,7 @@ public class MockAdapterManagerImpl implements AdapterManager {
     /**
      * The service tracker for the event admin
      */
-    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL, policy=ReferencePolicy.DYNAMIC)
     private volatile EventAdmin eventAdmin;
 
     // DISABLED IN THIS COPY OF CLASS
@@ -201,6 +196,7 @@ public class MockAdapterManagerImpl implements AdapterManager {
 
     /**
      * Bind a new adapter factory.
+     * @param reference Service reference
      */
     protected void bindAdapterFactory(final ServiceReference reference) {
         boolean create = true;
@@ -219,6 +215,7 @@ public class MockAdapterManagerImpl implements AdapterManager {
 
     /**
      * Unbind a adapter factory.
+     * @param reference Service reference
      */
     protected void unbindAdapterFactory(final ServiceReference reference) {
         unregisterAdapterFactory(reference);

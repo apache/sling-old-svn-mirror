@@ -16,8 +16,10 @@
  */
 package org.apache.sling.models.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,7 +29,6 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.models.impl.ParameterizedTypeFromRequestAttributeTest.TestModel;
 import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.testmodels.classes.ChildModel;

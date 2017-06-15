@@ -29,14 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.scripting.core.impl.helper.ProxyScriptEngineManager;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
@@ -46,9 +41,13 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
-import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,9 +55,14 @@ import org.slf4j.LoggerFactory;
  * Component which exposes a ScriptEngineManager service.
  *
  */
-@Component(metatype=false, immediate=true, specVersion="1.1")
-@Reference(name="ScriptEngineFactory", referenceInterface=ScriptEngineFactory.class,
-           policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE)
+@Component(service = {},
+    reference = @Reference(
+        name = "ScriptEngineFactory",
+        service = ScriptEngineFactory.class,
+        policy = ReferencePolicy.DYNAMIC,
+        cardinality = ReferenceCardinality.MULTIPLE
+    )
+)
 public class ScriptEngineManagerFactory implements BundleListener {
 
     private final Logger log = LoggerFactory.getLogger(ScriptEngineManagerFactory.class);
@@ -68,9 +72,12 @@ public class ScriptEngineManagerFactory implements BundleListener {
     private BundleContext bundleContext;
 
     /**
-     * The service tracker for the event admin
+     * Event admin is optional
      */
-    private ServiceTracker eventAdminTracker;
+    @Reference(policy = ReferencePolicy.DYNAMIC,
+            policyOption = ReferencePolicyOption.GREEDY,
+            cardinality=ReferenceCardinality.OPTIONAL)
+    private volatile EventAdmin eventAdmin;
 
     /**
      * The proxy to the actual ScriptEngineManager. This proxy is actually
@@ -79,9 +86,9 @@ public class ScriptEngineManagerFactory implements BundleListener {
      */
     private final ProxyScriptEngineManager scriptEngineManager = new ProxyScriptEngineManager();
 
-    private final Set<Bundle> engineSpiBundles = new HashSet<Bundle>();
+    private final Set<Bundle> engineSpiBundles = new HashSet<>();
 
-    private final Map<ScriptEngineFactory, Map<Object, Object>> engineSpiServices = new HashMap<ScriptEngineFactory, Map<Object, Object>>();
+    private final Map<ScriptEngineFactory, Map<Object, Object>> engineSpiServices = new HashMap<>();
 
     private ServiceRegistration scriptEngineManagerRegistration;
 
@@ -126,7 +133,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
             while ((line = reader.readLine()) != null) {
                 if (!line.startsWith("#") && line.trim().length() > 0) {
 	                try {
-	                    Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
+	                    Class<ScriptEngineFactory> clazz = (Class<ScriptEngineFactory>) bundle.loadClass(line);
 	                    ScriptEngineFactory spi = clazz.newInstance();
 	                    registerFactory(mgr, spi, null);
 	                } catch (Throwable t) {
@@ -153,6 +160,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
     // ---------- BundleListener interface -------------------------------------
 
+    @Override
     public void bundleChanged(BundleEvent event) {
         if (event.getType() == BundleEvent.STARTED
             && event.getBundle().getEntry(ENGINE_FACTORY_SERVICE) != null) {
@@ -175,10 +183,6 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
     protected void activate(ComponentContext context) {
         this.bundleContext = context.getBundleContext();
-
-        // setup tracker first as this is used in the bind/unbind methods
-        this.eventAdminTracker = new ServiceTracker(this.bundleContext, EventAdmin.class.getName(), null);
-        this.eventAdminTracker.open();
 
         this.bundleContext.addBundleListener(this);
 
@@ -220,11 +224,6 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
         scriptEngineManager.setDelegatee(null);
 
-        if (this.eventAdminTracker != null) {
-            this.eventAdminTracker.close();
-            this.eventAdminTracker = null;
-        }
-
         this.bundleContext = null;
     }
 
@@ -255,15 +254,6 @@ public class ScriptEngineManagerFactory implements BundleListener {
         postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_REMOVED, scriptEngineFactory);
     }
 
-    /**
-     * Get the event admin.
-     *
-     * @return The event admin or <code>null</code>
-     */
-    private EventAdmin getEventAdmin() {
-        return (EventAdmin) (this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
-    }
-
     private String[] toArray(final List<String> list) {
         return list.toArray(new String[list.size()]);
     }
@@ -272,9 +262,9 @@ public class ScriptEngineManagerFactory implements BundleListener {
      * Post a notification with the EventAdmin
      */
     private void postEvent(final String topic, final ScriptEngineFactory scriptEngineFactory) {
-        final EventAdmin localEA = this.getEventAdmin();
+        final EventAdmin localEA = this.eventAdmin;
         if (localEA != null) {
-            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            final Dictionary<String, Object> props = new Hashtable<>();
             props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_NAME, scriptEngineFactory.getEngineName());
             props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_VERSION, scriptEngineFactory.getEngineVersion());
             props.put(SlingScriptConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_EXTENSIONS, toArray(scriptEngineFactory.getExtensions()));

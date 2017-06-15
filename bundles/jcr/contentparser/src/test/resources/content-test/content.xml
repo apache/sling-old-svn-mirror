@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <primaryNodeType>app:Page</primaryNodeType>
+  <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+  <property><name>jcr:created</name><value>Thu Aug 07 2014 16:32:59 GMT+0200</value><type>Date</type></property>
+  
+  <node>
+    <name>jcr:content</name>
+    <primaryNodeType>app:PageContent</primaryNodeType>
+    <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+    <property><name>jcr:title</name><value>English</value><type>String</type></property>
+    <property><name>app:template</name><value>sample/templates/homepage</value><type>String</type></property>
+    <property><name>jcr:created</name><value>Thu Aug 07 2014 16:32:59 GMT+0200</value><type>Date</type></property>
+    <property><name>app:lastModified</name><value>Tue Apr 22 2014 15:11:24 GMT+0200</value><type>Date</type></property>
+    <property><name>dateISO8601String</name><value>2014-04-22T15:11:24.000+02:00</value><type>Date</type></property>
+    <property><name>pageTitle</name><value>Sample Homepage</value><type>String</type></property>
+    <property><name>sling:resourceType</name><value>sample/components/homepage</value><type>String</type></property>
+    <property><name>sling:resourceSuperType</name><value>sample/components/supertype</value><type>String</type></property>
+    <property><name>app:designPath</name><value>/etc/designs/sample</value><type>String</type></property>
+    <property><name>app:lastModifiedBy</name><value>admin</value><type>String</type></property>
+    <property><name>utf8Property</name><value>äöüß€</value><type>String</type></property>
+    <property><name>refpro1</name><value>abc</value><type>Reference</type></property>
+    <property><name>pathprop1</name><value>def</value><type>Path</type></property>
+    
+    <node>
+      <name>par</name>
+      <primaryNodeType>nt:unstructured</primaryNodeType>
+      <property><name>sling:resourceType</name><value>foundation/components/parsys</value><type>String</type></property>
+      <node>
+        <name>colctrl</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+        <property><name>layout</name><value>2;colctrl-lt0</value><type>String</type></property>
+        <property><name>jcr:created</name><value>Mon Aug 23 2010 22:02:24 GMT+0200</value><type>Date</type></property>
+        <property><name>jcr:lastModified</name><value>Mon Aug 23 2010 22:02:35 GMT+0200</value><type>Date</type></property>
+        <property><name>sling:resourceType</name><value>foundation/components/parsys/colctrl</value><type>String</type></property>
+      </node>
+      <node>
+        <name>image</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+        <property><name>fileReference</name><value>/content/dam/sample/portraits/jane_doe.jpg</value><type>String</type></property>
+        <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:created</name><value>Mon Aug 23 2010 22:03:39 GMT+0200</value><type>Date</type></property>
+        <property><name>width</name><value>340</value><type>String</type></property>
+        <property><name>jcr:lastModified</name><value>Sun Oct 31 2010 21:39:50 GMT+0100</value><type>Date</type></property>
+        <property><name>sling:resourceTyp</name><value>foundation/components/image</value><type>String</type></property>
+        <node>
+          <name>file</name>
+          <primaryNodeType>nt:file</primaryNodeType>
+          <property><name>jcr:createdB</name><value>admin</value><type>String</type></property>
+          <property><name>jcr:created</name><value>Thu Aug 07 2014 16:32:59 GMT+0200</value><type>Date</type></property>
+          <node>
+            <name>jcr:content</name>
+            <primaryNodeType>nt:resource</primaryNodeType>
+            <property><name>jcr:lastModifiedBy</name><value>anonymous</value><type>String</type></property>
+            <property><name>jcr:mimeType</name><value>image/jpeg</value><type>String</type></property>
+            <property><name>jcr:lastModified</name><value>Thu Aug 07 2014 16:32:59 GMT+0200</value><type>Date</type></property>
+            <property><name>jcr:uuid</name><value>eda76d00-b2cd-4b59-878f-c33f71ceaddc</value><type>String</type></property>
+          </node>
+        </node>
+      </node>
+      <node>
+        <name>title_1</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:title</name><value>Strategic Consulting</value><type>String</type></property>
+        <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:created</name><value>Mon Aug 23 2010 22:12:08 GMT+0200</value><type>Date</type></property>
+        <property><name>jcr:lastModified</name><value>Wed Oct 27 2010 21:33:24 GMT+0200</value><type>Date</type></property>
+        <property><name>sling:resourceType</name><value>sample/components/title</value><type>String</type></property>
+      </node>
+      <node>
+        <name>text_1</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:created</name><value>Sun Oct 31 2010 21:48:04 GMT+0100</value><type>Date</type></property>
+        <property><name>text</name><value><![CDATA[<p><span class="Apple-style-span" style="font-size: 12px;">In&nbsp;today's competitive market, organizations can face several key geometric challenges:</span></p>
+<ul>
+<li><span class="Apple-style-span" style="font-size: 12px;">Polyhedral Sectioning</span></li>
+<li><span class="Apple-style-span" style="font-size: 12px;">Triangulation&nbsp;</span></li>
+<li><span class="Apple-style-span" style="font-size: 12px;">Trigonometric Calculation</span></li>
+<li><span class="Apple-style-span" style="font-size: 12px;">Ruler and Compass Construction</span></li>
+</ul>
+<p><span class="Apple-style-span" style="font-size: 12px;"><br>
+Sample is ready to help your organization deal effectively with all these challenges through our award winning geometric consulting services.</span></p>
+<p style="font-family: tahoma, arial, helvetica, sans-serif; font-size: 12px;\"><\/p>
+]]></value><type>String</type></property>
+        <property><name>jcr:lastModified</name><value>Sun Oct 31 2010 21:49:06 GMT+0100</value><type>Date</type></property>
+        <property><name>sling:resourceType</name><value>foundation/components/text</value><type>String</type></property>
+        <property><name>textIsRich</name><value>true</value><type>String</type></property>
+      </node>
+      <node>
+        <name>col_break12825937554040</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>controlType</name><value>break</value><type>String</type></property>
+        <property><name>sling:resourceType</name><value>foundation/components/parsys/colctrl</value><type>String</type></property>
+      </node>
+      <node>
+        <name>image_0</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+        <property><name>fileReference</name><value>/content/dam/sample/offices/clean_room.jpg</value><type>String</type></property>
+        <property><name>height</name><value>226</value><type>String</type></property>
+        <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:created</name><value>Mon Aug 23 2010 22:04:46 GMT+0200</value><type>Date</type></property>
+        <property><name>jcr:lastModified</name><value>Fri Nov 05 2010 10:38:15 GMT+0100</value><type>Date</type></property>
+        <property><name>sling:resourceType</name><value>foundation/components/image</value><type>String</type></property>
+        <property><name>imageRotate</name><value>0</value><type>String</type></property>
+        <node>
+          <name>file</name>
+          <primaryNodeType>nt:file</primaryNodeType>
+          <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+          <property><name>jcr:created</name><value>Thu Aug 07 2014 16:32:59 GMT+0200</value><type>Date</type></property>
+          <node>
+            <name>jcr:content</name>
+            <primaryNodeType>nt:resource</primaryNodeType>
+            <property><name>jcr:lastModifiedBy</name><value>anonymous</value><type>String</type></property>
+            <property><name>jcr:mimeType</name><value>image/jpeg</value><type>String</type></property>
+            <property><name>jcr:lastModified</name><value>Thu Aug 07 2014 16:32:59 GMT+0200</value><type>String</type></property>
+            <property><name>jcr:uuid</name><value>6139077f-191f-4337-aaef-55456ebe6784</value><type>String</type></property>
+          </node>
+        </node>
+      </node>
+      <node>
+        <name>title_2</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:title</name><value>Shape Technology</value><type>String</type></property>
+        <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:created</name><value>Mon Aug 23 2010 22:12:13 GMT+0200</value><type>Date</type></property>
+        <property><name>jcr:lastModified</name><value>Tue Oct 26 2010 21:16:29 GMT+0200</value><type>Date</type></property>
+        <property><name>sling:resourceType</name><value>sample/components/title</value><type>String</type></property>
+      </node>
+      <node>
+        <name>text_0</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:created</name><value>Mon Aug 23 2010 22:16:30 GMT+0200</value><type>Date</type></property>
+        <property><name>text</name><value><![CDATA[<p>The Sample investment in R&amp;D has done more than solidify our industry leadership role, we have now outpaced our competitors to such an extent that we are in an altogether new space.</p>
+<p>This is why our high quality polygons and polyhedra provide the only turnkey solutions across the whole range of euclidean geometry. And our mathematicians are working on the next generation of fractal curves to bring you shapes that are unthinkable today.</p>
+<p></p>
+<p></p>
+]]></value><type>String</type></property>
+        <property><name>jcr:lastModified</name><value>Mon Nov 08 2010 20:39:00 GMT+0100</value><type>Date</type></property>
+        <property><name>sling:resourceType</name><value>foundation/components/text</value><type>String</type></property>
+        <property><name>textIsRich</name><value>true</value><type>String</type></property>
+      </node>
+      <node>
+        <name>col_end12825937444810</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>controlType</name><value>end</value><type>String</type></property>
+        <property><name>sling:resourceType</name><value>foundation/components/parsys/colctrl</value><type>String</type></property>
+      </node>
+    </node>
+    <node>
+      <name>header</name>
+      <primaryNodeType>nt:unstructured</primaryNodeType>
+      <property><name>jcr:title</name><value>trust our experience
+to manage your business</value><type>String</type></property>
+      <property><name>imageReference</name><value>/content/dam/sample/header.png</value><type>String</type></property>
+      <property><name>text</name><value>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nunc eget neque. Nunc condimentum ipsum et orci. Aenean est. Cras eget diam. read more</value><type>String</type></property>
+      <property><name>sling:resourceType</name><value>sample/components/header</value><type>String</type></property>
+    </node>
+    <node>
+      <name>newslist</name>
+      <primaryNodeType>nt:unstructured</primaryNodeType>
+      <property><name>headline</name><value>trust our experience
+to manage your business</value><type>String</type></property>
+      <property><name>text</name><value>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nunc eget neque. Nunc condimentum ipsum et orci. Aenean est. Cras eget diam. read more</value><type>String</type></property>
+      <property><name>sling:resourceType</name><value>sample/components/listchildren</value><type>String</type></property>
+      <property><name>listroot</name><value>/content/sample/en/about/news</value><type>String</type></property>
+    </node>
+    <node>
+      <name>lead</name>
+      <primaryNodeType>nt:unstructured</primaryNodeType>
+      <property><name>jcr:title</name><value>World Leader in Applied Geometry </value><type>String</type></property>
+      <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+      <property><name>text</name><value>Lead Text</value><type>String</type></property>
+      <property><name>title</name><value>Lead Title</value><type>String</type></property>
+      <property><name>jcr:description</name><value>ample has been selling and servicing shapes for over 2000 years. From our beginnings as a small vendor of squares and rectangles we have grown our business into a leading global provider of platonic solids and fractals. Join us as we lead geometry into the future.</value><type>String</type></property>
+      <property><name>jcr:lastModified</name><value>Wed Jan 19 2011 14:35:29 GMT+0100</value><type>Date</type></property>
+      <property><name>sling:resourceType</name><value>sample/components/lead</value><type>String</type></property>
+      <node>
+        <name>app:annotations</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+      </node>
+    </node>
+    <node>
+      <name>image</name>
+      <primaryNodeType>nt:unstructured</primaryNodeType>
+      <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+      <property><name>jcr:lastModified</name><value>Wed Oct 27 2010 21:30:59 GMT+0200</value><type>Date</type></property>
+      <property><name>imageRotate</name><value>0</value><type>String</type></property>
+    </node>
+    <node>
+      <name>carousel</name>
+      <primaryNodeType>nt:unstructured</primaryNodeType>
+      <property><name>playSpeed</name><value>6000</value><type>String</type></property>
+      <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+      <property><name>pages</name><values><value>/content/sample/en/events/techsummit</value><value>/content/sample/en/events/userconf</value><value>/content/sample/en/events/shapecon</value><value>/content/sample/en/events/dsc</value></values><type>String</type></property>
+      <property><name>jcr:lastModified</name><value>Tue Oct 05 2010 14:14:27 GMT+0200</value><type>Date</type></property>
+      <property><name>transTime</name><value>1000</value><type>String</type></property>
+      <property><name>sling:resourceType</name><value>foundation/components/carousel</value><type>String</type></property>
+      <property><name>listFrom</name><value>static</value><type>String</type></property>
+    </node>
+    <node>
+      <name>rightpar</name>
+      <primaryNodeType>nt:unstructured</primaryNodeType>
+      <property><name>sling:resourceType</name><value>foundation/components/parsys</value><type>String</type></property>
+      <node>
+        <name>teaser</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:lastModifiedBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:created</name><value>Tue Jan 25 2011 11:30:09 GMT+0100</value><type>Date</type></property>
+        <property><name>campaignpath</name><value>/content/campaigns/sample</value><type>String</type></property>
+        <property><name>jcr:lastModified</name><value>Wed Feb 02 2011 08:40:30 GMT+0100</value><type>Date</type></property>
+        <property><name>sling:resourceTyp</name><value>personalization/components/teaser</value><type>String</type></property>
+      </node>
+    </node>
+  </node>
+  <node>
+    <name>toolbar</name>
+    <primaryNodeType>app:Page</primaryNodeType>
+    <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+    <property><name>jcr:created</name><value>Thu Aug 07 2014 16:33:00 GMT+0200</value><type>String</type></property>
+    <node>
+      <name>jcr:content</name>
+      <primaryNodeType>app:PageContent</primaryNodeType>
+      <property><name>subtitle</name><value>Contains the toolbar</value><type>String</type></property>
+      <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+      <property><name>jcr:title</name><value>Toolbar</value><type>String</type></property>
+      <property><name>app:template</name><value>sample/templates/contentpage</value><type>String</type></property>
+      <property><name>jcr:created</name><value>Thu Aug 07 2014 16:33:00 GMT+0200</value><type>String</type></property>
+      <property><name>app:lastModified</name><value>Wed Aug 25 2010 22:51:02 GMT+0200</value><type>Date</type></property>
+      <property><name>hideInNav</name><value>true</value><type>Date</type></property>
+      <property><name>sling:resourceType</name><value>sample/components/contentpage</value><type>String</type></property>
+      <property><name>app:lastModifiedBy</name><value>admin</value><type>String</type></property>
+      <node>
+        <name>par</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>sling:resourceType</name><value>foundation/components/parsys</value><type>String</type></property>
+      </node>
+      <node>
+        <name>rightpar</name>
+        <primaryNodeType>nt:unstructured</primaryNodeType>
+        <property><name>sling:resourceType</name><value>foundation/components/iparsys</value><type>String</type></property>
+        <node>
+          <name>iparsys_fake_par</name>
+          <primaryNodeType>nt:unstructured</primaryNodeType>
+          <property><name>sling:resourceType</name><value>foundation/components/iparsys/par</value><type>String</type></property>
+        </node>
+      </node>
+    </node>
+    <node>
+      <name>profiles</name>
+      <primaryNodeType>app:Page</primaryNodeType>
+      <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+      <property><name>jcr:created</name><value>Thu Aug 07 2014 16:33:00 GMT+0200</value><type>Date</type></property>
+      <node>
+        <name>jcr:content</name>
+        <primaryNodeType>app:PageContent</primaryNodeType>
+        <mixinNodeType>type1</mixinNodeType>
+        <mixinNodeType>type2</mixinNodeType>
+        <property><name>jcr:createdBy</name><value>admin</value><type>String</type></property>
+        <property><name>jcr:title</name><value>Profiles</value><type>String</type></property>
+        <property><name>app:template</name><value>sample/templates/contentpage</value><type>String</type></property>
+        <property><name>jcr:created</name><value>Thu Aug 07 2014 16:33:00 GMT+0200</value><type>Date</type></property>
+        <property><name>app:lastModified</name><value>Thu Nov 05 2009 20:27:13 GMT+0100</value><type>Date</type></property>
+        <property><name>hideInNav</name><value>true</value><type>Boolean</type></property>
+        <property><name>sling:resourceType</name><value>sample/components/contentpage</value><type>String</type></property>
+        <property><name>app:lastModifiedBy</name><value>admin</value><type>String</type></property>
+        <property><name>longProp</name><value>1234567890123</value><type>Long</type></property>
+        <property><name>decimalProp</name><value>1.2345</value><type>Decimal</type></property>
+        <property><name>booleanProp</name><value>true</value><type>Boolean</type></property>
+        <property><name>longPropMulti</name><values><value>1234567890123</value><value>55</value></values><type>Long</type></property>
+        <property><name>decimalPropMulti</name><values><value>1.2345</value><value>1.1</value></values><type>Decimal</type></property>
+        <property><name>booleanPropMulti</name><values><value>true</value><value>false</value></values><type>Boolean</type></property>
+        <property><name>stringPropMulti</name><values><value>aa</value><value>bb</value><value>cc</value></values><type>String</type></property>
+        <node>
+          <name>par</name>
+          <primaryNodeType>nt:unstructured</primaryNodeType>
+          <property><name>sling:resourceType</name><value>foundation/components/parsys</value><type>String</type></property>
+          <node>
+            <name>textimage</name>
+            <primaryNodeType>nt:unstructured</primaryNodeType>
+            <property><name>sling:resourceType</name><value>foundation/components/textimage</value><type>String</type></property>
+          </node>
+          <node>
+            <name>mygadgets</name>
+            <primaryNodeType>nt:unstructured</primaryNodeType>
+            <property><name>gadgets</name><value>http://customer.meteogroup.de/meteogroup/gadgets/wetter24.xml
+http://germanweatherradar.googlecode.com/svn/trunk/german-weather-radar.xml
+http://www.digitalpowered.info/gadget/ski.pictures.xml
+http://www.canbuffi.de/gadgets/clock/clock.xml</value><type>String</type></property>
+            <property><name>sling:resourceType</name><value>personalization/components/mygadgets</value><type>String</type></property>
+          </node>
+        </node>
+        <node>
+          <name>rightpar</name>
+          <primaryNodeType>nt:unstructured</primaryNodeType>
+          <property><name>sling:resourceType</name><value>foundation/components/iparsys</value><type>String</type></property>
+          <node>
+            <name>iparsys_fake_par</name>
+            <primaryNodeType>nt:unstructured</primaryNodeType>
+            <property><name>sling:resourceType</name><value>foundation/components/iparsys/par</value><type>String</type></property>
+          </node>
+        </node>
+      </node>
+    </node>
+  </node>
+</node>

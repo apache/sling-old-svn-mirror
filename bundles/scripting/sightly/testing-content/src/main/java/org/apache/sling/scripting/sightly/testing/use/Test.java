@@ -16,6 +16,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.testing.use;
 
+import java.util.Date;
 import java.util.Iterator;
 import javax.script.Bindings;
 
@@ -81,5 +82,9 @@ public class Test implements Use {
 
     public Iterator<Resource> getChildren() {
         return this.children;
+    }
+
+    public Date getDate() {
+        return new Date();
     }
 }

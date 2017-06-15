@@ -20,8 +20,7 @@ package org.apache.sling.commons.contentdetection.internal;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import junitx.util.PrivateAccessor;
+import java.lang.reflect.Field;
 
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.junit.Assert;
@@ -58,9 +57,11 @@ public class ContentAwareMimeTypeServiceImplTest {
     };
     
     @Before
-    public void setup() throws NoSuchFieldException {
+    public void setup() throws NoSuchFieldException, IllegalAccessException {
         contentAwareMimeTypeService = new ContentAwareMimeTypeServiceImpl();
-        PrivateAccessor.setField(contentAwareMimeTypeService, "mimeTypeService", mimeTypeService);
+        final Field field = contentAwareMimeTypeService.getClass().getDeclaredField("mimeTypeService");
+        field.setAccessible(true);
+        field.set(contentAwareMimeTypeService, mimeTypeService);
     }
     
     @Test

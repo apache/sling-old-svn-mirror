@@ -16,8 +16,11 @@ Features
 Installation
 ------------
 
-For running Sling Scripting Thymeleaf with Sling's Launchpad some dependencies need to be resolved. This can be achieved by installing the following bundle:
+For running Sling Scripting Thymeleaf with Sling's Launchpad some dependencies need to be resolved. This can be achieved by installing the following bundles:
 
+    mvn:org.attoparser/attoparser/2.0.2.RELEASE
+    mvn:org.unbescape/unbescape/1.1.4.RELEASE
+    mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.ognl/3.2_1
     mvn:org.javassist/javassist/3.20.0-GA
 
 There is a feature for [Karaf](https://github.com/apache/sling/tree/trunk/contrib/launchpad/karaf):

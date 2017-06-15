@@ -19,12 +19,14 @@
 
 package org.apache.sling.mom;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import java.util.Map;
 
 /**
- * Created by ieb on 30/03/2016.
  * Filter inbound messages, optionally implemented by QueueReaders.
  */
+@ProviderType
 public interface MessageFilter {
     /**
      * Provides message filtering, the implementation should return true if it wants to get the message, false if not.

@@ -27,9 +27,7 @@ import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
 import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
 import static org.apache.sling.distribution.it.DistributionUtils.distribute;
-import static org.apache.sling.distribution.it.DistributionUtils.distributeDeep;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 /**
  * Integration test for forward distribution

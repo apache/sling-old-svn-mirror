@@ -18,6 +18,8 @@
 package org.apache.sling.repoinit.parser.operations;
 
 public interface OperationVisitor {
+    void visitCreateUser(CreateUser u);
+    void visitDeleteUser(DeleteUser u);
     void visitCreateServiceUser(CreateServiceUser s);
     void visitDeleteServiceUser(DeleteServiceUser s);
     void visitSetAclPrincipal(SetAclPrincipals s);

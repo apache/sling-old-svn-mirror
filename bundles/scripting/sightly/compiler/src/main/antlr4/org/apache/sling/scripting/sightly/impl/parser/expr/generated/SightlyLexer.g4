@@ -18,7 +18,7 @@
  ******************************************************************************/
 lexer grammar SightlyLexer;
 
-ESC_EXPR: '\${'.*? '}';
+ESC_EXPR: '\\${'.*? '}';
 
 EXPR_START: '${' -> pushMode(ExpressionMode);
 
@@ -90,6 +90,9 @@ WS  :   ( ' '
         | '\t'
         | '\r'
         | '\n'
+        | '\f'
+        | '\u000B'
+        | '\u00A0'
         ) -> channel(HIDDEN)
     ;
 

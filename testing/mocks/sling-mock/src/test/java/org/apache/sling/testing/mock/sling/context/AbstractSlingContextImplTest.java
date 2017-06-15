@@ -26,17 +26,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
-import javax.inject.Inject;
-
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingBindings;
-import org.apache.sling.commons.mime.MimeTypeService;
-import org.apache.sling.models.annotations.Model;
 import org.apache.sling.settings.SlingSettingsService;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.context.models.OsgiServiceModel;
+import org.apache.sling.testing.mock.sling.context.models.RequestAttributeModel;
+import org.apache.sling.testing.mock.sling.context.models.ServiceInterface;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.mock.sling.loader.ContentLoader;
 import org.apache.sling.testing.mock.sling.services.MockMimeTypeService;
@@ -51,7 +48,10 @@ public abstract class AbstractSlingContextImplTest {
 
     @Before
     public void setUp() throws Exception {
-        context.addModelsForPackage("org.apache.sling.testing.mock.sling.context");
+        // make sure ResourceResolverFactory is available immediately and not lazily
+        assertEquals(1, context.getServices(ResourceResolverFactory.class, null).length);
+
+        context.addModelsForPackage("org.apache.sling.testing.mock.sling.context.models");
         
         ContentLoader contentLoader = this.context.load();
         contentLoader.json("/json-import-samples/content.json", "/content/sample/en");
@@ -141,38 +141,4 @@ public abstract class AbstractSlingContextImplTest {
         assertTrue(newRunModes.contains("mode2"));
     }
     
-    @Test
-    public void testResourceResolverFactory() {
-        ResourceResolverFactory factory = context.getService(ResourceResolverFactory.class);
-        assertNotNull(factory);
-    }
-
-    @Model(adaptables = SlingHttpServletRequest.class)
-    public interface RequestAttributeModel {
-        @Inject
-        String getProp1();
-    }
-
-    @Model(adaptables = ResourceResolver.class)
-    public interface OsgiServiceModel {
-        @Inject
-        MimeTypeService getMimeTypeService();
-    }
-
-    public interface ServiceInterface {
-        String getPropValue();
-    }
-
-    @Model(adaptables = SlingHttpServletRequest.class, adapters = ServiceInterface.class)
-    public static class ServiceInterfaceImpl implements ServiceInterface {
-
-        @Inject
-        private String prop1;
-
-        @Override
-        public String getPropValue() {
-            return this.prop1;
-        }
-    }
-
 }

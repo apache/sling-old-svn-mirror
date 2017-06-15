@@ -42,7 +42,6 @@ public class ConfigInstallTask extends AbstractConfigTask {
         return CONFIG_INSTALL_ORDER + getCompositePid();
     }
 
-    @SuppressWarnings("unchecked")
 	@Override
     public void execute(final InstallationContext ctx) {
         synchronized ( Coordinator.SHARED ) {
@@ -78,10 +77,10 @@ public class ConfigInstallTask extends AbstractConfigTask {
                     if ( this.factoryPid != null ) {
                         this.aliasPid = config.getPid();
                     }
-                    this.setFinishedState(ResourceState.INSTALLED, this.getCompositeAliasPid());
                     this.getLogger().debug("Configuration " + config.getPid()
                                 + " " + (created ? "created" : "updated")
                                 + " from " + getResource());
+                    this.setFinishedState(ResourceState.INSTALLED, this.getCompositeAliasPid());
                     final Operation op = new Coordinator.Operation(config.getPid(), config.getFactoryPid(), false);
                     Coordinator.SHARED.add(op);
                 } else {

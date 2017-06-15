@@ -50,7 +50,6 @@ public class RepoInitIT {
     
     @Before
     public void setup() throws Exception {
-        WaitFor.services(teleporter, SlingRepository.class, RepoInitParser.class);
         session = teleporter.getService(SlingRepository.class).loginAdministrative(null);
         
         // Execute some repoinit statements

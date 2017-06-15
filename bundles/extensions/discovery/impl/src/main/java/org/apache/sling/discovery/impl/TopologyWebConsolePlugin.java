@@ -44,7 +44,6 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
@@ -175,6 +174,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
                 tv.findInstances(new InstanceFilter() {
 
+                    @Override
                     public boolean accept(InstanceDescription instance) {
                         String slingId = instance.getSlingId();
                     	if (logger.isDebugEnabled()) {
@@ -483,7 +483,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("</tbody>");
         pw.println("</table>");
     }
-    
+
     private String beautifiedDueTime(long secondsDue) {
         if (secondsDue<-1) {
             return "overdue";
@@ -569,6 +569,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     /**
      * keep a truncated history of the log events for information purpose (to be shown in the webconsole)
      */
+    @Override
     public void handleTopologyEvent(final TopologyEvent event) {
         if (event.getType() == Type.PROPERTIES_CHANGED) {
             this.currentView = event.getNewView();
@@ -600,7 +601,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                         sb.append(", ");
                     }
                     sb.append("on instance "
-                            + newInstanceDescription.getSlingId() + (newInstanceDescription.isLeader() ? " [isLeader]" : "") 
+                            + newInstanceDescription.getSlingId() + (newInstanceDescription.isLeader() ? " [isLeader]" : "")
                             + ": " + diff);
                 }
             }
@@ -669,7 +670,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                         }
                     }
                 }
-    
+
                 addEventLog(
                         event.getType(),
                         "old view: " + shortViewInfo(event.getOldView())
@@ -688,6 +689,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         Set<InstanceDescription> foundInstances = view
                 .findInstances(new InstanceFilter() {
 
+                    @Override
                     public boolean accept(InstanceDescription instance) {
                         return instance.getSlingId().equals(slingId);
                     }
@@ -920,7 +922,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         }
         pw.println();
         pw.println();
-    
+
     }
 
     /**

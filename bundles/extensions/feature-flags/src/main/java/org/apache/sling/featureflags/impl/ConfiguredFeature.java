@@ -34,7 +34,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @Designate(ocd = ConfiguredFeature.Config.class, factory = true)
 @Component(service = Feature.class,
-           configurationPolicy = ConfigurationPolicy.REQUIRE)
+           configurationPolicy = ConfigurationPolicy.REQUIRE,
+           property = {
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+           })
 public class ConfiguredFeature implements Feature {
 
     @ObjectClassDefinition(name = "Apache Sling Configured Feature",

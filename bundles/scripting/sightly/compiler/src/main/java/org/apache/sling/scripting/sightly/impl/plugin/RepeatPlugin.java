@@ -20,6 +20,7 @@ package org.apache.sling.scripting.sightly.impl.plugin;
 
 import java.util.HashMap;
 
+import org.apache.sling.scripting.sightly.compiler.commands.OutText;
 import org.apache.sling.scripting.sightly.impl.compiler.Syntax;
 import org.apache.sling.scripting.sightly.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.compiler.expression.ExpressionNode;
@@ -45,6 +46,7 @@ public class RepeatPlugin extends AbstractPlugin {
     private static final String LAST = "last";
     private static final String ODD = "odd";
     private static final String EVEN = "even";
+    private static final OutText NEW_LINE = new OutText("\n");
 
     public RepeatPlugin() {
         name = "repeat";
@@ -70,6 +72,11 @@ public class RepeatPlugin extends AbstractPlugin {
                 stream.write(new Loop.Start(listVariable, itemVariable, indexVariable));
                 stream.write(new VariableBinding.Start(loopStatusVar, buildStatusObj(indexVariable, collectionSizeVar)));
 
+            }
+
+            @Override
+            public void afterTagClose(PushStream stream, boolean isSelfClosing) {
+                stream.write(NEW_LINE);
             }
 
             @Override

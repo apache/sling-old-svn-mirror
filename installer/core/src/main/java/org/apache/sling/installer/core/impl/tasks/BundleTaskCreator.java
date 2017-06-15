@@ -18,6 +18,9 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
+import java.text.MessageFormat;
+import java.util.Iterator;
+
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.tasks.ChangeStateTask;
@@ -27,8 +30,11 @@ import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.RetryHandler;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
+import org.apache.sling.installer.core.impl.BundleBlackList;
+import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.InternalService;
 import org.apache.sling.installer.core.impl.PersistentResourceList;
+import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
 import org.apache.sling.installer.core.impl.Util;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -63,9 +69,12 @@ public class BundleTaskCreator
     /** The retry handler. */
     private RetryHandler retryHandler;
 
+    private BundleBlackList bundleBlacklist;
+
     /**
      * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext, org.apache.sling.installer.api.ResourceChangeListener, RetryHandler)
      */
+    @Override
     public void init(final BundleContext bc, final ResourceChangeListener listener, final RetryHandler retryHandler) {
         this.bundleContext = bc;
         this.retryHandler = retryHandler;
@@ -74,18 +83,19 @@ public class BundleTaskCreator
         this.bundleContext.addFrameworkListener(this);
 
         this.taskSupport = new TaskSupport(bc);
+        this.bundleBlacklist = new BundleBlackList(bc);
     }
 
     /**
      * @see org.apache.sling.installer.core.impl.InternalService#deactivate()
      */
+    @Override
     public void deactivate() {
         if ( this.bundleContext != null ) {
             this.bundleContext.removeBundleListener(this);
             this.bundleContext.removeFrameworkListener(this);
         }
         if ( this.taskSupport != null ) {
-            this.taskSupport.deactivate();
             this.taskSupport = null;
         }
     }
@@ -93,6 +103,7 @@ public class BundleTaskCreator
     /**
      * @see org.osgi.framework.FrameworkListener#frameworkEvent(org.osgi.framework.FrameworkEvent)
      */
+    @Override
     public void frameworkEvent(final FrameworkEvent event) {
         if ( event.getType() == FrameworkEvent.PACKAGES_REFRESHED ) {
             logger.debug("Received FrameworkEvent triggering a retry of the installer: {}", event);
@@ -103,6 +114,7 @@ public class BundleTaskCreator
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
+    @Override
     public void bundleChanged(final BundleEvent event) {
         final int t = event.getType();
         if (t == BundleEvent.INSTALLED || t == BundleEvent.RESOLVED || t == BundleEvent.STARTED || t == BundleEvent.UPDATED) {
@@ -114,6 +126,7 @@ public class BundleTaskCreator
     /**
      * @see org.apache.sling.installer.core.impl.InternalService#getDescription()
      */
+    @Override
     public String getDescription() {
         return "Apache Sling Bundle Install Task Factory";
     }
@@ -123,7 +136,8 @@ public class BundleTaskCreator
      *
 	 * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.TaskResourceGroup)
 	 */
-	public InstallTask createTask(final TaskResourceGroup resourceList) {
+	@Override
+    public InstallTask createTask(final TaskResourceGroup resourceList) {
 	    // quick check of the resource type.
 	    final TaskResource toActivate = resourceList.getActiveResource();
 	    if ( toActivate.getType().equals(PersistentResourceList.RESTART_ACTIVE_BUNDLES_TYPE) ) {
@@ -137,8 +151,9 @@ public class BundleTaskCreator
         if ( toActivate.getAttribute(Constants.BUNDLE_SYMBOLICNAME) == null ) {
             final Util.BundleHeaders headers = Util.readBundleHeaders(toActivate, logger);
             if ( headers == null ) {
-                logger.info("Resource of type bundle {} is not really a bundle - manifest entries are missing.", toActivate);
-                return new ChangeStateTask(resourceList, ResourceState.IGNORED);
+                String message = MessageFormat.format("Resource of type bundle {0} is not really a bundle - manifest entries are missing.", toActivate);
+                logger.info(message);
+                return new ChangeStateTask(resourceList, ResourceState.IGNORED, message);
             }
             toActivate.setAttribute(Constants.BUNDLE_SYMBOLICNAME, headers.symbolicName);
             toActivate.setAttribute(Constants.BUNDLE_VERSION, headers.version);
@@ -160,18 +175,33 @@ public class BundleTaskCreator
 		    if ( info != null ) {
 	            // if this is an uninstall, check if we have to install an older version
 	            // in this case we should do an update instead of uninstall/install (!)
-	            final TaskResource second = resourceList.getNextActiveResource();
+                Iterator<TaskResource> candidatesIt = ((EntityResourceList)resourceList).getActiveResourceIterator();
+                TaskResource second = null;
+                while (candidatesIt != null && second == null && candidatesIt.hasNext()) {
+                    TaskResource candidate = candidatesIt.next();
+                    boolean sameVersion = toActivate.getVersion().equals(candidate.getVersion());
+                    if (!sameVersion) {
+                        if (bundleBlacklist.isBlacklisted(symbolicName, candidate.getVersion())) {
+                            String message = MessageFormat.format("Uninstalling blacklisted bundle {0} found at {1}", symbolicName, candidate.getURL());
+                            logger.info(message);
+                            // blacklisted candidates should be uninstalled to no longer be taken into account anymore
+                            ((RegisteredResourceImpl)candidate).setState(ResourceState.UNINSTALL, message);
+                        } else {
+                            second = candidate;
+                        }
+                    }
+                }
 	            if ( second != null &&
 	                ( second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED || second.getState() == ResourceState.INSTALL ) ) {
                     second.setAttribute(FORCE_INSTALL_VERSION, info.version.toString());
                     BundleUtil.clearBundleStart(second);
                     logger.debug("Detected downgrade of bundle {}", symbolicName);
-                    result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED);
+                    result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED, null);
 	            } else {
 	                // prevent uninstalling the installer itself!
 	                if ( isInstallerCoreBundle ) {
 	                    logger.debug("Prevent completely uninstalling installer bundle {}", symbolicName);
-	                    result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED);
+	                    result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED, null);
 	                } else {
 	                    result = new BundleRemoveTask(resourceList, this.taskSupport);
 	                }
@@ -179,7 +209,7 @@ public class BundleTaskCreator
 		    } else {
 	            logger.debug("Bundle {}:{} is not installed anymore - nothing to remove.", symbolicName,
 	                    toActivate.getAttribute(Constants.BUNDLE_VERSION));
-	            result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED);
+	            result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED, null);
 	        }
 
 		// Install
@@ -192,11 +222,19 @@ public class BundleTaskCreator
                 } else {
                     // system bundle
                     result = new ChangeStateTask(resourceList, ResourceState.INSTALLED, null,
-                                    new String[] {InstallTask.ASYNC_ATTR_NAME});
+                                    new String[] {InstallTask.ASYNC_ATTR_NAME}, null);
                 }
 		    } else {
-    		    // for install and update, we want the bundle with the highest version
-    	        final BundleInfo info = this.getBundleInfo(symbolicName, null);
+                final Version newVersion = new Version((String) toActivate.getAttribute(Constants.BUNDLE_VERSION));
+                if (bundleBlacklist.isBlacklisted(symbolicName, newVersion)) {
+                    String message = MessageFormat.format("Ignoring blacklisted bundle {0} found at {1}", symbolicName, toActivate.getURL());
+                    logger.info(message);
+                    result = new ChangeStateTask(resourceList, ResourceState.IGNORED, message);
+                } else {
+
+                    // for install and update, we want the bundle with the
+                    // highest version
+                    final BundleInfo info = this.getBundleInfo(symbolicName, null);
 
     		    // check if we should start the bundle as we installed it in the previous run
     		    if (info == null) {
@@ -207,7 +245,6 @@ public class BundleTaskCreator
     			} else {
     	            boolean doUpdate = false;
 
-    	            final Version newVersion = new Version((String)toActivate.getAttribute(Constants.BUNDLE_VERSION));
     			    final int compare = info.version.compareTo(newVersion);
                     if (compare < 0) {
                         // installed version is lower -> update
@@ -239,10 +276,12 @@ public class BundleTaskCreator
                         }
                     } else if ( compare == 0 && (isInstallerCoreBundle || Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName)) ) {
                         // the installer core bundle / system bundle has been updated, just set state
-                        result = new ChangeStateTask(resourceList, ResourceState.INSTALLED);
+                        result = new ChangeStateTask(resourceList, ResourceState.INSTALLED, "This is the system bundle, therefore nothing was actually done!");
                     } else {
-                        logger.debug("Nothing to install for {}, same version {} already installed.", toActivate, newVersion);
-                        result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
+                        String message = MessageFormat.format("Nothing to install for {0}, same or newer version {1} already installed.", toActivate, newVersion);
+                        logger.debug(message);
+                        result = new ChangeStateTask(resourceList, ResourceState.IGNORED, message);
+                        }
                     }
     			}
 		    }

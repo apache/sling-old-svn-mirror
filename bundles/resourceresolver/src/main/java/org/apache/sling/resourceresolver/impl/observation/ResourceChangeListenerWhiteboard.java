@@ -45,41 +45,43 @@ public class ResourceChangeListenerWhiteboard implements ResourceProviderTracker
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final Map<ServiceReference, ResourceChangeListenerInfo> listeners = new ConcurrentHashMap<ServiceReference, ResourceChangeListenerInfo>();
+    private final Map<ServiceReference<ResourceChangeListener>, ResourceChangeListenerInfo> listeners = new ConcurrentHashMap<>();
 
     private volatile ResourceProviderTracker resourceProviderTracker;
 
-    private volatile ServiceTracker tracker;
+    private volatile ServiceTracker<ResourceChangeListener, ServiceReference<ResourceChangeListener>> tracker;
+
+    private volatile String[] searchPath;
 
     public void activate(final BundleContext bundleContext,
             final ResourceProviderTracker resourceProviderTracker,
-            final String[] searchPaths) {
+            final String[] searchPath) {
+        this.searchPath = searchPath;
         this.resourceProviderTracker = resourceProviderTracker;
         this.resourceProviderTracker.setObservationReporterGenerator(this);
-        this.tracker = new ServiceTracker(bundleContext,
-                ResourceChangeListener.class.getName(),
-                new ServiceTrackerCustomizer() {
+        this.tracker = new ServiceTracker<>(bundleContext,
+                ResourceChangeListener.class,
+                new ServiceTrackerCustomizer<ResourceChangeListener, ServiceReference<ResourceChangeListener>>() {
 
             @Override
-            public void removedService(final ServiceReference reference, final Object service) {
-                final ServiceReference ref = (ServiceReference)service;
-                final ResourceChangeListenerInfo info = listeners.remove(ref);
+            public void removedService(final ServiceReference<ResourceChangeListener> reference, final ServiceReference<ResourceChangeListener> service) {
+                final ResourceChangeListenerInfo info = listeners.remove(reference);
                 if ( info != null ) {
                     updateProviderTracker();
                 }
             }
 
             @Override
-            public void modifiedService(final ServiceReference reference, final Object service) {
+            public void modifiedService(final ServiceReference<ResourceChangeListener> reference, final ServiceReference<ResourceChangeListener> service) {
                 removedService(reference, service);
                 addingService(reference);
             }
 
             @Override
-            public Object addingService(final ServiceReference reference) {
-                final ResourceChangeListenerInfo info = new ResourceChangeListenerInfo(reference, searchPaths);
+            public ServiceReference<ResourceChangeListener> addingService(final ServiceReference<ResourceChangeListener> reference) {
+                final ResourceChangeListenerInfo info = new ResourceChangeListenerInfo(reference, searchPath);
                 if ( info.isValid() ) {
-                    final ResourceChangeListener listener = (ResourceChangeListener) bundleContext.getService(reference);
+                    final ResourceChangeListener listener = bundleContext.getService(reference);
                     if ( listener != null ) {
                         info.setListener(listener);
                         listeners.put(reference, info);
@@ -109,18 +111,23 @@ public class ResourceChangeListenerWhiteboard implements ResourceProviderTracker
 
     @Override
     public ObservationReporter create(final Path path, final PathSet excludes) {
-        return new BasicObservationReporter(this.listeners.values(), path, excludes);
+        return new BasicObservationReporter(this.searchPath, this.listeners.values(), path, excludes);
     }
 
     @Override
     public ObservationReporter createProviderReporter() {
-        return new BasicObservationReporter(this.listeners.values());
+        return new BasicObservationReporter(this.searchPath, this.listeners.values());
     }
 
     private static final ObservationReporter EMPTY_REPORTER = new ObservationReporter() {
 
         @Override
         public void reportChanges(Iterable<ResourceChange> changes, boolean distribute) {
+            // ignore
+        }
+
+        @Override
+        public void reportChanges(ObserverConfiguration config, Iterable<ResourceChange> changes, boolean distribute) {
             // ignore
         }
 

@@ -16,7 +16,7 @@
  */
 package org.apache.sling.ide.impl.resource.transport;
 
-import java.util.Iterator;
+import java.io.InputStreamReader;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
@@ -29,7 +29,11 @@ import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 import org.apache.sling.ide.util.PathUtil;
-import org.json.JSONObject;
+
+import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 
 class ListChildrenCommand extends AbstractCommand<ResourceProxy> {
 
@@ -37,6 +41,15 @@ class ListChildrenCommand extends AbstractCommand<ResourceProxy> {
         super(repositoryInfo, httpClient, relativePath);
     }
 
+    
+    private static final class ResourceWithPrimaryType {
+        @SerializedName(Repository.JCR_PRIMARY_TYPE)
+        private String primaryType;
+        
+        String getPrimaryType() {
+            return primaryType;
+        }
+    }
     @Override
     public Result<ResourceProxy> execute() {
         GetMethod get = new GetMethod(getPath());
@@ -52,26 +65,32 @@ class ListChildrenCommand extends AbstractCommand<ResourceProxy> {
                 return failureResultForStatusCode(responseStatus);
 
             ResourceProxy resource = new ResourceProxy(path);
-
-            JSONObject json = new JSONObject(get.getResponseBodyAsString());
-            String primaryType = json.optString(Repository.JCR_PRIMARY_TYPE);
-            if (primaryType != null) { // TODO - needed?
-                resource.addProperty(Repository.JCR_PRIMARY_TYPE, primaryType);
-            }
-
-            // TODO - populate all properties
-
-            for (Iterator<?> keyIterator = json.keys(); keyIterator.hasNext();) {
-
-                String key = (String) keyIterator.next();
-                JSONObject value = json.optJSONObject(key);
-                if (value != null) {
-                    ResourceProxy child = new ResourceProxy(PathUtil.join(path, key));
-                    child.addProperty(Repository.JCR_PRIMARY_TYPE, value.optString(Repository.JCR_PRIMARY_TYPE));
-                    resource.addChild(child);
+            Gson gson = new Gson();
+            try (JsonReader jsonReader = new JsonReader(
+                    new InputStreamReader(get.getResponseBodyAsStream(), get.getResponseCharSet()))) {
+                jsonReader.beginObject();
+                while (jsonReader.hasNext()) {
+                    String name = jsonReader.nextName();
+                    JsonToken token = jsonReader.peek();
+                    if (token == JsonToken.BEGIN_OBJECT) {
+                        ResourceProxy child = new ResourceProxy(PathUtil.join(path, name));
+                        ResourceWithPrimaryType resourceWithPrimaryType = gson.fromJson(jsonReader, ResourceWithPrimaryType.class);
+                        // evaluate its jcr:primaryType as well!
+                        child.addProperty(Repository.JCR_PRIMARY_TYPE, resourceWithPrimaryType.getPrimaryType());
+                        resource.addChild(child);
+                    } else if (token == JsonToken.STRING) {
+                        if (Repository.JCR_PRIMARY_TYPE.equals(name)) {
+                            String primaryType = jsonReader.nextString();
+                            if (primaryType != null) { // TODO - needed?
+                                resource.addProperty(Repository.JCR_PRIMARY_TYPE, primaryType);
+                            }
+                        }
+                    } else {
+                        jsonReader.skipValue();
+                    }
                 }
+                jsonReader.endObject();
             }
-    		
             return AbstractResult.success(resource);
     	} catch (Exception e) {
     		return AbstractResult.failure(new RepositoryException(e));

@@ -18,15 +18,16 @@
  */
 package org.apache.sling.distribution.packaging.impl;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -50,7 +51,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
     private final String type;
 
-    protected AbstractDistributionPackageBuilder(String type) {
+    AbstractDistributionPackageBuilder(String type) {
         this.type = type;
     }
 
@@ -64,7 +65,6 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         DistributionPackage distributionPackage;
 
         request = VltUtils.sanitizeRequest(request);
-
 
         if (DistributionRequestType.ADD.equals(request.getRequestType())) {
             distributionPackage = createPackageForAdd(resourceResolver, request);
@@ -197,9 +197,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         } finally {
             IOUtils.closeQuietly(inputStream);
         }
-
     }
-
 
     @CheckForNull
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
@@ -218,9 +216,10 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         return distributionPackage;
     }
 
-    protected Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
+    private Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
         Session session = resourceResolver.adaptTo(Session.class);
         if (session != null) {
+            // this is needed in order to avoid loops in sync case when there're deletions, otherwise it could work with sling resources
             DistributionJcrUtils.setDoNotDistribute(session);
         } else {
             throw new RepositoryException("could not obtain a session from calling user " + resourceResolver.getUserID());
@@ -228,7 +227,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         return session;
     }
 
-    protected void ungetSession(Session session) {
+    private void ungetSession(Session session) {
         if (session != null) {
             try {
                 if (session.hasPendingChanges()) {

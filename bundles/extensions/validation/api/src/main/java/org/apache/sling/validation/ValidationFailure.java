@@ -22,22 +22,22 @@ import java.util.ResourceBundle;
 
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 @ProviderType
 public interface ValidationFailure {
 
     /**
-     * @param resourceBundle ResourceBundle in which to look up the according message (used for i18n)
+     * @param resourceBundle ResourceBundle in which to look up the according message (used for i18n), if {@code null} is given, the default resource bundle is used.
      * @return the failure message
      */
-    @Nonnull String getMessage(@Nonnull ResourceBundle resourceBundle);
+    @Nonnull String getMessage(ResourceBundle resourceBundle);
 
     /**
      * Returns the relative location of the property/resource/value which triggered this validation failure.
      * The location 
      * <ul>
-     * <li>is relative to the resource given in the first parameter in case it was returned by {@link ValidationService#validate(org.apache.sling.api.resource.Resource, org.apache.sling.validation.model.ValidationModel)} or {@link ValidationService#validateResourceRecursively(org.apache.sling.api.resource.Resource, boolean, org.apache.commons.collections.Predicate, boolean)} or</li>
+     * <li>is relative to the resource given in the first parameter in case it was returned by {@link ValidationService#validate(org.apache.sling.api.resource.Resource, org.apache.sling.validation.model.ValidationModel)} or {@link ValidationService#validateResourceRecursively(org.apache.sling.api.resource.Resource, boolean, java.util.function.Predicate, boolean)} or</li>
      * <li>contains just the value name in case it was returned by {@link ValidationService#validate(org.apache.sling.api.resource.ValueMap, org.apache.sling.validation.model.ValidationModel)}</li>
      * </ul>
      * @return the location (usually the validated resource's property path).

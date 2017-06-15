@@ -27,25 +27,23 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.resourcebuilder.api.ResourceBuilder;
-import org.apache.sling.resourcebuilder.test.ResourceAssertions;
+import org.apache.sling.resourcebuilder.api.ResourceBuilderFactory;
 
 class TestEnvironment {
     
     final ResourceBuilder builder;
-    final ResourceBuilder builderService;
+    final ResourceBuilderFactory builderService;
     final ResourceResolver resolver;
     final String testRootPath;
     final Resource parent;
-    final ResourceAssertions A;
 
     TestEnvironment(TeleporterRule teleporter) throws LoginException, PersistenceException {
         testRootPath = getClass().getSimpleName() + "-" + UUID.randomUUID().toString(); 
         resolver = teleporter.getService(ResourceResolverFactory.class).getAdministrativeResourceResolver(null);
         final Resource root = resolver.getResource("/");
         parent = resolver.create(root, testRootPath, null);
-        builderService = teleporter.getService(ResourceBuilder.class); 
+        builderService = teleporter.getService(ResourceBuilderFactory.class); 
         builder = builderService.forParent(parent);
-        A = new ResourceAssertions(testRootPath, resolver);
     }
     
     void cleanup() throws PersistenceException {

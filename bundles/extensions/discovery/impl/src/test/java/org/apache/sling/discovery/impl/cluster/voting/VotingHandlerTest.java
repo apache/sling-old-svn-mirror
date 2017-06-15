@@ -72,7 +72,7 @@ public class VotingHandlerTest {
     VotingHandler votingHandler3;
     VotingHandler votingHandler4;
     VotingHandler votingHandler5;
-    
+
     String slingId1;
     String slingId2;
     String slingId3;
@@ -84,7 +84,7 @@ public class VotingHandlerTest {
     TestConfig config;
 
     DefaultThreadPool threadPool;
-    
+
     private void resetRepo() throws Exception {
         Session l = RepositoryProvider.instance().getRepository()
                 .loginAdministrative(null);
@@ -97,7 +97,7 @@ public class VotingHandlerTest {
         l.save();
         l.logout();
     }
-    
+
     @Before
     public void setUp() throws Exception {
         slingId1 = UUID.randomUUID().toString();
@@ -105,7 +105,7 @@ public class VotingHandlerTest {
         slingId3 = UUID.randomUUID().toString();
         slingId4 = UUID.randomUUID().toString();
         slingId5 = UUID.randomUUID().toString();
-        
+
         factory = new DummyResourceResolverFactory();
         resetRepo();
         config = new TestConfig("/var/discovery/impltesting/");
@@ -117,26 +117,26 @@ public class VotingHandlerTest {
         votingHandler3 = VotingHandler.testConstructor(new DummySlingSettingsService(slingId3), factory, config);
         votingHandler4 = VotingHandler.testConstructor(new DummySlingSettingsService(slingId4), factory, config);
         votingHandler5 = VotingHandler.testConstructor(new DummySlingSettingsService(slingId5), factory, config);
-        
-        resourceResolver = factory.getAdministrativeResourceResolver(null);
-        
+
+        resourceResolver = factory.getServiceResourceResolver(null);
+
         ModifiableThreadPoolConfig tpConfig = new ModifiableThreadPoolConfig();
         tpConfig.setMinPoolSize(80);
         tpConfig.setMaxPoolSize(80);
         threadPool = new DefaultThreadPool("testing", tpConfig);
     }
-    
+
     @After
     public void tearDown() throws Exception {
         if (resourceResolver != null) {
             resourceResolver.close();
         }
-        
+
         if (threadPool != null) {
             threadPool.shutdown();
         }
     }
-    
+
     @Test
     public void testActivateDeactivate() throws Exception {
         assertFalse((Boolean)PrivateAccessor.getField(votingHandler1, "activated"));
@@ -145,20 +145,20 @@ public class VotingHandlerTest {
         votingHandler1.deactivate();
         assertFalse((Boolean)PrivateAccessor.getField(votingHandler1, "activated"));
     }
-    
+
     @Test
     public void testNoVotings() throws Exception {
         votingHandler1.analyzeVotings(resourceResolver);
     }
-    
+
     private VotingView newVoting2(String newViewId, String initiatorId, String... liveInstances) throws Exception {
         return VotingView.newVoting(resourceResolver, config, newViewId, initiatorId, new HashSet<String>(Arrays.asList(liveInstances)));
     }
-    
+
     private VotingView newVoting(String initiatorId, String... liveInstances) throws Exception {
         return newVoting2(UUID.randomUUID().toString(), initiatorId, liveInstances);
     }
-    
+
     @Test
     public void testPromotion() throws Exception {
         VotingView voting = newVoting(slingId1, slingId1);
@@ -173,7 +173,7 @@ public class VotingHandlerTest {
         assertNotNull(result);
         assertEquals(0, result.size());
     }
-    
+
     @Test
     public void testVotingYesTwoNodes() throws Exception {
         VotingView voting = newVoting(slingId2, slingId1, slingId2);
@@ -272,7 +272,7 @@ public class VotingHandlerTest {
         OSGiMock.activate(hh);
         HeartbeatHelper.issueClusterLocalHeartbeat(hh);
     }
-    
+
     @Test
     public void testTimedout() throws Exception {
         config.setHeartbeatTimeout(1);
@@ -288,7 +288,7 @@ public class VotingHandlerTest {
         assertNotNull(result);
         assertEquals(0, result.size());
     }
-    
+
     private void asyncVote(final String debugInfo, final VotingHandler votingHandler, final List<VotingDetail> votingDetails, final Semaphore ready, final Semaphore go, final Semaphore done, final Set<Throwable> exceptions) throws Exception {
         Runnable r = new Runnable() {
 
@@ -302,7 +302,7 @@ public class VotingHandlerTest {
                     int retries = 0;
                     while(true) {
                         try{
-                            rr = factory.getAdministrativeResourceResolver(null);
+                            rr = factory.getServiceResourceResolver(null);
                             if (retries == 0) {
                                 logger.info("asyncVote["+debugInfo+"] marking ready...");
                                 ready.release();
@@ -421,24 +421,24 @@ public class VotingHandlerTest {
     public void doTestConcurrentVotes(int votingsLoopCnt, int perVotingInnerLoopCnt, VotingHandler... votingHandler) throws Exception {
         config.setHeartbeatInterval(999);
         config.setHeartbeatTimeout(120);
-        
+
         for (VotingHandler handler : votingHandler) {
             handler.activate(null);
         }
-        
+
         int[] totals = new int[votingHandler.length];
-        
+
         List<Map<VotingDetail,Integer>> totalDetails = new LinkedList<Map<VotingDetail,Integer>>();
         for(int i=0; i<votingHandler.length; i++) {
             HashMap<VotingDetail, Integer> d = new HashMap<VotingHandler.VotingDetail, Integer>();
             totalDetails.add(d);
         }
-        
+
         String[] slingIds = new String[votingHandler.length];
         for(int k=0; k<votingHandler.length; k++) {
             slingIds[k] = (String) PrivateAccessor.getField(votingHandler[k], "slingId");
         }
-        
+
         for(int i=0; i<votingsLoopCnt; i++) { // large voting loop
             logger.info("testConcurrentVotes: loop i="+i+", votingHandler.cnt="+votingHandler.length);
 
@@ -455,12 +455,12 @@ public class VotingHandlerTest {
             Semaphore done = new Semaphore(0);
             Set<Throwable> e = new ConcurrentHashSet<Throwable>();
             boolean success = false;
-            
+
             List<List<VotingDetail>> detailList = new LinkedList<List<VotingDetail>>();
             for(int k=0; k<votingHandler.length; k++) {
                 detailList.add(new LinkedList<VotingHandler.VotingDetail>());
             }
-            
+
             for(int j=0; j<perVotingInnerLoopCnt; j++) {
                 logger.info("testConcurrentVotes: loop i="+i+", votingHandler.cnt="+votingHandler.length+", j="+j);
                 for(int k=0; k<votingHandler.length; k++) {
@@ -478,7 +478,7 @@ public class VotingHandlerTest {
                 if (e.size()!=0) {
                     fail("Got exceptions: "+e.size()+", first: "+e.iterator().next());
                 }
-                
+
                 int promotionTotalCount = 0;
                 int noTotalCount = 0;
                 for(int k=0; k<votingHandler.length; k++) {
@@ -513,7 +513,7 @@ public class VotingHandlerTest {
             sb.append(": ");
             sb.append(totals[k]);
         }
-        
+
         logger.info("testConcurrentVotes: promoted "+sb);
         int totalPromotion = 0;
         for(int k=0; k<votingHandler.length; k++) {
@@ -525,7 +525,7 @@ public class VotingHandlerTest {
             // that is the case when the instance that does not initiate the vote comes first, then
             // the initiator - in that case the initiator finds an already completed vote - and it
             // will then not do any no-votes ..
-            // so .. this check is a) not possible and b) just also not necessary, cos 
+            // so .. this check is a) not possible and b) just also not necessary, cos
             // we already make sure that we at least get 'votingHandler.length-1' no votes in the j-loop
             // and that is precise enough. so as unfortuante as it is, we can't make below assertion..
             // unless we do more white-box-assertions into analyzeVotings, which is probably not helping
@@ -541,7 +541,7 @@ public class VotingHandlerTest {
                 totalPromotion += i;
             }
         }
-        assertEquals((int)votingsLoopCnt, totalPromotion);
+        assertEquals(votingsLoopCnt, totalPromotion);
     }
 
 }

@@ -24,6 +24,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.hamcrest.matchers.ResourceChildrenMatcher;
 import org.apache.sling.hamcrest.matchers.ResourceNameMatcher;
+import org.apache.sling.hamcrest.matchers.ResourcePathMatcher;
 import org.apache.sling.hamcrest.matchers.ResourcePropertiesMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -69,7 +70,7 @@ public final class ResourceMatchers {
      * Matches resources which have exactly the children with the names given in <tt>children</tt>. The order is not validated.
      * 
      * <pre>
-     * assertThat(resource, containsChildren('child1', 'child2'));
+     * assertThat(resource, containsChildrenInAnyOrder('child1', 'child2'));
      * </pre>
      * 
      * @param children the expected children, not <code>null</code> or empty
@@ -80,16 +81,30 @@ public final class ResourceMatchers {
     }
     
     /**
+     * Matches only if the resource has the given path
+     * 
+     * <pre>
+     * assertThat(resource, hasName('/a/b/c'));
+     * </pre>
+     * 
+     * @param path the resources path, not <code>null</code> or empty
+     * @return a matcher instance
+     */
+    public static Matcher<Resource> path(String path) {
+        return new ResourcePathMatcher(path);
+    }
+
+    /**
      * Matches only if the resource has the given name
      * 
      * <pre>
-     * assertThat(resource, hasName('resource1'));
+     * assertThat(resource, resourceWithName('resource1'));
      * </pre>
      * 
      * @param name the resources name, not <code>null</code> or empty
      * @return a matcher instance
      */
-    public static Matcher<Resource> resourceWithName(String name) {
+    public static Matcher<Resource> name(String name) {
         return new ResourceNameMatcher(name);
     }
 
@@ -102,7 +117,7 @@ public final class ResourceMatchers {
      * @param resourceType the resource type to match
      * @return a matcher instance
      */
-    public static Matcher<Resource> resourceOfType(String resourceType) {
+    public static Matcher<Resource> resourceType(String resourceType) {
         return new ResourcePropertiesMatcher(Collections.<String, Object> singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, resourceType));
     }
 
@@ -111,7 +126,7 @@ public final class ResourceMatchers {
      * 
      * <p>Values not declared in the the <tt>properties</tt> parameter are not validated.</p>
      * <pre>
-     * Map<String, Object> expectedProperties = new HashMap<>();
+     * Map&lt;String, Object&gt; expectedProperties = new HashMap&lt;&gt;();
      * expectedProperties.put("jcr:title", "Node title");
      * expectedProperties.put("jcr:text",  "Some long text");
      * 
@@ -121,8 +136,27 @@ public final class ResourceMatchers {
      * @param properties the properties to match
      * @return a matcher instance
      */    
-    public static Matcher<Resource> resourceWithProps(Map<String, Object> properties) {
+    public static Matcher<Resource> props(Map<String, Object> properties) {
         return new ResourcePropertiesMatcher(properties);
+    }
+
+    /**
+     * Matches resources which has at least the specified <tt>properties</tt> defined with matching values
+     * 
+     * <p>Values not declared in the the <tt>properties</tt> parameter are not validated.</p>
+     * <pre>
+     * Map&lt;String, Object&gt; expectedProperties = new HashMap&lt;&gt;();
+     * expectedProperties.put("jcr:title", "Node title");
+     * expectedProperties.put("jcr:text",  "Some long text");
+     * 
+     * assertThat(resource, resourceWithProps(expectedProperties));
+     * </pre>
+     * 
+     * @param properties the properties to match
+     * @return a matcher instance
+     */    
+    public static Matcher<Resource> props(Object... properties) {
+        return props(MapUtil.toMap(properties));
     }
 
     /**
@@ -130,7 +164,7 @@ public final class ResourceMatchers {
      * 
      * <p>Values not declared in the the <tt>properties</tt> parameter are not validated.</p>
      * <pre>
-     * Map<String, Object> expectedProperties = new HashMap<>();
+     * Map&lt;String, Object&gt; expectedProperties = new HashMap&lt;&gt;();
      * expectedProperties.put("jcr:title", "Node title");
      * expectedProperties.put("jcr:text",  "Some long text");
      * 
@@ -141,8 +175,28 @@ public final class ResourceMatchers {
      * @param properties the properties to match
      * @return a matcher instance
      */
-    public static Matcher<Resource> resourceWithNameAndProps(String name, Map<String, Object> properties) {
+    public static Matcher<Resource> nameAndProps(String name, Map<String, Object> properties) {
         return Matchers.allOf(new ResourceNameMatcher(name), new ResourcePropertiesMatcher(properties));
+    }
+
+    /**
+     * Matches resources which has the given name and at least the specified <tt>properties</tt> defined with matching values
+     * 
+     * <p>Values not declared in the the <tt>properties</tt> parameter are not validated.</p>
+     * <pre>
+     * Map&lt;String, Object&gt; expectedProperties = new HashMap&lt;&gt;();
+     * expectedProperties.put("jcr:title", "Node title");
+     * expectedProperties.put("jcr:text",  "Some long text");
+     * 
+     * assertThat(resource, resourceWithProps(expectedProperties));
+     * </pre>
+     * 
+     * @param name the expected name of the resource
+     * @param properties the properties to match
+     * @return a matcher instance
+     */
+    public static Matcher<Resource> nameAndProps(String name, Object... properties) {
+        return nameAndProps(name, MapUtil.toMap(properties));
     }
 
     private ResourceMatchers() {

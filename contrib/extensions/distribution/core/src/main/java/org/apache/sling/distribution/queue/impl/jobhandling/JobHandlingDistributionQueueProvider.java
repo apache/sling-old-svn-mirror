@@ -64,7 +64,7 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
     private BundleContext context;
     private Set<String> processingQueueNames = null;
 
-    private ConfigurationAdmin configAdmin;
+    private final ConfigurationAdmin configAdmin;
 
     public JobHandlingDistributionQueueProvider(String prefix, JobManager jobManager, BundleContext context) {
         this(prefix, jobManager, context, null);

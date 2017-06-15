@@ -1,30 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Licensed to the Apache Software Foundation (ASF) under one
-  or more contributor license agreements.  See the NOTICE file
-  distributed with this work for additional information
-  regarding copyright ownership.  The ASF licenses this file
-  to you under the Apache License, Version 2.0 (the
-  "License"); you may not use this file except in compliance
-  with the License.  You may obtain a copy of the License at
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
-  Unless required by applicable law or agreed to in writing,
-  software distributed under the License is distributed on an
-  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-  KIND, either express or implied.  See the License for the
-  specific language governing permissions and limitations
-  under the License.
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>30</version>
         <relativePath/>
     </parent>
 
@@ -37,6 +38,9 @@
 
     <properties>
         <sling.java.version>8</sling.java.version>
+        <http.host>localhost</http.host>
+        <!-- start with -DkeepITServerRunning=true to allow to rerun ITs or inspect the server after the ITs have been executed there -->
+        <keepITServerRunning>false</keepITServerRunning>
     </properties>
 
     <scm>
@@ -48,12 +52,101 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <!-- Find free ports to run our server -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>reserve-server-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <portNames>
+                                <!-- used port name must be stored in property because it must be used for the base url -->
+                                <portName>http.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- the Sling instance is provisioned from the model in src/main/provisioning/model.txt -->
+                <groupId>org.apache.sling</groupId>
+                <artifactId>slingstart-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>prepare-launchpad-package</id>
+                        <goals>
+                            <goal>prepare-package</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                    </execution>
+                    <execution>
+                        <id>build-launchpad-package</id>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                    </execution>
+                    <execution>
+                        <id>start-container-before-IT</id>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                        <configuration>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>stop-container-after-IT</id>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                        <configuration>
+                            <shouldBlockUntilKeyIsPressed>${keepITServerRunning}</shouldBlockUntilKeyIsPressed>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <servers>
+                        <server>
+                            <id>singleinstance</id>
+                            <port>${http.port}</port>
+                            <vmOpts>${sling.vm.options}</vmOpts>
+                            <stdOutFile>sling/logs/stdout.log</stdOutFile>
+                        </server>
+                    </servers>
+                    <disableExtendingMavenClasspath>true</disableExtendingMavenClasspath>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <ClientSideTeleporter.baseUrl>http://${http.host}:${http.port}/</ClientSideTeleporter.baseUrl>
+                        <ClientSideTeleporter.testReadyTimeoutSeconds>20</ClientSideTeleporter.testReadyTimeoutSeconds>
+                        <ClientSideTeleporter.testBundleDirectory>${project.build.directory}/test-bundles</ClientSideTeleporter.testBundleDirectory>
+                        <ClientSideTeleporter.enableLogging>true</ClientSideTeleporter.enableLogging>
+                        <!-- deploy test content and some Sling models with the test bundle -->
+                        <ClientSideTeleporter.additionalBundleHeaders>Sling-Initial-Content:SLING-CONTENT;overwrite:=true,Sling-Model-Packages:org.apache.sling.models.validation.impl.it</ClientSideTeleporter.additionalBundleHeaders>
+                        <ClientSideTeleporter.includeDependencyPrefixes>org.apache.sling.models.validation.impl.it</ClientSideTeleporter.includeDependencyPrefixes>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -66,13 +159,18 @@
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.cmpn</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.2.0</version>
+            <version>2.5.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -89,12 +187,6 @@
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
-            <version>3.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -111,6 +203,12 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.junit.teleporter</artifactId>
+            <version>1.0.14</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

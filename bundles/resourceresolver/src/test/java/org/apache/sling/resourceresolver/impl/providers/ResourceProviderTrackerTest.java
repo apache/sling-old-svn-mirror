@@ -259,6 +259,10 @@ public class ResourceProviderTrackerTest {
         }
 
         @Override
+        public void reportChanges(ObserverConfiguration config, Iterable<ResourceChange> changes, boolean distribute) {
+        }
+
+        @Override
         public List<ObserverConfiguration> getObserverConfigurations() {
             return Collections.emptyList();
         }

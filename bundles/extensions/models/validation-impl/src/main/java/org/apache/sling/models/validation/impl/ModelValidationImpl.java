@@ -16,19 +16,23 @@
  */
 package org.apache.sling.models.validation.impl;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.factory.InvalidModelException;
 import org.apache.sling.models.factory.ValidationException;
 import org.apache.sling.models.spi.ModelValidation;
 import org.apache.sling.models.validation.InvalidResourceException;
+import org.apache.sling.validation.SlingValidationException;
+import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
-import org.apache.sling.validation.SlingValidationException;
 import org.apache.sling.validation.model.ValidationModel;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,17 +41,24 @@ import org.slf4j.LoggerFactory;
  * It enforces a validation of the resource which is adapted to the model.
  * @see <a href="http://sling.apache.org/documentation/bundles/validation.html">Sling Validation</a>
  */
-@Service
 @Component
+@Designate(ocd=ModelValidationConfiguration.class)
 public class ModelValidationImpl implements ModelValidation {
 
     @Reference
     private ValidationService validation;
     
+    private ModelValidationConfiguration configuration;
+    
     private static final Logger log = LoggerFactory.getLogger(ModelValidationImpl.class);
     
+    @Activate
+    protected void activate(ModelValidationConfiguration configuration) {
+        this.configuration = configuration;
+    }
+    
     /**
-     * Triggers validation for the given model on the given adaptable. Instead of the generic 
+     * Triggers validation for the given model on the given adaptable.
      * @param adaptable {@inheritDoc}
      * @param modelClass {@inheritDoc}
      * @param required {@inheritDoc}
@@ -56,6 +67,10 @@ public class ModelValidationImpl implements ModelValidation {
      * Or a {@link InvalidResourceException} in case the given resource (in the adaptable) could not be validated through the {@link ModelValidation}.
      */
     public <ModelType> RuntimeException validate(Object adaptable, Class<ModelType> modelClass, boolean required) throws ValidationException, InvalidModelException {
+        if (configuration.disabled()) {
+            log.debug("Skip validation of model {}, because  validation is disabled through the OSGi configuration for ModelValidationConfiguration", modelClass);
+            return null;
+        }
         Resource resource = null;
         if (adaptable instanceof SlingHttpServletRequest) {
             resource = ((SlingHttpServletRequest)adaptable).getResource();
@@ -69,7 +84,7 @@ public class ModelValidationImpl implements ModelValidation {
         }
     }
     
-    private RuntimeException validate(Resource resource, boolean required) {
+    private RuntimeException validate(@Nonnull Resource resource, boolean required) {
         try {
             ValidationModel validationModel = validation.getValidationModel(resource, true);
             if (validationModel == null) {
@@ -83,7 +98,20 @@ public class ModelValidationImpl implements ModelValidation {
                 try {
                     ValidationResult validationResult = validation.validate(resource, validationModel);
                     if (!validationResult.isValid()) {
-                        return new InvalidResourceException("Model is invalid", validationResult, resource.getPath());
+                        boolean shouldThrow = false;
+                        // evaluate all severities
+                        for (ValidationFailure failure : validationResult.getFailures()) {
+                            if (failure.getSeverity() >= configuration.severityThreshold()) {
+                                shouldThrow = true;
+                                break;
+                            }
+                        }
+                        if (shouldThrow) {
+                            return new InvalidResourceException("Sling Model is invalid", validationResult, resource.getPath());
+                        } else {
+                            log.debug("Although the resource {} is considered invalid by Sling Validation, all validation failures have a severity below the threshold '{}', "
+                                    + "therefore considering this Sling Model valid.", resource.getPath(), configuration.severityThreshold());
+                        }
                     }
                 } catch (SlingValidationException e) {
                     return new ValidationException(e);

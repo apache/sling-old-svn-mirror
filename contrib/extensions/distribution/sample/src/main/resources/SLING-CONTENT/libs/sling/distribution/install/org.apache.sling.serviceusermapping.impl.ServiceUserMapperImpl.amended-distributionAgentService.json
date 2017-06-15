@@ -1,5 +1,5 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
     "user.default": "",
-    "user.mapping": "org.apache.sling.distribution.core:defaultAgentService=distribution-agent-user"
+    "user.mapping": ["org.apache.sling.distribution.core:defaultAgentService=distribution-agent-user","org.apache.sling.distribution.core=distribution-agent-user"]
 }

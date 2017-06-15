@@ -1,7 +1,9 @@
 <%@ page import="org.apache.sling.api.resource.Resource" %>
 <%@ page import="org.apache.sling.api.resource.ValueMap" %>
 <%@ page import="org.apache.sling.xss.XSSAPI" %>
+<%@ page import="java.util.Date" %>
 <%@ page import="java.util.Iterator" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@ taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling"%>
@@ -36,8 +38,9 @@
     if (tag != null) {
         out.println("</" + tag + ">");
     }
-
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 %>
+    <%=sdf.format(new Date())%>
     <sling:call script="mode.jsp" />
 <%
 

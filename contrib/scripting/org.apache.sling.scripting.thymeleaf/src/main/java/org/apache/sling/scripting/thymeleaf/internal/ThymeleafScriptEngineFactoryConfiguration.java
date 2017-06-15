@@ -92,6 +92,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
         name = "use standard engine context factory",
         description = "Enables Thymeleaf's standard engine context factory and uses it exclusively."
     )
-    boolean useStandardEngineContextFactory() default true;
+    boolean useStandardEngineContextFactory() default false;
 
 }

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Utility for merging two model.
+ * Utility for merging two models.
  *
  * @since 1.4
  */
@@ -49,10 +49,12 @@ public abstract class MergeUtility {
 
         /**
          * Set to {@code true} if the remove run mode should be respected.
-         * @param handleRemoveRunMode
+         * @param handleRemoveRunMode Whether the remove run mode should be respected.
+         * @return This instance.
          */
-        public void setHandleRemoveRunMode(boolean handleRemoveRunMode) {
+        public MergeOptions setHandleRemoveRunMode(boolean handleRemoveRunMode) {
             this.handleRemoveRunMode = handleRemoveRunMode;
+            return this;
         }
 
         /**
@@ -67,9 +69,12 @@ public abstract class MergeUtility {
         /**
          * Set to {@code true} if the latest artifact should win on a merge.
          * Set to {@code false} if the artifact with the highest version should win
+         * @param latestArtifactWins Whether the latest artifact should win
+         * @return This instance.
          */
-        public void setLatestArtifactWins(boolean latestArtifactWins) {
+        public MergeOptions setLatestArtifactWins(boolean latestArtifactWins) {
             this.latestArtifactWins = latestArtifactWins;
+            return this;
         }
     }
 
@@ -92,6 +97,9 @@ public abstract class MergeUtility {
      * <p>
      * For each feature, the following actions are performed:
      * <ul>
+     *   <li>If either the base feature or the additional feature has a version, then
+     *    the one with the higher version is used, the other one is skipped. A missing
+     *    version is considered the lowest possible version.</li>
      *   <li>The feature type of the base feature is set to the type of the additional feature.</li>
      *   <li>All additional sections of the additional feature are added to the base feature.</li>
      *   <li>All variables from the additional feature are set on the base feature, overriding
@@ -107,13 +115,43 @@ public abstract class MergeUtility {
         // features
         for(final Feature feature : additional.getFeatures()) {
             final Feature baseFeature = base.getOrCreateFeature(feature.getName());
+
+            // version check first
+            boolean overwrite = false;
+            if ( baseFeature.getVersion() != null ) {
+                if ( feature.getVersion() == null ) {
+                    continue;
+                }
+                final Version baseVersion = new Version(baseFeature.getVersion());
+                final Version addVersion = new Version(feature.getVersion());
+                if ( baseVersion.compareTo(addVersion) >= 0 ) {
+                    continue;
+                }
+                overwrite = true;
+            } else {
+                if ( feature.getVersion() != null ) {
+                    overwrite = true;
+                }
+            }
+            if ( overwrite ) {
+                // set version
+                baseFeature.setVersion(feature.getVersion());
+                // remove everything from base feature
+                baseFeature.getRunModes().clear();
+                baseFeature.getAdditionalSections().clear();
+                baseFeature.getVariables().clear();
+                baseFeature.setComment(null);
+            }
+
+            mergeComments(baseFeature, feature);
             baseFeature.setType(feature.getType());
 
-            // additional sections
+            // additional sections (sections are not cloned, therefore comments do not need to be merged)
             baseFeature.getAdditionalSections().addAll(feature.getAdditionalSections());
 
             // variables
             baseFeature.getVariables().putAll(feature.getVariables());
+            mergeComments(baseFeature.getVariables(), feature.getVariables());
 
             // run modes
             for(final RunMode runMode : feature.getRunModes()) {
@@ -130,6 +168,8 @@ public abstract class MergeUtility {
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
                     final ArtifactGroup baseGroup = baseRunMode.getOrCreateArtifactGroup(group.getStartLevel());
 
+                    mergeComments(baseGroup, group);
+
                     int foundStartLevel = 0;
 
                     for(final Artifact artifact : group) {
@@ -141,18 +181,29 @@ public abstract class MergeUtility {
                                     searchGroup.remove(found);
                                     foundStartLevel = searchGroup.getStartLevel();
                                 } else {
-                                    final Version baseVersion = new Version(found.getVersion());
-                                    final Version mergeVersion = new Version(artifact.getVersion());
-                                    if ( baseVersion.compareTo(mergeVersion) <= 0 ) {
-                                        searchGroup.remove(found);
-                                        foundStartLevel = searchGroup.getStartLevel();
-                                    } else {
-                                        addArtifact = false;
+                                    try {
+                                        final Version baseVersion = new Version(found.getVersion());
+                                        final Version mergeVersion = new Version(artifact.getVersion());
+                                        if ( baseVersion.compareTo(mergeVersion) <= 0 ) {
+                                            searchGroup.remove(found);
+                                            foundStartLevel = searchGroup.getStartLevel();
+                                        } else {
+                                            addArtifact = false;
+                                        }
+                                    } catch ( final IllegalArgumentException iae) {
+                                        // if at least one version is not a valid maven version
+                                        if ( found.getVersion().compareTo(artifact.getVersion()) <= 0 ) {
+                                            searchGroup.remove(found);
+                                            foundStartLevel = searchGroup.getStartLevel();
+                                        } else {
+                                            addArtifact = false;
+                                        }
                                     }
                                 }
                             }
                         }
                         if ( addArtifact ) {
+                            // artifacts are not cloned, therefore comments do not need to be merged
                             if ( group.getStartLevel() == 0 && foundStartLevel != 0 ) {
                                 baseRunMode.getOrCreateArtifactGroup(foundStartLevel).add(artifact);
                             } else {
@@ -167,12 +218,14 @@ public abstract class MergeUtility {
                     final Configuration found = baseRunMode.getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
 
                     mergeConfiguration(found, config);
+                    mergeComments(found, config);
                 }
 
                 // settings
                 for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
                     baseRunMode.getSettings().put(entry.getKey(), entry.getValue());
                 }
+                mergeComments(baseRunMode.getSettings(), runMode.getSettings());
             }
 
         }
@@ -333,6 +386,20 @@ public abstract class MergeUtility {
             if ( !key.equals(ModelConstants.CFG_UNPROCESSED_MODE) ) {
                 baseConfig.getProperties().put(key, mergeConfig.getProperties().get(key));
             }
+        }
+    }
+
+    /**
+     * Merge the comments
+     * @param base The base model object
+     * @param additional The additional model object
+     * @since 1.9.0
+     */
+    public static void mergeComments(final Commentable base, final Commentable additional) {
+        if ( base.getComment() == null ) {
+            base.setComment(additional.getComment());
+        } else if ( additional.getComment() != null ) {
+            base.setComment(base.getComment() + "\n" + additional.getComment());
         }
     }
 }

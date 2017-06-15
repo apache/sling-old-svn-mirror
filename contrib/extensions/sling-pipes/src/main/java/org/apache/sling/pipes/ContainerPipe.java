@@ -16,28 +16,16 @@
  */
 package org.apache.sling.pipes;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ValueMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.script.Bindings;
-import javax.script.Invocable;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import javax.script.SimpleScriptContext;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.sling.api.resource.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This pipe executes the pipes it has in its configuration, chaining their result, and
@@ -54,6 +42,12 @@ public class ContainerPipe extends BasePipe {
 
     List<Pipe> reversePipeList = new ArrayList<>();
 
+    /**
+     * Constructor
+     * @param plumber plumber
+     * @param resource container's configuration resource
+     * @throws Exception bad configuration handling
+     */
     public ContainerPipe(Plumber plumber, Resource resource) throws Exception{
         super(plumber, resource);
         for (Iterator<Resource> childPipeResources = getConfiguration().listChildren(); childPipeResources.hasNext();){
@@ -84,17 +78,13 @@ public class ContainerPipe extends BasePipe {
 
     @Override
     public Iterator<Resource> getOutput()  {
-        if (pipeList.size() == 1) {
-            //corner case with only one element: no need to have a container resource iterator
-            return pipeList.iterator().next().getOutput();
-        }
         return new ContainerResourceIterator(this);
     }
 
     /**
      * Returns the pipe immediately before the given pipe, null if it's the first
-     * @param pipe
-     * @return
+     * @param pipe given pipe
+     * @return previous pipe of the param
      */
     public Pipe getPreviousPipe(Pipe pipe){
         Pipe previousPipe = null;
@@ -109,7 +99,7 @@ public class ContainerPipe extends BasePipe {
 
     /**
      * Return the first pipe in the container
-     * @return
+     * @return first pipe of the container
      */
     public Pipe getFirstPipe() {
         return pipeList.iterator().next();
@@ -117,13 +107,17 @@ public class ContainerPipe extends BasePipe {
 
     /**
      * Return the last pipe in the container
-     * @return
+     * @return pipe in the last position of the container's pipes
      */
     public Pipe getLastPipe() {
         return reversePipeList.iterator().next();
     }
 
-    public Resource getOuputResource() {
+    /**
+     * output resource of the container pipe
+     * @return output resource of the last pipe of the container
+     */
+    public Resource getOutputResource() {
         return bindings.getExecutedResource(getLastPipe().getName());
     }
 
@@ -148,6 +142,10 @@ public class ContainerPipe extends BasePipe {
         boolean hasNext = false;
         int cursor = 0;
 
+        /**
+         * Constructor
+         * @param containerPipe corresponding container pipe
+         */
         ContainerResourceIterator(ContainerPipe containerPipe) {
             container = containerPipe;
             bindings = container.bindings;
@@ -160,7 +158,7 @@ public class ContainerPipe extends BasePipe {
         /**
          * go up and down the container iterators until cursor is at 0 (first pipe) with no
          * more resources, or at length - 1 (last pipe) with a next one
-         * @return
+         * @return true if cursor has been updated
          */
         private boolean updateCursor(){
             Pipe currentPipe = container.pipeList.get(cursor);
@@ -187,7 +185,8 @@ public class ContainerPipe extends BasePipe {
             //2 choices here:
             // either cursor is at 0 with no resource left: end,
             // either cursor is on last pipe with a resource left: hasNext
-            return cursor > 0;
+            // the second part is for the corner case with only one item
+            return cursor > 0 || (iterators.size() == 1 && it.hasNext());
         }
 
         /**
@@ -220,7 +219,7 @@ public class ContainerPipe extends BasePipe {
 
         @Override
         public void remove() {
-
+            throw new UnsupportedOperationException();
         }
     }
 

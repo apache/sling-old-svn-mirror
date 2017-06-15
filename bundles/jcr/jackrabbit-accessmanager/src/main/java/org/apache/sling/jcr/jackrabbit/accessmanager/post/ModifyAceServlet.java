@@ -22,26 +22,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.Servlet;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceNotFoundException;
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.jcr.jackrabbit.accessmanager.ModifyAce;
 import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * <p>
@@ -84,18 +80,12 @@ import org.apache.sling.servlets.post.Modification;
  * will not be added to the group. The group will only contain granted privileges.
  * </p>
  */
-@Component
-@Service (value={
-		Servlet.class,
-		ModifyAce.class
-})
-@Properties ({
-	@Property (name="sling.servlet.resourceTypes", 
-			value="sling/servlet/default"),
-	@Property (name="sling.servlet.methods", 
-			value="POST"),
-	@Property (name="sling.servlet.selectors", 
-			value="modifyAce")
+
+@Component(service = {Servlet.class, ModifyAce.class},
+property= {
+		"sling.servlet.resourceTypes=sling/servlet/default",
+		"sling.servlet.methods=POST",
+		"sling.servlet.selectors=modifyAce"
 })
 public class ModifyAceServlet extends AbstractAccessPostServlet implements ModifyAce {
 	private static final long serialVersionUID = -9182485466670280437L;

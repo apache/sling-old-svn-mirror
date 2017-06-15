@@ -31,23 +31,25 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.testing.paxexam.SlingOptions;
 import org.apache.sling.testing.paxexam.TestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.util.PathUtils;
 import org.osgi.framework.BundleContext;
 
-import static org.apache.sling.testing.paxexam.SlingOptions.jackrabbitSling;
 import static org.apache.sling.testing.paxexam.SlingOptions.scr;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingJcr;
-import static org.apache.sling.testing.paxexam.SlingOptions.tikaSling;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingJcrRepoinit;
+import static org.apache.sling.testing.paxexam.SlingOptions.versionResolver;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 public abstract class OakServerTestSupport extends TestSupport {
@@ -115,24 +117,30 @@ public abstract class OakServerTestSupport extends TestSupport {
      * @return the path of the test node that was created.
      */
     protected String assertCreateRetrieveNode(String nodeType) throws RepositoryException {
-        Session s = repository.loginAdministrative(null);
+        return assertCreateRetrieveNode(nodeType, null);
+    }
+
+    protected String assertCreateRetrieveNode(String nodeType, String relParentPath) throws RepositoryException {
+        Session session = repository.loginAdministrative(null);
         try {
-            final Node root = s.getRootNode();
+            final Node root = session.getRootNode();
             final String name = uniqueName("assertCreateRetrieveNode");
             final String propName = "PN_" + name;
             final String propValue = "PV_" + name;
-            final Node child = nodeType == null ? root.addNode(name) : root.addNode(name, nodeType);
+            final Node parent = relParentPath == null ? root : JcrUtils.getOrAddNode(root, relParentPath);
+            final Node child = nodeType == null ? parent.addNode(name) : parent.addNode(name, nodeType);
             child.setProperty(propName, propValue);
             child.setProperty("foo", child.getPath());
-            s.save();
-            s.logout();
-            s = repository.loginAdministrative(null);
-            final Node n = s.getNode("/" + name);
+            session.save();
+            session.logout();
+            session = repository.loginAdministrative(null);
+            final String path = relParentPath == null ? "/" + name : "/" + relParentPath + "/" + name;
+            final Node n = session.getNode(path);
             assertNotNull(n);
             assertEquals(propValue, n.getProperty(propName).getString());
             return n.getPath();
         } finally {
-            s.logout();
+            session.logout();
         }
     }
 
@@ -153,33 +161,44 @@ public abstract class OakServerTestSupport extends TestSupport {
     }
 
     protected Option launchpad() {
+        versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.jetty", "3.1.6"); // SLING-6080 – Java 7
+        versionResolver.setVersion("org.apache.felix", "org.apache.felix.http.whiteboard", "2.3.2"); // SLING-6080 – Java 7
+        final String repoinit = String.format("raw:file:%s/src/test/resources/repoinit.txt", PathUtils.getBaseDir());
         final String slingHome = String.format("%s/sling", workingDirectory());
         final String repositoryHome = String.format("%s/repository", slingHome);
         final String localIndexDir = String.format("%s/index", repositoryHome);
         return composite(
             scr(),
             slingJcr(),
-            jackrabbitSling(),
-            tikaSling(),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-core").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-commons").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-blob").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-jcr").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("com.google.guava").artifactId("guava").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.jaas").version(SlingOptions.versionResolver),
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-lucene").version(SlingOptions.versionResolver), // TODO  make Oak Lucene optional
-            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment").version(SlingOptions.versionResolver),
-            newConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService")
+            slingJcrRepoinit(),
+            mavenBundle().groupId("org.apache.jackrabbit").artifactId("oak-segment-tar").version(versionResolver),
+            newConfiguration("org.apache.jackrabbit.oak.segment.SegmentNodeStoreService")
                 .put("repository.home", repositoryHome)
                 .put("name", "Default NodeStore")
                 .asOption(),
             newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
                 .put("localIndexDir", localIndexDir)
                 .asOption(),
-            newConfiguration("org.apache.sling.resourceresolver.impl.observation.OsgiObservationBridge")
-                .put("enabled", true)
+            newConfiguration("org.apache.sling.jcr.repoinit.impl.RepositoryInitializer")
+                .put("references", new String[]{repoinit})
+                .asOption(),
+            getWhitelistRegexpOption(),
+            // To generate the list of whitelisted bundles after a failed test-run:
+            // grep -R 'NOT white' target/failsafe-reports/ | awk -F': Bundle ' '{print substr($2, 1, index($2, " is NOT "))}' | sort -u
+            factoryConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment")
+                .put("whitelist.bundles", new String[]{
+                    "org.apache.sling.jcr.oak.server",
+                    "org.apache.sling.jcr.contentloader",
+                    "org.apache.sling.jcr.resource",
+                    "org.apache.sling.resourceresolver"
+                })
                 .asOption()
         );
     }
 
+    protected Option getWhitelistRegexpOption() {
+        return newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist")
+            .put("whitelist.bundles.regexp", "PAXEXAM-PROBE-.*")
+            .asOption();
+    }
 }

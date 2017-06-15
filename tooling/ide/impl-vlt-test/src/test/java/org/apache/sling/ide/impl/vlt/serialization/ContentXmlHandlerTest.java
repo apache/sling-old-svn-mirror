@@ -180,6 +180,14 @@ public class ContentXmlHandlerTest {
     }
 
     @Test
+    public void parseContentXmlWithEscapedValues() throws ParserConfigurationException, SAXException, IOException {
+        ResourceProxy root = parseContentXmlFile("escaped-value-in-property.xml", "/");
+
+        assertThat(root.getProperties(), hasEntry("property", 
+                (Object) "{\"template\":\"<p class=\\\"contexthub-module-line1\\\">\"}"));
+    }
+
+    @Test
     public void escapedBraceAtStartOfPropertyValue() throws Exception {
 
         ResourceProxy root = parseContentXmlFile("escaped-braces-at-start-of-property.xml", "/");

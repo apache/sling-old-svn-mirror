@@ -18,23 +18,11 @@ package org.apache.sling.ide.eclipse.ui.internal;
 
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.eclipse.ui.nav.model.SyncDir;
+import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.IDecoration;
-import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
-import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.swt.graphics.Image;
 
-public class JcrNodeDecorator extends LabelProvider implements ILabelDecorator, ILightweightLabelDecorator {
-
-    @Override
-    public Image decorateImage(Image image, Object element) {
-        return image;
-    }
-
-    @Override
-    public String decorateText(String text, Object element) {
-        return text;
-    }
+public class JcrNodeDecorator extends BaseLabelProvider implements ILightweightLabelDecorator {
 
     @Override
     public void decorate(Object element, IDecoration decoration) {

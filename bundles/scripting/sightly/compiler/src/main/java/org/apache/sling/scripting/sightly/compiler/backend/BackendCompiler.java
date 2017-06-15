@@ -24,11 +24,11 @@ import org.apache.sling.scripting.sightly.compiler.commands.Command;
 import org.apache.sling.scripting.sightly.compiler.commands.CommandStream;
 import org.apache.sling.scripting.sightly.compiler.commands.CommandVisitor;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * <p>
- *     A {@link BackendCompiler} can be hooked in into the {@link SightlyCompiler} in order to transpile Sightly {@link Command}s into other
+ *     A {@link BackendCompiler} can be hooked in into the {@link SightlyCompiler} in order to transpile HTL {@link Command}s into other
  *     JVM supported languages. The transpilation can be performed with the help of specific {@link CommandVisitor} implementations that are
  *     attached to the {@link Command}s from the {@link CommandStream}.
  * </p>

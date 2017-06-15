@@ -23,7 +23,6 @@ import javax.inject.Named;
 import javax.servlet.Filter;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Optional;
 

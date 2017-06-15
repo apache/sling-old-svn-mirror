@@ -19,14 +19,15 @@ package org.apache.sling.jcr.contentloader.internal;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.io.StringWriter;
 import java.util.LinkedHashMap;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonWriter;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.internal.readers.JsonReader;
 import org.jmock.Expectations;
@@ -208,7 +209,7 @@ public class JsonReaderTest {
 
     @org.junit.Test public void testChild() throws Exception {
         String json = "{ " +
-                      " c1 : {}" +
+                      " \"c1\" : {}" +
                       "}";
         this.mockery.checking(new Expectations() {{
             allowing(creator).createNode(null, null, null); inSequence(mySequence);
@@ -221,7 +222,7 @@ public class JsonReaderTest {
 
     @org.junit.Test public void testChildWithMixin() throws Exception {
         String json = "{ " +
-        " c1 : {" +
+        " \"c1\" : {" +
               "\"jcr:mixinTypes\" : [\"xyz:TestType\"]" +
               "}" +
         "}";
@@ -236,8 +237,8 @@ public class JsonReaderTest {
 
     @org.junit.Test public void testTwoChildren() throws Exception {
         String json = "{ " +
-        " c1 : {}," +
-        " c2 : {}" +
+        " \"c1\" : {}," +
+        " \"c2\" : {}" +
         "}";
         this.mockery.checking(new Expectations() {{
             allowing(creator).createNode(null, null, null); inSequence(mySequence);
@@ -252,8 +253,8 @@ public class JsonReaderTest {
 
     @org.junit.Test public void testChildWithProperty() throws Exception {
         String json = "{ " +
-        " c1 : {" +
-        "      c1p1 : \"v1\"" +
+        " \"c1\" : {" +
+        "      \"c1p1\" : \"v1\"" +
               "}" +
         "}";
         this.mockery.checking(new Expectations() {{
@@ -340,6 +341,37 @@ public class JsonReaderTest {
         }});
         this.parse(json);
     }
+    
+    @org.junit.Test public void testCreateAclWithTickQuotes() throws Exception {
+        String json = " { " +
+                "'security:acl' : [ " +
+                "  { " +
+                "    'principal' : 'username1'," +
+                "    'granted' : ['jcr:read','jcr:write']," +
+                "    'denied' : []" +
+                "  }," +
+                "  {" +
+                "    'principal' : 'groupname1'," +
+                "    'granted' : ['jcr:read','jcr:write']" +
+                "  }," +
+                "  {" +
+                "    'principal' : \"\\\"'groupname2'\"," +
+                "    'granted' : ['jcr:read']," +
+                "    'denied' : ['jcr:write']," +
+                "    'order' : 'first'" +
+                "  }" +
+                "]" +
+                "}";
+        this.mockery.checking(new Expectations() {{
+            allowing(creator).createNode(null, null, null); inSequence(mySequence);
+
+            allowing(creator).createAce("username1",new String[]{"jcr:read","jcr:write"},new String[]{}, null); inSequence(mySequence);
+            allowing(creator).createAce("groupname1",new String[]{"jcr:read","jcr:write"},null, null); inSequence(mySequence);
+            allowing(creator).createAce("\"'groupname2'",new String[]{"jcr:read"},new String[]{"jcr:write"}, "first"); inSequence(mySequence);
+            allowing(creator).finishNode(); inSequence(mySequence);
+        }});
+        this.parse(json);
+    }
 
     //---------- internal helper ----------------------------------------------
 
@@ -350,7 +382,17 @@ public class JsonReaderTest {
         this.jsonReader.parse(ins, this.creator);
     }
 
-    protected JSONArray toJsonArray(String[] array) throws JSONException {
-        return new JSONArray(Arrays.asList(array));
+    protected String toJsonArray(String[] array) {
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        for (String value : array)
+        {
+            builder.add(value);
+        }
+        StringWriter stringWriter = new StringWriter();
+        try (JsonWriter writer = Json.createWriter(stringWriter))
+        {
+            writer.writeArray(builder.build());
+        }
+        return stringWriter.toString();
     }
 }

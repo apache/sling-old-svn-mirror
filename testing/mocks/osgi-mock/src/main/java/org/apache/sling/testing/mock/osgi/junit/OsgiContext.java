@@ -18,64 +18,72 @@
  */
 package org.apache.sling.testing.mock.osgi.junit;
 
+import org.apache.sling.testing.mock.osgi.context.ContextCallback;
+import org.apache.sling.testing.mock.osgi.context.ContextPlugins;
 import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * JUnit rule for setting up and tearing down OSGi context for unit tests.
  */
+@ProviderType
 public final class OsgiContext extends OsgiContextImpl implements TestRule {
 
-    private final OsgiContextCallback setUpCallback;
-    private final OsgiContextCallback tearDownCallback;
+    private final ContextPlugins plugins;
     private final TestRule delegate;
 
     /**
      * Initialize OSGi context.
      */
     public OsgiContext() {
-        this(null, null);
+        this(new ContextPlugins());
     }
 
     /**
      * Initialize OSGi context.
-     * @param setUpCallback Allows the application to register an own callback
-     *            function that is called after the built-in setup rules are
-     *            executed.
+     * @param <T> context type
+     * @param afterSetUpCallback Allows the application to register an own callback function that is called after the built-in setup rules are executed.
      */
-    public OsgiContext(final OsgiContextCallback setUpCallback) {
-        this(setUpCallback, null);
+    public <T extends OsgiContextImpl> OsgiContext(final ContextCallback<T> afterSetUpCallback) {
+        this(new ContextPlugins(afterSetUpCallback));
     }
 
     /**
      * Initialize OSGi context.
-     * @param setUpCallback Allows the application to register an own callback
-     *            function that is called after the built-in setup rules are
-     *            executed.
-     * @param tearDownCallback Allows the application to register an own
-     *            callback function that is called before the built-in teardown
-     *            rules are executed.
+     * @param <U> context type
+     * @param <V> context type
+     * @param afterSetUpCallback Allows the application to register an own callback function that is called after the built-in setup rules are executed.
+     * @param beforeTearDownCallback Allows the application to register an own callback function that is called before the built-in teardown rules are executed.
      */
-    public OsgiContext(final OsgiContextCallback setUpCallback, final OsgiContextCallback tearDownCallback) {
+    public <U extends OsgiContextImpl, V extends OsgiContextImpl> OsgiContext(final ContextCallback<U> afterSetUpCallback, final ContextCallback<V> beforeTearDownCallback) {
+        this(new ContextPlugins(afterSetUpCallback, beforeTearDownCallback));
+    }
 
-        this.setUpCallback = setUpCallback;
-        this.tearDownCallback = tearDownCallback;
+    /**
+     * Initialize OSGi context with resource resolver type.
+     * @param contextPlugins Context plugins
+     */
+    OsgiContext(final ContextPlugins contextPlugins) {
+        this.plugins = contextPlugins;
 
         // wrap {@link ExternalResource} rule executes each test method once
         this.delegate = new ExternalResource() {
             @Override
             protected void before() {
+                plugins.executeBeforeSetUpCallback(OsgiContext.this);
                 OsgiContext.this.setUp();
-                OsgiContext.this.executeSetUpCallback();
+                plugins.executeAfterSetUpCallback(OsgiContext.this);
             }
 
             @Override
             protected void after() {
-                OsgiContext.this.executeTearDownCallback();
+                plugins.executeBeforeTearDownCallback(OsgiContext.this);
                 OsgiContext.this.tearDown();
+                plugins.executeAfterTearDownCallback(OsgiContext.this);
             }
         };
     }
@@ -83,26 +91,6 @@ public final class OsgiContext extends OsgiContextImpl implements TestRule {
     @Override
     public Statement apply(final Statement base, final Description description) {
         return this.delegate.apply(base, description);
-    }
-
-    private void executeSetUpCallback() {
-        if (this.setUpCallback != null) {
-            try {
-                this.setUpCallback.execute(this);
-            } catch (Throwable ex) {
-                throw new RuntimeException("Setup failed: " + ex.getMessage(), ex);
-            }
-        }
-    }
-
-    private void executeTearDownCallback() {
-        if (this.tearDownCallback != null) {
-            try {
-                this.tearDownCallback.execute(this);
-            } catch (Throwable ex) {
-                throw new RuntimeException("Teardown failed: " + ex.getMessage(), ex);
-            }
-        }
     }
 
 }

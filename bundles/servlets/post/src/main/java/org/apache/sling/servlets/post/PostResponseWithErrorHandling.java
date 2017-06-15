@@ -19,22 +19,25 @@
 package org.apache.sling.servlets.post;
 
 import java.io.IOException;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest; 
 
-@Component
-@Service
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.sling.api.SlingHttpServletRequest;
+
+/**
+ * @deprecated
+ */
+@Deprecated
 public class PostResponseWithErrorHandling implements PostResponseCreator{
 
-	public PostResponse createPostResponse(SlingHttpServletRequest request) {
+	@Override
+    public PostResponse createPostResponse(SlingHttpServletRequest request) {
 		if (isSendError(request)) {
 			return new HtmlResponse() {
 
 				@Override
 				protected void doSend(HttpServletResponse response) throws IOException {
-					if (!this.isSuccessful()) {		
+					if (!this.isSuccessful()) {
 						response.sendError(this.getStatusCode(), this.getError().toString());
 						return;
 					}else{

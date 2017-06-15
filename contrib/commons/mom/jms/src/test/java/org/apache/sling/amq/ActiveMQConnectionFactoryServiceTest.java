@@ -19,20 +19,24 @@
 
 package org.apache.sling.amq;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import javax.annotation.Nonnull;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.jms.Topic;
+
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.jms.*;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.*;
-
 /**
- * Created by ieb on 31/03/2016.
  */
 public class ActiveMQConnectionFactoryServiceTest {
 
@@ -41,7 +45,7 @@ public class ActiveMQConnectionFactoryServiceTest {
     @Test
     public void testGetConnectionFactory() throws Exception {
         LOGGER.info("Starting test");
-        ActiveMQConnectionFactoryService cfs = ActiveMQConnectionFactoryServiceTest.activate(null);
+        ActiveMQConnectionFactoryService cfs = ActiveMQConnectionFactoryServiceTest.activate();
         ConnectionFactory cf = cfs.getConnectionFactory();
         Connection connection = cf.createConnection();
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
@@ -64,17 +68,15 @@ public class ActiveMQConnectionFactoryServiceTest {
     }
 
     public static void deactivate(@Nonnull ActiveMQConnectionFactoryService cfs) {
-        cfs.deactivate(new HashMap<String, Object>());
+        cfs.deactivate();
     }
 
     @Nonnull
-    public static ActiveMQConnectionFactoryService activate(@Nullable Map<String, Object> props) {
+    public static ActiveMQConnectionFactoryService activate() {
         ActiveMQConnectionFactoryService amqConnectionFactoryService = new ActiveMQConnectionFactoryService();
-        if ( props == null ) {
-            props = new HashMap<String, Object>();
-            props.put(ActiveMQConnectionFactoryService.BROKER_URI, ActiveMQConnectionFactoryService.DEFAULT_BROKER_URI);
-        }
-        amqConnectionFactoryService.activate(props);
+        final ActiveMQConnectionFactoryService.Config config = Mockito.mock(ActiveMQConnectionFactoryService.Config.class);
+        Mockito.when(config.jms_brokerUri()).thenReturn(ActiveMQConnectionFactoryService.DEFAULT_BROKER_URI);
+        amqConnectionFactoryService.activate(config);
         return amqConnectionFactoryService;
     }
 

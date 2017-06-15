@@ -21,12 +21,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -42,11 +42,13 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.observation.ResourceChangeListenerWhiteboard;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderInfo;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
@@ -64,7 +66,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
 
 /**
  * This tests the ResourceResolver using mocks. The Unit test is in addition to
@@ -84,9 +85,6 @@ public class MockedResourceResolverImplTest {
     private ResourceResolverFactoryActivator activator;
 
     private List<ResourceProviderHandler> handlers = new ArrayList<ResourceProviderHandler>();
-
-    @Mock
-    private ComponentContext componentContext;
 
     @Mock
     private BundleContext bundleContext;
@@ -144,14 +142,14 @@ public class MockedResourceResolverImplTest {
     public void before() throws LoginException {
         activator = new ResourceResolverFactoryActivator();
 
-        Mockito.when(componentContext.getProperties()).thenReturn(buildBundleProperties());
-        Mockito.when(componentContext.getBundleContext()).thenReturn(
-            bundleContext);
-
+        // system bundle access
+        final Bundle systemBundle = Mockito.mock(Bundle.class);
+        Mockito.when(systemBundle.getState()).thenReturn(Bundle.ACTIVE);
+        Mockito.when(bundleContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION)).thenReturn(systemBundle);
         activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
         activator.resourceProviderTracker = resourceProviderTracker;
         activator.changeListenerWhiteboard = resourceChangeListenerWhiteboard;
-
+        activator.serviceUserMapper = Mockito.mock(ServiceUserMapper.class);
         handlers.add(createRPHandler(resourceProvider, "org.apache.sling.resourceresolver.impl.DummyTestProvider", 10L, "/single"));
 
         // setup mapping resources at /etc/map to exercise vanity etc.
@@ -170,32 +168,143 @@ public class MockedResourceResolverImplTest {
         Mockito.when(resourceProviderTracker.getResourceProviderStorage()).thenReturn(storage);
 
         // activate the components.
-        activator.activate(componentContext);
+        activator.activate(bundleContext, new ResourceResolverFactoryConfig() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return null;
+            }
+
+            @Override
+            public String[] resource_resolver_virtual() {
+                return new String[] {"/:/"};
+            }
+
+            @Override
+            public String[] resource_resolver_vanitypath_whitelist() {
+                return null;
+            }
+
+            @Override
+            public boolean resource_resolver_vanitypath_maxEntries_startup() {
+                return true;
+            }
+
+            @Override
+            public int resource_resolver_vanitypath_maxEntries() {
+                return -1;
+            }
+
+            @Override
+            public int resource_resolver_vanitypath_bloomfilter_maxBytes() {
+                return 1024000;
+            }
+
+            @Override
+            public String[] resource_resolver_vanitypath_blacklist() {
+                return null;
+            }
+
+            @Override
+            public boolean resource_resolver_vanity_precedence() {
+                return false;
+            }
+
+            @Override
+            public String[] resource_resolver_searchpath() {
+                return new String[] {"/apps", "/libs"};
+            }
+
+            @Override
+            public String[] resource_resolver_required_providers() {
+                return  new String[] { "org.apache.sling.resourceresolver.impl.DummyTestProvider" };
+            }
+
+            @Override
+            public String[] resource_resolver_required_providernames() {
+                return null;
+            }
+
+            @Override
+            public boolean resource_resolver_providerhandling_paranoid() {
+                return false;
+            }
+
+            @Override
+            public boolean resource_resolver_optimize_alias_resolution() {
+                return true;
+            }
+
+            @Override
+            public String[] resource_resolver_mapping() {
+                return new String[] { "/:/",
+                        "/content/:/", "/system/docroot/:/", "/content.html-/$" };
+            }
+
+            @Override
+            public String[] resource_resolver_map_observation() {
+                return new String[] {"/"};
+            }
+
+            @Override
+            public String resource_resolver_map_location() {
+                return MapEntries.DEFAULT_MAP_ROOT;
+            }
+
+            @Override
+            public boolean resource_resolver_manglenamespaces() {
+                return true;
+            }
+
+            @Override
+            public boolean resource_resolver_log_closing() {
+                return false;
+            }
+
+            @Override
+            public boolean resource_resolver_enable_vanitypath() {
+                return true;
+            }
+
+            @Override
+            public int resource_resolver_default_vanity_redirect_status() {
+                return 302;
+            }
+
+            @Override
+            public boolean resource_resolver_allowDirect() {
+                return true;
+            }
+
+            @Override
+            public boolean resource_resolver_log_unclosed() {
+                return true;
+            }
+        });
 
         // configure using Bundle
         Mockito.when(usingBundle.getBundleContext()).thenReturn(usingBundleContext);
         Mockito.when(usingBundleContext.getBundle()).thenReturn(usingBundle);
 
         // extract any services that were registered into a map.
-        ArgumentCaptor<String> classesCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<Object> serviceCaptor = ArgumentCaptor.forClass(Object.class);
+        ArgumentCaptor<Class> classesCaptor = ArgumentCaptor.forClass(Class.class);
+        ArgumentCaptor<ServiceFactory> serviceCaptor = ArgumentCaptor.forClass(ServiceFactory.class);
         @SuppressWarnings("rawtypes")
         ArgumentCaptor<Dictionary> propertiesCaptor = ArgumentCaptor.forClass(Dictionary.class);
         Mockito.verify(bundleContext, Mockito.atLeastOnce()).registerService(
-            classesCaptor.capture(), serviceCaptor.capture(),
+            (Class<ResourceResolverFactory>)classesCaptor.capture(), (ServiceFactory<ResourceResolverFactory>)serviceCaptor.capture(),
             propertiesCaptor.capture());
 
         int si = 0;
-        List<Object> serviceList = serviceCaptor.getAllValues();
+        List<ServiceFactory> serviceList = serviceCaptor.getAllValues();
         @SuppressWarnings({ "unused", "rawtypes" })
         List<Dictionary> servicePropertiesList = propertiesCaptor.getAllValues();
-        for (String serviceName : classesCaptor.getAllValues()) {
-            services.put(serviceName, serviceList.get(si));
-            serviceProperties.put(serviceName, serviceProperties.get(si));
+        for (Class serviceClass : classesCaptor.getAllValues()) {
+            services.put(serviceClass.getName(), serviceList.get(si));
+            serviceProperties.put(serviceClass.getName(), serviceProperties.get(si));
             si++;
         }
         // verify that a ResourceResolverFactoryImpl was created and registered.
-        Assert.assertNotNull(services.get(ResourceResolverFactory.class.getName()));
+        Assert.assertNotNull("" + services, services.get(ResourceResolverFactory.class.getName()));
         Object rrf = services.get(ResourceResolverFactory.class.getName());
         if (rrf instanceof ServiceFactory) {
             rrf = ((ServiceFactory) rrf).getService(usingBundle, null);
@@ -327,29 +436,6 @@ public class MockedResourceResolverImplTest {
     private String getName(String fullpath) {
         int n = fullpath.lastIndexOf("/");
         return fullpath.substring(n+1);
-    }
-
-    /**
-     * build a properties for a resource resolver bundle.
-     * @return
-     */
-    private Dictionary<String, Object> buildBundleProperties() {
-        Dictionary<String, Object> properties = new Hashtable<String, Object>();
-        properties.put("resource.resolver.virtual", new String[] { "/:/" });
-        properties.put("resource.resolver.mapping", new String[] { "/:/",
-            "/content/:/", "/system/docroot/:/", "/content.html-/$" });
-        properties.put("resource.resolver.allowDirect", true);
-        properties.put("resource.resolver.searchpath", new String[] { "/apps",
-            "/libs" });
-        properties.put("resource.resolver.manglenamespaces", true);
-        properties.put("resource.resolver.map.location", "/etc/map");
-        properties.put("resource.resolver.default.vanity.redirect.status", 302);
-        properties.put(
-            "resource.resolver.required.providers",
-            new String[] { "org.apache.sling.resourceresolver.impl.DummyTestProvider" });
-        properties.put(Constants.SERVICE_VENDOR, "Apache");
-        properties.put(Constants.SERVICE_DESCRIPTION, "Testing");
-        return properties;
     }
 
     /**

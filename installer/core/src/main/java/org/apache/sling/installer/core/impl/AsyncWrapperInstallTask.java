@@ -68,6 +68,11 @@ public class AsyncWrapperInstallTask extends InstallTask {
     }
 
     @Override
+    public void setFinishedState(ResourceState state, String alias, String error) {
+        this.delegatee.setFinishedState(state, alias, error);
+    }
+
+    @Override
     public String toString() {
         return this.delegatee.toString();
     }

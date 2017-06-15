@@ -133,7 +133,6 @@ public class RequestUtilTest extends TestCase {
             public void flushBuffer() throws IOException {}
 
             @Override
-            @SuppressWarnings("deprecation")
             public void setStatus(int sc, String sm) {}
 
             @Override
@@ -158,7 +157,6 @@ public class RequestUtilTest extends TestCase {
             public void sendError(int sc) throws IOException {}
 
             @Override
-            @SuppressWarnings("deprecation")
             public String encodeUrl(String url) {
                 return null;
             }
@@ -169,7 +167,6 @@ public class RequestUtilTest extends TestCase {
             }
 
             @Override
-            @SuppressWarnings("deprecation")
             public String encodeRedirectUrl(String url) {
                 return null;
             }
@@ -197,32 +194,25 @@ public class RequestUtilTest extends TestCase {
             public void addCookie(Cookie cookie) {}
 
             @Override
-            public void setContentLengthLong(long len) {
-                // TODO Auto-generated method stub
-
-            }
+            public void setContentLengthLong(long len) {}
 
             @Override
             public int getStatus() {
-                // TODO Auto-generated method stub
                 return 0;
             }
 
             @Override
             public String getHeader(String name) {
-                // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
             public Collection<String> getHeaders(String name) {
-                // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
             public Collection<String> getHeaderNames() {
-                // TODO Auto-generated method stub
                 return null;
             }
         };

@@ -19,13 +19,17 @@
 package org.apache.sling.scripting.sightly.impl.engine;
 
 import java.io.PrintWriter;
+import javax.script.Bindings;
 import javax.script.CompiledScript;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptConstants;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.java.compiler.RenderUnit;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -42,12 +46,21 @@ public class SightlyCompiledScript extends CompiledScript {
 
     @Override
     public Object eval(ScriptContext context) throws ScriptException {
-        RenderContext renderContext = new RenderContextImpl(context);
+        Bindings bindings = context.getBindings(ScriptContext.ENGINE_SCOPE);
+        SlingBindings slingBindings = new SlingBindings();
+        slingBindings.putAll(bindings);
+        SlingHttpServletRequest request = slingBindings.getRequest();
+        if (request == null) {
+            throw new SightlyException("Missing SlingHttpServletRequest from ScriptContext.");
+        }
+        Object oldBindings = request.getAttribute(SlingBindings.class.getName());
         try {
+            request.setAttribute(SlingBindings.class.getName(), slingBindings);
+            RenderContext renderContext = new RenderContextImpl(context);
             PrintWriter out = new PrintWriter(context.getWriter());
             renderUnit.render(out, renderContext, new SimpleBindings());
         } finally {
-            renderContext.getBindings().remove(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER);
+            request.setAttribute(SlingBindings.class.getName(), oldBindings);
         }
         return null;
     }

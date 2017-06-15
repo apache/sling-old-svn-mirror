@@ -27,11 +27,10 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 
 /** Test servlet that dumps our repository descriptors */ 
 @SuppressWarnings("serial")
@@ -53,7 +52,6 @@ public class RepositoryDescriptorsServlet extends SlingSafeMethodsServlet {
         response.setCharacterEncoding("UTF-8");
         try {
             final JSONWriter w = new JSONWriter(response.getWriter());
-            w.setTidy(Arrays.asList(request.getRequestPathInfo().getSelectors()).contains("tidy"));
             w.object();
             w.key("descriptors");
             w.object();
@@ -62,9 +60,9 @@ public class RepositoryDescriptorsServlet extends SlingSafeMethodsServlet {
             }
             w.endObject();
             w.endObject();
-        } catch(JSONException je) {
+            w.flush();
+        } catch(IOException je) {
             throw (IOException)new IOException("JSONException in doGet").initCause(je);
         }
-        response.getWriter().flush();
     }
 }

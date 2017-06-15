@@ -18,7 +18,7 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
-import static org.apache.commons.lang.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,12 +29,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.CheckForNull;
-import javax.jcr.NamespaceException;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
@@ -72,18 +68,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private static final Logger logger = LoggerFactory.getLogger(ResourceResolverImpl.class);
 
     private static final Map<String, String> EMPTY_PARAMETERS = Collections.emptyMap();
-
-    private static final String MANGLE_NAMESPACE_IN_SUFFIX = "_";
-
-    private static final String MANGLE_NAMESPACE_IN_PREFIX = "/_";
-
-    private static final Pattern MANGLE_NAMESPACE_IN_PATTERN = Pattern.compile("/_([^_/]+)_");
-
-    private static final String MANGLE_NAMESPACE_OUT_SUFFIX = ":";
-
-    private static final String MANGLE_NAMESPACE_OUT_PREFIX = "/";
-
-    private static final Pattern MANLE_NAMESPACE_OUT_PATTERN = Pattern.compile("/([^:/]+):");
 
     public static final String PROP_REDIRECT_INTERNAL = "sling:internalRedirect";
 
@@ -125,7 +109,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     private ResourceResolverImpl(final ResourceResolverImpl resolver, final Map<String, Object> authenticationInfo) throws LoginException {
         this.factory = resolver.factory;
-        Map<String, Object> authInfo = new HashMap<String, Object>();
+        Map<String, Object> authInfo = new HashMap<>();
         if (resolver.control.getAuthenticationInfo() != null) {
             authInfo.putAll(resolver.control.getAuthenticationInfo());
         }
@@ -246,7 +230,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#resolve(javax.servlet.http.HttpServletRequest)
      */
-    @SuppressWarnings("deprecation")
     @Override
     public Resource resolve(final HttpServletRequest request) {
         checkClosed();
@@ -478,14 +461,14 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             // find aliases for segments. we can't walk the parent chain
             // since the request session might not have permissions to
             // read all parents SLING-2093
-            final LinkedList<String> names = new LinkedList<String>();
+            final LinkedList<String> names = new LinkedList<>();
 
             Resource current = res;
             String path = res.getPath();
             while (path != null) {
                 String alias = null;
                 if (current != null && !path.endsWith(JCR_CONTENT_LEAF)) {
-                    if (factory.getMapEntries().isOptimizeAliasResolutionEnabled()) {
+                    if (factory.isOptimizeAliasResolutionEnabled()) {
                         logger.debug("map: Optimize Alias Resolution is Enabled");
                         String parentPath = ResourceUtil.getParent(path);
                         if (parentPath != null) {
@@ -683,7 +666,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if ( path != null ) {
             // if the path is absolute, normalize . and .. segments and get res
             if (path.startsWith("/")) {
-                ParsedParameters parsedPath = new ParsedParameters(path);
+                final ParsedParameters parsedPath = new ParsedParameters(path);
                 path = ResourceUtil.normalize(parsedPath.getRawPath());
                 result = (path != null) ? getAbsoluteResourceInternal(parent, path, parsedPath.getParameters(), false) : null;
                 if (result != null) {
@@ -781,11 +764,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                 return user.toString();
             }
         }
-        // Try session
-        final Session session = this.getSession();
-        if ( session != null ) {
-            return session.getUserID();
-        }
         // Try attributes
         final Object impUser = this.getAttribute(ResourceResolverFactory.USER_IMPERSONATION);
         if ( impUser != null ) {
@@ -800,19 +778,20 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
     /** Cached session object, fetched on demand. */
-    private Session cachedSession;
+    private Object cachedSession;
     /** Flag indicating if a searching has already been searched. */
     private boolean searchedSession = false;
 
     /**
      * Try to get a session from one of the resource providers.
      */
-    private Session getSession() {
+    @SuppressWarnings("unchecked")
+    private <AdapterType> AdapterType getSession(final Class<AdapterType> type) {
         if ( !this.searchedSession ) {
             this.searchedSession = true;
-            this.cachedSession = this.control.adaptTo(this.context, Session.class);
+            this.cachedSession = this.control.adaptTo(this.context, type);
         }
-        return this.cachedSession;
+        return (AdapterType) this.cachedSession;
     }
 
     // ---------- Adaptable interface
@@ -821,12 +800,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.adapter.SlingAdaptable#adaptTo(java.lang.Class)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         checkClosed();
 
-        if (type == Session.class) {
-            return (AdapterType) getSession();
+        if (type.getName().equals("javax.jcr.Session")) {
+            return getSession(type);
         }
         final AdapterType result = this.control.adaptTo(this.context, type);
         if ( result != null ) {
@@ -917,11 +895,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         } else {
 
             String tokenizedPath = absPath;
-            
+
             // no direct resource found, so we have to drill down into the
             // resource tree to find a match
             resource = getAbsoluteResourceInternal(null, "/", parameters, true);
-            
+
             //no read access on / drilling further down
             //SLING-5638
             if (resource == null) {
@@ -930,7 +908,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                     tokenizedPath = tokenizedPath.substring(resource.getPath().length());
                 }
             }
-            
+
             final StringBuilder resolutionPath = new StringBuilder();
             final StringTokenizer tokener = new StringTokenizer(tokenizedPath, "/");
             while (resource != null && tokener.hasMoreTokens()) {
@@ -941,7 +919,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
                     resource = nextResource;
                     resolutionPath.append("/").append(childNameRaw);
-                    
+
                 } else {
 
                     String childName = null;
@@ -1005,7 +983,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         // we do not have a child with the exact name, so we look for
         // a child, whose alias matches the childName
-        if (factory.getMapEntries().isOptimizeAliasResolutionEnabled()){
+        if (factory.isOptimizeAliasResolutionEnabled()){
             logger.debug("getChildInternal: Optimize Alias Resolution is Enabled");
             //optimization made in SLING-2521
             final Map<String, String> aliases = factory.getMapEntries().getAliasMap(parent.getPath());
@@ -1074,30 +1052,30 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         logger.debug("getResourceInternal: Cannot resolve path '{}' to a resource", path);
         return null;
     }
-    
+
     /**
      * Creates a resource, traversing bottom up, to the highest readable resource.
-     * 
+     *
      */
     private Resource getAbsoluteResourceInternal(String absPath, final Map<String, String> parameters, final boolean isResolved) {
-         
+
         if (!absPath.contains("/") || "/".equals(absPath)) {
             return null;
         }
-        
+
         absPath = absPath.substring(absPath.indexOf("/"));
         Resource resource = getAbsoluteResourceInternal(null, absPath, parameters, isResolved);
-        
+
         absPath = absPath.substring(0, absPath.lastIndexOf("/"));
 
         while (!absPath.equals("")) {
             Resource r = getAbsoluteResourceInternal(null, absPath, parameters, true);
-            
+
             if (r != null) {
                 resource = r;
-            }            
+            }
             absPath = absPath.substring(0, absPath.lastIndexOf("/"));
-        }        
+        }
         return resource;
     }
 
@@ -1119,79 +1097,16 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
     private String mangleNamespaces(String absPath) {
-        if (factory.isMangleNamespacePrefixes() && absPath != null && absPath.contains(MANGLE_NAMESPACE_OUT_SUFFIX)) {
-            final Matcher m = MANLE_NAMESPACE_OUT_PATTERN.matcher(absPath);
-
-            final StringBuffer buf = new StringBuffer();
-            while (m.find()) {
-                final String namespace = m.group(1);
-                try {
-
-                    // throws if "namespace" is not a registered
-                    // namespace prefix
-                    final Session session = getSession();
-                    if ( session != null ) {
-                        session.getNamespaceURI(namespace);
-                        final String replacement = MANGLE_NAMESPACE_IN_PREFIX + namespace + MANGLE_NAMESPACE_IN_SUFFIX;
-                        m.appendReplacement(buf, replacement);
-                    } else {
-                        logger.debug("mangleNamespaces: '{}' is not a prefix, not mangling", namespace);
-                    }
-
-
-                } catch (final NamespaceException ne) {
-
-                    // not a valid prefix
-                    logger.debug("mangleNamespaces: '{}' is not a prefix, not mangling", namespace);
-
-                } catch (final RepositoryException re) {
-
-                    logger.warn("mangleNamespaces: Problem checking namespace '{}'", namespace, re);
-
-                }
-            }
-
-            m.appendTail(buf);
-
-            absPath = buf.toString();
+        if ( absPath != null && factory.getNamespaceMangler() != null ) {
+            absPath = ((JcrNamespaceMangler)factory.getNamespaceMangler()).mangleNamespaces(this, logger, absPath);
         }
 
         return absPath;
     }
 
     private String unmangleNamespaces(String absPath) {
-        if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_IN_PREFIX)) {
-            final Matcher m = MANGLE_NAMESPACE_IN_PATTERN.matcher(absPath);
-            final StringBuffer buf = new StringBuffer();
-            while (m.find()) {
-                final String namespace = m.group(1);
-                try {
-
-                    // throws if "namespace" is not a registered
-                    // namespace prefix
-                    final Session session = getSession();
-                    if ( session != null ) {
-                        session.getNamespaceURI(namespace);
-                        final String replacement = MANGLE_NAMESPACE_OUT_PREFIX + namespace + MANGLE_NAMESPACE_OUT_SUFFIX;
-                        m.appendReplacement(buf, replacement);
-                    } else {
-                        logger.debug("unmangleNamespaces: '{}' is not a prefix, not unmangling", namespace);
-                    }
-
-
-                } catch (final NamespaceException ne) {
-
-                    // not a valid prefix
-                    logger.debug("unmangleNamespaces: '{}' is not a prefix, not unmangling", namespace);
-
-                } catch (final RepositoryException re) {
-
-                    logger.warn("unmangleNamespaces: Problem checking namespace '{}'", namespace, re);
-
-                }
-            }
-            m.appendTail(buf);
-            absPath = buf.toString();
+        if (absPath != null && factory.getNamespaceMangler() != null ) {
+            absPath = ((JcrNamespaceMangler)factory.getNamespaceMangler()).unmangleNamespaces(this, logger, absPath);
         }
 
         return absPath;
@@ -1311,13 +1226,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
              // Check if the resource is of the given type. This method first checks the
              // resource type of the resource, then its super resource type and continues
              //  to go up the resource super type hierarchy.
-             if (resourceType.equals(resource.getResourceType())) {
+             if (ResourceTypeUtil.areResourceTypesEqual(resourceType, resource.getResourceType(), getSearchPath())) {
                  result = true;
              } else {
-                 Set<String> superTypesChecked = new HashSet<String>();
+                 Set<String> superTypesChecked = new HashSet<>();
                  String superType = this.getParentResourceType(resource);
                  while (!result && superType != null) {
-                     if (resourceType.equals(superType)) {
+                     if (ResourceTypeUtil.areResourceTypesEqual(resourceType, superType, getSearchPath())) {
                          result = true;
                      } else {
                          superTypesChecked.add(superType);

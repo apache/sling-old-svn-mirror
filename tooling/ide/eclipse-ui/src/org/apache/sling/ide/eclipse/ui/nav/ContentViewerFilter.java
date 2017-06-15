@@ -18,13 +18,13 @@ package org.apache.sling.ide.eclipse.ui.nav;
 
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
-import org.eclipse.jface.viewers.TreePath;;
+import org.eclipse.jface.viewers.ViewerFilter;;
 
 /**
  * The <tt>ContentViewerFilter</tt> ensures that Sling content projects do not have 
- * the 'Deployment Descriptor' contribution present.
+ * the various WST-specific contributions present.
  *
  */
 public class ContentViewerFilter extends ViewerFilter {
@@ -39,6 +39,8 @@ public class ContentViewerFilter extends ViewerFilter {
             case "org.eclipse.jst.j2ee.webapplication.internal.impl.WebAppImpl":
             case "org.eclipse.jst.jee.ui.internal.navigator.web.WebAppProvider":
             case "org.eclipse.jst.jee.ui.internal.navigator.LoadingGroupProvider":
+            case "org.eclipse.jst.ws.jaxws.dom.integration.navigator.DOMAdapterFactoryContentProvider$LoadingWsProject":
+            case "org.eclipse.m2e.wtp.internal.WTPResourcesNode":                
 
                 IProject project = getProjectFromParent(parentElement);
                 
@@ -55,9 +57,13 @@ public class ContentViewerFilter extends ViewerFilter {
     private IProject getProjectFromParent(Object parentElement) {
 
         if (parentElement instanceof TreePath) {
-            Object firstSegment = ((TreePath) parentElement).getFirstSegment();
-            if (firstSegment instanceof IProject) {
-                return (IProject) firstSegment;
+            TreePath treePath = (TreePath) parentElement;
+            // go through all segments from the bottom up until a project is found
+            for (int n = treePath.getSegmentCount() - 1; n >= 0; n--) {
+                Object segment = treePath.getSegment(n);
+                if (segment instanceof IProject) {
+                    return (IProject) segment;
+                }
             }
         } else if (parentElement instanceof IProject) {
             return (IProject) parentElement;

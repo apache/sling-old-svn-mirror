@@ -21,12 +21,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>30</version>
         <relativePath/>
     </parent>
 
     <artifactId>org.apache.sling.installer.it</artifactId>
-    <version>3.6.9-SNAPSHOT</version>
+    <version>3.8.11-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Installer Integration Tests</name>
@@ -34,9 +34,12 @@
 
     <properties>
         <exam.version>3.0.3</exam.version>
-        <url.version>2.4.7</url.version>
+        <url.version>2.5.2</url.version>
         <pax.exam.log.level>INFO</pax.exam.log.level>
+        <pax.vm.options>-Xmx256M -XX:MaxPermSize=256m</pax.vm.options>
         <installer.configuration.version>1.1.3-SNAPSHOT</installer.configuration.version>
+        
+        <argLine>${pax.vm.options}</argLine>
 
         <!-- BundleInstallStressTest parameters -->
         <BundleInstallStressTest.default.bundles.folder>${project.build.directory}/bundle-install-stress-test-bundles</BundleInstallStressTest.default.bundles.folder>
@@ -54,6 +57,17 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/test/resources/blacklisttest/sling_bootstrap.txt</exclude>
+                        <exclude>src/test/resources/blacklisttestempty/sling_bootstrap.txt</exclude>
+                        <exclude>src/test/resources/sling_bootstrap.txt</exclude>
+                    </excludes>
+                </configuration>
+             </plugin>
+             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
@@ -61,6 +75,10 @@
                         <property>
                             <name>pax.exam.log.level</name>
                             <value>${pax.exam.log.level}</value>
+                        </property>
+                        <property>
+                            <name>pax.exam.debug.port</name>
+                            <value>${pax.exam.debug.port}</value>
                         </property>
                         <property>
                             <name>osgi.installer.pom.version</name>
@@ -445,17 +463,17 @@
             <scope>provided</scope>
         </dependency>          
         <dependency>
+             <groupId>org.osgi</groupId>
+             <artifactId>org.osgi.service.cm</artifactId>
+             <version>1.5.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.log</artifactId>
             <version>2.1.2</version>
             <scope>provided</scope>
         </dependency>          
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.2.0</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-container-native</artifactId>
@@ -483,13 +501,12 @@
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
-            <version>1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.4.1</version>
+            <version>5.6.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

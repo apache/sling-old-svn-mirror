@@ -20,6 +20,8 @@ package org.apache.sling.distribution.packaging.impl;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,7 +38,7 @@ public class ReferencePackage extends AbstractDistributionPackage {
     private final String reference;
 
     public ReferencePackage(DistributionPackage distributionPackage) {
-        super(REFERENCE_PREFIX + distributionPackage.getId(), distributionPackage.getType());
+        super(REFERENCE_PREFIX + distributionPackage.getId(), distributionPackage.getType(), null, null);
         this.distributionPackage = distributionPackage;
         this.reference = REFERENCE_PREFIX + distributionPackage.getId();
         getInfo().putAll(distributionPackage.getInfo());
@@ -88,6 +90,23 @@ public class ReferencePackage extends AbstractDistributionPackage {
     @Override
     public String getId() {
         return reference;
+    }
+
+    @Nullable
+    @Override
+    public String getDigestAlgorithm() {
+        if (distributionPackage instanceof AbstractDistributionPackage) {
+            ((AbstractDistributionPackage) distributionPackage).getDigestAlgorithm();
+        }
+        return null;
+    }
+
+    @Override
+    public String getDigestMessage() {
+        if (distributionPackage instanceof AbstractDistributionPackage) {
+            ((AbstractDistributionPackage) distributionPackage).getDigestMessage();
+        }
+        return null;
     }
 
     public static boolean isReference(String string) {

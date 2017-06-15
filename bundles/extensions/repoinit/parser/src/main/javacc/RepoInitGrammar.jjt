@@ -69,16 +69,23 @@ TOKEN:
 |   < NODETYPES: "nodetypes" >
 |   < REGISTER: "register" >
 |   < NAMESPACE: "namespace" >
+|   < WITH: "with" >
+|   < PASSWORD: "password" >
 |   < START_TEXTBLOCK: "<<===" > : TEXTBLOCK
 |   < LPAREN: "(" >
 |   < RPAREN: ")" >
+|   < LCURLY: "{" >
+|   < RCURLY: "}" >
 |   < COMMA: "," >
 |   < STAR: "*" >
+|   < EQUALS: "=" >
+|   < RESTRICTION: "restriction" >
+|   < ACL_OPTIONS: "ACLOptions" >
 
 /* The order of these fuzzy statements is important (first match wins?) */ 
 |   < NAMESPACED_ITEM: (["a"-"z"] | ["A"-"Z"])+ ":" (["a"-"z"] | ["A"-"Z"])+ >
 |   < PATH_STRING: "/" (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"]) * >
-|   < STRING: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"] | [":"]) * >
+|   < STRING: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"] | [":"] | ["*"]) * >
 |   < EOL: "\n" >
 }
 
@@ -105,6 +112,8 @@ List<Operation> parse() :
         | createPathStatement(result)
         | registerNamespaceStatement(result)
         | registerNodetypesStatement(result)
+        | createUserStatement(result)
+        | deleteUserStatement(result)
         | blankLine() 
     ) * 
     <EOF>
@@ -204,15 +213,16 @@ void setAclPaths(List<Operation> result) :
 {
     List<String> paths;
     List<AclLine> lines = new ArrayList<AclLine>();
+    List<String> aclOptions;
 } 
 {
-    <SET> <ACL> <ON> paths  = pathsList() <EOL>
+    <SET> <ACL> <ON> paths  = pathsList() aclOptions=aclOptions() <EOL>
     ( removeStarLine(lines) | userPrivilegesLine(lines) | blankLine() ) +
     <END> 
     ( <EOL> | <EOF> )
     
     {
-        result.add(new SetAclPaths(paths, lines));
+        result.add(new SetAclPaths(paths, lines, aclOptions));
     }
 }
 
@@ -249,33 +259,121 @@ void userPrivilegesLine(List<AclLine> lines) :
 {
     AclLine line;
     List<String> tmp;
+    List<RestrictionClause> restrictions;
 }
 {
     line = privilegesLineOperation()
-    tmp = namespacedItemsList() { line.setProperty(AclLine.PROP_PRIVILEGES, tmp); } 
+    tmp = namespacedItemsList() { line.setProperty(AclLine.PROP_PRIVILEGES, tmp); }
     <FOR>
     tmp = principalsList() { line.setProperty(AclLine.PROP_PRINCIPALS, tmp); }
+    restrictions = parseRestrictions()  { line.setRestrictions(restrictions); }
     <EOL>
 
     {   
         lines.add(line); 
     }
 }
+/**
+ * Parses a single restriction value
+ */
+void parseRestrictionValue(List<String> values) :
+{
+   Token t;
+}
+{
+   <COMMA> ( t=<STAR> | t=<NAMESPACED_ITEM> | t=<PATH_STRING> | t=<STRING> )
+   {
+       values.add(t.image);
+   }
+}
+
+/**
+ * parses list of restriction values
+ */
+List<String> parseRestrictionValues() :
+{
+    List<String> values = new ArrayList<String>();
+}
+{
+    ( parseRestrictionValue(values) ) *
+
+    {
+        return values;
+    }
+
+}
+
+
+/**
+ * parses a single restriction
+ */
+void parseRestriction(List<RestrictionClause> restrictions) :
+{
+  Token restrictionProp;
+  List<String> values;
+}
+{
+  <RESTRICTION>
+  <LPAREN> restrictionProp=<NAMESPACED_ITEM> values=parseRestrictionValues()  <RPAREN>
+
+  {
+      restrictions.add(new RestrictionClause(restrictionProp.image,values));
+  }
+}
+
+/**
+ * parses list of restrictions
+ */
+List<RestrictionClause> parseRestrictions() :
+{
+    List<RestrictionClause> restrictions = new ArrayList<RestrictionClause>();
+}
+{
+   ( parseRestriction(restrictions) )*
+
+   {
+       return restrictions;
+   }
+}
 
 void pathPrivilegesLine(List<AclLine> lines) : 
 {
     AclLine line;
     List<String> tmp;
+    List<RestrictionClause> restrictions;
 }
 {
     line = privilegesLineOperation()
     tmp = namespacedItemsList() { line.setProperty(AclLine.PROP_PRIVILEGES, tmp); } 
     <ON> tmp = pathsList() { line.setProperty(AclLine.PROP_PATHS, tmp); }
     ( <NODETYPES> tmp = namespacedItemsList() { line.setProperty(AclLine.PROP_NODETYPES, tmp); }) ?
+     restrictions = parseRestrictions()  { line.setRestrictions(restrictions); }
     <EOL>
     
     {    
         lines.add(line); 
+    }
+}
+void aclOption(List<String> options) :
+{
+   Token t;
+}
+{
+    (t=<NAMESPACED_ITEM> | t=<STRING>)
+    {
+        options.add(t.image);
+    }
+}
+List<String> aclOptions() :
+{
+    List<String> aclOptionList = new ArrayList<String>();
+    Token t;
+}
+{
+    ( <LPAREN> <ACL_OPTIONS> <EQUALS> aclOption(aclOptionList) ( <COMMA> aclOption(aclOptionList) )*  <RPAREN> )?
+
+    {
+       return aclOptionList;
     }
 }
 
@@ -283,15 +381,16 @@ void setAclPrincipals(List<Operation> result) :
 {
     List <String> principals;
     List<AclLine> lines = new ArrayList<AclLine>();
+    List<String> aclOptions;
 }
 {
-    <SET> <ACL> <FOR> principals = principalsList() <EOL>
+    <SET> <ACL> <FOR> principals = principalsList() aclOptions=aclOptions() <EOL>
     ( removeStarLine(lines) | pathPrivilegesLine(lines) | blankLine() ) +
     <END> 
     ( <EOL> | <EOF> )
     
     {
-        result.add(new SetAclPrincipals(principals, lines));
+        result.add(new SetAclPrincipals(principals, lines, aclOptions));
     }
 }
 
@@ -332,5 +431,37 @@ void registerNodetypesStatement(List<Operation> result) :
     (<EOL> | <EOF>)
     {
         result.add(new RegisterNodetypes(b.toString()));
+    }
+}
+
+void createUserStatement(List<Operation> result) :
+{
+    Token user = null;
+    Token encoding = null;
+    Token password = null;
+}
+{
+    <CREATE> <USER> 
+    ( user = <STRING> )
+    ( <WITH> <PASSWORD> ( <LCURLY> encoding = <STRING> <RCURLY> )? password = <STRING> )?
+    
+    {
+        result.add(new CreateUser(user.image, 
+            (encoding == null ? null : encoding.image), 
+            (password == null ? null : password.image)
+        ));
+    }
+}
+
+void deleteUserStatement(List<Operation> result) :
+{
+    Token user = null;
+}
+{
+    <DELETE> <USER> 
+    ( user = <STRING> )
+
+    {
+        result.add(new DeleteUser(user.image));
     }
 }

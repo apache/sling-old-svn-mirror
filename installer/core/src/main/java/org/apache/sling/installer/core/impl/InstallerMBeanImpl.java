@@ -35,6 +35,7 @@ public class InstallerMBeanImpl implements InstallationListener, InstallerMBean 
 
     //~---------------------------------------< InstallationListener >
 
+    @Override
     public void onEvent(InstallationEvent event) {
         switch (event.getType()) {
             case STARTED:
@@ -43,24 +44,31 @@ public class InstallerMBeanImpl implements InstallationListener, InstallerMBean 
             case SUSPENDED:
                 active = false;
                 break;
+            default:
+                // nothing to do
+                break;
         }
         lastEventTime = System.currentTimeMillis();
     }
 
     //~----------------------------------------< InstallerMBean >
 
+    @Override
     public int getActiveResourceCount() {
         return infoProvider.getInstallationState().getActiveResources().size();
     }
 
+    @Override
     public int getInstalledResourceCount() {
         return infoProvider.getInstallationState().getInstalledResources().size();
     }
 
+    @Override
     public boolean isActive() {
         return active;
     }
 
+    @Override
     public long getSuspendedSince() {
         return active ? -1 : lastEventTime;
     }

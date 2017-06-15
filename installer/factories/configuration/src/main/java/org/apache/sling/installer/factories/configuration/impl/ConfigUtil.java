@@ -19,6 +19,7 @@
 package org.apache.sling.installer.factories.configuration.impl;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -73,6 +74,19 @@ abstract class ConfigUtil {
         return keys;
     }
 
+    /**
+     * Convert the object to an array
+     * @param value The array
+     * @return an object array
+     */
+    private static Object[] convertToObjectArray(final Object value) {
+        final Object[] values = new Object[Array.getLength(value)];
+        for(int i=0;i<values.length;i++) {
+            values[i] = Array.get(value, i);
+        }
+        return values;
+    }
+
     /** True if a and b represent the same config data, ignoring "non-configuration" keys in the dictionaries */
     public static boolean isSameData(Dictionary<String, Object>a, Dictionary<String, Object>b) {
         boolean result = false;
@@ -85,8 +99,8 @@ abstract class ConfigUtil {
                     final Object valA = a.get(key);
                     final Object valB = b.get(key);
                     if ( valA.getClass().isArray() ) {
-                        final Object[] arrA = (Object[])valA;
-                        final Object[] arrB = (Object[])valB;
+                        final Object[] arrA = convertToObjectArray(valA);
+                        final Object[] arrB = convertToObjectArray(valB);
 
                         if ( arrA.length != arrB.length ) {
                             result = false;

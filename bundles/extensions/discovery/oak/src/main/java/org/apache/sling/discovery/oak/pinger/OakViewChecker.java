@@ -47,7 +47,7 @@ import org.osgi.service.http.HttpService;
 /**
  * The OakViewChecker is taking care of checking the oak discovery-lite
  * descriptor when checking the local cluster view and passing that
- * on to the ViewStateManager which will then detect whether there was 
+ * on to the ViewStateManager which will then detect whether there was
  * any change or not. Unlike discovery.impl's HeartbeatHandler this one
  * does not store any heartbeats in the repository anymore.
  * <p>
@@ -105,32 +105,32 @@ public class OakViewChecker extends BaseViewChecker {
     protected AnnouncementRegistry getAnnouncementRegistry() {
         return announcementRegistry;
     }
-    
+
     @Override
     protected BaseConfig getConnectorConfig() {
         return config;
     }
-    
+
     @Override
     protected ConnectorRegistry getConnectorRegistry() {
         return connectorRegistry;
     }
-    
+
     @Override
     protected ResourceResolverFactory getResourceResolverFactory() {
         return resourceResolverFactory;
     }
-    
+
     @Override
     protected Scheduler getScheduler() {
         return scheduler;
     }
-    
+
     @Override
     protected SlingSettingsService getSlingSettingsService() {
         return slingSettingsService;
     }
-    
+
     @Override
     protected void doActivate() {
         // on activate the resetLeaderElectionId is set to true to ensure that
@@ -141,10 +141,10 @@ public class OakViewChecker extends BaseViewChecker {
         runtimeId = UUID.randomUUID().toString();
 
         logger.info("doActivate: activated with runtimeId: {}, slingId: {}", runtimeId, slingId);
-        
+
         resetLeaderElectionId();
     }
-    
+
     @Override
     protected void deactivate() {
         super.deactivate();
@@ -175,7 +175,7 @@ public class OakViewChecker extends BaseViewChecker {
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }
-        
+
         // start the (more frequent) periodic job that checks
         // the discoveryLite descriptor - that can be more frequent
         // since it is only reading an oak repository descriptor
@@ -192,13 +192,13 @@ public class OakViewChecker extends BaseViewChecker {
                 public void run() {
                     discoveryLiteCheck();
                 }
-                
+
             });
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }
     }
-    
+
     private void discoveryLiteCheck() {
         logger.debug("discoveryLiteCheck: start. [for slingId="+slingId+"]");
         synchronized(lock) {
@@ -225,7 +225,7 @@ public class OakViewChecker extends BaseViewChecker {
             logger.error("getResourceResolver: resourceResolverFactory is null!");
             return null;
         }
-        return resourceResolverFactory.getAdministrativeResourceResolver(null);
+        return resourceResolverFactory.getServiceResourceResolver(null);
     }
 
     /** Calcualte the local cluster instance path **/
@@ -234,7 +234,7 @@ public class OakViewChecker extends BaseViewChecker {
     }
 
     /**
-     * Hook that will cause a reset of the leaderElectionId 
+     * Hook that will cause a reset of the leaderElectionId
      * on next invocation of issueClusterLocalHeartbeat.
      * @return true if the leaderElectionId was reset - false if that was not
      * necessary as that happened earlier already and it has not propagated
@@ -269,7 +269,7 @@ public class OakViewChecker extends BaseViewChecker {
             resourceMap.put("leaderElectionId", newLeaderElectionId);
             resourceMap.put("leaderElectionIdCreatedAt", leaderElectionCreatedAt);
 
-            logger.info("resetLeaderElectionId: storing my runtimeId: {}, endpoints: {}, sling home path: {}, new leaderElectionId: {}, created at: {}", 
+            logger.info("resetLeaderElectionId: storing my runtimeId: {}, endpoints: {}, sling home path: {}, new leaderElectionId: {}, created at: {}",
                     new Object[]{runtimeId, endpointsAsString, slingHomePath, newLeaderElectionId, leaderElectionCreatedAt});
             resourceResolver.commit();
         } catch (LoginException e) {
@@ -311,9 +311,15 @@ public class OakViewChecker extends BaseViewChecker {
         discoveryService.checkForTopologyChange();
     }
 
+    @Override
     protected void updateProperties() {
         if (discoveryService == null) {
-            logger.error("issueHeartbeat: discoveryService is null");
+            // SLING-6065: it's legitimate that updateProperties()
+            // (which comes from BaseViewChecker.issueHeartbeat())
+            // is called while discoveryService is not yet set. That's 
+            // due to the fact that discoveryService is set in initialize()
+            // which is called once the OakDiscoveryService is activated
+            // and that can come at a later point.
         } else {
             discoveryService.updateProperties();
         }

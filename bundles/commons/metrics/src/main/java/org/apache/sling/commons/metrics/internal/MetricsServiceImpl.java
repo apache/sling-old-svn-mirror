@@ -33,11 +33,6 @@ import javax.management.MBeanServer;
 
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.sling.commons.metrics.Meter;
 import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.commons.metrics.Timer;
@@ -47,14 +42,21 @@ import org.apache.sling.commons.metrics.Metric;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 
-@Component
+@Component(service = {}, immediate = true)
 public class MetricsServiceImpl implements MetricsService {
-    private final List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
-    private final ConcurrentMap<String, Metric> metrics = new ConcurrentHashMap<String, Metric>();
+    private final List<ServiceRegistration> regs = new ArrayList<>();
+    private final ConcurrentMap<String, Metric> metrics = new ConcurrentHashMap<>();
     private final MetricRegistry registry = new MetricRegistry();
+    private final BundleMetricsMapper metricsMapper = new BundleMetricsMapper(registry);
+    private GaugeManager gaugeManager;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     private MBeanServer server;
 
     private JmxReporter reporter;
@@ -63,12 +65,15 @@ public class MetricsServiceImpl implements MetricsService {
     private void activate(BundleContext context, Map<String, Object> config) {
         enableJMXReporter();
 
-        final Dictionary<String, String> svcProps = new Hashtable<String, String>();
+        gaugeManager = new GaugeManager(context, registry, metricsMapper);
+
+        final Dictionary<String, String> svcProps = new Hashtable<>();
         svcProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Metrics Service");
         svcProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        regs.add(context.registerService(MetricsService.class.getName(), this, svcProps));
+        regs.add(context.registerService(MetricsService.class.getName(),
+                new InternalMetricsServiceFactory(this, metricsMapper), svcProps));
 
-        final Dictionary<String, String> regProps = new Hashtable<String, String>();
+        final Dictionary<String, String> regProps = new Hashtable<>();
         regProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Metrics Registry");
         regProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         regProps.put("name", "sling");
@@ -81,6 +86,8 @@ public class MetricsServiceImpl implements MetricsService {
             reg.unregister();
         }
         regs.clear();
+
+        gaugeManager.close();
 
         metrics.clear();
 
@@ -116,6 +123,10 @@ public class MetricsServiceImpl implements MetricsService {
             return (A) registry;
         }
         return null;
+    }
+
+    MetricRegistry getRegistry() {
+        return registry;
     }
 
     @SuppressWarnings("unchecked")
@@ -202,16 +213,13 @@ public class MetricsServiceImpl implements MetricsService {
     }
 
     private void enableJMXReporter() {
-        //TODO Domain name should be based on calling bundle
-        //For that we can register ServiceFactory and make use of calling
-        //bundle symbolic name to determine the mapping
-
         if (server == null){
             server = ManagementFactory.getPlatformMBeanServer();
         }
 
         reporter = JmxReporter.forRegistry(registry)
-                .inDomain("org.apache.sling")
+                .inDomain(BundleMetricsMapper.DEFAULT_DOMAIN_NAME)
+                .createsObjectNamesWith(metricsMapper)
                 .registerWith(server)
                 .build();
         reporter.start();

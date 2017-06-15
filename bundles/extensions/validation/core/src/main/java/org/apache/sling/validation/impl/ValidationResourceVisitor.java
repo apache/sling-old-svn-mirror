@@ -35,9 +35,9 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
     private final boolean enforceValidation;
     private final boolean considerResourceSuperTypeModels;
     private final @Nonnull CompositeValidationResult result;
-    private final Predicate filter;
+    private final Predicate<Resource> filter;
 
-    public ValidationResourceVisitor(ValidationServiceImpl validationService, String rootResourcePath, boolean enforceValidation, Predicate filter,  boolean considerResourceSuperTypeModels) {
+    public ValidationResourceVisitor(ValidationServiceImpl validationService, String rootResourcePath, boolean enforceValidation, Predicate<Resource> filter,  boolean considerResourceSuperTypeModels) {
         super();
         this.validationService = validationService;
         this.rootResourcePath = rootResourcePath + "/";
@@ -60,7 +60,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
             }
             // calculate the property name correctly from the root
             // the relative path must not end with a slash and not start with a slash
-            final String relativePath;
+            @Nonnull final String relativePath;
             if (resource.getPath().startsWith(rootResourcePath)) {
                 relativePath = resource.getPath().substring(rootResourcePath.length());
             } else {
@@ -75,7 +75,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
      * 
      * @return {@code true} in case the given resource should have its own Sling Validation model
      */
-    private boolean isValidSubResource(Resource resource) {
+    private boolean isValidSubResource(@Nonnull Resource resource) {
         if (ResourceUtil.isNonExistingResource(resource)) {
             return false;
         }

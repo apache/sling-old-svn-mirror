@@ -4,7 +4,7 @@
   "applicablePaths": [
     "/content/fling/"
   ],
-  "validatedResourceType": "fling/form/comment",
+  "validatingResourceType": "fling/form/comment",
   "properties": {
     "jcr:primaryType": "nt:unstructured",
     "name": {
@@ -12,7 +12,7 @@
       "propertyType": "string",
       "validators": {
         "jcr:primaryType": "nt:unstructured",
-        "org.apache.sling.validation.impl.validators.RegexValidator": {
+        "org.apache.sling.validation.core.RegexValidator": {
           "jcr:primaryType": "nt:unstructured",
           "validatorArguments": ["regex=^\\p{L}+$"]
         }
@@ -27,7 +27,7 @@
           "jcr:primaryType": "nt:unstructured",
           "validatorArguments": ["comment=I love Apache Sling!"]
         },
-        "org.apache.sling.validation.impl.validators.RegexValidator": {
+        "org.apache.sling.validation.core.RegexValidator": {
           "jcr:primaryType": "nt:unstructured",
           "validatorArguments": ["regex=^\\D*$"]
         }

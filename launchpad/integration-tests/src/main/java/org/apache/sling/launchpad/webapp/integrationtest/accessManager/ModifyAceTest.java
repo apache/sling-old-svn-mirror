@@ -27,15 +27,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,7 +92,7 @@ public class ModifyAceTest {
 	}
 
 	@Test 
-	public void testModifyAceForUser() throws IOException, JSONException {
+	public void testModifyAceForUser() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
 		testFolderUrl = H.createTestFolder();
@@ -113,31 +114,31 @@ public class ModifyAceTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
-		assertEquals(1, jsonObject.length());
+		JsonObject jsonObject = JsonUtil.parseObject(json);
+		assertEquals(1, jsonObject.size());
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 		
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 
-	        int order = aceObject.optInt("order");
+	        int order = aceObject.getInt("order");
 	        assertEquals(0, order);
 
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(1, grantedArray.length());
+		assertEquals(1, grantedArray.size());
 		assertEquals("jcr:read", grantedArray.getString(0));
 
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
-		assertEquals(1, deniedArray.length());
+		assertEquals(1, deniedArray.size());
 		assertEquals("jcr:write", deniedArray.getString(0));
 	}
 
 	@Test 
-	public void testModifyAceForGroup() throws IOException, JSONException {
+	public void testModifyAceForGroup() throws IOException, JsonException {
 		testGroupId = H.createTestGroup();
 
 		testFolderUrl = H.createTestFolder();
@@ -159,24 +160,24 @@ public class ModifyAceTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
-		assertEquals(1, jsonObject.length());
+		JsonObject jsonObject = JsonUtil.parseObject(json);
+		assertEquals(1, jsonObject.size());
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testGroupId);
+		JsonObject aceObject = jsonObject.getJsonObject(testGroupId);
 		assertNotNull(aceObject);
 
-	        int order = aceObject.optInt("order");
+	        int order = aceObject.getInt("order");
 	        assertEquals(0, order);
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testGroupId, principalString);
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(1, grantedArray.length());
+		assertEquals(1, grantedArray.size());
 		assertEquals("jcr:read", grantedArray.getString(0));
 
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
 		assertEquals("jcr:write", deniedArray.getString(0));
 	}
@@ -186,7 +187,7 @@ public class ModifyAceTest {
 	 * request.
 	 */
 	@Test 
-	public void testMergeAceForUser() throws IOException, JSONException {
+	public void testMergeAceForUser() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		testFolderUrl = H.createTestFolder();
 		
@@ -209,34 +210,34 @@ public class ModifyAceTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
-		assertEquals(1, jsonObject.length());
+		JsonObject jsonObject = JsonUtil.parseObject(json);
+		assertEquals(1, jsonObject.size());
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 		
-	        int order = aceObject.optInt("order");
+	        int order = aceObject.getInt("order");
 	        assertEquals(0, order);
 
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(3, grantedArray.length());
+		assertEquals(3, grantedArray.size());
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames, true, "jcr:read");
 		H.assertPrivilege(grantedPrivilegeNames, true, "jcr:readAccessControl");
 		H.assertPrivilege(grantedPrivilegeNames, true, "jcr:addChildNodes");
 
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
-		assertEquals(2, deniedArray.length());
+		assertEquals(2, deniedArray.size());
 		Set<String> deniedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < deniedArray.length(); i++) {
+		for (int i=0; i < deniedArray.size(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:modifyAccessControl");
@@ -261,31 +262,31 @@ public class ModifyAceTest {
 		//fetch the JSON for the acl to verify the settings.
 		String json2 = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
-		JSONObject jsonObject2 = new JSONObject(json2);
-		assertEquals(1, jsonObject2.length());
+		JsonObject jsonObject2 = JsonUtil.parseObject(json2);
+		assertEquals(1, jsonObject2.size());
 		
-		JSONObject aceObject2 = jsonObject2.optJSONObject(testUserId);
+		JsonObject aceObject2 = jsonObject2.getJsonObject(testUserId);
 		assertNotNull(aceObject2);
 
-		String principalString2 = aceObject2.optString("principal");
+		String principalString2 = aceObject2.getString("principal");
 		assertEquals(testUserId, principalString2);
 		
-		JSONArray grantedArray2 = aceObject2.optJSONArray("granted");
+		JsonArray grantedArray2 = aceObject2.getJsonArray("granted");
 		assertNotNull(grantedArray2);
-		assertEquals(3, grantedArray2.length());
+		assertEquals(3, grantedArray2.size());
 		Set<String> grantedPrivilegeNames2 = new HashSet<String>();
-		for (int i=0; i < grantedArray2.length(); i++) {
+		for (int i=0; i < grantedArray2.size(); i++) {
 			grantedPrivilegeNames2.add(grantedArray2.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:read");
 		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:addChildNodes");
 		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:modifyProperties");
 
-		JSONArray deniedArray2 = aceObject2.optJSONArray("denied");
+		JsonArray deniedArray2 = aceObject2.getJsonArray("denied");
 		assertNotNull(deniedArray2);
-		assertEquals(2, deniedArray2.length());
+		assertEquals(2, deniedArray2.size());
 		Set<String> deniedPrivilegeNames2 = new HashSet<String>();
-		for (int i=0; i < deniedArray2.length(); i++) {
+		for (int i=0; i < deniedArray2.size(); i++) {
 			deniedPrivilegeNames2.add(deniedArray2.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames2, true, "jcr:modifyAccessControl");
@@ -298,7 +299,7 @@ public class ModifyAceTest {
 	 * request.
 	 */
 	@Test 
-	public void testMergeAceForUserSplitAggregatePrincipal() throws IOException, JSONException {
+	public void testMergeAceForUserSplitAggregatePrincipal() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		testFolderUrl = H.createTestFolder();
 		
@@ -319,28 +320,28 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONObject jsonObject = new JSONObject(json);
-		assertEquals(1, jsonObject.length());
+		JsonObject jsonObject = JsonUtil.parseObject(json);
+		assertEquals(1, jsonObject.size());
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 		
-		assertEquals(testUserId, aceObject.optString("principal"));
+		assertEquals(testUserId, aceObject.getString("principal"));
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(1, grantedArray.length());
+		assertEquals(1, grantedArray.size());
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames, true, "jcr:read");
 
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
-		assertEquals(1, deniedArray.length());
+		assertEquals(1, deniedArray.size());
 		Set<String> deniedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < deniedArray.length(); i++) {
+		for (int i=0; i < deniedArray.size(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:write");
@@ -362,29 +363,29 @@ public class ModifyAceTest {
 		String json2 = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
 		
-		JSONObject jsonObject2 = new JSONObject(json2);
-		assertEquals(1, jsonObject2.length());
+		JsonObject jsonObject2 = JsonUtil.parseObject(json2);
+		assertEquals(1, jsonObject2.size());
 		
-		JSONObject aceObject2 = jsonObject2.optJSONObject(testUserId);
+		JsonObject aceObject2 = jsonObject2.getJsonObject(testUserId);
 		assertNotNull(aceObject2);
 		
-		assertEquals(testUserId, aceObject2.optString("principal"));
+		assertEquals(testUserId, aceObject2.getString("principal"));
 		
-		JSONArray grantedArray2 = aceObject2.optJSONArray("granted");
+		JsonArray grantedArray2 = aceObject2.getJsonArray("granted");
 		assertNotNull(grantedArray2);
-		assertEquals(2, grantedArray2.length());
+		assertEquals(2, grantedArray2.size());
 		Set<String> grantedPrivilegeNames2 = new HashSet<String>();
-		for (int i=0; i < grantedArray2.length(); i++) {
+		for (int i=0; i < grantedArray2.size(); i++) {
 			grantedPrivilegeNames2.add(grantedArray2.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:read");
 		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:modifyProperties");
 
-		JSONArray deniedArray2 = aceObject2.optJSONArray("denied");
+		JsonArray deniedArray2 = aceObject2.getJsonArray("denied");
 		assertNotNull(deniedArray2);
-		assertEquals(3, deniedArray2.length());
+		assertEquals(3, deniedArray2.size());
 		Set<String> deniedPrivilegeNames2 = new HashSet<String>();
-		for (int i=0; i < deniedArray2.length(); i++) {
+		for (int i=0; i < deniedArray2.size(); i++) {
 			deniedPrivilegeNames2.add(deniedArray2.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames2, false, "jcr:write");
@@ -399,7 +400,7 @@ public class ModifyAceTest {
 	 * request.
 	 */
 	@Test 
-	public void testMergeAceForUserCombineAggregatePrivilege() throws IOException, JSONException {
+	public void testMergeAceForUserCombineAggregatePrivilege() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		testFolderUrl = H.createTestFolder();
 		
@@ -420,28 +421,28 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONObject jsonObject = new JSONObject(json);
-		assertEquals(1, jsonObject.length());
+		JsonObject jsonObject = JsonUtil.parseObject(json);
+		assertEquals(1, jsonObject.size());
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 		
-		assertEquals(testUserId, aceObject.optString("principal"));
+		assertEquals(testUserId, aceObject.getString("principal"));
 		
-		JSONArray grantedArray = aceObject.getJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(1, grantedArray.length());
+		assertEquals(1, grantedArray.size());
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames, true, "jcr:read");
 
-		JSONArray deniedArray = aceObject.getJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
-		assertEquals(1, deniedArray.length());
+		assertEquals(1, deniedArray.size());
 		Set<String> deniedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < deniedArray.length(); i++) {
+		for (int i=0; i < deniedArray.size(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:removeNode");
@@ -464,28 +465,28 @@ public class ModifyAceTest {
 		String json2 = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
 		
-		JSONObject jsonObject2 = new JSONObject(json2);
-		assertEquals(1, jsonObject2.length());
+		JsonObject jsonObject2 = JsonUtil.parseObject(json2);
+		assertEquals(1, jsonObject2.size());
 		
-		JSONObject aceObject2 = jsonObject2.optJSONObject(testUserId);
+		JsonObject aceObject2 = jsonObject2.getJsonObject(testUserId);
 		assertNotNull(aceObject2);
 		
-		assertEquals(testUserId, aceObject.optString("principal"));
+		assertEquals(testUserId, aceObject.getString("principal"));
 		
-		JSONArray grantedArray2 = aceObject2.optJSONArray("granted");
+		JsonArray grantedArray2 = aceObject2.getJsonArray("granted");
 		assertNotNull(grantedArray2);
-		assertEquals(1, grantedArray2.length());
+		assertEquals(1, grantedArray2.size());
 		Set<String> grantedPrivilegeNames2 = new HashSet<String>();
-		for (int i=0; i < grantedArray2.length(); i++) {
+		for (int i=0; i < grantedArray2.size(); i++) {
 			grantedPrivilegeNames2.add(grantedArray2.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:read");
 
-		JSONArray deniedArray2 = aceObject2.optJSONArray("denied");
+		JsonArray deniedArray2 = aceObject2.getJsonArray("denied");
 		assertNotNull(deniedArray2);
-		assertEquals(1, deniedArray2.length());
+		assertEquals(1, deniedArray2.size());
 		Set<String> deniedPrivilegeNames2 = new HashSet<String>();
-		for (int i=0; i < deniedArray2.length(); i++) {
+		for (int i=0; i < deniedArray2.size(); i++) {
 			deniedPrivilegeNames2.add(deniedArray2.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames2, true, "jcr:write");
@@ -497,7 +498,7 @@ public class ModifyAceTest {
 	 * a grant privilege 
 	 */
 	@Test 
-	public void testMergeAceForUserDenyPrivilegeAfterGrantPrivilege() throws IOException, JSONException {
+	public void testMergeAceForUserDenyPrivilegeAfterGrantPrivilege() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		testFolderUrl = H.createTestFolder();
 		
@@ -517,24 +518,24 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONObject jsonObject = new JSONObject(json);
-		assertEquals(1, jsonObject.length());
+		JsonObject jsonObject = JsonUtil.parseObject(json);
+		assertEquals(1, jsonObject.size());
 
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 		
-		assertEquals(testUserId, aceObject.optString("principal"));
+		assertEquals(testUserId, aceObject.getString("principal"));
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(1, grantedArray.length());
+		assertEquals(1, grantedArray.size());
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames, true, "jcr:write");
 
-		assertFalse(aceObject.has("denied"));
+		assertFalse(aceObject.containsKey("denied"));
 		
 		
         //2. post a new set of privileges to merge with the existing privileges
@@ -553,28 +554,28 @@ public class ModifyAceTest {
 		String json2 = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
 
-		JSONObject jsonObject2 = new JSONObject(json2);
-		assertEquals(1, jsonObject2.length());
+		JsonObject jsonObject2 = JsonUtil.parseObject(json2);
+		assertEquals(1, jsonObject2.size());
 		
-		JSONObject aceObject2 = jsonObject2.optJSONObject(testUserId);
+		JsonObject aceObject2 = jsonObject2.getJsonObject(testUserId);
 		assertNotNull(aceObject2);
 		
-		assertEquals(testUserId, aceObject2.optString("principal"));
+		assertEquals(testUserId, aceObject2.getString("principal"));
 		
-		JSONArray grantedArray2 = aceObject2.optJSONArray("granted");
+		JsonArray grantedArray2 = aceObject2.getJsonArray("granted");
 		assertNotNull(grantedArray2);
-		assertEquals(1, grantedArray2.length());
+		assertEquals(1, grantedArray2.size());
 		Set<String> grantedPrivilegeNames2 = new HashSet<String>();
-		for (int i=0; i < grantedArray2.length(); i++) {
+		for (int i=0; i < grantedArray2.size(); i++) {
 			grantedPrivilegeNames2.add(grantedArray2.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:write");
 
-		JSONArray deniedArray2 = aceObject2.optJSONArray("denied");
+		JsonArray deniedArray2 = aceObject2.getJsonArray("denied");
 		assertNotNull(deniedArray2);
-		assertEquals(1, deniedArray2.length());
+		assertEquals(1, deniedArray2.size());
 		Set<String> deniedPrivilegeNames2 = new HashSet<String>();
-		for (int i=0; i < deniedArray2.length(); i++) {
+		for (int i=0; i < deniedArray2.size(); i++) {
 			deniedPrivilegeNames2.add(deniedArray2.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames2, true, "jcr:nodeTypeManagement");
@@ -587,7 +588,7 @@ public class ModifyAceTest {
 	 * the ACL
 	 */
 	@Test 
-	public void testAddAceOrderByFirst() throws IOException, JSONException {
+	public void testAddAceOrderByFirst() throws IOException, JsonException {
 		createAceOrderTestFolderWithOneAce();
 		
 		testGroupId = H.createTestGroup();
@@ -601,14 +602,14 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONObject jsonObject = new JSONObject(json);
-		assertEquals(2, jsonObject.length());
+		JsonObject jsonObject = JsonUtil.parseObject(json);
+		assertEquals(2, jsonObject.size());
 
-		JSONObject group = jsonObject.getJSONObject(testGroupId);
+		JsonObject group = jsonObject.getJsonObject(testGroupId);
 		assertNotNull(group);
 		assertEquals(testGroupId, group.getString("principal"));
                 assertEquals(0, group.getInt("order"));
-		JSONObject user =  jsonObject.getJSONObject(testUserId);
+		JsonObject user =  jsonObject.getJsonObject(testUserId);
                 assertNotNull(user);
                 assertEquals(testUserId, user.getString("principal"));
                 assertEquals(1, user.getInt("order"));
@@ -619,7 +620,7 @@ public class ModifyAceTest {
 	 * the ACL
 	 */
 	@Test 
-	public void testAddAceOrderByLast() throws IOException, JSONException {
+	public void testAddAceOrderByLast() throws IOException, JsonException {
 		createAceOrderTestFolderWithOneAce();
 		
 		testGroupId = H.createTestGroup();
@@ -633,14 +634,14 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONObject jsonObject = new JSONObject(json);
-		assertEquals(2, jsonObject.length());
+		JsonObject jsonObject = JsonUtil.parseObject(json);
+		assertEquals(2, jsonObject.size());
 		
-                JSONObject user =  jsonObject.getJSONObject(testUserId);
+                JsonObject user =  jsonObject.getJsonObject(testUserId);
                 assertNotNull(user);
                 assertEquals(testUserId, user.getString("principal"));
                 assertEquals(0, user.getInt("order"));
-                JSONObject group = jsonObject.getJSONObject(testGroupId);
+                JsonObject group = jsonObject.getJsonObject(testGroupId);
                 assertNotNull(group);
                 assertEquals(testGroupId, group.getString("principal"));
                 assertEquals(1, group.getInt("order"));
@@ -652,7 +653,7 @@ public class ModifyAceTest {
 	 * the ACL
 	 */
 	@Test 
-	public void testAddAceOrderByBefore() throws IOException, JSONException {
+	public void testAddAceOrderByBefore() throws IOException, JsonException {
 		createAceOrderTestFolderWithOneAce();
 		
 		testGroupId = H.createTestGroup();
@@ -667,15 +668,15 @@ public class ModifyAceTest {
 		assertNotNull(json);
 
 		
-                JSONObject jsonObject = new JSONObject(json);
-                assertEquals(2, jsonObject.length());
+                JsonObject jsonObject = JsonUtil.parseObject(json);
+                assertEquals(2, jsonObject.size());
 
 
-                JSONObject group = jsonObject.getJSONObject(testGroupId);
+                JsonObject group = jsonObject.getJsonObject(testGroupId);
                 assertNotNull(group);
                 assertEquals(testGroupId, group.getString("principal"));
                 assertEquals(0, group.getInt("order"));
-                JSONObject user =  jsonObject.getJSONObject(testUserId);
+                JsonObject user =  jsonObject.getJsonObject(testUserId);
                 assertNotNull(user);
                 assertEquals(testUserId, user.getString("principal"));
                 assertEquals(1, user.getInt("order"));
@@ -687,7 +688,7 @@ public class ModifyAceTest {
 	 * the ACL
 	 */
 	@Test 
-	public void testAddAceOrderByAfter() throws IOException, JSONException {
+	public void testAddAceOrderByAfter() throws IOException, JsonException {
 		createAceOrderTestFolderWithOneAce();
 		
 		testGroupId = H.createTestGroup();
@@ -701,14 +702,14 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-                JSONObject jsonObject = new JSONObject(json);
-                assertEquals(2, jsonObject.length());
+                JsonObject jsonObject = JsonUtil.parseObject(json);
+                assertEquals(2, jsonObject.size());
 
-                JSONObject user =  jsonObject.getJSONObject(testUserId);
+                JsonObject user =  jsonObject.getJsonObject(testUserId);
                 assertNotNull(user);
                 assertEquals(testUserId, user.getString("principal"));
                 assertEquals(0, user.getInt("order"));
-                JSONObject group = jsonObject.getJSONObject(testGroupId);
+                JsonObject group = jsonObject.getJsonObject(testGroupId);
                 assertNotNull(group);
                 assertEquals(testGroupId, group.getString("principal"));
                 assertEquals(1, group.getInt("order"));
@@ -720,7 +721,7 @@ public class ModifyAceTest {
 	 * the ACL
 	 */
 	@Test 
-	public void testAddAceOrderByNumeric() throws IOException, JSONException {
+	public void testAddAceOrderByNumeric() throws IOException, JsonException {
 		createAceOrderTestFolderWithOneAce();
 		
 		testGroupId = H.createTestGroup();
@@ -734,15 +735,15 @@ public class ModifyAceTest {
 		assertNotNull(json);
 
 		
-                JSONObject jsonObject = new JSONObject(json);
-                assertEquals(2, jsonObject.length());
+                JsonObject jsonObject = JsonUtil.parseObject(json);
+                assertEquals(2, jsonObject.size());
 
-                JSONObject group = jsonObject.getJSONObject(testGroupId);
+                JsonObject group = jsonObject.getJsonObject(testGroupId);
                 assertNotNull(group);
                 assertEquals(testGroupId, group.getString("principal"));
                 assertEquals(0, group.getInt("order"));
 
-                JSONObject user =  jsonObject.getJSONObject(testUserId);
+                JsonObject user =  jsonObject.getJsonObject(testUserId);
                 assertNotNull(user);
                 assertEquals(testUserId, user.getString("principal"));
                 assertEquals(1, user.getInt("order"));
@@ -756,20 +757,20 @@ public class ModifyAceTest {
 		String json2 = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
 
-                JSONObject jsonObject2 = new JSONObject(json2);
-                assertEquals(3, jsonObject2.length());
+                JsonObject jsonObject2 = JsonUtil.parseObject(json2);
+                assertEquals(3, jsonObject2.size());
 
-                JSONObject group2 = jsonObject2.getJSONObject(testGroupId);
+                JsonObject group2 = jsonObject2.getJsonObject(testGroupId);
                 assertNotNull(group2);
                 assertEquals(testGroupId, group2.getString("principal"));
                 assertEquals(0, group2.getInt("order"));
 
-                JSONObject user3 =  jsonObject2.getJSONObject(testUserId2);
+                JsonObject user3 =  jsonObject2.getJsonObject(testUserId2);
                 assertNotNull(user3);
                 assertEquals(testUserId2, user3.getString("principal"));
                 assertEquals(1, user3.getInt("order"));
 
-                JSONObject user2 =  jsonObject2.getJSONObject(testUserId);
+                JsonObject user2 =  jsonObject2.getJsonObject(testUserId);
                 assertNotNull(user2);
                 assertEquals(testUserId, user2.getString("principal"));
                 assertEquals(2, user2.getInt("order"));
@@ -781,7 +782,7 @@ public class ModifyAceTest {
 	 * leaves the ACE in the same position in the ACL
 	 */
 	@Test 
-	public void testUpdateAcePreservePosition() throws IOException, JSONException {
+	public void testUpdateAcePreservePosition() throws IOException, JsonException {
 		createAceOrderTestFolderWithOneAce();
 		
 		testGroupId = H.createTestGroup();
@@ -799,14 +800,14 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-                JSONObject jsonObject = new JSONObject(json);
-                assertEquals(2, jsonObject.length());
+                JsonObject jsonObject = JsonUtil.parseObject(json);
+                assertEquals(2, jsonObject.size());
 
-                JSONObject group = jsonObject.getJSONObject(testGroupId);
+                JsonObject group = jsonObject.getJsonObject(testGroupId);
                 assertNotNull(group);
                 assertEquals(testGroupId, group.getString("principal"));
                 assertEquals(0, group.getInt("order"));
-                JSONObject user =  jsonObject.getJSONObject(testUserId);
+                JsonObject user =  jsonObject.getJsonObject(testUserId);
                 assertNotNull(user);
                 assertEquals(testUserId, user.getString("principal"));
                 assertEquals(1, user.getInt("order"));
@@ -817,7 +818,7 @@ public class ModifyAceTest {
 	/**
 	 * Helper to create a test folder with a single ACE pre-created
 	 */
-	private void createAceOrderTestFolderWithOneAce() throws IOException, JSONException {
+	private void createAceOrderTestFolderWithOneAce() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
 		testFolderUrl = H.createTestFolder();
@@ -831,10 +832,10 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-                JSONObject jsonObject = new JSONObject(json);
-                assertEquals(1, jsonObject.length());
+                JsonObject jsonObject = JsonUtil.parseObject(json);
+                assertEquals(1, jsonObject.size());
 
-                JSONObject user = jsonObject.getJSONObject(testUserId);
+                JsonObject user = jsonObject.getJsonObject(testUserId);
                 assertNotNull(user);
                 assertEquals(testUserId, user.getString("principal"));
                 assertEquals(0, user.getInt("order"));
@@ -844,7 +845,7 @@ public class ModifyAceTest {
 	/**
 	 * Helper to add or update an ace for testing
 	 */
-	private void addOrUpdateAce(String folderUrl, String principalId, boolean readGranted, String order) throws IOException, JSONException {
+	private void addOrUpdateAce(String folderUrl, String principalId, boolean readGranted, String order) throws IOException, JsonException {
         String postUrl = folderUrl + ".modifyAce.html";
 
 		//1. create an initial set of privileges
@@ -864,7 +865,7 @@ public class ModifyAceTest {
 	 * Test for SLING-1677
 	 */
 	@Test 
-	public void testModifyAceResponseAsJSON() throws IOException, JSONException {
+	public void testModifyAceResponseAsJSON() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
 		testFolderUrl = H.createTestFolder();
@@ -881,7 +882,7 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedPostContent(creds, postUrl, HttpTest.CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
 
         //make sure the json response can be parsed as a JSON object
-        JSONObject jsonObject = new JSONObject(json);
+        JsonObject jsonObject = JsonUtil.parseObject(json);
 		assertNotNull(jsonObject);
 	}
 	
@@ -890,7 +891,7 @@ public class ModifyAceTest {
 	 * Test for SLING-3010
 	 */
 	@Test 
-	public void testMergeAceForUserGrantNestedAggregatePrivilegeAfterDenySuperAggregatePrivilege() throws IOException, JSONException {
+	public void testMergeAceForUserGrantNestedAggregatePrivilegeAfterDenySuperAggregatePrivilege() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
 		testFolderUrl = H.createTestFolder();
@@ -926,19 +927,19 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONObject jsonObject = new JSONObject(json);
-		assertEquals(1, jsonObject.length());
+		JsonObject jsonObject = JsonUtil.parseObject(json);
+		assertEquals(1, jsonObject.size());
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 		
-		assertEquals(testUserId, aceObject.optString("principal"));
+		assertEquals(testUserId, aceObject.getString("principal"));
 		
-		JSONArray grantedArray = aceObject.getJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(4, grantedArray.length());
+		assertEquals(4, grantedArray.size());
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames, true, "jcr:versionManagement");
@@ -946,11 +947,11 @@ public class ModifyAceTest {
 		H.assertPrivilege(grantedPrivilegeNames, true, "jcr:modifyAccessControl");
 		H.assertPrivilege(grantedPrivilegeNames, true, "jcr:write");
 
-		JSONArray deniedArray = aceObject.getJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
-		assertEquals(1, deniedArray.length());
+		assertEquals(1, deniedArray.size());
 		Set<String> deniedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < deniedArray.length(); i++) {
+		for (int i=0; i < deniedArray.size(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
 		//the leftovers from the denied rep:write that were not granted with jcr:write
@@ -961,7 +962,7 @@ public class ModifyAceTest {
 	 * Test for SLING-3010
 	 */
 	@Test 
-	public void testMergeAceForUserGrantAggregatePrivilegePartsAfterDenyAggregatePrivilege() throws IOException, JSONException {
+	public void testMergeAceForUserGrantAggregatePrivilegePartsAfterDenyAggregatePrivilege() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
 		testFolderUrl = H.createTestFolder();
@@ -997,18 +998,18 @@ public class ModifyAceTest {
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONObject jsonObject = new JSONObject(json);
-		assertEquals(1, jsonObject.length());
+		JsonObject jsonObject = JsonUtil.parseObject(json);
+		assertEquals(1, jsonObject.size());
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 		
-		assertEquals(testUserId, aceObject.optString("principal"));
+		assertEquals(testUserId, aceObject.getString("principal"));
 		
-		JSONArray grantedArray = aceObject.getJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames, true, "jcr:versionManagement");
@@ -1018,7 +1019,7 @@ public class ModifyAceTest {
         assertEquals("Expecting the correct number of privileges in " + grantedPrivilegeNames, 4, grantedPrivilegeNames.size());
 
 		//should be nothing left in the denied set.
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		Object deniedArray = aceObject.get("denied");
 		assertNull(deniedArray);
 	}
 	

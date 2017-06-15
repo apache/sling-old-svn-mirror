@@ -42,7 +42,7 @@ public interface DeleteGroup {
      * @param jcrSession the JCR session of the user creating the user
      * @param name The name of the group to delete (required)
      * @param changes The list of changes for this operation (optional)
-     * @throws RepositoryException
+     * @throws RepositoryException if group can't be deleted
      */
     public void deleteGroup(Session jcrSession,
                             String name,

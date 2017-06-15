@@ -16,11 +16,11 @@
  */
 package org.apache.sling.tooling.support.install.impl;
 
+import java.io.IOException;
 import java.io.Writer;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.felix.utils.json.JSONWriter;
 
 public class InstallationResult {
 
@@ -42,7 +42,7 @@ public class InstallationResult {
                 writer.key("message").value(message);
             }
             writer.endObject();
-        } catch (JSONException e) {
+        } catch (IOException e) {
             // never happens
             throw new RuntimeException(e);
         }

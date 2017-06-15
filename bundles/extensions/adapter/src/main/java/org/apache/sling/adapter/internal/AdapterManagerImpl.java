@@ -32,13 +32,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.adapter.Adaption;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.adapter.AdapterFactory;
@@ -49,6 +42,10 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.packageadmin.PackageAdmin;
@@ -61,18 +58,16 @@ import org.slf4j.LoggerFactory;
  * interface to be used by any clients.
  *
  */
-@Component(immediate=true)
-@Service
-@Properties({
-    @Property(name=Constants.SERVICE_DESCRIPTION, value="Sling Adapter Manager"),
-    @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation")
-
-})
-@Reference(name="AdapterFactory", referenceInterface=AdapterFactory.class,
-cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
+@Component(service = AdapterManager.class, immediate=true,
+    property = {
+            Constants.SERVICE_DESCRIPTION + "=Sling Adapter Manager",
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    })
 public class AdapterManagerImpl implements AdapterManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    static final String ALLOWED_IN_PRIVATE = "adapter.allowed.in.private.package";
 
     /**
      * The OSGi <code>ComponentContext</code> to retrieve
@@ -85,7 +80,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * the manager has been activated. These bound services will be accessed as
      * soon as the manager is being activated.
      */
-    private final List<ServiceReference> boundAdapterFactories = new LinkedList<ServiceReference>();
+    private final List<ServiceReference<AdapterFactory>> boundAdapterFactories = new LinkedList<>();
 
     /**
      * A map of {@link AdapterFactoryDescriptorMap} instances. The map is
@@ -95,7 +90,7 @@ public class AdapterManagerImpl implements AdapterManager {
      *
      * @see AdapterFactoryDescriptorMap
      */
-    private final Map<String, AdapterFactoryDescriptorMap> descriptors = new HashMap<String, AdapterFactoryDescriptorMap>();
+    private final Map<String, AdapterFactoryDescriptorMap> descriptors = new HashMap<>();
 
     /**
      * Matrix of {@link AdapterFactoryDescriptor} instances primarily indexed by the fully
@@ -107,12 +102,12 @@ public class AdapterManagerImpl implements AdapterManager {
      * whenever an adapter factory is registered on unregistered.
      */
     private final ConcurrentMap<String, Map<String, List<AdapterFactoryDescriptor>>> factoryCache
-    = new ConcurrentHashMap<String, Map<String, List<AdapterFactoryDescriptor>>>();
+    = new ConcurrentHashMap<>();
 
     /**
      * The service tracker for the event admin
      */
-    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL, policy=ReferencePolicy.DYNAMIC)
     private volatile EventAdmin eventAdmin;
 
     @Reference
@@ -126,6 +121,7 @@ public class AdapterManagerImpl implements AdapterManager {
      *
      * @see org.apache.sling.api.adapter.AdapterManager#getAdapter(java.lang.Object, java.lang.Class)
      */
+    @Override
     public <AdapterType> AdapterType getAdapter(final Object adaptable,
             final Class<AdapterType> type) {
 
@@ -171,12 +167,12 @@ public class AdapterManagerImpl implements AdapterManager {
         this.context = context;
 
         // register all adapter factories bound before activation
-        final List<ServiceReference> refs;
+        final List<ServiceReference<AdapterFactory>> refs;
         synchronized ( this.boundAdapterFactories ) {
-            refs = new ArrayList<ServiceReference>(this.boundAdapterFactories);
+            refs = new ArrayList<>(this.boundAdapterFactories);
             boundAdapterFactories.clear();
         }
-        for (final ServiceReference reference : refs) {
+        for (final ServiceReference<AdapterFactory> reference : refs) {
             registerAdapterFactory(context, reference);
         }
 
@@ -196,7 +192,9 @@ public class AdapterManagerImpl implements AdapterManager {
     /**
      * Bind a new adapter factory.
      */
-    protected void bindAdapterFactory(final ServiceReference reference) {
+    @Reference(name="AdapterFactory", service=AdapterFactory.class,
+            cardinality=ReferenceCardinality.MULTIPLE, policy=ReferencePolicy.DYNAMIC)
+    protected void bindAdapterFactory(final ServiceReference<AdapterFactory> reference) {
         boolean create = true;
         if (context == null) {
             synchronized ( this.boundAdapterFactories ) {
@@ -214,7 +212,7 @@ public class AdapterManagerImpl implements AdapterManager {
     /**
      * Unbind a adapter factory.
      */
-    protected void unbindAdapterFactory(final ServiceReference reference) {
+    protected void unbindAdapterFactory(final ServiceReference<AdapterFactory> reference) {
         unregisterAdapterFactory(reference);
     }
 
@@ -245,9 +243,10 @@ public class AdapterManagerImpl implements AdapterManager {
      * <code>reference</code> from the registry.
      */
     private void registerAdapterFactory(final ComponentContext context,
-            final ServiceReference reference) {
+            final ServiceReference<AdapterFactory> reference) {
         final String[] adaptables = PropertiesUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
         final String[] adapters = PropertiesUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
+        final boolean allowedInPrivatePackage = PropertiesUtil.toBoolean(reference.getProperty(ALLOWED_IN_PRIVATE), false);
 
         if (adaptables == null || adaptables.length == 0 || adapters == null
                 || adapters.length == 0) {
@@ -255,13 +254,13 @@ public class AdapterManagerImpl implements AdapterManager {
         }
 
         for (String clazz : adaptables) {
-            if (!checkPackage(packageAdmin, clazz)) {
+            if (!allowedInPrivatePackage && !checkPackage(packageAdmin, clazz)) {
                 log.warn("Adaptable class {} in factory service {} is not in an exported package.", clazz, reference.getProperty(Constants.SERVICE_ID));
             }
         }
 
         for (String clazz : adapters) {
-            if (!checkPackage(packageAdmin, clazz)) {
+            if (!allowedInPrivatePackage && !checkPackage(packageAdmin, clazz)) {
                 log.warn("Adapter class {} in factory service {} is not in an exported package.", clazz, reference.getProperty(Constants.SERVICE_ID));
             }
         }
@@ -287,12 +286,12 @@ public class AdapterManagerImpl implements AdapterManager {
         this.factoryCache.clear();
 
         // register adaption
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<>();
         props.put(SlingConstants.PROPERTY_ADAPTABLE_CLASSES, adaptables);
         props.put(SlingConstants.PROPERTY_ADAPTER_CLASSES, adapters);
 
-        ServiceRegistration adaptionRegistration = this.context.getBundleContext().registerService(
-                Adaption.class.getName(), AdaptionImpl.INSTANCE, props);
+        ServiceRegistration<Adaption> adaptionRegistration = this.context.getBundleContext().registerService(
+                Adaption.class, AdaptionImpl.INSTANCE, props);
         if (log.isDebugEnabled()) {
             log.debug("Registered service {} with {} : {} and {} : {}", new Object[] { Adaption.class.getName(),
                     SlingConstants.PROPERTY_ADAPTABLE_CLASSES, Arrays.toString(adaptables),
@@ -307,7 +306,7 @@ public class AdapterManagerImpl implements AdapterManager {
                     props));
         }
     }
-    
+
     static String getPackageName(String clazz) {
         final int lastDot = clazz.lastIndexOf('.');
         return lastDot <= 0 ? "" : clazz.substring(0, lastDot);
@@ -316,13 +315,13 @@ public class AdapterManagerImpl implements AdapterManager {
     /**
      * Check that the package containing the class is exported or is a java.*
      * class.
-     * 
+     *
      * @param packageAdmin the PackageAdmin service
      * @param clazz the class name
      * @return true if the package is exported
      */
     static boolean checkPackage(PackageAdmin packageAdmin, String clazz) {
-        final String packageName = getPackageName(clazz); 
+        final String packageName = getPackageName(clazz);
         if (packageName.startsWith("java.")) {
             return true;
         }
@@ -333,7 +332,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * Unregisters the {@link AdapterFactory} referred to by the service
      * <code>reference</code> from the registry.
      */
-    private void unregisterAdapterFactory(final ServiceReference reference) {
+    private void unregisterAdapterFactory(final ServiceReference<AdapterFactory> reference) {
         synchronized ( this.boundAdapterFactories ) {
             boundAdapterFactories.remove(reference);
         }
@@ -389,7 +388,7 @@ public class AdapterManagerImpl implements AdapterManager {
         // send event
         final EventAdmin localEA = this.eventAdmin;
         if ( localEA != null ) {
-            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            final Dictionary<String, Object> props = new Hashtable<>();
             props.put(SlingConstants.PROPERTY_ADAPTABLE_CLASSES, adaptables);
             props.put(SlingConstants.PROPERTY_ADAPTER_CLASSES, adapters);
             localEA.postEvent(new Event(SlingConstants.TOPIC_ADAPTER_FACTORY_REMOVED,
@@ -433,7 +432,7 @@ public class AdapterManagerImpl implements AdapterManager {
      *         <code>clazz</code>.
      */
     private Map<String, List<AdapterFactoryDescriptor>> createAdapterFactoryMap(final Class<?> clazz) {
-        final Map<String, List<AdapterFactoryDescriptor>> afm = new HashMap<String, List<AdapterFactoryDescriptor>>();
+        final Map<String, List<AdapterFactoryDescriptor>> afm = new HashMap<>();
 
         // AdapterFactories for this class
         AdapterFactoryDescriptorMap afdMap = null;
@@ -443,7 +442,7 @@ public class AdapterManagerImpl implements AdapterManager {
         if (afdMap != null) {
             final List<AdapterFactoryDescriptor> afdSet;
             synchronized ( afdMap ) {
-                afdSet = new ArrayList<AdapterFactoryDescriptor>(afdMap.values());
+                afdSet = new ArrayList<>(afdMap.values());
             }
             for (final AdapterFactoryDescriptor afd : afdSet) {
                 final String[] adapters = afd.getAdapters();
@@ -451,7 +450,7 @@ public class AdapterManagerImpl implements AdapterManager {
                     // to handle service ranking, we add to the end of the list or create a new list
                     List<AdapterFactoryDescriptor> factoryDescriptors = afm.get(adapter);
                     if (factoryDescriptors == null) {
-                        factoryDescriptors = new ArrayList<AdapterFactoryDescriptor>();
+                        factoryDescriptors = new ArrayList<>();
                         afm.put(adapter, factoryDescriptors);
                     }
                     factoryDescriptors.add(afd);
@@ -498,7 +497,7 @@ public class AdapterManagerImpl implements AdapterManager {
             List<AdapterFactoryDescriptor> factoryDescriptors = dest.get(entry.getKey());
 
             if (factoryDescriptors == null) {
-                factoryDescriptors = new ArrayList<AdapterFactoryDescriptor>();
+                factoryDescriptors = new ArrayList<>();
                 dest.put(entry.getKey(), factoryDescriptors);
             }
             for (AdapterFactoryDescriptor descriptor : entry.getValue()) {

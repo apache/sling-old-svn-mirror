@@ -62,7 +62,7 @@ abstract class AbstractItem implements Item {
 
     @Override
     public boolean isModified() {
-        return false;
+        return itemData.isChanged();
     }
 
     @Override

@@ -39,7 +39,7 @@ public class CallPlugin extends AbstractPlugin {
                                final PluginCallInfo callInfo,
                                final CompilerContext compilerContext) {
         if (callInfo.getArguments().length > 0) {
-            throw new SightlyCompilerException("Call plugin should have no arguments");
+            throw new SightlyCompilerException("Call plugin should have no arguments.", "data-sly-call." + callInfo.getArguments()[0]);
         }
         return new DefaultPluginInvoke() {
 

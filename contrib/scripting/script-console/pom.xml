@@ -56,6 +56,13 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Embed-Dependency>
+                                org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter.class
+                        </Embed-Dependency>
+                    </instructions>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.rat</groupId>
@@ -88,15 +95,21 @@
     </reporting>
 
     <dependencies>
+    <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.utils</artifactId>
+        <version>1.9.0</version>
+        <scope>provided</scope>
+    </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <version>4.2.0</version>
         </dependency>
- 		<dependency>
-		    <groupId>org.apache.felix</groupId>
-		    <artifactId>org.apache.felix.scr.annotations</artifactId>
-		</dependency>
+         <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
@@ -139,12 +152,6 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.adapter</artifactId>
             <version>2.0.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.6</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

@@ -63,7 +63,7 @@ public class AttributePlugin extends AbstractPlugin {
         String attributeName = decodeAttributeName(callInfo);
         if (attributeName != null && MarkupUtils.isSensitiveAttribute(attributeName)) {
             String warningMessage = String.format("Refusing to generate attribute '%s' for security reasons.", attributeName);
-            compilerContext.getPushStream().write(new PushStream.Warning(warningMessage, expression.getRawText()));
+            compilerContext.getPushStream().warn(new PushStream.StreamMessage(warningMessage, expression.getRawText()));
             return new DefaultPluginInvoke(); //no-op invocation
         }
         return (attributeName != null)

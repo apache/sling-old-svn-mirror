@@ -5,13 +5,15 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.UUID;
+
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
 import org.apache.sling.crankstart.junit.CrankstartSetup;
@@ -33,6 +35,17 @@ public class BasicLauncherIT {
     
     private DefaultHttpClient client;
     private static WebconsoleClient osgiConsole;
+    private static final String uniqueText = "Unique text for tests run " + UUID.randomUUID();
+    
+    // The Launcher.VARIABLE_OVERRIDE_PREFIX must be used for system properties that
+    // are meant to provide values for the provisioning model
+    private static final String PROP_UNIQUE_TEXT = Launcher.VARIABLE_OVERRIDE_PREFIX + "single.servlet.text";
+    
+    static {
+        // BeforeClass would be too late for this as it's
+        // the CrankstartSetup rule that needs this.
+        System.setProperty(PROP_UNIQUE_TEXT, uniqueText);
+    }
     
     @Rule
     public final RetryRule retryRule = new RetryRule();
@@ -44,6 +57,7 @@ public class BasicLauncherIT {
     
     @Before
     public void setup() throws IOException {
+        System.getProperties().remove(PROP_UNIQUE_TEXT);
         client = new DefaultHttpClient();
     }
     
@@ -68,6 +82,9 @@ public class BasicLauncherIT {
         try {
             response = client.execute(get);
             assertEquals("Expecting success for " + get.getURI(), 200, response.getStatusLine().getStatusCode());
+            final String content = U.getContent(response);
+            final String expected = "SingleConfigServlet:test content is " + uniqueText;
+            assertEquals(expected, content);
         } finally {
             U.closeConnection(response);
         }
@@ -146,16 +163,16 @@ public class BasicLauncherIT {
                 osgiConsole.getBundleState(symbolicName));
         
         // Start level is in the props array, with key="Start Level"
-        final JSONObject status = U.getBundleData(C, client, symbolicName);
-        final JSONArray props = status.getJSONArray("data").getJSONObject(0).getJSONArray("props");
+        final JsonObject status = U.getBundleData(C, client, symbolicName);
+        final JsonArray props = status.getJsonArray("data").getJsonObject(0).getJsonArray("props");
         final String KEY = "key";
         final String SL = "Start Level";
         boolean found = false;
-        for(int i=0; i < props.length(); i++) {
-            final JSONObject o = props.getJSONObject(i);
-            if(o.has(KEY) && SL.equals(o.getString(KEY))) {
+        for(int i=0; i < props.size(); i++) {
+            final JsonObject o = props.getJsonObject(i);
+            if(o.containsKey(KEY) && SL.equals(o.getString(KEY))) {
                 found = true;
-                assertEquals("Expecting the start level that's set in provisioning model", "99", o.getString("value"));
+                assertEquals("Expecting the start level that's set in provisioning model", 99, o.getInt("value"));
             }
         }
         assertTrue("Expecting start level to be found in JSON output", found);

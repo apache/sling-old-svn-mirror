@@ -18,14 +18,13 @@
  */
 package org.apache.sling.testing.mock.sling.context;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
-
 import java.util.UUID;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.osgi.annotation.versioning.ConsumerType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
  * where the repository is not cleaned for each test run. This class provides
  * unique root paths for each run, and cleans them up when done.
  */
+@ConsumerType
 public class UniqueRoot {
     
     private final SlingContextImpl context;
@@ -79,7 +79,7 @@ public class UniqueRoot {
      */
     public final String content() {
         if (contentRoot == null) {
-            contentRoot = getOrCreateResource("/content/" + uniquePathPart, NT_SLING_ORDERED_FOLDER);
+            contentRoot = getOrCreateResource("/content/" + uniquePathPart, "sling:OrderedFolder");
         }
         return contentRoot.getPath();
     }
@@ -91,7 +91,7 @@ public class UniqueRoot {
      */
     public final String apps() {
         if (appsRoot == null) {
-            appsRoot = getOrCreateResource("/apps/" + uniquePathPart, NT_SLING_ORDERED_FOLDER);
+            appsRoot = getOrCreateResource("/apps/" + uniquePathPart, "sling:OrderedFolder");
         }
         return appsRoot.getPath();
     }
@@ -103,7 +103,7 @@ public class UniqueRoot {
      */
     public final String libs() {
         if (libsRoot == null) {
-            libsRoot = getOrCreateResource("/libs/" + uniquePathPart, NT_SLING_ORDERED_FOLDER);
+            libsRoot = getOrCreateResource("/libs/" + uniquePathPart, "sling:OrderedFolder");
         }
         return libsRoot.getPath();
     }

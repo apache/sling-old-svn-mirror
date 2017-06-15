@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 
 /**
@@ -46,7 +46,7 @@ public interface ResourceChangeListener {
      * is changed or deleted through configuration admin.
      * @since 3.2.0
      */
-    public static final String RESOURCE_PERSIST = "org.apache.sling.installer.api.persist";
+    String RESOURCE_PERSIST = "org.apache.sling.installer.api.persist";
 
     /**
      * Inform the installer about an added or updated
@@ -55,18 +55,19 @@ public interface ResourceChangeListener {
      * @param entityId     The entity id (symbolic name etc.)
      * @param is           Input stream or
      * @param dict         Dictionary
+     * @param attributes   Map of attributes.
      */
-    void resourceAddedOrUpdated(final String resourceType,
-            final String entityId,
-            final InputStream is,
-            final Dictionary<String, Object> dict,
-            final Map<String, Object> attributes);
+    void resourceAddedOrUpdated(String resourceType,
+            String entityId,
+            InputStream is,
+            Dictionary<String, Object> dict,
+            Map<String, Object> attributes);
 
     /**
      * Inform the installer about a removed resource
      * @param resourceType The resource type
      * @param entityId     The entity id (symbolic name etc.)
      */
-    void resourceRemoved(final String resourceType,
-            final String entityId);
+    void resourceRemoved(String resourceType,
+            String entityId);
 }

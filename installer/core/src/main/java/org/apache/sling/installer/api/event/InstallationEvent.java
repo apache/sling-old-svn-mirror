@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api.event;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 
 /**
@@ -38,6 +38,7 @@ public interface InstallationEvent {
 
     /**
      * Return the event type.
+     * @return The event type.
      */
     TYPE getType();
 
@@ -47,6 +48,7 @@ public interface InstallationEvent {
      * this is <code>null</code>.
      * For {@link TYPE#PROCESSED} events this is a
      * {@link org.apache.sling.installer.api.tasks.TaskResource}.
+     * @return The source of the event.
      */
     Object getSource();
 }

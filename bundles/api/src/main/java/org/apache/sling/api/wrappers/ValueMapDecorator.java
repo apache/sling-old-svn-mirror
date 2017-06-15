@@ -18,14 +18,12 @@
  */
 package org.apache.sling.api.wrappers;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.impl.ObjectConverter;
 
 /**
  * <code>ValueMapDecorator</code> decorates another {@link Map}
@@ -51,93 +49,11 @@ public class ValueMapDecorator implements ValueMap {
      * {@inheritDoc}
      */
     public <T> T get(String name, Class<T> type) {
-        return convert(get(name), type);
-    }
-
-    /**
-     * Converts the object to the given type.
-     * @param obj object
-     * @param type type
-     * @return the converted object
-     */
-    @SuppressWarnings("unchecked")
-    private <T> T convert(Object obj, Class<T> type) {
-        // todo: do smarter checks
-        try {
-            if (obj == null) {
-                return null;
-            } else if (type.isAssignableFrom(obj.getClass())) {
-                return (T) obj;
-            } else if (type.isArray()) {
-                return (T) convertToArray(obj, type.getComponentType());
-            } else if (type == String.class) {
-                return (T) String.valueOf(getSingleValue(obj));
-            } else if (type == Integer.class) {
-                return (T) (Integer) Integer.parseInt(getSingleValue(obj));
-            } else if (type == Long.class) {
-                return (T) (Long) Long.parseLong(getSingleValue(obj));
-            } else if (type == Double.class) {
-                return (T) (Double) Double.parseDouble(getSingleValue(obj));
-            } else if (type == Boolean.class) {
-                return (T) (Boolean) Boolean.parseBoolean(getSingleValue(obj));
-            } else {
-                return null;
-            }
-        } catch (NumberFormatException e) {
-            return null;
+        if (base instanceof ValueMap) {
+            // shortcut if decorated map is ValueMap
+            return ((ValueMap)base).get(name, type);
         }
-    }
-
-    /**
-     * Gets a single value of String from the object. If the object is an array it returns it's first element.
-     * @param obj object or object array.
-     * @return result of <code>toString()</code> on object or first element of an object array. If @param obj is null
-     * or it's an array with first element that is null, then null is returned.
-     */
-    private String getSingleValue(Object obj) {
-        final String result;
-        if (obj == null) {
-            result = null;
-        } else if (obj.getClass().isArray()) {
-            final Object[] values = (Object[]) obj;
-            result = values[0] != null ? values[0].toString() : null;
-        } else {
-            result = obj.toString();
-        }
-        return result;
-    }
-
-    /**
-     * Converts the object to an array of the given type
-     * @param obj the object or object array
-     * @param type the component type of the array
-     * @return and array of type T
-     */
-    private <T> T[] convertToArray(Object obj, Class<T> type) {
-        if (obj.getClass().isArray()) {
-            final Object[] array = (Object[]) obj;
-            List<Object> resultList = new ArrayList<Object>();
-            for (int i = 0; i < array.length; i++) {
-                T singleValueResult = convert(array[i], type);
-                if (singleValueResult != null) {
-                    resultList.add(singleValueResult);
-                }
-            }
-            if (resultList.isEmpty()) {
-                return null;
-            }
-            return resultList.toArray((T[]) Array.newInstance(type, resultList.size()));
-        } else {
-            @SuppressWarnings("unchecked")
-            final T singleValueResult = convert(obj, type);
-            // return null for type conversion errors instead of single element array with value null
-            if (singleValueResult == null) {
-                return null;
-            }
-            final T[] arrayResult = (T[]) Array.newInstance(type, 1);
-            arrayResult[0] = singleValueResult;
-            return arrayResult;
-        }
+        return ObjectConverter.convert(get(name), type);
     }
 
     /**
@@ -145,7 +61,11 @@ public class ValueMapDecorator implements ValueMap {
      */
     @SuppressWarnings("unchecked")
     public <T> T get(String name, T defaultValue) {
-        if ( defaultValue == null ) {
+        if (base instanceof ValueMap) {
+            // shortcut if decorated map is ValueMap
+            return ((ValueMap)base).get(name, defaultValue);
+        }
+        if (defaultValue == null) {
             return (T)get(name);
         }
         T value = get(name, (Class<T>) defaultValue.getClass());

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
@@ -46,64 +45,29 @@ import javax.script.ScriptEngineFactory;
 
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
+import org.apache.sling.scripting.core.it.ScriptingCoreTestSupport;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
-public class BindingsValuesProvidersByContextIT {
-
-    private static final String FELIX_GID = "org.apache.felix";
-    private static final String SLING_GID = "org.apache.sling";
+public class BindingsValuesProvidersByContextIT  extends ScriptingCoreTestSupport{
 
     @Inject
+    @Filter(timeout = 300000)
     private BindingsValuesProvidersByContext bvpProvider;
 
     @Inject
     private BundleContext bundleContext;
 
     private final List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
-
-    @org.ops4j.pax.exam.Configuration
-    public Option[] config() {
-        final String localRepo = System.getProperty("maven.repo.local", "");
-
-        final String bundleFileName = System.getProperty("bundle.file.name", "BUNDLE_FILE_NOT_SET");
-        final File bundleFile = new File(bundleFileName);
-        if (!bundleFile.canRead()) {
-            throw new IllegalArgumentException("Cannot read from bundle file " + bundleFile.getAbsolutePath());
-        }
-
-        return options(
-                when(localRepo.length() > 0).useOptions(
-                        systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
-                ),
-                provision(
-                        bundle(bundleFile.toURI().toString()),
-                        mavenBundle().groupId(FELIX_GID).artifactId("org.apache.felix.scr").versionAsInProject(),
-                        mavenBundle().groupId(FELIX_GID).artifactId("org.apache.felix.eventadmin").versionAsInProject(),
-                        mavenBundle().groupId(FELIX_GID).artifactId("org.apache.felix.webconsole").versionAsInProject(),
-
-                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.scripting.api").versionAsInProject(),
-
-                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.commons.threads").versionAsInProject(),
-                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.api").versionAsInProject(),
-                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.commons.mime").versionAsInProject(),
-                        mavenBundle().groupId(SLING_GID).artifactId("org.apache.sling.commons.osgi").versionAsInProject(),
-
-                        mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").versionAsInProject(),
-                        mavenBundle().groupId("commons-io").artifactId("commons-io").versionAsInProject(),
-                        mavenBundle().groupId("commons-lang").artifactId("commons-lang").versionAsInProject()
-                ),
-                junitBundles()
-        );
-    }
 
     @Before
     public void setup() {
@@ -136,6 +100,7 @@ public class BindingsValuesProvidersByContextIT {
                 return id;
             }
 
+            @Override
             public void addBindings(Bindings b) {
             }
         };
@@ -150,6 +115,7 @@ public class BindingsValuesProvidersByContextIT {
                 return id;
             }
 
+            @Override
             public void addBindings(Bindings b) {
             }
         };
@@ -174,52 +140,64 @@ public class BindingsValuesProvidersByContextIT {
     private ScriptEngineFactory factory(final String engineName) {
         return new ScriptEngineFactory() {
 
+            @Override
             public ScriptEngine getScriptEngine() {
                 return null;
             }
 
+            @Override
             public String getProgram(String... arg0) {
                 return null;
             }
 
+            @Override
             public Object getParameter(String arg0) {
                 return null;
             }
 
+            @Override
             public String getOutputStatement(String arg0) {
                 return null;
             }
 
+            @Override
             public List<String> getNames() {
                 final List<String> names = new ArrayList<String>();
                 names.add(engineName);
                 return names;
             }
 
+            @Override
             public List<String> getMimeTypes() {
                 return null;
             }
 
+            @Override
             public String getMethodCallSyntax(String arg0, String arg1, String... arg2) {
                 return null;
             }
 
+            @Override
             public String getLanguageVersion() {
                 return null;
             }
 
+            @Override
             public String getLanguageName() {
                 return null;
             }
 
+            @Override
             public List<String> getExtensions() {
                 return null;
             }
 
+            @Override
             public String getEngineVersion() {
                 return null;
             }
 
+            @Override
             public String getEngineName() {
                 return engineName;
             }

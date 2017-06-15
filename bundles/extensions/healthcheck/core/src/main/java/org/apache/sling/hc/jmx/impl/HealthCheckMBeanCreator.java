@@ -106,7 +106,7 @@ public class HealthCheckMBeanCreator {
      * @return The registered mbean or <code>null</code>
      */
     private synchronized Object registerHCMBean(final BundleContext bundleContext, final ServiceReference reference) {
-        final Registration reg = Registration.getRegistration(this.executor, reference);
+        final Registration reg = getRegistration(reference);
         if ( reg != null ) {
             this.registeredServices.put(reference, reg);
 
@@ -124,9 +124,9 @@ public class HealthCheckMBeanCreator {
                 if ( registered.size() > 1 ) {
                     final ServiceReference prevRef = registered.get(lastIndex - 1);
                     final Registration prevReg = this.registeredServices.get(prevRef);
-                    prevReg.unregister(this.logger);
+                    prevReg.unregister();
                 }
-                reg.register(this.logger, bundleContext);
+                reg.register(bundleContext);
             }
         }
         return reg;
@@ -135,7 +135,7 @@ public class HealthCheckMBeanCreator {
     private synchronized void unregisterHCMBean(final BundleContext bundleContext, final ServiceReference ref) {
         final Registration reg = registeredServices.remove(ref);
         if ( reg != null ) {
-            final boolean registerFirst = reg.unregister(this.logger);
+            final boolean registerFirst = reg.unregister();
             final List<ServiceReference> registered = this.sortedRegistrations.get(reg.name);
             registered.remove(ref);
             if ( registered.size() == 0 ) {
@@ -143,55 +143,51 @@ public class HealthCheckMBeanCreator {
             } else if ( registerFirst ) {
                 final ServiceReference newRef = registered.get(0);
                 final Registration newReg = this.registeredServices.get(newRef);
-                newReg.register(this.logger, bundleContext);
+                newReg.register(bundleContext);
             }
             bundleContext.ungetService(ref);
         }
     }
 
-    private static final class Registration {
-        public final String name;
-        public final HealthCheckMBean mbean;
+    private final class Registration {
+        private final String name;
+        private final HealthCheckMBean mbean;
+
+        private final String objectName;
+
         private ServiceRegistration registration;
 
-        public Registration(final String name, final HealthCheckMBean mbean) {
+        Registration(final String name, final HealthCheckMBean mbean) {
             this.name = name;
             this.mbean = mbean;
+            objectName = String.format("%s:type=%s,name=%s", JMX_DOMAIN, JMX_TYPE_NAME, name);
         }
 
-        public static Registration getRegistration(final ExtendedHealthCheckExecutor executor, final ServiceReference ref) {
-            final Object nameObj = ref.getProperty(HealthCheck.MBEAN_NAME);
-            if ( nameObj != null ) {
-                final HealthCheckMBean mbean = new HealthCheckMBean(ref, executor);
-
-                return new Registration(nameObj.toString().replace(',', '.'), mbean);
-            }
-            return null;
-        }
-
-        public void register(final Logger logger, final BundleContext btx) {
-            final StringBuilder sb = new StringBuilder(JMX_DOMAIN);
-            sb.append(":type=");
-            sb.append(JMX_TYPE_NAME);
-            sb.append(",name=");
-            sb.append(this.name);
-            final String objectName = sb.toString();
-
+        void register(final BundleContext btx) {
+            logger.debug("Registering health check mbean {} with name {}", mbean, objectName);
             final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
             mbeanProps.put("jmx.objectname", objectName);
             this.registration = btx.registerService(DynamicMBean.class.getName(), this.mbean, mbeanProps);
-
-            logger.debug("Registered health check mbean {} as {}", this.mbean, objectName);
         }
 
-        public boolean unregister(final Logger logger) {
+        boolean unregister() {
             if ( this.registration != null ) {
+                logger.debug("Unregistering health check mbean {} with name {}", mbean, objectName);
                 this.registration.unregister();
                 this.registration = null;
-                logger.debug("Unregistered health check mbean {}", this.mbean);
                 return true;
             }
             return false;
         }
     }
+
+    private Registration getRegistration(final ServiceReference ref) {
+        final Object nameObj = ref.getProperty(HealthCheck.MBEAN_NAME);
+        if ( nameObj != null ) {
+            final HealthCheckMBean mbean = new HealthCheckMBean(ref, executor);
+            return new Registration(nameObj.toString().replace(',', '.'), mbean);
+        }
+        return null;
+    }
+
 }

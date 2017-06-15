@@ -18,15 +18,19 @@
  */
 package org.apache.sling.scripting.freemarker.internal;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
+import freemarker.template.Configuration;
+import freemarker.template.TemplateModel;
+import org.apache.sling.commons.osgi.SortingServiceTracker;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -48,72 +52,24 @@ import org.slf4j.LoggerFactory;
 )
 public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
 
-    /** The name of the FreeMarker language (value is "FreeMarker"). */
+    private BundleContext bundleContext;
+
+    private SortingServiceTracker<TemplateModel> templateModelTracker;
+
     private static final String FREEMARKER_NAME = "FreeMarker";
-
-    /**
-     * The absolute path to the FreeMarker version properties file (value is
-     * "/freemarker/version.properties").
-     */
-    private static final String FREEMARKER_VERSION_PROPERTIES = "/freemarker/version.properties";
-
-    /**
-     * The name of the property containing the FreeMarker version (value is
-     * "version").
-     */
-    private static final String PROP_FREEMARKER_VERSION = "version";
-
-    /**
-     * The default version of FreeMarker if the version property cannot be read
-     * (value is "2.3", which is the latest minor version release as of
-     * 17.Dec.2007).
-     */
-    private static final String DEFAULT_FREEMARKER_VERSION = "2.3";
-
-    /**
-     * The FreeMarker language version extracted from the FreeMarker version
-     * properties file. If this file cannot be read the language version
-     * defaults to ...
-     */
-    private final String languageVersion;
 
     private final Logger logger = LoggerFactory.getLogger(FreemarkerScriptEngineFactory.class);
 
     public FreemarkerScriptEngineFactory() {
-
-        // extract language version from version.properties file
-        String langVersion = null;
-        InputStream ins = null;
-        try {
-            ins = getClass().getResourceAsStream(FREEMARKER_VERSION_PROPERTIES);
-            if (ins != null) {
-                Properties props = new Properties();
-                props.load(ins);
-                langVersion = props.getProperty(PROP_FREEMARKER_VERSION);
-            }
-        } catch (IOException ioe) {
-            // don't really care, just use default
-        } finally {
-            if (ins != null) {
-                try {
-                    ins.close();
-                } catch (IOException ignore) {
-                    // ignore
-                }
-            }
-        }
-
-        // if we could not extract the actual version, assume version 2.3
-        // which is the current minor release as of 17.Dec.2007
-        languageVersion = (langVersion == null)
-                ? DEFAULT_FREEMARKER_VERSION
-                : langVersion;
     }
 
     @Activate
-    private void activate(final FreemarkerScriptEngineFactoryConfiguration configuration) {
+    private void activate(final FreemarkerScriptEngineFactoryConfiguration configuration, final BundleContext bundleContext) {
         logger.debug("activate");
         configure(configuration);
+        this.bundleContext = bundleContext;
+        templateModelTracker = new SortingServiceTracker<>(bundleContext, TemplateModel.class.getName());
+        templateModelTracker.open();
     }
 
     @Modified
@@ -125,6 +81,9 @@ public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
     @Deactivate
     private void deactivate() {
         logger.debug("deactivate");
+        templateModelTracker.close();
+        templateModelTracker = null;
+        bundleContext = null;
     }
 
     private void configure(final FreemarkerScriptEngineFactoryConfiguration configuration) {
@@ -142,6 +101,15 @@ public class FreemarkerScriptEngineFactory extends AbstractScriptEngineFactory {
     }
 
     public String getLanguageVersion() {
-        return languageVersion;
+        return Configuration.getVersion().toString();
     }
+
+    Map<String, TemplateModel> getTemplateModels() {
+        final Map<String, TemplateModel> models = new HashMap<>();
+        for (final ServiceReference<TemplateModel> serviceReference : templateModelTracker.getSortedServiceReferences()) {
+            models.put(serviceReference.getProperty("name").toString(), bundleContext.getService(serviceReference));
+        }
+        return models;
+    }
+
 }

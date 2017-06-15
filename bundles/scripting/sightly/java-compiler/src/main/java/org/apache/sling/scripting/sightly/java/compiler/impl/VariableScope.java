@@ -18,7 +18,7 @@
 package org.apache.sling.scripting.sightly.java.compiler.impl;
 
 /**
- * The scope of a variable in a Sightly script
+ * The scope of a variable in a HTL script
  */
 public enum VariableScope {
     DYNAMIC, SCOPED, GLOBAL

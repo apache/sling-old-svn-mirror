@@ -38,9 +38,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.Weigher;
 import org.apache.commons.io.FileUtils;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.framework.BundleContext;
 
 class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorder {
@@ -142,7 +141,7 @@ class TracerLogServlet extends SimpleWebConsolePlugin implements TraceLogRecorde
                     jw.key("error").value("Not found");
                     jw.endObject();
                 }
-            } catch (JSONException e) {
+            } catch (IOException e) {
                 throw new ServletException(e);
             }
         }

@@ -91,6 +91,9 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        // create filter.xml
+        project.createVltFilterWithRoots("/content");
+
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
@@ -125,6 +128,9 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        // create filter.xml
+        project.createVltFilterWithRoots("/content");
 
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
@@ -227,6 +233,8 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+        // create filter.xml
+        project.createVltFilterWithRoots("/content");
 
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
@@ -322,6 +330,9 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         server.installModule(contentProject);
         
         final String baseName = "com.example.some.Component";
+
+        // create filter.xml
+        project.createVltFilterWithRoots("/content");
 
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream(baseName + ".xml");

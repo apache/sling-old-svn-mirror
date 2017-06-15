@@ -23,7 +23,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Iterator;
 
+import javax.json.JsonException;
+
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.CharEncoding;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -31,13 +34,10 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.util.Validator;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 /**
- * Plugin to validate resources:
- * - validate json files
+ * The <code>validate</code> goal checks the JSON code of a bundle.
  */
 @Mojo(name = "validate", defaultPhase = LifecyclePhase.PROCESS_RESOURCES)
 public class ValidationMojo extends AbstractMojo {
@@ -49,16 +49,23 @@ public class ValidationMojo extends AbstractMojo {
     private MavenProject project;
 
     /**
-     * Whether to skip the validation
+     * Whether to skip the validation. 
      */
     @Parameter(property = "sling.validation.skip", defaultValue = "false", required = true)
     private boolean skip;
 
     /**
-     * Whether to skip the json validation
+     * Whether to skip the json validation.
+     * At the time, there's no difference between <code>skip</code> and <code>skipJson</code> because only JSON files will be validated by now.
      */
     @Parameter(property = "sling.validation.skipJson", defaultValue = "false", required = true)
     private boolean skipJson;
+
+    /**
+     * Whether to accept quote ticks in JSON files or not. 
+     */
+    @Parameter(property = "sling.validation.jsonQuoteTick", defaultValue = "false", required = false)
+    private boolean jsonQuoteTick;
 
     /**
      * @see org.apache.maven.plugin.AbstractMojo#execute()
@@ -69,7 +76,6 @@ public class ValidationMojo extends AbstractMojo {
             getLog().info("Validation is skipped.");
             return;
         }
-        @SuppressWarnings("unchecked")
         final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
         while ( rsrcIterator.hasNext() ) {
             final Resource rsrc = rsrcIterator.next();
@@ -111,16 +117,16 @@ public class ValidationMojo extends AbstractMojo {
                 String json = null;
                 try {
                     fis = new FileInputStream(file);
-                    json = IOUtils.toString(fis);
+                    json = IOUtils.toString(fis, CharEncoding.UTF_8);
                 } catch (IOException e) {
                     throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", e);
                 } finally {
                     IOUtils.closeQuietly(fis);
                 }
-                // first, let's see if this is a json array
+                // validate JSON
                 try {
-                    Validator.validate(json);
-                } catch (JSONException e) {
+                    JsonSupport.validateJsonStructure(json, jsonQuoteTick);
+                } catch (JsonException e) {
                     throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", e);
                 }
             }

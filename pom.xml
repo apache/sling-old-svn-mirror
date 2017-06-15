@@ -78,8 +78,6 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
-        <module>tooling/maven/apache-sling-jar-resource-bundle</module>
-
         <!-- The real Sling Parent Project -->
         <module>parent</module>
 
@@ -104,8 +102,8 @@
         <module>bundles/commons/classloader</module>
         <module>bundles/commons/fsclassloader</module>
         <module>bundles/commons/compiler</module>
-        <module>bundles/commons/json</module>
         <module>bundles/commons/log</module>
+        <module>bundles/commons/log-webconsole</module>
         <module>bundles/commons/logservice</module>
         <module>bundles/commons/mime</module>
         <module>bundles/commons/contentdetection</module>
@@ -127,10 +125,10 @@
         <module>bundles/jcr/api</module>
         <module>bundles/jcr/base</module>
         <module>bundles/jcr/contentloader</module>
+        <module>bundles/jcr/contentparser</module>
         <!--
         <module>bundles/jcr/jackrabbit-base</module>
         -->
-        <module>bundles/jcr/jackrabbit-server</module>
         <module>bundles/jcr/jackrabbit-usermanager</module>
         <module>bundles/jcr/jackrabbit-accessmanager</module>
         <module>bundles/jcr/jcr-wrapper</module>
@@ -141,20 +139,20 @@
         <module>bundles/jcr/davex</module>
         <module>bundles/jcr/webconsole</module>
         <module>bundles/jcr/oak-server</module>
-        <module>bundles/jcr/it-jackrabbit-oak</module>
         <module>bundles/jcr/repoinit</module>
 
         <!-- Servlets -->
         <module>bundles/servlets/resolver</module>
         <module>bundles/servlets/get</module>
         <module>bundles/servlets/post</module>
-        <module>bundles/servlets/compat</module>
 
         <!-- Scripting Support -->
         <module>bundles/scripting/api</module>
         <module>bundles/scripting/core</module>
+        <module>bundles/scripting/el-api</module>
         <module>bundles/scripting/javascript</module>
         <module>bundles/scripting/jsp</module>
+        <module>bundles/scripting/jsp-api</module>
         <module>bundles/scripting/jsp-taglib</module>
         <module>bundles/scripting/jsp-jstl</module>
         <module>bundles/scripting/sightly</module>
@@ -162,6 +160,7 @@
         <!-- Extensions -->
         <module>bundles/extensions/adapter</module>
         <module>bundles/extensions/bundleresource</module>
+        <module>bundles/extensions/caconfig</module>
         <module>bundles/extensions/dea</module>
         <module>bundles/extensions/discovery/api</module>
         <module>bundles/extensions/discovery/commons</module>
@@ -170,7 +169,8 @@
         <module>bundles/extensions/discovery/oak</module>
         <module>bundles/extensions/discovery/support</module>
         <module>bundles/extensions/discovery/standalone</module>
-        <module>bundles/extensions/event</module>
+        <module>bundles/extensions/event/api</module>
+        <module>bundles/extensions/event/resource</module>
         <module>bundles/extensions/feature-flags</module>
         <module>bundles/extensions/fsresource</module>
         <module>bundles/extensions/javax.activation</module>
@@ -178,13 +178,10 @@
         <module>bundles/extensions/settings</module>
         <module>bundles/extensions/webconsolebranding</module>
         <module>bundles/extensions/webconsolesecurityprovider</module>
-        <module>bundles/extensions/explorer</module>
         <module>bundles/extensions/healthcheck</module>
         <module>bundles/resourceaccesssecurity/core</module>
         <module>bundles/resourceaccesssecurity/it</module>
-        <module>bundles/extensions/models/api</module>
-        <module>bundles/extensions/models/impl</module>
-        <module>bundles/extensions/models/integration-tests</module>
+        <module>bundles/extensions/models</module>
         <module>bundles/extensions/i18n</module>
         <module>bundles/extensions/xss</module>
         <module>bundles/extensions/resourcebuilder</module>
@@ -203,6 +200,9 @@
         <module>installer/factories/deploymentpck</module>
         <module>installer/factories/subsystem_base</module>
         <module>installer/factories/subsystems</module>
+        <module>installer/factories/model</module>
+        <module>installer/factories/packages</module>
+        <module>installer/hc</module>
         <module>installer/it</module>
 
         <!-- Launchpad -->
@@ -223,7 +223,6 @@
             </activation>
             <modules>
                 <module>bundles/extensions/validation</module>
-                <module>bundles/extensions/models/validation-impl</module>
             </modules>
         </profile>
         <profile>

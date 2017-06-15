@@ -20,9 +20,9 @@
         <version>1</version>
     </parent>
     <artifactId>sling-slingstart-archetype</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
-    <name>Sling Slingstart Archetype</name>
+    <name>Apache Sling Slingstart Archetype</name>
     <description>Maven archetype for a Sling Slingstart application</description>
 
     <scm>

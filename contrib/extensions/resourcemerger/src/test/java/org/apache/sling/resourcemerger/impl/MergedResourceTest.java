@@ -20,6 +20,7 @@ package org.apache.sling.resourcemerger.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -138,5 +139,22 @@ public class MergedResourceTest {
 
         assertEquals("c", mr2.getResourceType());
         assertEquals("vmb", mr2.getResourceSuperType());
+    }
+    
+    @Test public void testToString() throws Exception {
+        final ValueMap vm = new ValueMapDecorator(
+                Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "vm"));
+        final Resource r = new MockResource("/innerResourcePath", vm, null) {
+
+            @Override
+            public String getResourceType() {
+                return "innerResource";
+            }
+        };
+
+        final Resource mr = new MergedResource(null, "/merged", "merged", Collections.singletonList(r),
+                Collections.singletonList(vm));
+
+        assertTrue(mr.toString().contains("/innerResourcePath"));
     }
 }

@@ -68,9 +68,13 @@ public class WebConsolePrinterTest {
             assertRegexp(reader.readLine(), ".*Apache Sling Scheduler.*");
             reader.readLine();
             assertRegexp(reader.readLine(), ".*Status.*active.*");
+            assertRegexp(reader.readLine(), ".*Discovery.*available.*");
             assertRegexp(reader.readLine(), ".*Name.*ApacheSling.*");
             assertRegexp(reader.readLine(), ".*ThreadPool.*testName.*");
             assertRegexp(reader.readLine(), ".*Id.*");
+            reader.readLine();
+            reader.readLine();
+            assertRegexp(reader.readLine(), ".*Active.*Jobs.*");
             reader.readLine();
             assertRegexp(reader.readLine(), "^Job.*testName[123].*");
             assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName[123].*");

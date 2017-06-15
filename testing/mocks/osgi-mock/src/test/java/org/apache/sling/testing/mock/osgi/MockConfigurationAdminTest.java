@@ -22,8 +22,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Dictionary;
-import java.util.Hashtable;
 
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest.ServiceWithMetadata;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
@@ -31,8 +29,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -48,14 +44,10 @@ public class MockConfigurationAdminTest {
 
     @Test
     public void testGetConfigurationString() throws IOException {
-        ConfigurationAdmin configAdmin = context.getService(ConfigurationAdmin.class);
-        
-        Configuration config = configAdmin.getConfiguration("org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata");
-        Dictionary<String, Object> configProps = new Hashtable<String, Object>();
-        configProps.put(Constants.SERVICE_RANKING, 3000);
-        configProps.put("adaptables", TEST_ADAPTABLES);
-        configProps.put("prop2", 2);
-        config.update(configProps);
+        MockOsgi.setConfigForPid(context.bundleContext(), "org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata",
+                Constants.SERVICE_RANKING, 3000,
+                "adaptables", TEST_ADAPTABLES,
+                "prop2", 2);
         
         context.registerInjectActivateService(new ServiceWithMetadata(), ImmutableMap.<String, Object>builder()
                 .put(Constants.SERVICE_RANKING, 4000)

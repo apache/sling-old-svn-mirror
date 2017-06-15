@@ -610,6 +610,7 @@ public class JspUtil {
     /**
      * Resets the temporary variable name.
      * (not thread-safe)
+     * @deprecated
      */
     public static void resetTemporaryVariableName() {
         tempSequenceNumber = 0;
@@ -618,6 +619,7 @@ public class JspUtil {
     /**
      * Generates a new temporary variable name.
      * (not thread-safe)
+     * @deprecated
      */
     public static String nextTemporaryVariableName() {
         return Constants.TEMP_VARIABLE_NAME_PREFIX + (tempSequenceNumber++);

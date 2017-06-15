@@ -291,14 +291,14 @@ public class ParameterSupport {
                 // Multipart POST
                 if (ServletFileUpload.isMultipartContent(new ServletRequestContext(this.getServletRequest()))) {
                     if (isStreamed(parameters, this.getServletRequest())) {
-                        // special case, the request is Mutipart and streamed processing has been requested
+                        // special case, the request is Multipart and streamed processing has been requested
                         try {
                             this.getServletRequest().setAttribute(REQUEST_PARTS_ITERATOR_ATTRIBUTE, new RequestPartsIterator(this.getServletRequest()));
-                            this.log.debug("getRequestParameterMapInternal: Iterator<javax.servlet.http.Part> available as request attribute  named request-parts-iterator");
+                            this.log.debug("getRequestParameterMapInternal: Iterator<javax.servlet.http.Part> available as request attribute named request-parts-iterator");
                         } catch (IOException e) {
-                            this.log.error("getRequestParameterMapInternal: Error parsing mulmultipart streamed requesttipart streamed request", e);
+                            this.log.error("getRequestParameterMapInternal: Error parsing multipart streamed request", e);
                         } catch (FileUploadException e) {
-                            this.log.error("getRequestParameterMapInternal: Error parsing mulmultipart streamed request", e);
+                            this.log.error("getRequestParameterMapInternal: Error parsing multipart streamed request", e);
                         }
                         // The request data has been passed to the RequestPartsIterator, hence from a RequestParameter pov its been used, and must not be used again.
                         this.requestDataUsed = true;

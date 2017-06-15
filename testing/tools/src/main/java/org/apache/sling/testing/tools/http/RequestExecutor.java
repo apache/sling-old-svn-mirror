@@ -152,7 +152,7 @@ public class RequestExecutor {
     /** Verify that response matches supplied status */
     public RequestExecutor assertStatus(int expected) {
         assertNotNull(this.toString(), response);
-        assertEquals(this + ": expecting status " + expected, expected, response.getStatusLine().getStatusCode());
+        assertEquals(this + ": \nBody: " + content + "\nHTTP status: ", expected, response.getStatusLine().getStatusCode());
         return this;
     }
     

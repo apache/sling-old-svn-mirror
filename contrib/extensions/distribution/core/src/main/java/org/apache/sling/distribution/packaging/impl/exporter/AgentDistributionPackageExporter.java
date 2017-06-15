@@ -83,7 +83,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
         try {
             log.debug("getting packages from queue {}", queueName);
 
-            DistributionQueue queue = agent.getQueue(queueName);
+            DistributionQueue queue = getQueueOrThrow(queueName);
             DistributionQueueEntry entry = queue.getHead();
             if (entry != null) {
                 DistributionQueueItem queueItem = entry.getItem();
@@ -92,10 +92,11 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
 
                 if (packageBuilder != null) {
                     distributionPackage = packageBuilder.getPackage(resourceResolver, queueItem.getPackageId());
-                    distributionPackage.getInfo().putAll(info);
-
-                    log.debug("item {} fetched from the queue", info);
                     if (distributionPackage != null) {
+                        distributionPackage.getInfo().putAll(info);
+
+                        log.debug("item {} fetched from the queue", info);
+
                         packageProcessor.process(new AgentDistributionPackage(distributionPackage, queue, entry.getId()));
                     } else {
                         log.warn("cannot get package {}", info);
@@ -117,7 +118,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
         try {
             log.debug("getting package from queue {}", queueName);
 
-            DistributionQueue queue = agent.getQueue(queueName);
+            DistributionQueue queue = getQueueOrThrow(queueName);
             DistributionQueueEntry entry = queue.getItem(distributionPackageId);
             DistributionPackage distributionPackage;
 
@@ -181,5 +182,15 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
         if (agentLog instanceof DefaultDistributionLog) {
             ((DefaultDistributionLog) agentLog).info(message, values);
         }
+    }
+
+    @Nonnull
+    private DistributionQueue getQueueOrThrow(@Nonnull String queueName)
+            throws DistributionException {
+        DistributionQueue queue = agent.getQueue(queueName);
+        if (queue == null) {
+            throw new DistributionException(String.format("Could not find queue %s", queueName));
+        }
+        return queue;
     }
 }

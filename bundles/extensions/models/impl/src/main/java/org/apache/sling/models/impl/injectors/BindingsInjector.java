@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletRequest;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
@@ -30,19 +31,16 @@ import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ScriptVariable;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.ValuePreparer;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 1000)
-public class BindingsInjector implements Injector, StaticInjectAnnotationProcessorFactory {
-
-    private static final Logger log = LoggerFactory.getLogger(BindingsInjector.class);
+public class BindingsInjector implements Injector, StaticInjectAnnotationProcessorFactory, ValuePreparer {
 
     @Override
     public @Nonnull String getName() {
@@ -51,20 +49,20 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
 
     public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
             @Nonnull DisposalCallbackRegistry callbackRegistry) {
+        if (adaptable == ObjectUtils.NULL) {
+            return null;
+        }
         SlingBindings bindings = getBindings(adaptable);
         if (bindings == null) {
             return null;
         }
-        if (type instanceof Class<?>) {
-            return bindings.get(name);
-        } else {
-            log.debug("BindingsInjector doesn't support non-class type {}", type);
-            return null;
-        }
+        return bindings.get(name);
     }
 
     private SlingBindings getBindings(Object adaptable) {
-        if (adaptable instanceof ServletRequest) {
+        if (adaptable instanceof SlingBindings) {
+            return (SlingBindings) adaptable;
+        } else if (adaptable instanceof ServletRequest) {
             ServletRequest request = (ServletRequest) adaptable;
             return (SlingBindings) request.getAttribute(SlingBindings.class.getName());
         } else {
@@ -80,6 +78,12 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
             return new ScriptVariableAnnotationProcessor(annotation);
         }
         return null;
+    }
+
+    @Override
+    public Object prepareValue(Object adaptable) {
+        Object prepared = getBindings(adaptable);
+        return prepared != null ? prepared : ObjectUtils.NULL;
     }
 
     private static class ScriptVariableAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {

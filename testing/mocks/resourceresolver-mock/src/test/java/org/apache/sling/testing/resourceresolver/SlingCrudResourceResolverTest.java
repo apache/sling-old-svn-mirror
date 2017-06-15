@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -37,6 +38,7 @@ import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.NonExistingResource;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -56,7 +58,9 @@ public class SlingCrudResourceResolverTest {
     private static final String STRING_VALUE = "value1";
     private static final String[] STRING_ARRAY_VALUE = new String[] { "value1", "value2" };
     private static final int INTEGER_VALUE = 25;
+    private static final long LONG_VALUE = 250L;
     private static final double DOUBLE_VALUE = 3.555d;
+    private static final BigDecimal BIGDECIMAL_VALUE = new BigDecimal("12345.678");
     private static final boolean BOOLEAN_VALUE = true;
     private static final Date DATE_VALUE = new Date(10000);
     private static final Calendar CALENDAR_VALUE = Calendar.getInstance();
@@ -80,8 +84,10 @@ public class SlingCrudResourceResolverTest {
                 .put("stringProp", STRING_VALUE)
                 .put("stringArrayProp", STRING_ARRAY_VALUE)
                 .put("integerProp", INTEGER_VALUE)
+                .put("longProp", LONG_VALUE)
                 .put("doubleProp", DOUBLE_VALUE)
                 .put("booleanProp", BOOLEAN_VALUE)
+                .put("bigDecimalProp", BIGDECIMAL_VALUE)
                 .put("dateProp", DATE_VALUE)
                 .put("calendarProp", CALENDAR_VALUE)
                 .put("binaryProp", new ByteArrayInputStream(BINARY_VALUE))
@@ -104,11 +110,31 @@ public class SlingCrudResourceResolverTest {
         ValueMap props = ResourceUtil.getValueMap(resource1);
         assertEquals(STRING_VALUE, props.get("stringProp", String.class));
         assertArrayEquals(STRING_ARRAY_VALUE, props.get("stringArrayProp", String[].class));
-        assertEquals((Integer) INTEGER_VALUE, props.get("integerProp", Integer.class));
+        assertEquals((Integer)INTEGER_VALUE, props.get("integerProp", Integer.class));
+        assertEquals((Long)LONG_VALUE, props.get("longProp", Long.class));
         assertEquals(DOUBLE_VALUE, props.get("doubleProp", Double.class), 0.0001);
+        assertEquals(BIGDECIMAL_VALUE, props.get("bigDecimalProp", BigDecimal.class));
         assertEquals(BOOLEAN_VALUE, props.get("booleanProp", Boolean.class));
     }
 
+    @Test
+    public void testSimpleProperties_IntegerLongConversion() throws IOException {
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
+        ValueMap props = ResourceUtil.getValueMap(resource1);
+
+        assertEquals((Integer)(int)LONG_VALUE, props.get("longProp", Integer.class));
+        assertEquals((Long)(long)INTEGER_VALUE, props.get("integerProp", Long.class));
+    }
+
+    @Test
+    public void testSimpleProperties_DecimalConversion() throws IOException {
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
+        ValueMap props = ResourceUtil.getValueMap(resource1);
+
+        assertEquals(new BigDecimal(DOUBLE_VALUE).doubleValue(), props.get("doubleProp", BigDecimal.class).doubleValue(), 0.0001d);
+        assertEquals(BIGDECIMAL_VALUE.doubleValue() , props.get("bigDecimalProp", Double.class), 0.0001d);
+    }
+    
     @Test
     public void testSimpleProperties_DeepPathAccess() throws IOException {
         Resource resource1 = resourceResolver.getResource(testRoot.getPath());
@@ -119,7 +145,9 @@ public class SlingCrudResourceResolverTest {
         assertEquals(STRING_VALUE, props.get("node1/stringProp", String.class));
         assertArrayEquals(STRING_ARRAY_VALUE, props.get("node1/stringArrayProp", String[].class));
         assertEquals((Integer) INTEGER_VALUE, props.get("node1/integerProp", Integer.class));
+        assertEquals((Long)LONG_VALUE, props.get("node1/longProp", Long.class));
         assertEquals(DOUBLE_VALUE, props.get("node1/doubleProp", Double.class), 0.0001);
+        assertEquals(BIGDECIMAL_VALUE, props.get("node1/bigDecimalProp", BigDecimal.class));
         assertEquals(BOOLEAN_VALUE, props.get("node1/booleanProp", Boolean.class));
         assertEquals(STRING_VALUE, props.get("node1/node11/stringProp11", String.class));
 
@@ -260,6 +288,23 @@ public class SlingCrudResourceResolverTest {
         Resource resource = resourceResolver.resolve("/non/existing/path");
         assertTrue(resource instanceof NonExistingResource);
         assertEquals("/non/existing/path", resource.getPath());
+    }
+    
+    @Test
+    public void testGetParentResourceType() throws PersistenceException {
+        Resource r1 = resourceResolver.create(testRoot, "resource1", ImmutableMap.<String, Object>of());
+        Resource r2 = resourceResolver.create(testRoot, "resource2", ImmutableMap.<String, Object>of(
+                "sling:resourceSuperType", testRoot.getPath() + "/resource1"));
+        Resource r3 = resourceResolver.create(testRoot, "resource3", ImmutableMap.<String, Object>of(
+                "sling:resourceType", testRoot.getPath() + "/resource2"));
+        Resource r4 = resourceResolver.create(testRoot, "resource4", ImmutableMap.<String, Object>of(
+                "sling:resourceSuperType", testRoot.getPath() + "/resource2"));
+        
+        assertNull(resourceResolver.getParentResourceType(r1));
+        assertEquals(r1.getPath(), resourceResolver.getParentResourceType(r2));
+        assertEquals(r1.getPath(), resourceResolver.getParentResourceType(r3));
+        assertEquals(r2.getPath(), resourceResolver.getParentResourceType(r4));
+        assertEquals(r2.getPath(), resourceResolver.getParentResourceType(r4.getPath()));
     }
     
 }

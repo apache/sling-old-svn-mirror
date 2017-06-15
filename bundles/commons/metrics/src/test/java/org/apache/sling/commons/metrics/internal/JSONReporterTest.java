@@ -19,21 +19,24 @@
 
 package org.apache.sling.commons.metrics.internal;
 
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringWriter;
+import java.util.Map;
+
+import org.apache.commons.io.output.WriterOutputStream;
+import org.apache.felix.utils.json.JSONParser;
+import org.junit.Test;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.JvmAttributeGaugeSet;
 import com.codahale.metrics.MetricRegistry;
-import org.apache.commons.io.output.WriterOutputStream;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 public class JSONReporterTest {
 
+    @SuppressWarnings("unchecked")
     @Test
     public void jsonOutput() throws Exception {
         MetricRegistry registry = new MetricRegistry();
@@ -43,21 +46,22 @@ public class JSONReporterTest {
         registry.counter("test4").inc(9);
         registry.registerAll(new JvmAttributeGaugeSet());
 
-        JSONObject json = getJSON(registry);
+        Map<String, Object> json = getJSON(registry);
 
-        assertTrue(json.has("meters"));
-        assertTrue(json.has("guages"));
-        assertTrue(json.has("timers"));
-        assertTrue(json.has("counters"));
-        assertTrue(json.has("histograms"));
-        assertTrue(json.has("meters"));
+        assertTrue(json.containsKey("meters"));
+        assertTrue(json.containsKey("gauges"));
+        assertTrue(json.containsKey("timers"));
+        assertTrue(json.containsKey("counters"));
+        assertTrue(json.containsKey("histograms"));
+        assertTrue(json.containsKey("meters"));
 
-        assertTrue(json.getJSONObject("meters").has("test1"));
-        assertTrue(json.getJSONObject("timers").has("test2"));
-        assertTrue(json.getJSONObject("counters").has("test4"));
-        assertTrue(json.getJSONObject("histograms").has("test3"));
+        assertTrue(((Map<String, Object>)json.get("meters")).containsKey("test1"));
+        assertTrue(((Map<String, Object>)json.get("timers")).containsKey("test2"));
+        assertTrue(((Map<String, Object>)json.get("counters")).containsKey("test4"));
+        assertTrue(((Map<String, Object>)json.get("histograms")).containsKey("test3"));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void nan_value() throws Exception{
         MetricRegistry registry = new MetricRegistry();
@@ -70,18 +74,18 @@ public class JSONReporterTest {
         });
 
 
-        JSONObject json = getJSON(registry);
-        assertTrue(json.getJSONObject("guages").has("test"));
+        Map<String, Object> json = getJSON(registry);
+        assertTrue(((Map<String, Object>)json.get("gauges")).containsKey("test"));
     }
 
-    private static JSONObject getJSON(MetricRegistry registry) throws JSONException {
+    private static Map<String, Object> getJSON(MetricRegistry registry) throws IOException {
         StringWriter sw = new StringWriter();
         JSONReporter reporter = JSONReporter.forRegistry(registry)
                 .outputTo(new PrintStream(new WriterOutputStream(sw)))
                 .build();
         reporter.report();
         reporter.close();
-        return new JSONObject(sw.toString());
+        return new JSONParser(sw.toString()).getParsed();
     }
 
 }

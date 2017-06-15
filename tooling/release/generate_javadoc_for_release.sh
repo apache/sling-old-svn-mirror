@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-VERSION=8
+VERSION=9
 WORKDIR=out
-ALLOW_SNAPSHOT=1
+ALLOW_SNAPSHOT=0
 
 # create work directory
 if [ ! -d $WORKDIR ] ; then
@@ -17,9 +17,14 @@ else
     wget https://repo1.maven.org/maven2/org/apache/sling/org.apache.sling.launchpad/$VERSION/org.apache.sling.launchpad-$VERSION-slingfeature.txt -O $WORKDIR/slingfeature.txt
 fi
 
-# checkout tags
+# extract <artifactId>-<version> from slingfeature.txt
 artifacts=$(awk -F '/' '/org.apache.sling\// { print $2"-"$3 }' < $WORKDIR/slingfeature.txt)
 
+# add additional artifacts which are not part of the launchpad
+# https://issues.apache.org/jira/browse/SLING-6766
+artifacts+=" adapter-annotations-1.0.0"
+
+# checkout tags
 for artifact in $artifacts; do
     if [ -d $WORKDIR/$artifact ] ; then
         echo "Not checking out $artifact, already present";

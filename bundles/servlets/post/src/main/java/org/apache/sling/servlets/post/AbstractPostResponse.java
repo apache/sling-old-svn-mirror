@@ -22,8 +22,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.SlingException;
-
 /**
  * The <code>AbstractPostResponse</code> class provides a basic implementation
  * of the {@link PostResponse} interface maintaining properties to be
@@ -218,7 +216,7 @@ public abstract class AbstractPostResponse implements PostResponse {
     }
 
     public void setError(Throwable error) {
-        setProperty(PN_ERROR, new SlingException("Exception during response processing.", null));
+        setProperty(PN_ERROR, error);
     }
 
     /**
@@ -262,7 +260,7 @@ public abstract class AbstractPostResponse implements PostResponse {
 
     /**
      * Records a 'moved' change.
-     * <p/>
+     * <p>
      * Note: the moved change only records the basic move command. the implied
      * changes on the moved properties and sub nodes are not recorded.
      *
@@ -275,7 +273,7 @@ public abstract class AbstractPostResponse implements PostResponse {
 
     /**
      * Records a 'copied' change.
-     * <p/>
+     * <p>
      * Note: the copy change only records the basic copy command. the implied
      * changes on the copied properties and sub nodes are not recorded.
      *

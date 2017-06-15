@@ -33,7 +33,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.CharEncoding;
-import org.apache.sling.servlethelpers.MockSlingHttpServletResponse;
 import org.junit.Before;
 import org.junit.Test;
 

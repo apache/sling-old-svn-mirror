@@ -23,16 +23,18 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.zip.GZIPInputStream;
 
 import javax.annotation.Nonnull;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.junit.Rule;
@@ -74,7 +76,7 @@ public class TracerLogServletTest {
     @Test
     public void recordingWhenRequested() throws Exception{
         TracerLogServlet logServlet = new TracerLogServlet(context.bundleContext());
-        request = new MockSlingHttpServletRequest();
+        request = new MockSlingHttpServletRequest(context.bundleContext());
 
         Recording recording = logServlet.startRecording(request, response);
         assertNotNull(recording);
@@ -114,9 +116,9 @@ public class TracerLogServletTest {
         when(request.getRequestURI()).thenReturn("/system/console/" + requestIdCaptor.getValue() + ".json" );
 
         logServlet.renderContent(request, response);
-        JSONObject json = new JSONObject(sos.baos.toString("UTF-8"));
+        JsonObject json = Json.createReader(new StringReader(sos.baos.toString("UTF-8"))).readObject();
         assertEquals("GET", json.getString("method"));
-        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
+        assertEquals(2, json.getJsonArray("requestProgressLogs").size());
     }
 
     @Test
@@ -141,9 +143,9 @@ public class TracerLogServletTest {
 
         logServlet.renderContent(request, response);
         byte[] data = IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(sos.baos.toByteArray())));
-        JSONObject json = new JSONObject(new String(data, "UTF-8"));
+        JsonObject json = Json.createReader(new StringReader(new String(data, "UTF-8"))).readObject();
         assertEquals("GET", json.getString("method"));
-        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
+        assertEquals(2, json.getJsonArray("requestProgressLogs").size());
 
         verify(response).setHeader("Content-Encoding" , "gzip");
     }

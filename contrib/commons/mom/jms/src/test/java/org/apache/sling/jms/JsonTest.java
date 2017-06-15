@@ -19,6 +19,7 @@
 
 package org.apache.sling.jms;
 
+import org.apache.sling.jms.impl.Json;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by ieb on 31/03/2016.
  */
 public class JsonTest {
 

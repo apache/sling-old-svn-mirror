@@ -6,6 +6,11 @@
         "jcr:primaryType" : "sling:MessageEntry",
         "sling:key" : "bun",
         "sling:message" : "Brötli"
+    },
+    "currency_thousands": {
+        "jcr:primaryType": "sling:MessageEntry",
+        "sling:key": "curr #,###.##",
+        "sling:message": "CHF #,###.##"
     }
 
 }

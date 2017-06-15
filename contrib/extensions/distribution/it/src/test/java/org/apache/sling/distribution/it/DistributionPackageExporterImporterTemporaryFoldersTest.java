@@ -55,6 +55,8 @@ public class DistributionPackageExporterImporterTemporaryFoldersTest extends Dis
 
         String content = doExport(publish, "temp", DistributionRequestType.PULL);
 
+        Thread.sleep(5000);
+
         jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/packages/tempvlt/data");
         assertEquals(0, jcrPackages.size());
 

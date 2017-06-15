@@ -18,10 +18,9 @@
  */
 package org.apache.sling.engine.impl;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.engine.SlingSettingsService;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The implementation of the settings service has moved to the
@@ -29,8 +28,7 @@ import org.apache.sling.engine.SlingSettingsService;
  *
  * @deprecated
  */
-@Component
-@Service
+@Component(service = SlingSettingsService.class)
 @Deprecated
 public class SlingSettingsServiceImpl
     implements SlingSettingsService {
@@ -41,6 +39,7 @@ public class SlingSettingsServiceImpl
     /**
      * @see org.apache.sling.engine.SlingSettingsService#getSlingId()
      */
+    @Override
     public String getSlingId() {
         return this.settingsService.getSlingId();
     }

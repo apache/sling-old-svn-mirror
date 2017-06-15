@@ -18,9 +18,6 @@
  */
 package org.apache.sling.commons.log.logback.internal;
 
-import static org.apache.sling.commons.log.logback.internal.LogbackManager.APP_ROOT;
-import static org.apache.sling.commons.log.logback.internal.LogbackManager.RES_LOC;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,7 +27,6 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Dictionary;
@@ -40,11 +36,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.sling.commons.log.logback.internal.AppenderTracker.AppenderInfo;
 import org.apache.sling.commons.log.logback.internal.ConfigSourceTracker.ConfigSourceInfo;
 import org.apache.sling.commons.log.logback.internal.LogbackManager.LoggerStateContext;
@@ -52,6 +43,9 @@ import org.apache.sling.commons.log.logback.internal.config.ConfigurationExcepti
 import org.apache.sling.commons.log.logback.internal.util.SlingRollingFileAppender;
 import org.apache.sling.commons.log.logback.internal.util.Util;
 import org.apache.sling.commons.log.logback.internal.util.XmlUtil;
+import org.apache.sling.commons.log.logback.webconsole.LogPanel;
+import org.apache.sling.commons.log.logback.webconsole.LoggerConfig;
+import org.apache.sling.commons.log.logback.webconsole.TailerOptions;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -77,21 +71,7 @@ import ch.qos.logback.core.util.CachingDateFormatter;
  * In future revisions of this plugin, the configuration may probably even be
  * modified through this panel.
  */
-public class SlingLogPanel extends HttpServlet {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * Request param name to control number of lines to include in the log
-     */
-    private static final String PARAM_NUM_OF_LINES = "tail";
-    private static final String PARAM_APPENDER_NAME = "name";
-
-    /**
-     * Let the path end with extension. In that case WebConsole logic would by pass this request's
-     * response completely
-     */
-    private static final String PATH_TAILER = "tailer.txt";
+public class SlingLogPanel implements LogPanel {
 
     private final CachingDateFormatter SDF = new CachingDateFormatter("yyyy-MM-dd HH:mm:ss");
 
@@ -110,40 +90,22 @@ public class SlingLogPanel extends HttpServlet {
     private final LogbackManager logbackManager;
     private final BundleContext bundleContext;
 
-    private final String labelRes;
-
-    private final int labelResLen;
-
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(SlingLogPanel.class);
 
     public SlingLogPanel(final LogbackManager logbackManager, final BundleContext bundleContext) {
         this.logbackManager = logbackManager;
         this.bundleContext = bundleContext;
-        this.labelRes = '/' + APP_ROOT + '/';
-        this.labelResLen = labelRes.length() - 1;
     }
 
     @Override
-    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
-
-        final PrintWriter pw = resp.getWriter();
-
-        final String consoleAppRoot = (String) req.getAttribute("felix.webconsole.appRoot");
-
+    public void tail(PrintWriter pw, String appenderName, TailerOptions options) throws IOException {
         final LoggerStateContext ctx = logbackManager.determineLoggerState();
-        if (req.getPathInfo() != null) {
-            if (req.getPathInfo().endsWith(PATH_TAILER)){
-                String appenderName = req.getParameter(PARAM_APPENDER_NAME);
-                addNoSniffHeader(resp);
-                if (appenderName == null){
-                    pw.printf("Provide appender name via [%s] request parameter%n", PARAM_APPENDER_NAME);
-                    return;
-                }
-                renderAppenderContent(ctx, pw, appenderName, getNumOfLines(req));
-                return;
-            }
-        }
+        renderAppenderContent(ctx, pw, appenderName, options);
+    }
 
+    @Override
+    public void render(PrintWriter pw, String consoleAppRoot) throws IOException {
+        final LoggerStateContext ctx = logbackManager.determineLoggerState();
         appendLoggerStatus(pw, ctx);
         appendOsgiConfiguredLoggerData(pw, consoleAppRoot);
         appendOtherLoggerData(pw, ctx);
@@ -156,34 +118,22 @@ public class SlingLogPanel extends HttpServlet {
     }
 
     @Override
-    protected void doPost(final HttpServletRequest req, final HttpServletResponse resp)
-            throws ServletException, IOException {
-        // check if a configuration should be deleted
-        boolean isDelete = req.getParameter("delete") != null;
-        // get the configuration pid
-        String pid = req.getParameter("pid");
+    public void deleteLoggerConfig(String pid) {
         try {
-            if (isDelete) {
-                // in delete mode remove the logger with the given pid
-                removeLogger(pid);
-            } else {
-                // get the logger parameters and configure the logger
-                // if the given pid is empty a new logger with be created
-                String logger = req.getParameter("logger");
-                String logLevel = req.getParameter("loglevel");
-                String logFile = req.getParameter("logfile");
-                String additive = req.getParameter("logAdditive");
-                String[] loggers = req.getParameterValues("logger");
-                if (null != logger) {
-                    configureLogger(pid, logLevel, loggers, logFile, additive);
-                }
-            }
+            removeLogger(pid);
         } catch (ConfigurationException e) {
             internalFailure("", e);
         }
-        // send the redirect back to the logpanel
-        final String consoleAppRoot = (String) req.getAttribute("felix.webconsole.appRoot");
-        resp.sendRedirect(consoleAppRoot + "/" + APP_ROOT);
+    }
+
+    @Override
+    public void createLoggerConfig(LoggerConfig config) throws IOException {
+        try {
+            configureLogger(config.getPid(), config.getLogLevel(), config.getLoggers(),
+                    config.getLogFile(), config.isAdditive());
+        } catch (ConfigurationException e) {
+            internalFailure("", e);
+        }
     }
 
     private void addScriptBlock(final PrintWriter pw, final LoggerStateContext ctx) {
@@ -580,24 +530,6 @@ public class SlingLogPanel extends HttpServlet {
     }
 
     /**
-     * Called internally by AbstractWebConsolePlugin to load resources.
-     * This particular implementation depends on the label. As example, if the
-     * plugin is accessed as <code>/system/console/abc</code>, and the plugin
-     * resources are accessed like <code>/system/console/abc/res/logo.gif</code>
-     * , the code here will try load resource <code>/res/logo.gif</code> from
-     * the bundle, providing the plugin.
-     *
-     * @param path the path to read.
-     * @return the URL of the resource or <code>null</code> if not found.
-     */
-    @SuppressWarnings("UnusedDeclaration")
-    protected URL getResource(String path) {
-        return (path != null && path.startsWith(labelRes)) ? //
-                getClass().getResource(path.substring(labelResLen))
-                : null;
-    }
-
-    /**
      * Checks if all log files are in the same folder, then the path can displayed shortened in the panel.
      *
      * @param logWriters list of log writers
@@ -621,16 +553,20 @@ public class SlingLogPanel extends HttpServlet {
         return true;
     }
 
-    private void renderAppenderContent(LoggerStateContext ctx, PrintWriter pw, String appenderName, int numOfLines)
+    private void renderAppenderContent(LoggerStateContext ctx, PrintWriter pw, String appenderName, TailerOptions opts)
             throws IOException {
         for (final Appender<ILoggingEvent> appender : ctx.appenders.values()) {
             if (appender instanceof FileAppender && appenderName.equals(appender.getName())) {
                 final File file = new File(((FileAppender) appender).getFile());
                 if (file.exists()) {
-                    if (numOfLines < 0) {
+                    if (opts.tailAll()) {
                         SlingConfigurationPrinter.includeWholeFile(pw, file);
                     } else {
-                        new Tailer(pw, numOfLines).tail(file);
+                        int numOfLines = opts.getNumOfLines();
+                        if (numOfLines == 0){
+                            numOfLines = logbackManager.getLogConfigManager().getNumOfLines();
+                        }
+                        new Tailer(new FilteringListener(pw, opts.getRegex()), numOfLines).tail(file);
                     }
                 }
                 return;
@@ -639,18 +575,16 @@ public class SlingLogPanel extends HttpServlet {
         pw.printf("No appender with name [%s] found", appenderName);
     }
 
-    private int getNumOfLines(HttpServletRequest req) {
-        return Util.toInteger(req.getParameter(PARAM_NUM_OF_LINES), logbackManager.getLogConfigManager().getNumOfLines());
-    }
-
     private String getLinkedName(FileAppender<ILoggingEvent> appender) throws UnsupportedEncodingException {
         String fileName = appender.getFile();
         String name = appender.getName();
-        return String.format("File : [<a href=\"%s/%s?%s=%d&%s=%s\">%s</a>] %s",
+        return String.format("File : [<a href=\"%s/%s?%s=%d&%s=%s&%s=%s\">%s</a>] %s",
                 APP_ROOT,
                 PATH_TAILER,
-                PARAM_NUM_OF_LINES,
+                PARAM_TAIL_NUM_OF_LINES,
                 logbackManager.getLogConfigManager().getNumOfLines(),
+                PARAM_TAIL_GREP,
+                FilteringListener.MATCH_ALL,
                 PARAM_APPENDER_NAME,
                 URLEncoder.encode(name, "UTF-8"),
                 XmlUtil.escapeXml(name),
@@ -669,7 +603,8 @@ public class SlingLogPanel extends HttpServlet {
      * @throws IOException            when an existing configuration couldn't be updated or a configuration couldn't be created.
      * @throws ConfigurationException when mandatory parameters where not specified
      */
-    private void configureLogger(final String pid, final String logLevel, final String[] loggers, final String logFile, String additive)
+    private void configureLogger(final String pid, final String logLevel, final String[] loggers, final String
+            logFile, boolean additive)
             throws IOException, ConfigurationException {
         // try to get the configadmin service reference
         ServiceReference sr = this.bundleContext
@@ -704,10 +639,10 @@ public class SlingLogPanel extends HttpServlet {
                         dict.put(LogConfigManager.LOG_LOGGERS, loggers);
                         dict.put(LogConfigManager.LOG_FILE, logFile);
 
-                        if (additive == null){
-                            dict.put(LogConfigManager.LOG_ADDITIV, "false");
-                        } else {
+                        if (additive){
                             dict.put(LogConfigManager.LOG_ADDITIV, "true");
+                        } else {
+                            dict.put(LogConfigManager.LOG_ADDITIV, "false");
                         }
                         config.update(dict);
                     }
@@ -856,10 +791,6 @@ public class SlingLogPanel extends HttpServlet {
             path = path.substring(rootPath.length() + 1);
         }
         return (path != null) ? path : "[stdout]";
-    }
-
-    private static void addNoSniffHeader(HttpServletResponse resp) {
-        resp.setHeader("X-Content-Type-Options", "nosniff");
     }
 
     // ~------------------------------------------------Status Manager

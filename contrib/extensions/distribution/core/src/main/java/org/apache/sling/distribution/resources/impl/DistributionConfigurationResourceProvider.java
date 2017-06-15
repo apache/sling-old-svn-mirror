@@ -109,11 +109,11 @@ public class DistributionConfigurationResourceProvider extends AbstractModifying
         return null;
     }
 
-    protected Map<String, Object> getChildResourceProperties(DistributionConfiguration config, String childResourceName) {
+    private Map<String, Object> getChildResourceProperties(DistributionConfiguration config, String childResourceName) {
         return null;
     }
 
-    protected Iterable<String> getChildResourceChildren(DistributionConfiguration config, String childResourceName) {
+    private Iterable<String> getChildResourceChildren(DistributionConfiguration config, String childResourceName) {
         return null;
     }
 

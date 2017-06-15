@@ -27,7 +27,6 @@ public class MultipleMatcher extends AbstractPropertyMatcher implements Property
 		super.index = index;
 	}
 
-	@Override
 	public boolean match(PropertyDefinition propertyDefinition) {
 		String arrayValue = super.getArrayValue(idFields, index);
 		if (arrayValue!=null){

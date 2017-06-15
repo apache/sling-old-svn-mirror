@@ -42,6 +42,7 @@ class ModelProcessor {
             newFeature.setType(feature.getType());
             newFeature.setComment(feature.getComment());
             newFeature.setLocation(feature.getLocation());
+            newFeature.setVersion(feature.getVersion());
             newFeature.getAdditionalSections().addAll(feature.getAdditionalSections());
 
             newFeature.getVariables().setComment(feature.getVariables().getComment());

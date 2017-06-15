@@ -15,78 +15,77 @@
     See the License for the specific language governing permissions
     and limitations under the License.
 -->
-<project
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<modelVersion>4.0.0</modelVersion>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>14</version>
     </parent>
-	<groupId>org.apache.sling.ide</groupId>
-	<artifactId>reactor</artifactId>
-	<version>1.1.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<name>Sling IDE Tools: Reactor</name>
+    <groupId>org.apache.sling.ide</groupId>
+    <artifactId>reactor</artifactId>
+    <version>1.1.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Sling IDE Tools: Reactor</name>
     <url>http://sling.apache.org</url>
-    
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide</url>
     </scm>
 
-	<modules>
-		<module>target-definition</module>
-		<module>api</module>
+    <modules>
+        <module>target-definition</module>
+        <module>api</module>
         <module>api-test</module>
         <module>artifacts</module>
-		<module>impl-resource</module>
+        <module>impl-resource</module>
         <module>impl-resource-test</module>
-		<module>vlt-wrapper</module>                
-		<module>impl-vlt</module>
-		<module>impl-vlt-test</module>
-		<module>eclipse-core</module>
-		<module>eclipse-ui</module>
-		<module>feature</module>
-		<module>eclipse-m2e-core</module>
-		<module>eclipse-m2e-ui</module>
-		<module>eclipse-m2e-test</module>
-		<module>m2e-feature</module>
-		<module>eclipse-sightly-core</module>
-		<module>eclipse-sightly-ui</module>
-		<module>sightly-feature</module>
-		<module>p2update</module>
-	</modules>
+        <module>vlt-wrapper</module>
+        <module>impl-vlt</module>
+        <module>impl-vlt-test</module>
+        <module>eclipse-core</module>
+        <module>eclipse-ui</module>
+        <module>feature</module>
+        <module>eclipse-m2e-core</module>
+        <module>eclipse-m2e-ui</module>
+        <module>eclipse-m2e-test</module>
+        <module>m2e-feature</module>
+        <module>eclipse-sightly-core</module>
+        <module>eclipse-sightly-ui</module>
+        <module>sightly-feature</module>
+        <module>p2update</module>
+    </modules>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-maven-plugin</artifactId>
-				<version>${tycho.version}</version>
-				<extensions>true</extensions>
-			</plugin>
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>target-platform-configuration</artifactId>
-				<version>${tycho.version}</version>
-				<configuration>
-					<target>
-						<artifact>
-							<groupId>${project.groupId}</groupId>
-							<artifactId>org.apache.sling.ide.target-definition</artifactId>
-							<version>${project.version}</version>
-						</artifact>
-					</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-versions-plugin</artifactId>
-				<version>${tycho.version}</version>
-			</plugin>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-maven-plugin</artifactId>
+                <version>${tycho.version}</version>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>target-platform-configuration</artifactId>
+                <version>${tycho.version}</version>
+                <configuration>
+                    <target>
+                        <artifact>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>org.apache.sling.ide.target-definition</artifactId>
+                            <version>${project.version}</version>
+                        </artifact>
+                    </target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-versions-plugin</artifactId>
+                <version>${tycho.version}</version>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>ianal-maven-plugin</artifactId>
@@ -111,21 +110,21 @@
                         <exclude>derby.log</exclude>
                         <exclude>.gitignore</exclude>
                         <exclude>README.md</exclude>
-                        
+
                         <!-- Eclipse build related files -->
                         <exclude>*.launch</exclude>
                         <exclude>build.properties</exclude>
                         <exclude>.options</exclude>
                         <exclude>META-INF/MANIFEST.MF</exclude>
-                        
+
                         <!-- test data -->
                         <exclude>**/*.binary</exclude>
-                        
+
                         <!-- prevent failures when eclipse-test is not activated as a submodule -->
                         <exclude>eclipse-test/**</exclude>
                         <!-- exclude target file from the source-bundle project since it is not a module -->
                         <exclude>source-bundle/target/**</exclude>
-                        
+
                         <!-- Jenkins Xvfb plugin -->
                         <exclude>.Xauthority-*</exclude>
                     </excludes>
@@ -139,7 +138,7 @@
                     </execution>
                 </executions>
             </plugin>
-		</plugins>
+        </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -147,14 +146,14 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.1</version>
                     <configuration>
-                      <source>1.7</source>
-                      <target>1.7</target>
+                        <source>1.7</source>
+                        <target>1.7</target>
                     </configuration>
                 </plugin>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
                 <!--
                     We embed some bundles that are not available on p2 update sites. To make the build seamless, we copy them early in the process.
-                 -->
+                -->
                 <plugin>
                     <groupId>org.eclipse.m2e</groupId>
                     <artifactId>lifecycle-mapping</artifactId>
@@ -187,7 +186,7 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-	</build>
+    </build>
 
     <pluginRepositories>
         <pluginRepository>
@@ -195,12 +194,12 @@
             <name>JBoss Public Repository Group</name>
             <url>http://repository.jboss.org/nexus/content/groups/public/</url>
         </pluginRepository>
-    </pluginRepositories>    
+    </pluginRepositories>
 
-	<properties>
-		<tycho.version>0.22.0</tycho.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+    <properties>
+        <tycho.version>0.22.0</tycho.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <profiles>
         <profile>

@@ -23,6 +23,8 @@ import static org.apache.sling.jcr.resource.internal.AssertCalendar.assertEquals
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -35,6 +37,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NodeType;
 
 import org.apache.commons.io.IOUtils;
@@ -43,7 +48,6 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
@@ -63,10 +67,59 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
         final Map<String, Object> values = this.initialSet();
         for(Map.Entry<String, Object> entry : values.entrySet()) {
-            JcrResourceUtil.setProperty(rootNode, entry.getKey().toString(), entry.getValue());
+            setProperty(rootNode, entry.getKey().toString(), entry.getValue());
         }
         getSession().save();
     }
+    
+    private void setProperty(final Node node,
+            final String propertyName,
+            final Object propertyValue)
+    throws RepositoryException {
+        if ( propertyValue == null ) {
+            node.setProperty(propertyName, (String)null);
+        } else if ( propertyValue.getClass().isArray() ) {
+            final int length = Array.getLength(propertyValue);
+            final Value[] setValues = new Value[length];
+            for(int i=0; i<length; i++) {
+                final Object value = Array.get(propertyValue, i);
+                setValues[i] = createValue(value, node.getSession());
+            }
+            node.setProperty(propertyName, setValues);
+        } else {
+            node.setProperty(propertyName, createValue(propertyValue, node.getSession()));
+        }
+    }
+    
+    Value createValue(final Object value, final Session session)
+            throws RepositoryException {
+                Value val;
+                ValueFactory fac = session.getValueFactory();
+                if(value instanceof Calendar) {
+                    val = fac.createValue((Calendar)value);
+                } else if (value instanceof InputStream) {
+                    val = fac.createValue(fac.createBinary((InputStream)value));
+                } else if (value instanceof Node) {
+                    val = fac.createValue((Node)value);
+                } else if (value instanceof BigDecimal) {
+                    val = fac.createValue((BigDecimal)value);
+                } else if (value instanceof Long) {
+                    val = fac.createValue((Long)value);
+                } else if (value instanceof Short) {
+                    val = fac.createValue((Short)value);
+                } else if (value instanceof Integer) {
+                    val = fac.createValue((Integer)value);
+                } else if (value instanceof Number) {
+                    val = fac.createValue(((Number)value).doubleValue());
+                } else if (value instanceof Boolean) {
+                    val = fac.createValue((Boolean) value);
+                } else if ( value instanceof String ) {
+                    val = fac.createValue((String)value);
+                } else {
+                    val = null;
+                }
+                return val;
+            }
 
     @Override
     protected void tearDown() throws Exception {
@@ -78,7 +131,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
     }
 
     private HelperData getHelperData() throws Exception {
-        return new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new PathMapperImpl());
+        return new HelperData(new AtomicReference<DynamicClassLoaderManager>());
     }
 
     private Map<String, Object> initialSet() {
@@ -120,6 +173,22 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
         final ModifiableValueMap pvm2 = new JcrModifiableValueMap(this.rootNode, getHelperData());
         assertContains(pvm2, currentlyStored);
+    }
+
+    public void testRemove()
+    throws Exception {
+        getSession().refresh(false);
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, getHelperData());
+
+        final String key = "removeMe";
+        final Long longValue = 5L;
+
+        pvm.put(key, longValue);
+
+        final Object removedValue = pvm.remove(key);
+        assertTrue(removedValue instanceof Long);
+        assertTrue(removedValue == longValue);
+        assertFalse(pvm.containsKey(key));
     }
 
     public void testSerializable()

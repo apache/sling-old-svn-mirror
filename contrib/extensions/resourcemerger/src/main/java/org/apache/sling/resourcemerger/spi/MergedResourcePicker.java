@@ -30,7 +30,7 @@ import aQute.bnd.annotation.ConsumerType;
  * Service interface which can be implemented to define an algorithm used to pick
  * resources to be merged. For each picker service, a separate {@link ResourceProviderFactory}
  * will be exposed at the MERGE_ROOT of the picker.
- * @deprecated
+ * @deprecated Use new {@link MergedResourcePicker2} instead.
  */
 @Deprecated
 @ConsumerType
@@ -61,7 +61,14 @@ public interface MergedResourcePicker {
     String TRAVERSE_PARENT = MergedResourcePicker2.TRAVERSE_PARENT;
 
     /**
-     * @see #pickResources(ResourceResolver, String, Resource)
+     * Method invoked by the MergingResourceProvider to identify the resources to be merged for a given
+     * relative path. The resources returned may be either resources returned from the ResourceResolver
+     * directory or an instance of NonExistingResource.
+     * 
+     * @param resolver the ResourceResolver
+     * @param relativePath the path relative to the merge root
+     * @return a List of Resource objects
+     * @see MergedResourcePicker2#pickResources(ResourceResolver, String, Resource)
      */
     List<Resource> pickResources(ResourceResolver resolver, String relativePath);
 }

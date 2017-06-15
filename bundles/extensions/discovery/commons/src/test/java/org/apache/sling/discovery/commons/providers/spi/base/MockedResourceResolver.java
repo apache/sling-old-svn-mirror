@@ -96,6 +96,7 @@ public class MockedResourceResolver implements ResourceResolver {
     }
 
 
+    @Override
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type.equals(Session.class)) {
@@ -110,27 +111,33 @@ public class MockedResourceResolver implements ResourceResolver {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public Resource resolve(HttpServletRequest request, String absPath) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public Resource resolve(String absPath) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     @Deprecated
     public Resource resolve(HttpServletRequest request) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public String map(String resourcePath) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public String map(HttpServletRequest request, String resourcePath) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public Resource getResource(String path) {
         Session session;
         try {
@@ -144,6 +151,7 @@ public class MockedResourceResolver implements ResourceResolver {
         return new MockedResource(this, path, "nt:unstructured");
     }
 
+    @Override
     public Resource getResource(Resource base, String path) {
         if (base.getPath().equals("/")) {
             return getResource("/" + path);
@@ -152,20 +160,24 @@ public class MockedResourceResolver implements ResourceResolver {
         }
     }
 
+    @Override
     public String[] getSearchPath() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public Iterator<Resource> listChildren(Resource parent) {
         try {
             Node node = parent.adaptTo(Node.class);
             final NodeIterator nodes = node.getNodes();
             return new Iterator<Resource>() {
 
+                @Override
                 public void remove() {
                     throw new UnsupportedOperationException();
                 }
 
+                @Override
                 public Resource next() {
                     Node next = nodes.nextNode();
                     try {
@@ -177,6 +189,7 @@ public class MockedResourceResolver implements ResourceResolver {
                     }
                 }
 
+                @Override
                 public boolean hasNext() {
                     return nodes.hasNext();
                 }
@@ -186,28 +199,34 @@ public class MockedResourceResolver implements ResourceResolver {
         }
     }
 
+    @Override
     public Iterable<Resource> getChildren(Resource parent) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public Iterator<Resource> findResources(String query, String language) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public Iterator<Map<String, Object>> queryResources(String query,
             String language) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public ResourceResolver clone(Map<String, Object> authenticationInfo)
             throws LoginException {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public boolean isLive() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public void close() {
         Iterator<MockedResource> it = resources.iterator();
         while (it.hasNext()) {
@@ -226,18 +245,22 @@ public class MockedResourceResolver implements ResourceResolver {
         resources.add(mockedResource);
     }
 
+    @Override
     public String getUserID() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public Iterator<String> getAttributeNames() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public Object getAttribute(String name) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public void delete(Resource resource) throws PersistenceException {
         if (resources.contains(resource)) {
             resources.remove(resource);
@@ -252,6 +275,7 @@ public class MockedResourceResolver implements ResourceResolver {
         }
     }
 
+    @Override
     public Resource create(Resource parent, String name,
             Map<String, Object> properties) throws PersistenceException {
         final Node parentNode = parent.adaptTo(Node.class);
@@ -286,6 +310,7 @@ public class MockedResourceResolver implements ResourceResolver {
         }
     }
 
+    @Override
     public void revert() {
         try {
             this.session.refresh(false);
@@ -294,6 +319,7 @@ public class MockedResourceResolver implements ResourceResolver {
         }
     }
 
+    @Override
     public void commit() throws PersistenceException {
         try {
             this.session.save();
@@ -302,28 +328,54 @@ public class MockedResourceResolver implements ResourceResolver {
         }
     }
 
+    @Override
     public boolean hasChanges() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public String getParentResourceType(Resource resource) {
         // TODO Auto-generated method stub
         return null;
     }
 
+    @Override
     public String getParentResourceType(String resourceType) {
         // TODO Auto-generated method stub
         return null;
     }
 
+    @Override
     public boolean isResourceType(Resource resource, String resourceType) {
         // TODO Auto-generated method stub
         return false;
     }
 
+    @Override
     public void refresh() {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public boolean hasChildren(Resource arg0) {
+        Iterable<Resource> iter = this.getChildren(arg0);
+        return iter.iterator().hasNext();
+    }
+
+    @Override
+    public Resource getParent(Resource child) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Resource copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Resource move(String srcAbsPath, String destAbsPath) throws PersistenceException {
+        throw new UnsupportedOperationException("Not implemented");
     }
 
 }

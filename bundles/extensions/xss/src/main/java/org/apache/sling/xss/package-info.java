@@ -17,10 +17,9 @@
 /**
  * XSS Protection Service
  *
- * @version 1.2.0
+ * @version 2.0.0
  */
-@Version("1.2.0")
+@Version("2.0.0")
 package org.apache.sling.xss;
 
-import aQute.bnd.annotation.Version;
-
+import org.osgi.annotation.versioning.Version;

@@ -211,7 +211,7 @@ describe('A user of the Apache Sling Resource Editor', function() {
 		  });
 	  });
 
-	  describe('can add a', function(done){
+	  describe('can add a', function(){
 		  it('String property', function(done) {
 			  addProperty("String", "textarea");
 			  client.call(done);
@@ -349,7 +349,7 @@ describe('A user of the Apache Sling Resource Editor', function() {
 	  // specs ("it" functions) are always executed before describe blocks
 	  // that's why this spec is wrapped within a describe block as
 	  // it has to be executed last
-	  describe('can delete the (test) node', function(done){
+	  describe('can delete the (test) node', function(){
 		  it('with the icon', function(done) {
 			  client = client.url(homeURL);
 			  client.waitForExist('#last-element', function(err) {

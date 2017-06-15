@@ -60,4 +60,11 @@ public interface ExecutionContext {
      * @return the resource resolver or {@code null}
      */
     ResourceResolver getResourceResolver();
+
+    /**
+     * Return the {@link Features} manager. This allows a feature to find out
+     * about other features.
+     * @since 1.1.0
+     */
+    Features getFeatures();
 }

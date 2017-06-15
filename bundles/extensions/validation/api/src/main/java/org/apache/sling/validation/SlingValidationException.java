@@ -18,9 +18,12 @@
  */
 package org.apache.sling.validation;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 /**
  * Exception that is thrown for Validator inconsistencies, e.g. if a mandatory parameter for a validator is missing.
  */
+@ConsumerType
 public class SlingValidationException extends RuntimeException {
 
     private static final long serialVersionUID = 3123210091593613191L;

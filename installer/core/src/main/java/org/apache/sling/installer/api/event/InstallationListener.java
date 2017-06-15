@@ -18,7 +18,7 @@
  */
 package org.apache.sling.installer.api.event;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 
 /**
@@ -32,6 +32,7 @@ public interface InstallationListener {
 
     /**
      * Receive an installation event.
+     * @param event The installation event
      */
-    void onEvent(final InstallationEvent event);
+    void onEvent(InstallationEvent event);
 }

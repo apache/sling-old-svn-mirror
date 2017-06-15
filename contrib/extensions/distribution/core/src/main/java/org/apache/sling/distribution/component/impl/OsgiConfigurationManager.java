@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * Manager implementation which represents the distribution configurations as OSGI configuration.
  */
 public class OsgiConfigurationManager implements DistributionConfigurationManager {
-    final ConfigurationAdmin configurationAdmin;
+    private final ConfigurationAdmin configurationAdmin;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public OsgiConfigurationManager(ConfigurationAdmin configurationAdmin) {

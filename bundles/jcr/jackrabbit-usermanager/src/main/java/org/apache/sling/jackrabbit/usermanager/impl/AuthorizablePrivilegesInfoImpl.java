@@ -19,15 +19,13 @@ package org.apache.sling.jackrabbit.usermanager.impl;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Dictionary;
+import java.util.Collection;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.Servlet;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -37,7 +35,8 @@ import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +52,11 @@ import org.slf4j.LoggerFactory;
  * her/his group membership,</li>
  * </ul>
  */
-@Component (immediate=true)
-@Service (value=AuthorizablePrivilegesInfo.class)
+@Component(service=AuthorizablePrivilegesInfo.class,
+    property={
+    		AuthorizablePrivilegesInfoImpl.PAR_USER_ADMIN_GROUP_NAME + "=" + AuthorizablePrivilegesInfoImpl.DEFAULT_USER_ADMIN_GROUP_NAME,
+    		AuthorizablePrivilegesInfoImpl.PAR_GROUP_ADMIN_GROUP_NAME + "=" + AuthorizablePrivilegesInfoImpl.DEFAULT_GROUP_ADMIN_GROUP_NAME		
+    })
 public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInfo {
 
     /** default log */
@@ -65,28 +67,26 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
      *
      * @see #PAR_USER_ADMIN_GROUP_NAME
      */
-    private static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
+    static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
  
     /**
      * The name of the configuration parameter providing the 
      * 'User administrator' group name.
      */
-    @Property (value=DEFAULT_USER_ADMIN_GROUP_NAME)
-    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
+    static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
 
     /**
      * The default 'User administrator' group name
      *
      * @see #PAR_GROUP_ADMIN_GROUP_NAME
      */
-    private static final String DEFAULT_GROUP_ADMIN_GROUP_NAME = "GroupAdmin";
+    static final String DEFAULT_GROUP_ADMIN_GROUP_NAME = "GroupAdmin";
  
     /**
      * The name of the configuration parameter providing the 
      * 'Group administrator' group name.
      */
-    @Property (value=DEFAULT_GROUP_ADMIN_GROUP_NAME)
-    private static final String PAR_GROUP_ADMIN_GROUP_NAME = "group.admin.group.name";
+    static final String PAR_GROUP_ADMIN_GROUP_NAME = "group.admin.group.name";
     
     /* (non-Javadoc)
      * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canAddGroup(javax.jcr.Session)
@@ -113,13 +113,12 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
     public boolean canAddUser(Session jcrSession) {
         try {
             //if self-registration is enabled, then anyone can create a user
-            if (componentContext != null) {
+            if (bundleContext != null) {
                 String filter = "(&(sling.servlet.resourceTypes=sling/users)(|(sling.servlet.methods=POST)(sling.servlet.selectors=create)))";
-                BundleContext bundleContext = componentContext.getBundleContext();
-                ServiceReference[] serviceReferences = bundleContext.getServiceReferences(Servlet.class.getName(), filter);
+                Collection<ServiceReference<Servlet>> serviceReferences = bundleContext.getServiceReferences(Servlet.class, filter);
                 if (serviceReferences != null) {
                     String propName = "self.registration.enabled";
-                    for (ServiceReference serviceReference : serviceReferences) {
+                    for (ServiceReference<Servlet> serviceReference : serviceReferences) {
                         Object propValue = serviceReference.getProperty(propName);
                         if (propValue != null) {
                             boolean selfRegEnabled = Boolean.TRUE.equals(propValue);
@@ -207,24 +206,15 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
     // ---------- SCR Integration ----------------------------------------------
 
     //keep track of the bundle context
-    private ComponentContext componentContext;
+    private BundleContext bundleContext;
 
-    /**
-     * Called by SCR to activate the component.
-     *
-     * @throws InvalidKeyException
-     * @throws NoSuchAlgorithmException
-     * @throws IllegalStateException
-     * @throws UnsupportedEncodingException
-     */
-    protected void activate(ComponentContext componentContext)
+    @Activate
+    protected void activate(BundleContext bundleContext, Map<String, Object> properties)
             throws InvalidKeyException, NoSuchAlgorithmException,
             IllegalStateException, UnsupportedEncodingException {
 
-        this.componentContext = componentContext;
+        this.bundleContext = bundleContext;
         
-        Dictionary<?, ?> properties = componentContext.getProperties();
-
         String userAdminGroupName = OsgiUtil.toString(properties.get(PAR_USER_ADMIN_GROUP_NAME), null);
         if ( userAdminGroupName != null && ! DEFAULT_USER_ADMIN_GROUP_NAME.equals(userAdminGroupName)) {
             log.warn("Configuration setting for {} is deprecated and will not have any effect", PAR_USER_ADMIN_GROUP_NAME);

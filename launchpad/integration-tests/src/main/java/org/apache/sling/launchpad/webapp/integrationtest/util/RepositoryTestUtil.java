@@ -20,8 +20,9 @@ package org.apache.sling.launchpad.webapp.integrationtest.util;
 
 import java.io.IOException;
 
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.slf4j.Logger;
@@ -33,13 +34,13 @@ public class RepositoryTestUtil {
     
     public static final String DESCRIPTORS_KEY = "descriptors";
     
-    public static String getDescriptor(HttpTestBase H, String descriptorName) throws JSONException, IOException {
+    public static String getDescriptor(HttpTestBase H, String descriptorName) throws JsonException, IOException {
         final String path = "/testing/RepositoryDescriptors.json";
-        final JSONObject json = new JSONObject(H.getContent(HttpTest.HTTP_BASE_URL + path, HttpTest.CONTENT_TYPE_JSON));
-        return json.getJSONObject("descriptors").getString(descriptorName);
+        final JsonObject json = JsonUtil.parseObject(H.getContent(HttpTest.HTTP_BASE_URL + path, HttpTest.CONTENT_TYPE_JSON));
+        return json.getJsonObject("descriptors").getString(descriptorName);
     }
     
-    public static void logDescriptors(HttpTestBase H, String ... names) throws JSONException, IOException {
+    public static void logDescriptors(HttpTestBase H, String ... names) throws JsonException, IOException {
         for(String name : names) {
             log.info("Repository descriptor {}={}", name, getDescriptor(H, name));
         }

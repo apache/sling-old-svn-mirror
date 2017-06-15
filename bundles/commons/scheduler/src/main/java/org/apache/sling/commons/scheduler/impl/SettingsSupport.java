@@ -20,9 +20,6 @@ package org.apache.sling.commons.scheduler.impl;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -30,11 +27,14 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * The <code>SettingsSupport</code> listens for the settings service.
  */
-@Component
+@Component()
 public class SettingsSupport {
 
     private static final String SETTINGS_NAME = "org.apache.sling.settings.SlingSettingsService";
@@ -124,6 +124,7 @@ public class SettingsSupport {
         /**
          * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
          */
+        @Override
         public void serviceChanged(final ServiceEvent event) {
             if (event.getType() == ServiceEvent.REGISTERED) {
                 this.retainService();

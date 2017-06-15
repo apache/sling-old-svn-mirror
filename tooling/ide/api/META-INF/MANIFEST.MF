@@ -11,14 +11,16 @@ Export-Package: org.apache.sling.ide.filter,
  org.apache.sling.ide.serialization,
  org.apache.sling.ide.transport,
  org.apache.sling.ide.util
-Import-Package: javax.jcr.nodetype,
+Import-Package: com.google.gson;version="2.2.4",
+ com.google.gson.annotations;version="2.2.4",
+ com.google.gson.stream;version="2.2.4",
+ javax.jcr.nodetype,
  org.apache.commons.httpclient;version="3.1.0",
  org.apache.commons.httpclient.auth;version="3.1.0",
  org.apache.commons.httpclient.methods;version="3.1.0",
  org.apache.commons.httpclient.methods.multipart;version="3.1.0",
  org.apache.commons.httpclient.params;version="3.1.0",
  org.apache.commons.io;version="2.0.1",
- org.json,
  org.osgi.framework;version="1.6.0",
  org.osgi.service.event
 Service-Component: OSGI-INF/*.xml

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.resourcemerger.impl;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.sling.api.resource.AbstractResource;
@@ -184,7 +185,9 @@ public class MergedResource extends AbstractResource {
 
     @Override
     public String toString() {
-        return "MergedResource [path=" + this.path +
-               ", resources=" + this.metadata.get(MergedResourceConstants.METADATA_RESOURCES) + "]";
+        final Object resources = this.metadata.get(MergedResourceConstants.METADATA_RESOURCES);
+        return "MergedResource [path=" + this.path + ", resources="
+                + ((resources instanceof String[]) ? Arrays.toString((String[]) resources) : resources.toString())
+                + "]";
     }
 }

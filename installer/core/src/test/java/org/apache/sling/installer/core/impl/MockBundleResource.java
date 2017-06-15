@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.annotation.CheckForNull;
+
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
@@ -149,6 +151,12 @@ public class MockBundleResource implements TaskResource, Comparable<MockBundleRe
         return state;
     }
 
+    @Override
+    @CheckForNull
+    public String getError() {
+        return null;
+    }
+
     /**
      * Set the state
      */
@@ -217,7 +225,7 @@ public class MockBundleResource implements TaskResource, Comparable<MockBundleRe
         tr.setResourceType(this.getType());
         tr.setVersion(this.getVersion());
         rr = (RegisteredResourceImpl)rr.clone(tr);
-        rr.setState(this.getState());
+        rr.setState(this.getState(), null);
 
         return rr;
     }

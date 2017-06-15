@@ -21,8 +21,13 @@ import java.util.List;
 import javax.jcr.Session;
 
 import org.apache.sling.repoinit.parser.operations.Operation;
+import org.osgi.annotation.versioning.ProviderType;
 
-/** Apply Operations produced by the repoinit parser to a JCR Repository */
+/**
+ * Apply Operations produced by the repoinit parser to a JCR Repository
+ */
+@ProviderType
 public interface JcrRepoInitOpsProcessor {
+
     void apply(Session session, List<Operation> ops);
 }

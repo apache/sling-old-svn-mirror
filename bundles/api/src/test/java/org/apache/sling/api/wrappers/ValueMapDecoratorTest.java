@@ -18,6 +18,10 @@
  */
 package org.apache.sling.api.wrappers;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,8 +47,8 @@ public class ValueMapDecoratorTest {
     public void testIncompatibleTypeInArray() {
         map.put("prop1", new String[] { "test", "test2" });
         map.put("prop2", "test");
-        Assert.assertNull("Not convertible type should return null", valueMap.get("prop1", Integer[].class));
-        Assert.assertNull("Not convertible type should return null", valueMap.get("prop2", Integer[].class));
+        Assert.assertArrayEquals("Not convertible type should return empty array", new Integer[0], valueMap.get("prop1", Integer[].class));
+        Assert.assertArrayEquals("Not convertible type should return empt array", new Integer[0], valueMap.get("prop2", Integer[].class));
     }
 
     // SLING-662
@@ -90,8 +94,12 @@ public class ValueMapDecoratorTest {
     public void testPrimitiveTypes() {
         map.put("prop1", new String[] { "1", "2" });
         Assert.assertNull("ValueMap should not support conversion to primitive type", valueMap.get("prop1", int.class));
-        Assert.assertNull("ValueMap should not support conversion to array of primitive type",
-                valueMap.get("prop1", int[].class));
+    }
+    @Test(expected=ClassCastException.class)
+    public void testPrimitiveTypesArray() {
+        map.put("prop1", new String[] { "1", "2" });
+        Assert.assertArrayEquals("ValueMap should not support conversion to array of primitive type",
+                new int[0], valueMap.get("prop1", int[].class));
     }
 
     @Test
@@ -146,4 +154,17 @@ public class ValueMapDecoratorTest {
         Assert.assertFalse("Two ValueMapDecorators based on maps with different entries should not be equal",
                 valueMap.equals(valueMap2));
     }
+    
+    @Test
+    public void testDelegateToValueMap() {
+        ValueMap original = mock(ValueMap.class);
+        ValueMap decorated = new ValueMapDecorator(original);
+        
+        decorated.get("prop1", String.class);
+        verify(original, times(1)).get("prop1", String.class);
+
+        decorated.get("prop1", "defValue");
+        verify(original, times(1)).get("prop1", "defValue");
+    }
+    
 }

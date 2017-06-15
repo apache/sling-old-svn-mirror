@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
            service = Filter.class,
            property = {
                    HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT+ "=(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=" + SlingMainServlet.SERVLET_CONTEXT_NAME + ")",
-                   HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN + "=/",
+                   HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN + "=/",
                    Constants.SERVICE_RANKING + ":Integer=32768",
                    Constants.SERVICE_DESCRIPTION + "=Request Logger Filter",
                    Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
@@ -83,7 +83,7 @@ public final class RequestLoggerFilter implements Filter {
 
     // ---------- SCR Integration ----------------------------------------------
 
-    @Reference(cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC)
+    @Reference(cardinality = ReferenceCardinality.AT_LEAST_ONE, policy = ReferencePolicy.DYNAMIC)
     private void bindRequestLoggerService(RequestLoggerService requestLoggerService) {
         if (requestLoggerService.isOnEntry()) {
             this.requestEntry = this.addService(this.requestEntry, requestLoggerService);

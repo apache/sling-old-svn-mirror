@@ -58,7 +58,6 @@ public class ProjectUtilTest {
         project.createVltFilterWithRoots();
         // create content sync dir
         project.ensureDirectoryExists(Path.fromPortableString("jcr_root"));
-
     }
     
     @Test
@@ -114,5 +113,33 @@ public class ProjectUtilTest {
         // a second query should work just the same, to make sure that after deleting the data from the old store we get the right value back
         assertThat("sync_root not obeyed after old store for property was deleted", 
                 ProjectUtil.getSyncDirectory(contentProject).getProjectRelativePath(), equalTo(contentSyncPath));
+    }
+    
+    @Test
+    public void noModelsDirectory() throws Exception {
+    	
+    	assertThat("provisioning model path", ProjectUtil.getProvisioningModelPath(contentProject), nullValue());
+    }
+
+    @Test
+    public void existingModelsDirectoryWithoutLaunchpadNature() throws Exception {
+
+    	IPath modelPath = Path.fromPortableString("src/main/provisioning");
+		project.ensureDirectoryExists(modelPath);
+    	ProjectUtil.setProvisioningModelPath(contentProject, modelPath);
+    	
+    	assertThat("provisioning model path", ProjectUtil.getProvisioningModelPath(contentProject), nullValue());
+    }
+
+    @Test
+    public void existingModelsDirectoryWithLaunchpadNature() throws Exception {
+    	
+    	project.installFacet("sling.launchpad", "1.0");
+    	
+    	IPath modelPath = Path.fromPortableString("src/main/provisioning");
+    	project.ensureDirectoryExists(modelPath);
+    	ProjectUtil.setProvisioningModelPath(contentProject, modelPath);
+    	
+    	assertThat("provisioning model path", ProjectUtil.getProvisioningModelPath(contentProject), equalTo(modelPath));
     }
 }

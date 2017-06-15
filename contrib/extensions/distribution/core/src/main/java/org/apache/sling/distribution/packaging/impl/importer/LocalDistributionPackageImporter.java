@@ -119,9 +119,9 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
                 }
             } else {
                 try {
-                    stream.reset();
+                    stream.reset(); // TODO : see if this can be removed entirely
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    // do nothing
                 }
                 DistributionPackageInfo packageInfo;
                 Object rr = headerInfo.get("reference-required");

@@ -25,8 +25,7 @@
  * {@link org.apache.sling.jcr.base.AbstractSlingRepository2} being the
  * basis for the repository service instance handed to using bundles.
  */
-@Version("3.0")
+@org.osgi.annotation.versioning.Version("3.2.0")
 package org.apache.sling.jcr.base;
 
-import aQute.bnd.annotation.Version;
 

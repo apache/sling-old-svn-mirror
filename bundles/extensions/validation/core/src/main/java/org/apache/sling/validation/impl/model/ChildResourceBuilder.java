@@ -31,7 +31,9 @@ public class ChildResourceBuilder {
     public boolean optional;
     public boolean multiple;
     String nameRegex;
+    @Nonnull
     private final List<ResourceProperty> resourceProperties;
+    @Nonnull
     private final List<ChildResource> children;
 
     public ChildResourceBuilder() {

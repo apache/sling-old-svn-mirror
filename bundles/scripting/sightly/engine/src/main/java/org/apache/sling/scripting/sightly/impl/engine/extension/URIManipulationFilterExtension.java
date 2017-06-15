@@ -18,8 +18,10 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,21 +32,19 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
+import org.osgi.service.component.annotations.Component;
 
-@Component
-@Service(RuntimeExtension.class)
-@Properties({
-        @Property(name = RuntimeExtension.NAME, value = RuntimeFunction.URI_MANIPULATION)
-})
+@Component(
+        service = RuntimeExtension.class,
+        property = {
+                RuntimeExtension.NAME + "=" + RuntimeFunction.URI_MANIPULATION
+        }
+)
 public class URIManipulationFilterExtension implements RuntimeExtension {
 
     public static final String SCHEME = "scheme";
@@ -310,17 +310,21 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
             queryParameters) {
         for (Map.Entry<String, Object> entry : queryParameters.entrySet()) {
             Object entryValue = entry.getValue();
-            if (runtimeObjectModel.isCollection(entryValue)) {
-                Collection<Object> collection = runtimeObjectModel.toCollection(entryValue);
-                Collection<String> values = new ArrayList<>(collection.size());
-                for (Object o : collection) {
-                    values.add(runtimeObjectModel.toString(o));
+            try {
+                if (runtimeObjectModel.isCollection(entryValue)) {
+                    Collection<Object> collection = runtimeObjectModel.toCollection(entryValue);
+                    Collection<String> values = new ArrayList<>(collection.size());
+                    for (Object o : collection) {
+                        values.add(URLEncoder.encode(runtimeObjectModel.toString(o), "UTF-8"));
+                    }
+                    parameters.put(entry.getKey(), values);
+                } else {
+                    Collection<String> values = new ArrayList<>(1);
+                    values.add(URLEncoder.encode(runtimeObjectModel.toString(entryValue), "UTF-8"));
+                    parameters.put(entry.getKey(), values);
                 }
-                parameters.put(entry.getKey(), values);
-            } else {
-                Collection<String> values = new ArrayList<>(1);
-                values.add(runtimeObjectModel.toString(entryValue));
-                parameters.put(entry.getKey(), values);
+            } catch (UnsupportedEncodingException e) {
+                throw new SightlyException(e);
             }
         }
     }
@@ -387,11 +391,11 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
             } else {
                 this.path = processingPath.substring(0, pathLength);
             }
-            String query = uri.getQuery();
+            String query = uri.getRawQuery();
             if (StringUtils.isNotEmpty(query)) {
                 String[] keyValuePairs = query.split("&");
-                for (int i = 0; i < keyValuePairs.length; i++) {
-                    String[] pair = keyValuePairs[i].split("=");
+                for (String keyValuePair : keyValuePairs) {
+                    String[] pair = keyValuePair.split("=");
                     if (pair.length == 2) {
                         String param = pair[0];
                         String value = pair[1];

@@ -38,15 +38,11 @@ import org.apache.sling.hc.api.ResultLog.Entry;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.osgi.service.component.ComponentContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Serializes health check results into html format. */
 @Service(ResultHtmlSerializer.class)
-@Component(metatype = true)
+@Component(metatype = true, name = "Apache Sling Health Check Result HTML Serializer", description = "Serializer for health check results in HTML format")
 public class ResultHtmlSerializer {
-    private static final Logger LOG = LoggerFactory.getLogger(ResultHtmlSerializer.class);
-
     private static final String CSS_STYLE_DEFAULT = "body { font-size:12px; font-family:arial,verdana,sans-serif;background-color:#FFFDF1; }\n"
             + "h1 { font-size:20px;}\n"
             + "table { font-size:12px; border:#ccc 1px solid; border-radius:3px; }\n"
@@ -82,15 +78,21 @@ public class ResultHtmlSerializer {
 
         final DateFormat dfShort = new SimpleDateFormat("HH:mm:ss.SSS");
         final DateFormat dfLong = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        
+
         writer.println("<table id=\"healthCheckResults\" cellspacing=\"0\">");
-        writer.println("<thead><tr><th>Health Check</th><th>Status</th><th>Log</th><th colspan=\"2\">Execution Time</th></tr></thead>");
+        writer.println(
+                "<thead><tr><th>Health Check <span style='color:gray'>(tags)</span></th><th>Status</th><th>Log</th><th>Finished At</th><th>Time</th></tr></thead>");
         for (HealthCheckExecutionResult executionResult : executionResults) {
             Result result = executionResult.getHealthCheckResult();
-            writer.println("<tr class=\"" + getClassForStatus(result.getStatus()) + "\" "
-                    + "title=\"Tags: " + StringEscapeUtils.escapeHtml(StringUtils.join(executionResult.getHealthCheckMetadata().getTags(), ",")) + "\">");
-            writer.println("<td><span title=\"" + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getName()) + "\">"
-                    + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getTitle()) + "</span></td>");
+            List<String> tags = executionResult.getHealthCheckMetadata().getTags();
+            boolean hasTags = tags != null && tags.size() > 0 && StringUtils.isNotBlank(tags.get(0));
+            writer.print("<tr class=\"" + getClassForStatus(result.getStatus()) + "\">");
+            writer.print("<td><p title=\"" + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getName()) + "\">"
+                    + StringEscapeUtils.escapeHtml(executionResult.getHealthCheckMetadata().getTitle()) + "");
+            if (hasTags) {
+                writer.println("<br/><span style='color:gray'>" + StringEscapeUtils.escapeHtml(StringUtils.join(tags, ", ")) + "</span>");
+            }
+            writer.println("</p></td>");
             writer.println("<td style='font-weight:bold;'>" + StringEscapeUtils.escapeHtml(result.getStatus().toString()) + "</td>");
             writer.println("<td>");
             boolean isFirst = true;
@@ -101,15 +103,15 @@ public class ResultHtmlSerializer {
             	if(!includeDebug && entry.getStatus()==Result.Status.DEBUG) {
             		continue;
             	}
-            	
+
                 if (isFirst) {
                     isFirst = false;
                 } else {
                     writer.println("<br/>\n");
                 }
-                
+
                 boolean showStatus = !isSingleResult && entry.getStatus()!=Result.Status.DEBUG && entry.getStatus() !=Result.Status.INFO;
-                
+
                 String message = StringEscapeUtils.escapeHtml(entry.getMessage());
                 if(entry.getStatus()==Result.Status.DEBUG) {
                 	message = "<span style='color:gray'/>"+message + "</span>";
@@ -128,11 +130,11 @@ public class ResultHtmlSerializer {
             Date finishedAt = executionResult.getFinishedAt();
             writer.println("<td>" + (isToday(finishedAt) ? dfShort.format(finishedAt) : dfLong.format(finishedAt)) + "</td>");
             writer.println("<td>" + FormattingResultLog.msHumanReadable(executionResult.getElapsedTimeInMs()) + "</td>");
-            
+
             writer.println("</tr>");
         }
         writer.println("</table>");
-        
+
         writer.println("<div class='helpText'>");
         writer.println(escapedHelpText);
         writer.println("</div>");

@@ -96,7 +96,7 @@ import org.xmlpull.v1.XmlPullParserException;
  * </pre>
  *
  * If you want to include a binary file in your loaded content, you may specify it using a
- * {@link org.apache.sling.jcr.contentloader.internal.readers.XmlReader.FileDescription <code>&lt;nt:file&gt;</code>} element.
+ * {@link org.apache.sling.jcr.contentloader.internal.readers.XmlReader.FileDescription} <code>&lt;nt:file&gt;</code> element.
  */
 @Component
 @Service
@@ -531,7 +531,7 @@ public class XmlReader implements ContentReader {
     /**
      * Represents a reference to a file that is to be loaded into the repository. The file is referenced by an
      * XML element named <code>&lt;nt:file&gt;</code>, with the attributes <code>src</code>,
-     * <code>mimeType</code> and <code>lastModified</code>. <br/><br/>Example:
+     * <code>mimeType</code> and <code>lastModified</code>. <br><br>Example:
      * <pre>
      * &lt;nt:file src="../../image.png" mimeType="image/png" lastModified="1977-06-01T07:00:00+0100" /&gt;
      * </pre>

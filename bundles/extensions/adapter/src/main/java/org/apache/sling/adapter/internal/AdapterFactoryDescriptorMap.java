@@ -20,6 +20,7 @@ package org.apache.sling.adapter.internal;
 
 import java.util.TreeMap;
 
+import org.apache.sling.api.adapter.AdapterFactory;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -36,7 +37,7 @@ import org.osgi.framework.ServiceReference;
  * removed the eventual second instance may actually be used instead.
  */
 public class AdapterFactoryDescriptorMap extends
-        TreeMap<ServiceReference, AdapterFactoryDescriptor> {
+        TreeMap<ServiceReference<AdapterFactory>, AdapterFactoryDescriptor> {
 
     private static final long serialVersionUID = 2L;
 

@@ -20,10 +20,13 @@
 package org.apache.sling.tracer.internal;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.List;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.Servlet;
@@ -42,7 +45,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContextCallback;
@@ -276,7 +278,7 @@ public class LogTracerTest {
     @Test
     public void recordingWithoutTracing() throws Exception{
         activateTracerAndServlet();
-        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(){
+        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(context.bundleContext()){
             @Override
             public RequestProgressTracker getRequestProgressTracker() {
                 return createTracker("x", "y");
@@ -310,15 +312,15 @@ public class LogTracerTest {
 
         StringWriter sw = new StringWriter();
         jr.render(sw);
-        JSONObject json = new JSONObject(sw.toString());
-
-        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
+        JsonObject json = Json.createReader(new StringReader(sw.toString())).readObject();
+        
+        assertEquals(2, json.getJsonArray("requestProgressLogs").size());
     }
 
     @Test
     public void recordingWithTracing() throws Exception{
         activateTracerAndServlet();
-        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(){
+        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(context.bundleContext()){
             @Override
             public RequestProgressTracker getRequestProgressTracker() {
                 return createTracker("x", "y");
@@ -354,10 +356,10 @@ public class LogTracerTest {
 
         StringWriter sw = new StringWriter();
         jr.render(sw);
-        JSONObject json = new JSONObject(sw.toString());
-
-        assertEquals(2, json.getJSONArray("requestProgressLogs").length());
-        assertEquals(1, json.getJSONArray("logs").length());
+        JsonObject json = Json.createReader(new StringReader(sw.toString())).readObject();
+        
+        assertEquals(2, json.getJsonArray("requestProgressLogs").size());
+        assertEquals(1, json.getJsonArray("logs").size());
     }
 
 
@@ -382,7 +384,7 @@ public class LogTracerTest {
                 context.bundleContext().getServiceReferences(Filter.class, null);
         ServiceReference<Filter> result = null;
         for (ServiceReference<Filter> ref : refs) {
-            if (slingFilter && ref.getProperty("filter.scope") != null) {
+            if (slingFilter && ref.getProperty("sling.filter.scope") != null) {
                 result = ref;
                 break;
             } else if (!slingFilter && ref.getProperty("pattern") != null) {

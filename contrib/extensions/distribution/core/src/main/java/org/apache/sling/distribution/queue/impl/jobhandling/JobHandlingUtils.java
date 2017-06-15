@@ -85,7 +85,7 @@ class JobHandlingUtils {
     }
 
     @CheckForNull
-    public static String getQueueName(Job job) {
+    private static String getQueueName(Job job) {
 
         String topic = job.getTopic();
         if (topic == null || !topic.startsWith(JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC)) return null;
@@ -121,7 +121,7 @@ class JobHandlingUtils {
         return null;
     }
 
-    public static String escapeId(String jobId) {
+    private static String escapeId(String jobId) {
         //return id;
         if (jobId == null) {
             return null;

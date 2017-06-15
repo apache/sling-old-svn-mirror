@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
 
+import javax.json.JsonException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.Header;
@@ -44,7 +45,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.base.commons.ClusterViewService;
@@ -322,7 +322,7 @@ public class TopologyConnectorClient implements
     			logger.warn("ping: got IOException [suppressing further warns]: " + e + ", uri=" + uri);
         	}
             statusDetails = e.toString();
-        } catch (JSONException e) {
+        } catch (JsonException e) {
             logger.warn("ping: got JSONException: " + e);
             statusDetails = e.toString();
         } catch (RuntimeException re) {

@@ -47,7 +47,7 @@ public interface ChangeUserPassword {
      * @param newPasswordConfirm The password value to apply again (required)
      * @param changes The list of changes for this operation (optional)
      * @return the user whose password was changed
-     * @throws RepositoryException
+     * @throws RepositoryException if password can't be changed for some reason
      */
     public User changePassword(Session jcrSession,
                             String name,

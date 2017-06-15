@@ -65,6 +65,8 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
 
     static final String PROPERTY_PROCESS_ERROR = "processError";
 
+    static final String ATTR_PIPELINE = "org.apache.sling.rewriter.pipeline";
+
 
     /** For which content types should this processor be applied. */
     private final String[] contentTypes;
@@ -112,6 +114,8 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
 
     private final String descString;
 
+    private final String name;
+
     /**
      * This is the constructor for a pipeline
      */
@@ -126,6 +130,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
                                       ProcessingComponentConfiguration[] transformerConfigs,
                                       ProcessingComponentConfiguration serializerConfig,
                                       boolean processErrorResponse) {
+        this.name = null;
         this.contentTypes = contentTypes;
         this.resourceTypes = resourceTypes;
         this.unwrapResources = unwrapResources;
@@ -160,6 +165,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
      * This constructor reads the configuration from the specified resource.
      */
     public ProcessorConfigurationImpl(final Resource resource) {
+        this.name = resource.getName();
         final ValueMap properties = ResourceUtil.getValueMap(resource);
         this.contentTypes = properties.get(PROPERTY_CONTENT_TYPES, String[].class);
         this.resourceTypes = properties.get(PROPERTY_RESOURCE_TYPES, String[].class);
@@ -198,6 +204,10 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
     }
 
     void printConfiguration(final PrintWriter pw) {
+        if ( this.name != null ) {
+            pw.print("Name : ");
+            pw.println(this.name);
+        }
         if ( this.contentTypes != null ) {
             pw.print("Content Types : ");
             pw.println(Arrays.toString(this.contentTypes));
@@ -370,6 +380,12 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         if ( !this.processErrorResponse && processContext.getRequest().getAttribute("javax.servlet.error.status_code") != null ) {
             return false;
         }
+
+        final Object pipelineName = processContext.getRequest().getAttribute(ATTR_PIPELINE);
+        if (pipelineName != null && !pipelineName.equals(this.name)) {
+            return false;
+        }
+
         String contentType = processContext.getContentType();
         // if no content type is supplied, we assume html
         if ( contentType == null ) {

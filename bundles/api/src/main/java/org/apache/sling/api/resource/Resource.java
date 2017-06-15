@@ -179,17 +179,14 @@ public interface Resource extends Adaptable {
     boolean hasChildren();
 
     /**
-     * Returns <code>true</code> if the resource type or any of the resource's
-     * super type(s) equals the given resource type.
+     * Is just a shortcut for {@code getResourceResolver().isResourceType(this, resourceType)}.
      *
-     * @param resourceType The resource type to check this resource against.
-     * @return <code>true</code> if the resource type or any of the resource's
-     *         super type(s) equals the given resource type. <code>false</code>
-     *         is also returned if <code>resourceType</code> is
-     *         <code>null</code>.
-     * @throws IllegalStateException if this resource resolver has already been
-     *             {@link ResourceResolver#close() closed}.
+     * @param resourceType the resource type to check this resource against
+     * @see ResourceResolver#isResourceType(Resource, String)
      * @since 2.1.0 (Sling API Bundle 2.1.0)
+     * @return <code>true</code> if the resource type or any of the resource's
+     *         super type(s) equals the given resource type, <code>false</code> otherwise;
+     *         <code>false</code> can also be returned if <code>resourceType</code> is null
      */
     boolean isResourceType(String resourceType);
 

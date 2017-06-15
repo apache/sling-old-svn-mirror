@@ -19,7 +19,9 @@ package org.apache.sling.resourceresolver.impl.mapping;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.path.Path;
 
 /**
  * Internal interface representing the additional methods
@@ -32,6 +34,10 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
 
     String getMapRoot();
 
+    boolean isMapConfiguration(String path);
+
+    Path[] getObservationPaths();
+
     Map<?, ?> getVirtualURLMap();
 
     Mapping[] getMappings();
@@ -39,17 +45,19 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
     int getDefaultVanityPathRedirectStatus();
 
     boolean isVanityPathEnabled();
-    
+
     long getMaxCachedVanityPathEntries();
-    
+
     boolean isMaxCachedVanityPathEntriesStartup();
-    
+
     int getVanityBloomFilterMaxBytes();
 
     boolean isOptimizeAliasResolutionEnabled();
-    
+
     boolean hasVanityPathPrecedence();
 
+    Map<String, Object> getServiceUserAuthenticationInfo(final String subServiceName) throws LoginException;
+    
     public class VanityPathConfig implements Comparable<VanityPathConfig> {
         public final boolean isExclude;
         public final String prefix;
@@ -59,6 +67,7 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
             this.isExclude = isExclude;
         }
 
+        @Override
         public int compareTo(VanityPathConfig o2) {
             return new Integer(o2.prefix.length()).compareTo(this.prefix.length());
         }

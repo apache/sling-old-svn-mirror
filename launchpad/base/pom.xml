@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
@@ -32,7 +32,7 @@
        This version is a concatenation of the framework version and a version for the launchpad base itself.
        For a release only the qualifier (launchpad base version) is increased.
      -->
-    <version>5.4.0-2.6.11-SNAPSHOT</version>
+    <version>5.6.4-2.6.19-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Launchpad Base</name>
@@ -236,10 +236,6 @@
                     </execution>
                 </executions>
             </plugin>
-        </plugins>
-    </build>
-    <reporting>
-        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -251,13 +247,13 @@
                 </configuration>
             </plugin>
         </plugins>
-    </reporting>
+    </build>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>5.4.0</version>
+            <version>5.6.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -281,7 +277,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.bridge</artifactId>
-            <version>3.0.12</version>
+            <version>3.0.18</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

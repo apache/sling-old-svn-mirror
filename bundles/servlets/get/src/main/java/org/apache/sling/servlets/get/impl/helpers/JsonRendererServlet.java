@@ -18,9 +18,11 @@ package org.apache.sling.servlets.get.impl.helpers;
 
 import java.io.IOException;
 
+import javax.json.Json;
+import javax.json.stream.JsonGenerator;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -28,10 +30,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONRenderer;
-import org.apache.sling.commons.json.io.JSONWriter;
-import org.apache.sling.commons.json.sling.ResourceTraversor;
+import org.apache.sling.servlets.get.impl.util.JsonRenderer;
+import org.apache.sling.servlets.get.impl.util.ResourceTraversor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,18 +52,18 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
     /** Selector that means "pretty-print the output */
     public static final String TIDY = "tidy";
-    
-    /** Selector that causes hierarchy to be rendered as arrays 
-     *  instead of child objects - useful to preserve the order of those 
-     *  child objects */ 
+
+    /** Selector that causes hierarchy to be rendered as arrays
+     *  instead of child objects - useful to preserve the order of those
+     *  child objects */
     public static final String HARRAY = "harray";
-    
+
     /** How much to indent in tidy mode */
     public static final int INDENT_SPACES = 2;
 
     private long maximumResults;
-    
-    private final JSONRenderer renderer = new JSONRenderer();
+
+    private final JsonRenderer renderer = new JsonRenderer();
 
     public JsonRendererServlet(long maximumResults) {
         this.maximumResults = maximumResults;
@@ -96,19 +96,19 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         final boolean harray = hasSelector(req, HARRAY);
         ResourceTraversor traversor = null;
         try {
-            traversor = new ResourceTraversor(maxRecursionLevels, maximumResults, r, tidy);
+            traversor = new ResourceTraversor(maxRecursionLevels, maximumResults, r);
             allowedLevel = traversor.collectResources();
             if ( allowedLevel != -1 ) {
-			    allowDump = false;
+                allowDump = false;
             }
-        } catch (final JSONException e) {
+        } catch (final Exception e) {
             reportException(e);
         }
         try {
             // Dump the resource if we can
             if (allowDump) {
                 if (tidy || harray) {
-                    final JSONRenderer.Options opt = renderer.options()
+                    final JsonRenderer.Options opt = renderer.options()
                             .withIndent(tidy ? INDENT_SPACES : 0)
                             .withArraysForChildren(harray);
                     resp.getWriter().write(renderer.prettyPrint(traversor.getJSONObject(), opt));
@@ -116,7 +116,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
                     // If no rendering options, use the plain toString() method, for
                     // backwards compatibility. Output might be slightly different
                     // with prettyPrint and no options
-                    resp.getWriter().write(traversor.getJSONObject().toString());
+                    Json.createGenerator(resp.getWriter()).write(traversor.getJSONObject()).close();
                 }
 
             } else {
@@ -124,19 +124,20 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
                 // Send a 300
                 String tidyUrl = (tidy) ? "tidy." : "";
                 resp.setStatus(HttpServletResponse.SC_MULTIPLE_CHOICES);
-                JSONWriter writer = new JSONWriter(resp.getWriter());
-                writer.array();
+                JsonGenerator writer = Json.createGenerator(resp.getWriter());
+                writer.writeStartArray();
                 while (allowedLevel >= 0) {
-                    writer.value(r.getResourceMetadata().getResolutionPath() + "." + tidyUrl + allowedLevel + ".json");
+                    writer.write(r.getResourceMetadata().getResolutionPath() + "." + tidyUrl + allowedLevel + ".json");
                     allowedLevel--;
                 }
-                writer.endArray();
+                writer.writeEnd();
+                writer.close();
             }
-        } catch (JSONException je) {
+        } catch (Exception je) {
             reportException(je);
         }
     }
-    
+
     /**
      * Get recursion level from selectors. as per SLING-167: the last selector, if present, gives the recursion level.
      *
@@ -160,7 +161,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
                         if (StringUtils.isNumeric(level)){
                             maxRecursionLevels = -1;
                         } else {
-                            throw new IllegalArgumentException("Invalid recursion selector value '" + level + "'"); 
+                            throw new IllegalArgumentException("Invalid recursion selector value '" + level + "'");
                         }
                     }
                 }

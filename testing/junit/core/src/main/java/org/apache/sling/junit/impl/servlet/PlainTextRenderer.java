@@ -40,23 +40,18 @@ public class PlainTextRenderer extends RunListener implements Renderer, Renderer
     public static final String EXTENSION = "txt";
     private PrintWriter output;
     
-    /** @inheritDoc */
     public Renderer createRenderer() { 
         return new PlainTextRenderer();
     }
 
-    /** @inheritDoc */
     public boolean appliesTo(TestSelector selector) {
         return EXTENSION.equals(selector.getExtension());
     }
 
-    
-    /** @inheritDoc */
     public String getExtension() {
         return EXTENSION;
     }
 
-    /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
         if(output != null) {
             throw new IllegalStateException("Output Writer already set");
@@ -67,30 +62,25 @@ public class PlainTextRenderer extends RunListener implements Renderer, Renderer
         title(1, pageTitle);
     }
     
-    /** @inheritDoc */
     public void cleanup() {
         output = null;
     }
 
-    /** @inheritDoc */
     public void info(String cssClass, String str) {
         output.println(str);
     }
     
-    /** @inheritDoc */
     public void list(String cssClass, Collection<String> data) {
         for(String str : data) {
             output.println(str);
         }
     }
     
-    /** @inheritDoc */
     public void title(int level, String title) {
         output.print(title);
         output.println(" ****");
     }
     
-    /** @inheritDoc */
     public void link(String info, String url, String method) {
         output.print("LINK: ");
         output.print(info);
@@ -100,7 +90,6 @@ public class PlainTextRenderer extends RunListener implements Renderer, Renderer
         output.println(method);
     }
 
-    /** @inheritDoc */
     public RunListener getRunListener() {
         return this;
     }

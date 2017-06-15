@@ -31,7 +31,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 /**
- * {@link OutputStream} implementation which writes into a {@code byte[]} until a certain {@link #fileThreshold} is
+ * {@link OutputStream} implementation which writes into a {@code byte[]} until a certain threshold is
  * reached and then starts writing into a {@code File} beyond that.
  */
 public class FileBackedMemoryOutputStream extends OutputStream {
@@ -47,11 +47,11 @@ public class FileBackedMemoryOutputStream extends OutputStream {
 
         private final int memoryFactor;
 
-        private MemoryUnit(int memoryFactor) {
+        MemoryUnit(int memoryFactor) {
             this.memoryFactor = memoryFactor;
         }
 
-    };
+    }
 
     private final ByteBuffer memory;
 
@@ -100,6 +100,22 @@ public class FileBackedMemoryOutputStream extends OutputStream {
     }
 
     @Override
+    public void write(byte b[], int off, int len) throws IOException {
+        if (out == null) {
+            int memLen = Math.min(memory.remaining(), len);
+            memory.put(b, off, memLen);
+            if (len > memLen) {
+                file = createTempFile(fileName, fileExtension, tempDirectory);
+                out = new FileOutputStream(file);
+                out.write(b, off + memLen, len - memLen);
+            }
+        } else {
+
+            out.write(b, off, len);
+        }
+    }
+
+    @Override
     public void flush() throws IOException {
         if (out != null) {
             out.flush();
@@ -114,7 +130,7 @@ public class FileBackedMemoryOutputStream extends OutputStream {
     }
 
     // method added just for testing purposes
-    protected File getFile() {
+    File getFile() {
         return file;
     }
 

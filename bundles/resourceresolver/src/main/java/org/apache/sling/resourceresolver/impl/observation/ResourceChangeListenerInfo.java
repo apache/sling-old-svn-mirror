@@ -18,27 +18,30 @@
  */
 package org.apache.sling.resourceresolver.impl.observation;
 
+import static org.apache.sling.api.resource.observation.ResourceChangeListener.CHANGES;
+import static org.apache.sling.api.resource.observation.ResourceChangeListener.PATHS;
+import static org.apache.sling.commons.osgi.PropertiesUtil.toStringArray;
+
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
+import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.api.resource.path.PathSet;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.ServiceReference;
-
-import static org.apache.sling.api.resource.observation.ResourceChangeListener.CHANGES;
-import static org.apache.sling.api.resource.observation.ResourceChangeListener.PATHS;
-import static org.apache.sling.commons.osgi.PropertiesUtil.toStringArray;
 
 /**
  * Information about a resource change listener.
  */
-public class ResourceChangeListenerInfo {
+public class ResourceChangeListenerInfo implements Comparable<ResourceChangeListenerInfo> {
 
     private static final Set<ChangeType> DEFAULT_CHANGE_RESOURCE_TYPES = EnumSet.of(ChangeType.ADDED, ChangeType.REMOVED, ChangeType.CHANGED);
 
@@ -50,15 +53,15 @@ public class ResourceChangeListenerInfo {
 
     private final Set<ChangeType> providerChangeTypes;
 
+    private final Set<String> propertyNamesHint;
+
     private final boolean valid;
 
     private volatile boolean external = false;
 
     private volatile ResourceChangeListener listener;
 
-    private static final String GLOB_PREFIX = "glob:";
-
-    public ResourceChangeListenerInfo(final ServiceReference ref, final String[] searchPaths) {
+    public ResourceChangeListenerInfo(final ServiceReference<ResourceChangeListener> ref, final String[] searchPaths) {
         boolean configValid = true;
         final Set<String> pathsSet = new HashSet<String>();
         final String paths[] = toStringArray(ref.getProperty(PATHS), null);
@@ -66,23 +69,23 @@ public class ResourceChangeListenerInfo {
             for(final String p : paths) {
                 boolean isGlobPattern = false;
                 String normalisedPath = ResourceUtil.normalize(p);
-                if (p.startsWith(GLOB_PREFIX)) {
+                if (p.startsWith(Path.GLOB_PREFIX)) {
                     isGlobPattern = true;
-                    normalisedPath =  ResourceUtil.normalize(p.substring(GLOB_PREFIX.length()));
+                    normalisedPath =  ResourceUtil.normalize(p.substring(Path.GLOB_PREFIX.length()));
                 }
                 if (!".".equals(p) && normalisedPath.isEmpty()) {
                     configValid = false;
                 } else if ( normalisedPath.startsWith("/") && !isGlobPattern ) {
                     pathsSet.add(normalisedPath);
                 } else if (normalisedPath.startsWith("/") && isGlobPattern) {
-                    pathsSet.add(GLOB_PREFIX + normalisedPath);
+                    pathsSet.add(Path.GLOB_PREFIX + normalisedPath);
                 } else {
                     for(final String sp : searchPaths) {
                         if ( p.equals(".") ) {
                             pathsSet.add(sp);
                         } else {
                             if (isGlobPattern) {
-                                pathsSet.add(GLOB_PREFIX + ResourceUtil.normalize(sp + normalisedPath));
+                                pathsSet.add(Path.GLOB_PREFIX + ResourceUtil.normalize(sp + normalisedPath));
                             } else {
                                 pathsSet.add(ResourceUtil.normalize(sp + normalisedPath));
                             }
@@ -147,6 +150,14 @@ public class ResourceChangeListenerInfo {
             this.providerChangeTypes = DEFAULT_CHANGE_PROVIDER_TYPES;
         }
 
+        if ( ref.getProperty(ResourceChangeListener.PROPERTY_NAMES_HINT) != null ) {
+            this.propertyNamesHint = new HashSet<String>();
+            for(final String val : PropertiesUtil.toStringArray(ref.getProperty(ResourceChangeListener.PROPERTY_NAMES_HINT)) ) {
+                this.propertyNamesHint.add(val);
+            }
+        } else {
+            this.propertyNamesHint = null;
+        }
         this.valid = configValid;
     }
 
@@ -166,6 +177,14 @@ public class ResourceChangeListenerInfo {
         return this.paths;
     }
 
+    /**
+     * Return a set of property name hints
+     * @return The set of names or {@code null}.
+     */
+    public Set<String> getPropertyNamesHint() {
+        return this.propertyNamesHint;
+    }
+
     public boolean isExternal() {
         return this.external;
     }
@@ -177,5 +196,69 @@ public class ResourceChangeListenerInfo {
     public void setListener(final ResourceChangeListener listener) {
         this.listener = listener;
         this.external = listener instanceof ExternalResourceChangeListener;
+    }
+
+    private int compareSet(final Set<String> t, final Set<String> o) {
+        if ( t == null && o == null ) {
+            return 0;
+        }
+        if ( t == null ) {
+            return -1;
+        }
+        if ( o == null ) {
+            return 1;
+        }
+        final Set<String> tPaths = new TreeSet<>(t);
+        final Set<String> oPaths = new TreeSet<>(o);
+
+        int result = tPaths.size() - oPaths.size();
+        if ( result == 0 ) {
+            final Iterator<String> tPathsIter = tPaths.iterator();
+            final Iterator<String> oPathsIter = oPaths.iterator();
+            while ( result == 0 && tPathsIter.hasNext() ) {
+                result = tPathsIter.next().compareTo(oPathsIter.next());
+            }
+        }
+        return result;
+    }
+
+    private int compareChangeTypes(final Set<ChangeType> t, final Set<ChangeType> o) {
+        int result = t.size() - o.size();
+        if ( result == 0 ) {
+            final Iterator<ChangeType> tIter = t.iterator();
+            final Iterator<ChangeType> oIter = o.iterator();
+            while ( result == 0 && tIter.hasNext() ) {
+                result = tIter.next().compareTo(oIter.next());
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public int compareTo(final ResourceChangeListenerInfo o) {
+        // paths first
+        int result = compareSet(this.paths.toStringSet(), o.paths.toStringSet());
+        if ( result == 0 ) {
+            // hints
+            result = compareSet(this.propertyNamesHint, o.propertyNamesHint);
+            if ( result == 0 ) {
+                // external next
+                result = Boolean.valueOf(this.external).compareTo(o.external);
+                if ( result == 0 ) {
+                    result = compareChangeTypes(this.resourceChangeTypes, o.resourceChangeTypes);
+                    if ( result == 0 ) {
+                        result = compareChangeTypes(this.providerChangeTypes, o.providerChangeTypes);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ResourceChangeListenerInfo [paths=" + paths + ", resourceChangeTypes=" + resourceChangeTypes
+                + ", providerChangeTypes=" + providerChangeTypes + ", propertyNamesHint=" + propertyNamesHint
+                + ", valid=" + valid + ", external=" + external + ", listener=" + listener + "]";
     }
 }

@@ -88,4 +88,21 @@ public class ConfigUtilTest {
         assertTrue(ConfigUtil.isSameData(a, b));
         assertTrue(ConfigUtil.isSameData(b, a));
     }
+
+    @Test public void testIsSameDataWithPrimitiveArrays() throws Exception {
+        final Dictionary<String, Object> a = new Hashtable<String, Object>();
+        final Dictionary<String, Object> b = new Hashtable<String, Object>();
+
+        a.put("b", new int[] {1,2,3});
+        b.put("b", a.get("b"));
+
+        a.put("c", new long[] {1L,2L,3L});
+        b.put("c", a.get("c"));
+
+        a.put("d", new int[] {1,2,3});
+        b.put("d", new String[] {"1", "2", "3"});
+
+        assertTrue(ConfigUtil.isSameData(a, b));
+        assertTrue(ConfigUtil.isSameData(b, a));
+    }
 }

@@ -16,8 +16,6 @@
  */
 package org.apache.sling.scripting.jsp;
 
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -29,7 +27,6 @@ import org.apache.sling.scripting.jsp.jasper.compiler.JspConfig;
 import org.apache.sling.scripting.jsp.jasper.compiler.Localizer;
 import org.apache.sling.scripting.jsp.jasper.compiler.TagPluginManager;
 import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,6 +162,7 @@ public class JspServletOptions implements Options {
     /**
      * Are we keeping generated code around?
      */
+    @Override
     public boolean getKeepGenerated() {
         return this.keepGenerated;
     }
@@ -172,10 +170,12 @@ public class JspServletOptions implements Options {
     /**
      * Should white spaces between directives or actions be trimmed?
      */
+    @Override
     public boolean getTrimSpaces() {
         return this.trimSpaces;
     }
 
+    @Override
     public boolean isPoolingEnabled() {
         return this.isPoolingEnabled;
     }
@@ -183,6 +183,7 @@ public class JspServletOptions implements Options {
     /**
      * Are we supporting HTML mapped servlets?
      */
+    @Override
     public boolean getMappedFile() {
         return this.mappedFile;
     }
@@ -190,6 +191,7 @@ public class JspServletOptions implements Options {
     /**
      * Should errors be sent to client or thrown into stderr?
      */
+    @Override
     public boolean getSendErrorToClient() {
         return this.sendErrorToClient;
     }
@@ -197,6 +199,7 @@ public class JspServletOptions implements Options {
     /**
      * Should class files be compiled with debug information?
      */
+    @Override
     public boolean getClassDebugInfo() {
         return this.classDebugInfo;
     }
@@ -204,6 +207,7 @@ public class JspServletOptions implements Options {
     /**
      * Is the generation of SMAP info for JSR45 debugging suppressed?
      */
+    @Override
     public boolean isSmapSuppressed() {
         return this.isSmapSuppressed;
     }
@@ -211,6 +215,7 @@ public class JspServletOptions implements Options {
     /**
      * Should SMAP info for JSR45 debugging be dumped to a file?
      */
+    @Override
     public boolean isSmapDumped() {
         return this.isSmapDumped;
     }
@@ -218,6 +223,7 @@ public class JspServletOptions implements Options {
     /**
      * Are Text strings to be generated as char arrays?
      */
+    @Override
     public boolean genStringAsCharArray() {
         return this.genStringAsCharArray;
     }
@@ -225,6 +231,7 @@ public class JspServletOptions implements Options {
     /**
      * Class ID for use in the plugin tag when the browser is IE.
      */
+    @Override
     public String getIeClassId() {
         return this.ieClassId;
     }
@@ -232,6 +239,7 @@ public class JspServletOptions implements Options {
     /**
      * Is generation of X-Powered-By response header enabled/disabled?
      */
+    @Override
     public boolean isXpoweredBy() {
         return this.xpoweredBy;
     }
@@ -240,6 +248,7 @@ public class JspServletOptions implements Options {
      * Allways return null for the compiler to use, assuming JDT is the default
      * which we will never overwrite.
      */
+    @Override
     public String getCompiler() {
         return null;
     }
@@ -247,6 +256,7 @@ public class JspServletOptions implements Options {
     /**
      * @see Options#getCompilerTargetVM
      */
+    @Override
     public String getCompilerTargetVM() {
         return this.compilerTargetVM;
     }
@@ -254,10 +264,12 @@ public class JspServletOptions implements Options {
     /**
      * @see Options#getCompilerSourceVM
      */
+    @Override
     public String getCompilerSourceVM() {
         return this.compilerSourceVM;
     }
 
+    @Override
     public boolean getErrorOnUseBeanInvalidClassAttribute() {
         return this.errorOnUseBeanInvalidClassAttribute;
     }
@@ -266,6 +278,7 @@ public class JspServletOptions implements Options {
         this.errorOnUseBeanInvalidClassAttribute = b;
     }
 
+    @Override
     public TldLocationsCache getTldLocationsCache() {
         return this.tldLocationsCache;
     }
@@ -274,30 +287,36 @@ public class JspServletOptions implements Options {
         this.tldLocationsCache = tldC;
     }
 
+    @Override
     public String getJavaEncoding() {
         return this.javaEncoding;
     }
 
+    @Override
     public boolean getFork() {
         return this.fork;
     }
 
+    @Override
     public JspConfig getJspConfig() {
         return this.jspConfig;
     }
 
+    @Override
     public TagPluginManager getTagPluginManager() {
         return this.tagPluginManager;
     }
 
+    @Override
     public boolean getDisplaySourceFragment() {
         return displaySourceFragments;
     }
 
     /**
-     * Allways return null for the compiler to use, assuming JDT is the default
+     * Always return null for the compiler to use, assuming JDT is the default
      * which we will never overwrite.
      */
+    @Override
     public String getCompilerClassName() {
         return null;
     }
@@ -307,19 +326,17 @@ public class JspServletOptions implements Options {
      * ServletConfig and ServletContext.
      */
     public JspServletOptions(ServletContext servletContext,
-            IOProvider ioProvider, ComponentContext componentContext,
+            IOProvider ioProvider, Map<String, Object> config,
             TldLocationsCache tldLocationsCache) {
 
         // JVM version numbers default to current vm version
         this.compilerSourceVM = System.getProperty("java.specification.version");
         this.compilerTargetVM = this.compilerSourceVM;
 
-        Dictionary<?, ?> config = componentContext.getProperties();
-        Enumeration<?> enumeration = config.keys();
-        while (enumeration.hasMoreElements()) {
-            String key = (String) enumeration.nextElement();
+        for(final Map.Entry<String, Object> entry : config.entrySet()) {
+            String key = entry.getKey();
             if (key.startsWith("jasper.")) {
-                final Object value = config.get(key);
+                final Object value = entry.getValue();
                 if (value != null) {
                     final String strValue = String.valueOf(value).trim();
                     if ( strValue.length() > 0 ) {
@@ -536,6 +553,7 @@ public class JspServletOptions implements Options {
         this.tagPluginManager = new TagPluginManager(servletContext);
     }
 
+    @Override
     public String getScratchDir() {
         return ":";
     }

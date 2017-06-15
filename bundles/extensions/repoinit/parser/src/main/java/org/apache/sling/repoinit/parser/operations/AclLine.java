@@ -42,6 +42,7 @@ public class AclLine {
     };
     
     private final Map<String, List<String>> properties;
+    private List<RestrictionClause> restrictions;
     
     public AclLine(Action a) {
         action = a;
@@ -63,9 +64,16 @@ public class AclLine {
     public void setProperty(String name, List<String> values) {
         properties.put(name, Collections.unmodifiableList(values));
     }
+
+    public void setRestrictions(List<RestrictionClause> restrictions){
+        this.restrictions = restrictions;
+    }
+
+    public List<RestrictionClause> getRestrictions() { return this.restrictions; }
     
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " " + action + " " + properties;
+        return getClass().getSimpleName() + " " + action + " " + properties + (restrictions == null || restrictions.isEmpty() ? "" : " restrictions="+restrictions);
+
     }
 }

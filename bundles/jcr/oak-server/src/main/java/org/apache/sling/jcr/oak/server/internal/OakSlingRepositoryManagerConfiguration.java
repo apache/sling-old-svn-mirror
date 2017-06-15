@@ -54,12 +54,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
     boolean admin_login_enabled() default true;
 
     @AttributeDefinition(
-        name = "Allow anonymous reads",
-        description = "If true, the anonymous user has read access to the whole repository (for backwards compatibility)"
-    )
-    boolean anonymous_read_all() default true;
-
-    @AttributeDefinition(
         name = "Observation queue length",
         description = "Maximum number of pending revisions in a observation listener queue"
     )

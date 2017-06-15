@@ -70,17 +70,17 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
         this.factory = dummyFactory;
         return this;
     }
-    
+
     @Override
     public VirtualInstanceBuilder useRepositoryOf(VirtualInstanceBuilder other) throws Exception {
         super.useRepositoryOf(other);
         DummyResourceResolverFactory dummyFactory = new DummyResourceResolverFactory();
         DummyResourceResolverFactory originalFactory = (DummyResourceResolverFactory) this.factory;
         // force repository to be created now..
-        originalFactory.getAdministrativeResourceResolver(null);
+        originalFactory.getServiceResourceResolver(null);
         dummyFactory.setSlingRepository(originalFactory.getSlingRepository());
         dummyFactory.setArtificialDelay(getDelay());
-        this.factory = dummyFactory; 
+        this.factory = dummyFactory;
         return this;
     }
 
@@ -95,36 +95,36 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
         }
         return this;
     }
-    
+
     TestConfig getConfig() {
         if (config==null) {
             config = createConfig();
         }
         return config;
     }
-    
+
     private TestConfig createConfig() {
         TestConfig c = new TestConfig(path);
         return c;
     }
-    
+
     @Override
     public ModifiableTestBaseConfig getConnectorConfig() {
         return getConfig();
     }
-    
+
     @Override
     protected ViewChecker createViewChecker() throws Exception {
         return HeartbeatHandler.testConstructor(getSlingSettingsService(), getResourceResolverFactory(), getAnnouncementRegistry(), getConnectorRegistry(), getConfig(), getScheduler(), getVotingHandler());
     }
-    
+
     private SyncTokenService getSyncTokenService() throws Exception {
         if (syncTokenService == null) {
             syncTokenService = createSyncTokenService();
         }
         return syncTokenService;
     }
-    
+
     private SyncTokenService createSyncTokenService() {
         return SyncTokenService.testConstructorAndActivate(getConfig(), getResourceResolverFactory(), getSlingSettingsService());
     }
@@ -133,7 +133,7 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
     protected BaseDiscoveryService createDiscoveryService() throws Exception {
         return DiscoveryServiceImpl.testConstructor(getResourceResolverFactory(), getAnnouncementRegistry(), getConnectorRegistry(), (ClusterViewServiceImpl) getClusterViewService(), getHeartbeatHandler(), getSlingSettingsService(), getScheduler(), getConfig(), getSyncTokenService());
     }
-    
+
     @Override
     protected ClusterViewService createClusterViewService() {
         return ClusterViewServiceImpl.testConstructor(getSlingSettingsService(), getResourceResolverFactory(), getConfig());
@@ -145,7 +145,7 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
         }
         return (HeartbeatHandler) getViewChecker();
     }
-    
+
     @Override
     public Object[] getAdditionalServices(VirtualInstance instance) throws Exception {
         if (additionalServices==null) {
@@ -153,7 +153,7 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
         }
         return additionalServices;
     }
-    
+
     VotingHandler getVotingHandler() throws Exception {
         if (votingHandler == null) {
             votingHandler = createVotingHandler();
@@ -167,12 +167,12 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
 
     private Object[] createAdditionalServices(VirtualInstance instance) throws Exception {
         Object[] additionals = new Object[1];
-        
+
         additionals[0] = getVotingHandler();
-        
+
         observationListener = new VotingEventListener(instance, votingHandler, getSlingId());
         ResourceResolver resourceResolver = getResourceResolverFactory()
-                .getAdministrativeResourceResolver(null);
+                .getServiceResourceResolver(null);
         Session session = resourceResolver.adaptTo(Session.class);
         observationManager = session.getWorkspace()
                 .getObservationManager();
@@ -186,7 +186,7 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
 
         return additionals;
     }
-    
+
     void stopVoting() {
         if (observationListener!=null) {
             logger.info("stopVoting: stopping voting of slingId="+getSlingId());
@@ -210,7 +210,7 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
     public FullJR2VirtualInstance fullBuild() throws Exception {
         return (FullJR2VirtualInstance) build();
     }
-    
+
     @Override
     public VirtualInstance build() throws Exception {
         if (path==null) {
@@ -246,7 +246,7 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
                 }
                 super.stop();
             }
-            
+
             @Override
             public void assertEstablishedView() {
                 super.assertEstablishedView();
@@ -260,7 +260,7 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
             }
         };
     }
-    
+
     @Override
     protected void resetRepo() throws Exception {
         logger.info("resetRepo: start, logging in");
@@ -283,5 +283,5 @@ public class FullJR2VirtualInstanceBuilder extends VirtualInstanceBuilder {
         }
     }
 
-    
+
 }

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
@@ -37,14 +38,18 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.framework.FilterImpl;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -57,7 +62,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Helper methods to parse OSGi metadata.
@@ -65,11 +69,16 @@ import com.google.common.collect.ImmutableList;
 final class OsgiMetadataUtil {
 
     private static final Logger log = LoggerFactory.getLogger(OsgiMetadataUtil.class);
+    
+    private static final String METADATA_PATH = "OSGI-INF";
 
     private static final DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY;
     static {
         DOCUMENT_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
         DOCUMENT_BUILDER_FACTORY.setNamespaceAware(true);
+
+        // suppress log entries from Reflections library
+        Reflections.log = null;
     }
 
     private static final XPathFactory XPATH_FACTORY = XPathFactory.newInstance();
@@ -80,30 +89,7 @@ final class OsgiMetadataUtil {
     }
 
     private static final OsgiMetadata NULL_METADATA = new OsgiMetadata();
-
-    /*
-     * The OSGI metadata XML files do not change during the unit test runs because static part of classpath.
-     * So we can cache the parsing step if we need them multiple times.
-     */
-    private static final LoadingCache<Class, OsgiMetadata> METADATA_CACHE = CacheBuilder.newBuilder().build(new CacheLoader<Class, OsgiMetadata>() {
-        @Override
-        public OsgiMetadata load(Class clazz) throws Exception {
-            List<Document> metadataDocuments = OsgiMetadataUtil.getMetadataDocument(clazz);
-            if (metadataDocuments != null) {
-                for (Document metadataDocument : metadataDocuments) {
-                    if (matchesService(clazz, metadataDocument)) {
-                        return new OsgiMetadata(clazz, metadataDocument);
-                    }
-                }
-            }
-            return NULL_METADATA;
-        }
-    });
-
-    private OsgiMetadataUtil() {
-        // static methods only
-    }
-
+    
     private static final NamespaceContext NAMESPACE_CONTEXT = new NamespaceContext() {
         @Override
         public String getNamespaceURI(String prefix) {
@@ -121,14 +107,26 @@ final class OsgiMetadataUtil {
         }
     };
 
-    public static String getMetadataPath(Class clazz) {
-        return "OSGI-INF/" + StringUtils.substringBefore(clazz.getName(), "$") + ".xml";
-    }
+    /*
+     * The OSGI metadata XML files do not change during the unit test runs because static part of classpath.
+     * So we can cache the parsing step if we need them multiple times.
+     */
+    private static final Map<String,Document> METADATA_DOCUMENT_CACHE = initMetadataDocumentCache();
+    private static final LoadingCache<Class, OsgiMetadata> METADATA_CACHE = CacheBuilder.newBuilder().build(new CacheLoader<Class, OsgiMetadata>() {
+        @Override
+        public OsgiMetadata load(Class clazz) throws Exception {
+            Document metadataDocument = METADATA_DOCUMENT_CACHE.get(cleanupClassName(clazz.getName()));
+            if (metadataDocument != null) {
+                return new OsgiMetadata(clazz, metadataDocument);
+            }
+            return NULL_METADATA;
+        }
+    });
 
-    public static String getOldMetadataMultiPath() {
-        return "OSGI-INF/serviceComponents.xml";
+    private OsgiMetadataUtil() {
+        // static methods only
     }
-
+    
     /**
      * Try to read OSGI-metadata from /OSGI-INF and read all implemented interfaces and service properties.
      * The metadata is cached after initial read, so it's no problem to call this method multiple time for the same class.
@@ -149,36 +147,76 @@ final class OsgiMetadataUtil {
             throw new RuntimeException("Error loading OSGi metadata from loader cache.", ex);
         }
     }
+    
+    /**
+     * Reads all SCR metadata XML documents located at OSGI-INF/ and caches them with quick access by implementation class.
+     * @return Cache map
+     */
+    private static Map<String,Document> initMetadataDocumentCache() {
+        Map<String,Document> cacheMap = new HashMap<>();
+        
+        XPath xpath = XPATH_FACTORY.newXPath();
+        xpath.setNamespaceContext(NAMESPACE_CONTEXT);
+        XPathExpression xpathExpression;
+        try {
+            xpathExpression = xpath.compile("//*[implementation/@class]");
+        }
+        catch (XPathExpressionException ex) {
+            throw new RuntimeException("Compiling XPath expression failed.", ex);
+        }
 
-    private static List<Document> getMetadataDocument(Class clazz) {
-        String metadataPath = getMetadataPath(clazz);
-        InputStream metadataStream = OsgiMetadataUtil.class.getClassLoader().getResourceAsStream(metadataPath);
-        if (metadataStream == null) {
-            String oldMetadataPath = getOldMetadataMultiPath();
-            log.debug("No OSGi metadata found at {}, try to fallback to {}", metadataPath, oldMetadataPath);
-
-            try {
-                Enumeration<URL> metadataUrls = OsgiMetadataUtil.class.getClassLoader().getResources(oldMetadataPath);
-                List<Document> docs = new ArrayList<Document>();
-                while (metadataUrls.hasMoreElements()) {
-                    URL metadataUrl = metadataUrls.nextElement();
-                    metadataStream = metadataUrl.openStream();
-                    docs.add(toXmlDocument(metadataStream, oldMetadataPath));
-                }
-                if (docs.size() == 0) {
-                    return null;
-                }
-                else {
-                    return docs;
+        Reflections reflections = new Reflections(METADATA_PATH, new ResourcesScanner());
+        Set<String> paths = reflections.getResources(Pattern.compile("^.*\\.xml$"));
+        for (String path : paths) {
+            parseMetadataDocuments(cacheMap, path, xpathExpression);
+        }
+        
+        return cacheMap;
+    }
+    
+    private static void parseMetadataDocuments(Map<String,Document> cacheMap, String resourcePath, XPathExpression xpathExpression) {
+        try {
+            Enumeration<URL> resourceUrls = OsgiMetadataUtil.class.getClassLoader().getResources(resourcePath);
+            while (resourceUrls.hasMoreElements()) {
+                URL resourceUrl = resourceUrls.nextElement();
+                try (InputStream fileStream = resourceUrl.openStream()) {
+                    parseMetadataDocument(cacheMap, resourcePath, fileStream, xpathExpression);
                 }
             }
-            catch (IOException ex) {
-                throw new RuntimeException("Unable to read classpath resource: " + oldMetadataPath, ex);
+        }
+        catch (Exception ex) {
+            log.warn("Error reading SCR metadata XML document from " + resourcePath, ex);
+        }
+    }
+    
+    private static void parseMetadataDocument(Map<String,Document> cacheMap, String resourcePath,
+            InputStream fileStream, XPathExpression xpathExpression) throws XPathExpressionException {
+        Document metadata = toXmlDocument(fileStream, resourcePath);
+        NodeList nodes = (NodeList)xpathExpression.evaluate(metadata, XPathConstants.NODESET);
+        if (nodes != null) {
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                String implementationClass = getImplementationClassName(node);
+                if (implementationClass != null) {
+                    cacheMap.put(implementationClass, metadata);
+                }
+            }
+        }                            
+    }
+
+    private static String getImplementationClassName(Node componentNode) {
+        NodeList childNodes = componentNode.getChildNodes();
+        for (int j = 0; j < childNodes.getLength(); j++) {
+            Node childNode = childNodes.item(j);
+            if (childNode.getNodeName().equals("implementation")) {
+                String implementationClass = getAttributeValue(childNode, "class");
+                if (!StringUtils.isBlank(implementationClass)) {
+                    return implementationClass;
+                }
+                break;
             }
         }
-        else {
-            return ImmutableList.of(toXmlDocument(metadataStream, metadataPath));
-        }
+        return null;
     }
 
     private static Document toXmlDocument(InputStream inputStream, String path) {
@@ -206,14 +244,26 @@ final class OsgiMetadataUtil {
      * @return XPath query fragment to find matching XML node in SCR metadata
      */
     private static String getComponentXPathQuery(Class clazz) {
-        String className = StringUtils.substringBefore(clazz.getName(), "$$Enhancer");
+        String className = cleanupClassName(clazz.getName());
         return "//*[implementation/@class='" + className + "' or @name='" + className + "']";
     }
-
-    private static boolean matchesService(Class clazz, Document metadata) {
+    
+    /**
+     * Remove extensions from class names added e.g. by mockito.
+     * @param className Class name
+     * @return Cleaned up class name
+     */
+    public static final String cleanupClassName(String className) {
+        return StringUtils.substringBefore(className, "$$Enhancer");
+    }
+    
+    private static String getComponentName(Class clazz, Document metadata) {
         String query = getComponentXPathQuery(clazz);
         NodeList nodes = queryNodes(metadata, query);
-        return nodes != null && nodes.getLength() > 0;
+        if (nodes != null && nodes.getLength() > 0) {
+            return getAttributeValue(nodes.item(0), "name");
+        }
+        return null;
     }
 
     private static Set<String> getServiceInterfaces(Class clazz, Document metadata) {
@@ -326,6 +376,7 @@ final class OsgiMetadataUtil {
     static class OsgiMetadata {
 
         private final Class<?> clazz;
+        private final String name;
         private final Set<String> serviceInterfaces;
         private final Map<String, Object> properties;
         private final List<Reference> references;
@@ -335,6 +386,7 @@ final class OsgiMetadataUtil {
 
         private OsgiMetadata(Class<?> clazz, Document metadataDocument) {
             this.clazz = clazz;
+            this.name = OsgiMetadataUtil.getComponentName(clazz, metadataDocument);
             this.serviceInterfaces = OsgiMetadataUtil.getServiceInterfaces(clazz, metadataDocument);
             this.properties = OsgiMetadataUtil.getProperties(clazz, metadataDocument);
             this.references = OsgiMetadataUtil.getReferences(clazz, metadataDocument);
@@ -345,6 +397,7 @@ final class OsgiMetadataUtil {
 
         private OsgiMetadata() {
             this.clazz = null;
+            this.name = null;
             this.serviceInterfaces = null;
             this.properties = null;
             this.references = null;
@@ -355,6 +408,18 @@ final class OsgiMetadataUtil {
 
         public Class<?> getServiceClass() {
             return clazz;
+        }
+        
+        public String getName() {
+            return name;
+        }
+        
+        public String getPID() {
+            String pid = null;
+            if (properties != null) {
+                pid = (String)properties.get(Constants.SERVICE_PID);
+            }
+            return StringUtils.defaultString(pid, name);
         }
 
         public Set<String> getServiceInterfaces() {
@@ -524,7 +589,7 @@ final class OsgiMetadataUtil {
                     return item;
                 }
             }
-            return null;
+            return FieldCollectionType.SERVICE;
         }
 
     }

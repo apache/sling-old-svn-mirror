@@ -46,7 +46,7 @@ public interface UpdateGroup {
      * @param properties Extra properties to update on the group.  The entry values should be either a String or String[] (optional)
      * @param changes The list of changes for this operation (optional)
      * @return the group that was updated or null if not found
-     * @throws RepositoryException
+     * @throws RepositoryException if group can't be updated
      */
     public Group updateGroup(Session jcrSession,
                             String name,

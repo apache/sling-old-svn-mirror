@@ -15,7 +15,6 @@
  * limitations under the License.
  ******************************************************************************/
 
-@Version("1.1.0")
+@org.osgi.annotation.versioning.Version("1.1.2")
 package org.apache.sling.jcr.repoinit;
 
-import aQute.bnd.annotation.Version;

@@ -22,12 +22,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.NameValuePair;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpStatusCodeException;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test node copy via the MicrojaxPostServlet */
@@ -411,8 +412,8 @@ public class PostServletCopyTest extends HttpTestBase {
         // assert content test
         String content = getContent(HTTP_BASE_URL + testPath
             + "/dest/src1.json", CONTENT_TYPE_JSON);
-        JSONObject json = new JSONObject(content);
-        assertEquals("Hello", json.get("text"));
+        final JsonObject json = JsonUtil.parseObject(content);
+        assertEquals("Hello", json.getString("text"));
 
         // modify src1 content
         nvPairs.clear();
@@ -436,8 +437,8 @@ public class PostServletCopyTest extends HttpTestBase {
         // assert content test
         String content2 = getContent(HTTP_BASE_URL + testPath
             + "/dest/src1.json", CONTENT_TYPE_JSON);
-        JSONObject json2 = new JSONObject(content2);
-        assertEquals("Modified Hello", json2.get("text"));
+        final JsonObject json2 = JsonUtil.parseObject(content2);
+        assertEquals("Modified Hello", json2.getString("text"));
 
         // clean up
         testClient.delete(testRoot);

@@ -44,7 +44,7 @@ public class SlingJcrRepoinitIT extends KarafTestSupport {
     }
 
     @Test
-    public void testOrgApacheSlingJcrCompiler() {
+    public void testOrgApacheSlingJcrRepoinit() {
         final Bundle bundle = findBundle("org.apache.sling.jcr.repoinit");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());

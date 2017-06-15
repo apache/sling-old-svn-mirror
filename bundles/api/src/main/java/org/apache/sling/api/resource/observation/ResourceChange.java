@@ -28,8 +28,8 @@ import org.osgi.annotation.versioning.ConsumerType;
 /**
  * A resource change event is immutable.
  *
- * A change event can either be local or external. Local changes happended
- * on the same instance, while external changes happended on a different
+ * A change event can either be local or external. Local changes happened
+ * on the same instance, while external changes happened on a different
  * instance.
  *
  * Resource listeners only receive external changes if they mark themselves
@@ -84,10 +84,31 @@ public class ResourceChange {
      * @param changeType The change type
      * @param path The resource path
      * @param isExternal {code true} if the change happened on another node
+     * @since 1.2.0 (Sling API Bundle 2.15.0)
+     */
+    public ResourceChange(final @Nonnull ChangeType changeType,
+            final @Nonnull String path,
+            final boolean isExternal) {
+        this.path = path;
+        this.changeType = changeType;
+        this.isExternal = isExternal;
+        this.addedPropertyNames = null;
+        this.changedPropertyNames = null;
+        this.removedPropertyNames = null;
+    }
+
+    /**
+     * Create a new change object
+     *
+     * @param changeType The change type
+     * @param path The resource path
+     * @param isExternal {code true} if the change happened on another node
      * @param addedPropertyNames set of added property names, if provided must be immutable
      * @param changedPropertyNames set of added property names, if provided must be immutable
      * @param removedPropertyNames set of added property names, if provided must be immutable
+     * @deprecated The sets of property names are not supported anymore.
      */
+    @Deprecated
     public ResourceChange(final @Nonnull ChangeType changeType,
             final @Nonnull String path,
             final boolean isExternal,
@@ -136,28 +157,68 @@ public class ResourceChange {
 
     /**
      * Optional information about changed properties.
+     * The application code can not rely on getting the correct set of changed
+     * properties. A resource provider implementation is free to not support
+     * this. Therefore if this method returns {@code null} it does not mean
+     * that there are no changed properties. However if an empty set is
+     * returned, it can safely be assumed that there are none. Therefore
+     * returning {code null} is the equivalent of "don't know".
      * @return The set of changed property names. For external events or
      *         resource provider events {@code null} is returned.
+     * @deprecated As there is no guarantee that this information is contained in the change
+     *             event, this should not be used anymore.
      */
+    @Deprecated
     public @CheckForNull Set<String> getChangedPropertyNames() {
         return this.changedPropertyNames;
     }
 
     /**
      * Optional information about added properties.
+     * The application code can not rely on getting the correct set of added
+     * properties. A resource provider implementation is free to not support
+     * this. Therefore if this method returns {@code null} it does not mean
+     * that there are no added properties. However if an empty set is
+     * returned, it can safely be assumed that there are none. Therefore
+     * returning {code null} is the equivalent of "don't know".
      * @return The set of changed property names. For external events or
      *         resource provider events {@code null} is returned.
+     * @deprecated As there is no guarantee that this information is contained in the change
+     *             event, this should not be used anymore.
      */
+    @Deprecated
     public @CheckForNull Set<String> getAddedPropertyNames() {
         return this.addedPropertyNames;
     }
 
     /**
      * Optional information about removed properties.
+     * The application code can not rely on getting the correct set of removed
+     * properties. A resource provider implementation is free to not support
+     * this. Therefore if this method returns {@code null} it does not mean
+     * that there are no removed properties. However if an empty set is
+     * returned, it can safely be assumed that there are none. Therefore
+     * returning {code null} is the equivalent of "don't know".
      * @return The set of changed property names. For external events or
      *         resource provider events {@code null} is returned.
+     * @deprecated As there is no guarantee that this information is contained in the change
+     *             event, this should not be used anymore.
      */
+    @Deprecated
     public @CheckForNull Set<String> getRemovedPropertyNames() {
         return this.removedPropertyNames;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("ResourceChange[type=")
+          .append(this.getType())
+          .append(", path=")
+          .append(this.getPath())
+          .append(", external=")
+          .append(this.isExternal)
+          .append("]");
+        return b.toString();
     }
 }

@@ -100,9 +100,11 @@ public final class AuthUtil {
      * as follows:
      * <ol>
      * <li>If there is a request attribute of that name, which is a non-empty
-     * string, it is returned.</li>If there is a non-empty request parameter of
-     * that name, this parameter is returned.
-     * <li>Otherwise the <code>defaultValue</code> is returned.
+     * string, it is returned.</li>
+     * <li>If there is a non-empty request parameter of
+     * that name, this parameter is returned. </li>
+     * <li>Otherwise the <code>defaultValue</code> is returned.</li>
+     * </ol>
      *
      * @param request The request from which to return the attribute or request
      *            parameter
@@ -302,12 +304,12 @@ public final class AuthUtil {
      * submitted username/password credentials.
      * <p>
      * This implementation returns <code>true</code> if the request parameter
-     * {@link #PAR_J_VALIDATE} is set to <code>true</code> (case-insensitve). If
+     * {@link AuthConstants#PAR_J_VALIDATE} is set to <code>true</code> (case-insensitve). If
      * the request parameter is not set or to any value other than
      * <code>true</code> this method returns <code>false</code>.
      *
      * @param request The request to provide the parameter to check
-     * @return <code>true</code> if the {@link #PAR_J_VALIDATE} parameter is set
+     * @return <code>true</code> if the {@link AuthConstants#PAR_J_VALIDATE} parameter is set
      *         to <code>true</code>.
      */
     public static boolean isValidateRequest(final HttpServletRequest request) {
@@ -350,8 +352,8 @@ public final class AuthUtil {
 
     /**
      * Sends a 403/FORBIDDEN response optionally stating the reason for this
-     * response code in the {@link #X_REASON} header. The value for the
-     * {@link #X_REASON} header is taken from
+     * response code in the {@link AuthConstants#X_REASON} header. The value for the
+     * {@link AuthConstants#X_REASON} header is taken from
      * {@link AuthenticationHandler#FAILURE_REASON} request attribute if set.
      * <p>
      * This method just overwrites the response status to 403/FORBIDDEN, adds

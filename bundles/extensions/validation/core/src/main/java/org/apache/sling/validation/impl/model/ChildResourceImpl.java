@@ -33,7 +33,7 @@ import org.apache.sling.validation.model.ResourceProperty;
  */
 public class ChildResourceImpl implements ChildResource {
 
-    private final String name;
+    private final @Nonnull String name;
     private final Pattern namePattern;
     private final @Nonnull List<ResourceProperty> properties;
     private final @Nonnull List<ChildResource> children;
@@ -56,7 +56,7 @@ public class ChildResourceImpl implements ChildResource {
     }
 
     @Override
-    public String getName() {
+    public @Nonnull String getName() {
         return name;
     }
 
@@ -104,10 +104,7 @@ public class ChildResourceImpl implements ChildResource {
             return false;
         if (isRequired != other.isRequired)
             return false;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
+        if (!name.equals(other.name))
             return false;
         if (namePattern == null) {
             if (other.namePattern != null)

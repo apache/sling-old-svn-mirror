@@ -39,6 +39,7 @@ import javax.servlet.jsp.tagext.TagVariableInfo;
 import javax.servlet.jsp.tagext.TryCatchFinally;
 import javax.servlet.jsp.tagext.VariableInfo;
 
+import org.apache.sling.scripting.jsp.jasper.Constants;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.compiler.tagplugin.TagPluginContext;
 import org.xml.sax.Attributes;
@@ -470,6 +471,11 @@ abstract class Node implements TagConstants {
         private boolean isBomPresent;
 
         /*
+         * Sequence number for temporary variables.
+         */
+        private int tempSequenceNumber = 0;
+
+        /*
          * Constructor.
          */
         Root(Mark start, Node parent, boolean isXmlSyntax) {
@@ -548,6 +554,17 @@ abstract class Node implements TagConstants {
          */
         public Root getParentRoot() {
             return parentRoot;
+        }
+
+        /**
+         * Generates a new temporary variable name.
+         */
+        public String nextTemporaryVariableName() {
+            if (parentRoot == null) {
+                return Constants.TEMP_VARIABLE_NAME_PREFIX + (tempSequenceNumber++);
+            } else {
+                return parentRoot.nextTemporaryVariableName();
+            }
         }
     }
 
@@ -1973,7 +1990,7 @@ abstract class Node implements TagConstants {
          */
         public String getTemporaryVariableName() {
             if (temporaryVariableName == null) {
-                temporaryVariableName = JspUtil.nextTemporaryVariableName();
+                temporaryVariableName = getRoot().nextTemporaryVariableName();
             }
             return temporaryVariableName;
         }

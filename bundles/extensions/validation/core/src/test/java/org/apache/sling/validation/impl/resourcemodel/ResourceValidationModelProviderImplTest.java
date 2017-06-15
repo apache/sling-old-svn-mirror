@@ -39,7 +39,9 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.testing.mock.jcr.MockJcr;
 import org.apache.sling.testing.mock.jcr.MockQuery;
@@ -52,17 +54,21 @@ import org.apache.sling.validation.impl.model.ResourcePropertyBuilder;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.impl.validators.RegexValidator;
 import org.apache.sling.validation.model.ChildResource;
-import org.apache.sling.validation.model.ParameterizedValidator;
+import org.apache.sling.validation.model.ValidatorInvocation;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
-import org.apache.sling.validation.spi.Validator;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ResourceValidationModelProviderImplTest {
 
     private final static class PrefixAndResourceType {
@@ -119,15 +125,15 @@ public class ResourceValidationModelProviderImplTest {
     private static Map<String, Object> primaryTypeUnstructuredMap;
     private ResourceValidationModelProviderImpl modelProvider;
     private ResourceResolver rr;
+    @Mock
+    private ResourceResolverFactory resourceResolverFactory;
     private MockQueryResultHandler prefixBasedResultHandler;
     private Map<PrefixAndResourceType, List<Node>> validatorModelNodesPerPrefixAndResourceType;
-    private Map<String, Validator<?>> validatorMap;
-    private Map<String, Object> regexValdidatorParametrization;
     private ValidationModelBuilder modelBuilder;
 
     // extract resource type from strings like
     // "/jcr:root/apps//validation//*[@sling:resourceType="sling/validation/model" and @validatedResourceType="<some-resource-type>"]"
-    private static final Pattern RESOURCE_TYPE_PATTERN = Pattern.compile(".*@validatedResourceType=\"([^\"]*)\".*");
+    private static final Pattern RESOURCE_TYPE_PATTERN = Pattern.compile(".*@validatingResourceType=\"([^\"]*)\".*");
 
     @Rule
     public SlingContext context = new SlingContext(ResourceResolverType.JCR_MOCK); // search capability necessary
@@ -138,14 +144,12 @@ public class ResourceValidationModelProviderImplTest {
         primaryTypeUnstructuredMap.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
         
         modelProvider = new ResourceValidationModelProviderImpl();
-        validatorMap = new HashMap<String, Validator<?>>();
-        validatorMap.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
 
         // one default model
         modelBuilder = new ValidationModelBuilder();
         modelBuilder.setApplicablePath("/content/site1");
         ResourcePropertyBuilder propertyBuilder = new ResourcePropertyBuilder();
-        propertyBuilder.validator(new RegexValidator(), 10, RegexValidator.REGEX_PARAM, "prefix.*");
+        propertyBuilder.validator("validatorId", 10, RegexValidator.REGEX_PARAM, "prefix.*");
         ResourceProperty property = propertyBuilder.build("field1");
         modelBuilder.resourceProperty(property);
 
@@ -157,7 +161,7 @@ public class ResourceValidationModelProviderImplTest {
                 }
                 String statement = query.getStatement();
                 // query looks like /jcr:root/apps//validation//*[@sling:resourceType="sling/validation/model" and
-                // @validatedResourceType="<some-resource-type>"]
+                // @validatingResourceType="<some-resource-type>"]
                 if (statement.startsWith("/jcr:root/")) {
                     statement = statement.substring("/jcr:root/".length() - 1);
                 }
@@ -181,6 +185,13 @@ public class ResourceValidationModelProviderImplTest {
             }
         };
         rr = context.resourceResolver();
+        modelProvider.rrf = resourceResolverFactory;
+        // create a wrapper resource resolver, which cannot be closed (as the SlingContext will take care of that)
+        ResourceResolver nonClosableResourceResolverWrapper = Mockito.spy(rr);
+        // intercept all close calls
+        Mockito.doNothing().when(nonClosableResourceResolverWrapper).close();
+        // always use the context's resource resolver (because we never commit)
+        Mockito.when(resourceResolverFactory.getServiceResourceResolver(Mockito.anyObject())).thenReturn(nonClosableResourceResolverWrapper);
         MockJcr.addQueryResultHandler(rr.adaptTo(Session.class), prefixBasedResultHandler);
 
         validatorModelNodesPerPrefixAndResourceType = new HashMap<PrefixAndResourceType, List<Node>>();
@@ -205,23 +216,56 @@ public class ResourceValidationModelProviderImplTest {
     @Test
     public void testGetValidationModels() throws Exception {
         // build two models manually (which are identical except for the applicable path)
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
+        ValidationModel model1 = modelBuilder.resourceProperty(resourcePropertyBuilder.build("property1")).build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         modelBuilder.setApplicablePath("/content/site2");
-        ValidationModel model2 = modelBuilder.build("sling/validation/test");
+        ValidationModel model2 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel2");
 
         // build models in JCR
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel2", model2);
 
         // check that both models are returned
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap, rr);
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.containsInAnyOrder(model1, model2));
     }
 
     @Test
+    public void testGetValidationModelsWithoutApplicablePath() throws Exception {
+        modelBuilder = new ValidationModelBuilder();
+        // build two models manually (which are identical except for the applicable path)
+        ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
+        ValidationModel model1 = modelBuilder.resourceProperty(resourcePropertyBuilder.build("property1")).build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
+        
+        // build models in JCR
+        Resource modelResource = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
+        ModifiableValueMap properties = modelResource.adaptTo(ModifiableValueMap.class);
+        properties.remove("applicablePaths");
+
+        // check that both models are returned
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
+        Assert.assertThat(models, Matchers.containsInAnyOrder(model1));
+    }
+    
+    @Test
+    public void testGetValidationModelsWithEmptyApplicablePath() throws Exception {
+        modelBuilder = new ValidationModelBuilder();
+        // build two models manually (which are identical except for the applicable path)
+        ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
+        ValidationModel model1 = modelBuilder.resourceProperty(resourcePropertyBuilder.build("property1")).build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
+        
+        // build models in JCR
+        createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
+        
+        // check that both models are returned
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
+        Assert.assertThat(models, Matchers.containsInAnyOrder(model1));
+    }
+    
+    @Test
     public void testGetValidationModelsOutsideSearchPath() throws Exception {
         // build two models manually (which are identical except for the applicable path)
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", "some source");
 
         Resource contentValidatorsRoot = ResourceUtil.getOrCreateResource(rr, "/content",
                 (Map<String, Object>) null, "sling:Folder", true);
@@ -230,7 +274,7 @@ public class ResourceValidationModelProviderImplTest {
             createValidationModelResource(rr, contentValidatorsRoot.getPath(), "testValidationModel1", model1);
 
             // check that no model is found
-            Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap, rr);
+            Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
             Assert.assertThat("Model was placed outside resource resolver search path but still found", models, Matchers.empty());
         } finally {
             rr.delete(contentValidatorsRoot);
@@ -246,62 +290,133 @@ public class ResourceValidationModelProviderImplTest {
         ResourceProperty childproperty = resourcePropertyBuilder.build("child1property");
         modelBuilder.childResource(new ChildResourceImpl("child1", null, true,
                 Collections.singletonList(childproperty), Collections.<ChildResource> emptyList()));
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
 
         // build models in JCR
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
 
         // compare both models
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap, rr);
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.contains(model1));
     }
 
     @Test
     public void testGetValidationModelsWithOverlay() throws Exception {
         // create two models manually (which are identical except for the applicable path)
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         modelBuilder.setApplicablePath("/content/site2");
-        ValidationModel model2 = modelBuilder.build("sling/validation/test");
+        ValidationModel model2 = modelBuilder.build("sling/validation/test", appsValidatorsRoot.getPath() + "/testValidationModel1");
 
-        // create two models in the JCR: one in libs and one in apps (distinguishable via applicablePath)
+        // create two models: one in libs and one in apps (distinguishable via applicablePath)
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
         createValidationModelResource(rr, appsValidatorsRoot.getPath(), "testValidationModel1", model2);
 
         // only the apps model should be returned
-        Collection<ValidationModel> models = modelProvider.getModels("sling/validation/test", validatorMap, rr);
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
         Assert.assertThat(models, Matchers.contains(model2));
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testGetValidationModelsWithInvalidValidator() throws Exception {
-        // create one default model
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
-        createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
-
-        // clear validator map to make the referenced validator unknown
-        validatorMap.clear();
-        modelProvider.getModels("sling/validation/test", validatorMap, rr);
-    }
-    
-    @Test(expected = IllegalStateException.class)
     public void testGetValidationModelsWithMissingChildrenAndProperties() throws Exception {
-        // create a model with neither children nor properties
+        // create a model with properties (otherwise build() will already throw an exception)
         modelBuilder = new ValidationModelBuilder();
+        modelBuilder.resourceProperty(new ResourcePropertyBuilder().build("field1"));
         modelBuilder.addApplicablePath("content/site1");
-        ValidationModel model1 = modelBuilder.build("sling/validation/test");
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         
+        Resource resource = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
+        // make created model invalid by removing the properties sub resource
+        rr.delete(resource.getChild("properties"));
+        modelProvider.getValidationModels("sling/validation/test");
+    }
+
+    @Test
+    public void testGetValidationModelsWithComplexValidatorArguments() throws Exception {
+        // create a model with neither children nor properties
+        Map<String, Object> validatorArguments = new HashMap<>();
+        validatorArguments.put("key1", "value1");
+        validatorArguments.put("key1", "value2");
+        validatorArguments.put("key1", "value3");
+        validatorArguments.put("key2", "value1");
+        validatorArguments.put("key3", "value1=value2");
+        modelBuilder = new ValidationModelBuilder();
+        modelBuilder.resourceProperty(new ResourcePropertyBuilder().validator("validatorId", 10, validatorArguments).build("field1"));
+        modelBuilder.addApplicablePath("content/site1");
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
+        createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
+        Assert.assertThat(models, Matchers.contains(model1));
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void testGetValidationModelsWithInvalidValidatorArguments1() throws Exception {
+        // create a model with neither children nor properties
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
+        // create valid model first
+        Resource modelResource = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
+        // and make parametrization of validator invalid afterwards
+        Resource validatorResource = modelResource.getChild("properties/field1/validators/validatorId");
+        ModifiableValueMap validatorArguments = validatorResource.adaptTo(ModifiableValueMap.class);
+        validatorArguments.put("validatorArguments", "key1"); // value without "="
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
+        Assert.assertThat(models, Matchers.contains(model1));
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void testGetValidationModelsWithInvalidValidatorArguments2() throws Exception {
+        // create a model with neither children nor properties
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
+        // create valid model first
+        Resource modelResource = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
+        // and make parametrization of validator invalid afterwards
+        Resource validatorResource = modelResource.getChild("properties/field1/validators/validatorId");
+        ModifiableValueMap validatorArguments = validatorResource.adaptTo(ModifiableValueMap.class);
+        validatorArguments.put("validatorArguments", "=value2"); // starting with "="
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
+        Assert.assertThat(models, Matchers.contains(model1));
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void testGetValidationModelsWithInvalidValidatorArguments3() throws Exception {
+        // create a model with neither children nor properties
+        ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
+        // create valid model first
+        Resource modelResource = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
+        // and make parametrization of validator invalid afterwards
+        Resource validatorResource = modelResource.getChild("properties/field1/validators/validatorId");
+        ModifiableValueMap validatorArguments = validatorResource.adaptTo(ModifiableValueMap.class);
+        validatorArguments.put("validatorArguments", "key1="); // ending with "="
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
+        Assert.assertThat(models, Matchers.contains(model1));
+    }
+
+    @Test
+    public void testCachingOfGetValidationModels() throws Exception {
+        // build one model
+        ResourcePropertyBuilder resourcePropertyBuilder = new ResourcePropertyBuilder();
+        ValidationModel model1 = modelBuilder.resourceProperty(resourcePropertyBuilder.build("property1")).build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
+        modelBuilder.setApplicablePath("/content/site2");
+
+        // build models in JCR
         createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
 
-        modelProvider.getModels("sling/validation/test", validatorMap, rr);
+        // check that both models are returned
+        Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
+        Assert.assertThat(models, Matchers.containsInAnyOrder(model1));
+        
+        // the 2nd time the same instance should be returned
+        Collection<ValidationModel> models2 = modelProvider.getValidationModels("sling/validation/test");
+        Assert.assertEquals("Due to caching both models should be actually the same instance", System.identityHashCode(models), System.identityHashCode(models2));
     }
+
+    /*--- the following methods create validation model resources from ValidationModel objects --*/
 
     private Resource createValidationModelResource(ResourceResolver rr, String root, String name, ValidationModel model)
             throws Exception {
         Map<String, Object> modelProperties = new HashMap<String, Object>();
-        modelProperties.put(ResourceValidationModelProviderImpl.VALIDATED_RESOURCE_TYPE, model.getValidatedResourceType());
-        modelProperties.put(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, model.getApplicablePaths());
-        modelProperties
-                .put(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, ResourceValidationModelProviderImpl.VALIDATION_MODEL_RESOURCE_TYPE);
+        modelProperties.put(ResourceValidationModelProviderImpl.VALIDATING_RESOURCE_TYPE, model.getValidatingResourceType());
+        modelProperties.put(ResourceValidationModelProviderImpl.APPLICABLE_PATHS, model.getApplicablePaths().toArray());
+        modelProperties.put(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, ResourceValidationModelProviderImpl.VALIDATION_MODEL_RESOURCE_TYPE);
         modelProperties.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
         Resource modelResource = ResourceUtil.getOrCreateResource(rr, root + "/" + name, modelProperties,
                 JcrResourceConstants.NT_SLING_FOLDER, true);
@@ -313,7 +428,7 @@ public class ResourceValidationModelProviderImplTest {
             // add to search handler (with root path)
             String prefix = Text.getAbsoluteParent(root, 0);
             PrefixAndResourceType prefixAndResourceType = new PrefixAndResourceType(prefix,
-                    model.getValidatedResourceType());
+                    model.getValidatingResourceType());
             List<Node> nodes;
             nodes = validatorModelNodesPerPrefixAndResourceType.get(prefixAndResourceType);
             if (nodes == null) {
@@ -325,6 +440,12 @@ public class ResourceValidationModelProviderImplTest {
         return modelResource;
     }
 
+    /**
+     * Always uses the validator's class name as validator resource name.
+     * @param model
+     * @param properties
+     * @throws PersistenceException
+     */
     private void createValidationModelProperties(Resource model, @Nonnull Collection<ResourceProperty> properties)
             throws PersistenceException {
         ResourceResolver rr = model.getResourceResolver();
@@ -349,21 +470,21 @@ public class ResourceValidationModelProviderImplTest {
                 Resource validators = ResourceUtil.getOrCreateResource(rr, propertyResource.getPath() + "/"
                         + ResourceValidationModelProviderImpl.VALIDATORS, JcrConstants.NT_UNSTRUCTURED, null, true);
                 if (validators != null) {
-                    for (ParameterizedValidator validator : property.getValidators()) {
+                    for (ValidatorInvocation validatorIncovation : property.getValidatorInvocations()) {
                         Map<String, Object> validatorProperties = new HashMap<String, Object>();
                         validatorProperties.put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                        Map<String, Object> parameters = validator.getParameters();
+                        ValueMap parameters = validatorIncovation.getParameters();
                         if (!parameters.isEmpty()) {
                             // convert to right format
                             validatorProperties.put(ResourceValidationModelProviderImpl.VALIDATOR_ARGUMENTS,
                                     convertMapToJcrValidatorArguments(parameters));
                         }
-                        Integer severity = validator.getSeverity();
+                        Integer severity = validatorIncovation.getSeverity();
                         if (severity != null) {
                             validatorProperties.put(ResourceValidationModelProviderImpl.SEVERITY, severity);
                         }
                         ResourceUtil.getOrCreateResource(rr, validators.getPath() + "/"
-                                + validator.getValidator().getClass().getName(), validatorProperties, null, true);
+                                + validatorIncovation.getValidatorId(), validatorProperties, null, true);
                     }
                 }
             }
@@ -376,10 +497,16 @@ public class ResourceValidationModelProviderImplTest {
      * @param map
      * @return
      */
-    private String[] convertMapToJcrValidatorArguments(Map<String, Object> map) {
+    private String[] convertMapToJcrValidatorArguments(ValueMap map) {
         List<String> parametersForJcr = new ArrayList<String>();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
-            parametersForJcr.add(entry.getKey() + "=" + entry.getValue());
+            if (entry.getValue() instanceof String[]) {
+                for (String value : (String[]) entry.getValue()) {
+                    parametersForJcr.add(value + "=" + entry.getValue());
+                }
+            } else {
+                parametersForJcr.add(entry.getKey() + "=" + entry.getValue());
+            }
         }
         return parametersForJcr.toArray(new String[0]);
     }

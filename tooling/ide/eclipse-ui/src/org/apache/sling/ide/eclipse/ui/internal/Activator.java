@@ -17,13 +17,17 @@
 package org.apache.sling.ide.eclipse.ui.internal;
 
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
+import org.apache.sling.ide.eclipse.core.Preferences;
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.EventAdmin;
@@ -42,6 +46,9 @@ public class Activator extends AbstractUIPlugin {
     private ServiceTracker<Logger, Logger> tracer;
 
     private ServiceRegistration<Logger> tracerRegistration;
+    private ScopedPreferenceStore preferenceStore;
+    
+    private Preferences preferences;
 
     public static Activator getDefault() {
 
@@ -112,5 +119,24 @@ public class Activator extends AbstractUIPlugin {
 
     public Logger getPluginLogger() {
         return (Logger) ServiceUtil.getNotNull(tracer);
+    }
+
+    @Override
+    public IPreferenceStore getPreferenceStore() {
+        // return a IPreference wrapper around the preferences being maintained for the core(!!) plugin
+        // Create the preference store lazily.
+        if (preferenceStore == null) {
+            // this leverages the default scope under the hood for the default values
+            preferenceStore = new ScopedPreferenceStore(InstanceScope.INSTANCE, org.apache.sling.ide.eclipse.core.internal.Activator.PLUGIN_ID);
+        }
+        return preferenceStore;
+    }
+    
+    public Preferences getPreferences() {
+        // Create the preferences lazily.
+        if (preferences == null) {
+            preferences = new Preferences();
+        }
+        return preferences;
     }
 }

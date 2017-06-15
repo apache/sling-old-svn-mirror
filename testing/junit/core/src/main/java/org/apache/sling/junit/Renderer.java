@@ -26,7 +26,7 @@ import org.junit.runner.notification.RunListener;
 
 /** Renderer for our servlet output. Should not be used directly for
  *  rendering as it leads to non-reentrant renderers. Use only via
- *  {@link RendererFactory} as {@link RendererSelectorImpl} does 
+ *  {@link RendererFactory} as {@link org.apache.sling.junit.impl.RendererSelectorImpl} does 
  */
  public interface Renderer {
     /** True if this renderer applies to supplied request */
@@ -39,12 +39,12 @@ import org.junit.runner.notification.RunListener;
     void cleanup();
     
     /** Render a list of things 
-     * @param describes the role of the list, must be a valid CSS class value
+     * @param role describes the role of the list, must be a valid CSS class value
      */
     void list(String role, Collection<String> data);
     
     /** Render general information 
-     * @param describes the role of the list, must be a valid CSS class value
+     * @param role describes the role of the list, must be a valid CSS class value
      */
     void info(String role, String info);
     

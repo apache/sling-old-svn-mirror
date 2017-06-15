@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.sling.testing.mock.sling.NodeTypeDefinitionScanner;
 import org.junit.Test;
 
 

@@ -19,6 +19,9 @@
 
 [feature name=crankstart.tests]
 
+[variables]
+single.servlet.text = this can be overridden, see BasicLauncherIT
+
 [artifacts]
   org.apache.sling/org.apache.sling.crankstart.test.services/1.9.9-SNAPSHOT
   org.apache.sling/org.apache.sling.junit.core/1.0.10
@@ -44,9 +47,8 @@
 
 [configurations]
   org.apache.sling.crankstart.testservices.SingleConfigServlet
-  # TODO should use a variable to verify that they work in configs
     path="/single"
-    message="doesn't matter"
+    message="test content is ${single.servlet.text}"
 
   org.apache.sling.crankstart.testservices.ConfigFactoryServlet-foo
     path="/foo"

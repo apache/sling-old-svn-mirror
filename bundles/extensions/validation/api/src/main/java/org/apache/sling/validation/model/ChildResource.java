@@ -24,7 +24,8 @@ import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
+
 
 /**
  * Defines the validation rules for a child resource, allowing {@link ValidationModel}s to be applied to {@link
@@ -39,7 +40,7 @@ public interface ChildResource {
      *
      * @return the name
      */
-     String getName();
+     @Nonnull String getName();
     
     /**
      * Returns this resource's name pattern. In case this is not returning {@code null}, this pattern is used for finding the child resources which should be validated.

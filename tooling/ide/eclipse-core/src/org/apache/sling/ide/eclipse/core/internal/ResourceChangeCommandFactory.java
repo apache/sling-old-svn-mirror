@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -64,16 +63,13 @@ import org.eclipse.ui.statushandlers.StatusManager;
  */
 public class ResourceChangeCommandFactory {
 
-    private final Set<String> ignoredFileNames = new HashSet<>();
-    {
-        ignoredFileNames.add(".vlt");
-        ignoredFileNames.add(".vltignore");
-    }
+    private final Set<String> ignoredFileNames;
 
     private final SerializationManager serializationManager;
 
-    public ResourceChangeCommandFactory(SerializationManager serializationManager) {
+    public ResourceChangeCommandFactory(SerializationManager serializationManager, Set<String> ignoredFileNames) {
         this.serializationManager = serializationManager;
+        this.ignoredFileNames = ignoredFileNames;
     }
 
     public Command<?> newCommandForAddedOrUpdated(Repository repository, IResource addedOrUpdated) throws CoreException {
@@ -240,7 +236,7 @@ public class ResourceChangeCommandFactory {
      * The resourceProxy may be null, typically when a resource is already deleted.
      * 
      * <p>
-     * The filter may be null, in which case all combinations are included in the filed, i.e. allowed.
+     * In case the filter is {@code null} no resource should be added, i.e. {@link FilterResult#DENY} is returned
      * 
      * @param resource the resource to filter for, must not be <code>null</code>
      * @param resourceProxy the resource proxy to filter for, possibly <code>null</code>
@@ -250,7 +246,7 @@ public class ResourceChangeCommandFactory {
     private FilterResult getFilterResult(IResource resource, ResourceProxy resourceProxy, Filter filter) {
 
         if (filter == null) {
-            return FilterResult.ALLOW;
+            return FilterResult.DENY;
         }
 
         File contentSyncRoot = ProjectUtil.getSyncDirectoryFile(resource.getProject());
@@ -339,7 +335,7 @@ public class ResourceChangeCommandFactory {
         // don't use isRoot() to prevent infinite loop when the final path is '//'
         while (serializationFilePath.segmentCount() != 0) {
             serializationFilePath = serializationFilePath.removeLastSegments(1);
-            IFolder folderWithPossibleSerializationFile = (IFolder) syncDirectory.findMember(serializationFilePath);
+            IFolder folderWithPossibleSerializationFile = syncDirectory.getFolder(serializationFilePath);
             if (folderWithPossibleSerializationFile == null) {
                 logger.trace("No folder found at {0}, moving up to the next level", serializationFilePath);
                 continue;

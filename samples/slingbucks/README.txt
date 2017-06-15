@@ -33,7 +33,14 @@ HOW TO TEST
 -----------
 On a default Sling trunk instance you usually need to first disable the 
 "Allow Anonymous Access" option at 
+
 http://localhost:8080/system/console/configMgr/org.apache.sling.engine.impl.auth.SlingAuthenticator
+
+And also, as long as this bundle uses loginAdministrative, whitelist it by adding 
+"org.apache.sling.samples.slingbucks" to the "Whitelist bundles additional" configuration 
+property at
+
+http://localhost:8080/system/console/configMgr/org.apache.sling.jcr.base.internal.LoginAdminWhitelist
 
 Then, start at 
 

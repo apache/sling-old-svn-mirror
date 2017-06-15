@@ -32,7 +32,7 @@ import org.apache.sling.discovery.commons.providers.BaseTopologyView;
  * important that one listener doesn't do activity based on
  * an older incarnation of the topologyView than another listener
  * on another instance. they should change from one view to the
- * next view based on the same repository state.</li>
+ * next view based on the same repository state.
  * </li>
  * <li>when an instance leaves the cluster (eg crashes), then 
  * depending on the repository it might have left a backlog around

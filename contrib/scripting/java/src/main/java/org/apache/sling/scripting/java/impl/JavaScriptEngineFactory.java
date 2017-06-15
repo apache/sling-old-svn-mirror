@@ -20,8 +20,8 @@ import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -31,17 +31,15 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
@@ -49,10 +47,14 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventHandler;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,36 +62,54 @@ import org.slf4j.LoggerFactory;
  * The Java engine
  *
  */
-@Component(metatype=true, label="%javahandler.name", description="%javahandler.description")
-@Service(value=javax.script.ScriptEngineFactory.class)
-@Properties({
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name="service.description", value="Java Servlet Script Handler"),
-    @Property(name=JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M, value=JavaScriptEngineFactory.VERSION_AUTO),
-    @Property(name=JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M, value=JavaScriptEngineFactory.VERSION_AUTO),
-    @Property(name=JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO, boolValue=true),
-    @Property(name=JavaScriptEngineFactory.PROPERTY_ENCODING, value="UTF-8")
-})
+@Component(service={javax.script.ScriptEngineFactory.class, ResourceChangeListener.class},
+           property={
+                   "extensions=" + JavaScriptEngineFactory.SCRIPT_TYPE,
+                   "names=java",
+                   "names=Java",
+                   Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+                   Constants.SERVICE_DESCRIPTION + "=" + JavaScriptEngineFactory.DESCRIPTION,
+                   ResourceChangeListener.CHANGES + "=CHANGED",
+                   ResourceChangeListener.CHANGES + "=REMOVED",
+                   ResourceChangeListener.PATHS + "=glob:**/*.java"
+           })
+@Designate(ocd = JavaScriptEngineFactory.Config.class)
 public class JavaScriptEngineFactory
     extends AbstractScriptEngineFactory
-    implements EventHandler {
+    implements ResourceChangeListener, ExternalResourceChangeListener {
+
+    public static final String DESCRIPTION = "Java Servlet Script Handler";
+
+    @ObjectClassDefinition(name = "Apache Sling Java Script Handler",
+           description = "The Java Script Handler supports development of Java Servlets to render response content. ")
+
+    public @interface Config {
+
+        @AttributeDefinition(name = "Generate Debug Info", description = "Should the class file be compiled with " +
+                   "debugging information? true or false, default true.")
+        boolean java_classdebuginfo() default true;
+
+        @AttributeDefinition(name = "Source Encoding", description = "")
+        String java_javaEncoding() default "UTF-8";
+
+        @AttributeDefinition(name = "Source VM", description = "Java Specification to be used to read " +
+                 "the source files. If left empty or the value \"auto\" is specified, the " +
+                 "current vm version will be used.")
+        String java_compilerSourceVM() default JavaScriptEngineFactory.VERSION_AUTO;
+
+        @AttributeDefinition(name = "Target VM", description = "Target Java version for compilation. If left " +
+                   "empty or the value \"auto\" is specified, the current vm version will be used.")
+        String java_compilerTargetVM() default JavaScriptEngineFactory.VERSION_AUTO;
+    }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    public static final String PROPERTY_COMPILER_SOURCE_V_M = "java.compilerSourceVM";
-
-    public static final String PROPERTY_COMPILER_TARGET_V_M = "java.compilerTargetVM";
-
-    public static final String PROPERTY_CLASSDEBUGINFO = "java.classdebuginfo";
-
-    public static final String PROPERTY_ENCODING = "java.javaEncoding";
 
     public static final String VERSION_AUTO = "auto";
 
     @Reference
     private JavaCompiler javaCompiler;
 
-    @Reference
+    @Reference(target="(name=org.apache.sling)")
     private ServletContext slingServletContext;
 
     private SlingIOProvider ioProvider;
@@ -97,8 +117,6 @@ public class JavaScriptEngineFactory
     private JavaServletContext javaServletContext;
 
     private ServletConfig servletConfig;
-
-    private ServiceRegistration eventHandlerRegistration;
 
     public static final String SCRIPT_TYPE = "java";
 
@@ -112,6 +130,7 @@ public class JavaScriptEngineFactory
     /**
      * @see javax.script.ScriptEngineFactory#getScriptEngine()
      */
+    @Override
     public ScriptEngine getScriptEngine() {
         return new JavaScriptEngine(this);
     }
@@ -119,6 +138,7 @@ public class JavaScriptEngineFactory
     /**
      * @see javax.script.ScriptEngineFactory#getLanguageName()
      */
+    @Override
     public String getLanguageName() {
         return "Java Servlet Compiler";
     }
@@ -126,6 +146,7 @@ public class JavaScriptEngineFactory
     /**
      * @see javax.script.ScriptEngineFactory#getLanguageVersion()
      */
+    @Override
     public String getLanguageVersion() {
         return "1.5";
     }
@@ -145,38 +166,25 @@ public class JavaScriptEngineFactory
     /**
      * Activate this engine
      *
-     * @param componentContext
+     * @param config Configuration properties
      */
-    @SuppressWarnings("unchecked")
-    protected void activate(final ComponentContext componentContext) {
-        final CompilerOptions opts = CompilerOptions.createOptions(componentContext.getProperties());
+    @Activate
+    protected void activate(final Config config, final Map<String, Object> props) {
+        final CompilerOptions opts = CompilerOptions.createOptions(config);
         this.ioProvider = new SlingIOProvider(this.javaCompiler, opts);
         this.javaServletContext = new JavaServletContext(ioProvider,
             slingServletContext);
 
-        this.servletConfig = new JavaServletConfig(javaServletContext,
-            componentContext.getProperties());
+        this.servletConfig = new JavaServletConfig(javaServletContext, props);
 
-        // register event handler
-        final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put("event.topics","org/apache/sling/api/resource/*");
-        props.put("service.description","Java Servlet Script Modification Handler");
-        props.put("service.vendor","The Apache Software Foundation");
-
-        this.eventHandlerRegistration = componentContext.getBundleContext()
-                  .registerService(EventHandler.class.getName(), this, props);
         logger.info("Activating Apache Sling Script Engine for Java with options {}", opts);
     }
 
     /**
      * Deactivate this engine
-     * @param componentContext
      */
-    protected void deactivate(final ComponentContext componentContext) {
-        if ( this.eventHandlerRegistration != null ) {
-            this.eventHandlerRegistration.unregister();
-            this.eventHandlerRegistration = null;
-        }
+    @Deactivate
+    protected void deactivate() {
         if ( this.ioProvider != null ) {
             this.ioProvider.destroy();
             this.ioProvider = null;
@@ -249,19 +257,20 @@ public class JavaScriptEngineFactory
         return wrapper;
     }
 
-    /**
-     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
-     */
-    public void handleEvent(Event event) {
-        if ( SlingConstants.TOPIC_RESOURCE_CHANGED.equals(event.getTopic()) ) {
-            this.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH), false);
-        } else if ( SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ) {
-            this.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH), true);
-        }
-    }
+    @Override
+	public void onChange(List<ResourceChange> resourceChange) {
+		for(ResourceChange change : resourceChange){
+			ChangeType topic = change.getType();
+			if (topic.equals(ChangeType.CHANGED)) {
+				this.handleModification(change.getPath(), false);
+			} else if (topic.equals(ChangeType.REMOVED)){
+				this.handleModification(change.getPath(), true);
+			}
+		}
+	}
 
     private void handleModification(final String scriptName, final boolean remove) {
-        this.ioProvider.getServletCache().removeWrapper(scriptName);
+        this.ioProvider.getServletCache().removeWrapper(scriptName, remove);
     }
 
     private static class JavaScriptEngine extends AbstractSlingScriptEngine {
@@ -273,6 +282,7 @@ public class JavaScriptEngineFactory
         /**
          * @see javax.script.ScriptEngine#eval(java.io.Reader, javax.script.ScriptContext)
          */
+        @Override
         public Object eval(Reader script, ScriptContext context)
         throws ScriptException {
             final Bindings props = context.getBindings(ScriptContext.ENGINE_SCOPE);

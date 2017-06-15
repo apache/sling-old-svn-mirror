@@ -33,6 +33,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ContentType;
+import org.apache.http.protocol.HTTP;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
@@ -41,6 +42,7 @@ import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+import org.apache.sling.distribution.packaging.impl.AbstractDistributionPackage;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
@@ -56,6 +58,12 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     private static final String EXECUTOR_CONTEXT_KEY_PREFIX = "ExecutorContextKey";
 
     /**
+     * The <code>Digest</code> header, see <a href="https://tools.ietf.org/html/rfc3230#section-4.3.2">section-4.3.2</a>
+     * of Instance Digests in HTTP (RFC3230)
+     */
+    private static final String DIGEST_HEADER = "Digest";
+
+    /**
      * distribution package origin uri
      */
     private static final String PACKAGE_INFO_PROPERTY_ORIGIN_URI = "internal.origin.uri";
@@ -64,16 +72,19 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
     private final DistributionEndpoint distributionEndpoint;
     private final DistributionPackageBuilder packageBuilder;
     private final DistributionTransportSecretProvider secretProvider;
+    private final HttpConfiguration httpConfiguration;
     private final String contextKeyExecutor;
 
     public SimpleHttpDistributionTransport(DefaultDistributionLog log, DistributionEndpoint distributionEndpoint,
                                            DistributionPackageBuilder packageBuilder,
-                                           DistributionTransportSecretProvider secretProvider) {
+                                           DistributionTransportSecretProvider secretProvider,
+                                           HttpConfiguration httpConfiguration) {
         this.log = log;
 
         this.distributionEndpoint = distributionEndpoint;
         this.packageBuilder = packageBuilder;
         this.secretProvider = secretProvider;
+        this.httpConfiguration = httpConfiguration;
         this.contextKeyExecutor = EXECUTOR_CONTEXT_KEY_PREFIX + "_" + getHostAndPort(distributionEndpoint.getUri()) + "_" + UUID.randomUUID();
     }
 
@@ -91,7 +102,19 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             try {
                 Executor executor = getExecutor(distributionContext);
 
-                Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
+                Request req = Request.Post(distributionEndpoint.getUri())
+                        .connectTimeout(httpConfiguration.getConnectTimeout())
+                        .socketTimeout(httpConfiguration.getSocketTimeout())
+                        .addHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_CLOSE)
+                        .useExpectContinue();
+
+                // add the message body digest, see https://tools.ietf.org/html/rfc3230#section-4.3.2
+                if (distributionPackage instanceof AbstractDistributionPackage) {
+                    AbstractDistributionPackage adb = (AbstractDistributionPackage) distributionPackage;
+                    if (adb.getDigestAlgorithm() != null && adb.getDigestMessage() != null) {
+                        req.addHeader(DIGEST_HEADER, String.format("%s=%s", adb.getDigestAlgorithm(), adb.getDigestMessage()));
+                    }
+                }
 
                 InputStream inputStream = null;
                 try {
@@ -132,17 +155,21 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             Executor executor = getExecutor(distributionContext);
 
             // TODO : add queue parameter
-            InputStream inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI);
+            InputStream inputStream = HttpTransportUtils.fetchNextPackage(executor, distributionURI, httpConfiguration);
 
             if (inputStream == null) {
                 return null;
             }
 
-            final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, inputStream);
-            responsePackage.getInfo().put(PACKAGE_INFO_PROPERTY_ORIGIN_URI, distributionURI);
-            log.debug("pulled package with info {}", responsePackage.getInfo());
+            try {
+                final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, inputStream);
+                responsePackage.getInfo().put(PACKAGE_INFO_PROPERTY_ORIGIN_URI, distributionURI);
+                log.debug("pulled package with info {}", responsePackage.getInfo());
 
-            return new DefaultRemoteDistributionPackage(responsePackage, executor, distributionURI);
+                return new DefaultRemoteDistributionPackage(responsePackage, executor, distributionURI);
+            } finally {
+                IOUtils.closeQuietly(inputStream);
+            }
         } catch (HttpHostConnectException e) {
             log.debug("could not connect to {} - skipping", distributionEndpoint.getUri());
         } catch (Exception ex) {

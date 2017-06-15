@@ -26,9 +26,8 @@ import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.verifyPrivate;
 
-import java.util.HashMap;
+import java.lang.annotation.Annotation;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -60,9 +59,28 @@ public class ConcurrentJcrResourceBundleLoadingTest {
     @Before
     public void setup() throws Exception {
         provider = spy(new JcrResourceBundleProvider());
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put("locale.default", "en");
-        provider.activate(PowerMockito.mock(BundleContext.class), properties);
+        provider.activate(PowerMockito.mock(BundleContext.class), new JcrResourceBundleProvider.Config() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return JcrResourceBundleProvider.Config.class;
+            }
+
+            @Override
+            public boolean preload_bundles() {
+                return false;
+            }
+
+            @Override
+            public String locale_default() {
+                return "en";
+            }
+
+            @Override
+            public long invalidation_delay() {
+                return 5000;
+            }
+        });
         doReturn(english).when(provider, "createResourceBundle", eq(null), eq(Locale.ENGLISH));
         doReturn(german).when(provider, "createResourceBundle", eq(null), eq(Locale.GERMAN));
         Mockito.when(german.getLocale()).thenReturn(Locale.GERMAN);

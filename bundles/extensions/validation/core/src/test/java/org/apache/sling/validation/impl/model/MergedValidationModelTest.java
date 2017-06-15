@@ -19,14 +19,11 @@
 package org.apache.sling.validation.impl.model;
 
 import java.util.Arrays;
-import java.util.regex.Pattern;
 
-import org.apache.sling.validation.model.ChildResource;
-import org.apache.sling.validation.model.ResourceProperty;
+import org.apache.sling.validation.impl.util.ChildResourceNameRegexMatcher;
+import org.apache.sling.validation.impl.util.ResourcePropertyNameRegexMatcher;
 import org.apache.sling.validation.model.ValidationModel;
-import org.hamcrest.Description;
 import org.hamcrest.Matchers;
-import org.hamcrest.TypeSafeMatcher;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,24 +38,26 @@ public class MergedValidationModelTest {
     public void setup() {
         modelBuilder = new ValidationModelBuilder();
         propertyBuilder = new ResourcePropertyBuilder();
+        // each model needs at least one property or childresource
+        modelBuilder.resourceProperty(propertyBuilder.build("nameToOverwrite"));
         childResourceBuilder = new ChildResourceBuilder();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testMoreSpecificApplicationPathInModelToMerge() {
         modelBuilder.addApplicablePath("/base/path").addApplicablePath("/base/path2");
-        ValidationModel baseValidationModel = modelBuilder.build("base");
+        ValidationModel baseValidationModel = modelBuilder.build("base", "some source");
         modelBuilder.setApplicablePath("/base/path3");
-        new MergedValidationModel(baseValidationModel, modelBuilder.build("superType"));
+        new MergedValidationModel(baseValidationModel, modelBuilder.build("superType", "some source"));
     }
 
     @Test
     public void testLessSpecificApplicationPathInModelToMerge() {
         modelBuilder.addApplicablePath("/base/path").addApplicablePath("/base/path2");
-        ValidationModel baseValidationModel = modelBuilder.build("base");
+        ValidationModel baseValidationModel = modelBuilder.build("base", "some source");
         modelBuilder.setApplicablePath("/base");
-        ValidationModel mergedModel = new MergedValidationModel(baseValidationModel, modelBuilder.build("superType"));
-        Assert.assertThat(Arrays.asList(mergedModel.getApplicablePaths()),
+        ValidationModel mergedModel = new MergedValidationModel(baseValidationModel, modelBuilder.build("superType", "some source"));
+        Assert.assertThat(mergedModel.getApplicablePaths(),
                 Matchers.contains("/base/path", "/base/path2"));
     }
 
@@ -67,7 +66,7 @@ public class MergedValidationModelTest {
         modelBuilder.resourceProperty(propertyBuilder.nameRegex("overwrittenNameToOverwrite").build("nameToOverwrite"));
         modelBuilder.childResource(childResourceBuilder.nameRegex("overwrittenNameToOverwrite")
                 .build("nameToOverwrite"));
-        ValidationModel baseValidationModel = modelBuilder.build("base");
+        ValidationModel baseValidationModel = modelBuilder.build("base", "some source");
         modelBuilder = new ValidationModelBuilder();
         modelBuilder.resourceProperty(propertyBuilder.nameRegex("originalNameToOverwrite").build("nameToOverwrite"));
         modelBuilder.childResource(childResourceBuilder.nameRegex("originalNameToOverwrite").build("nameToOverwrite"));
@@ -75,73 +74,20 @@ public class MergedValidationModelTest {
                 "nameNotOverwritten"));
         modelBuilder.childResource(childResourceBuilder.nameRegex("originalNameNotOverwritten").build(
                 "nameNotOverwritten"));
-        ValidationModel mergedModel = new MergedValidationModel(baseValidationModel, modelBuilder.build("superType"));
-        Assert.assertThat(mergedModel.getResourceProperties(), Matchers.containsInAnyOrder(
-                new ResourcePropertyNameRegexMatcher("overwrittenNameToOverwrite"),
-                new ResourcePropertyNameRegexMatcher("originalNameNotOverwritten")));
-        Assert.assertThat(mergedModel.getChildren(), Matchers.containsInAnyOrder(new ChildResourceNameRegexMatcher(
-                "overwrittenNameToOverwrite"), new ChildResourceNameRegexMatcher("originalNameNotOverwritten")));
+        ValidationModel mergedModel = new MergedValidationModel(baseValidationModel, modelBuilder.build("superType", "some source"));
+        Assert.assertThat(mergedModel.getResourceProperties(), Matchers.containsInAnyOrder(Arrays.asList(
+                new ResourcePropertyNameRegexMatcher("overwrittenNameToOverwrite"), 
+                new ResourcePropertyNameRegexMatcher("originalNameNotOverwritten"))));
+        Assert.assertThat(mergedModel.getChildren(), Matchers.containsInAnyOrder(Arrays.asList(
+                new ChildResourceNameRegexMatcher("overwrittenNameToOverwrite"), 
+                new ChildResourceNameRegexMatcher("originalNameNotOverwritten"))));
     }
 
     @Test
     public void testValidatedResourceTypes() {
-        ValidationModel mergedModel = new MergedValidationModel(modelBuilder.build("base"),
-                modelBuilder.build("superType"));
-        Assert.assertThat(mergedModel.getValidatedResourceType(), Matchers.equalTo("base"));
+        ValidationModel mergedModel = new MergedValidationModel(modelBuilder.build("base", "some source"),
+                modelBuilder.build("superType", "some source"));
+        Assert.assertThat(mergedModel.getValidatingResourceType(), Matchers.equalTo("base"));
     }
 
-    /**
-     * Custom Hamcrest matcher which matches Resource Properties based on the equality only on their namePatterns.
-     */
-    private static final class ResourcePropertyNameRegexMatcher extends TypeSafeMatcher<ResourceProperty> {
-
-        private final String expectedNameRegex;
-
-        public ResourcePropertyNameRegexMatcher(String nameRegex) {
-            expectedNameRegex = nameRegex;
-        }
-
-        @Override
-        public void describeTo(Description description) {
-            description.appendText("ResourceProperty with namePattern=" + expectedNameRegex);
-        }
-
-        @Override
-        protected boolean matchesSafely(ResourceProperty resourceProperty) {
-            Pattern namePattern = resourceProperty.getNamePattern();
-            if (namePattern == null) {
-                return false;
-            } else {
-                return expectedNameRegex.equals(namePattern.toString());
-            }
-        }
-
-    }
-
-    /**
-     * Custom Hamcrest matcher which matches ChildResource based on the equality only on their namePatterns.
-     */
-    private static final class ChildResourceNameRegexMatcher extends TypeSafeMatcher<ChildResource> {
-
-        private final String expectedNameRegex;
-
-        public ChildResourceNameRegexMatcher(String nameRegex) {
-            expectedNameRegex = nameRegex;
-        }
-
-        @Override
-        public void describeTo(Description description) {
-            description.appendText("ChildResource with namePattern=" + expectedNameRegex);
-        }
-
-        @Override
-        protected boolean matchesSafely(ChildResource childResource) {
-            Pattern namePattern = childResource.getNamePattern();
-            if (namePattern == null) {
-                return false;
-            } else {
-                return expectedNameRegex.equals(namePattern.toString());
-            }
-        }
-    }
 }

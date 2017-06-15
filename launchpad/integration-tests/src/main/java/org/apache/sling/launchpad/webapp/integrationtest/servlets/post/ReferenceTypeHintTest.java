@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.commons.testing.integration.NameValuePairList;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.custommonkey.xmlunit.NamespaceContext;
 import org.custommonkey.xmlunit.SimpleNamespaceContext;
@@ -141,10 +143,10 @@ public class ReferenceTypeHintTest extends HttpTestBase {
     }
 
     private String[] getPropertyArray(String url, String name) throws Exception {
-        JSONObject jo = new JSONObject(getContent(url + "/" + name + ".json", CONTENT_TYPE_JSON));
-        JSONArray arr = jo.getJSONArray(name);
-        String[] result = new String[arr.length()];
-        for (int i = 0; i < arr.length(); i++) {
+        JsonObject jo = JsonUtil.parseObject(getContent(url + "/" + name + ".json", CONTENT_TYPE_JSON));
+        JsonArray arr = jo.getJsonArray(name);
+        String[] result = new String[arr.size()];
+        for (int i = 0; i < arr.size(); i++) {
             result[i] = arr.getString(i);
         }
         return result;

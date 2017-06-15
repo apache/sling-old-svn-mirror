@@ -24,12 +24,12 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>28</version>
+    <version>30</version>
     <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.jcr.oak.server</artifactId>
-  <version>1.1.1-SNAPSHOT</version>
+  <version>1.1.5-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Apache Sling JCR Oak Repository Server</name>
@@ -37,15 +37,14 @@
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/oak-server</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/oak-server
-    </developerConnection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/oak-server</developerConnection>
     <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/oak-server</url>
   </scm>
 
   <properties>
-    <jackrabbit.version>2.13.1</jackrabbit.version>
-    <oak.version>1.5.7</oak.version>
-    <org.ops4j.pax.exam.version>4.9.1</org.ops4j.pax.exam.version>
+    <jackrabbit.version>2.14.0</jackrabbit.version>
+    <oak.version>1.6.1</oak.version>
+    <org.ops4j.pax.exam.version>4.10.0</org.ops4j.pax.exam.version>
   </properties>
 
   <build>
@@ -65,13 +64,20 @@
               org.apache.felix.jaas.boot,
               *
             </Import-Package>
+            <Embed-Dependency>
+              oak-lucene;inline="org/apache/jackrabbit/oak/plugins/index/lucene/util/LuceneIndexHelper.*"
+            </Embed-Dependency>
+            <_removeheaders>
+              Embed-Dependency,
+              Private-Package,
+              Include-Resource
+            </_removeheaders>
           </instructions>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.18.1</version>
         <executions>
           <execution>
             <goals>
@@ -81,6 +87,7 @@
           </execution>
         </executions>
         <configuration>
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <systemProperties>
             <property>
               <name>bundle.filename</name>
@@ -92,7 +99,6 @@
       <plugin>
         <groupId>org.apache.servicemix.tooling</groupId>
         <artifactId>depends-maven-plugin</artifactId>
-        <version>1.2</version>
         <executions>
           <execution>
             <goals>
@@ -115,13 +121,12 @@
     <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
-      <scope>provided</scope>
     </dependency>
     <!-- Apache Felix -->
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>5.4.0</version>
+      <version>5.6.2</version>
       <scope>test</scope>
     </dependency>
     <!-- Apache Jackrabbit -->
@@ -159,8 +164,8 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.api</artifactId>
-      <version>2.3.0</version>
-      <scope>provided</scope>
+      <version>2.16.2</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
@@ -177,7 +182,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.jcr.base</artifactId>
-      <version>2.4.0</version>
+      <version>3.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -189,24 +194,19 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.testing.paxexam</artifactId>
-      <version>0.0.3-SNAPSHOT</version>
+      <version>0.0.4</version>
       <scope>test</scope>
     </dependency>
     <!-- OSGi -->
     <dependency>
       <groupId>org.osgi</groupId>
-      <artifactId>osgi.annotation</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>osgi.cmpn</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
       <artifactId>osgi.core</artifactId>
-      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.service.cm</artifactId>
+      <version>1.5.0</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
@@ -216,25 +216,19 @@
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.service.component.annotations</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.service.metatype.annotations</artifactId>
-      <scope>provided</scope>
+      <artifactId>org.osgi.service.event</artifactId>
+      <version>1.3.1</version>
+      <scope>test</scope>
     </dependency>
     <!-- logging -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <scope>provided</scope>
     </dependency>
     <!-- testing -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>

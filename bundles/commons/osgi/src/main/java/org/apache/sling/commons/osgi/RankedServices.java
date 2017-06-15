@@ -27,11 +27,10 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.osgi.annotation.versioning.ConsumerType;
+import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-
-import aQute.bnd.annotation.ConsumerType;
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Helper class that collects all services registered via OSGi bind/unbind methods.

@@ -27,15 +27,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -80,11 +81,11 @@ public class GetAclTest {
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
 	@Test 
-	public void testEffectiveAclForUser() throws IOException, JSONException {
+	public void testEffectiveAclForUser() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		testUserId2 = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -115,43 +116,43 @@ public class GetAclTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(1, grantedArray.length());
+		assertEquals(1, grantedArray.size());
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:write");
 
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		Object deniedArray = aceObject.get("denied");
 		assertNull(deniedArray);
 
-		JSONObject aceObject2 = jsonObject.optJSONObject(testUserId2);
+		JsonObject aceObject2 = jsonObject.getJsonObject(testUserId2);
 		assertNotNull(aceObject2);
 
-		String principalString2 = aceObject2.optString("principal");
+		String principalString2 = aceObject2.getString("principal");
 		assertEquals(testUserId2, principalString2);
 		
-		JSONArray grantedArray2 = aceObject2.optJSONArray("granted");
+		JsonArray grantedArray2 = aceObject2.getJsonArray("granted");
 		assertNotNull(grantedArray2);
-		assertEquals(2, grantedArray2.length());
+		assertEquals(2, grantedArray2.size());
 		Set<String> grantedPrivilegeNames2 = new HashSet<String>();
-		for (int i=0; i < grantedArray2.length(); i++) {
+		for (int i=0; i < grantedArray2.size(); i++) {
 			grantedPrivilegeNames2.add(grantedArray2.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:write");
 		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:lockManagement");
 
-		JSONArray deniedArray2 = aceObject2.optJSONArray("denied");
+		Object deniedArray2 = aceObject2.get("denied");
 		assertNull(deniedArray2);
 	
 	}
@@ -160,10 +161,10 @@ public class GetAclTest {
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
 	@Test 
-	public void testEffectiveAclMergeForUser_ReplacePrivilegeOnChild() throws IOException, JSONException {
+	public void testEffectiveAclMergeForUser_ReplacePrivilegeOnChild() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -190,24 +191,24 @@ public class GetAclTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(1, grantedArray.length());
+		assertEquals(1, grantedArray.size());
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:write");
 
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		Object deniedArray = aceObject.get("denied");
 		assertNull(deniedArray);
 	}
 	
@@ -215,10 +216,10 @@ public class GetAclTest {
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
 	@Test 
-	public void testEffectiveAclMergeForUser_FewerPrivilegesGrantedOnChild() throws IOException, JSONException {
+	public void testEffectiveAclMergeForUser_FewerPrivilegesGrantedOnChild() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -245,24 +246,24 @@ public class GetAclTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(1, grantedArray.length());
+		assertEquals(1, grantedArray.size());
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:all");
 
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		Object deniedArray = aceObject.get("denied");
 		assertNull(deniedArray);
 	}
 
@@ -270,10 +271,10 @@ public class GetAclTest {
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
 	@Test 
-	public void testEffectiveAclMergeForUser_MorePrivilegesGrantedOnChild() throws IOException, JSONException {
+	public void testEffectiveAclMergeForUser_MorePrivilegesGrantedOnChild() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -300,24 +301,24 @@ public class GetAclTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(1, grantedArray.length());
+		assertEquals(1, grantedArray.size());
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:all");
 
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		Object deniedArray = aceObject.get("denied");
 		assertNull(deniedArray);
 	}
 
@@ -326,10 +327,10 @@ public class GetAclTest {
 	 */
 	@Test
 	@Ignore // TODO: fails on Oak
-	public void testEffectiveAclMergeForUser_SubsetOfPrivilegesDeniedOnChild() throws IOException, JSONException {
+	public void testEffectiveAclMergeForUser_SubsetOfPrivilegesDeniedOnChild() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -356,19 +357,19 @@ public class GetAclTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertTrue(grantedArray.length() >= 8);
+		assertTrue(grantedArray.size() >= 8);
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:all");
@@ -388,11 +389,11 @@ public class GetAclTest {
 		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:removeChildNodes");
 		
 		
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
-		assertEquals(1, deniedArray.length());
+		assertEquals(1, deniedArray.size());
 		Set<String> deniedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < deniedArray.length(); i++) {
+		for (int i=0; i < deniedArray.size(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:write");
@@ -402,10 +403,10 @@ public class GetAclTest {
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
 	@Test 
-	public void testEffectiveAclMergeForUser_SubsetOfPrivilegesDeniedOnChild2() throws IOException, JSONException {
+	public void testEffectiveAclMergeForUser_SubsetOfPrivilegesDeniedOnChild2() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -432,19 +433,19 @@ public class GetAclTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
-		assertTrue(grantedArray.length() >= 11);
+		assertTrue(grantedArray.size() >= 11);
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.length(); i++) {
+		for (int i=0; i < grantedArray.size(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
 		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:all");
@@ -461,11 +462,11 @@ public class GetAclTest {
 		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:addChildNodes");
 		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:removeChildNodes");
 
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
-		assertEquals(1, deniedArray.length());
+		assertEquals(1, deniedArray.size());
 		Set<String> deniedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < deniedArray.length(); i++) {
+		for (int i=0; i < deniedArray.size(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:removeNode");
@@ -475,10 +476,10 @@ public class GetAclTest {
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
 	@Test 
-	public void testEffectiveAclMergeForUser_SupersetOfPrivilegesDeniedOnChild() throws IOException, JSONException {
+	public void testEffectiveAclMergeForUser_SupersetOfPrivilegesDeniedOnChild() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -505,22 +506,22 @@ public class GetAclTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		Object grantedArray = aceObject.get("granted");
 		assertNull(grantedArray);
 		
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
-		assertEquals(1, deniedArray.length());
+		assertEquals(1, deniedArray.size());
 		Set<String> deniedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < deniedArray.length(); i++) {
+		for (int i=0; i < deniedArray.size(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:all");
@@ -530,10 +531,10 @@ public class GetAclTest {
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
 	@Test 
-	public void testEffectiveAclMergeForUser_SupersetOfPrivilegesDeniedOnChild2() throws IOException, JSONException {
+	public void testEffectiveAclMergeForUser_SupersetOfPrivilegesDeniedOnChild2() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
-		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -560,22 +561,22 @@ public class GetAclTest {
 
 		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		Object grantedArray = aceObject.get("granted");
 		assertNull(grantedArray);
 		
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
-		assertEquals(1, deniedArray.length());
+		assertEquals(1, deniedArray.size());
 		Set<String> deniedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < deniedArray.length(); i++) {
+		for (int i=0; i < deniedArray.size(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
 		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:all");

@@ -44,29 +44,24 @@ public class JUnitResultRenderer extends RunListener implements Renderer,Rendere
     private ObjectOutputStream outputStream;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /** @inheritDoc */
     public Renderer createRenderer() { 
         return new JUnitResultRenderer();
     }
     
-    /** @inheritDoc */
     public boolean appliesTo(TestSelector s) {
         return EXTENSION.equals(s.getExtension());
     }
     
-    /** @inheritDoc */
     public String getExtension() {
         return EXTENSION;
     }
 
-    /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) 
     throws IOException, UnsupportedEncodingException {
         response.setContentType("application/x-java-serialized-object");
         outputStream = new ObjectOutputStream(response.getOutputStream());
     }
     
-    /** @inheritDoc */
     public void cleanup() {
         try {
             outputStream.flush();
@@ -77,24 +72,19 @@ public class JUnitResultRenderer extends RunListener implements Renderer,Rendere
         outputStream = null;
     }
 
-    /** @inheritDoc */
     public RunListener getRunListener() {
         return this;
     }
 
-    /** @inheritDoc */
     public void info(String role, String info) {
     }
 
-    /** @inheritDoc */
     public void link(String info, String url, String method) {
     }
 
-    /** @inheritDoc */
     public void list(String role, Collection<String> data) {
     }
 
-    /** @inheritDoc */
     public void title(int level, String title) {
     }
     

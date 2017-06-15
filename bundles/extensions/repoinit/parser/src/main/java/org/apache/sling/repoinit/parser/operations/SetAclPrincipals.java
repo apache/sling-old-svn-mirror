@@ -17,6 +17,7 @@
 
 package org.apache.sling.repoinit.parser.operations;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,10 +29,14 @@ public class SetAclPrincipals extends AclGroupBase {
     private final List<String> principals;
     
     public SetAclPrincipals(List<String> principals, List<AclLine> lines) {
-        super(lines);
+        this(principals,lines,new ArrayList<String>());
+    }
+
+    public SetAclPrincipals(List<String> principals,List<AclLine> lines, List<String> aclOptions) {
+        super(lines,aclOptions);
         this.principals = Collections.unmodifiableList(principals);
     }
-    
+
     protected String getParametersDescription() {
         final StringBuilder sb = new StringBuilder();
         sb.append(principals);

@@ -50,7 +50,7 @@
     optionally using -Dmaven.surefire.debug to enable debugging.
     -->
     <properties>
-
+        <sling.java.version>8</sling.java.version>
         <!-- Set this to run tests against an existing server instance -->
         <keepJarRunning>false</keepJarRunning>
 
@@ -67,7 +67,7 @@
         <test.server.password />
 
         <!-- Options for the VM that executes our runnable jar -->
-        <jar.executor.vm.options>-Xmx512m</jar.executor.vm.options>
+        <jar.executor.vm.options>-Xmx2048m</jar.executor.vm.options>
 
         <!-- Change this to use longer or shorter timeouts for testing -->
         <sling.testing.timeout.multiplier>1.0</sling.testing.timeout.multiplier>
@@ -133,6 +133,8 @@
                 <configuration>
                     <excludes>
                         <exclude>derby.log</exclude>
+                        <exclude>**/sling.properties</exclude>
+                        <exclude>**/cache.lock</exclude>
                         <exclude>src/main/resources/**/*.*</exclude>
                         <exclude>src/test/resources/**/*.*</exclude>
                     </excludes>
@@ -306,14 +308,12 @@
                             ${project.build.directory},${project.build.directory}/sling/additional-bundles
                         </additional.bundles.path>
                         <keepJarRunning>${keepJarRunning}</keepJarRunning>
-                        <server.ready.timeout.seconds>60</server.ready.timeout.seconds>
+                        <server.ready.timeout.seconds>360</server.ready.timeout.seconds>
                         <sling.testing.timeout.multiplier>${sling.testing.timeout.multiplier}
                         </sling.testing.timeout.multiplier>
                         <server.ready.path.1>/:script src="system/sling.js"</server.ready.path.1>
-                        <server.ready.path.2>/.explorer.html:href="/libs/sling/explorer/css/explorer.css"
-                        </server.ready.path.2>
-                        <server.ready.path.3>/sling-test/sling/sling-test.html:Sling client library tests
-                        </server.ready.path.3>
+                        <server.ready.path.2>/.explorer.html:href="/libs/sling/explorer/css/explorer.css"</server.ready.path.2>
+                        <server.ready.path.3>/sling-test/sling/sling-test.html:Sling client library tests</server.ready.path.3>
                         <start.bundles.timeout.seconds>30</start.bundles.timeout.seconds>
                         <bundle.install.timeout.seconds>20</bundle.install.timeout.seconds>
 
@@ -332,6 +332,7 @@
                         <sling.additional.bundle.7>org.apache.sling.distribution.core</sling.additional.bundle.7>
                         <sling.additional.bundle.8>org.apache.sling.distribution.sample</sling.additional.bundle.8>
                         <sling.additional.bundle.9>${project.build.finalName}.jar</sling.additional.bundle.9>
+                        <sling.additional.bundle.10>org.apache.sling.commons.johnzon</sling.additional.bundle.10>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -344,7 +345,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.12</version>
+            <version>1.0.17-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -363,7 +364,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit.vault</groupId>
             <artifactId>org.apache.jackrabbit.vault</artifactId>
-            <version>3.1.24</version>
+            <version>3.1.30</version>
             <scope>provided</scope>
         </dependency>
         <!-- HTTP -->
@@ -388,13 +389,13 @@
         <!-- actual dependencies -->
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.6</version>
+            <artifactId>org.apache.sling.commons.johnzon</artifactId>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
-            <version>9-SNAPSHOT</version>
+            <version>8</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -456,7 +457,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.core</artifactId>
-            <version>0.1.19-SNAPSHOT</version>
+            <version>0.2.9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>

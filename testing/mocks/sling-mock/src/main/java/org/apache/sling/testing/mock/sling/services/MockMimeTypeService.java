@@ -21,18 +21,16 @@ package org.apache.sling.testing.mock.sling.services;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.mime.internal.MimeTypeServiceImpl;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Mock {@link MimeTypeService} implementation.
  */
-@Component(inherit = false)
-@Service(MimeTypeService.class)
+@Component(service = MimeTypeService.class)
 public final class MockMimeTypeService extends MimeTypeServiceImpl {
 
     private boolean initialized;

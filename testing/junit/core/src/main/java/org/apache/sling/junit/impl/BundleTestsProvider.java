@@ -196,7 +196,6 @@ public class BundleTestsProvider implements TestsProvider, BundleListener {
         return null;
     }
     
-    /** @inheritDoc */
     public Class<?> createTestClass(String testName) throws ClassNotFoundException {
         // Find the bundle to which the class belongs
         Bundle b = null;
@@ -213,17 +212,14 @@ public class BundleTestsProvider implements TestsProvider, BundleListener {
         return b.loadClass(testName);
     }
 
-    /** @inheritDoc */
     public long lastModified() {
         return lastModified;
     }
 
-    /** @inheritDoc */
     public String getServicePid() {
         return pid;
     }
 
-    /** @inheritDoc */
     public List<String> getTestNames() {
         maybeUpdateTestClasses();
         final List<String> result = new ArrayList<String>();

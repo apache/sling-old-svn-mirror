@@ -19,12 +19,19 @@ package org.apache.sling.testing.junit.rules.instance;
 
 import org.apache.sling.testing.clients.SlingClient;
 import org.apache.sling.testing.clients.instance.InstanceConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.net.URI;
 
 public abstract class AbstractInstance implements Instance {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractInstance.class);
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T extends SlingClient> T getClient(Class<T> clientClass, String user, String pass) {
         InstanceConfiguration configuration = getConfiguration();
@@ -48,9 +55,23 @@ public abstract class AbstractInstance implements Instance {
         return client;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T extends SlingClient> T getAdminClient(Class<T> clientClass) {
-        return getClient(clientClass, "admin", "admin");
+        return getClient(clientClass, getConfiguration().getAdminUser(), getConfiguration().getAdminPassword());
     }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SlingClient getAdminClient() {
+       return getAdminClient(SlingClient.class);
+    }
+
+
 
 }

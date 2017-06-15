@@ -18,16 +18,18 @@
  */
 package org.apache.sling.testing.mock.osgi;
 
-import static org.apache.sling.testing.mock.osgi.MapUtil.propertiesMergeWithOsgiMetadata;
+import static org.apache.sling.testing.mock.osgi.MapMergeUtil.propertiesMergeWithOsgiMetadata;
 import static org.apache.sling.testing.mock.osgi.MapUtil.toDictionary;
 import static org.apache.sling.testing.mock.osgi.MapUtil.toMap;
 
+import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
@@ -82,6 +84,14 @@ public final class MockOsgi {
     }
 
     /**
+     * @param properties Properties
+     * @return Mocked {@link ComponentContext} instance
+     */
+    public static ComponentContext newComponentContext(Object... properties) {
+        return componentContext().properties(properties).build();
+    }
+
+    /**
      * @param bundleContext Bundle context
      * @param properties Properties
      * @return Mocked {@link ComponentContext} instance
@@ -96,7 +106,18 @@ public final class MockOsgi {
      * @param properties Properties
      * @return Mocked {@link ComponentContext} instance
      */
-    public static ComponentContext newComponentContext(BundleContext bundleContext, Map<String, Object> properties) {
+    public static ComponentContext newComponentContext(BundleContext bundleContext,
+            Map<String, Object> properties) {
+        return componentContext().bundleContext(bundleContext).properties(properties).build();
+    }
+
+    /**
+     * @param bundleContext Bundle context
+     * @param properties Properties
+     * @return Mocked {@link ComponentContext} instance
+     */
+    public static ComponentContext newComponentContext(BundleContext bundleContext,
+            Object... properties) {
         return componentContext().bundleContext(bundleContext).properties(properties).build();
     }
 
@@ -162,6 +183,17 @@ public final class MockOsgi {
     }
 
     /**
+     * Simulate activation of service instance. Invokes the @Activate annotated method.
+     * @param target Service instance.
+     * @param bundleContext Bundle context
+     * @param properties Properties
+     * @return true if activation method was called. False if no activate method is defined.
+     */
+    public static boolean activate(Object target, BundleContext bundleContext, Object... properties) {
+        return activate(target, bundleContext, toDictionary(properties));
+    }
+
+    /**
      * Simulate deactivation of service instance. Invokes the @Deactivate annotated method.
      * @param target Service instance.
      * @param bundleContext Bundle context.
@@ -196,6 +228,17 @@ public final class MockOsgi {
     }
 
     /**
+     * Simulate activation of service instance. Invokes the @Deactivate annotated method.
+     * @param target Service instance.
+     * @param bundleContext Bundle context
+     * @param properties Properties
+     * @return true if deactivation method was called. False if no deactivate method is defined.
+     */
+    public static boolean deactivate(Object target, BundleContext bundleContext, Object... properties) {
+        return deactivate(target, bundleContext, toDictionary(properties));
+    }
+
+    /**
      * Simulate configuration modification of service instance. Invokes the @Modified annotated method.
      * @param target Service instance.
      * @param bundleContext Bundle context
@@ -217,6 +260,51 @@ public final class MockOsgi {
         Map<String, Object> mergedProperties = propertiesMergeWithOsgiMetadata(target, getConfigAdmin(bundleContext), properties);
         ComponentContext componentContext = newComponentContext(bundleContext, mergedProperties);
         return OsgiServiceUtil.modified(target, componentContext, mergedProperties);
+    }
+    
+    /**
+     * Simulate configuration modification of service instance. Invokes the @Modified annotated method.
+     * @param target Service instance.
+     * @param bundleContext Bundle context
+     * @param properties Properties
+     * @return true if modified method was called. False if no modified method is defined.
+     */
+    public static boolean modified(Object target, BundleContext bundleContext, Object... properties) {
+        return modified(target, bundleContext, toDictionary(properties));
+    }
+    
+    /**
+     * Set configuration via ConfigurationAdmin service in bundle context for component with given pid.
+     * @param bundleContext Bundle context
+     * @param pid PID
+     * @param properties Configuration properties
+     */
+    public static void setConfigForPid(BundleContext bundleContext, String pid, Map<String,Object> properties) {
+        setConfigForPid(bundleContext, pid, toDictionary(properties));
+    }
+    
+    /**
+     * Set configuration via ConfigurationAdmin service in bundle context for component with given pid.
+     * @param bundleContext Bundle context
+     * @param pid PID
+     * @param properties Configuration properties
+     */
+    public static void setConfigForPid(BundleContext bundleContext, String pid, Object... properties) {
+        setConfigForPid(bundleContext, pid, toDictionary(properties));
+    }
+    
+    private static void setConfigForPid(BundleContext bundleContext, String pid, Dictionary<String, Object> properties) {
+        ConfigurationAdmin configAdmin = getConfigAdmin(bundleContext);
+        if (configAdmin == null) {
+            throw new RuntimeException("ConfigurationAdmin service is not registered in bundle context.");
+        }
+        try {
+            Configuration config = configAdmin.getConfiguration(pid);
+            config.update(properties);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Unable to update configuration for pid '" + pid + "'.", ex);
+        }
     }
     
     /**

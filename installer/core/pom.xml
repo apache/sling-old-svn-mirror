@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.installer.core</artifactId>
-    <version>3.6.9-SNAPSHOT</version>
+    <version>3.8.11-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Installer</name>
@@ -54,29 +54,8 @@
 						<Bundle-Activator>
 							org.apache.sling.installer.core.impl.Activator
                         </Bundle-Activator>
-                        <Private-Package>
-                            org.apache.sling.installer.core.impl.*
-                        </Private-Package>
-                        <Export-Package>
-                            org.apache.sling.installer.api,
-                            org.apache.sling.installer.api.info,
-                            org.apache.sling.installer.api.event,
-                            org.apache.sling.installer.api.tasks,
-                            org.apache.sling.installer.api.jmx
-                        </Export-Package>
-				     <!-- 
-				        As we make use of optional features from 4.3 if they
-				        are available, we have to add the framework imports 
-				        by hand:
-				     -->
-				        <Import-Package>
-				            org.osgi.framework;version="[1.4,2]",
-				            org.osgi.framework.wiring;resolution:=optional,
-				            *
-				        </Import-Package>
                         <Embed-Dependency>
                             org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*",
-                            org.osgi.compendium;inline="org/osgi/util/tracker/*",
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/ManifestHeader*.*|org/apache/sling/commons/osgi/PropertiesUtil.*|org/apache/sling/commons/osgi/SortingServiceTracker.*"
                         </Embed-Dependency>
 					</instructions>
@@ -126,22 +105,30 @@
 					</execution>
 				</executions>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <excludePackageNames>
+                        org.apache.sling.installer.core.impl:org.apache.sling.installer.core.impl.tasks:org.apache.sling.installer.core.impl.util
+                    </excludePackageNames>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -153,7 +140,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.8.6</version>
+            <version>1.8.12</version>
             <scope>provided</scope>
         </dependency>
       <!-- Basic dependencies for Unit Tests -->

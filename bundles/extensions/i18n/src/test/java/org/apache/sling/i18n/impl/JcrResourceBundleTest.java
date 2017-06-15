@@ -30,6 +30,7 @@ import java.util.Map;
 import javax.jcr.Binary;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.query.Query;
@@ -328,6 +329,30 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                 // TODO Auto-generated method stub
 
             }
+
+            @Override
+            public Resource getParent(Resource child) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public boolean hasChildren(Resource resource) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public Resource copy(String srcAbsPath, String destAbsPath) throws PersistenceException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public Resource move(String srcAbsPath, String destAbsPath) throws PersistenceException {
+                // TODO Auto-generated method stub
+                return null;
+            }
         };
 
         createTestContent();
@@ -584,7 +609,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         Node de = appsI18n.addNode("de_basename", "nt:unstructured");
         de.addMixin("mix:language");
         de.setProperty("jcr:language", "de");
-        de.setProperty("sling:basename", "FOO");
+        de.setProperty("sling:basename", new String[]{"FOO", "BAR"});
         for (Message msg : MESSAGES_DE_BASENAME.values()) {
             msg.add(de);
         }
@@ -592,6 +617,12 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
 
         // test getString
         JcrResourceBundle bundle = new JcrResourceBundle(new Locale("de"), "FOO", resolver);
+        for (Message msg : MESSAGES_DE_BASENAME.values()) {
+            assertEquals(msg.message, bundle.getString(msg.key));
+        }
+        
+        // test getString
+        bundle = new JcrResourceBundle(new Locale("de"), "BAR", resolver);
         for (Message msg : MESSAGES_DE_BASENAME.values()) {
             assertEquals(msg.message, bundle.getString(msg.key));
         }
@@ -701,7 +732,17 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                         props.put(JcrResourceBundle.PROP_LANGUAGE, node.getProperty(JcrResourceBundle.PROP_LANGUAGE).getString());
                     }
                     if ( node.hasProperty(JcrResourceBundle.PROP_BASENAME) ) {
-                        props.put(JcrResourceBundle.PROP_BASENAME, node.getProperty(JcrResourceBundle.PROP_BASENAME).getString());
+                        Property propBasename = node.getProperty(JcrResourceBundle.PROP_BASENAME);
+                        if (propBasename.isMultiple()) {
+                            String[] basenames = new String[propBasename.getValues().length];
+                            int i=0;
+                            for (Value basename : propBasename.getValues()) {
+                                basenames[i++] = basename.getString();
+                            }
+                            props.put(JcrResourceBundle.PROP_BASENAME, basenames);
+                        } else {
+                            props.put(JcrResourceBundle.PROP_BASENAME, propBasename.getString());
+                        }
                     }
                     if ( node.hasProperty(JcrResourceBundle.PROP_KEY) ) {
                         props.put(JcrResourceBundle.PROP_KEY, node.getProperty(JcrResourceBundle.PROP_KEY).getString());

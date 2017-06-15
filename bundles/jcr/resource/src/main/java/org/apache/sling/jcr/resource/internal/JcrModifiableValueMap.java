@@ -484,8 +484,8 @@ public final class JcrModifiableValueMap
     public Object remove(final Object aKey) {
         final String key = checkKey(aKey.toString());
         readFully();
-        final Object oldValue = this.cache.remove(key);
-        this.valueCache.remove(key);
+        this.cache.remove(key);
+        final Object oldValue = this.valueCache.remove(key);
         try {
             final String name = escapeKeyName(key);
             if ( node.hasProperty(name) ) {

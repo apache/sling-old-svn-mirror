@@ -47,7 +47,7 @@ After the projects are imported, you need to set your target environment to
 ensure that all dependencies are met and that you are working against the
 project's declared baseline. To do that, open the following file in Eclipse
 
-    target-definition/org.apache.sling.ide.target-definition.target
+    target-definition/org.apache.sling.ide.target-definition-dev.target
 
 In the target editor which appears, click 'Set as Target Platform'. Once
 the target platform is set up, you can create a new launch configuration.

@@ -22,11 +22,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.NameValuePair;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test support of @Delete suffix of SLING-458 */
@@ -59,8 +60,8 @@ public class PostServletAtDeleteTest extends HttpTestBase {
             // assert property is set correctly
             final String propURL = contentURL + "/" + PROP_NAME;
             final String data = getContent(propURL + ".json", CONTENT_TYPE_JSON);
-            final JSONObject json = new JSONObject(data);
-            assertEquals(PROP_VALUE, json.get(PROP_NAME));
+            final JsonObject json = JsonUtil.parseObject(data);
+            assertEquals(PROP_VALUE, json.getString(PROP_NAME));
             
             final List <NameValuePair> params = new LinkedList<NameValuePair> ();
             params.add(new NameValuePair(PROP_NAME + SlingPostConstants.SUFFIX_DELETE, "don't care"));
@@ -81,8 +82,8 @@ public class PostServletAtDeleteTest extends HttpTestBase {
             // assert property is set correctly
             final String propURL = contentURL + "/" + PROP_NAME;
             final String data = getContent(propURL + ".json", CONTENT_TYPE_JSON);
-            final JSONObject json = new JSONObject(data);
-            assertEquals(PROP_VALUE, json.get(PROP_NAME));
+            final JsonObject json = JsonUtil.parseObject(data);
+            assertEquals(PROP_VALUE, json.getString(PROP_NAME));
             
             final List <NameValuePair> params = new LinkedList<NameValuePair> ();
             params.add(new NameValuePair(PROP_NAME + SlingPostConstants.SUFFIX_DELETE, "don't care"));
@@ -93,9 +94,9 @@ public class PostServletAtDeleteTest extends HttpTestBase {
             assertHttpStatus(contentURL + "/" + PROP_NAME2, HttpServletResponse.SC_OK, PROP_NAME2 + " must exist");
 
             final String data2 = getContent(contentURL + ".json", CONTENT_TYPE_JSON);
-            final JSONObject json2 = new JSONObject(data2);
-            assertFalse(json2.has(PROP_VALUE));
-            assertEquals(PROP_VALUE2, json2.get(PROP_NAME2));
+            final JsonObject json2 = JsonUtil.parseObject(data2);
+            assertFalse(json2.containsKey(PROP_VALUE));
+            assertEquals(PROP_VALUE2, json2.getString(PROP_NAME2));
 
         } finally {
             deleteNode(contentURL);

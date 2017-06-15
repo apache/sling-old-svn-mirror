@@ -23,13 +23,19 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
-        <relativePath/>
+        <version>30</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.launchpad.test-bundles</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.3-SNAPSHOT</version>
     <packaging>slingfeature</packaging>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/test-bundles</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/test-bundles</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/test-bundles</url>
+    </scm>
 
     <name>Apache Sling Launchpad Test Bundles</name>
     <description>Bundles required for testing Apache Sling</description>
@@ -39,7 +45,7 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.4.2</version>
+                <version>1.7.0</version>
                 <extensions>true</extensions>
             </plugin>
         </plugins>

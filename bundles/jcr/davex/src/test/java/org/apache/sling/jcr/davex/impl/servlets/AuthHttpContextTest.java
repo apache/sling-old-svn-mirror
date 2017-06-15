@@ -37,50 +37,44 @@ public class AuthHttpContextTest {
 
     @Test
     public void test_getWorkspace_null() throws Throwable {
-        final AuthHttpContext ahc = new AuthHttpContext("/server");
+        final AuthHttpContext ahc = new AuthHttpContext();
         TestCase.assertNull(getWorkspace.invoke(ahc, (String) null));
     }
 
     @Test
     public void test_getWorkspace_root() throws Throwable {
-        final AuthHttpContext ahc = new AuthHttpContext("/server");
-        TestCase.assertNull(getWorkspace.invoke(ahc, "/server"));
+        final AuthHttpContext ahc = new AuthHttpContext();
+        TestCase.assertNull(getWorkspace.invoke(ahc, ""));
     }
 
     @Test
     public void test_getWorkspace_root_slash() throws Throwable {
-        final AuthHttpContext ahc = new AuthHttpContext("/server");
-        TestCase.assertNull(getWorkspace.invoke(ahc, "/server/"));
-    }
-
-    @Test
-    public void test_getWorkspace_root_char() throws Throwable {
-        final AuthHttpContext ahc = new AuthHttpContext("/server");
-        TestCase.assertNull(getWorkspace.invoke(ahc, "/serverxyz"));
+        final AuthHttpContext ahc = new AuthHttpContext();
+        TestCase.assertNull(getWorkspace.invoke(ahc, "/"));
     }
 
     @Test
     public void test_getWorkspace_wsp() throws Throwable {
-        final AuthHttpContext ahc = new AuthHttpContext("/server");
-        TestCase.assertEquals("w", getWorkspace.invoke(ahc, "/server/w"));
-        TestCase.assertEquals("wsp", getWorkspace.invoke(ahc, "/server/wsp"));
+        final AuthHttpContext ahc = new AuthHttpContext();
+        TestCase.assertEquals("w", getWorkspace.invoke(ahc, "/w"));
+        TestCase.assertEquals("wsp", getWorkspace.invoke(ahc, "/wsp"));
     }
 
     @Test
     public void test_getWorkspace_wsp_slash() throws Throwable {
-        final AuthHttpContext ahc = new AuthHttpContext("/server");
-        TestCase.assertEquals("w", getWorkspace.invoke(ahc, "/server/w/"));
-        TestCase.assertEquals("wsp", getWorkspace.invoke(ahc, "/server/wsp/"));
+        final AuthHttpContext ahc = new AuthHttpContext();
+        TestCase.assertEquals("w", getWorkspace.invoke(ahc, "/w/"));
+        TestCase.assertEquals("wsp", getWorkspace.invoke(ahc, "/wsp/"));
     }
 
     @Test
     public void test_getWorkspace_wsp_path() throws Throwable {
-        final AuthHttpContext ahc = new AuthHttpContext("/server");
-        TestCase.assertEquals("w", getWorkspace.invoke(ahc, "/server/w/abc"));
-        TestCase.assertEquals("wsp", getWorkspace.invoke(ahc, "/server/wsp/abc"));
+        final AuthHttpContext ahc = new AuthHttpContext();
+        TestCase.assertEquals("w", getWorkspace.invoke(ahc, "/w/abc"));
+        TestCase.assertEquals("wsp", getWorkspace.invoke(ahc, "/wsp/abc"));
 
-        TestCase.assertEquals("w", getWorkspace.invoke(ahc, "/server/w/abc/xyz"));
-        TestCase.assertEquals("wsp", getWorkspace.invoke(ahc, "/server/wsp/abc/xyz"));
+        TestCase.assertEquals("w", getWorkspace.invoke(ahc, "/w/abc/xyz"));
+        TestCase.assertEquals("wsp", getWorkspace.invoke(ahc, "/wsp/abc/xyz"));
     }
 
 }

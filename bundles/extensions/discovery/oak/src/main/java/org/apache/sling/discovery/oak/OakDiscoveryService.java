@@ -93,7 +93,7 @@ public class OakDiscoveryService extends BaseDiscoveryService {
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC, referenceInterface = TopologyEventListener.class)
     private TopologyEventListener[] eventListeners = new TopologyEventListener[0];
-    
+
     /**
      * All property providers.
      */
@@ -132,7 +132,7 @@ public class OakDiscoveryService extends BaseDiscoveryService {
 
     @Reference
     private IdMapService idMapService;
-    
+
     @Reference
     private OakBacklogClusterSyncService oakBacklogClusterSyncService;
 
@@ -146,15 +146,16 @@ public class OakDiscoveryService extends BaseDiscoveryService {
 
     private ViewStateManager viewStateManager;
 
-    private final ReentrantLock viewStateManagerLock = new ReentrantLock(); 
-    
+    private final ReentrantLock viewStateManagerLock = new ReentrantLock();
+
     private final List<TopologyEventListener> pendingListeners = new LinkedList<TopologyEventListener>();
-    
+
     private TopologyEventListener changePropagationListener = new TopologyEventListener() {
 
+        @Override
         public void handleTopologyEvent(TopologyEvent event) {
             OakViewChecker checker = oakViewChecker;
-            if (activated && checker != null 
+            if (activated && checker != null
                     && (event.getType() == Type.TOPOLOGY_CHANGED || event.getType() == Type.PROPERTIES_CHANGED)) {
                 logger.info("changePropagationListener.handleTopologyEvent: topology changed - propagate through connectors");
                 checker.triggerAsyncConnectorPing();
@@ -188,10 +189,11 @@ public class OakDiscoveryService extends BaseDiscoveryService {
         return discoService;
     }
 
+    @Override
     protected void handleIsolatedFromTopology() {
         if (oakViewChecker!=null) {
             // SLING-5030 part 2: when we detect being isolated we should
-            // step at the end of the leader-election queue and 
+            // step at the end of the leader-election queue and
             // that can be achieved by resetting the leaderElectionId
             // (which will in turn take effect on the next round of
             // voting, or also double-checked when the local instance votes)
@@ -206,7 +208,7 @@ public class OakDiscoveryService extends BaseDiscoveryService {
             }
         }
     }
-    
+
     /**
      * Activate this service
      */
@@ -232,7 +234,7 @@ public class OakDiscoveryService extends BaseDiscoveryService {
             consistencyService = new ClusterSyncServiceChain(oakBacklogClusterSyncService, syncTokenService);
         } else {
             consistencyService = oakBacklogClusterSyncService;
-            
+
         }
         viewStateManager = ViewStateManagerFactory.newViewStateManager(viewStateManagerLock, consistencyService);
 
@@ -249,7 +251,7 @@ public class OakDiscoveryService extends BaseDiscoveryService {
             // the first TOPOLOGY_INIT and afterwards
             DefaultClusterView isolatedCluster = new DefaultClusterView(isolatedClusterId);
             Map<String, String> emptyProperties = new HashMap<String, String>();
-            DefaultInstanceDescription isolatedInstance = 
+            DefaultInstanceDescription isolatedInstance =
                     new DefaultInstanceDescription(isolatedCluster, true, true, slingId, emptyProperties);
             Collection<InstanceDescription> col = new ArrayList<InstanceDescription>();
             col.add(isolatedInstance);
@@ -282,14 +284,14 @@ public class OakDiscoveryService extends BaseDiscoveryService {
             }
             activated = true;
             setOldView(newView);
-            
+
             // in case bind got called before activate we now have pending listeners,
             // bind them to the viewstatemanager too
             for (TopologyEventListener listener : pendingListeners) {
                 viewStateManager.bind(listener);
             }
             pendingListeners.clear();
-            
+
             viewStateManager.bind(changePropagationListener);
         } finally {
             if (viewStateManagerLock!=null) {
@@ -311,7 +313,7 @@ public class OakDiscoveryService extends BaseDiscoveryService {
                 }
             }
         }
-        
+
         logger.debug("OakDiscoveryService activated.");
     }
 
@@ -326,7 +328,7 @@ public class OakDiscoveryService extends BaseDiscoveryService {
             viewStateManager.unbind(changePropagationListener);
 
             viewStateManager.handleDeactivated();
-            
+
             activated = false;
         } finally {
             if (viewStateManagerLock!=null) {
@@ -485,7 +487,7 @@ public class OakDiscoveryService extends BaseDiscoveryService {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = rrf
-                    .getAdministrativeResourceResolver(null);
+                    .getServiceResourceResolver(null);
 
             Resource myInstance = ResourceHelper
                     .getOrCreateResource(
@@ -619,6 +621,7 @@ public class OakDiscoveryService extends BaseDiscoveryService {
 		/**
          * @see java.lang.Comparable#compareTo(java.lang.Object)
          */
+        @Override
         public int compareTo(final ProviderInfo o) {
             // Sort by rank in ascending order.
             if (this.ranking < o.ranking) {
@@ -680,15 +683,17 @@ public class OakDiscoveryService extends BaseDiscoveryService {
         viewStateManager.handleChanging();
     }
 
+    @Override
     protected ClusterViewService getClusterViewService() {
         return clusterViewService;
     }
-    
+
+    @Override
     protected AnnouncementRegistry getAnnouncementRegistry() {
         return announcementRegistry;
     }
 
-    /** for testing only 
+    /** for testing only
      * @return */
     public ViewStateManager getViewStateManager() {
         return viewStateManager;

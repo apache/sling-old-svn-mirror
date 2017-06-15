@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.maven.shared.dependency.analyzer.asm.DependencyClassFileVisitor;
+import org.slf4j.Logger;
 
 /** Find the class dependencies of a class, recursively, 
  *  using the maven-dependency-analyzer and optionally considering only
@@ -62,13 +63,13 @@ class DependencyAnalyzer {
     /** Get the aggregate dependencies of our classes, based on a recursive
      *  analysis that takes our include/exclude prefixes into account
      */
-    synchronized Collection<Class<?>> getDependencies() {
+    synchronized Collection<Class<?>> getDependencies(Logger log) {
         if(dependencies != null) {
             return dependencies;
         }
         dependencies = new HashSet<Class<?>>();
         for(Class<?> c : classes) {
-            analyze(c);
+            analyze(c, log);
         }
         for(String dep : dependencyNames) {
             dependencies.add(toClass(dep));
@@ -77,7 +78,7 @@ class DependencyAnalyzer {
     }
     
     /** Analyze a single class, recursively */
-    private void analyze(Class<?> c) {
+    private void analyze(Class<?> c, Logger log) {
         if(alreadySeen.contains(c)) {
             return;
         }
@@ -88,6 +89,7 @@ class DependencyAnalyzer {
         if(input == null) {
             throw new RuntimeException("Class resource not found: " + path);
         }
+        log.trace("Analyzing dependencies of {}...", c);
         try {
             try {
                 final DependencyClassFileVisitor v = new DependencyClassFileVisitor();
@@ -105,15 +107,15 @@ class DependencyAnalyzer {
             if(dep.equals(c.getName())) {
                 continue;
             }
-            if(accept(dep)) {
+            if(accept(dep, log)) {
                 dependencyNames.add(dep);
-                analyze(toClass(dep));
+                analyze(toClass(dep), log);
             }
         }
     }
     
     /** True if given class name matches our include/exclude prefixes */
-    private boolean accept(String className) {
+    private boolean accept(String className, Logger log) {
         boolean result = false;
         
         for(String s : includes) {
@@ -128,9 +130,15 @@ class DependencyAnalyzer {
             for(String s : excludes) {
                 if(className.startsWith(s)) {
                     result = false;
+                    log.trace("Dependent class '{}' not included because package blacklisted via exclude '{}'.", className, s);
                     break;
                 }
             }
+        }
+        if (result) {
+            log.trace("Dependent class '{}' included because package not whitelisted via include.", className);
+        } else {
+            log.trace("Dependent class '{}' not included because package not whitelisted via include.", className);
         }
         return result;
     }

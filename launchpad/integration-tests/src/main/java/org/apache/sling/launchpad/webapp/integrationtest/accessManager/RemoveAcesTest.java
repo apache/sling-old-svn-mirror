@@ -20,14 +20,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 
 /**
  * Tests for the 'removeAce' Sling POST operation
@@ -65,7 +66,7 @@ public class RemoveAcesTest extends AccessManagerTestUtil {
 		//todo delete test folder
 	}
 	
-	private String createFolderWithAces(boolean addGroupAce) throws IOException, JSONException {
+	private String createFolderWithAces(boolean addGroupAce) throws IOException, JsonException {
 		testUserId = createTestUser();
 		testFolderUrl = createTestFolder();
 
@@ -95,40 +96,40 @@ public class RemoveAcesTest extends AccessManagerTestUtil {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		
 		if (addGroupAce) {
-			assertEquals(2, jsonObject.length());
+			assertEquals(2, jsonObject.size());
 		} else {
-			assertEquals(1, jsonObject.length());
+			assertEquals(1, jsonObject.size());
 		}
 		
-		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
 		assertNotNull(aceObject);
 		
 		assertEquals(0, aceObject.getInt("order"));
 
-		String principalString = aceObject.optString("principal");
+		String principalString = aceObject.getString("principal");
 		assertEquals(testUserId, principalString);
 		
-		JSONArray grantedArray = aceObject.optJSONArray("granted");
+		JsonArray grantedArray = aceObject.getJsonArray("granted");
 		assertNotNull(grantedArray);
 		assertEquals("jcr:read", grantedArray.getString(0));
 
-		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		JsonArray deniedArray = aceObject.getJsonArray("denied");
 		assertNotNull(deniedArray);
 		assertEquals("jcr:write", deniedArray.getString(0));
 
 		if (addGroupAce) {
-			aceObject = jsonObject.optJSONObject(testGroupId);
+			aceObject = jsonObject.getJsonObject(testGroupId);
 			assertNotNull(aceObject);
 			
-			principalString = aceObject.optString("principal");
+			principalString = aceObject.getString("principal");
 			assertEquals(testGroupId, principalString);
 
 		        assertEquals(1, aceObject.getInt("order"));
 
-			grantedArray = aceObject.optJSONArray("granted");
+			grantedArray = aceObject.getJsonArray("granted");
 			assertNotNull(grantedArray);
 			assertEquals("jcr:read", grantedArray.getString(0));
 		}
@@ -137,7 +138,7 @@ public class RemoveAcesTest extends AccessManagerTestUtil {
 	}
 	
 	//test removing a single ace
-	public void testRemoveAce() throws IOException, JSONException {
+	public void testRemoveAce() throws IOException, JsonException {
 		String folderUrl = createFolderWithAces(false);
 		
 		//remove the ace for the testUser principal
@@ -153,13 +154,13 @@ public class RemoveAcesTest extends AccessManagerTestUtil {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		assertNotNull(jsonObject);
-		assertEquals(0, jsonObject.length());
+		assertEquals(0, jsonObject.size());
 	}
 
 	//test removing multiple aces
-	public void testRemoveAces() throws IOException, JSONException {
+	public void testRemoveAces() throws IOException, JsonException {
 		String folderUrl = createFolderWithAces(true);
 		
 		//remove the ace for the testUser principal
@@ -176,15 +177,15 @@ public class RemoveAcesTest extends AccessManagerTestUtil {
 		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 
-		JSONObject jsonObject = new JSONObject(json);
+		JsonObject jsonObject = JsonUtil.parseObject(json);
 		assertNotNull(jsonObject);
-		assertEquals(0, jsonObject.length());
+		assertEquals(0, jsonObject.size());
 	}
 	
 	/**
 	 * Test for SLING-1677
 	 */
-	public void testRemoveAcesResponseAsJSON() throws IOException, JSONException {
+	public void testRemoveAcesResponseAsJSON() throws IOException, JsonException {
 		String folderUrl = createFolderWithAces(true);
 		
 		//remove the ace for the testUser principal
@@ -196,7 +197,7 @@ public class RemoveAcesTest extends AccessManagerTestUtil {
         String json = getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
 
         //make sure the json response can be parsed as a JSON object
-        JSONObject jsonObject = new JSONObject(json);
+        JsonObject jsonObject = JsonUtil.parseObject(json);
 		assertNotNull(jsonObject);
 	}
 }

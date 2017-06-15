@@ -18,8 +18,9 @@
  */
 package org.apache.sling.distribution.packaging.impl.exporter;
 
-import javax.annotation.Nonnull;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -29,14 +30,12 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.distribution.packaging.DistributionPackageExporter;
+import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 
 /**
  * OSGi configuration factory for {@link LocalDistributionPackageExporter}s.
@@ -49,8 +48,6 @@ import org.slf4j.LoggerFactory;
 @Service(value = DistributionPackageExporter.class)
 @Property(name="webconsole.configurationFactory.nameHint", value="Exporter name: {name}")
 public class LocalDistributionPackageExporterFactory implements DistributionPackageExporter {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * name of this exporter.

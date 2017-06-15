@@ -37,6 +37,7 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.apache.sling.hc.core.impl.executor.HealthCheckFuture.Callback;
 import org.apache.sling.hc.util.HealthCheckFilter;
 import org.apache.sling.hc.util.HealthCheckMetadata;
@@ -77,7 +78,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
         int count = 0;
         HealthCheckFilter healthCheckFilter = new HealthCheckFilter(bundleContext);
-        final ServiceReference[] healthCheckReferences = healthCheckFilter.getTaggedHealthCheckServiceReferences(new String[0]);
+        final ServiceReference[] healthCheckReferences = healthCheckFilter.getHealthCheckServiceReferences(HealthCheckSelector.empty());
         for (ServiceReference serviceReference : healthCheckReferences) {
             HealthCheckMetadata healthCheckMetadata = new HealthCheckMetadata(serviceReference);
             if (isAsync(healthCheckMetadata)) {
@@ -140,7 +141,7 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
             registeredJobs.put(descriptor, healthCheckAsyncJob);
             return true;
         } catch (Exception e) {
-            LOG.warn("Could not schedule job for " + descriptor + ". Exeception: " + e, e);
+            LOG.warn("Could not schedule job for " + descriptor + ". Exception: " + e, e);
             return false;
         }
 
@@ -160,13 +161,14 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
                 return true;
             }
         } catch (Exception e) {
-            LOG.warn("Could not unschedule job " + job + ". Exeception: " + e, e);
+            LOG.warn("Could not unschedule job " + job + ". Exception: " + e, e);
         }
         return false;
 
     }
 
-    void collectAsyncResults(List<HealthCheckMetadata> healthCheckDescriptors, Collection<HealthCheckExecutionResult> results) {
+    /** Called by the main Executor to get results from async HCs */
+    void collectAsyncResults(List<HealthCheckMetadata> healthCheckDescriptors, Collection<HealthCheckExecutionResult> results, HealthCheckResultCache cache) {
         Iterator<HealthCheckMetadata> checksIt = healthCheckDescriptors.iterator();
 
         Set<ExecutionResult> asyncResults = new TreeSet<ExecutionResult>();
@@ -186,6 +188,12 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
                 checksIt.remove();
             }
         }
+        
+        LOG.debug("Caching {} results from async results", asyncResults.size());
+        for(ExecutionResult result : asyncResults) {
+            cache.updateWith(result);
+        }
+        
         LOG.debug("Adding {} results from async results", asyncResults.size());
         results.addAll(asyncResults);
 

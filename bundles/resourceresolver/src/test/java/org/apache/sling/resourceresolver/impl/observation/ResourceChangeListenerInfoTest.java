@@ -16,15 +16,15 @@
  ******************************************************************************/
 package org.apache.sling.resourceresolver.impl.observation;
 
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.Set;
 
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
-
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class ResourceChangeListenerInfoTest {
 
@@ -46,8 +46,8 @@ public class ResourceChangeListenerInfoTest {
         when(reference.getProperty(ResourceChangeListener.PATHS)).thenReturn(new String[] {"."});
         final ResourceChangeListenerInfo rcli = new ResourceChangeListenerInfo(reference, new String[] {"/apps/", "/libs/"});
         Set<String> paths = rcli.getPaths().toStringSet();
-        assertTrue("PathSet " + paths.toString() + " does not contain /apps/", paths.contains("/apps/"));
-        assertTrue("PathSet " + paths.toString() + " does not contain /libs/.", paths.contains("/libs/"));
+        assertTrue("PathSet " + paths.toString() + " does not contain /apps/", paths.contains("/apps"));
+        assertTrue("PathSet " + paths.toString() + " does not contain /libs/.", paths.contains("/libs"));
     }
 
     @Test

@@ -25,7 +25,7 @@ import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.webconsole.WebConsoleSecurityProvider2;
+import org.apache.felix.webconsole.WebConsoleSecurityProvider3;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
@@ -49,7 +49,7 @@ import org.apache.sling.auth.core.AuthenticationSupport;
  */
 public class SlingWebConsoleSecurityProvider2
     extends AbstractWebConsoleSecurityProvider
-    implements WebConsoleSecurityProvider2 {
+    implements WebConsoleSecurityProvider3 {
 
     private final AuthenticationSupport authentiationSupport;
 
@@ -63,6 +63,7 @@ public class SlingWebConsoleSecurityProvider2
     /**
      * @see org.apache.felix.webconsole.WebConsoleSecurityProvider2#authenticate(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
+    @Override
     public boolean authenticate(final HttpServletRequest request,
             final HttpServletResponse response) {
         if ( this.authentiationSupport.handleSecurity(request, response) ) {
@@ -88,11 +89,17 @@ public class SlingWebConsoleSecurityProvider2
             }
             if (request.getAuthType() == null) {
                 this.authenticator.login(request, response);
-            }            
+            }
         }
         return false;
     }
 
+    @Override
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        this.authenticator.logout(request, response);
+    }
+
+    @Override
     public User authenticate(String userName, String password) {
         return null; // this method is never invoked
     }
@@ -110,7 +117,6 @@ public class SlingWebConsoleSecurityProvider2
                 }
 
                 // check groups
-                @SuppressWarnings("unchecked")
                 Iterator<Group> gi = a.memberOf();
                 while (gi.hasNext()) {
                     if (groups.contains(gi.next().getID())) {
@@ -138,6 +144,7 @@ public class SlingWebConsoleSecurityProvider2
      * All users authenticated with the repository and being a member of the
      * authorized groups are granted access for all roles in the Web Console.
      */
+    @Override
     public boolean authorize(Object user, String role) {
         logger.debug("authorize: Grant user {} access for role {}", user, role);
         return true;

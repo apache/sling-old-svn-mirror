@@ -38,6 +38,7 @@ public @interface Model {
     /**
      * @return List of classes to which can be adapted. If missing, the class that is annotated is used.
      *   If classes are given, they have to be either the annotated class itself, or interfaces or super classes of the class.
+     *   The annotated class itself is always implicitly added to the adapters and does not need to be listed explicitly here.
      */
     public Class<?>[] adapters() default {};
 
@@ -59,5 +60,18 @@ public @interface Model {
      * @see <a href="http://sling.apache.org/documentation/bundles/validation.html">Sling Validation</a>
      */
     public ValidationStrategy validation() default ValidationStrategy.DISABLED;
+
+    /**
+     *
+     * @return the associated resource type for this model class
+     */
+    public String[] resourceType() default {};
+
+    /**
+     *
+     * @return whether or not the model should be cached for the lifecycle of the adaptable
+     */
+    public boolean cache() default false;
+
 
 }

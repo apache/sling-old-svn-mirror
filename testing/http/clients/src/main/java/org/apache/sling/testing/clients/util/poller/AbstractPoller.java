@@ -16,6 +16,11 @@
  */
 package org.apache.sling.testing.clients.util.poller;
 
+/**
+ * @deprecated use {@link Polling} instead.
+ * @see Polling for a better way to implement polling
+ */
+@Deprecated
 public abstract class AbstractPoller  implements Poller {
 
     private final long waitInterval;

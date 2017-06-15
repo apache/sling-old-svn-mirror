@@ -73,13 +73,13 @@ public class OakClusterViewService implements ClusterViewService {
 
     @Reference
     private Config config;
-    
+
     @Reference
     private IdMapService idMapService;
-    
+
     /** the last sequence number read from the oak discovery-lite descriptor **/
     private long lastSeqNum = -1;
-    
+
     public static OakClusterViewService testConstructor(SlingSettingsService settingsService,
             ResourceResolverFactory resourceResolverFactory,
             IdMapService idMapService,
@@ -91,7 +91,8 @@ public class OakClusterViewService implements ClusterViewService {
         service.idMapService = idMapService;
         return service;
     }
-    
+
+    @Override
     public String getSlingId() {
     	if (settingsService==null) {
     		return null;
@@ -100,15 +101,16 @@ public class OakClusterViewService implements ClusterViewService {
     }
 
     protected ResourceResolver getResourceResolver() throws LoginException {
-        return resourceResolverFactory.getAdministrativeResourceResolver(null);
+        return resourceResolverFactory.getServiceResourceResolver(null);
     }
 
+    @Override
     public LocalClusterView getLocalClusterView() throws UndefinedClusterViewException {
         logger.trace("getLocalClusterView: start");
         ResourceResolver resourceResolver = null;
         try{
             resourceResolver = getResourceResolver();
-            DiscoveryLiteDescriptor descriptor = 
+            DiscoveryLiteDescriptor descriptor =
                     DiscoveryLiteDescriptor.getDescriptorFrom(resourceResolver);
             if (lastSeqNum!=descriptor.getSeqNum()) {
                 logger.info("getLocalClusterView: sequence number change detected - clearing idmap cache");
@@ -120,7 +122,11 @@ public class OakClusterViewService implements ClusterViewService {
             logger.info("getLocalClusterView: undefined clusterView: "+e.getReason()+" - "+e.getMessage());
             throw e;
         } catch (Exception e) {
-            logger.error("getLocalClusterView: repository exception: "+e, e);
+            if (e.getMessage() != null && e.getMessage().contains("No Descriptor value available")) {
+                logger.warn("getLocalClusterView: repository exception: "+e);
+            } else {
+                logger.error("getLocalClusterView: repository exception: "+e, e);
+            }
             throw new UndefinedClusterViewException(Reason.REPOSITORY_EXCEPTION, "Exception while processing descriptor: "+e);
         } finally {
             logger.trace("getLocalClusterView: end");
@@ -159,7 +165,7 @@ public class OakClusterViewService implements ClusterViewService {
         for (Integer integer : activeIds) {
             activeIdsList.add(integer);
         }
-        
+
         // step 1: sort activeIds by their leaderElectionId
         //   serves two purposes: pos[0] is then leader
         //   and the rest are properly sorted within the cluster
@@ -175,7 +181,7 @@ public class OakClusterViewService implements ClusterViewService {
                     slingId);
             leaderElectionIds.put(id, leaderElectionId);
         }
-        
+
         Collections.sort(activeIdsList, new Comparator<Integer>() {
 
             @Override
@@ -184,7 +190,7 @@ public class OakClusterViewService implements ClusterViewService {
                         .compareTo(leaderElectionIds.get(arg1));
             }
         });
-        
+
         for(int i=0; i<activeIdsList.size(); i++) {
             int id = activeIdsList.get(i);
             boolean isLeader = i==0; // thx to sorting above [0] is leader indeed
@@ -208,7 +214,7 @@ public class OakClusterViewService implements ClusterViewService {
                     + "This is normal at startup. At other times is pseudo-network-partitioning is an indicator for repository/network-delays or clocks-out-of-sync (SLING-3432). "
                     + "(increasing the heartbeatTimeout can help as a workaround too) "
                     + "The local instance will stay in TOPOLOGY_CHANGING or pre _INIT mode until a new vote was successful.");
-            throw new UndefinedClusterViewException(Reason.ISOLATED_FROM_TOPOLOGY, 
+            throw new UndefinedClusterViewException(Reason.ISOLATED_FROM_TOPOLOGY,
                     "established view does not include local instance - isolated");
         }
     }
@@ -292,7 +298,7 @@ public class OakClusterViewService implements ClusterViewService {
         String result = resourceMap.get("leaderElectionId", String.class);
         return result;
     }
-    
+
     private Map<String, String> readProperties(String slingId, ResourceResolver resourceResolver) {
         Resource res = resourceResolver.getResource(
                         config.getClusterInstancesPath() + "/"

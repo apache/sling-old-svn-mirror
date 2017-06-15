@@ -20,12 +20,17 @@
 package org.apache.sling.distribution.servlet;
 
 import javax.annotation.Nullable;
+import javax.json.Json;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.Map;
 
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.distribution.DistributionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,13 +43,13 @@ class ServletJsonUtils {
     private final static Logger log = LoggerFactory.getLogger(ServletJsonUtils.class);
 
     public static void writeJson(SlingHttpServletResponse response, DistributionResponse distributionResponse) throws IOException {
-        JSONObject json = new JSONObject();
+        JsonObjectBuilder json = Json.createObjectBuilder();
         try {
-            json.put("success", distributionResponse.isSuccessful());
-            json.put("state", distributionResponse.getState().name());
-            json.put("message", distributionResponse.getMessage());
+            json.add("success", distributionResponse.isSuccessful());
+            json.add("state", distributionResponse.getState().name());
+            json.add("message", distributionResponse.getMessage());
 
-        } catch (JSONException e) {
+        } catch (JsonException e) {
             log.error("Cannot write json", e);
         }
 
@@ -62,24 +67,30 @@ class ServletJsonUtils {
                 // TODO
                 break;
         }
-        response.getWriter().append(json.toString());
+        append(json.build(), response.getWriter());
     }
 
     public static void writeJson(SlingHttpServletResponse response, int status, String message,
                                  @Nullable Map<String, String> kv) throws IOException {
-        JSONObject json = new JSONObject();
+        JsonObjectBuilder json = Json.createObjectBuilder();
         try {
-            json.put("message", message);
+            json.add("message", message);
             if (kv != null && kv.size() > 0) {
                 for (Map.Entry<String, String> entry : kv.entrySet()) {
-                    json.put(entry.getKey(), entry.getValue());
+                    json.add(entry.getKey(), entry.getValue());
                 }
             }
-        } catch (JSONException e) {
+        } catch (JsonException e) {
             log.error("Cannot write json", e);
         }
         response.setStatus(status);
 
-        response.getWriter().append(json.toString());
+        append(json.build(), response.getWriter());
+    }
+    
+    private static void append(JsonObject json, Writer writer) throws IOException {
+        StringWriter buffer = new StringWriter();
+        Json.createWriter(buffer).writeObject(json);
+        writer.append(buffer.toString());
     }
 }

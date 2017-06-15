@@ -99,13 +99,13 @@ public class HeartbeatHandler extends BaseViewChecker {
     /** whether or not to reset the leaderElectionId at next heartbeat time **/
     private volatile boolean resetLeaderElectionId = false;
 
-    /** SLING-5030 : upon resetLeaderElectionId() a newLeaderElectionId is calculated 
+    /** SLING-5030 : upon resetLeaderElectionId() a newLeaderElectionId is calculated
      * and passed on to the VotingHandler - but the actual storing under ./clusterInstances
      * is only done on heartbeats - this field is used to temporarily store the new
      * leaderElectionId that the next heartbeat then stores
      */
     private volatile String newLeaderElectionId;
-    
+
     /** SLING-2892: remember first heartbeat written to repository by this instance **/
     private long firstHeartbeatWritten = -1;
 
@@ -123,10 +123,10 @@ public class HeartbeatHandler extends BaseViewChecker {
     /** for testing only **/
     public static HeartbeatHandler testConstructor(
             SlingSettingsService slingSettingsService,
-            ResourceResolverFactory factory, 
-            AnnouncementRegistry announcementRegistry, 
+            ResourceResolverFactory factory,
+            AnnouncementRegistry announcementRegistry,
             ConnectorRegistry connectorRegistry,
-            Config config, 
+            Config config,
             Scheduler scheduler,
             VotingHandler votingHandler) {
         HeartbeatHandler handler = new HeartbeatHandler();
@@ -139,37 +139,37 @@ public class HeartbeatHandler extends BaseViewChecker {
         handler.votingHandler = votingHandler;
         return handler;
     }
-    
+
     @Override
     protected AnnouncementRegistry getAnnouncementRegistry() {
         return announcementRegistry;
     }
-    
+
     @Override
     protected BaseConfig getConnectorConfig() {
         return config;
     }
-    
+
     @Override
     protected ConnectorRegistry getConnectorRegistry() {
         return connectorRegistry;
     }
-    
+
     @Override
     protected ResourceResolverFactory getResourceResolverFactory() {
         return resourceResolverFactory;
     }
-    
+
     @Override
     protected Scheduler getScheduler() {
         return scheduler;
     }
-    
+
     @Override
     protected SlingSettingsService getSlingSettingsService() {
         return slingSettingsService;
     }
-    
+
     @Override
     protected void doActivate() {
         // on activate the resetLeaderElectionId is set to true to ensure that
@@ -186,7 +186,7 @@ public class HeartbeatHandler extends BaseViewChecker {
 
         logger.info("doActivate: activated with runtimeId: {}, slingId: {}", runtimeId, slingId);
     }
-    
+
     @Override
     protected void deactivate() {
         super.deactivate();
@@ -195,7 +195,7 @@ public class HeartbeatHandler extends BaseViewChecker {
             periodicCheckJob = null;
         }
     }
-    
+
     /**
      * The initialize method is called by the DiscoveryServiceImpl.activate
      * as we require the discoveryService (and the discoveryService has
@@ -232,7 +232,7 @@ public class HeartbeatHandler extends BaseViewChecker {
         }
 
         // SLING-5195 - to account for repository delays, the writing of heartbeats and voting
-        // should be done independently of getting the current clusterView and 
+        // should be done independently of getting the current clusterView and
         // potentially sending a topology event.
         // so this second part is now done (additionally) in a 2nd runner here:
         try {
@@ -263,7 +263,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                                     + " => maxMillisSinceHb=" + maxMillisSinceHb + "). Flagging us as (still) changing");
                             // mark the current establishedView as faulty
                             invalidateCurrentEstablishedView();
-                            
+
                             // then tell the listeners immediately
                             // note that just calling handleTopologyChanging alone - without the above invalidate -
                             // won't be sufficient, because that would only affect the listeners, not the
@@ -278,7 +278,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                     discoveryService.checkForLocalClusterViewChange();
                     logger.debug("checkForLocalClusterViewChange/.run: check for topology change done.");
                 }
-                
+
             });
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
@@ -291,7 +291,7 @@ public class HeartbeatHandler extends BaseViewChecker {
             logger.error("getResourceResolver: resourceResolverFactory is null!");
             return null;
         }
-        return resourceResolverFactory.getAdministrativeResourceResolver(null);
+        return resourceResolverFactory.getServiceResourceResolver(null);
     }
 
     /** Calcualte the local cluster instance path **/
@@ -300,7 +300,7 @@ public class HeartbeatHandler extends BaseViewChecker {
     }
 
     /**
-     * Hook that will cause a reset of the leaderElectionId 
+     * Hook that will cause a reset of the leaderElectionId
      * on next invocation of issueClusterLocalHeartbeat.
      * @return true if the leaderElectionId was reset - false if that was not
      * necessary as that happened earlier already and it has not propagated
@@ -345,12 +345,14 @@ public class HeartbeatHandler extends BaseViewChecker {
      * and then a remote heartbeat (to all the topology connectors
      * which announce this part of the topology to others)
      */
+    @Override
     protected void issueHeartbeat() {
         updateProperties();
         issueClusterLocalHeartbeat();
         issueConnectorPings();
     }
 
+    @Override
     protected void updateProperties() {
         if (discoveryServiceImpl == null) {
             logger.debug("updateProperties: discoveryService is null");
@@ -358,7 +360,7 @@ public class HeartbeatHandler extends BaseViewChecker {
             discoveryServiceImpl.updateProperties();
         }
     }
-    
+
     /** Issue a cluster local heartbeat (into the repository) **/
     protected void issueClusterLocalHeartbeat() {
         if (logger.isDebugEnabled()) {
@@ -454,7 +456,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                 resourceMap.put(PROPERTY_ID_SLING_HOME_PATH, slingHomePath);
             	final String endpointsAsString = getEndpointsAsString();
                 resourceMap.put(PROPERTY_ID_ENDPOINTS, endpointsAsString);
-            	logger.info("issueClusterLocalHeartbeat: storing my runtimeId: {}, endpoints: {} and sling home path: {}", 
+            	logger.info("issueClusterLocalHeartbeat: storing my runtimeId: {}, endpoints: {} and sling home path: {}",
             	        new Object[]{runtimeId, endpointsAsString, slingHomePath});
             }
             if (resetLeaderElectionId || !resourceMap.containsKey("leaderElectionId")) {
@@ -533,6 +535,7 @@ public class HeartbeatHandler extends BaseViewChecker {
     /** Check whether the established view matches the reality, ie matches the
      * heartbeats
      */
+    @Override
     protected void doCheckView() {
         super.doCheckView();
 
@@ -580,12 +583,12 @@ public class HeartbeatHandler extends BaseViewChecker {
         if (winningVoting != null || (numOpenNonWinningVotes > 0)) {
             // then there are votings pending and I shall wait for them to
             // settle
-            
+
             // but first: make sure we sent the TOPOLOGY_CHANGING
             logger.info("doCheckViewWith: there are pending votings, marking topology as changing...");
             invalidateCurrentEstablishedView();
             discoveryServiceImpl.handleTopologyChanging();
-            
+
         	if (logger.isDebugEnabled()) {
 	            logger.debug("doCheckViewWith: "
 	                    + numOpenNonWinningVotes
@@ -629,7 +632,7 @@ public class HeartbeatHandler extends BaseViewChecker {
                 establishedViewMatches = mismatchDetails == null;
             }
         }
-        
+
         if (establishedViewMatches) {
             // that's the normal case. the established view matches what we're
             // seeing.
@@ -637,18 +640,18 @@ public class HeartbeatHandler extends BaseViewChecker {
             logger.debug("doCheckViewWith: no pending nor winning votes. view is fine. we're all happy.");
             return;
         }
-        
+
         // immediately send a TOPOLOGY_CHANGING - could already be sent, but just to be sure
         logger.info("doCheckViewWith: no matching established view, marking topology as changing");
         invalidateCurrentEstablishedView();
         discoveryServiceImpl.handleTopologyChanging();
-        
+
         List<VotingView> myYesVotes = VotingHelper.getYesVotingsOf(resourceResolver, config, slingId);
         if (myYesVotes != null && myYesVotes.size() > 0) {
             logger.info("doCheckViewWith: I have voted yes (" + myYesVotes.size() + "x)- the vote was not yet promoted but expecting it to be soon. Not voting again in the meantime. My yes vote was for: "+myYesVotes);
             return;
         }
-        
+
     	if (logger.isDebugEnabled()) {
 	        logger.debug("doCheckViewWith: no pending nor winning votes. But: view does not match established or no established yet. Initiating a new voting");
 	        Iterator<String> it = liveInstances.iterator();
@@ -673,7 +676,7 @@ public class HeartbeatHandler extends BaseViewChecker {
 
         VotingView.newVoting(resourceResolver, config, votingId, slingId, liveInstances);
     }
-    
+
     /**
      * Mark the current establishedView as invalid - requiring it to be
      * replaced with a new one, be it by another instance or this one,
@@ -689,7 +692,7 @@ public class HeartbeatHandler extends BaseViewChecker {
         failedEstablishedViewId = lastEstablishedViewId;
         discoveryServiceImpl.getClusterViewServiceImpl().invalidateEstablishedViewId(lastEstablishedViewId);
     }
-    
+
     /**
      * Management function to trigger the otherwise algorithm-dependent
      * start of a new voting.
@@ -720,5 +723,5 @@ public class HeartbeatHandler extends BaseViewChecker {
             }
         }
     }
-    
+
 }

@@ -1,0 +1,11 @@
+# Test create/delete user statements
+
+delete user userB
+create user userB
+
+create user userC with password some_password
+create user userD with password {SHA-256}dc460da4ad72c
+
+create user userE with password {someEncoding} afdgwdsdf
+
+create user one_with-more-chars.ok:/123456 with password {encoding_with.ok-:/12345} pw-with.ok-:/13456

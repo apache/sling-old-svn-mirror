@@ -16,7 +16,7 @@
  */
 package org.apache.sling.security.impl;
 
-import java.util.HashMap;
+import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,6 +30,7 @@ import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import junitx.util.PrivateAccessor;
@@ -43,15 +44,67 @@ public class ContentDispositionFilterTest {
 
     private static final String JCR_CONTENT_LEAF = "jcr:content";
 
+    @Before
+    public void setUp() {
+        contentDispositionFilter = new ContentDispositionFilter();
+    }
+    
+    /**
+     * Implementation of the annotation class used for the configuration of the ContentDispositionFilter.
+     * Unfortunately there is no way to hide the compiler warning: http://stackoverflow.com/a/13261789/5155923
+     */
+    private static final class Configuration implements ContentDispositionFilterConfiguration {
+
+        public Configuration(String[] paths, String[] excludedPaths, boolean enableForAllPaths) {
+            super();
+            this.paths = paths;
+            this.excludedPaths = excludedPaths;
+            this.enableForAllPaths = enableForAllPaths;
+        }
+
+        private final String paths[];
+        private final String excludedPaths[];
+        private final boolean enableForAllPaths;
+        
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return ContentDispositionFilterConfiguration.class;
+        }
+        
+        @Override
+        public String[] sling_content_disposition_paths() {
+            return paths;
+        }
+        
+        @Override
+        public String[] sling_content_disposition_excluded_paths() {
+            return excludedPaths;
+        }
+        
+        @Override
+        public boolean sling_content_disposition_all_paths() {
+            return enableForAllPaths;
+        }
+    }
+
+    private void callActivateWithConfiguration(String[] paths) throws Throwable {
+        callActivateWithConfiguration(paths, new String[]{});
+    }
+
+    private void callActivateWithConfiguration(String[] paths, String[] excludedPaths) throws Throwable {
+        callActivateWithConfiguration(paths, excludedPaths, false);
+    }
+    
+
+    private void callActivateWithConfiguration(String[] paths, String[] excludedPaths, boolean enableForAllPaths) throws Throwable {
+        ContentDispositionFilterConfiguration configuration = new Configuration(paths, excludedPaths, enableForAllPaths);
+        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{ContentDispositionFilterConfiguration.class},new Object[]{configuration});
+    }
+
     @SuppressWarnings("unchecked")
     @Test
     public void test_activator1() throws Throwable{
-        contentDispositionFilter = new ContentDispositionFilter();
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String []{""});
         Set<String> contentDispositionPaths = ( Set<String> ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPaths");
         Assert.assertEquals(1, contentDispositionPaths.size());
         String[] contentDispositionPathsPfx = ( String[] ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPathsPfx");
@@ -63,13 +116,7 @@ public class ContentDispositionFilterTest {
     @SuppressWarnings("unchecked")
     @Test
     public void test_activator2() throws Throwable{
-        contentDispositionFilter = new ContentDispositionFilter();
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated/*"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated/*"}, new String []{""});
         Set<String> contentDispositionPaths = ( Set<String> ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPaths");
         Assert.assertEquals(0, contentDispositionPaths.size());
         String[] contentDispositionPathsPfx = ( String[] ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPathsPfx");
@@ -81,13 +128,7 @@ public class ContentDispositionFilterTest {
     @SuppressWarnings("unchecked")
     @Test
     public void test_activator3() throws Throwable{
-        contentDispositionFilter = new ContentDispositionFilter();
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/libs", "/content/usergenerated/*"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/libs", "/content/usergenerated/*"}, new String[]{""});
         Set<String> contentDispositionPaths = ( Set<String> ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPaths");
         Assert.assertEquals(1, contentDispositionPaths.size());
         String[] contentDispositionPathsPfx = ( String[] ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPathsPfx");
@@ -99,13 +140,7 @@ public class ContentDispositionFilterTest {
     @SuppressWarnings("unchecked")
     @Test
     public void test_activator5() throws Throwable{
-        contentDispositionFilter = new ContentDispositionFilter();
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"*"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"*"}, new String[]{""});
         Set<String> contentDispositionPaths = ( Set<String> ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPaths");
         Assert.assertEquals(0, contentDispositionPaths.size());
         String[] contentDispositionPathsPfx = ( String[] ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPathsPfx");
@@ -117,13 +152,7 @@ public class ContentDispositionFilterTest {
     @SuppressWarnings("unchecked")
     @Test
     public void test_activator6() throws Throwable{
-        contentDispositionFilter = new ContentDispositionFilter();
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/libs:*"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/libs:*"}, new String[]{""});
         Set<String> contentDispositionPaths = ( Set<String> ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPaths");
         Assert.assertEquals(0, contentDispositionPaths.size());
         String[] contentDispositionPathsPfx = ( String[] ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPathsPfx");
@@ -135,13 +164,7 @@ public class ContentDispositionFilterTest {
     @SuppressWarnings("unchecked")
     @Test
     public void test_activator7() throws Throwable{
-        contentDispositionFilter = new ContentDispositionFilter();
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/libs:text/html,text/plain","/content/usergenerated/*:image/jpeg"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/libs:text/html,text/plain","/content/usergenerated/*:image/jpeg"}, new String[]{""});
         Set<String> contentDispositionPaths = ( Set<String> ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPaths");
         Assert.assertEquals(1, contentDispositionPaths.size());
         String[] contentDispositionPathsPfx = ( String[] ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionPathsPfx");
@@ -158,29 +181,19 @@ public class ContentDispositionFilterTest {
         userGeneratedMapping.contains("image/jpeg");
      }
 
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
     @Test
     public void test_activator8() throws Throwable{
-        contentDispositionFilter = new ContentDispositionFilter();
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/libs:text/html,text/plain","/content/usergenerated/*:image/jpeg"});
-        props.put("sling.content.disposition.excluded.paths", new String []{});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/libs:text/html,text/plain","/content/usergenerated/*:image/jpeg"}, new String[]{});
+        
         Set<String> contentDispositionExcludedPaths = ( Set<String> ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionExcludedPaths");
         Assert.assertEquals(0, contentDispositionExcludedPaths.size());
-     }
-
+    }
+     
     @SuppressWarnings("unchecked")
     @Test
     public void test_activator9() throws Throwable{
-        contentDispositionFilter = new ContentDispositionFilter();
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/libs:text/html,text/plain","/content/usergenerated/*:image/jpeg"});
-        props.put("sling.content.disposition.excluded.paths", new String []{"/content", "/libs"});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/libs:text/html,text/plain","/content/usergenerated/*:image/jpeg"}, new String[]{"/content", "/libs"});
 
         Set<String> contentDispositionExcludedPaths = ( Set<String> ) PrivateAccessor.getField(contentDispositionFilter, "contentDispositionExcludedPaths");
         Assert.assertEquals(2, contentDispositionExcludedPaths.size());
@@ -210,15 +223,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
-
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{""});
 
         context.checking(new Expectations() {
             {
@@ -247,14 +252,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{""});
 
         context.checking(new Expectations() {
             {
@@ -283,14 +281,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+		callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{""});
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -331,14 +322,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated/*"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated/*"}, new String[]{""});
 
         context.checking(new Expectations() {
             {
@@ -367,13 +351,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated/*"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated/*"}, new String[]{""});
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -415,13 +393,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated/*"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated/*"}, new String[]{""});
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -462,14 +434,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated:text/html,text/plain"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated:text/html,text/plain"}, new String[]{""});
 
         context.checking(new Expectations() {
             {
@@ -498,14 +463,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated:text/html,text/plain"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated:text/html,text/plain"}, new String[]{""});
 
         context.checking(new Expectations() {
             {
@@ -533,14 +491,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated:text/html,text/plain"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated:text/html,text/plain"}, new String[]{""});
 
         context.checking(new Expectations() {
             {
@@ -570,12 +521,7 @@ public class ContentDispositionFilterTest {
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
         contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated:text/html,text/plain"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated:text/html,text/plain"}, new String[]{""});
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -616,14 +562,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated/*:text/html,text/plain"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated/*:text/html,text/plain"}, new String[]{""});
 
         context.checking(new Expectations() {
             {
@@ -652,14 +591,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated/*:text/html,text/plain"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated/*:text/html,text/plain"}, new String[]{""});
 
         context.checking(new Expectations() {
             {
@@ -687,14 +619,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated/*:text/html,text/plain"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated/*:text/html,text/plain"}, new String[]{""});
 
         context.checking(new Expectations() {
             {
@@ -723,13 +648,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated/*:text/html,text/plain"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated/*:text/html,text/plain"}, new String[]{""});
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -775,13 +694,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{""});
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -830,13 +743,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{""});
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -887,13 +794,7 @@ public class ContentDispositionFilterTest {
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
         contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-        props.put("sling.content.disposition.all.paths", false);
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{""}, false);
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -935,21 +836,13 @@ public class ContentDispositionFilterTest {
         Assert.assertEquals(0, counter.intValue());
     }
 
-
     @Test
     public void test_doFilter18() throws Throwable{
         final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{""});
-        props.put("sling.content.disposition.all.paths", true);
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{""}, true);
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -997,14 +890,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{"/content"});
-        props.put("sling.content.disposition.all.paths", true);
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{"/content"}, true);
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -1052,14 +938,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{"/content/other"});
-        props.put("sling.content.disposition.all.paths", true);
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{"/content/other"}, true);
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -1107,14 +986,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{"/content"});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
-
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{"/content"});
 
         final AtomicInteger counter =  new AtomicInteger();
 
@@ -1149,6 +1021,68 @@ public class ContentDispositionFilterTest {
         rewriterResponse.setContentType("text/html");
         Assert.assertEquals(1, counter.intValue());
     }
+    
+    /**
+     * Test multiple calls of setContentType which each result in a content-disposition header being needed.
+     * Only one header should be added.
+     * @throws Throwable
+     */
+    @Test
+    public void test_doFilter21b() throws Throwable{
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );
+        final ValueMap properties = context.mock(ValueMap.class);
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{"/content"});
+
+        final AtomicInteger counter =  new AtomicInteger();
+
+        context.checking(new Expectations() {
+            {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
+                allowing(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
+                exactly(1).of(response).reset();
+                exactly(1).of(request).removeAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
+                will(returnValue("/content/usergenerated"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
+                
+                // Exactly 2 setContentType should reach the mock response.
+                exactly(1).of(response).setContentType("text/html");
+                exactly(1).of(response).setContentType("text/html");
+                //CONTENT DISPOSITION IS SET
+                exactly(1).of(response).addHeader("Content-Disposition", "attachment");
+            }
+        });
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {
+            @Override
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
+        rewriterResponse.setContentType("text/html");
+        Assert.assertEquals(1, counter.intValue());
+        rewriterResponse.reset();
+        
+        /* Reset on the response clears all the headers, so if we setContentType again the content type header *and* the
+         * content disposition should both reappear. The counter counts each time the content disposition header is added.
+         * The setContentType calls on the mock response are enforced in the Expectations checked above.
+         */
+        rewriterResponse.setContentType("text/html");
+
+        Assert.assertEquals(2, counter.intValue());
+    }
 
     @Test
     public void test_doFilter22() throws Throwable{
@@ -1156,13 +1090,7 @@ public class ContentDispositionFilterTest {
         final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
         final Resource resource = context.mock(Resource.class, "resource" );
         final ValueMap properties = context.mock(ValueMap.class);
-        contentDispositionFilter = new ContentDispositionFilter();
-
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("sling.content.disposition.paths", new String []{"/content/usergenerated"});
-        props.put("sling.content.disposition.excluded.paths", new String []{"/content/usergenerated"});
-
-        PrivateAccessor.invoke(contentDispositionFilter,"activate",  new Class[]{Map.class},new Object[]{props});
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{"/content/usergenerated"});
 
         final AtomicInteger counter =  new AtomicInteger();
         context.checking(new Expectations() {
@@ -1197,7 +1125,52 @@ public class ContentDispositionFilterTest {
         rewriterResponse.setContentType("text/html");
         Assert.assertEquals(0, counter.intValue());
     }
+    
+    @Test
+    public void test_doFilter22b() throws Throwable{
+        final SlingHttpServletRequest request = context.mock(SlingHttpServletRequest.class);
+        final SlingHttpServletResponse response = context.mock(SlingHttpServletResponse.class);
+        final Resource resource = context.mock(Resource.class, "resource" );
+        final ValueMap properties = context.mock(ValueMap.class);
+        callActivateWithConfiguration(new String[]{"/content/usergenerated"}, new String[]{"/content/usergenerated"});
 
+        final AtomicInteger counter =  new AtomicInteger();
+        context.checking(new Expectations() {
+            {
+                allowing(request).getMethod();
+                will(returnValue("GET"));
+                allowing(response).containsHeader("Content-Disposition");
+                will(returnValue(false));
+                exactly(1).of(response).reset();
+                allowing(request).getAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                will(returnValue(null));
+                allowing(request).setAttribute(RewriterResponse.ATTRIBUTE_NAME, "text/html");
+                exactly(1).of(request).removeAttribute(RewriterResponse.ATTRIBUTE_NAME);
+                allowing(request).getResource();
+                will(returnValue(resource));
+                allowing(resource).getPath();
+                will(returnValue("/content/usergenerated"));
+                allowing(resource).adaptTo(ValueMap.class);
+                will(returnValue(properties));
+                allowing(properties).containsKey(PROP_JCR_DATA);
+                will(returnValue(true));
+                exactly(2).of(response).setContentType("text/html");
+                //CONTENT DISPOSITION IS NOT SET
+                never(response).addHeader("Content-Disposition", "attachment");
+            }
+        });
+        final ContentDispositionFilter.RewriterResponse rewriterResponse = contentDispositionFilter. new RewriterResponse(request, response) {
+            @Override
+            public void addHeader(String name, String value) {
+                counter.incrementAndGet();
+            }
+        };
+
+        rewriterResponse.setContentType("text/html");
+        rewriterResponse.reset();
+        rewriterResponse.setContentType("text/html");
+        Assert.assertEquals(0, counter.intValue());
+    }
     @Test
     public void test_isJcrData1() throws Throwable {
         contentDispositionFilter = new ContentDispositionFilter();

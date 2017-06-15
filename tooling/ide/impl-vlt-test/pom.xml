@@ -104,7 +104,13 @@
       <dependency>
          <groupId>org.apache.jackrabbit.vault</groupId>
           <artifactId>org.apache.jackrabbit.vault</artifactId>
-          <version>3.0.0</version>
+          <version>${vault.version}</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.jackrabbit.vault</groupId>
+          <artifactId>vault-davex</artifactId>
+          <version>${vault.version}</version>
           <scope>test</scope>
       </dependency>
       <dependency>
@@ -116,6 +122,8 @@
   </dependencies>
 
     <properties>
-        <jackrabbit.version>2.4.0</jackrabbit.version>
+        <!-- must match the version being referenced in the pom.xml of filevault -->
+        <jackrabbit.version>2.14.0</jackrabbit.version>
+        <vault.version>3.1.38</vault.version>
     </properties>
 </project>

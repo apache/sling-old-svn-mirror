@@ -22,18 +22,15 @@ import java.util.Iterator;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-
 import org.osgi.annotation.versioning.ConsumerType;
 
 
 /**
  * The JCR query provider supports querying based on the JCR spec.
- * Calls from {@link ResourceResolver#findResources(String, String)} and
- * {@link ResourceResolver#queryResources(String, String)} are passed on
+ * Calls from {@link org.apache.sling.api.resource.ResourceResolver#findResources(String, String)} and
+ * {@link org.apache.sling.api.resource.ResourceResolver#queryResources(String, String)} are passed on
  * to this object.
  *
  * @since 1.0.0 (Sling API Bundle 2.11.0)
@@ -65,7 +62,7 @@ public interface QueryLanguageProvider<T> {
      * @return An <code>Iterator</code> of {@link Resource} objects matching the
      *         query. If no resources match, <code>null</code> might be
      *         returned instead of an empty iterator.
-     * @throws QuerySyntaxException If the query is not syntactically correct
+     * @throws org.apache.sling.api.resource.QuerySyntaxException If the query is not syntactically correct
      *             according to the query language indicator or if the query
      *             language is not supported as specified in {@link #getSupportedLanguages(ResolveContext)}.
      * @throws org.apache.sling.api.SlingException If an error occurs querying
@@ -95,7 +92,7 @@ public interface QueryLanguageProvider<T> {
      * @return An <code>Iterator</code> of <code>Map</code> instances providing
      *         access to the query result. If no resources match, <code>null</code>
      *         might be returned instead of an empty iterator.
-     * @throws QuerySyntaxException If the query is not syntactically correct
+     * @throws org.apache.sling.api.resource.QuerySyntaxException If the query is not syntactically correct
      *             according to the query language indicator or if the query
      *             language is not supported as specified in {@link #getSupportedLanguages(ResolveContext)}.
      * @throws org.apache.sling.api.SlingException If an error occurs querying

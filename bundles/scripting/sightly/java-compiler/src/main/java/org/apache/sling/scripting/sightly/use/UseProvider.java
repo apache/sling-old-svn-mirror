@@ -23,7 +23,7 @@ import javax.script.Bindings;
 
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * <p>

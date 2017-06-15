@@ -110,7 +110,7 @@ public class RequestPartsIterator implements Iterator<Part> {
 
         @Override
         public String getName() {
-            return fileItem.getName();
+            return fileItem.getFieldName();
         }
 
         @Override
@@ -146,7 +146,7 @@ public class RequestPartsIterator implements Iterator<Part> {
 
         @Override
         public String getSubmittedFileName() {
-            return fileItem.getFieldName();
+            return fileItem.getName();
         }
 
         private <T> Collection<T> toCollection(Iterator<T> i) {

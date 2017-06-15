@@ -455,6 +455,10 @@ public class ResourceUtil {
      * resource type of the resource, then its super resource type and continues
      * to go up the resource super type hierarchy.
      *
+     * In case the type of the given resource or the given resource type starts with one of the resource resolver's search paths
+     * it is converted to a relative resource type by stripping off the resource resolver's search path 
+     * before doing the comparison.
+     * 
      * @param resource the resource to check
      * @param resourceType the resource type to check the resource against
      * @return <code>false</code> if <code>resource</code> is <code>null</code>.

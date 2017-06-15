@@ -53,7 +53,7 @@ public class ServicesListener {
     private final Listener configAdminListener;
 
     /** Registration the service. */
-    private ServiceRegistration configTaskCreatorRegistration;
+    private ServiceRegistration<?> configTaskCreatorRegistration;
 
     private ConfigTaskCreator configTaskCreator;
 
@@ -75,6 +75,8 @@ public class ServicesListener {
                 final Hashtable<String, String> props = new Hashtable<String, String>();
                 props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Configuration Install Task Factory");
                 props.put(Constants.SERVICE_VENDOR, VENDOR);
+                props.put(InstallTaskFactory.NAME, "org.osgi.service.cm");
+                props.put(ResourceTransformer.NAME, "org.osgi.service.cm");
 
                 this.configTaskCreator = new ConfigTaskCreator(listener, configAdmin);
                 // start and register osgi installer service
@@ -112,7 +114,7 @@ public class ServicesListener {
 
         private final String serviceName;
 
-        private ServiceReference reference;
+        private ServiceReference<?> reference;
         private Object service;
 
         public Listener(final String serviceName) {
@@ -163,6 +165,7 @@ public class ServicesListener {
         /**
          * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
          */
+        @Override
         public void serviceChanged(ServiceEvent event) {
             if (event.getType() == ServiceEvent.REGISTERED ) {
                 this.retainService();

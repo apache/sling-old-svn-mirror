@@ -185,7 +185,7 @@ public class ImportRepositoryContentAction {
 
     private void recordNotIgnoredResources() throws CoreException {
 
-        final ResourceChangeCommandFactory rccf = new ResourceChangeCommandFactory(serializationManager);
+        final ResourceChangeCommandFactory rccf = new ResourceChangeCommandFactory(serializationManager, Activator.getDefault().getPreferences().getIgnoredFileNamesForSync());
 
         IResource importStartingPoint = contentSyncRootDir.findMember(repositoryImportRoot);
         if (importStartingPoint == null) {

@@ -19,6 +19,8 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 
 import java.util.Hashtable;
 
@@ -34,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.LoggerFactory;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RequestInjectionTest {
@@ -59,6 +62,7 @@ public class RequestInjectionTest {
 
         SlingBindings bindings = new SlingBindings();
         bindings.setSling(sling);
+        bindings.setLog(LoggerFactory.getLogger("test"));
         when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
 
         factory = new ModelAdapterFactory();
@@ -73,6 +77,8 @@ public class RequestInjectionTest {
         BindingsModel model = factory.getAdapter(request, BindingsModel.class);
         assertNotNull(model.getSling());
         assertEquals(sling, model.getSling());
+        assertEquals("test", model.getLog().getName());
+        verify(request, times(1)).getAttribute(SlingBindings.class.getName());
     }
 
     @Test
@@ -81,6 +87,9 @@ public class RequestInjectionTest {
                 = factory.getAdapter(request, org.apache.sling.models.testmodels.classes.constructorinjection.BindingsModel.class);
         assertNotNull(model.getSling());
         assertEquals(sling, model.getSling());
+        assertEquals("test", model.getLog().getName());
+
+        verify(request, times(1)).getAttribute(SlingBindings.class.getName());
     }
 
 }

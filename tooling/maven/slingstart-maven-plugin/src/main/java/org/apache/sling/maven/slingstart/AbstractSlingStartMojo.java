@@ -32,25 +32,57 @@ import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
     /**
-     * The model directory
-     * This parameter is evaluated in the DependencyLifecycleParticipant
+     * The model directory containing the provision models.
+     * This parameter is evaluated in the {@link DependencyLifecycleParticipant}.
+     * As default first <code>${basedir}/src/main/provisioning</code> and then
+     * <code>${basedir}/src/test/provisioning</code> is used 
+     * (in case the former does not exist).
+     * <p>
+     * This parameter is evaluated in the {@link ModelPreprocessor}, i.e. outside of the Mojo execution therefore it must not be 
+     * configured within an <a href="https://maven.apache.org/guides/mini/guide-configuring-plugins.html#Using_the_executions_Tag">execution tag</a>
+     * but rather in the global configuration section for this plugin.
+     * </p>
      */
     @Parameter(defaultValue="${basedir}/src/main/provisioning")
     private File modelDirectory;
 
     /**
-     * The model file name pattern
-     * This parameter is evaluated in the DependencyLifecycleParticipant
+     * The model file name pattern to consider.
+     * <p>
+     * This parameter is evaluated in the {@link ModelPreprocessor}, i.e. outside of the Mojo execution therefore it must not be 
+     * configured within an <a href="https://maven.apache.org/guides/mini/guide-configuring-plugins.html#Using_the_executions_Tag">execution tag</a>
+     * but rather in the global configuration section for this plugin.
+     * </p>
      */
-    @Parameter
+    @Parameter(defaultValue=DEFAULT_MODEL_PATTERN)
     private String modelPattern;
+    
+    public static final String DEFAULT_MODEL_PATTERN = "((.*)\\.txt|(.*)\\.model)";
 
     /**
-     * Inlined model, supported since version 1.3.
-     * This parameter is evaluated in the DependencyLifecycleParticipant
+     * Inlined model. Is processed first and afterwards merged with any model found in {@link #modelDirectory}.
+     * <p>
+     * This parameter is evaluated in the {@link ModelPreprocessor}, i.e. outside of the Mojo execution therefore it must not be 
+     * configured within an <a href="https://maven.apache.org/guides/mini/guide-configuring-plugins.html#Using_the_executions_Tag">execution tag</a>
+     * but rather in the global configuration section for this plugin.
+     * </p>
+     * @since 1.3
+     * @see <a href="https://issues.apache.org/jira/browse/SLING-4912">SLING-4912</a>
      */
     @Parameter
     private String model;
+    
+    static final String CONFIGURATION_NAME_DISABLE_EXTENDING_CLASSPATH = "disableExtendingMavenClasspath";
+    /**
+     * If set to {@code true} the Maven classpath (either scope "provided" or "test") will not be extended by the artifacts being referenced in the model.
+     * <p>
+     * This parameter is evaluated in the {@link ModelPreprocessor}, i.e. outside of the Mojo execution therefore it must not be 
+     * configured within an <a href="https://maven.apache.org/guides/mini/guide-configuring-plugins.html#Using_the_executions_Tag">execution tag</a>
+     * but rather in the global configuration section for this plugin.
+     * </p>
+     */
+    @Parameter(name=CONFIGURATION_NAME_DISABLE_EXTENDING_CLASSPATH)
+    private boolean disableExtendingMavenClasspath;
 
     @Parameter(property = "project", readonly = true, required = true)
     protected MavenProject project;
@@ -60,9 +92,6 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
     @Parameter(property = "session", readonly = true, required = true)
     protected MavenSession mavenSession;
-
-    @Parameter(defaultValue="false")
-    protected boolean createWebapp;
 
     /**
      * If set to true, properties from the Maven POM can be used as variables in the provisioning files.

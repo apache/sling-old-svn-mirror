@@ -72,16 +72,20 @@ public interface ValueMap extends Map<String, Object> {
      * This method does not support conversion into a primitive type or an
      * array of a primitive type. It should return the default value in this
      * case.
+     * <br><br>
+     * <b>Implementation hint</b>: In the past it was allowed to call this with a 2nd parameter being {@code null}. 
+     * Therefore all implementations should internally call {@link #get(String)} when the 2nd parameter
+     * has value {@code null}.
      *
      * @param name The name of the property
      * @param <T> The expected type
      * @param defaultValue The default value to use if the named property does
      *            not exist or cannot be converted to the requested type. The
      *            default value is also used to define the type to convert the
-     *            value to. If this is <code>null</code> any existing property is
-     *            not converted.
+     *            value to. Must not be {@code null}. If you want to return {@code null} by default
+     *            rather rely on {@link #get(String, Class)}.
      * @return Return named value converted to type T or the default value if
      *         non existing or can't be converted.
      */
-    <T> T get(@Nonnull String name, T defaultValue);
+    @Nonnull <T> T get(@Nonnull String name, @Nonnull T defaultValue);
 }

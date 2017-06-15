@@ -16,13 +16,16 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.render;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.sling.scripting.sightly.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +52,6 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
      */
     public static final Set<Class<?>> PRIMITIVE_CLASSES = Collections.unmodifiableSet(new HashSet<Class<?>>() {{
         add(Boolean.class);
-        add(Boolean.class);
         add(Character.class);
         add(Byte.class);
         add(Short.class);
@@ -64,6 +67,23 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
     @Override
     public boolean isPrimitive(Object obj) {
         return PRIMITIVE_CLASSES.contains(obj.getClass());
+    }
+
+    @Override
+    public boolean isDate(Object target) {
+        return (target instanceof Date || target instanceof Calendar);
+    }
+
+    @Override
+    public boolean isNumber(Object target) {
+        if (target == null) {
+            return false;
+        }
+        if (target instanceof Number) {
+            return true;
+        }
+        String value = toString(target);
+        return NumberUtils.isNumber(value);
     }
 
     @Override
@@ -90,10 +110,27 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
 
     @Override
     public Number toNumber(Object object) {
+        if (object == null) {
+            return null;
+        }
         if (object instanceof Number) {
             return (Number) object;
         }
-        return 0;
+        String stringValue = toString(object);
+        try {
+            return NumberUtils.createNumber(stringValue);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    public Date toDate(Object object) {
+        if (object instanceof Date) {
+            return (Date)object;
+        } else if (object instanceof Calendar) {
+            return ((Calendar)object).getTime();
+        }
+        return null;
     }
 
     @Override
@@ -286,11 +323,10 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
     }
 
     protected static Object getField(Object obj, String property) {
-        if (obj instanceof Object[] && "length".equals(property)) {
-            // Working around this limitation: http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getFields%28%29
-            return ((Object[]) obj).length;
-        }
         Class<?> cls = obj.getClass();
+        if (cls.isArray() && "length".equals(property)) {
+            return Array.getLength(obj);
+        }
         try {
             Field field = cls.getDeclaredField(property);
             return field.get(obj);
@@ -368,4 +404,3 @@ public abstract class AbstractRuntimeObjectModel implements RuntimeObjectModel {
     }
 
 }
-

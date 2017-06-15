@@ -25,17 +25,16 @@ import org.junit.runner.Description;
  */
 public class TestDescriptionRule extends TestWatcher {
 
-
     @Override
     protected void finished(Description description) {
-        TestDescriptionHolder.setClassName(description.getClassName());
-        TestDescriptionHolder.setMethodName(description.getMethodName());
+        TestDescriptionHolder.removeMethodName();
+        TestDescriptionHolder.removeClassName();
     }
 
     @Override
     protected void starting (Description description) {
-        TestDescriptionHolder.removeMethodName();
-        TestDescriptionHolder.removeClassName();
+        TestDescriptionHolder.setClassName(description.getClassName());
+        TestDescriptionHolder.setMethodName(description.getMethodName());
     }
 
 }

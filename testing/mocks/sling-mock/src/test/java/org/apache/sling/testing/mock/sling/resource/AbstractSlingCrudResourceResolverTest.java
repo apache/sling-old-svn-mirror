@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -63,7 +64,9 @@ public abstract class AbstractSlingCrudResourceResolverTest {
     private static final String STRING_VALUE = "value1";
     private static final String[] STRING_ARRAY_VALUE = new String[] { "value1", "value2" };
     private static final int INTEGER_VALUE = 25;
+    private static final long LONG_VALUE = 250L;
     private static final double DOUBLE_VALUE = 3.555d;
+    private static final BigDecimal BIGDECIMAL_VALUE = new BigDecimal("12345.678");
     private static final boolean BOOLEAN_VALUE = true;
     private static final Date DATE_VALUE = new Date(10000);
     private static final Calendar CALENDAR_VALUE = Calendar.getInstance();
@@ -83,7 +86,9 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         props.put("stringProp", STRING_VALUE);
         props.put("stringArrayProp", STRING_ARRAY_VALUE);
         props.put("integerProp", INTEGER_VALUE);
+        props.put("longProp", LONG_VALUE);
         props.put("doubleProp", DOUBLE_VALUE);
+        props.put("bigDecimalProp", BIGDECIMAL_VALUE);
         props.put("booleanProp", BOOLEAN_VALUE);
         props.put("dateProp", DATE_VALUE);
         props.put("calendarProp", CALENDAR_VALUE);
@@ -118,9 +123,29 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         ValueMap props = ResourceUtil.getValueMap(resource1);
         assertEquals(STRING_VALUE, props.get("stringProp", String.class));
         assertArrayEquals(STRING_ARRAY_VALUE, props.get("stringArrayProp", String[].class));
-        assertEquals((Integer) INTEGER_VALUE, props.get("integerProp", Integer.class));
+        assertEquals((Integer)INTEGER_VALUE, props.get("integerProp", Integer.class));
+        assertEquals((Long)LONG_VALUE, props.get("longProp", Long.class));
         assertEquals(DOUBLE_VALUE, props.get("doubleProp", Double.class), 0.0001);
+        assertEquals(BIGDECIMAL_VALUE, props.get("bigDecimalProp", BigDecimal.class));
         assertEquals(BOOLEAN_VALUE, props.get("booleanProp", Boolean.class));
+    }
+
+    @Test
+    public void testSimpleProperties_IntegerLongConversion() throws IOException {
+        Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
+        ValueMap props = ResourceUtil.getValueMap(resource1);
+
+        assertEquals((Integer)(int)LONG_VALUE, props.get("longProp", Integer.class));
+        assertEquals((Long)(long)INTEGER_VALUE, props.get("integerProp", Long.class));
+    }
+
+    @Test
+    public void testSimpleProperties_DecimalConversion() throws IOException {
+        Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
+        ValueMap props = ResourceUtil.getValueMap(resource1);
+
+        assertEquals(new BigDecimal(DOUBLE_VALUE).doubleValue(), props.get("doubleProp", BigDecimal.class).doubleValue(), 0.0001d);
+        assertEquals(BIGDECIMAL_VALUE.doubleValue() , props.get("bigDecimalProp", Double.class), 0.0001d);
     }
 
     @Test
@@ -132,8 +157,10 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         ValueMap props = ResourceUtil.getValueMap(resource1);
         assertEquals(STRING_VALUE, props.get("node1/stringProp", String.class));
         assertArrayEquals(STRING_ARRAY_VALUE, props.get("node1/stringArrayProp", String[].class));
-        assertEquals((Integer) INTEGER_VALUE, props.get("node1/integerProp", Integer.class));
+        assertEquals((Integer)INTEGER_VALUE, props.get("node1/integerProp", Integer.class));
+        assertEquals((Long)LONG_VALUE, props.get("node1/longProp", Long.class));
         assertEquals(DOUBLE_VALUE, props.get("node1/doubleProp", Double.class), 0.0001);
+        assertEquals(BIGDECIMAL_VALUE, props.get("node1/bigDecimalProp", BigDecimal.class));
         assertEquals(BOOLEAN_VALUE, props.get("node1/booleanProp", Boolean.class));
         assertEquals(STRING_VALUE, props.get("node1/node11/stringProp11", String.class));
     }
@@ -142,26 +169,16 @@ public abstract class AbstractSlingCrudResourceResolverTest {
     public void testDateProperty() throws IOException {
         Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         ValueMap props = ResourceUtil.getValueMap(resource1);
-        // TODO: enable this test when JCR resource implementation supports
-        // writing Date objects (SLING-3846)
-        if (getResourceResolverType() != ResourceResolverType.JCR_MOCK
-                && getResourceResolverType() != ResourceResolverType.JCR_OAK ) {
-            assertEquals(DATE_VALUE, props.get("dateProp", Date.class));
-        }
+        assertEquals(DATE_VALUE, props.get("dateProp", Date.class));
     }
 
     @Test
     public void testDatePropertyToCalendar() throws IOException {
         Resource resource1 = context.resourceResolver().getResource(getTestRootResource().getPath() + "/node1");
         ValueMap props = ResourceUtil.getValueMap(resource1);
-        // TODO: enable this test when JCR resource implementation supports
-        // writing Date objects (SLING-3846)
-        if (getResourceResolverType() != ResourceResolverType.JCR_MOCK
-                && getResourceResolverType() != ResourceResolverType.JCR_OAK ) {
-            Calendar calendarValue = props.get("dateProp", Calendar.class);
-            assertNotNull(calendarValue);
-            assertEquals(DATE_VALUE, calendarValue.getTime());
-        }
+        Calendar calendarValue = props.get("dateProp", Calendar.class);
+        assertNotNull(calendarValue);
+        assertEquals(DATE_VALUE, calendarValue.getTime());
     }
 
     @Test

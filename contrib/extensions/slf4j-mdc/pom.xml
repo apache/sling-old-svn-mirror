@@ -209,9 +209,9 @@
       <version>4.10</version>
     </dependency>
     <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20070829</version>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.johnzon</artifactId>
+      <version>1.0.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -282,7 +282,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>4.0.2</version>
+      <version>5.4.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -25,21 +25,22 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.testing.paxexam.TestSupport;
-import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.util.Filter;
+import org.ops4j.pax.exam.util.PathUtils;
 import org.osgi.framework.Constants;
 import org.osgi.service.http.HttpService;
 
 import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionModels;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingLaunchpadOakTar;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingScripting;
-import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
 
 public abstract class FreemarkerTestSupport extends TestSupport {
 
@@ -59,20 +60,24 @@ public abstract class FreemarkerTestSupport extends TestSupport {
     @Filter(value = "(names=freemarker)")
     protected ScriptEngineFactory scriptEngineFactory;
 
-    @Configuration
-    public Option[] configuration() {
-        return new Option[]{
-            baseConfiguration(),
+    public Option baseConfiguration() {
+        return composite(
+            super.baseConfiguration(),
             launchpad(),
             // Sling Scripting FreeMarker
             testBundle("bundle.filename"),
+            mavenBundle().groupId("org.freemarker").artifactId("freemarker").versionAsInProject(),
             mavenBundle().groupId("org.apache.servicemix.specs").artifactId("org.apache.servicemix.specs.jaxp-api-1.4").versionAsInProject(),
-            bootDelegationPackage("javax.swing.*"),
             // testing
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.resource.presence").versionAsInProject(),
+            factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
+                .put("user.mapping", new String[]{"org.apache.sling.resource.presence=sling-readall"})
+                .asOption(),
             mavenBundle().groupId("org.jsoup").artifactId("jsoup").versionAsInProject(),
             mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.hamcrest").versionAsInProject(),
-            junitBundles()
-        };
+            junitBundles(),
+            logging()
+        );
     }
 
     @ProbeBuilder
@@ -93,6 +98,17 @@ public abstract class FreemarkerTestSupport extends TestSupport {
             slingLaunchpadOakTar(workingDirectory, httpPort),
             slingExtensionModels(),
             slingScripting()
+        );
+    }
+
+    protected Option logging() {
+        final String filename = String.format("file:%s/src/test/resources/logback.xml", PathUtils.getBaseDir());
+        return composite(
+            systemProperty("logback.configurationFile").value(filename),
+            mavenBundle().groupId("org.slf4j").artifactId("slf4j-api").version("1.7.21"),
+            mavenBundle().groupId("org.slf4j").artifactId("jcl-over-slf4j").version("1.7.21"),
+            mavenBundle().groupId("ch.qos.logback").artifactId("logback-core").version("1.1.7"),
+            mavenBundle().groupId("ch.qos.logback").artifactId("logback-classic").version("1.1.7")
         );
     }
 

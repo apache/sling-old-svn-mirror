@@ -36,33 +36,33 @@ public final class AuthConstants {
      * and password should just be checked and a status code be set for success
      * (200/OK) or failure (403/FORBIDDEN).
      *
-     * @see #isValidateRequest(HttpServletRequest)
-     * @see #sendValid(HttpServletResponse)
-     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
+     * @see AuthUtil#isValidateRequest(HttpServletRequest)
+     * @see AuthUtil#sendValid(HttpServletResponse)
+     * @see AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)
      */
     public static final String PAR_J_VALIDATE = "j_validate";
 
     /**
      * The name of the request header set by the
-     * {@link #sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
+     * {@link AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
      * credentials cannot be used for login.
      * <p>
      * This header may be inspected by clients for a reason why the request
      * failed.
      *
-     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
+     * @see AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)
      */
     public static final String X_REASON = "X-Reason";
 
     /**
      * The name of the request header set by the
-     * {@link #sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
+     * {@link AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
      * credentials cannot be used for login.
      * <p>
      * This header may be inspected by clients for a a detailed reason code why the request
      * failed.
      *
-     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
+     * @see AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)
      */
     public static final String X_REASON_CODE = "X-Reason-Code";
 

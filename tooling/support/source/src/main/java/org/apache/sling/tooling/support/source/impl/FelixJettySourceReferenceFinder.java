@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -28,10 +29,14 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.osgi.framework.Bundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class FelixJettySourceReferenceFinder implements SourceReferenceFinder {
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public List<SourceReference> findSourceReferences(Bundle bundle) throws SourceReferenceException {
@@ -43,35 +48,40 @@ public class FelixJettySourceReferenceFinder implements SourceReferenceFinder {
             
         final Object jettyVersion = bundle.getHeaders().get("X-Jetty-Version");
         if ( !(jettyVersion instanceof String) ) {
+            log.warn("Could not retrieve Jetty version from bundle '{}' because header 'X-Jetty-Version' is not set!", bundle);
             return Collections.emptyList();
         }
-        
-        URL entry = bundle.getEntry("/META-INF/maven/org.apache.felix/org.apache.felix.http.jetty/pom.xml");
-        
-        InputStream pom = null;
-        try {
-            pom = entry.openStream();
-            
+        Enumeration<URL> entries = bundle.findEntries("META-INF/maven", "pom.xml", true);
+        if (entries != null && entries.hasMoreElements()) {
+            URL entry = entries.nextElement();
+            InputStream pom = null;
             try {
-                SAXParserFactory parserFactory = SAXParserFactory.newInstance();
-                SAXParser parser = parserFactory.newSAXParser();
-                PomHandler handler = new PomHandler((String) jettyVersion);
-                parser.parse(new InputSource(pom), handler);
+                pom = entry.openStream();
                 
-                return handler.getReferences();
-            } catch (SAXException e) {
-                throw new SourceReferenceException(e);
-            } catch (ParserConfigurationException e) {
+                try {
+                    SAXParserFactory parserFactory = SAXParserFactory.newInstance();
+                    SAXParser parser = parserFactory.newSAXParser();
+                    PomHandler handler = new PomHandler((String) jettyVersion);
+                    parser.parse(new InputSource(pom), handler);
+                    
+                    return handler.getReferences();
+                } catch (SAXException e) {
+                    throw new SourceReferenceException(e);
+                } catch (ParserConfigurationException e) {
+                    throw new SourceReferenceException(e);
+                } finally {
+                    IOUtils.closeQuietly(pom);
+                }
+            } catch (IOException e) {
                 throw new SourceReferenceException(e);
             } finally {
                 IOUtils.closeQuietly(pom);
             }
-        } catch (IOException e) {
-            throw new SourceReferenceException(e);
-        } finally {
-            IOUtils.closeQuietly(pom);
+            
+        } else {
+            log.warn("Could not find a pom.xml in bundle '{}'!", bundle);
+            return Collections.emptyList();
         }
-
     }
 
 }

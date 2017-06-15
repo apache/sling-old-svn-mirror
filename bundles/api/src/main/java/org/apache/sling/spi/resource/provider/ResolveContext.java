@@ -18,13 +18,10 @@
  */
 package org.apache.sling.spi.resource.provider;
 
-import java.util.Map;
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ResourceResolver;
-
 import org.osgi.annotation.versioning.ProviderType;
 
 /**

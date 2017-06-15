@@ -16,13 +16,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.launchpad</artifactId>
     <packaging>slingstart</packaging>
-    <version>9-SNAPSHOT</version>
+    <version>10-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Application Builder</name>
     <description>
@@ -36,7 +36,7 @@
     </scm>
 
     <properties>
-        <sling.java.version>7</sling.java.version>
+        <sling.java.version>8</sling.java.version>
         <IT.expected.bundles.count>125</IT.expected.bundles.count>
     </properties>
 
@@ -73,7 +73,7 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.4.2</version>
+                <version>1.7.6</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -166,9 +166,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20160212</version>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.9.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

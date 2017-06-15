@@ -75,7 +75,7 @@ public class SlingLaunchpadOakMongoIT extends AbstractSlingLaunchpadOakTestSuppo
         final String mongoUri = String.format("mongodb://localhost:%s", port);
         return OptionUtils.combine(baseConfiguration(),
             editConfigurationFilePut("etc/org.apache.karaf.features.cfg", "featuresBoot", "(wrap)"),
-            editConfigurationFilePut("etc/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.cfg", "mongouri", mongoUri),
+            editConfigurationFilePut("etc/org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.config", "mongouri", mongoUri),
             wrappedBundle(mavenBundle().groupId("de.flapdoodle.embed").artifactId("de.flapdoodle.embed.mongo").versionAsInProject()),
             wrappedBundle(mavenBundle().groupId("de.flapdoodle.embed").artifactId("de.flapdoodle.embed.process").versionAsInProject()),
             wrappedBundle(mavenBundle().groupId("net.java.dev.jna").artifactId("jna").versionAsInProject()),
@@ -86,8 +86,29 @@ public class SlingLaunchpadOakMongoIT extends AbstractSlingLaunchpadOakTestSuppo
     }
 
     @Test
+    public void testOrgApacheSlingJcrOakServer() {
+        final Bundle bundle = findBundle("org.apache.sling.jcr.oak.server");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheJackrabbitOakLucene() {
+        final Bundle bundle = findBundle("org.apache.jackrabbit.oak-lucene");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
     public void testOrgMongodbMongoJavaDriver() {
         final Bundle bundle = findBundle("org.mongodb.mongo-java-driver");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testComH2databaseH2Mvstore() {
+        final Bundle bundle = findBundle("org.h2.mvstore");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }

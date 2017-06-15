@@ -24,19 +24,28 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.validation.model.ParameterizedValidator;
+import org.apache.sling.validation.model.ValidatorInvocation;
 import org.apache.sling.validation.model.ResourceProperty;
 
 public class ResourcePropertyImpl implements ResourceProperty {
 
-    private final String name;
+    private final @Nonnull String name;
     private final boolean isMultiple;
     private final boolean isRequired;
-    private final @Nonnull List<ParameterizedValidator> validators;
+    private final @Nonnull List<ValidatorInvocation> validators;
     private final Pattern namePattern;
 
-    public ResourcePropertyImpl(@Nonnull String name, String nameRegex, boolean isMultiple, boolean isRequired,
-            @Nonnull List<ParameterizedValidator> validators) throws IllegalArgumentException {
+    /**
+     * Is only supposed to be used from {@link ResourcePropertyBuilder}.
+     * @param name
+     * @param nameRegex
+     * @param isMultiple
+     * @param isRequired
+     * @param validators
+     * @throws IllegalArgumentException
+     */
+    protected ResourcePropertyImpl(@Nonnull String name, String nameRegex, boolean isMultiple, boolean isRequired,
+            @Nonnull List<ValidatorInvocation> validators) throws IllegalArgumentException {
         if (nameRegex != null) {
             try {
                 this.namePattern = Pattern.compile(nameRegex);
@@ -73,7 +82,7 @@ public class ResourcePropertyImpl implements ResourceProperty {
     }
 
     @Override
-    public @Nonnull List<ParameterizedValidator> getValidators() {
+    public @Nonnull List<ValidatorInvocation> getValidatorInvocations() {
         return validators;
     }
 
@@ -108,10 +117,7 @@ public class ResourcePropertyImpl implements ResourceProperty {
             return false;
         if (isRequired != other.isRequired)
             return false;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
+        if (!name.equals(other.name))
             return false;
         if (namePattern == null) {
             if (other.namePattern != null)

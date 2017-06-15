@@ -19,47 +19,43 @@
 package org.apache.sling.serviceusermapping.impl;
 
 import java.util.ArrayList;
-import java.util.Map;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype=true,
-        name="org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended",
-        label="Apache Sling Service User Mapper Service Amendment",
-        description="An amendment mapping for the user mapping service.",
-        configurationFactory=true,
-        policy=ConfigurationPolicy.REQUIRE)
-@Service(value={MappingConfigAmendment.class})
-@Properties({
-    @Property(name=Constants.SERVICE_RANKING, intValue=0, propertyPrivate=false,
-              label="Ranking",
-              description="Amendments are processed in order of their ranking, an amendment with a higher ranking has" +
-                          " precedence over a mapping with a lower ranking."),
-    @Property(name="webconsole.configurationFactory.nameHint", value="Mapping: {user.mapping}")
-})
+@Designate(factory=true, ocd=MappingConfigAmendment.Config.class)
+@Component(name = "org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended",
+           configurationPolicy=ConfigurationPolicy.REQUIRE,
+           service={MappingConfigAmendment.class})
 public class MappingConfigAmendment implements Comparable<MappingConfigAmendment> {
 
-    @Property(
-            label = "Service Mappings",
+    @ObjectClassDefinition(name ="Apache Sling Service User Mapper Service Amendment",
+            description="An amendment mapping for the user mapping service.")
+    public @interface Config {
+
+        @AttributeDefinition(name = "Ranking",
+              description="Amendments are processed in order of their ranking, an amendment with a higher ranking has" +
+                          " precedence over a mapping with a lower ranking.")
+        int service_ranking() default 0;
+
+        @AttributeDefinition(name = "Service Mappings",
             description = "Provides mappings from service name to user names. "
                 + "Each entry is of the form 'bundleId [ \":\" subServiceName ] \"=\" userName' "
                 + "where bundleId and subServiceName identify the service and userName "
-                + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.",
-            unbounded = PropertyUnbounded.ARRAY)
-    private static final String PROP_SERVICE2USER_MAPPING = "user.mapping";
+                + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.")
+        String[] user_mapping() default {};
 
-    private static final String[] PROP_SERVICE2USER_MAPPING_DEFAULT = {};
+        // Internal Name hint for web console.
+        String webconsole_configurationFactory_nameHint() default "Mapping: {user.mapping}";
+
+    }
 
     /** default logger */
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -70,30 +66,34 @@ public class MappingConfigAmendment implements Comparable<MappingConfigAmendment
 
     @Activate
     @Modified
-    void configure(final Map<String, Object> config) {
-        final String[] props = PropertiesUtil.toStringArray(config.get(PROP_SERVICE2USER_MAPPING),
-            PROP_SERVICE2USER_MAPPING_DEFAULT);
+    void configure(final Config config) {
+        final String[] props = config.user_mapping();
 
-        final ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
-        for (final String prop : props) {
-            if (prop != null && prop.trim().length() > 0 ) {
-                try {
-                    final Mapping mapping = new Mapping(prop.trim());
-                    mappings.add(mapping);
-                } catch (final IllegalArgumentException iae) {
-                    logger.info("configure: Ignoring '{}': {}", prop, iae.getMessage());
+        if ( props != null ) {
+            final ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
+            for (final String prop : props) {
+                if (prop != null && prop.trim().length() > 0 ) {
+                    try {
+                        final Mapping mapping = new Mapping(prop.trim());
+                        mappings.add(mapping);
+                    } catch (final IllegalArgumentException iae) {
+                        logger.info("configure: Ignoring '{}': {}", prop, iae.getMessage());
+                    }
                 }
             }
-        }
 
-        this.serviceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
-        this.serviceRanking = PropertiesUtil.toInteger(config.get(Constants.SERVICE_RANKING), 0);
+            this.serviceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
+        } else {
+            this.serviceUserMappings = new Mapping[0];
+        }
+        this.serviceRanking = config.service_ranking();
     }
 
     public Mapping[] getServiceUserMappings() {
         return this.serviceUserMappings;
     }
 
+    @Override
     public int compareTo(final MappingConfigAmendment o) {
         // Sort by rank in descending order.
         if ( this.serviceRanking > o.serviceRanking ) {

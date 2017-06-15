@@ -18,10 +18,6 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -34,6 +30,11 @@ import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * Implements the syncToken idea: each instance stores a key-value
@@ -45,17 +46,19 @@ import org.apache.sling.settings.SlingSettingsService;
  * (thus all topology-dependent activity is now stalled and waiting)
  * and are aware of the new discoveryLite view.
  */
-@Component(immediate = false)
-@Service(value = { ClusterSyncService.class, SyncTokenService.class })
+@Component(service = { ClusterSyncService.class, SyncTokenService.class },
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    })
 public class SyncTokenService extends AbstractServiceWithBackgroundCheck implements ClusterSyncService {
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     protected DiscoveryLiteConfig commonsConfig;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     protected ResourceResolverFactory resourceResolverFactory;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     protected SlingSettingsService settingsService;
 
     protected ClusterSyncHistory clusterSyncHistory = new ClusterSyncHistory();
@@ -68,7 +71,7 @@ public class SyncTokenService extends AbstractServiceWithBackgroundCheck impleme
         service.activate();
         return service;
     }
-    
+
     public static SyncTokenService testConstructor(
             DiscoveryLiteConfig commonsConfig,
             ResourceResolverFactory resourceResolverFactory,
@@ -94,20 +97,20 @@ public class SyncTokenService extends AbstractServiceWithBackgroundCheck impleme
         this.slingId = settingsService.getSlingId();
         logger.info("activate: activated with slingId="+slingId);
     }
-    
+
     public void setConsistencyHistory(ClusterSyncHistory consistencyHistory) {
         this.clusterSyncHistory = consistencyHistory;
     }
-    
+
     public ClusterSyncHistory getClusterSyncHistory() {
         return clusterSyncHistory;
     }
-    
+
     /** Get or create a ResourceResolver **/
     protected ResourceResolver getResourceResolver() throws LoginException {
-        return resourceResolverFactory.getAdministrativeResourceResolver(null);
+        return resourceResolverFactory.getServiceResourceResolver(null);
     }
-    
+
     @Override
     public void cancelSync() {
         cancelPreviousBackgroundCheck();
@@ -124,9 +127,9 @@ public class SyncTokenService extends AbstractServiceWithBackgroundCheck impleme
     }
 
     protected void syncToken(final BaseTopologyView view, final Runnable callback) {
-        
+
         startBackgroundCheck("SyncTokenService", new BackgroundCheck() {
-            
+
             @Override
             public boolean check() {
                 // 1) first storing my syncToken
@@ -134,12 +137,12 @@ public class SyncTokenService extends AbstractServiceWithBackgroundCheck impleme
                 if (!storeMySyncToken(localClusterSyncTokenId)) {
                     // if anything goes wrong above, then this will mean for the others
                     // that they will have to wait until the timeout hits
-                    
+
                     // so to try to avoid this, retry storing my sync token later:
                     clusterSyncHistory.addHistoryEntry(view, "storing my syncToken ("+localClusterSyncTokenId+")");
                     return false;
                 }
-                
+
                 // 2) then check if all others have done the same already
                 return seenAllSyncTokens(view);
             }
@@ -200,7 +203,7 @@ public class SyncTokenService extends AbstractServiceWithBackgroundCheck impleme
             Resource resource = ResourceHelper.getOrCreateResource(resourceResolver, getSyncTokenPath());
             ValueMap syncTokens = resource.adaptTo(ValueMap.class);
             String syncToken = view.getLocalClusterSyncTokenId();
-            
+
             boolean success = true;
             StringBuffer historyEntry = new StringBuffer();
             for (InstanceDescription instance : view.getLocalInstance().getClusterView().getInstances()) {
@@ -232,7 +235,7 @@ public class SyncTokenService extends AbstractServiceWithBackgroundCheck impleme
             } else {
                 clusterSyncHistory.addHistoryEntry(view, "seen all syncTokens");
             }
-            
+
             resourceResolver.commit();
             logger.info("seenAllSyncTokens: seen all syncTokens!");
             return true;
@@ -249,5 +252,5 @@ public class SyncTokenService extends AbstractServiceWithBackgroundCheck impleme
             }
         }
     }
-    
+
 }

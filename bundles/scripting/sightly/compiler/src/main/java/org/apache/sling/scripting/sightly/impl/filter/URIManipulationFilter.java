@@ -28,7 +28,7 @@ import org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall;
 
 /**
  * The {@code URIManipulationFilter} provides support for Sightly's URI Manipulation options according to the
- * <a href="https://github.com/Adobe-Marketing-Cloud/sightly-spec/blob/1.2/SPECIFICATION.md">language specification</a>
+ * <a href="https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/1.2/SPECIFICATION.md">language specification</a>
  */
 public class URIManipulationFilter extends AbstractFilter {
 

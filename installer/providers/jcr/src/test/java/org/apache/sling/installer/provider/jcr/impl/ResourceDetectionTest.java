@@ -18,9 +18,14 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import javax.jcr.Node;
 
 import org.apache.sling.installer.provider.jcr.impl.JcrInstaller;
+import org.junit.Test;
 import org.osgi.service.component.ComponentContext;
 
 /** Test that added/updated/removed resources are
@@ -29,15 +34,13 @@ import org.osgi.service.component.ComponentContext;
  */
 public class ResourceDetectionTest extends JcrInstallTestBase {
 
+    @Test
     public void testInitialResourceDetection() throws Exception {
         assertRegisteredPaths(contentHelper.FAKE_RESOURCES);
         assertRegisteredPaths(contentHelper.FAKE_CONFIGS);
     }
 
-    protected boolean needsTestContent() {
-        return true;
-    }
-
+    @Test
     public void testAddFiles() throws Exception {
         final String [] paths = {
             "/libs/foo/bar/install/" + System.currentTimeMillis() + ".jar",
@@ -55,6 +58,7 @@ public class ResourceDetectionTest extends JcrInstallTestBase {
         assertRegisteredPaths(paths);
     }
     
+    @Test
     public void testAddConfigs() throws Exception {
         final String [] paths = {
             "/libs/foo/bar/install/" + System.currentTimeMillis() + ".jar",
@@ -73,6 +77,7 @@ public class ResourceDetectionTest extends JcrInstallTestBase {
         assertRegisteredPaths(paths);
     }
     
+    @Test
     public void testDeleteResources() throws Exception {
         assertRegisteredPaths(contentHelper.FAKE_RESOURCES);
         assertRegisteredPaths(contentHelper.FAKE_CONFIGS);
@@ -96,10 +101,11 @@ public class ResourceDetectionTest extends JcrInstallTestBase {
         		2, osgiInstaller.getRecordedCalls().size());
     }
     
+    @Test
     public void testStopAndRestart() throws Exception {
         assertRegisteredPaths(contentHelper.FAKE_RESOURCES);
         assertRegisteredPaths(contentHelper.FAKE_CONFIGS);
-        final ComponentContext cc = MiscUtil.getMockComponentContext();
+        final ComponentContext cc = context.componentContext();
         
         // With the installer deactivated, remove two resources and add some new ones 
         osgiInstaller.clearRecordedCalls();
@@ -149,6 +155,7 @@ public class ResourceDetectionTest extends JcrInstallTestBase {
         }
    }
     
+    @Test
     public void testFolderRemoval() throws Exception {
         assertRegisteredPaths(contentHelper.FAKE_RESOURCES);
         assertRegisteredPaths(contentHelper.FAKE_CONFIGS);
@@ -164,6 +171,7 @@ public class ResourceDetectionTest extends JcrInstallTestBase {
         }
     }
     
+    @Test
     public void testFileUpdate() throws Exception {
     	final String path = contentHelper.FAKE_RESOURCES[0];
     	assertRegistered(path, true);
@@ -186,6 +194,7 @@ public class ResourceDetectionTest extends JcrInstallTestBase {
         assertRecordedCall("add", path);
     }
     
+    @Test
     public void testConfigUpdate() throws Exception {
        	final String path = contentHelper.FAKE_CONFIGS[0];
     	assertRegistered(path, true);

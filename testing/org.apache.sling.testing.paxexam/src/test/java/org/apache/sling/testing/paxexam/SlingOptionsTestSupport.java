@@ -18,7 +18,6 @@
  */
 package org.apache.sling.testing.paxexam;
 
-
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 

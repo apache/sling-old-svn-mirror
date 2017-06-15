@@ -25,13 +25,14 @@ import java.util.TreeSet;
 import org.apache.maven.model.Resource;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
-import org.apache.sling.ide.log.Logger;
 import org.eclipse.aether.util.StringUtils;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jst.common.project.facet.core.JavaFacet;
 import org.eclipse.jst.common.project.facet.core.internal.JavaFacetUtil;
@@ -40,7 +41,6 @@ import org.eclipse.jst.j2ee.project.facet.IJ2EEModuleFacetInstallDataModelProper
 import org.eclipse.jst.j2ee.web.project.facet.IWebFacetInstallDataModelProperties;
 import org.eclipse.jst.j2ee.web.project.facet.WebFacetInstallDataModelProvider;
 import org.eclipse.jst.j2ee.web.project.facet.WebFacetUtils;
-import org.eclipse.m2e.core.project.configurator.AbstractProjectConfigurator;
 import org.eclipse.m2e.core.project.configurator.ProjectConfigurationRequest;
 import org.eclipse.wst.common.frameworks.datamodel.DataModelFactory;
 import org.eclipse.wst.common.frameworks.datamodel.IDataModel;
@@ -68,16 +68,22 @@ public class ContentPackageProjectConfigurator extends AbstractProjectConfigurat
     public void configure(ProjectConfigurationRequest configRequest, IProgressMonitor progressMonitor) throws CoreException {
 
         IProject project = configRequest.getProject();
+        // delete all previous markers on this pom.xml set by any project configurator
+        deleteMarkers(configRequest.getPom());
+
+        if (!getPreferences().isContentPackageProjectConfiguratorEnabled()) {
+            trace("M2E project configurator for packing type 'content-package' was disabled through preference.");
+            return;
+        }
+
         MavenProject mavenProject = configRequest.getMavenProject();
         boolean active = !"false".equalsIgnoreCase(mavenProject.getProperties().getProperty(M2E_ACTIVE));
         if(!active) {
-            trace("M2E project configurer for packing type content-package was disabled with property {0}", M2E_ACTIVE);
+            trace("M2E project configurator for packing type 'content-package' was disabled with Maven property {0}", M2E_ACTIVE);
             return;
         }
         
-        String mavenGav = mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() + ":" + mavenProject.getVersion();
-       
-        trace("Configuring Maven project {0} with packaging content-package...", mavenGav);
+        trace("Configuring {0} with packaging 'content-package'...", mavenProject);
         
         // core configuration for sling ide plugin
         
@@ -88,45 +94,57 @@ public class ContentPackageProjectConfigurator extends AbstractProjectConfigurat
         String jcrRootPath = contentSyncPath.toString();
         ConfigurationHelper.convertToContentPackageProject(project, progressMonitor, Path.fromOSString(jcrRootPath));   
         
-        new WtpProjectConfigurer(mavenProject, project, jcrRootPath).configure(progressMonitor);
+        if (getPreferences().isWtpFacetsEnabledInContentPackageProjectConfigurator()) {
+            new WtpProjectConfigurer(configRequest, project, jcrRootPath).configure(progressMonitor);
+            trace("WTP facets for {0} added", mavenProject);
+        } else {
+            trace("WTP facets for packing type 'content-package' are disabled through preferences.");
+        }
         
         trace("Done converting .");
     }
 
     /**
-     * @see Logger#trace(String, Object...)
+     * Adds the given natures to the project
+     * @param project
+     * @param natureIdsToAdd
+     * @param progressMonitor
+     * @throws CoreException
+     * @see <a href="http://help.eclipse.org/neon/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Fguide%2FresAdv_natures.htm">Eclipse Help: Project Natures</a>
      */
-    private static void trace(String format, Object... arguments) {
-        Activator.getDefault().getPluginLogger().trace(format, arguments);
-    }
-
-    private void addNatures(IProject project, String[] naturesToAdd, IProgressMonitor progressMonitor)
+    private void addNatures(IProject project, String[] natureIdsToAdd, IProgressMonitor progressMonitor, IResource pomResource)
             throws CoreException {
         
-        trace("Adding natures {0} to project {1} ", Arrays.toString(naturesToAdd), project);
+        trace("Adding natures {0} to project {1} ", Arrays.toString(natureIdsToAdd), project);
 
         IProjectDescription description = project.getDescription();
-        String[] currentNaturesArr = description.getNatureIds();
-        Set<String> naturesSet = new TreeSet<String>();
-        naturesSet.addAll(Arrays.asList(currentNaturesArr));
-        naturesSet.addAll(Arrays.asList(naturesToAdd));
-                
-        description.setNatureIds(naturesSet.toArray(new String[naturesSet.size()]));
-        project.setDescription(description, IResource.KEEP_HISTORY, progressMonitor);
-
+        String[] oldNatureIds = description.getNatureIds();
+        Set<String> newNatureIdSet = new TreeSet<String>();
+        newNatureIdSet.addAll(Arrays.asList(oldNatureIds));
+        newNatureIdSet.addAll(Arrays.asList(natureIdsToAdd));
+        String[] newNatureIds = newNatureIdSet.toArray(new String[newNatureIdSet.size()]);
+        IStatus status = project.getWorkspace().validateNatureSet(newNatureIds);
+        // check the status and decide what to do
+        if (status.getCode() == IStatus.OK) {
+            description.setNatureIds(newNatureIds);
+            project.setDescription(description, IResource.KEEP_HISTORY, progressMonitor);
+        } else {
+            // add marker
+            addMarker(pomResource, "Could not add all necessary WTP natures: " + status.getMessage(), IMarker.SEVERITY_ERROR);
+        }
     }
 
     // Implemented in line with the current m2e-wtp plugin, except that java/web facet version can be configured
     private class WtpProjectConfigurer {
 
-       private final MavenProject mavenProject;
+        private final ProjectConfigurationRequest configRequest;
        private final IProject project;
        private final String jcrRootPath;
        
-       WtpProjectConfigurer(MavenProject mavenProject,
+        WtpProjectConfigurer(ProjectConfigurationRequest configRequest,
                IProject project, String jcrRootPath) {
 
-           this.mavenProject = mavenProject;
+            this.configRequest = configRequest;
            this.project = project;
            this.jcrRootPath = jcrRootPath;
        }
@@ -136,12 +154,12 @@ public class ContentPackageProjectConfigurator extends AbstractProjectConfigurat
            
            trace("Configuring content-package with WTP facets/natures");
            
-           addNatures(project, getDefaultWtpNatures(), progressMonitor);
+            addNatures(project, getDefaultWtpNatures(), progressMonitor, configRequest.getPom());
            addWtpFacets(progressMonitor);
        }
 
        void addWtpFacets( IProgressMonitor progressMonitor) throws CoreException {
-           
+           MavenProject mavenProject = configRequest.getMavenProject();
            String javaFacetVersion;
            if ( !StringUtils.isEmpty(mavenProject.getProperties().getProperty(M2E_JAVA_FACET_VERSION))) {
                javaFacetVersion = mavenProject.getProperties().getProperty(M2E_JAVA_FACET_VERSION);

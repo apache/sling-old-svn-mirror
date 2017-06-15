@@ -39,10 +39,14 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.monitor.impl.ForwardDistributionAgentMBean;
+import org.apache.sling.distribution.monitor.impl.ForwardDistributionAgentMBeanImpl;
+import org.apache.sling.distribution.monitor.impl.MonitoringDistributionQueueProvider;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -57,6 +61,7 @@ import org.apache.sling.distribution.queue.impl.PriorityQueueDispatchingStrategy
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.simple.SimpleDistributionQueueProvider;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.HttpConfiguration;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -78,7 +83,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
 @Property(name = "webconsole.configurationFactory.nameHint", value = "Agent name: {name}")
-public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFactory {
+public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFactory<ForwardDistributionAgentMBean> {
 
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -93,7 +98,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Property(boolValue = true, label = "Enabled", description = "Whether or not to start the distribution agent.")
     private static final String ENABLED = "enabled";
 
-    @Property(label = "Service Name", description = "The name of the service used to access the repository.")
+    @Property(label = "Service Name", description = "The name of the service used to access the repository. " +
+            "If not set, the calling user ResourceResolver will be used")
     private static final String SERVICE_NAME = "serviceName";
 
     @Property(options = {
@@ -174,6 +180,12 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Property(boolValue = false, label = "Async delivery", description = "Whether or not to use a separate delivery queue to maximize transport throughput when queue has more than 100 items")
     public static final String ASYNC_DELIVERY = "async.delivery";
 
+    /**
+     * timeout for HTTP requests
+     */
+    @Property(label = "HTTP connection timeout", intValue = 10, description = "The connection timeout for HTTP requests (in seconds).")
+    public static final String HTTP = "http.conn.timeout";
+
     @Reference
     private Packaging packaging;
 
@@ -198,6 +210,10 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     @Reference
     private ConfigurationAdmin configAdmin;
 
+    public ForwardDistributionAgentFactory() {
+        super(ForwardDistributionAgentMBean.class);
+    }
+
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
         super.activate(context, config);
@@ -218,7 +234,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
     @Override
     protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog) {
-        String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
         String[] allowedRoots = PropertiesUtil.toStringArray(config.get(ALLOWED_ROOTS), null);
         allowedRoots = SettingsUtils.removeEmptyEntries(allowedRoots);
 
@@ -229,6 +245,9 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
         Map<String, String> priorityQueues = PropertiesUtil.toMap(config.get(PRIORITY_QUEUES), new String[0]);
         priorityQueues = SettingsUtils.removeEmptyEntries(priorityQueues);
+
+        Integer timeout = PropertiesUtil.toInteger(HTTP, 10) * 1000;
+        HttpConfiguration httpConfiguration = new HttpConfiguration(timeout);
 
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
 
@@ -241,6 +260,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         } else {
             queueProvider = new SimpleDistributionQueueProvider(scheduler, agentName, true);
         }
+        queueProvider = new MonitoringDistributionQueueProvider(queueProvider, context);
 
         DistributionQueueDispatchingStrategy exportQueueStrategy;
         DistributionQueueDispatchingStrategy errorQueueStrategy = null;
@@ -263,6 +283,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
             Map<String, String> queueAliases = dispatchingStrategy.getMatchingQueues(null);
             importerEndpointsMap = SettingsUtils.expandUriMap(importerEndpointsMap, queueAliases);
             exportQueueStrategy = dispatchingStrategy;
+            endpointNames = importerEndpointsMap.keySet();
         } else {
             boolean asyncDelivery = PropertiesUtil.toBoolean(config.get(ASYNC_DELIVERY), false);
             if (asyncDelivery) {
@@ -282,7 +303,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         processingQueues.addAll(endpointNames);
         processingQueues.removeAll(Arrays.asList(passiveQueues));
 
-        packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, importerEndpointsMap);
+        packageImporter = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider,
+                importerEndpointsMap, httpConfiguration);
 
         DistributionRequestType[] allowedRequests = new DistributionRequestType[]{DistributionRequestType.ADD, DistributionRequestType.DELETE};
 
@@ -300,4 +322,10 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
 
     }
+
+    @Override
+    protected ForwardDistributionAgentMBean createMBeanAgent(DistributionAgent agent, Map<String, Object> osgiConfiguration) {
+        return new ForwardDistributionAgentMBeanImpl(agent, osgiConfiguration);
+    }
+
 }

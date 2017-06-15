@@ -18,6 +18,7 @@
 package org.apache.sling.scripting.java.impl;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -58,16 +59,26 @@ public final class ServletCache {
      * Remove a  ServletWrapper.
      *
      * @param servletUri Servlet URI
+     * @param isRemove Is a remove
      */
-    public void removeWrapper(final String servletUri) {
+    public void removeWrapper(final String servletUri, final boolean isRemove) {
         final ServletWrapper wrapper = servlets.remove(servletUri);
         if ( wrapper != null ) {
             wrapper.destroy();
+        } else if ( isRemove ) {
+            final Iterator<Map.Entry<String, ServletWrapper>> iter = servlets.entrySet().iterator();
+            while ( iter.hasNext() ) {
+                final Map.Entry<String, ServletWrapper> entry = iter.next();
+                if ( entry.getKey().startsWith(servletUri) ) {
+                    iter.remove();
+                    entry.getValue().destroy();
+                }
+            }
         }
     }
 
     /**
-     * Process a "destory" event for this web application context.
+     * Process a "destroy" event for this web application context.
      */
     public void destroy() {
         Iterator<ServletWrapper> i = this.servlets.values().iterator();

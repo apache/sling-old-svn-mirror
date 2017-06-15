@@ -19,16 +19,12 @@ package org.apache.sling.servlets.post.impl.operations;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -37,44 +33,41 @@ import org.apache.sling.servlets.post.VersioningConfiguration;
 /**
  * The <code>AbstractCopyMoveOperation</code> is the abstract base close for
  * the {@link CopyOperation} and {@link MoveOperation} classes implementing
- * commong behaviour.
+ * common behavior.
  */
 abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
 
     @Override
-    protected final void doRun(SlingHttpServletRequest request,
-            PostResponse response,
-            List<Modification> changes)
-    throws RepositoryException {
-        Session session = request.getResourceResolver().adaptTo(Session.class);
+    protected final void doRun(final SlingHttpServletRequest request,
+            final PostResponse response,
+            final List<Modification> changes)
+    throws PersistenceException {
+        final VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
-        VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
-
-        Resource resource = request.getResource();
-        String source = resource.getPath();
+        final Resource resource = request.getResource();
+        final String source = resource.getPath();
 
         // ensure dest is not empty/null and is absolute
         String dest = request.getParameter(SlingPostConstants.RP_DEST);
         if (dest == null || dest.length() == 0) {
             throw new IllegalArgumentException("Unable to process "
-                + getOperationName() + ". Missing destination");
+                    + getOperationName() + ". Missing destination");
         }
 
         // register whether the path ends with a trailing slash
-        boolean trailingSlash = dest.endsWith("/");
+        final boolean trailingSlash = dest.endsWith("/");
 
         // ensure destination is an absolute and normalized path
         if (!dest.startsWith("/")) {
             dest = ResourceUtil.getParent(source) + "/" + dest;
         }
         dest = ResourceUtil.normalize(dest);
-        dest = removeAndValidateWorkspace(dest, session);
 
         // destination parent and name
-        String dstParent = trailingSlash ? dest : ResourceUtil.getParent(dest);
+        final String dstParent = trailingSlash ? dest : ResourceUtil.getParent(dest);
 
         // delete destination if already exists
-        if (!trailingSlash && session.itemExists(dest)) {
+        if (!trailingSlash && request.getResourceResolver().getResource(dest) != null ) {
 
             final String replaceString = request.getParameter(SlingPostConstants.RP_REPLACE);
             final boolean isReplace = "true".equalsIgnoreCase(replaceString);
@@ -84,7 +77,8 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
                         + dest + ": destination exists");
                 return;
             } else {
-                checkoutIfNecessary(session.getItem(dest).getParent(), changes, versioningConfiguration);
+                this.jcrSsupport.checkoutIfNecessary(request.getResourceResolver().getResource(dstParent),
+                        changes, versioningConfiguration);
             }
 
         } else {
@@ -92,8 +86,9 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
             // check if path to destination exists and create it, but only
             // if it's a descendant of the current node
             if (!dstParent.equals("")) {
-                if (session.itemExists(dstParent)) {
-                    checkoutIfNecessary((Node) session.getItem(dstParent), changes, versioningConfiguration);
+                final Resource parentResource = request.getResourceResolver().getResource(dstParent);
+                if (parentResource != null ) {
+                    this.jcrSsupport.checkoutIfNecessary(parentResource, changes, versioningConfiguration);
                 } else {
                     response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
                         "Cannot " + getOperationName() + " " + resource + " to "
@@ -106,20 +101,12 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
             response.setCreateRequest(true);
         }
 
-        Iterator<Resource> resources = getApplyToResources(request);
-        Item destItem = null;
+        final Iterator<Resource> resources = getApplyToResources(request);
+        final Resource destResource;
         if (resources == null) {
 
-            // ensure we have an item underlying the request's resource
-            Item item = resource.adaptTo(Item.class);
-            if (item == null) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND,
-                    "Missing source " + resource + " for " + getOperationName());
-                return;
-            }
-
-            String dstName = trailingSlash ? null : ResourceUtil.getName(dest);
-            destItem = execute(changes, item, dstParent, dstName, versioningConfiguration);
+            final String dstName = trailingSlash ? null : ResourceUtil.getName(dest);
+            destResource = execute(changes, resource, dstParent, dstName, versioningConfiguration);
 
         } else {
 
@@ -135,18 +122,20 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
             response.setCreateRequest(false);
 
             while (resources.hasNext()) {
-                Resource applyTo = resources.next();
-                Item item = applyTo.adaptTo(Item.class);
-                if (item != null) {
-                    execute(changes, item, dstParent, null, versioningConfiguration);
-                }
+                final Resource applyTo = resources.next();
+                execute(changes, applyTo, dstParent, null, versioningConfiguration);
             }
-            destItem = session.getItem(dest);
+            destResource = request.getResourceResolver().getResource(dest);
 
         }
 
+        if ( destResource == null ) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND,
+                    "Missing source " + resource + " for " + getOperationName());
+            return;
+        }
         // finally apply the ordering parameter
-        orderNode(request, destItem, changes);
+        this.jcrSsupport.orderNode(request, destResource, changes);
     }
 
     /**
@@ -164,11 +153,14 @@ abstract class AbstractCopyMoveOperation extends AbstractPostOperation {
      * @param destName The name of the target item inside the
      *            <code>destParent</code>. If <code>null</code> the name of
      *            the <code>source</code> is used as the target item name.
-     * @throws RepositoryException May be thrown if an error occurrs executing
+     * @throws PersistenceException May be thrown if an error occurs executing
      *             the operation.
      */
-    protected abstract Item execute(List<Modification> changes, Item source,
-            String destParent, String destName,
-            VersioningConfiguration versioningConfiguration) throws RepositoryException;
+    protected abstract Resource execute(List<Modification> changes,
+            Resource source,
+            String destParent,
+            String destName,
+            VersioningConfiguration versioningConfiguration)
+    throws PersistenceException;
 
 }

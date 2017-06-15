@@ -16,6 +16,8 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -28,14 +30,15 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +55,9 @@ public class AuthorizableValueMap implements ValueMap {
 
     private static final String MEMBER_OF_KEY = "memberOf";
 
-    private Logger logger = LoggerFactory.getLogger(AuthorizableValueMap.class);
+    private static final String PATH_KEY = "path";
+
+    private static final Logger LOG = LoggerFactory.getLogger(AuthorizableValueMap.class);
 
     private boolean fullyRead;
 
@@ -150,12 +155,14 @@ public class AuthorizableValueMap implements ValueMap {
                 return getMembers((Group) authorizable, false);
             }
             if (key.equals(MEMBER_OF_KEY)) {
-                return getMemberships(authorizable, true);
+                return getMemberships(true);
             }
             if (key.equals(DECLARED_MEMBER_OF_KEY)) {
-                return getMemberships(authorizable, false);
+                return getMemberships(false);
             }
-
+            if (key.equals(PATH_KEY)) {
+                return getPath();
+            }
             if (authorizable.hasProperty(key)) {
                 final Value[] property = authorizable.getProperty(key);
                 final Object value = valuesToJavaObject(property);
@@ -163,29 +170,58 @@ public class AuthorizableValueMap implements ValueMap {
                 return value;
             }
         } catch (RepositoryException re) {
-            // TODO: log !!
+            LOG.error("Could not access authorizable property", re);
         }
 
         // property not found or some error accessing it
         return null;
     }
 
+    /**
+     * Converts a JCR Value to a corresponding Java Object
+     *
+     * @param value the JCR Value to convert
+     * @return the Java Object
+     * @throws RepositoryException if the value cannot be converted
+     */
+    public static Object toJavaObject(Value value) throws RepositoryException {
+        switch (value.getType()) {
+            case PropertyType.DECIMAL:
+                return value.getDecimal();
+            case PropertyType.BINARY:
+                return new LazyInputStream(value);
+            case PropertyType.BOOLEAN:
+                return value.getBoolean();
+            case PropertyType.DATE:
+                return value.getDate();
+            case PropertyType.DOUBLE:
+                return value.getDouble();
+            case PropertyType.LONG:
+                return value.getLong();
+            case PropertyType.NAME: // fall through
+            case PropertyType.PATH: // fall through
+            case PropertyType.REFERENCE: // fall through
+            case PropertyType.STRING: // fall through
+            case PropertyType.UNDEFINED: // not actually expected
+            default: // not actually expected
+                return value.getString();
+        }
+    }
     protected Object valuesToJavaObject(Value[] values)
             throws RepositoryException {
         if (values == null) {
             return null;
         } else if (values.length == 1) {
-            return JcrResourceUtil.toJavaObject(values[0]);
+            return toJavaObject(values[0]);
         } else {
             Object[] valuesObjs = new Object[values.length];
             for (int i = 0; i < values.length; i++) {
-                valuesObjs[i] = JcrResourceUtil.toJavaObject(values[i]);
+                valuesObjs[i] = toJavaObject(values[i]);
             }
             return valuesObjs;
         }
     }
 
-    @SuppressWarnings("unchecked")
     protected void readFully() {
         if (!fullyRead) {
             try {
@@ -193,10 +229,15 @@ public class AuthorizableValueMap implements ValueMap {
                     cache.put(MEMBERS_KEY, getMembers((Group) authorizable, true));
                     cache.put(DECLARED_MEMBERS_KEY, getMembers((Group) authorizable, false));
                 }
-                cache.put(MEMBER_OF_KEY, getMemberships(authorizable, true));
-                cache.put(DECLARED_MEMBER_OF_KEY, getMemberships(authorizable, false));
+                cache.put(MEMBER_OF_KEY, getMemberships(true));
+                cache.put(DECLARED_MEMBER_OF_KEY, getMemberships(false));
 
-                Iterator pi = authorizable.getPropertyNames();
+                String path = getPath();
+                if (path != null) {
+                    cache.put(PATH_KEY, path);
+                }
+                // only direct property
+                Iterator<String> pi = authorizable.getPropertyNames();
                 while (pi.hasNext()) {
                     String key = (String) pi.next();
                     if (!cache.containsKey(key)) {
@@ -208,7 +249,7 @@ public class AuthorizableValueMap implements ValueMap {
 
                 fullyRead = true;
             } catch (RepositoryException re) {
-                // TODO: log !!
+                LOG.error("Could not access certain properties of user {}", authorizable, re);
             }
         }
     }
@@ -277,10 +318,10 @@ public class AuthorizableValueMap implements ValueMap {
             }
 
         } catch (ValueFormatException vfe) {
-            logger.info("converToType: Cannot convert value of " + name
+            LOG.info("converToType: Cannot convert value of " + name
                 + " to " + type, vfe);
         } catch (RepositoryException re) {
-            logger.info("converToType: Cannot get value of " + name, re);
+            LOG.info("converToType: Cannot get value of " + name, re);
         }
 
         // fall back to nothing
@@ -362,7 +403,7 @@ public class AuthorizableValueMap implements ValueMap {
         return results.toArray(new String[results.size()]);
     }
 
-    private String[] getMemberships(Authorizable authorizable, boolean includeAll) throws RepositoryException {
+    private String[] getMemberships(boolean includeAll) throws RepositoryException {
         List<String> results = new ArrayList<String>();
         for (Iterator<Group> it = includeAll ? authorizable.memberOf() : authorizable.declaredMemberOf();
                 it.hasNext();) {
@@ -371,5 +412,98 @@ public class AuthorizableValueMap implements ValueMap {
         }
         return results.toArray(new String[results.size()]);
     }
+    
+    private String getPath() throws RepositoryException {
+        try {
+            return authorizable.getPath();
+        } catch (UnsupportedRepositoryOperationException e) {
+            LOG.debug("Could not retrieve path of authorizable {}", authorizable, e);
+            return null;
+        }
+    }
 
+    public static class LazyInputStream extends InputStream {
+
+        /** The JCR Value from which the input stream is requested on demand */
+        private final Value value;
+
+        /** The inputstream created on demand, null if not used */
+        private InputStream delegatee;
+
+        public LazyInputStream(Value value) {
+            this.value = value;
+        }
+
+        /**
+         * Closes the input stream if acquired otherwise does nothing.
+         */
+        @Override
+        public void close() throws IOException {
+            if (delegatee != null) {
+                delegatee.close();
+            }
+        }
+
+        @Override
+        public int available() throws IOException {
+            return getStream().available();
+        }
+
+        @Override
+        public int read() throws IOException {
+            return getStream().read();
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException {
+            return getStream().read(b);
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            return getStream().read(b, off, len);
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            return getStream().skip(n);
+        }
+
+        @Override
+        public boolean markSupported() {
+            try {
+                return getStream().markSupported();
+            } catch (IOException ioe) {
+                // ignore
+            }
+            return false;
+        }
+
+        @Override
+        public synchronized void mark(int readlimit) {
+            try {
+                getStream().mark(readlimit);
+            } catch (IOException ioe) {
+                // ignore
+            }
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+            getStream().reset();
+        }
+
+        /** Actually retrieves the input stream from the underlying JCR Value */
+        private InputStream getStream() throws IOException {
+            if (delegatee == null) {
+                try {
+                    delegatee = value.getBinary().getStream();
+                } catch (RepositoryException re) {
+                    throw (IOException) new IOException(re.getMessage()).initCause(re);
+                }
+            }
+            return delegatee;
+        }
+
+    }
 }

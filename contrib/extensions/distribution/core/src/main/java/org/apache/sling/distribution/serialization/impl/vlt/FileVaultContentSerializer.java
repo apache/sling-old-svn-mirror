@@ -40,10 +40,10 @@ import org.apache.jackrabbit.vault.packaging.PackageManager;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.packaging.impl.FileDistributionPackage;
+import org.apache.sling.distribution.serialization.DistributionContentSerializer;
+import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    static final String TYPE = "filevault";
+    private static final String TYPE = "filevault";
     private static final String VERSION = "0.0.1";
     private static final String PACKAGE_GROUP = "sling/distribution";
 
@@ -64,31 +64,33 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
     private final AccessControlHandling aclHandling;
     private final String[] packageRoots;
     private final int autosaveThreshold;
-    private final TreeMap<String, List<String>> filters;
+    private final TreeMap<String, List<String>> nodeFilters;
+    private final TreeMap<String, List<String>> propertyFilters;
     private final boolean useBinaryReferences;
     private final String name;
 
     public FileVaultContentSerializer(String name, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots,
-                                      String[] filters, boolean useBinaryReferences, int autosaveThreshold) {
+                                      String[] nodeFilters, String[] propertyFilters, boolean useBinaryReferences, int autosaveThreshold) {
         this.name = name;
         this.packaging = packaging;
         this.importMode = importMode;
         this.aclHandling = aclHandling;
         this.packageRoots = packageRoots;
         this.autosaveThreshold = autosaveThreshold;
-        this.filters = VltUtils.parseFilters(filters);
+        this.nodeFilters = VltUtils.parseFilters(nodeFilters);
+        this.propertyFilters = VltUtils.parseFilters(propertyFilters);
         this.useBinaryReferences = useBinaryReferences;
     }
 
     @Override
-    public void exportToStream(ResourceResolver resourceResolver, DistributionRequest request, OutputStream outputStream) throws DistributionException {
+    public void exportToStream(ResourceResolver resourceResolver, DistributionExportOptions exportOptions, OutputStream outputStream) throws DistributionException {
         Session session = null;
         try {
             session = getSession(resourceResolver);
             String packageGroup = PACKAGE_GROUP;
             String packageName = TYPE + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
 
-            WorkspaceFilter filter = VltUtils.createFilter(request, filters);
+            WorkspaceFilter filter = VltUtils.createFilter(exportOptions.getRequest(), nodeFilters, propertyFilters);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION, useBinaryReferences);
 
             log.debug("assembling package {} user {}", packageGroup + '/' + packageName + "-" + VERSION, resourceResolver.getUserID());
@@ -144,7 +146,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
 
     }
 
-    protected Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
+    private Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
         Session session = resourceResolver.adaptTo(Session.class);
         if (session != null) {
             DistributionJcrUtils.setDoNotDistribute(session);
@@ -154,7 +156,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
         return session;
     }
 
-    protected void ungetSession(Session session) {
+    private void ungetSession(Session session) {
         if (session != null) {
             try {
                 if (session.hasPendingChanges()) {
@@ -169,5 +171,10 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean isRequestFiltering() {
+        return true;
     }
 }

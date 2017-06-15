@@ -21,9 +21,11 @@ import static org.ops4j.pax.exam.Constants.*;
 import static org.ops4j.pax.exam.CoreOptions.*;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.inject.Inject;
 
@@ -37,6 +39,7 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.options.AbstractDelegateProvisionOption;
+import org.ops4j.pax.exam.options.MavenArtifactProvisionOption;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -49,21 +52,23 @@ public class DynamicClassLoaderIT {
     // the name of the system property providing the bundle file to be installed and tested
     private static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
 
+    private static MavenArtifactCoordinates commonsOsgi = new MavenArtifactCoordinates("org.apache.sling", "org.apache.sling.commons.osgi", "2.1.0");
+    
     @Inject
     protected BundleContext bundleContext;
 
     protected ClassLoader dynamicClassLoader;
 
-    protected ServiceReference classLoaderManagerReference;
+    protected ServiceReference<DynamicClassLoaderManager> classLoaderManagerReference;
 
     /**
      * Helper method to get a service of the given type
      */
-    @SuppressWarnings("unchecked")
 	protected <T> T getService(Class<T> clazz) {
-    	final ServiceReference ref = bundleContext.getServiceReference(clazz.getName());
+        
+    	final ServiceReference<T> ref = bundleContext.getServiceReference(clazz);
     	assertNotNull("getService(" + clazz.getName() + ") must find ServiceReference", ref);
-    	final T result = (T)(bundleContext.getService(ref));
+    	final T result = bundleContext.getService(ref);
     	assertNotNull("getService(" + clazz.getName() + ") must find service", result);
     	return result;
     }
@@ -71,10 +76,10 @@ public class DynamicClassLoaderIT {
     protected ClassLoader getDynamicClassLoader() {
         if ( classLoaderManagerReference == null || classLoaderManagerReference.getBundle() == null ) {
             dynamicClassLoader = null;
-            classLoaderManagerReference = bundleContext.getServiceReference(DynamicClassLoaderManager.class.getName());
+            classLoaderManagerReference = bundleContext.getServiceReference(DynamicClassLoaderManager.class);
         }
         if ( dynamicClassLoader == null && classLoaderManagerReference != null ) {
-            final DynamicClassLoaderManager dclm = (DynamicClassLoaderManager) bundleContext.getService(classLoaderManagerReference);
+            final DynamicClassLoaderManager dclm = bundleContext.getService(classLoaderManagerReference);
             if ( dclm != null ) {
                 dynamicClassLoader = dclm.getDynamicClassLoader();
             }
@@ -92,6 +97,7 @@ public class DynamicClassLoaderIT {
 
     @Configuration
     public static Option[] configuration() {
+
         final String bundleFileName = System.getProperty( BUNDLE_JAR_SYS_PROP );
         final File bundleFile = new File( bundleFileName );
         if ( !bundleFile.canRead() ) {
@@ -120,13 +126,9 @@ public class DynamicClassLoaderIT {
         // check class loader
         assertNotNull(getDynamicClassLoader());
 
-        final URL url = new URL(mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.1.0").getURL());
-        final InputStream is = url.openStream();
-        Bundle osgiBundle = null;
-        try {
-            osgiBundle = this.bundleContext.installBundle(url.toExternalForm(), is);
-        } finally {
-            try { is.close(); } catch ( final IOException ignore) {}
+        Bundle osgiBundle;
+        try ( InputStream input = commonsOsgi.openInputStream() ) {
+            osgiBundle = this.bundleContext.installBundle(commonsOsgi.getMavenBundle().getURL(), input);
         }
         assertNotNull(osgiBundle);
         assertEquals(Bundle.INSTALLED, osgiBundle.getState());
@@ -198,4 +200,49 @@ public class DynamicClassLoaderIT {
         }
     
     }
+    
+    /**
+     * Helper class which simplifies accesing a Maven artifact based on its coordinates
+     */
+    static class MavenArtifactCoordinates {
+        private String groupId;
+        private String artifactId;
+        private String version;
+        
+        private MavenArtifactCoordinates(String groupId, String artifactId, String version) {
+            this.groupId = groupId;
+            this.artifactId = artifactId;
+            this.version = version;
+        }
+
+        public InputStream openInputStream() throws FileNotFoundException {
+
+            // note that this contains a lot of Maven-related logic, but I did not find the
+            // right set of dependencies to make this work inside the OSGi container
+            // 
+            // The tough part is making sure that this also works on Jenkins where a 
+            // private local repository is specified using -Dmaven.repo.local
+            Path localRepo = Paths.get(System.getProperty("user.home"), ".m2", "repository");
+            String overridenRepo = System.getProperty("maven.repo.local");
+            if ( overridenRepo != null ) {
+                localRepo = Paths.get(overridenRepo);
+            }
+            
+            Path artifact = Paths.get(localRepo.toString(), groupId.replace('.', File.separatorChar), artifactId, version, artifactId+"-" + version+".jar");
+            
+            if ( !artifact.toFile().exists() ) {
+                throw new RuntimeException("Artifact at " + artifact + " does not exist.");
+            }
+            
+            return new FileInputStream(artifact.toFile());
+        }
+        
+        
+        
+        public MavenArtifactProvisionOption getMavenBundle() {
+            
+            return mavenBundle(groupId, artifactId, version);
+        }
+    }
+    
 }

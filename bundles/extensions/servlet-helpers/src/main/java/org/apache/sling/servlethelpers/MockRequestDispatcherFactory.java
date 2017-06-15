@@ -22,8 +22,7 @@ import javax.servlet.RequestDispatcher;
 
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
-
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Interface to create a mock {@link RequestDispatcher} when calling the getRequestDispatcher methods

@@ -24,7 +24,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -48,97 +50,100 @@ public class JcrProviderStateFactory {
 
     private final Logger logger = LoggerFactory.getLogger(JcrProviderStateFactory.class);
 
-    private final ServiceReference repositoryReference;
+    private final ServiceReference<SlingRepository> repositoryReference;
 
     private final SlingRepository repository;
 
     private final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference;
 
-    private final PathMapper pathMapper;
-
-    public JcrProviderStateFactory(final ServiceReference repositoryReference,
+    public JcrProviderStateFactory(final ServiceReference<SlingRepository> repositoryReference,
             final SlingRepository repository,
-            final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference,
-            final PathMapper pathMapper) {
+            final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference) {
         this.repository = repository;
         this.repositoryReference = repositoryReference;
         this.dynamicClassLoaderManagerReference = dynamicClassLoaderManagerReference;
-        this.pathMapper = pathMapper;
+    }
+
+    /** Get the calling Bundle from auth info, fail if not provided
+     *  @throws LoginException if no calling bundle info provided
+     */
+    @CheckForNull
+    private Bundle extractCallingBundle(@Nonnull Map<String, Object> authenticationInfo) throws LoginException {
+        final Object obj = authenticationInfo.get(ResourceProvider.AUTH_SERVICE_BUNDLE);
+        if(obj != null && !(obj instanceof Bundle)) {
+            throw new LoginException("Invalid calling bundle object in authentication info");
+        }
+        return (Bundle)obj;
     }
 
     @SuppressWarnings("deprecation")
     JcrProviderState createProviderState(final @Nonnull Map<String, Object> authenticationInfo) throws LoginException {
-        // by default any session used by the resource resolver returned is
-        // closed when the resource resolver is closed
-        boolean logoutSession = true;
+        boolean isLoginAdministrative = Boolean.TRUE.equals(authenticationInfo.get(ResourceProvider.AUTH_ADMIN));
 
-        // derive the session to be used
-        Session session;
+        // check whether a session is provided in the authenticationInfo
+        Session session = getSession(authenticationInfo);
+        if (session != null && !isLoginAdministrative) {
+            // by default any session used by the resource resolver returned is
+            // closed when the resource resolver is closed, except when the session
+            // was provided in the authenticationInfo
+            return createJcrProviderState(session, false, authenticationInfo, null);
+        }
+
         BundleContext bc = null;
         try {
-            if (Boolean.TRUE.equals(authenticationInfo.get(ResourceProvider.AUTH_ADMIN))) {
-                session = repository.loginAdministrative(null);
-            } else {
-                session = getSession(authenticationInfo);
-                if (session == null) {
-
-                    final Object serviceBundleObject = authenticationInfo.get(ResourceProvider.AUTH_SERVICE_BUNDLE);
-                    if (serviceBundleObject instanceof Bundle) {
-
-                        final String subServiceName = (authenticationInfo
-                                .get(ResourceResolverFactory.SUBSERVICE) instanceof String)
-                                        ? (String) authenticationInfo.get(ResourceResolverFactory.SUBSERVICE) : null;
-
-                        bc = ((Bundle) serviceBundleObject).getBundleContext();
-
-                        final SlingRepository repo = (SlingRepository) bc.getService(repositoryReference);
-                        if (repo == null) {
-                            logger.warn(
-                                    "getResourceProviderInternal: Cannot login service because cannot get SlingRepository on behalf of bundle {} ({})",
-                                    bc.getBundle().getSymbolicName(), bc.getBundle().getBundleId());
-                            throw new LoginException(); // TODO: correct ??
-                        }
-
-                        try {
-                            session = repo.loginService(subServiceName, null);
-                        } finally {
-                            // unget the repository if the service cannot
-                            // login to it, otherwise the repository service
-                            // is let go off when the resource resolver is
-                            // closed and the session logged out
-                            if (session == null) {
-                                bc.ungetService(repositoryReference);
-                            }
-                        }
-
-                    } else {
-
-                        // requested non-admin session to any workspace (or
-                        // default)
-                        final Credentials credentials = getCredentials(authenticationInfo);
-                        session = repository.login(credentials, null);
-
-                    }
-
-                } else {
-
-                    // session provided; no special workspace; just make sure
-                    // the session is not logged out when the resolver is closed
-                    logoutSession = false;
+            final Bundle bundle = extractCallingBundle(authenticationInfo);
+            if (bundle != null) {
+                bc = bundle.getBundleContext();
+                final SlingRepository repo = bc.getService(repositoryReference);
+                if (repo == null) {
+                    logger.warn("Cannot login {} because cannot get SlingRepository on behalf of bundle {} ({})",
+                            isLoginAdministrative ? "admin" : "service",
+                            bundle.getSymbolicName(),
+                            bundle.getBundleId());
+                    throw new LoginException("Repository unavailable"); // TODO: correct ??
                 }
+
+                try {
+                    if (isLoginAdministrative) {
+                        session = repo.loginAdministrative(null);
+                    } else {
+                        final Object subService = authenticationInfo.get(ResourceResolverFactory.SUBSERVICE);
+                        final String subServiceName = subService instanceof String ? (String) subService : null;
+                        session = repo.loginService(subServiceName, null);
+                    }
+                } catch (Throwable t) {
+                    // unget the repository if the service cannot
+                    // login to it, otherwise the repository service
+                    // is let go off when the resource resolver is
+                    // closed and the session logged out
+                    if (session == null) {
+                        bc.ungetService(repositoryReference);
+                    }
+                    throw t;
+                }
+            } else if (isLoginAdministrative) {
+                throw new LoginException("Calling bundle missing in authentication info");
+            } else {
+                // requested non-admin session
+                final Credentials credentials = getCredentials(authenticationInfo);
+                session = repository.login(credentials, null);
             }
         } catch (final RepositoryException re) {
             throw getLoginException(re);
         }
 
-        session = handleImpersonation(session, authenticationInfo, logoutSession);
+        return createJcrProviderState(session, true, authenticationInfo, bc);
+    }
 
-        final HelperData data = new HelperData(this.dynamicClassLoaderManagerReference, this.pathMapper);
-        if (bc == null) {
-            return new JcrProviderState(session, data, logoutSession);
-        } else {
-            return new JcrProviderState(session, data, logoutSession, bc, repositoryReference);
-        }
+    private JcrProviderState createJcrProviderState(
+            @Nonnull final Session s,
+            final boolean logoutSession,
+            @Nonnull final Map<String, Object> authenticationInfo,
+            @Nullable final BundleContext ctx
+    ) throws LoginException {
+        final Session session = handleImpersonation(s, authenticationInfo, logoutSession);
+        final HelperData data = new HelperData(this.dynamicClassLoaderManagerReference);
+        return new JcrProviderState(session, data, logoutSession, ctx, ctx == null ? null : repositoryReference);
     }
 
     /**

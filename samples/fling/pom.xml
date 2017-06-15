@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>26</version>
+    <version>30</version>
     <relativePath/>
   </parent>
 
@@ -34,7 +34,7 @@
   <packaging>bundle</packaging>
 
   <name>Apache Sling Fling Sample</name>
-  <description>sample using Sling Models, Query and Thymeleaf</description>
+  <description>sample using Sling Commons Messaging, Sling Models, Sling Query, Sling Validation and Sling Scripting Thymeleaf</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -45,34 +45,19 @@
   <dependencies>
     <!-- javax -->
     <dependency>
-      <groupId>javax.inject</groupId>
-      <artifactId>javax.inject</artifactId>
-      <version>1</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
-      <version>2.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
       <scope>provided</scope>
     </dependency>
     <!-- OSGi -->
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>osgi.core</artifactId>
-      <version>6.0.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>osgi.annotation</artifactId>
-      <version>6.0.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -122,13 +107,19 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.jcr.base</artifactId>
-      <version>2.4.0</version>
+      <version>3.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.scripting.thymeleaf</artifactId>
+      <version>1.1.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.validation.api</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.0.0</version>
       <scope>provided</scope>
     </dependency>
     <!-- Apache Jackrabbit -->
@@ -142,7 +133,7 @@
     <dependency>
       <groupId>org.thymeleaf</groupId>
       <artifactId>thymeleaf</artifactId>
-      <version>3.0.0.RELEASE</version>
+      <version>3.0.3.RELEASE</version>
       <scope>provided</scope>
     </dependency>
     <!-- SubEtha SMTP -->
@@ -160,7 +151,7 @@
         <plugin>
           <groupId>org.apache.sling</groupId>
           <artifactId>maven-sling-plugin</artifactId>
-          <version>2.1.8</version>
+          <version>2.2.0</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -168,7 +159,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.5.1</version>
+        <version>3.6.1</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -187,8 +178,7 @@
             </Sling-Bundle-Resources>
             <Sling-Initial-Content>
               apps/fling;path:=/apps/fling;overwrite:=true;uninstall:=true,
-              content;path:=/content;overwrite:=true;uninstall:=true,
-              etc;path:=/etc;overwrite:=true;uninstall:=true
+              content;path:=/content;overwrite:=true;uninstall:=true
             </Sling-Initial-Content>
             <Sling-Model-Packages>
               org.apache.sling.samples.fling.page
@@ -208,7 +198,7 @@
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
           <excludes combine.children="append">
-            <exclude>**/etc/messaging/form/comment.txt</exclude>
+            <exclude>**/apps/fling/messaging/form/comment.txt</exclude>
           </excludes>
         </configuration>
       </plugin>

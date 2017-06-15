@@ -42,6 +42,7 @@ import java.util.ResourceBundle;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
+import javax.servlet.ReadListener;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -51,6 +52,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
 import org.apache.commons.collections.IteratorUtils;
@@ -66,8 +68,7 @@ import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HttpConstants;
-
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Mock {@link SlingHttpServletRequest} implementation.
@@ -88,6 +89,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private String serverName = "localhost";
     private int serverPort = 80;
     private String servletPath = StringUtils.EMPTY;
+    private String pathInfo = null;
     private String method = HttpConstants.METHOD_GET;
     private final HeaderSupport headerSupport = new HeaderSupport();
     private final CookieSupport cookieSupport = new CookieSupport();
@@ -547,6 +549,18 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
             public int read() throws IOException {
                 return is.read();
             }
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+            @Override
+            public boolean isFinished() {
+                throw new UnsupportedOperationException();
+            }
+            @Override
+            public void setReadListener(ReadListener readListener) {
+                throw new UnsupportedOperationException();
+            }
         };  
     }
 
@@ -645,6 +659,10 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public String getPathInfo() {
+        if (this.pathInfo != null) {
+            return this.pathInfo; 
+        }
+        
         RequestPathInfo requestPathInfo = this.getRequestPathInfo();
 
         if (StringUtils.isEmpty(requestPathInfo.getResourcePath())) {
@@ -670,6 +688,10 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         }
 
         return pathInfo.toString();
+    }
+    
+    public void setPathInfo(String pathInfo) {
+        this.pathInfo = pathInfo;
     }
 
     @Override
@@ -866,6 +888,21 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public DispatcherType getDispatcherType() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String changeSessionId() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) throws IOException, ServletException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long getContentLengthLong() {
         throw new UnsupportedOperationException();
     }
 

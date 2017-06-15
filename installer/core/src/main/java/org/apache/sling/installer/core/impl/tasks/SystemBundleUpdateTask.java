@@ -20,6 +20,7 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.Collections;
 
 import org.apache.sling.installer.api.tasks.InstallationContext;
@@ -49,7 +50,7 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
         final Bundle systemBundle = this.getBundleContext().getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
         // sanity check
         if ( systemBundle == null ) {
-            this.setFinishedState(ResourceState.IGNORED);
+            this.setFinishedState(ResourceState.IGNORED, null, "Cannot update system bundle!");
             ctx.asyncTaskFailed(this);
             return;
         }
@@ -63,23 +64,24 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
             try {
                 is = getResource().getInputStream();
                 if (is == null) {
-                    getLogger().warn(
-                            "RegisteredResource provides null InputStream, cannot update system bundle: "
-                            + getResource());
-                    this.setFinishedState(ResourceState.IGNORED);
+                    String message = MessageFormat.format("RegisteredResource provides null InputStream, cannot update system bundle: {0}", getResource());
+                    getLogger().warn(message);
+                    this.setFinishedState(ResourceState.IGNORED, null, message);
                     ctx.asyncTaskFailed(this);
                 } else {
                     try {
                         systemBundle.update(is);
                     } catch (final BundleException e) {
-                        getLogger().warn("Updating system bundle failed - unable to retry: " + this, e);
-                        this.setFinishedState(ResourceState.IGNORED);
+                        String message = MessageFormat.format("Updating system bundle failed due to {0} - unable to retry: {1}", e.getLocalizedMessage(), this);
+                        getLogger().warn(message, e);
+                        this.setFinishedState(ResourceState.IGNORED, null, message);
                         ctx.asyncTaskFailed(this);
                     }
                 }
             } catch (final IOException e) {
-                this.getLogger().warn("Removing failing task - unable to retry: " + this, e);
-                this.setFinishedState(ResourceState.IGNORED);
+                String message = MessageFormat.format("Removing failing task due to  due to {0} - unable to retry: {1}", e.getLocalizedMessage(), this);
+                this.getLogger().warn(message, e);
+                this.setFinishedState(ResourceState.IGNORED, null, message);
                 ctx.asyncTaskFailed(this);
             } finally {
                 if ( is != null ) {

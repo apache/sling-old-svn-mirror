@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -45,11 +45,12 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
 
     private static final String LABEL = "bundleresources";
 
-    private ServiceRegistration serviceRegistration;
+    private volatile ServiceRegistration<Servlet> serviceRegistration;
 
-    private ServiceTracker providerTracker;
+    @SuppressWarnings("rawtypes")
+    private volatile ServiceTracker<ResourceProvider, ResourceProvider> providerTracker;
 
-    private List<BundleResourceProvider> provider = new ArrayList<BundleResourceProvider>();
+    private final List<BundleResourceProvider> provider = new ArrayList<>();
 
     //--------- setup and shutdown
 
@@ -92,7 +93,7 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
         for (BundleResourceProvider bundleResourceProvider : brp) {
 
             BundleResourceCache cache = bundleResourceProvider.getBundleResourceCache();
-            MappedPath[] paths = bundleResourceProvider.getMappedPaths();
+            MappedPath path = bundleResourceProvider.getMappedPath();
 
             pw.println("<tr class='content'>");
 
@@ -114,15 +115,12 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
             pw.println("<table>");
 
             pw.println("<tr>");
-            pw.println("<td>Mappings</td>");
+            pw.println("<td>Mapping</td>");
             pw.println("<td>");
-            for (MappedPath mappedPath : paths) {
-                pw.print(mappedPath.getResourceRoot());
-                if (mappedPath.getEntryRoot() != null) {
-                    pw.print(" ==> ");
-                    pw.print(mappedPath.getEntryRoot());
-                }
-                pw.print("<br>");
+            pw.print(path.getResourceRoot());
+            if (path.getEntryRoot() != null) {
+                pw.print(" ==> ");
+                pw.print(path.getEntryRoot());
             }
             pw.println("</td>");
             pw.println("</tr>");
@@ -149,21 +147,26 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
 
     }
 
+    @SuppressWarnings("rawtypes")
     public void activate(BundleContext context) {
-        providerTracker = new ServiceTracker(context,
-            ResourceProvider.SERVICE_NAME, null) {
+        providerTracker = new ServiceTracker<ResourceProvider, ResourceProvider>(context,
+            ResourceProvider.class.getName(), null) {
+
             @Override
-            public Object addingService(ServiceReference reference) {
-                Object service = super.addingService(reference);
-                if (service instanceof BundleResourceProvider) {
-                    provider.add((BundleResourceProvider) service);
+            public ResourceProvider addingService(final ServiceReference<ResourceProvider> reference) {
+                ResourceProvider service = null;
+                if ( reference.getProperty(BundleResourceProvider.PROP_BUNDLE) != null ) {
+                    service = super.addingService(reference);
+                    if (service instanceof BundleResourceProvider) {
+                        provider.add((BundleResourceProvider) service);
+                    }
                 }
                 return service;
             }
 
             @Override
-            public void removedService(ServiceReference reference,
-                    Object service) {
+            public void removedService(final ServiceReference<ResourceProvider> reference,
+                    final ResourceProvider service) {
                 if (service instanceof BundleResourceProvider) {
                     provider.remove(service);
                 }
@@ -172,17 +175,16 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
         };
         providerTracker.open();
 
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        Dictionary<String, Object> props = new Hashtable<>();
         props.put(Constants.SERVICE_DESCRIPTION,
             "Web Console Plugin for Bundle Resource Providers");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        props.put(Constants.SERVICE_PID, getClass().getName());
         props.put("felix.webconsole.label", LABEL);
         props.put("felix.webconsole.title", "Bundle Resource Provider");
         props.put("felix.webconsole.category", "Sling");
 
         serviceRegistration = context.registerService(
-            Servlet.class.getName(), this, props);
+            Servlet.class, this, props);
     }
 
     public void deactivate() {
@@ -197,8 +199,8 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
         }
     }
 
-    private String getName(Bundle bundle) {
-        String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
+    private String getName(final Bundle bundle) {
+        String name = bundle.getHeaders().get(Constants.BUNDLE_NAME);
         if (name == null) {
             name = bundle.getSymbolicName();
             if (name == null) {

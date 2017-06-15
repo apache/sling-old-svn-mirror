@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
-        <relativePath/>
+        <version>30</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.launchpad.testing-war</artifactId>
     <packaging>slingstart</packaging>
-    <version>9-SNAPSHOT</version>
+    <version>10-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Testing WAR version</name>
     <description>
@@ -57,10 +57,11 @@
         <test.host>localhost</test.host>
 
         <!-- optionally exclude some integration tests  -->
-        <failsafe.exclude></failsafe.exclude>
+        <failsafe.exclude />
 
         <slf4j.version>1.7.6</slf4j.version>
         <logback.version>1.1.2</logback.version>
+        <sling.java.version>8</sling.java.version>
     </properties>
 
     <build>
@@ -103,7 +104,7 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.4.2</version>
+                <version>1.7.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <createWebapp>true</createWebapp>
@@ -112,7 +113,7 @@
             <plugin>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
-                <version>9.2.10.v20150310</version>
+                <version>9.3.12.v20160915</version>
                 <configuration>
                     <skip>${maven.test.skip}</skip>
                     <stopKey>alpha</stopKey>
@@ -176,6 +177,16 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
+            <plugin>
+                <!-- Extend RAT configuration from parent pom -->
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes combine.children="append">
+                        <exclude>sling/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -192,11 +203,16 @@
         <dependency>
              <groupId>org.apache.sling</groupId>
              <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
-             <version>1.0.1-SNAPSHOT</version>
+             <version>1.0.5-SNAPSHOT</version>
              <scope>test</scope>
         </dependency>
 
         <!-- Dependencies for the Test Build and Run -->
+         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+        </dependency>
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
@@ -235,12 +251,12 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.cmpn</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

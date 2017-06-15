@@ -22,13 +22,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>27</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.servlets.post</artifactId>
     <packaging>bundle</packaging>
-    <version>2.3.13-SNAPSHOT</version>
+    <version>2.3.21-SNAPSHOT</version>
 
     <name>Apache Sling Default POST Servlets</name>
     <description>
@@ -49,21 +49,17 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>
-                            org.apache.sling.servlets.post;version=2.3.0
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.servlets.post.impl.*
-                        </Private-Package>
+                        <Import-Package>
+                            javax.jcr;resolution:=optional,
+                            javax.jcr.nodetype;resolution:=optional,
+                            javax.jcr.version;resolution:=optional,
+                            org.apache.sling.jcr.contentloader;resolution:=optional,
+                            *
+                        </Import-Package>
                         <Sling-Bundle-Resources>
                             /system/sling.js
                         </Sling-Bundle-Resources>
@@ -74,7 +70,7 @@
                             sling=http://sling.apache.org/jcr/sling/1.0
                         </Sling-Namespaces>
                         <Sling-Nodetypes>
-                            SLING-INF/nodetypes/chunk.cnd,
+                            SLING-INF/nodetypes/chunk.cnd
                         </Sling-Nodetypes>
                     </instructions>
                 </configuration>
@@ -86,6 +82,8 @@
                 <excludes>
                   <exclude>src/main/resources/org/apache/sling/servlets/post/HtmlResponse.html</exclude>
                   <exclude>src/main/resources/org/apache/sling/servlets/post/HtmlNoGoBackResponse.html</exclude>
+                  <exclude>developer-tests/README.md</exclude>
+                  <exclude>Protocols.md</exclude>
                 </excludes>
               </configuration>
             </plugin>
@@ -106,18 +104,12 @@
             <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.cmpn</artifactId>
-        </dependency>
-        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
-            <version>2.0</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -126,31 +118,13 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.3.0</version>
+            <version>2.9.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.api</artifactId>
-            <version>2.0.6</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.0.2-incubator</version>
-            <scope>provided</scope>
-        </dependency>
-         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.2-incubator</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -166,9 +140,16 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-json_1.0_spec</artifactId>
+            <version>1.0-alpha-1</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.johnzon</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>

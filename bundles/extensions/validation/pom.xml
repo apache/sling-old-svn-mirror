@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>30</version>
         <relativePath/>
     </parent>
 
@@ -34,7 +34,6 @@
         <module>api</module>
         <module>core</module>
         <module>test-services</module>
-        <module>it-http</module>
         <module>examples</module>
     </modules>
 

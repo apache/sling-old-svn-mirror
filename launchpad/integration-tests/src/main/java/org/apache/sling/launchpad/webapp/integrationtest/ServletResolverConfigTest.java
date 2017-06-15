@@ -16,8 +16,10 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.JsonObject;
+
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 
 /** Verify that the ServletResolver cache is disabled for testing */
 public class ServletResolverConfigTest extends HttpTestBase {
@@ -28,8 +30,8 @@ public class ServletResolverConfigTest extends HttpTestBase {
     
     public void testCacheDisabled() throws Exception {
         final String content = getContent(HTTP_BASE_URL + GET_CONFIG_PATH, CONTENT_TYPE_JSON);
-        final JSONObject json = new JSONObject(content);
-        final int cacheSize = json.getJSONObject("properties").getInt(CONFIG_PROP);
+        final JsonObject json = JsonUtil.parseObject(content);
+        final int cacheSize = Integer.parseInt(json.getJsonObject("properties").getString(CONFIG_PROP));
         if(cacheSize != 0) {
             fail(
                     "ServletResolver cache size should be set to zero for testing, current value=" + cacheSize

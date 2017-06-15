@@ -21,12 +21,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
 
-import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.rules.TeleporterRule;
-import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,6 +36,7 @@ public class ProvisioningModelIT {
     private Session session;
     private static final String TEST_PATH = "/repoinit/fromProvisioningModel";
     private static final String TEST_USER = "userFromProvisioningModel";
+    private static final String SECOND_TEST_USER = "secondUserFromProvisioningModel";
     private final String uniqueID = UUID.randomUUID().toString();
     
     @Rule
@@ -45,7 +44,6 @@ public class ProvisioningModelIT {
     
     @Before
     public void setup() throws Exception {
-        WaitFor.services(teleporter, SlingRepository.class, RepoInitParser.class);
         session = teleporter.getService(SlingRepository.class).loginAdministrative(null);
     }
     
@@ -57,8 +55,9 @@ public class ProvisioningModelIT {
     }
     
     @Test
-    public void userCreated() throws Exception {
+    public void usersCreated() throws Exception {
         assertTrue("Expecting user " + TEST_USER, U.userExists(session, TEST_USER));
+        assertTrue("Expecting user " + SECOND_TEST_USER, U.userExists(session, SECOND_TEST_USER));
     }
     
     @Test

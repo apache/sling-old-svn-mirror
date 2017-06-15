@@ -18,7 +18,7 @@ package org.apache.sling.scripting.sightly.java.compiler;
 
 import java.util.Map;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The {@code CompilationOutput} encapsulates the result of a compile operation as processed by the {@link JavaClassBackendCompiler}.

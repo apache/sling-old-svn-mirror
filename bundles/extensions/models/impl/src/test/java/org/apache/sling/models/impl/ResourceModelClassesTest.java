@@ -105,6 +105,8 @@ public class ResourceModelClassesTest {
         assertEquals("three", array[0]);
 
         assertTrue(model.isPostConstructCalled());
+
+        verify(res, times(1)).adaptTo(ValueMap.class);
     }
 
     @Test

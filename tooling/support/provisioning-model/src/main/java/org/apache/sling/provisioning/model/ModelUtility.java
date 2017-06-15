@@ -157,22 +157,31 @@ public abstract class ModelUtility {
 
     /**
      * Validates the model.
+     *
      * @param model The model to validate
-     * @return A map with errors or {@code null}.
+     * @return A map with errors or {@code null} if valid.
      */
     public static Map<Traceable, String> validate(final Model model) {
-        final Map<Traceable, String> errors = new HashMap<Traceable, String>();
+        final Map<Traceable, String> errors = new HashMap<>();
 
         for(final Feature feature : model.getFeatures() ) {
             // validate feature
             if ( feature.getName() == null || feature.getName().isEmpty() ) {
-                errors.put(feature, "Name is required for a feature.");
+                addError(errors, feature, "Name is required for a feature.");
+            }
+            // version should be a valid version
+            if ( feature.getVersion() != null ) {
+                try {
+                    new Version(feature.getVersion());
+                } catch ( final IllegalArgumentException iae) {
+                    addError(errors, feature, "Version is not a valid version: " + feature.getVersion());
+                }
             }
             for(final RunMode runMode : feature.getRunModes()) {
+                boolean hasRemove = false;
                 final String[] rm = runMode.getNames();
                 if ( rm != null ) {
                     int hasSpecial = 0;
-                    boolean hasRemove = false;
                     for(final String m : rm) {
                         if ( m.startsWith(":") ) {
                             if ( hasSpecial > 0 ) {
@@ -184,12 +193,12 @@ public abstract class ModelUtility {
                                         hasSpecial = 2;
                                     } else {
                                         hasSpecial = 2;
-                                        errors.put(runMode, "Invalid modes " + Arrays.toString(rm));
+                                        addError(errors, runMode, "Invalid modes " + Arrays.toString(rm));
                                         break;
                                     }
                                 } else {
                                     hasSpecial++;
-                                    errors.put(runMode, "Invalid modes " + Arrays.toString(rm));
+                                    addError(errors, runMode, "Invalid modes " + Arrays.toString(rm));
                                     break;
                                 }
 
@@ -203,7 +212,7 @@ public abstract class ModelUtility {
 
                 for(final ArtifactGroup sl : runMode.getArtifactGroups()) {
                     if ( sl.getStartLevel() < 0 ) {
-                        errors.put(sl, "Invalid start level " + sl.getStartLevel());
+                        addError(errors, sl, "Invalid start level " + sl.getStartLevel());
                     }
                     for(final Artifact a : sl) {
                         String error = null;
@@ -220,7 +229,7 @@ public abstract class ModelUtility {
                             error = (error != null ? error + ", " : "") + "type missing";
                         }
                         if (error != null) {
-                            errors.put(a, error);
+                            addError(errors, a, error);
                         }
                     }
                 }
@@ -233,16 +242,16 @@ public abstract class ModelUtility {
                     if ( c.isSpecial() && c.getFactoryPid() != null ) {
                         error = (error != null ? error + ", " : "") + "factory pid not allowed for special configuration";
                     }
-                    if ( c.getProperties().isEmpty() ) {
+                    if ( c.getProperties().isEmpty() && !hasRemove ) {
                         error = (error != null ? error + ", " : "") + "configuration properties missing";
                     }
                     if (error != null) {
-                        errors.put(c, error);
+                        addError(errors, c, error);
                     }
                 }
             }
         }
-        if ( errors.size() == 0 ) {
+        if ( errors.isEmpty()) {
             return null;
         }
         return errors;
@@ -251,7 +260,7 @@ public abstract class ModelUtility {
     /**
      * Applies a set of variables to the given model.
      * All variables that are referenced anywhere within the model are detected and passed to the given variable resolver.
-     * The variable resolver may look up variables on it's own, or fallback to the variables already defined for the feature.
+     * The variable resolver may look up variables on it's own, or fall back to the variables already defined for the feature.
      * All resolved variable values are collected and put to the "variables" section of the resulting model.
      * @param model Original model
      * @param resolver Variable resolver
@@ -262,7 +271,7 @@ public abstract class ModelUtility {
     public static Model applyVariables(final Model model, final VariableResolver resolver) {
 
         // define delegating resolver that collects all variable names and value per feature
-        final Map<String,Map<String,String>> collectedVars = new HashMap<String, Map<String,String>>();
+        final Map<String,Map<String,String>> collectedVars = new HashMap<>();
         VariableResolver variableCollector = new VariableResolver() {
             @Override
             public String resolve(Feature feature, String name) {
@@ -270,7 +279,7 @@ public abstract class ModelUtility {
                 if (value != null) {
                     Map<String,String> featureVars = collectedVars.get(feature.getName());
                     if (featureVars == null) {
-                        featureVars = new HashMap<String, String>();
+                        featureVars = new HashMap<>();
                         collectedVars.put(feature.getName(), featureVars);
                     }
                     featureVars.put(name, value);
@@ -286,7 +295,7 @@ public abstract class ModelUtility {
         ModelProcessor variablesUpdater = new ModelProcessor() {
             @Override
             protected KeyValueMap<String> processVariables(KeyValueMap<String> variables, Feature newFeature) {
-                KeyValueMap<String> newVariables = new KeyValueMap<String>();
+                KeyValueMap<String> newVariables = new KeyValueMap<>();
                 Map<String,String> featureVars = collectedVars.get(newFeature.getName());
                 if (featureVars != null) {
                     for (Map.Entry<String, String> entry : featureVars.entrySet()) {
@@ -337,4 +346,38 @@ public abstract class ModelUtility {
         return versionUpdater.process(model);
     }
 
+    /**
+     * Validates the model and checks that each feature has a valid version.
+     *
+     * This method first calls {@link #validate(Model)} and then checks
+     * that each feature has a version.
+     *
+     * @param model The model to validate
+     * @return A map with errors or {@code null} if valid.
+     * @since 1.9
+     */
+    public static Map<Traceable, String> validateIncludingVersion(final Model model) {
+        Map<Traceable, String> errors = validate(model);
+        for(final Feature feature : model.getFeatures()) {
+            if ( feature.getVersion() == null ) {
+                if ( errors == null ) {
+                    errors = new HashMap<>();
+                }
+                addError(errors, feature, "Feature must have a version.");
+            }
+        }
+        return errors;
+    }
+
+    /**
+     * Add an error for the {@code Traceable} to the error map
+     * @param errors The map of errors
+     * @param object The traceable object
+     * @param error The error message
+     * @since 1.9
+     */
+    private static void addError(final Map<Traceable, String> errors, final Traceable object, final String error) {
+        String value = errors.get(object);
+        errors.put(object, (value == null ? error : value + " " + error));
+    }
 }

@@ -76,7 +76,7 @@ public class RegisteredResourceComparatorTest {
         }
         final RegisteredResourceImpl result = (RegisteredResourceImpl)rr.clone(tr[0]);
         if ( state != null ) {
-            result.setState(state);
+            result.setState(state, null);
         }
         return result;
     }

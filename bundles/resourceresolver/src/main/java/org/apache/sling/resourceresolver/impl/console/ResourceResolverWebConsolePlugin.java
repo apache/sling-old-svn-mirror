@@ -31,6 +31,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -46,7 +47,7 @@ import org.apache.sling.api.resource.runtime.dto.RuntimeDTO;
 import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.helper.URI;
 import org.apache.sling.resourceresolver.impl.helper.URIException;
-import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
+import org.apache.sling.resourceresolver.impl.mapping.MapEntriesHandler;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.BundleContext;
@@ -68,7 +69,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
     private final transient CommonResourceResolverFactoryImpl resolverFactory;
 
-    private transient ServiceRegistration service;
+    private transient ServiceRegistration<Servlet> service;
 
     private final transient RuntimeService runtimeService;
 
@@ -92,8 +93,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         props.put("felix.webconsole.category", "Sling");
         props.put("felix.webconsole.configprinter.modes", "always");
 
-        service = context.registerService(
-                new String[] { "javax.servlet.Servlet" }, this, props);
+        service = context.registerService(Servlet.class, this, props);
     }
 
     public void dispose() {
@@ -106,7 +106,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
     @Override
     protected void doGet(final HttpServletRequest request,
             final HttpServletResponse response) throws ServletException,
-            IOException {
+    IOException {
         final String msg = request.getParameter(PAR_MSG);
         final String test;
         if (msg != null) {
@@ -119,7 +119,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
 
-        final MapEntries mapEntries = resolverFactory.getMapEntries();
+        final MapEntriesHandler mapEntries = resolverFactory.getMapEntries();
 
         titleHtml(pw, "Configuration", null);
         pw.println("<tr class='content'>");
@@ -182,10 +182,6 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         }
 
         separatorHtml(pw);
-
-        dumpDTOsHtml(pw);
-
-        separatorHtml(pw);
         dumpMapHtml(
                 pw,
                 "Resolver Map Entries",
@@ -199,6 +195,10 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
                 "Mapping Map Entries",
                 "Lists the entries used by the ResourceResolver.map methods to map Resource Paths to URLs",
                 mapEntries.getMapMaps());
+
+        separatorHtml(pw);
+
+        dumpDTOsHtml(pw);
 
         pw.println("</table>");
 
@@ -217,9 +217,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
                 // prepare the request for the resource resolver
                 HttpServletRequest helper = new ResolverRequest(request, test);
 
-                // get an administrative resource resolver
-                resolver = resolverFactory
-                        .getAdministrativeResourceResolver(null);
+                resolver = resolverFactory.getServiceResourceResolver(this.resolverFactory.getServiceUserAuthenticationInfo("console"));
 
                 // map or resolve as instructed
                 Object result;
@@ -251,7 +249,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
         // finally redirect
         final String path = request.getContextPath() + request.getServletPath()
-                + request.getPathInfo();
+        + request.getPathInfo();
         final String redirectTo;
         if (msg == null) {
             redirectTo = path;
@@ -278,7 +276,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
         separatorText(pw);
 
-        final MapEntries mapEntries = resolverFactory.getMapEntries();
+        final MapEntriesHandler mapEntries = resolverFactory.getMapEntries();
 
         dumpMapText(pw, "Resolver Map Entries", mapEntries.getResolveMaps());
 
@@ -369,12 +367,13 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         }
     }
 
-    private ServiceReference getServiceReference(final long id) {
+    private ServiceReference<ResourceProvider<?>> getServiceReference(final long id) {
         try {
-            final ServiceReference[] refs = this.bundleContext.getServiceReferences(ResourceProvider.class.getName(),
+            final Collection<ServiceReference<ResourceProvider>> refs = this.bundleContext.getServiceReferences(ResourceProvider.class,
                     "(" + Constants.SERVICE_ID + "=" + String.valueOf(id) + ")");
-            if ( refs != null && refs.length > 0 ) {
-                return refs[0];
+            if ( refs != null && !refs.isEmpty() ) {
+                final ServiceReference rp = refs.iterator().next();
+                return rp;
             }
         } catch ( final InvalidSyntaxException ise) {
             // ignore
@@ -395,7 +394,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         final RuntimeDTO runtimeDTO = this.runtimeService.getRuntimeDTO();
         for(final ResourceProviderDTO dto : runtimeDTO.providers) {
             // get service reference
-            final ServiceReference ref = this.getServiceReference(dto.serviceId);
+            final ServiceReference<ResourceProvider<?>> ref = this.getServiceReference(dto.serviceId);
             final StringBuilder sb = new StringBuilder();
             if ( dto.name != null ) {
                 sb.append(dto.name);
@@ -454,7 +453,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
             for(final ResourceProviderFailureDTO dto : runtimeDTO.failedProviders) {
                 // get service reference
-                final ServiceReference ref = this.getServiceReference(dto.serviceId);
+                final ServiceReference<ResourceProvider<?>> ref = this.getServiceReference(dto.serviceId);
                 final StringBuilder sb = new StringBuilder();
                 if ( dto.name != null ) {
                     sb.append(dto.name);
@@ -495,7 +494,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         final RuntimeDTO runtimeDTO = this.runtimeService.getRuntimeDTO();
         for(final ResourceProviderDTO dto : runtimeDTO.providers) {
             // get service reference
-            final ServiceReference ref = this.getServiceReference(dto.serviceId);
+            final ServiceReference<ResourceProvider<?>> ref = this.getServiceReference(dto.serviceId);
             final StringBuilder sb = new StringBuilder();
             if ( dto.name != null ) {
                 sb.append(dto.name);
@@ -534,7 +533,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
             for(final ResourceProviderFailureDTO dto : runtimeDTO.failedProviders) {
                 // get service reference
-                final ServiceReference ref = this.getServiceReference(dto.serviceId);
+                final ServiceReference<ResourceProvider<?>> ref = this.getServiceReference(dto.serviceId);
                 final StringBuilder sb = new StringBuilder();
                 if ( dto.name != null ) {
                     sb.append(dto.name);

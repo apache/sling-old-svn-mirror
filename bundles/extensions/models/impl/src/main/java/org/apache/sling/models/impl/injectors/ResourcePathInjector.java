@@ -91,10 +91,13 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
         if (resources == null || resources.isEmpty()) {
             return null;
         }
-        // unwrap if necessary
+        // unwrap/wrap if necessary
         if (isDeclaredTypeCollection(declaredType)) {
             return resources;
-        } else if (resources.size() == 1) {
+        } if (declaredType instanceof Class<?> && ((Class<?>)declaredType).isArray()){
+            return resources.toArray(new Resource[0]);
+        }
+         if (resources.size() == 1) {
             return resources.get(0);
         } else {
             // multiple resources to inject, but field is not a list

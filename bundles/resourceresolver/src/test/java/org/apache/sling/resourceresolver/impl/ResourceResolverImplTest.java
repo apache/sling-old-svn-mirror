@@ -57,6 +57,7 @@ import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.reflection.Whitebox;
+import org.osgi.framework.Bundle;
 
 public class ResourceResolverImplTest {
 
@@ -90,7 +91,8 @@ public class ResourceResolverImplTest {
         activator.resourceProviderTracker = resourceProviderTracker;
         activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
         commonFactory = new CommonResourceResolverFactoryImpl(activator);
-        resFac = new ResourceResolverFactoryImpl(commonFactory, /* TODO: using Bundle */ null, null);
+        final Bundle usingBundle = mock(Bundle.class);
+        resFac = new ResourceResolverFactoryImpl(commonFactory, usingBundle, null);
         resResolver = resFac.getAdministrativeResourceResolver(null);
     }
 
@@ -205,8 +207,10 @@ public class ResourceResolverImplTest {
     @SuppressWarnings("deprecation")
     @Test
     public void testCloseWithStackTraceLogging() throws Exception {
+        ResourceResolverFactoryConfig config = mock(ResourceResolverFactoryConfig.class);
+        when(config.resource_resolver_log_closing()).thenReturn(true);
         ResourceResolverFactoryActivator rrfa = spy(new ResourceResolverFactoryActivator());
-        Whitebox.setInternalState(rrfa, "logResourceResolverClosing", true);
+        Whitebox.setInternalState(rrfa, "config", config);
         CommonResourceResolverFactoryImpl crrfi = new CommonResourceResolverFactoryImpl(rrfa);
         final ResourceResolver rr = new ResourceResolverImpl(crrfi, false, null, resourceProviderTracker);
         assertTrue(rr.isLive());
@@ -552,6 +556,35 @@ public class ResourceResolverImplTest {
         assertFalse(resolver.isResourceType(resourceT3, "/types/unknown"));
     }
 
+    /**
+     * @see <a href="https://issues.apache.org/jira/browse/SLING-6327">SLING-6327</a>
+     */
+    @Test public void testIsResourceTypeWithMixedAbsoluteAndRelativePaths() {
+        final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver(new String[] {"/apps/", "/libs/"});
+
+        Resource resourceT1 = resolver.add(new SyntheticResource(resolver, "/resourceT1", "types/1"));
+        Resource resourceT2 = resolver.add(new SyntheticResource(resolver, "/resourceT2", "/apps/types/2"));
+        Resource resourceT3 = resolver.add(new SyntheticResource(resolver, "/resourceT3", "/libs/types/3"));
+        Resource resourceT4 = resolver.add(new SyntheticResource(resolver, "/resourceT3", "/someprefix/types/4"));
+
+        assertTrue(resolver.isResourceType(resourceT1, "/libs/types/1"));
+        assertTrue(resolver.isResourceType(resourceT1, "/apps/types/1"));
+        assertTrue(resolver.isResourceType(resourceT1, "types/1"));
+
+        assertTrue(resolver.isResourceType(resourceT2, "/apps/types/2"));
+        assertTrue(resolver.isResourceType(resourceT2, "types/2"));
+        assertTrue(resolver.isResourceType(resourceT2, "/libs/types/2"));
+
+        assertTrue(resolver.isResourceType(resourceT3, "/apps/types/3"));
+        assertTrue(resolver.isResourceType(resourceT3, "types/3"));
+        assertTrue(resolver.isResourceType(resourceT3, "/libs/types/3"));
+
+        assertFalse(resolver.isResourceType(resourceT4, "/apps/types/4"));
+        assertFalse(resolver.isResourceType(resourceT4, "types/4"));
+        assertFalse(resolver.isResourceType(resourceT4, "/libs/types/4"));
+        assertTrue(resolver.isResourceType(resourceT4, "/someprefix/types/4"));
+    }
+
     @Test(expected=SlingException.class)  public void testIsResourceCyclicHierarchyDirect() {
         final PathBasedResourceResolverImpl resolver = getPathBasedResourceResolver();
 
@@ -596,9 +629,14 @@ public class ResourceResolverImplTest {
     }
 
     private PathBasedResourceResolverImpl getPathBasedResourceResolver() {
+        return getPathBasedResourceResolver(new String[] {""});
+    }
+
+
+    private PathBasedResourceResolverImpl getPathBasedResourceResolver(String[] searchPaths) {
         try {
             final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
-            final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker);
+            final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker, searchPaths);
             resolvers.add(resolver);
             return resolver;
         }
@@ -610,19 +648,26 @@ public class ResourceResolverImplTest {
     private static class PathBasedResourceResolverImpl extends ResourceResolverImpl {
 
         private final Map<String, Resource> resources = new HashMap<String, Resource>();
+        private final String[] searchPaths;
 
-        public PathBasedResourceResolverImpl(final List<ResourceResolver> resolvers, final ResourceProviderTracker resourceProviderTracker) throws LoginException {
+        public PathBasedResourceResolverImpl(final List<ResourceResolver> resolvers, final ResourceProviderTracker resourceProviderTracker, String[] searchPaths) throws LoginException {
             this(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
                 @Override
                 public ResourceResolver getAdministrativeResourceResolver(
                         Map<String, Object> authenticationInfo) throws LoginException {
                     return resolvers.get(0);
                 }
-            }, resourceProviderTracker);
+                @Override
+                public ResourceResolver getServiceResourceResolver(
+                        Map<String, Object> authenticationInfo) throws LoginException {
+                    return resolvers.get(0);
+                }
+            }, resourceProviderTracker, searchPaths);
         }
 
-        public PathBasedResourceResolverImpl(CommonResourceResolverFactoryImpl factory, ResourceProviderTracker resourceProviderTracker) throws LoginException {
+        public PathBasedResourceResolverImpl(CommonResourceResolverFactoryImpl factory, ResourceProviderTracker resourceProviderTracker, String[] searchPaths) throws LoginException {
             super(factory, false, null, resourceProviderTracker);
+            this.searchPaths = searchPaths;
         }
 
         public Resource add(final Resource r) {
@@ -632,7 +677,7 @@ public class ResourceResolverImplTest {
 
         @Override
         public String[] getSearchPath() {
-            return new String[] {""};
+            return searchPaths;
         }
 
         @Override

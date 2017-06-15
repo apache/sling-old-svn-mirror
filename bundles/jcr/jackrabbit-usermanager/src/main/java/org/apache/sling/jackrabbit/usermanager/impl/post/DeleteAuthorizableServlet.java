@@ -25,10 +25,6 @@ import javax.jcr.Session;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
@@ -37,7 +33,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jackrabbit.usermanager.DeleteAuthorizables;
 import org.apache.sling.jackrabbit.usermanager.DeleteGroup;
 import org.apache.sling.jackrabbit.usermanager.DeleteUser;
@@ -46,9 +41,9 @@ import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.osgi.service.component.annotations.Component;
 
 /**
- 
  * <h2>Rest Service Description</h2>
  * <p>
  * Deletes an Authorizable, currently a user or a group. Maps on to nodes of resourceType <code>sling/users</code> or <code>sling/users</code> like
@@ -57,16 +52,16 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * <code>/system/userManager/user.delete.html</code> or <code>/system/userManager/group.delete.html</code>.
  * The servlet also responds to single delete requests eg <code>/system/userManager/group/newGroup.delete.html</code>
  * </p>
- * <h4>Methods</h4>
+ * <h3>Methods</h3>
  * <ul>
  * <li>POST</li>
  * </ul>
- * <h4>Post Parameters</h4>
+ * <h3>Post Parameters</h3>
  * <dl>
  * <dt>:applyTo</dt>
  * <dd>An array of relative resource references to Authorizables to be deleted, if this parameter is present, the url is ignored and all the Authorizables in the list are removed.</dd>
  * </dl>
- * <h4>Response</h4>
+ * <h3>Response</h3>
  * <dl>
  * <dt>200</dt>
  * <dd>Success, no body.</dd>
@@ -75,32 +70,20 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * <dt>500</dt>
  * <dd>Failure</dd>
  * </dl>
- * <h4>Example</h4>
+ * <h3>Example</h3>
  * 
  * <code>
  * curl -Fgo=1 http://localhost:8080/system/userManager/user/ieb.delete.html
  * </code>
  */
-@Component (immediate=true, metatype=true,
-		label="%deleteAuthorizable.post.operation.name",
-		description="%deleteAuthorizable.post.operation.description")
-@Service (value={
-	Servlet.class,
-	DeleteUser.class,
-	DeleteGroup.class,
-	DeleteAuthorizables.class
-})		
-@Properties ({
-	@Property (name="sling.servlet.resourceTypes",
-			value={
-					"sling/user",
-					"sling/group",
-					"sling/userManager"
-				}),
-	@Property (name="sling.servlet.methods",
-			value="POST"),
-	@Property (name="sling.servlet.selectors",
-			value="delete")
+
+@Component(service = {Servlet.class, DeleteUser.class, DeleteGroup.class, DeleteAuthorizables.class},
+    property = {
+		   "sling.servlet.resourceTypes=sling/user",
+		   "sling.servlet.resourceTypes=sling/group",
+		   "sling.servlet.resourceTypes=sling/userManager",
+		   "sling.servlet.methods=POST",
+		   "sling.servlet.selectors=delete"
 })
 public class DeleteAuthorizableServlet extends AbstractPostServlet
         implements DeleteUser, DeleteGroup, DeleteAuthorizables {

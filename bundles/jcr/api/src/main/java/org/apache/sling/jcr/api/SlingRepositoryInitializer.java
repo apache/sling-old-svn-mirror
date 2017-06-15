@@ -18,21 +18,21 @@
  */
 package org.apache.sling.jcr.api;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * All active <code>SlingRepositoryInitializer</code> services are called before 
+ * All active <code>SlingRepositoryInitializer</code> services are called before
  * making the <code>SlingRepository</code> service available, and can perform
  * initializations on it, like creating service users, setting up initial access
  * control, migrating content in upgrades, etc.
- * 
+ *
  * The <code>SlingRepositoryInitializer</code> services need to be aware of any
  * repository clustering scenarios as well as multiple Sling instances accessing
- * the same repository. They might need to implement locking to avoid conflicts. 
+ * the same repository. They might need to implement locking to avoid conflicts.
  */
 @ConsumerType
 public interface SlingRepositoryInitializer {
-    /** Process the content repository before it is 
+    /** Process the content repository before it is
      *  registered as an OSGi service.
      *  @param repo the repository to process
      *  @throws Exception If anything happens that should prevent

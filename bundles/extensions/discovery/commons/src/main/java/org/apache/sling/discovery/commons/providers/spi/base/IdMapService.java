@@ -22,16 +22,11 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -39,53 +34,59 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * The IdMapService is responsible for storing a slingId-clusterNodeId
  * pair to the repository and given all other instances in the cluster
  * do the same can map clusterNodeIds to slingIds (or vice-versa)
  */
-@Component(immediate = false)
-@Service(value = { IdMapService.class })
-public class IdMapService extends AbstractServiceWithBackgroundCheck implements EventHandler {
+@Component(service = { IdMapService.class },
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    })
+public class IdMapService extends AbstractServiceWithBackgroundCheck implements ResourceChangeListener {
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private ResourceResolverFactory resourceResolverFactory;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private SlingSettingsService settingsService;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     private DiscoveryLiteConfig commonsConfig;
-    
+
     private boolean initialized = false;
-    
+
     private String slingId;
 
     private long me;
 
-    private final Map<Integer, String> oldIdMapCache = new HashMap<Integer, String>();
-    private final Map<Integer, String> idMapCache = new HashMap<Integer, String>();
+    private final Map<Integer, String> oldIdMapCache = new HashMap<>();
+    private final Map<Integer, String> idMapCache = new HashMap<>();
 
     private long lastCacheInvalidation = -1;
 
     private BundleContext bundleContext;
 
-    private ServiceRegistration eventHandlerRegistration;
-    
+    private volatile ServiceRegistration<ResourceChangeListener> eventHandlerRegistration;
+
     /** test-only constructor **/
     public static IdMapService testConstructor(
             DiscoveryLiteConfig commonsConfig,
-            SlingSettingsService settingsService, 
+            SlingSettingsService settingsService,
             ResourceResolverFactory resourceResolverFactory) {
         IdMapService service = new IdMapService();
         service.commonsConfig = commonsConfig;
@@ -99,9 +100,9 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
     protected void activate(BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         registerEventHandler();
-        
+
         startBackgroundCheck("IdMapService-initializer", new BackgroundCheck() {
-            
+
             @Override
             public boolean check() {
                 try {
@@ -113,7 +114,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
             }
         }, null, -1, 1000 /* = 1sec interval */);
     }
-    
+
     @Deactivate
     protected void deactivate() {
         if (eventHandlerRegistration != null) {
@@ -123,40 +124,38 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
         // SLING-5592: cancel the potentially running background thread
         cancelPreviousBackgroundCheck();
     }
-    
+
     private void registerEventHandler() {
         if (bundleContext == null) {
             logger.info("registerEventHandler: bundleContext is null - cannot register");
             return;
         }
-        Dictionary<String,Object> properties = new Hashtable<String,Object>();
+        Dictionary<String,Object> properties = new Hashtable<>();
         properties.put(Constants.SERVICE_DESCRIPTION, "IdMap Change Listener.");
+        properties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         String[] topics = new String[] {
-                SlingConstants.TOPIC_RESOURCE_ADDED,
-                SlingConstants.TOPIC_RESOURCE_CHANGED,
-                SlingConstants.TOPIC_RESOURCE_REMOVED };
-        properties.put(EventConstants.EVENT_TOPIC, topics);
-        String path = getIdMapPath();
-        if (path.endsWith("/")) {
-            path = path.substring(0, path.length()-1);
-        }
-        properties.put(EventConstants.EVENT_FILTER, "(&(path="+path+"))");
-        eventHandlerRegistration = bundleContext.registerService(
-                EventHandler.class.getName(), this, properties);
+                ChangeType.ADDED.toString(),
+                ChangeType.CHANGED.toString(),
+                ChangeType.REMOVED.toString()
+                };
+        properties.put(ResourceChangeListener.CHANGES, topics);
+        properties.put(ResourceChangeListener.PATHS, getIdMapPath());
+
+        this.eventHandlerRegistration = bundleContext.registerService(ResourceChangeListener.class, this, properties);
     }
 
     /** Get or create a ResourceResolver **/
     private ResourceResolver getResourceResolver() throws LoginException {
-        return resourceResolverFactory.getAdministrativeResourceResolver(null);
+        return resourceResolverFactory.getServiceResourceResolver(null);
     }
-    
+
     public synchronized long getMyId() {
         if (!initialized) {
             return -1;
         }
         return me;
     }
-    
+
     /** for testing only **/
     public synchronized boolean waitForInit(long timeout) {
         long start = System.currentTimeMillis();
@@ -177,12 +176,12 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
         }
         return initialized;
     }
-    
+
     public synchronized boolean isInitialized() {
         return initialized;
     }
 
-    private synchronized boolean init() throws LoginException, JSONException, PersistenceException {
+    private synchronized boolean init() throws LoginException, PersistenceException {
         if (initialized) {
             return true;
         }
@@ -190,7 +189,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
         ResourceResolver resourceResolver = null;
         try{
             resourceResolver = getResourceResolver();
-            DiscoveryLiteDescriptor descriptor = 
+            DiscoveryLiteDescriptor descriptor =
                     DiscoveryLiteDescriptor.getDescriptorFrom(resourceResolver);
             long me = descriptor.getMyId();
             final Resource resource = ResourceHelper.getOrCreateResource(resourceResolver, getIdMapPath());
@@ -199,7 +198,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
             // or when my clusterNodeId is already mapped to another slingId
             // in both cases: clean that up
             boolean foundMe = false;
-            for (String aKey : new HashSet<String>(idmap.keySet())) {
+            for (String aKey : new HashSet<>(idmap.keySet())) {
                 Object value = idmap.get(aKey);
                 if (value instanceof Number) {
                     Number n = (Number)value;
@@ -243,9 +242,9 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
                 resourceResolver.close();
             }
         }
-        
+
     }
-    
+
     public synchronized void clearCache() {
         if (!idMapCache.isEmpty()) {
             logger.debug("clearCache: clearing idmap cache");
@@ -266,7 +265,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
             // force a cache invalidation).
             // we can either rely on observation - or combine that with
             // an invalidation of once per minute
-            // (note that this means we'll be reading 
+            // (note that this means we'll be reading
             // /var/discovery/oak/idMap once per minute - but that sounds
             // perfectly fine)
             clearCache();
@@ -295,14 +294,14 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
                 logger.info("toSlingId: mapping for "+oldEntry.getKey()+" to "+oldEntry.getValue()+" disappeared.");
             }
         }
-        
+
         return idMapCache.get(clusterNodeId);
     }
-    
+
     private Map<Integer, String> readIdMap(ResourceResolver resourceResolver) throws PersistenceException {
         Resource resource = ResourceHelper.getOrCreateResource(resourceResolver, getIdMapPath());
         ValueMap idmapValueMap = resource.adaptTo(ValueMap.class);
-        Map<Integer, String> idmap = new HashMap<Integer, String>();
+        Map<Integer, String> idmap = new HashMap<>();
         for (String slingId : idmapValueMap.keySet()) {
             Object value = idmapValueMap.get(slingId);
             if (value instanceof Number) {
@@ -318,18 +317,11 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
     }
 
     @Override
-    public void handleEvent(Event event) {
-        final String resourcePath = (String) event.getProperty("path");
-        if (resourcePath == null) {
-            // not of my business
-            return;
-        }
-        
-        if (!resourcePath.startsWith(getIdMapPath())) {
-            // not of my business
-            return;
-        }
-        logger.debug("handleEvent: got event for path: {}, event: {}", resourcePath, event);
+    public void onChange(List<ResourceChange> changes) {
+        // the listener is registered on the .../idmap subpath, so any
+        // change it receives should be relevant. hence no further
+        // filtering necessary here.
+        logger.debug("onChange: got notified of changes, clearing cache.");
         clearCache();
     }
 

@@ -24,108 +24,93 @@ import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.annotation.Nonnull;
 import javax.script.Compilable;
-import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.scripting.api.CachedScript;
 import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.core.impl.helper.CachingMap;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(
-        metatype = true,
-        label = "Apache Sling Script Cache",
-        description = "The Script Cache is useful for running previously compiled scripts."
-)
-@Properties({
-        @Property(
-                name = ScriptCacheImpl.PROP_CACHE_SIZE,
-                intValue = ScriptCacheImpl.DEFAULT_CACHE_SIZE,
-                label = "Cache Size",
-                description = "The Cache Size defines the maximum number of compiled script references that will be stored in the cache's" +
-                        " internal map."
-        ),
-        @Property(
-                name = ScriptCacheImpl.PROP_ADDITIONAL_EXTENSIONS,
-                value = "",
-                label = "Additional Extensions",
-                description = "Scripts from the search paths with these extensions will also be monitored so that changes to them will " +
-                        "clean the cache if the cache contains them.",
-                unbounded = PropertyUnbounded.ARRAY
-        )
-})
-@Service(ScriptCache.class)
-@Reference(
-        name = "scriptEngineFactory",
-        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-        referenceInterface = ScriptEngineFactory.class,
+    service = ScriptCache.class,
+    reference = @Reference(
+        name = "ScriptEngineFactory",
+        service = ScriptEngineFactory.class,
+        cardinality = ReferenceCardinality.MULTIPLE,
         policy = ReferencePolicy.DYNAMIC
+    ),
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
 )
-@SuppressWarnings("unused")
+@Designate(
+    ocd = ScriptCacheImplConfiguration.class
+)
 /**
  * The {@code ScriptCache} stores information about {@link CompiledScript} instances evaluated by various {@link ScriptEngine}s that
  * implement the {@link Compilable} interface.
  */
-public class ScriptCacheImpl implements EventHandler, ScriptCache {
+public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, ExternalResourceChangeListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ScriptCacheImpl.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(ScriptCacheImpl.class);
 
     public static final int DEFAULT_CACHE_SIZE = 65536;
-    public static final String PROP_CACHE_SIZE = "org.apache.sling.scripting.cache.size";
-    public static final String PROP_ADDITIONAL_EXTENSIONS = "org.apache.sling.scripting.cache.additional_extensions";
 
     private BundleContext bundleContext;
     private Map<String, SoftReference<CachedScript>> internalMap;
-    private ServiceRegistration eventHandlerServiceRegistration = null;
-    private Set<String> extensions = new HashSet<String>();
+    private ServiceRegistration<ResourceChangeListener> resourceChangeListener;
+    private Set<String> extensions = new HashSet<>();
     private String[] additionalExtensions = new String[]{};
     private String[] searchPaths = {};
 
     // use a static policy so that we can reconfigure the watched script files if the search paths are changed
-    @Reference(policy = ReferencePolicy.STATIC)
-    private ResourceResolverFactory rrf = null;
+    @Reference
+    private ResourceResolverFactory rrf;
 
     @Reference
-    private ThreadPoolManager threadPoolManager = null;
+    private ThreadPoolManager threadPoolManager;
 
     private ThreadPool threadPool;
     private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
     private final Lock readLock = rwl.readLock();
     private final Lock writeLock = rwl.writeLock();
-    boolean active = false;
+    private volatile boolean active = false;
+
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
 
     public ScriptCacheImpl() {
-        internalMap = new CachingMap<CachedScript>(DEFAULT_CACHE_SIZE);
+        internalMap = new CachingMap<>(DEFAULT_CACHE_SIZE);
     }
 
     @Override
@@ -146,8 +131,9 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
         try {
             for (String searchPath : searchPaths) {
                 if (script.getScriptPath().startsWith(searchPath)) {
-                    SoftReference<CachedScript> reference = new SoftReference<CachedScript>(script);
+                    SoftReference<CachedScript> reference = new SoftReference<>(script);
                     internalMap.put(script.getScriptPath(), reference);
+                    LOGGER.debug("Added script {} to script cache.", script.getScriptPath());
                     break;
                 }
             }
@@ -161,6 +147,7 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
         writeLock.lock();
         try {
             internalMap.clear();
+            LOGGER.debug("Cleared script cache.");
         } finally {
             writeLock.unlock();
         }
@@ -171,31 +158,40 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
         writeLock.lock();
         try {
             SoftReference<CachedScript> reference = internalMap.remove(scriptPath);
-            if (reference != null) {
-                return true;
+            boolean result = reference != null;
+            if (result) {
+                LOGGER.debug("Removed script {} from script cache.", scriptPath);
             }
-            return false;
+            return result;
         } finally {
             writeLock.unlock();
         }
     }
 
     @Override
-    public void handleEvent(final Event event) {
-        /**
-         * since the events trigger a synchronised map operation (remove in this case) we should handle events asynchronously so that we
-         * don't block event processing
-         */
-        final String topic = event.getTopic();
-        if (SlingConstants.TOPIC_RESOURCE_CHANGED.equals(topic) || SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
+    public void onChange(@Nonnull List<ResourceChange> list) {
+        for (final ResourceChange change : list) {
             Runnable eventTask = new Runnable() {
                 @Override
                 public void run() {
-                    String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
+                    String path = change.getPath();
                     writeLock.lock();
                     try {
-                        internalMap.remove(path);
+                        final boolean removed = internalMap.remove(path) != null;
                         LOGGER.debug("Detected script change for {} - removed entry from the cache.", path);
+                        if ( !removed && change.getType() == ChangeType.REMOVED ) {
+                            final String prefix = path + "/";
+                            final Set<String> removal = new HashSet<>();
+                            for(final Map.Entry<String, SoftReference<CachedScript>> entry : internalMap.entrySet()) {
+                                if ( entry.getKey().startsWith(prefix) ) {
+                                    removal.add(entry.getKey());
+                                }
+                            }
+                            for(final String key : removal) {
+                                internalMap.remove(key);
+                                LOGGER.debug("Detected removal for {} - removed entry {} from the cache.", path, key);
+                            }
+                        }
                     } finally {
                         writeLock.unlock();
                     }
@@ -215,77 +211,69 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
     }
 
     @Activate
-    @SuppressWarnings("unused")
-    protected void activate(ComponentContext componentContext) {
+    protected void activate(ScriptCacheImplConfiguration configuration, BundleContext bundleCtx) {
         threadPool = threadPoolManager.get("Script Cache Thread Pool");
-        bundleContext = componentContext.getBundleContext();
-        Dictionary properties = componentContext.getProperties();
-        additionalExtensions = PropertiesUtil.toStringArray(properties.get(PROP_ADDITIONAL_EXTENSIONS));
-        int newMaxCacheSize = PropertiesUtil.toInteger(properties.get(PROP_CACHE_SIZE), DEFAULT_CACHE_SIZE);
+        bundleContext = bundleCtx;
+        additionalExtensions = configuration.org_apache_sling_scripting_cache_additional__extensions();
+        int newMaxCacheSize = configuration.org_apache_sling_scripting_cache_size();
         if (newMaxCacheSize != DEFAULT_CACHE_SIZE) {
             // change the map only if there's a configuration change regarding the cache's max size
-            CachingMap<CachedScript> newMap = new CachingMap<CachedScript>(newMaxCacheSize);
+            CachingMap<CachedScript> newMap = new CachingMap<>(newMaxCacheSize);
             newMap.putAll(internalMap);
             internalMap = newMap;
         }
         ResourceResolver resolver = null;
         try {
-            resolver = rrf.getAdministrativeResourceResolver(null);
+            resolver = rrf.getServiceResourceResolver(null);
             searchPaths = resolver.getSearchPath();
         } catch (LoginException e) {
-            LOGGER.error("Unable to store search paths.", e);
+            LOGGER.error("Unable to retrieve a ResourceResolver for determining the search paths.", e);
         } finally {
             if (resolver != null) {
                 resolver.close();
             }
         }
+
         configureCache();
         active = true;
     }
 
-    @SuppressWarnings("unchecked")
     private void configureCache() {
         writeLock.lock();
-        ResourceResolver adminResolver = null;
         try {
-            if (eventHandlerServiceRegistration != null) {
-                eventHandlerServiceRegistration.unregister();
-                eventHandlerServiceRegistration = null;
+            if (resourceChangeListener != null) {
+                resourceChangeListener.unregister();
+                resourceChangeListener = null;
             }
             internalMap.clear();
             extensions.addAll(Arrays.asList(additionalExtensions));
-            if (extensions.size() > 0) {
-                adminResolver = rrf.getAdministrativeResourceResolver(null);
-                StringBuilder eventHandlerFilter = new StringBuilder("(|");
-                for (String searchPath : adminResolver.getSearchPath()) {
-                    for (String extension : extensions) {
-                        eventHandlerFilter.append("(path=").append(searchPath).append("**/*.").append(extension).append(")");
-                    }
+            if (!extensions.isEmpty()) {
+                Set<String> globPatterns = new HashSet<>(extensions.size());
+                for (String extension : extensions) {
+                    globPatterns.add("glob:**/*." + extension);
                 }
-                eventHandlerFilter.append(")");
-                Dictionary eventHandlerProperties = new Hashtable();
-                eventHandlerProperties.put(EventConstants.EVENT_FILTER, eventHandlerFilter.toString());
-                eventHandlerProperties.put(EventConstants.EVENT_TOPIC,
-                        new String[]{SlingConstants.TOPIC_RESOURCE_CHANGED, SlingConstants.TOPIC_RESOURCE_REMOVED});
-                eventHandlerServiceRegistration = bundleContext.registerService(EventHandler.class.getName(), this, eventHandlerProperties);
+                Dictionary<String, Object> resourceChangeListenerProperties = new Hashtable<>();
+                resourceChangeListenerProperties.put(ResourceChangeListener.PATHS, globPatterns.toArray(new String[globPatterns.size()]));
+                resourceChangeListenerProperties.put(ResourceChangeListener.CHANGES,
+                        new String[]{ResourceChange.ChangeType.CHANGED.name(), ResourceChange.ChangeType.REMOVED.name()});
+                resourceChangeListener =
+                        bundleContext.registerService(
+                                ResourceChangeListener.class,
+                                this,
+                                resourceChangeListenerProperties
+                        );
             }
-        } catch (LoginException e) {
-            LOGGER.error("Unable to set automated cache invalidation for the ScriptCache.", e);
         } finally {
-            if (adminResolver != null) {
-                adminResolver.close();
-            }
             writeLock.unlock();
         }
     }
 
     @Deactivate
-    @SuppressWarnings("unused")
-    protected void deactivate(ComponentContext componentContext) {
+    protected void deactivate() {
         internalMap.clear();
-        if (eventHandlerServiceRegistration != null) {
-            eventHandlerServiceRegistration.unregister();
-            eventHandlerServiceRegistration = null;
+        if (resourceChangeListener != null) {
+            resourceChangeListener.unregister();
+            resourceChangeListener = null;
         }
         if (threadPool != null) {
             threadPoolManager.release(threadPool);
@@ -294,7 +282,7 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
         active = false;
     }
 
-    protected void bindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory, Map<String, Object> properties) {
+    protected void bindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
         ScriptEngine engine = scriptEngineFactory.getScriptEngine();
         if (engine instanceof Compilable) {
             /**
@@ -309,7 +297,7 @@ public class ScriptCacheImpl implements EventHandler, ScriptCache {
         }
     }
 
-    protected void unbindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory, Map<String, Object> properties) {
+    protected void unbindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
         for (String extension : scriptEngineFactory.getExtensions()) {
             extensions.remove(extension);
         }

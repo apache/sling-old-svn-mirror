@@ -18,7 +18,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.compiler;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * This class describes the messages (warnings or errors) the {@link SightlyCompiler} will produce when compiling a script.

@@ -37,10 +37,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.felix.utils.json.JSONWriter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +87,12 @@ public class SourceReferencesServlet extends HttpServlet {
             
             for ( Bundle bundle : ctx.getBundleContext().getBundles() ) {
 
+                // skip bundle if it is a fragment (http://stackoverflow.com/questions/11655295/using-the-osgi-api-how-do-i-find-out-if-a-given-bundle-is-a-fragment)
+                if ((bundle.adapt(BundleRevision.class).getTypes() & BundleRevision.TYPE_FRAGMENT) != 0) {
+                    log.debug("Skip bundle '{}' because it is a fragment", bundle);
+                    // source references should only be listed with the host bundle
+                    continue;
+                }
                 Object bundleVersion = bundle.getHeaders().get(Constants.BUNDLE_VERSION);
                 
                 w.object();
@@ -134,12 +140,12 @@ public class SourceReferencesServlet extends HttpServlet {
             }
             
             w.endArray();
-        } catch (JSONException e) {
+        } catch (IOException e) {
             throw new ServletException(e);
         }
     }
 
-    private void collectMavenSourceReferences(JSONWriter w, Bundle bundle) throws IOException, JSONException {
+    private void collectMavenSourceReferences(JSONWriter w, Bundle bundle) throws IOException {
         
         Enumeration<?> entries = bundle.findEntries("/META-INF/maven", "pom.properties", true);
         
@@ -155,7 +161,7 @@ public class SourceReferencesServlet extends HttpServlet {
         }
     }
     
-    private void writeMavenGav(JSONWriter w, String groupId, String artifactId, String version) throws JSONException {
+    private void writeMavenGav(JSONWriter w, String groupId, String artifactId, String version) throws IOException {
         
         w.object();
         w.key(KEY_TYPE).value(VALUE_TYPE_MAVEN);
@@ -165,7 +171,7 @@ public class SourceReferencesServlet extends HttpServlet {
         w.endObject();
     }
     
-    private void writeMavenGav(JSONWriter w, InputStream in) throws IOException, JSONException {
+    private void writeMavenGav(JSONWriter w, InputStream in) throws IOException {
         
         Properties p = new Properties();
         p.load(in);
@@ -196,7 +202,7 @@ public class SourceReferencesServlet extends HttpServlet {
         return embeddedJars;
     }
     
-    private void collectMavenSourceRerefences(JSONWriter w, URL entry) throws IOException, JSONException {
+    private void collectMavenSourceRerefences(JSONWriter w, URL entry) throws IOException {
         
         InputStream wrappedIn = entry.openStream();
         try {

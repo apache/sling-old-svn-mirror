@@ -86,7 +86,10 @@ public interface ThreadPoolMBean {
      * Return the configured max thread age.
      *
      * @return The configured max thread age.
+     * @deprecated Since version 1.1.1 always returns -1 as threads are no longer retired
+     * but instead the thread locals are cleaned up (<a href="https://issues.apache.org/jira/browse/SLING-6261">SLING-6261</a>)
      */
+    @Deprecated
     long getMaxThreadAge();
 
     /**

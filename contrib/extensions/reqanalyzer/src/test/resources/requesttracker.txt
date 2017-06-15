@@ -1,0 +1,7 @@
+:1483519553437:3:GET:/libs/mylib/data.json:application/json; charset=ISO-8859-1:200
+!      0 TIMER_START{Request Processing}
+!      2 COMMENT timer_end format is {<elapsed microseconds>,<timer name>} <optional message>
+!     11 LOG Method=GET, PathInfo=/libs/mylib/data.json
+!  16431 LOG Including resource MyResource, type=my/ohmy/type, superType=null, path=/libs/mylib:foo (SlingRequestPathInfo: path='/libs/mylib:foo', selectorString='null', extension='json', suffix='/my/my.html')
+! 925338 TIMER_START{resolveServlet(/my/servlet)}
+! 925353 TIMER_END{13,resolveServlet(/my/servlet)} Using servlet /libs/mylib/mylib.jsp

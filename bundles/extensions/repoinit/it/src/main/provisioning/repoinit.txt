@@ -19,16 +19,20 @@
 [feature name=repoinit-tests]
 
 [artifacts startLevel=2]
-  org.apache.sling/org.apache.sling.jcr.repoinit/1.0.1-SNAPSHOT
-  org.apache.sling/org.apache.sling.repoinit.parser/1.0.3-SNAPSHOT
+  org.apache.sling/org.apache.sling.jcr.repoinit/1.1.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.repoinit.parser/1.1.1-SNAPSHOT
   org.apache.sling/org.apache.sling.provisioning.model/1.4.2
 
 [artifacts]
-  org.apache.sling/org.apache.sling.junit.core/1.0.14
+  org.apache.sling/org.apache.sling.junit.core/1.0.17-SNAPSHOT
   org.apache.sling/org.apache.sling.testing.tools/1.0.10
     
 [settings]
   org.apache.sling.commons.log.julenabled=true
+
+[configurations]
+  org.apache.sling.jcr.repoinit.impl.RepositoryInitializer
+    references=["model:context:/resources/provisioning/model.txt","model@repoinitTwo:context:/resources/provisioning/model.txt"]
 
 [:repoinit]
 # Test the RepositoryInitializer which reads such sections  
@@ -48,3 +52,7 @@ register nodetypes
 << <slingtest='http://sling.apache.org/ns/test/repoinit-it/v1.0'>
 << [slingtest:unstructured] > nt:unstructured
 ===>>
+
+# second section to test multiple configured URLs
+[:repoinitTwo]
+create service user secondUserFromProvisioningModel

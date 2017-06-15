@@ -18,6 +18,7 @@
  ******************************************************************************/
 package apps.sightlyperf.test;
 
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.script.Bindings;
@@ -84,5 +85,9 @@ public class Test implements Use {
 
     public Iterator<Resource> getChildren() {
         return this.children;
+    }
+
+    public Date getDate() {
+        return new Date();
     }
 }

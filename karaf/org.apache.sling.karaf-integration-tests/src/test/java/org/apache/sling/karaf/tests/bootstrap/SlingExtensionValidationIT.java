@@ -57,4 +57,11 @@ public class SlingExtensionValidationIT extends KarafTestSupport {
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
+    @Test
+    public void testOrgApacheCommonsCollections4() {
+        final Bundle bundle = findBundle("org.apache.commons.collections4");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
 }

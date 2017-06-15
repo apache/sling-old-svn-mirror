@@ -33,6 +33,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link org.apache.sling.distribution.component.impl.DistributionConfigurationManager} implementation based on OSGI configs.
@@ -52,22 +54,22 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
     @Property(label = "Resource Config Root", description = "The resource config root", value = "/etc/distribution")
     public static final String CONFIG_ROOT = "resource.config.root";
 
-    @Property(label = "Resource Config Properties", description = "The resource config properties", value = { "enabled" } )
-    public static final String CONFIG_PROPERTIES= "resource.config.properties";
+    @Property(label = "Resource Config Properties", description = "The resource config properties", value = {"enabled"})
+    public static final String CONFIG_PROPERTIES = "resource.config.properties";
 
-    @Property(label = "Resource Config Defaults", description = "The default values for resource config properties", value = { "serializationType=distribution" } )
+    @Property(label = "Resource Config Defaults", description = "The default values for resource config properties", value = {"serializationType=distribution"})
     public static final String CONFIG_DEFAULTS = "resource.config.defaults";
 
     @Reference
     ConfigurationAdmin configurationAdmin;
 
-    DistributionConfigurationManager osgiManager;
-    DistributionConfigurationManager resourceManager;
+    private DistributionConfigurationManager osgiManager;
+    private DistributionConfigurationManager resourceManager;
 
     static String resourcePrefix;
     static final String OSGI_PREFIX = "";
 
-
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Activate
     void activate(Map<String, Object> properties) {
@@ -121,8 +123,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
 
     @Override
     public void saveConfig(ResourceResolver resolver, DistributionConfiguration config) {
-
-
+        log.debug("saving config {}", config);
 
         if (resourceManager != null) {
             Map<String, DistributionConfiguration> splitConfig = splitConfig(config, resourcePrefix);
@@ -132,12 +133,15 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
             osgiManager.saveConfig(resolver, defaultConfig);
 
             DistributionConfiguration resourceConfig = splitConfig.get(resourcePrefix);
+            log.debug("retrieved config {}", resourceConfig);
 
             if (resourceConfig != null) {
                 resourceManager.saveConfig(resolver, resourceConfig);
+                log.debug("saved resource config: {}", resourceConfig);
             }
         } else {
             osgiManager.saveConfig(resolver, config);
+            log.debug("saved osgi config: {}", config);
         }
     }
 
@@ -149,7 +153,6 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
             resourceManager.deleteConfig(resolver, kind, name);
         }
     }
-
 
     static DistributionConfiguration mergeConfig(DistributionConfiguration main, DistributionConfiguration extension, String prefix) {
 
@@ -164,8 +167,6 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
 
         return mergeConfig(main.getKind(), main.getName(), configMap);
     }
-
-
 
     static DistributionConfiguration mergeConfig(DistributionComponentKind kind, String name, Map<String, DistributionConfiguration> configMap) {
         Map<String, Object> result = new HashMap<String, Object>();
@@ -197,7 +198,6 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
             sourceMap.put(config.getName(), config);
         }
 
-
         for (DistributionConfiguration targetConfig : target) {
             DistributionConfiguration sourceConfig = sourceMap.get(targetConfig.getName());
 
@@ -209,21 +209,32 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
         return result;
     }
 
-    static Map<String, DistributionConfiguration> splitConfig(DistributionConfiguration config, String prefix) {
-        Map<String, Object> properties = config.getProperties();
+    /**
+     * Split a {@link DistributionConfiguration} into two configurations, so that properties starting with a certain prefix
+     * go to a separate configuration while the remaining ones will live in a new configuration
+     * @param config a configuration
+     * @param prefix a prefix
+     * @return a {@link Map} of prefix -> configuration
+     */
+    private static Map<String, DistributionConfiguration> splitConfig(DistributionConfiguration config, String prefix) {
+        Map<String, Object> distributionConfigurationProperties = config.getProperties();
 
+        // properties for OSGi configuration
         Map<String, Object> defaultMap = new HashMap<String, Object>();
+
+        // properties for resource configuration
         Map<String, Object> prefixMap = new HashMap<String, Object>();
 
-
-        for (String propertyKey : properties.keySet()) {
-            if (propertyKey.startsWith(prefix)) {
-                prefixMap.put(propertyKey.substring(prefix.length()), properties.get(propertyKey));
+        // split the properties of the given configuration between the OSGi config and the persisted config
+        for (String configurationPropertyKey : distributionConfigurationProperties.keySet()) {
+            if (configurationPropertyKey.startsWith(prefix)) {
+                prefixMap.put(configurationPropertyKey.substring(prefix.length()), distributionConfigurationProperties.get(configurationPropertyKey));
             } else {
-                defaultMap.put(propertyKey, properties.get(propertyKey));
+                defaultMap.put(configurationPropertyKey, distributionConfigurationProperties.get(configurationPropertyKey));
             }
         }
 
+        // create an OSGi and a persisted configuration
         Map<String, DistributionConfiguration> result = new HashMap<String, DistributionConfiguration>();
         result.put(OSGI_PREFIX, new DistributionConfiguration(config.getKind(), config.getName(), defaultMap));
         if (prefixMap.size() > 0) {

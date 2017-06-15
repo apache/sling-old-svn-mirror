@@ -16,13 +16,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
-        <relativePath/>
+        <version>30</version>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.paxexam.util</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Pax Exam Utilities</name>
@@ -96,9 +96,7 @@
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.2.0</version>
-            <scope>provided</scope>
+            <artifactId>osgi.cmpn</artifactId>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
@@ -126,7 +124,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.2.1</version>
+            <version>5.6.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -162,7 +160,6 @@
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
-            <version>2.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -176,7 +173,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

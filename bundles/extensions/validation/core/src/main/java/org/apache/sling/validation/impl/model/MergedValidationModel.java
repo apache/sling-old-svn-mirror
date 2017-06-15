@@ -18,7 +18,6 @@
  */
 package org.apache.sling.validation.impl.model;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +41,7 @@ public class MergedValidationModel implements ValidationModel {
     private final ValidationModel baseModel;
     private final Map<String, ResourceProperty> resourcePropertiesMap;
     private final Map<String, ChildResource> childResourceMap;
+    private final @Nonnull String source;
     
     public MergedValidationModel(ValidationModel baseModel, ValidationModel... modelsToMerge) {
         this.baseModel = baseModel;
@@ -55,7 +55,7 @@ public class MergedValidationModel implements ValidationModel {
         for (ChildResource childResource : baseModel.getChildren()) {
             childResourceMap.put(childResource.getName(), childResource);
         }
-        
+        StringBuilder sourceStringBuilder = new StringBuilder(baseModel.getSource());
         for (ValidationModel modelToMerge : modelsToMerge) {
             for (ResourceProperty resourceProperty : modelToMerge.getResourceProperties()) {
                 // only if name is not already used, the resource property should be considered
@@ -72,11 +72,13 @@ public class MergedValidationModel implements ValidationModel {
             // throw exception if the applicable path is restricted in the modelToMerge in comparison to baseModel
             for (String path : modelToMerge.getApplicablePaths()) {
                 if (isPathRestricted(path, baseModel.getApplicablePaths())) {
-                    String msg = String.format("The path '%s' from one of the models to merge is more specific than any of the base paths (%s)", path, Arrays.toString(baseModel.getApplicablePaths()));
+                    String msg = String.format("The path '%s' from one of the models to merge is more specific than any of the base paths (%s)", path, baseModel.getApplicablePaths());
                     throw new IllegalArgumentException(msg);
                 }
             }
+            sourceStringBuilder.append(" + ").append(modelToMerge.getSource());
         }
+        source = sourceStringBuilder.toString();
     }
     
     /**
@@ -85,7 +87,7 @@ public class MergedValidationModel implements ValidationModel {
      * @param pathsToCompareWith
      * @return {@code true} in case the given path is either more specific or not at all overlapping with one of the pathsToCompareWith
      */
-    private boolean isPathRestricted(String path, String[] pathsToCompareWith) {
+    private boolean isPathRestricted(String path, Collection<String> pathsToCompareWith) {
         for (String basePath : pathsToCompareWith) {
             if (basePath.startsWith(path)) {
                 return false;
@@ -102,13 +104,13 @@ public class MergedValidationModel implements ValidationModel {
 
     @Override
     @Nonnull
-    public String getValidatedResourceType() {
-        return baseModel.getValidatedResourceType();
+    public String getValidatingResourceType() {
+        return baseModel.getValidatingResourceType();
     }
 
     @Override
     @Nonnull
-    public String[] getApplicablePaths() {
+    public Collection<String> getApplicablePaths() {
         return baseModel.getApplicablePaths();
     }
 
@@ -116,6 +118,12 @@ public class MergedValidationModel implements ValidationModel {
     @Nonnull
     public Collection<ChildResource> getChildren() {
         return childResourceMap.values();
+    }
+
+    @Override
+    @Nonnull
+    public String getSource() {
+        return source;
     }
 
 }

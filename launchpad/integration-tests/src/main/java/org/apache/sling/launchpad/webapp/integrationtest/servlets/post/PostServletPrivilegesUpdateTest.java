@@ -35,18 +35,20 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonString;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.commons.testing.integration.NameValuePairList;
 import org.apache.sling.launchpad.webapp.integrationtest.AuthenticatedTestUtil;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.junit.After;
 import org.junit.Before;
@@ -93,7 +95,7 @@ public class PostServletPrivilegesUpdateTest {
      */
     @Test 
     @Ignore // TODO fails on jackrabbit 2.6.5 and on Oak
-    public void testUpdatePropertyPrivilegesAndEvents() throws IOException, JSONException, RepositoryException, InterruptedException {
+    public void testUpdatePropertyPrivilegesAndEvents() throws IOException, JsonException, RepositoryException, InterruptedException {
     	//1. Create user as admin (OK)
         // curl -F:name=myuser -Fpwd=password -FpwdConfirm=password http://admin:admin@localhost:8080/system/userManager/user.create.html
     	testUserId = H.createTestUser();
@@ -109,16 +111,16 @@ public class PostServletPrivilegesUpdateTest {
     	String testNodeUrl = H.getTestClient().createNode(createTestNodeUrl, clientNodeProperties, null, false);
 
         String content = H.getContent(testNodeUrl + ".json", HttpTest.CONTENT_TYPE_JSON);
-        JSONObject json = new JSONObject(content);
-        Object propOneObj = json.opt("propOne");
-        assertTrue(propOneObj instanceof JSONArray);
-        assertEquals(2, ((JSONArray)propOneObj).length());
-        assertEquals("propOneValue1", ((JSONArray)propOneObj).get(0));
-        assertEquals("propOneValue2", ((JSONArray)propOneObj).get(1));
+        JsonObject json = JsonUtil.parseObject(content);
+        Object propOneObj = json.get("propOne");
+        assertTrue(propOneObj instanceof JsonArray);
+        assertEquals(2, ((JsonArray)propOneObj).size());
+        assertEquals("propOneValue1", ((JsonArray)propOneObj).getString(0));
+        assertEquals("propOneValue2", ((JsonArray)propOneObj).getString(1));
     	
-        Object propTwoObj = json.opt("propTwo");
-        assertTrue(propTwoObj instanceof String);
-        assertEquals("propTwoValue", propTwoObj);
+        Object propTwoObj = json.get("propTwo");
+        assertTrue(propTwoObj instanceof JsonString);
+        assertEquals("propTwoValue", ((JsonString) propTwoObj).getString());
     	
     	
         //3. Attempt to update property of node as testUser (500: javax.jcr.AccessDeniedException: /test/node/propOne: not allowed to add or modify item)
@@ -161,17 +163,17 @@ public class PostServletPrivilegesUpdateTest {
         	
         	//verify the change happened
             String afterUpdateContent = H.getContent(testNodeUrl + ".json", HttpTest.CONTENT_TYPE_JSON);
-            JSONObject afterUpdateJson = new JSONObject(afterUpdateContent);
-            Object afterUpdatePropOneObj = afterUpdateJson.opt("propOne");
-            assertTrue(afterUpdatePropOneObj instanceof JSONArray);
-            assertEquals(1, ((JSONArray)afterUpdatePropOneObj).length());
-            assertEquals("propOneValueChanged", ((JSONArray)afterUpdatePropOneObj).get(0));
+            JsonObject afterUpdateJson = JsonUtil.parseObject(afterUpdateContent);
+            Object afterUpdatePropOneObj = afterUpdateJson.get("propOne");
+            assertTrue(afterUpdatePropOneObj instanceof JsonArray);
+            assertEquals(1, ((JsonArray)afterUpdatePropOneObj).size());
+            assertEquals("propOneValueChanged", ((JsonArray)afterUpdatePropOneObj).getString(0));
         	
-            Object afterUpdatePropTwoObj = afterUpdateJson.opt("propTwo");
-            assertTrue(afterUpdatePropTwoObj instanceof JSONArray);
-            assertEquals(2, ((JSONArray)afterUpdatePropTwoObj).length());
-            assertEquals("propTwoValueChanged1", ((JSONArray)afterUpdatePropTwoObj).get(0));
-            assertEquals("propTwoValueChanged2", ((JSONArray)afterUpdatePropTwoObj).get(1));
+            Object afterUpdatePropTwoObj = afterUpdateJson.get("propTwo");
+            assertTrue(afterUpdatePropTwoObj instanceof JsonArray);
+            assertEquals(2, ((JsonArray)afterUpdatePropTwoObj).size());
+            assertEquals("propTwoValueChanged1", ((JsonArray)afterUpdatePropTwoObj).getString(0));
+            assertEquals("propTwoValueChanged2", ((JsonArray)afterUpdatePropTwoObj).getString(1));
             
         	//wait for the expected JCR events to be delivered
 			for (int second = 0; second < 15; second++) {

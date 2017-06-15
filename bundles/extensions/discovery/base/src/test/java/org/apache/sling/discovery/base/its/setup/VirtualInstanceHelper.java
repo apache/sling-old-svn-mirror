@@ -36,15 +36,15 @@ public class VirtualInstanceHelper {
 
     public static void dumpRepo(ResourceResolverFactory resourceResolverFactory) throws Exception {
         Session session = resourceResolverFactory
-                .getAdministrativeResourceResolver(null).adaptTo(Session.class);
+                .getServiceResourceResolver(null).adaptTo(Session.class);
         logger.info("dumpRepo: ====== START =====");
         logger.info("dumpRepo: repo = " + session.getRepository());
-    
+
         dump(session.getRootNode());
-    
+
         // session.logout();
         logger.info("dumpRepo: ======  END  =====");
-    
+
         session.logout();
     }
 
@@ -54,7 +54,7 @@ public class VirtualInstanceHelper {
             // ignore that one
             return;
         }
-    
+
         PropertyIterator pi = node.getProperties();
         StringBuilder sb = new StringBuilder();
         while (pi.hasNext()) {
@@ -72,7 +72,7 @@ public class VirtualInstanceHelper {
                 sb.append("<unknown type=" + p.getType() + "/>");
             }
         }
-    
+
         StringBuffer depth = new StringBuffer();
         for(int i=0; i<node.getDepth(); i++) {
             depth.append(" ");

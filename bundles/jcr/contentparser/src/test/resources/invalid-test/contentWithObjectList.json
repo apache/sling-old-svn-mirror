@@ -1,0 +1,14 @@
+{
+  "prop1": "value1",
+  "childObject": {
+    "prop2": "value2"
+  },
+  "childObjectList": [
+    {
+      "prop1": "value1"
+    },
+    {
+      "prop2": "value2"
+    }
+  ]
+}

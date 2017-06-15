@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>27</version>
+    <version>30</version>
     <relativePath/>
   </parent>
 
@@ -35,12 +35,19 @@
   <name>Apache Sling - Karaf Distribution</name>
   <description>Apache Sling Karaf Distribution</description>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-distribution</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/karaf/org.apache.sling.karaf-distribution</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/karaf/org.apache.sling.karaf-distribution</url>
+  </scm>
+
   <!-- https://github.com/apache/karaf/blob/master/assemblies/apache-karaf/pom.xml -->
 
   <properties>
-    <org.apache.karaf.version>4.0.5</org.apache.karaf.version>
-    <servicemix.specs.version>2.7.0</servicemix.specs.version>
-    <xerces.version>2.11.0</xerces.version>
+    <org.apache.karaf.version>4.1.1</org.apache.karaf.version>
+    <jna.version>4.3.0</jna.version>
+    <servicemix.specs.version>2.8.0</servicemix.specs.version>
+    <xerces.version>2.11.0_1</xerces.version>
     <xalan.bundle.version>2.7.2_3</xalan.bundle.version>
     <xalan-serializer.bundle.version>2.7.2_1</xalan-serializer.bundle.version>
   </properties>
@@ -68,9 +75,247 @@
       <type>xml</type>
       <scope>runtime</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.felix.jaas.Configuration.factory-GuestLoginModule</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.felix.jaas.Configuration.factory-LoginModuleImpl</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.felix.jaas.Configuration.factory-TokenLoginModule</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.felix.jaas.ConfigurationSpi</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.jackrabbit.oak.segment.SegmentNodeStoreService</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.jackrabbit.oak.security.authentication.AuthenticationConfigurationImpl</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.jackrabbit.oak.security.user.RandomAuthorizableNodeName</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.jackrabbit.oak.security.user.UserConfigurationImpl</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.jackrabbit.oak.spi.security.user.action.DefaultAuthorizableActionProvider</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-composum</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config-default</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.nosql.couchbase.resourceprovider.CouchbaseNoSqlResourceProviderFactory.factory.config-default</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.nosql.mongodb.resourceprovider.MongoDBNoSqlResourceProviderFactory.factory.config-default</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-discovery</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-event</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-i18n</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_jcr</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-jcr_resource</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resourceresolver</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_sightly</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_thymeleaf</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-servlets</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-validation</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-xss</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -139,8 +384,11 @@
             <feature>sling-extension-i18n</feature>
             <feature>sling-extension-jmx-provider</feature>
             <feature>sling-extension-models</feature>
+            <feature>sling-extension-models-jacksonexporter</feature>
+            <feature>sling-extension-pipes</feature>
             <feature>sling-extension-query</feature>
             <feature>sling-extension-resource-inventory</feature>
+            <feature>sling-extension-resource-presence</feature>
             <feature>sling-extension-resourcemerger</feature>
             <feature>sling-extension-rewriter</feature>
             <feature>sling-extension-security</feature>
@@ -150,13 +398,13 @@
             <feature>sling-extension-xss</feature>
             <!-- Apache Sling Installer -->
             <feature>sling-installer</feature>
+            <feature>sling-installer-healthcheck</feature>
             <feature>sling-installer-provider-file</feature>
             <feature>sling-installer-provider-jcr</feature>
             <!-- Apache Sling JCR -->
             <feature>sling-jcr</feature>
             <feature>sling-jcr-compiler</feature>
             <feature>sling-jcr-jackrabbit-security</feature>
-            <feature>sling-jcr-oak</feature>
             <feature>sling-jcr-repoinit</feature>
             <!-- Apache Sling Launchpad -->
             <feature>sling-launchpad-content</feature>
@@ -182,12 +430,15 @@
             <feature>sling-servlets</feature>
             <!-- Apache Jackrabbit -->
             <feature>jackrabbit-sling</feature>
+            <feature>jackrabbit-oak-sling</feature>
             <!-- Apache Tika -->
             <feature>tika-sling</feature>
             <!-- Apache Sling Samples -->
             <feature>sling-samples-fling</feature>
             <!-- Composum -->
             <feature>composum-sling</feature>
+            <!-- Pax URL (KARAF-4707) -->
+            <feature>pax-url-classpath-sling</feature>
           </installedFeatures>
           <startupFeatures>
             <!-- <feature>eventadmin</feature> -->
@@ -215,8 +466,7 @@
             <feature>webconsole</feature>
           </bootFeatures>
           <libraries>
-            <library>xerces-${xerces.version}.jar;url:="wrap:mvn:xerces/xercesImpl/${xerces.version}$Export-Package=org.apache.*;version=${xerces.version}";type:=endorsed;export:=true;delegate:=true</library>
-
+            <library>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xerces/${xerces.version};type:=endorsed;export:=true;delegate:=true</library>
             <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jaxp-api-1.4/${servicemix.specs.version};type:=endorsed;export:=true</library>
             <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jaxb-api-2.2/${servicemix.specs.version};type:=endorsed;export:=true</library>
             <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jaxws-api-2.2/${servicemix.specs.version};type:=endorsed;export:=true</library>
@@ -229,7 +479,11 @@
 
             <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.activator/${servicemix.specs.version};type:=default;export:=true</library>
             <library>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.locator/${servicemix.specs.version};type:=default;export:=true</library>
+
+            <library>mvn:net.java.dev.jna/jna/${jna.version};type:=boot;export:=false</library>
+            <library>mvn:net.java.dev.jna/jna-platform/${jna.version};type:=boot;export:=false</library>
           </libraries>
+          <javase>1.8</javase>
         </configuration>
       </plugin>
     </plugins>

@@ -19,6 +19,8 @@
 package org.apache.sling.distribution.serialization.impl;
 
 import java.io.InputStream;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 
 import javax.annotation.CheckForNull;
@@ -27,23 +29,31 @@ import javax.annotation.Nonnull;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
+import org.apache.sling.distribution.monitor.impl.MonitoringDistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.impl.FileDistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.impl.ResourceDistributionPackageBuilder;
+import org.apache.sling.distribution.packaging.impl.ResourceDistributionPackageCleanup;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.util.impl.FileBackedMemoryOutputStream.MemoryUnit;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * A factory for package builders
@@ -83,6 +93,8 @@ public class DistributionPackageBuilderFactory implements DistributionPackageBui
     @Reference(name = "format")
     private DistributionContentSerializer contentSerializer;
 
+    @Reference
+    private ResourceResolverFactory resolverFactory;
 
     /**
      * Temp file folder
@@ -100,10 +112,12 @@ public class DistributionPackageBuilderFactory implements DistributionPackageBui
     )
     public static final String FILE_THRESHOLD = "fileThreshold";
 
+    private static final String DEFAULT_MEMORY_UNIT = "MEGA_BYTES";
+
     @Property(
         label = "The memory unit for the file threshold",
         description = "The memory unit for the file threshold, Megabytes by default",
-        value = "MEGA_BYTES",
+        value = DEFAULT_MEMORY_UNIT,
         options = {
             @PropertyOption(name = "BYTES", value = "Bytes"),
             @PropertyOption(name = "KILO_BYTES", value = "Kilobytes"),
@@ -112,8 +126,6 @@ public class DistributionPackageBuilderFactory implements DistributionPackageBui
         }
     )
     private static final String MEMORY_UNIT = "memoryUnit";
-
-    private static final String DEFAULT_MEMORY_UNIT = "MEGA_BYTES";
 
     private static final boolean DEFAULT_USE_OFF_HEAP_MEMORY = false;
 
@@ -124,26 +136,101 @@ public class DistributionPackageBuilderFactory implements DistributionPackageBui
     )
     public static final String USE_OFF_HEAP_MEMORY = "useOffHeapMemory";
 
-    private DistributionPackageBuilder packageBuilder;
+    private static final String DEFAULT_DIGEST_ALGORITHM = "NONE";
+
+    @Property(
+        label = "The digest algorithm to calculate the package checksum",
+        description = "The digest algorithm to calculate the package checksum, Megabytes by default",
+        value = DEFAULT_DIGEST_ALGORITHM,
+        options = {
+            @PropertyOption(name = DEFAULT_DIGEST_ALGORITHM, value = "Do not send digest"),
+            @PropertyOption(name = "MD2", value = "md2"),
+            @PropertyOption(name = "MD5", value = "md5"),
+            @PropertyOption(name = "SHA-1", value = "sha1"),
+            @PropertyOption(name = "SHA-256", value = "sha256"),
+            @PropertyOption(name = "SHA-384", value = "sha384"),
+            @PropertyOption(name = "SHA-512", value = "sha512")
+        }
+    )
+    private static final String DIGEST_ALGORITHM = "digestAlgorithm";
+
+    private static final int DEFAULT_MONITORING_QUEUE_SIZE = 0;
+
+    @Property(
+        label="The number of items for monitoring distribution packages creation/installation",
+        description = "The number of items for monitoring distribution packages creation/installation, 100 by default",
+        intValue = DEFAULT_MONITORING_QUEUE_SIZE
+    )
+    private static final String MONITORING_QUEUE_SIZE = "monitoringQueueSize";
+
+    private static final long DEFAULT_PACKAGE_CLEANUP_DELAY = 60L;
+
+    @Property(
+            label="The delay in seconds between two runs of the cleanup phase for resource persisted packages.",
+            description = "The resource persisted packages are cleaned up periodically (asynchronously) since SLING-6503." +
+                    "The delay between two runs of the cleanup phase can be configured with this setting. 60 seconds by default",
+            longValue = DEFAULT_PACKAGE_CLEANUP_DELAY
+    )
+    private static final String PACKAGE_CLEANUP_DELAY = "cleanupDelay";
+
+    /**
+     * Package node filters
+     */
+    @Property(label = "Package Node Filters", description = "The package node path filters. Filter format: path|+include|-exclude", cardinality = 100)
+    private static final String PACKAGE_FILTERS = "package.filters";
+
+    /**
+     * Package property filters
+     */
+    @Property(label = "Package Property Filters", description = "The package property path filters. Filter format: path|+include|-exclude",
+            unbounded = PropertyUnbounded.ARRAY, value = {})
+    private static final String PROPERTY_FILTERS = "property.filters";
+
+    private MonitoringDistributionPackageBuilder packageBuilder;
+
+    private ServiceRegistration packageCleanup = null;
 
     @Activate
-    public void activate(Map<String, Object> config) {
+    public void activate(BundleContext context,
+                         Map<String, Object> config) {
 
+        String[] nodeFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PACKAGE_FILTERS), null));
+        String[] propertyFilters = SettingsUtils.removeEmptyEntries(PropertiesUtil.toStringArray(config.get(PROPERTY_FILTERS), null));
         String persistenceType = PropertiesUtil.toString(config.get(PERSISTENCE), null);
         String tempFsFolder = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(TEMP_FS_FOLDER), null));
+        String digestAlgorithm = PropertiesUtil.toString(config.get(DIGEST_ALGORITHM), DEFAULT_DIGEST_ALGORITHM);
+        long cleanupDelay = PropertiesUtil.toLong(config.get(PACKAGE_CLEANUP_DELAY), DEFAULT_PACKAGE_CLEANUP_DELAY);
+        if (DEFAULT_DIGEST_ALGORITHM.equals(digestAlgorithm)) {
+            digestAlgorithm = null;
+        }
 
-
+        DistributionPackageBuilder wrapped;
         if ("file".equals(persistenceType)) {
-            packageBuilder = new FileDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder);
+            wrapped = new FileDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder, digestAlgorithm, nodeFilters, propertyFilters);
         } else {
             final int fileThreshold = PropertiesUtil.toInteger(config.get(FILE_THRESHOLD), DEFAULT_FILE_THRESHOLD_VALUE);
             String memoryUnitName = PropertiesUtil.toString(config.get(MEMORY_UNIT), DEFAULT_MEMORY_UNIT);
             final MemoryUnit memoryUnit = MemoryUnit.valueOf(memoryUnitName);
             final boolean useOffHeapMemory = PropertiesUtil.toBoolean(config.get(USE_OFF_HEAP_MEMORY), DEFAULT_USE_OFF_HEAP_MEMORY);
-            packageBuilder = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder, fileThreshold, memoryUnit, useOffHeapMemory);
+            ResourceDistributionPackageBuilder resourceDistributionPackageBuilder = new ResourceDistributionPackageBuilder(contentSerializer.getName(), contentSerializer, tempFsFolder, fileThreshold, memoryUnit, useOffHeapMemory, digestAlgorithm, nodeFilters, propertyFilters);
+            Runnable cleanup = new ResourceDistributionPackageCleanup(resolverFactory, resourceDistributionPackageBuilder);
+            Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(Scheduler.PROPERTY_SCHEDULER_CONCURRENT, false);
+            props.put(Scheduler.PROPERTY_SCHEDULER_PERIOD, cleanupDelay);
+            packageCleanup = context.registerService(Runnable.class.getName(), cleanup, props);
+            wrapped = resourceDistributionPackageBuilder;
         }
 
+        int monitoringQueueSize = PropertiesUtil.toInteger(config.get(MONITORING_QUEUE_SIZE), DEFAULT_MONITORING_QUEUE_SIZE);
+        packageBuilder = new MonitoringDistributionPackageBuilder(monitoringQueueSize, wrapped, context);
+    }
 
+    @Deactivate
+    public void deactivate() {
+        packageBuilder.clear();
+        if (packageCleanup != null) {
+            packageCleanup.unregister();
+        }
     }
 
     public String getType() {

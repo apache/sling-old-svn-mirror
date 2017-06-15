@@ -54,8 +54,11 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
+
+import static org.apache.sling.tracer.internal.Util.trimToNull;
 
 /**
  * Tracer provides support for enabling the logs for specific category at specific level and
@@ -111,8 +114,9 @@ public class LogTracer {
     private static final String PROP_TRACER_ENABLED = "enabled";
 
     private static final boolean PROP_TRACER_SERVLET_ENABLED_DEFAULT = false;
-    @Property(label = "Servlet Enabled",
-            description = "Enable the Tracer Servlet",
+    @Property(label = "Recording Servlet Enabled",
+            description = "Enable the Tracer Servlet. This servlet is required for the tracer recording feature " +
+                    "to work and provides access to the json dump of the recording performed",
             boolValue = PROP_TRACER_SERVLET_ENABLED_DEFAULT
     )
     private static final String PROP_TRACER_SERVLET_ENABLED = "servletEnabled";
@@ -222,6 +226,9 @@ public class LogTracer {
 
     TracerContext getTracerContext(String tracerSetNames, String tracerConfig, Recording recording) {
         //No config or tracer set name provided. So tracing not required
+        tracerConfig = trimToNull(tracerConfig);
+        tracerSetNames = trimToNull(tracerSetNames);
+
         if (tracerSetNames == null && tracerConfig == null) {
             return null;
         }
@@ -263,13 +270,18 @@ public class LogTracer {
 
     private void registerFilters(BundleContext context) {
         Dictionary<String, Object> slingFilterProps = new Hashtable<String, Object>();
-        slingFilterProps.put("filter.scope", "REQUEST");
+        slingFilterProps.put("sling.filter.scope", "REQUEST");
         slingFilterProps.put(Constants.SERVICE_DESCRIPTION, "Sling Filter required for Log Tracer");
         slingFilterRegistration = context.registerService(Filter.class.getName(),
                 new SlingTracerFilter(), slingFilterProps);
 
         Dictionary<String, Object> filterProps = new Hashtable<String, Object>();
         filterProps.put("pattern", "/.*");
+
+        filterProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, "/");
+        filterProps.put(HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+                "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)");
+
         filterProps.put(Constants.SERVICE_DESCRIPTION, "Servlet Filter required for Log Tracer");
         filterRegistration = context.registerService(Filter.class.getName(),
                 new TracerFilter(), filterProps);
@@ -418,6 +430,8 @@ public class LogTracer {
             if (tracer == null) {
                 return FilterReply.NEUTRAL;
             }
+
+            tracer.recordCategory(logger.getName());
 
             TracerConfig tc = tracer.findMatchingConfig(logger.getName(), level);
             if (tc != null) {

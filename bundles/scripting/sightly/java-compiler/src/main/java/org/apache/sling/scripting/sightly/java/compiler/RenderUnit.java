@@ -39,6 +39,7 @@ public abstract class RenderUnit implements Record<RenderUnit> {
     /**
      * Render the main script template
      *
+     * @param out           the {@link PrintWriter} to which the commands are written
      * @param renderContext the rendering context
      * @param arguments     the arguments for this unit
      */
@@ -70,13 +71,13 @@ public abstract class RenderUnit implements Record<RenderUnit> {
             }
             if (renderContext.getObjectModel().isPrimitive(templateObj)) {
                 throw new SightlyJavaCompilerException(
-                        "data-sly-call: primitive \"" + templateObj.toString() + "\" does not represent a Sightly template.");
+                        "data-sly-call: primitive \"" + templateObj.toString() + "\" does not represent a HTL template.");
             } else if (templateObj instanceof String) {
                 throw new SightlyJavaCompilerException(
-                        "data-sly-call: String '" + templateObj.toString() + "' does not represent a Sightly template.");
+                        "data-sly-call: String '" + templateObj.toString() + "' does not represent a HTL template.");
             }
             throw new SightlyJavaCompilerException(
-                    "data-sly-call: " + templateObj.getClass().getName() + " does not represent a Sightly template.");
+                    "data-sly-call: " + templateObj.getClass().getName() + " does not represent a HTL template.");
         }
         RenderUnit unit = (RenderUnit) templateObj;
         Map<String, Object> argumentsMap = renderContext.getObjectModel().toMap(argsObj);

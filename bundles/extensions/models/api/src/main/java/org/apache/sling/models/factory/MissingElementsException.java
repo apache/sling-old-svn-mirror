@@ -44,21 +44,9 @@ public final class MissingElementsException extends RuntimeException {
         missingElements = new ArrayList<MissingElementException>();
     }
 
-    @Override
-    public String getMessage() {
-        StringBuilder message = new StringBuilder(super.getMessage());
-        for (MissingElementException e : missingElements) {
-            message.append('\n');
-            message.append(e.getMessage());
-            if (e.getCause() != null) {
-                message.append(" caused by ");
-                message.append(e.getCause().getMessage());
-            }
-        }
-        return message.toString();
-    }
-
     public void addMissingElementExceptions(MissingElementException e) {
+        // also add to suppressed list to make sure they appear as well with their full stack traces in the printStackTrace for this throwable
+        addSuppressed(e);
         missingElements.add(e);
     }
     

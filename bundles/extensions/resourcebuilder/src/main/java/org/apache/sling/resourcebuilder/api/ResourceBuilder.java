@@ -19,9 +19,9 @@
 package org.apache.sling.resourcebuilder.api;
 
 import java.io.InputStream;
+import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 
 import aQute.bnd.annotation.ProviderType;
 
@@ -32,31 +32,31 @@ public interface ResourceBuilder {
     /** Default primary type for resources created by this builder */
     public static final String DEFAULT_PRIMARY_TYPE = "nt:unstructured";
     
-    /** Start a ResourceBuilder using the supplied parent resource 
-     *  @return the new builder
-     * */
-    ResourceBuilder forParent(Resource parent);
-    
-    /** Start a ResourceBuilder using the supplied ResourceResolver,
-     *  starting with the root resource as the builder's parent resource. 
-     *  @return the new builder
-     * */
-    ResourceBuilder forResolver(ResourceResolver r);
-    
     /** Create a Resource, which optionally becomes the current 
      *  parent Resource. 
-     * @param relativePath The path of the Resource to create, relative to 
-     *          this builder's current parent Resource.
+     * @param path The path of the Resource to create.
+     *    If it's a relative path this builder's current resource is used as parent.
+     *    Otherwise the resource is created ad the given absoulte path.
      * @param properties optional name-value pairs 
      * @return this builder
      */
-    ResourceBuilder resource(String relativePath, Object ... properties);
+    ResourceBuilder resource(String path, Object... properties);
+
+    /** Create a Resource, which optionally becomes the current 
+     *  parent Resource. 
+     * @param path The path of the Resource to create.
+     *    If it's a relative path this builder's current resource is used as parent.
+     *    Otherwise the resource is created ad the given absoulte path.
+     * @param properties Name-value pairs 
+     * @return this builder
+     */
+    ResourceBuilder resource(String path, Map<String, Object> properties);
 
     /** Create a file under the current parent resource
      * @param filename The name of the created file
      * @param data The file data
      * @param mimeType If null, use the Sling MimeTypeService to set the mime type
-     * @param lastModified if < 0, current time is used
+     * @param lastModified if &lt; 0, current time is used
      * @return this builder
      */
     ResourceBuilder file(String filename, InputStream data, String mimeType, long lastModified);
@@ -99,4 +99,5 @@ public interface ResourceBuilder {
     /** Reset the current parent Resource to the original one.
      *  Also activates hierarchyMode which is the default mode. */ 
     ResourceBuilder atParent();
+
 }

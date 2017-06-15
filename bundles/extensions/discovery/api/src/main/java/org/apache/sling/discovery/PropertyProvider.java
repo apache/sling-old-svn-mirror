@@ -18,8 +18,7 @@
  */
 package org.apache.sling.discovery;
 
-import aQute.bnd.annotation.ConsumerType;
-
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>PropertyProvider</code> service interface may be implemented by

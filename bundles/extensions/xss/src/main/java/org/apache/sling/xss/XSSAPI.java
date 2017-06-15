@@ -22,10 +22,7 @@ package org.apache.sling.xss;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.ResourceResolver;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A service providing validators and encoders for XSS protection during the composition of HTML
@@ -239,28 +236,5 @@ public interface XSSAPI {
      */
     @Nonnull
     String filterHTML(@Nullable String source);
-
-
-    // =============================================================================================
-    // JCR-based URL MAPPING
-    //
-
-    /**
-     * Returns an XSSAPI instance capable of mapping resource URLs.
-     * EITHER THIS OR THE RESOURCERESOLVER VERSION MUST BE USED WHEN VALIDATING HREFs!
-     *
-     * @param request the request from which to obtain the {@link org.apache.sling.xss.XSSAPI}
-     * @return an XSSAPI service capable of validating hrefs.
-     */
-    XSSAPI getRequestSpecificAPI(SlingHttpServletRequest request);
-
-    /**
-     * Returns an XSSAPI instance capable of mapping resource URLs.
-     * EITHER THIS OR THE REQUEST VERSION MUST BE USED WHEN VALIDATING HREFs!
-     *
-     * @param resourceResolver the resolver from which to obtain the {@link org.apache.sling.xss.XSSAPI}
-     * @return an XSSAPI service capable of validating hrefs.
-     */
-    XSSAPI getResourceResolverSpecificAPI(ResourceResolver resourceResolver);
 
 }

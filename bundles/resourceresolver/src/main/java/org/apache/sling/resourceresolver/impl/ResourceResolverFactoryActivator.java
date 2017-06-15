@@ -18,30 +18,24 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.apache.commons.collections.BidiMap;
-import org.apache.commons.collections.bidimap.TreeBidiMap;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.References;
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.TreeBidiMap;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.api.resource.runtime.RuntimeService;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
@@ -55,8 +49,15 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.event.EventAdmin;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,202 +68,21 @@ import org.slf4j.LoggerFactory;
  * is registered.
  *
  */
-@Component(
-     name = "org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl",
-     label = "Apache Sling Resource Resolver Factory",
-     description = "Configures the Resource Resolver for request URL and resource path rewriting.",
-     specVersion = "1.1",
-     metatype = true)
-@Properties({
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Resource Resolver Factory"),
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
-})
-@References({
-    @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-})
+@Designate(ocd = ResourceResolverFactoryConfig.class)
+@Component(name = "org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl")
 public class ResourceResolverFactoryActivator {
+
 
     private static final class FactoryRegistration {
         /** Registration .*/
-        public volatile ServiceRegistration factoryRegistration;
+        public volatile ServiceRegistration<ResourceResolverFactory> factoryRegistration;
 
         /** Runtime registration. */
-        public volatile ServiceRegistration runtimeRegistration;
+        public volatile ServiceRegistration<RuntimeService> runtimeRegistration;
 
         public volatile CommonResourceResolverFactoryImpl commonFactory;
     }
 
-    @Property(value = { "/apps", "/libs" },
-              label = "Resource Search Path",
-              description = "The list of absolute path prefixes " +
-                            "applied to find resources whose path is just specified with a relative path. " +
-                            "The default value is [ \"/apps\", \"/libs\" ]. If an empty path is specified a " +
-                            "single entry path of [ \"/\" ] is assumed.")
-    public static final String PROP_PATH = "resource.resolver.searchpath";
-
-    /**
-     * Defines whether namespace prefixes of resource names inside the path
-     * (e.g. <code>jcr:</code> in <code>/home/path/jcr:content</code>) are
-     * mangled or not.
-     * <p>
-     * Mangling means that any namespace prefix contained in the path is replaced as per the generic
-     * substitution pattern <code>/([^:]+):/_$1_/</code> when calling the <code>map</code> method of
-     * the resource resolver. Likewise the <code>resolve</code> methods will unmangle such namespace
-     * prefixes according to the substitution pattern <code>/_([^_]+)_/$1:/</code>.
-     * <p>
-     * This feature is provided since there may be systems out there in the wild which cannot cope
-     * with URLs containing colons, even though they are perfectly valid characters in the path part
-     * of URI references with a scheme.
-     * <p>
-     * The default value of this property if no configuration is provided is <code>true</code>.
-     *
-     */
-    @Property(boolValue = true,
-              label = "Namespace Mangling",
-              description = "Defines whether namespace " +
-                            "prefixes of resource names inside the path (e.g. \"jcr:\" in \"/home/path/jcr:content\") " +
-                            "are mangled or not. Mangling means that any namespace prefix contained in the " +
-                            "path is replaced as per the generic substitution pattern \"/([^:]+):/_$1_/\" " +
-                            "when calling the \"map\" method of the resource resolver. Likewise the " +
-                            "\"resolve\" methods will unmangle such namespace prefixes according to the " +
-                            "substituation pattern \"/_([^_]+)_/$1:/\". This feature is provided since " +
-                            "there may be systems out there in the wild which cannot cope with URLs " +
-                            "containing colons, even though they are perfectly valid characters in the " +
-                            "path part of URI references with a scheme. The default value of this property " +
-                            "if no configuration is provided is \"true\".")
-    private static final String PROP_MANGLE_NAMESPACES = "resource.resolver.manglenamespaces";
-
-    @Property(boolValue = true,
-              label = "Allow Direct Mapping",
-              description = "Whether to add a direct URL mapping to the front of the mapping list.")
-    private static final String PROP_ALLOW_DIRECT = "resource.resolver.allowDirect";
-
-    @Property(unbounded=PropertyUnbounded.ARRAY,
-              label = "Required Providers (Deprecated)",
-              description = "A resource resolver factory is only " +
-                             "available (registered) if all resource providers mentioned in this configuration " +
-                             "are available. Each entry is either a service PID or a filter expression.  " +
-                             "Invalid filters are ignored.")
-    private static final String PROP_REQUIRED_PROVIDERS_LEGACY = "resource.resolver.required.providers";
-
-    @Property(unbounded=PropertyUnbounded.ARRAY,
-            value = "JCR",
-            label = "Required Providers ",
-            description = "A resource resolver factory is only " +
-                           "available (registered) if all resource providers mentioned in this configuration " +
-                           "are available. Each entry is refers to the name of a registered provider.")
-    private static final String PROP_REQUIRED_PROVIDERS = "resource.resolver.required.providernames";
-
-    /**
-     * The resolver.virtual property has no default configuration. But the Sling
-     * maven plugin and the sling management console cannot handle empty
-     * multivalue properties at the moment. So we just add a dummy direct
-     * mapping.
-     */
-    @Property(value = "/:/", unbounded = PropertyUnbounded.ARRAY,
-              label = "Virtual URLs",
-              description = "List of virtual URLs and there mappings to real URLs. " +
-                            "Format is <externalURL>:<internalURL>. Mappings are " +
-                            "applied on the complete request URL only.")
-    private static final String PROP_VIRTUAL = "resource.resolver.virtual";
-
-    @Property(value = { "/:/", "/content/:/", "/system/docroot/:/" },
-              label = "URL Mappings",
-              description = "List of mappings to apply to paths. Incoming mappings are " +
-                            "applied to request paths to map to resource paths, " +
-                            "outgoing mappings are applied to map resource paths to paths used on subsequent " +
-                            "requests. Form is <internalPathPrefix><op><externalPathPrefix> where <op> is " +
-                            "\">\" for incoming mappings, \"<\" for outgoing mappings and \":\" for mappings " +
-                            "applied in both directions. Mappings are applied in configuration order by " +
-                            "comparing and replacing URL prefixes. Note: The use of \"-\" as the <op> value " +
-                            "indicating a mapping in both directions is deprecated.")
-    private static final String PROP_MAPPING = "resource.resolver.mapping";
-
-    @Property(value = MapEntries.DEFAULT_MAP_ROOT,
-              label = "Mapping Location",
-              description = "The path to the root of the configuration to setup and configure " +
-                            "the ResourceResolver mapping. The default value is /etc/map.")
-    private static final String PROP_MAP_LOCATION = "resource.resolver.map.location";
-
-    @Property(intValue = MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS,
-              label = "Default Vanity Path Redirect Status",
-              description = "The default status code used when a sling:vanityPath is configured to redirect " +
-                            "and does not have a specific status code associated with it " +
-                            "(via a sling:redirectStatus property)")
-    private static final String PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS = "resource.resolver.default.vanity.redirect.status";
-
-    private static final boolean DEFAULT_ENABLE_VANITY_PATH = true;
-    @Property(boolValue = DEFAULT_ENABLE_VANITY_PATH,
-              label = "Enable Vanity Paths",
-              description = "This flag controls whether all resources with a sling:vanityPath property " +
-                            "are processed and added to the mappoing table.")
-    private static final String PROP_ENABLE_VANITY_PATH = "resource.resolver.enable.vanitypath";
-
-    private static final long DEFAULT_MAX_CACHED_VANITY_PATHS = -1;
-    @Property(longValue = DEFAULT_MAX_CACHED_VANITY_PATHS,
-              label = "Maximum number of cached vanity path entries",
-              description = "The maximum number of cached vanity path entries. " +
-                            "Default is -1 (no limit)")
-    private static final String PROP_MAX_CACHED_VANITY_PATHS = "resource.resolver.vanitypath.maxEntries";
-
-    private static final boolean DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP = true;
-    @Property(boolValue = DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP,
-              label = "Limit the maximum number of cached vanity path entries only at startup",
-              description = "Limit the maximum number of cached vanity path entries only at startup. " +
-                            "Default is true")
-    private static final String PROP_MAX_CACHED_VANITY_PATHS_STARTUP = "resource.resolver.vanitypath.maxEntries.startup";
-
-    private static final int DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES = 1024000;
-    @Property(longValue = DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES,
-              label = "Maximum number of vanity bloom filter bytes",
-              description = "The maximum number of vanity bloom filter bytes. " +
-                            "Changing this value is subject to vanity bloom filter rebuild")
-    private static final String PROP_VANITY_BLOOM_FILTER_MAX_BYTES = " resource.resolver.vanitypath.bloomfilter.maxBytes";
-
-    private static final boolean DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = true;
-    @Property(boolValue = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION ,
-              label = "Optimize alias resolution",
-              description ="This flag controls whether to optimize" +
-                      " the alias resolution by creating an internal cache of aliases. This might have an impact on the startup time"+
-                      " and on the alias update time if the number of aliases is huge (over 10000).")
-    private static final String PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = "resource.resolver.optimize.alias.resolution";
-
-    @Property(unbounded=PropertyUnbounded.ARRAY,
-            label = "Allowed Vanity Path Location",
-            description ="This setting can contain a list of path prefixes, e.g. /libs/, /content/. If " +
-                    "such a list is configured, only vanity paths from resources starting with this prefix " +
-                    " are considered. If the list is empty, all vanity paths are used.")
-    private static final String PROP_ALLOWED_VANITY_PATH_PREFIX = "resource.resolver.vanitypath.whitelist";
-
-    @Property(unbounded=PropertyUnbounded.ARRAY,
-            label = "Denied Vanity Path Location",
-            description ="This setting can contain a list of path prefixes, e.g. /misc/. If " +
-                    "such a list is configured,vanity paths from resources starting with this prefix " +
-                    " are not considered. If the list is empty, all vanity paths are used.")
-    private static final String PROP_DENIED_VANITY_PATH_PREFIX = "resource.resolver.vanitypath.blacklist";
-
-    private static final boolean DEFAULT_VANITY_PATH_PRECEDENCE = false;
-    @Property(boolValue = DEFAULT_VANITY_PATH_PRECEDENCE ,
-              label = "Vanity Path Precedence",
-              description ="This flag controls whether vanity paths" +
-                      " will have precedence over existing /etc/map mapping")
-    private static final String PROP_VANITY_PATH_PRECEDENCE = "resource.resolver.vanity.precedence";
-
-    private static final boolean DEFAULT_PARANOID_PROVIDER_HANDLING = false;
-    @Property(boolValue = DEFAULT_PARANOID_PROVIDER_HANDLING,
-              label = "Paranoid Provider Handling",
-              description = "If this flag is enabled, an unregistration of a resource provider (not factory), "
-                          + "is causing the resource resolver factory to restart, potentially cleaning up "
-                          + "for memory leaks caused by objects hold from that resource provider.")
-    private static final String PROP_PARANOID_PROVIDER_HANDLING = "resource.resolver.providerhandling.paranoid";
-
-    private static final boolean DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING = false;
-    @Property(boolValue = DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING,
-              label = "Log resource resolver closing",
-              description = "When enabled CRUD operations with a closed resource resolver will log a stack trace " +
-                  "with the point where the used resolver was closed. It's advisable to not enable this feature on " +
-                  "production systems.")
-    private static final String PROP_LOG_RESOURCE_RESOLVER_CLOSING = "resource.resolver.log.closing";
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -276,20 +96,13 @@ public class ResourceResolverFactoryActivator {
     /** The fake URLs */
     private volatile BidiMap virtualURLMap;
 
-    /** <code>true</code>, if direct mappings from URI to handle are allowed */
-    private volatile boolean allowDirect = false;
-
     /** the search path for ResourceResolver.getResource(String) */
     private volatile String[] searchPath;
 
     /** the root location of the /etc/map entries */
     private volatile String mapRoot;
 
-    /** whether to mangle paths with namespaces or not */
-    private volatile boolean mangleNamespacePrefixes;
-
-    /** paranoid provider handling. */
-    private volatile boolean paranoidProviderHandling;
+    private volatile String mapRootPrefix;
 
     /** Event admin. */
     @Reference
@@ -297,7 +110,7 @@ public class ResourceResolverFactoryActivator {
 
     /** Service User Mapper */
     @Reference
-    private ServiceUserMapper serviceUserMapper;
+    ServiceUserMapper serviceUserMapper;
 
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
@@ -306,37 +119,19 @@ public class ResourceResolverFactoryActivator {
 
     volatile ResourceChangeListenerWhiteboard changeListenerWhiteboard;
 
-    /** ComponentContext */
-    private volatile ComponentContext componentContext;
+    /** Bundle Context */
+    private volatile BundleContext bundleContext;
 
-    private volatile int defaultVanityPathRedirectStatus;
-
-    /** vanityPath enabled? */
-    private volatile boolean enableVanityPath = DEFAULT_ENABLE_VANITY_PATH;
-
-    /** alias resource resolution optimization enabled? */
-    private volatile boolean enableOptimizeAliasResolution = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION;
-
-    /** max number of cache vanity path entries */
-    private volatile long maxCachedVanityPathEntries = DEFAULT_MAX_CACHED_VANITY_PATHS;
-
-    /** limit max number of cache vanity path entries only at startup*/
-    private volatile boolean maxCachedVanityPathEntriesStartup = DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP;
-
-    /** Maximum number of vanity bloom filter bytes */
-    private volatile int vanityBloomFilterMaxBytes = DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES;
-
-    /** vanity paths will have precedence over existing /etc/map mapping? */
-    private volatile boolean vanityPathPrecedence = DEFAULT_VANITY_PATH_PRECEDENCE;
-
-    /** log the place where a resource resolver is closed */
-    private volatile boolean logResourceResolverClosing = DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING;
+    private volatile ResourceResolverFactoryConfig config = DEFAULT_CONFIG;
 
     /** Vanity path whitelist */
     private volatile String[] vanityPathWhiteList;
 
     /** Vanity path blacklist */
     private volatile String[] vanityPathBlackList;
+
+    /** Observation paths */
+    private volatile Path[] observationPaths;
 
     private final FactoryPreconditions preconds = new FactoryPreconditions();
 
@@ -377,7 +172,7 @@ public class ResourceResolverFactoryActivator {
     }
 
     public boolean isMangleNamespacePrefixes() {
-        return mangleNamespacePrefixes;
+        return config.resource_resolver_manglenamespaces();
 
     }
 
@@ -385,16 +180,25 @@ public class ResourceResolverFactoryActivator {
         return mapRoot;
     }
 
+    public boolean isMapConfiguration(String path) {
+        return path.equals(this.mapRoot)
+               || path.startsWith(this.mapRootPrefix);
+    }
+
     public int getDefaultVanityPathRedirectStatus() {
-        return defaultVanityPathRedirectStatus;
+        return config.resource_resolver_default_vanity_redirect_status();
     }
 
     public boolean isVanityPathEnabled() {
-        return this.enableVanityPath;
+        return this.config.resource_resolver_enable_vanitypath();
     }
 
     public boolean isOptimizeAliasResolutionEnabled() {
-        return this.enableOptimizeAliasResolution;
+        return this.config.resource_resolver_optimize_alias_resolution();
+    }
+
+    public boolean isLogUnclosedResourceResolvers() {
+        return this.config.resource_resolver_log_unclosed();
     }
 
     public String[] getVanityPathWhiteList() {
@@ -406,23 +210,27 @@ public class ResourceResolverFactoryActivator {
     }
 
     public boolean hasVanityPathPrecedence() {
-        return this.vanityPathPrecedence;
+        return this.config.resource_resolver_vanity_precedence();
     }
 
     public long getMaxCachedVanityPathEntries() {
-        return this.maxCachedVanityPathEntries;
+        return this.config.resource_resolver_vanitypath_maxEntries();
     }
 
     public boolean isMaxCachedVanityPathEntriesStartup() {
-        return this.maxCachedVanityPathEntriesStartup;
+        return this.config.resource_resolver_vanitypath_maxEntries_startup();
     }
 
     public int getVanityBloomFilterMaxBytes() {
-        return this.vanityBloomFilterMaxBytes;
+        return this.config.resource_resolver_vanitypath_bloomfilter_maxBytes();
     }
 
     public boolean shouldLogResourceResolverClosing() {
-        return logResourceResolverClosing;
+        return this.config.resource_resolver_log_closing();
+    }
+
+    public Path[] getObservationPaths() {
+        return this.observationPaths;
     }
 
     // ---------- SCR Integration ---------------------------------------------
@@ -431,29 +239,25 @@ public class ResourceResolverFactoryActivator {
      * Activates this component (called by SCR before)
      */
     @Activate
-    protected void activate(final ComponentContext componentContext) {
-        this.componentContext = componentContext;
-        final Dictionary<?, ?> properties = componentContext.getProperties();
+    protected void activate(final BundleContext bundleContext, final ResourceResolverFactoryConfig config) {
+        this.bundleContext = bundleContext;
+        this.config = config;
 
         final BidiMap virtuals = new TreeBidiMap();
-        final String[] virtualList = PropertiesUtil.toStringArray(properties.get(PROP_VIRTUAL));
-        for (int i = 0; virtualList != null && i < virtualList.length; i++) {
-            final String[] parts = Mapping.split(virtualList[i]);
+        for (int i = 0; config.resource_resolver_virtual() != null && i < config.resource_resolver_virtual().length; i++) {
+            final String[] parts = Mapping.split(config.resource_resolver_virtual()[i]);
             virtuals.put(parts[0], parts[2]);
         }
         virtualURLMap = virtuals;
 
-        final List<Mapping> maps = new ArrayList<Mapping>();
-        final String[] mappingList = (String[]) properties.get(PROP_MAPPING);
-        for (int i = 0; mappingList != null && i < mappingList.length; i++) {
-            maps.add(new Mapping(mappingList[i]));
+        final List<Mapping> maps = new ArrayList<>();
+        for (int i = 0; config.resource_resolver_mapping() != null && i < config.resource_resolver_mapping().length; i++) {
+            maps.add(new Mapping(config.resource_resolver_mapping()[i]));
         }
         final Mapping[] tmp = maps.toArray(new Mapping[maps.size()]);
 
         // check whether direct mappings are allowed
-        final Boolean directProp = (Boolean) properties.get(PROP_ALLOW_DIRECT);
-        allowDirect = (directProp != null) ? directProp.booleanValue() : true;
-        if (allowDirect) {
+        if (config.resource_resolver_allowDirect()) {
             final Mapping[] tmp2 = new Mapping[tmp.length + 1];
             tmp2[0] = Mapping.DIRECT;
             System.arraycopy(tmp, 0, tmp2, 1, tmp.length);
@@ -463,7 +267,7 @@ public class ResourceResolverFactoryActivator {
         }
 
         // from configuration if available
-        searchPath = PropertiesUtil.toStringArray(properties.get(PROP_PATH));
+        searchPath = config.resource_resolver_searchpath();
         if (searchPath != null && searchPath.length > 0) {
             for (int i = 0; i < searchPath.length; i++) {
                 // ensure leading slash
@@ -479,20 +283,21 @@ public class ResourceResolverFactoryActivator {
         if (searchPath == null) {
             searchPath = new String[] { "/" };
         }
-        // namespace mangling
-        mangleNamespacePrefixes = PropertiesUtil.toBoolean(properties.get(PROP_MANGLE_NAMESPACES), false);
-
         // the root of the resolver mappings
-        mapRoot = PropertiesUtil.toString(properties.get(PROP_MAP_LOCATION), MapEntries.DEFAULT_MAP_ROOT);
+        mapRoot = config.resource_resolver_map_location();
+        mapRootPrefix = mapRoot + '/';
 
-        defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS),
-                                                                   MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
-        this.enableVanityPath = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_VANITY_PATH), DEFAULT_ENABLE_VANITY_PATH);
+        final String[] paths = config.resource_resolver_map_observation();
+        this.observationPaths = new Path[paths.length];
+        for(int i=0;i<paths.length;i++) {
+            this.observationPaths[i] = new Path(paths[i]);
+        }
+
         // vanity path white list
         this.vanityPathWhiteList = null;
-        String[] vanityPathPrefixes = PropertiesUtil.toStringArray(properties.get(PROP_ALLOWED_VANITY_PATH_PREFIX));
+        String[] vanityPathPrefixes = config.resource_resolver_vanitypath_whitelist();
         if ( vanityPathPrefixes != null ) {
-            final List<String> prefixList = new ArrayList<String>();
+            final List<String> prefixList = new ArrayList<>();
             for(final String value : vanityPathPrefixes) {
                 if ( value.trim().length() > 0 ) {
                     if ( value.trim().endsWith("/") ) {
@@ -508,9 +313,9 @@ public class ResourceResolverFactoryActivator {
         }
         // vanity path black list
         this.vanityPathBlackList = null;
-        vanityPathPrefixes = PropertiesUtil.toStringArray(properties.get(PROP_DENIED_VANITY_PATH_PREFIX));
+        vanityPathPrefixes = config.resource_resolver_vanitypath_blacklist();
         if ( vanityPathPrefixes != null ) {
-            final List<String> prefixList = new ArrayList<String>();
+            final List<String> prefixList = new ArrayList<>();
             for(final String value : vanityPathPrefixes) {
                 if ( value.trim().length() > 0 ) {
                     if ( value.trim().endsWith("/") ) {
@@ -525,43 +330,50 @@ public class ResourceResolverFactoryActivator {
             }
         }
 
-        this.enableOptimizeAliasResolution = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION), DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION);
-        this.maxCachedVanityPathEntries = PropertiesUtil.toLong(properties.get(PROP_MAX_CACHED_VANITY_PATHS), DEFAULT_MAX_CACHED_VANITY_PATHS);
-        this.maxCachedVanityPathEntriesStartup = PropertiesUtil.toBoolean(properties.get(PROP_MAX_CACHED_VANITY_PATHS_STARTUP), DEFAULT_MAX_CACHED_VANITY_PATHS_STARTUP);
-        this.vanityBloomFilterMaxBytes = PropertiesUtil.toInteger(properties.get(PROP_VANITY_BLOOM_FILTER_MAX_BYTES), DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES);
-
-        this.vanityPathPrecedence = PropertiesUtil.toBoolean(properties.get(PROP_VANITY_PATH_PRECEDENCE), DEFAULT_VANITY_PATH_PRECEDENCE);
-        this.logResourceResolverClosing = PropertiesUtil.toBoolean(properties.get(PROP_LOG_RESOURCE_RESOLVER_CLOSING),
-            DEFAULT_LOG_RESOURCE_RESOLVER_CLOSING);
-        this.paranoidProviderHandling = PropertiesUtil.toBoolean(properties.get(PROP_PARANOID_PROVIDER_HANDLING), DEFAULT_PARANOID_PROVIDER_HANDLING);
-
-        final BundleContext bc = componentContext.getBundleContext();
-
         // check for required property
-        final String[] requiredResourceProvidersLegacy = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS_LEGACY));
-        final String[] requiredResourceProviderNames = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
+        Set<String> requiredResourceProvidersLegacy = getStringSet(config.resource_resolver_required_providers());
+        Set<String> requiredResourceProviderNames = getStringSet(config.resource_resolver_required_providernames());
 
-        if ( requiredResourceProvidersLegacy != null && requiredResourceProvidersLegacy.length > 0 ) {
-            boolean hasRealValue = false;
-            for(final String name : requiredResourceProvidersLegacy) {
-                if ( name != null && !name.trim().isEmpty() ) {
-                    hasRealValue = true;
-                    break;
-                }
-            }
-            if ( hasRealValue ) {
-                logger.error("ResourceResolverFactory is using deprecated required providers configuration (" + PROP_REQUIRED_PROVIDERS_LEGACY +
-                        "). Please change to use the property " + PROP_REQUIRED_PROVIDERS + " for values: " + Arrays.toString(requiredResourceProvidersLegacy));
+        boolean hasLegacyRequiredProvider = false;
+        if ( requiredResourceProvidersLegacy != null ) {
+            hasLegacyRequiredProvider = requiredResourceProvidersLegacy.remove(ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID);
+            if ( !requiredResourceProvidersLegacy.isEmpty() ) {
+                logger.error("ResourceResolverFactory is using deprecated required providers configuration (resource.resolver.required.providers" +
+                        "). Please change to use the property resource.resolver.required.providernames for values: " + requiredResourceProvidersLegacy);
+            } else {
+            	requiredResourceProvidersLegacy = null;
             }
         }
+        if ( hasLegacyRequiredProvider ) {
+            final boolean hasRequiredProvider;
+        	if ( requiredResourceProviderNames != null ) {
+        		hasRequiredProvider = !requiredResourceProviderNames.add(ResourceResolverFactoryConfig.REQUIRED_PROVIDER_NAME);
+        	} else {
+        		hasRequiredProvider = false;
+        		requiredResourceProviderNames = Collections.singleton(ResourceResolverFactoryConfig.REQUIRED_PROVIDER_NAME);
+        	}
+        	if ( hasRequiredProvider ) {
+                logger.warn("ResourceResolverFactory is using deprecated required providers configuration (resource.resolver.required.providers" +
+                        ") with value '" + ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID + ". Please remove this configuration property. " +
+                        ResourceResolverFactoryConfig.REQUIRED_PROVIDER_NAME + " is already contained in the property resource.resolver.required.providernames.");
+        	} else {
+                logger.warn("ResourceResolverFactory is using deprecated required providers configuration (resource.resolver.required.providers" +
+                        ") with value '" + ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID + ". Please remove this configuration property and add " +
+                        ResourceResolverFactoryConfig.REQUIRED_PROVIDER_NAME + " to the property resource.resolver.required.providernames.");
+        	}
+        }
+
         // for testing: if we run unit test, both trackers are set from the outside
         if ( this.resourceProviderTracker == null ) {
             this.resourceProviderTracker = new ResourceProviderTracker();
             this.changeListenerWhiteboard = new ResourceChangeListenerWhiteboard();
-            this.preconds.activate(bc, requiredResourceProvidersLegacy, requiredResourceProviderNames, resourceProviderTracker);
-            this.changeListenerWhiteboard.activate(this.componentContext.getBundleContext(),
+            this.preconds.activate(this.bundleContext,
+            		requiredResourceProvidersLegacy,
+            		requiredResourceProviderNames,
+            		resourceProviderTracker);
+            this.changeListenerWhiteboard.activate(this.bundleContext,
                 this.resourceProviderTracker, searchPath);
-            this.resourceProviderTracker.activate(this.componentContext.getBundleContext(),
+            this.resourceProviderTracker.activate(this.bundleContext,
                     this.eventAdmin,
                     new ChangeListener() {
 
@@ -576,7 +388,7 @@ public class ResourceResolverFactoryActivator {
                         @Override
                         public void providerRemoved(final String name, final String pid, final boolean stateful, final boolean isUsed) {
                             if ( factoryRegistration != null ) {
-                                if ( isUsed && (stateful || paranoidProviderHandling) ) {
+                                if ( isUsed && (stateful || config.resource_resolver_providerhandling_paranoid()) ) {
                                     unregisterFactory();
                                 }
                                 checkFactoryPreconditions(name, pid);
@@ -584,7 +396,10 @@ public class ResourceResolverFactoryActivator {
                         }
                     });
         } else {
-            this.preconds.activate(bc, requiredResourceProvidersLegacy, requiredResourceProviderNames, resourceProviderTracker);
+            this.preconds.activate(this.bundleContext,
+            		requiredResourceProvidersLegacy,
+            		requiredResourceProviderNames,
+            		resourceProviderTracker);
             this.checkFactoryPreconditions(null, null);
          }
     }
@@ -593,9 +408,9 @@ public class ResourceResolverFactoryActivator {
      * Modifies this component (called by SCR to update this component)
      */
     @Modified
-    protected void modified(final ComponentContext componentContext) {
+    protected void modified(final BundleContext bundleContext, final ResourceResolverFactoryConfig config) {
         this.deactivate();
-        this.activate(componentContext);
+        this.activate(bundleContext, config);
     }
 
     /**
@@ -605,8 +420,8 @@ public class ResourceResolverFactoryActivator {
     protected void deactivate() {
         this.unregisterFactory();
 
-        this.componentContext = null;
-
+        this.bundleContext = null;
+        this.config = DEFAULT_CONFIG;
         this.changeListenerWhiteboard.deactivate();
         this.changeListenerWhiteboard = null;
         this.resourceProviderTracker.deactivate();
@@ -657,23 +472,23 @@ public class ResourceResolverFactoryActivator {
     /**
      * Try to register the factory.
      */
-    private void registerFactory(final ComponentContext localContext) {
+    private void registerFactory(final BundleContext localContext) {
         final FactoryRegistration local = new FactoryRegistration();
 
         if ( localContext != null ) {
             // activate and register factory
-            final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
-            serviceProps.put(Constants.SERVICE_VENDOR, localContext.getProperties().get(Constants.SERVICE_VENDOR));
-            serviceProps.put(Constants.SERVICE_DESCRIPTION, localContext.getProperties().get(Constants.SERVICE_DESCRIPTION));
+            final Dictionary<String, Object> serviceProps = new Hashtable<>();
+            serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+            serviceProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Resource Resolver Factory");
 
             local.commonFactory = new CommonResourceResolverFactoryImpl(this);
-            local.commonFactory.activate(localContext.getBundleContext());
-            local.factoryRegistration = localContext.getBundleContext().registerService(
-                ResourceResolverFactory.class.getName(), new ServiceFactory() {
+            local.commonFactory.activate(localContext);
+            local.factoryRegistration = localContext.registerService(
+                ResourceResolverFactory.class, new ServiceFactory<ResourceResolverFactory>() {
 
                     @Override
-                    public Object getService(final Bundle bundle, final ServiceRegistration registration) {
-                        if ( ResourceResolverFactoryActivator.this.componentContext == null ) {
+                    public ResourceResolverFactory getService(final Bundle bundle, final ServiceRegistration<ResourceResolverFactory> registration) {
+                        if ( ResourceResolverFactoryActivator.this.bundleContext == null ) {
                             return null;
                         }
                         final ResourceResolverFactoryImpl r = new ResourceResolverFactoryImpl(
@@ -683,12 +498,12 @@ public class ResourceResolverFactoryActivator {
                     }
 
                     @Override
-                    public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service) {
+                    public void ungetService(final Bundle bundle, final ServiceRegistration<ResourceResolverFactory> registration, final ResourceResolverFactory service) {
                         // nothing to do
                     }
                 }, serviceProps);
 
-            local.runtimeRegistration = localContext.getBundleContext().registerService(RuntimeService.class.getName(),
+            local.runtimeRegistration = localContext.registerService(RuntimeService.class,
                     this.getRuntimeService(), null);
 
             this.factoryRegistration = local;
@@ -703,24 +518,36 @@ public class ResourceResolverFactoryActivator {
         return new RuntimeServiceImpl(this.resourceProviderTracker);
     }
 
+    public ServiceUserMapper getServiceUserMapper() {
+    	return this.serviceUserMapper;
+    }
+
+    public BundleContext getBundleContext() {
+    	return this.bundleContext;
+    }
+
     /**
      * Check the preconditions and if it changed, either register factory or unregister
      */
     private void checkFactoryPreconditions(final String unavailableName, final String unavailableServicePid) {
-        final ComponentContext localContext = this.componentContext;
+        final BundleContext localContext = this.bundleContext;
         if ( localContext != null ) {
             final boolean result = this.preconds.checkPreconditions(unavailableName, unavailableServicePid);
             if ( result && this.factoryRegistration == null ) {
-                boolean create = true;
-                synchronized ( this ) {
-                    if ( this.factoryRegistration == null ) {
-                        this.factoryRegistration = new FactoryRegistration();
-                    } else {
-                        create = false;
+                // check system bundle state - if stopping, don't register new factory
+                final Bundle systemBundle = localContext.getBundle(Constants.SYSTEM_BUNDLE_LOCATION);
+                if ( systemBundle != null && systemBundle.getState() != Bundle.STOPPING ) {
+                    boolean create = true;
+                    synchronized ( this ) {
+                        if ( this.factoryRegistration == null ) {
+                            this.factoryRegistration = new FactoryRegistration();
+                        } else {
+                            create = false;
+                        }
                     }
-                }
-                if ( create ) {
-                    this.registerFactory(localContext);
+                    if ( create ) {
+                        this.registerFactory(localContext);
+                    }
                 }
             } else if ( !result && this.factoryRegistration != null ) {
                 this.unregisterFactory();
@@ -731,6 +558,7 @@ public class ResourceResolverFactoryActivator {
     /**
      * Bind a resource decorator.
      */
+    @Reference(service = ResourceDecorator.class, cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     protected void bindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
         this.resourceDecoratorTracker.bindResourceDecorator(decorator, props);
     }
@@ -748,5 +576,51 @@ public class ResourceResolverFactoryActivator {
      */
     public ResourceProviderTracker getResourceProviderTracker() {
         return resourceProviderTracker;
+    }
+
+    /**
+     * Utility method to create a set out of a string array
+     */
+    private Set<String> getStringSet(final String[] values) {
+    	if ( values == null || values.length == 0 ) {
+    		return null;
+    	}
+    	final Set<String> set = new HashSet<>();
+    	for(final String val : values) {
+    		if ( val != null && !val.trim().isEmpty() ) {
+    			set.add(val.trim());
+    		}
+    	}
+    	return set.isEmpty() ? null : set;
+    }
+
+    public static ResourceResolverFactoryConfig DEFAULT_CONFIG;
+
+    static {
+       final InvocationHandler handler = new InvocationHandler() {
+
+            @Override
+            public Object invoke(final Object obj, final Method calledMethod, final Object[] args)
+            throws Throwable {
+                if ( calledMethod.getDeclaringClass().isAssignableFrom(ResourceResolverFactoryConfig.class) ) {
+                   return calledMethod.getDefaultValue();
+                }
+                if ( calledMethod.getDeclaringClass() == Object.class ) {
+                    if ( calledMethod.getName().equals("toString") && (args == null || args.length == 0) ) {
+                        return "Generated @" + ResourceResolverFactoryConfig.class.getName() + " instance";
+                    }
+                    if ( calledMethod.getName().equals("hashCode") && (args == null || args.length == 0) ) {
+                        return this.hashCode();
+                    }
+                    if ( calledMethod.getName().equals("equals") && args != null && args.length == 1 ) {
+                        return Boolean.FALSE;
+                    }
+                }
+                throw new InternalError("unexpected method dispatched: " + calledMethod);
+            }
+        };
+        DEFAULT_CONFIG = (ResourceResolverFactoryConfig) Proxy.newProxyInstance(ResourceResolverFactoryConfig.class.getClassLoader(),
+                new Class[] { ResourceResolverFactoryConfig.class },
+                handler);
     }
 }

@@ -27,12 +27,11 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
@@ -88,13 +87,13 @@ public class EventsCounterImpl extends SlingSafeMethodsServlet implements EventH
         response.setCharacterEncoding("UTF-8");
         try {
             final JSONWriter w = new JSONWriter(response.getWriter());
-            w.setTidy(true);
             w.object();
             for(Map.Entry<String, AtomicInteger> entry : counters.entrySet()) {
                 w.key(entry.getKey()).value(entry.getValue());
             }
             w.endObject();
-        } catch(JSONException je) {
+            w.flush();
+        } catch(IOException je) {
             throw (IOException)new IOException("JSONException in doGet").initCause(je);
         }
     }

@@ -20,10 +20,9 @@
 /**
  * Provides default SPI-implementations used by discovery.commons.providers.impl
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
-@Version("1.0.0")
+@Version("2.1.0")
 package org.apache.sling.discovery.commons.providers.spi.base;
 
-import aQute.bnd.annotation.Version;
-
+import org.osgi.annotation.versioning.Version;

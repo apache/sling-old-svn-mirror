@@ -28,6 +28,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +46,7 @@ public class ReferrerFilterTest {
         final Map<String, Object> props = new HashMap<String, Object>(){{
             put("allow.hosts", new String[]{"relhost"});
             put("allow.hosts.regexp", new String[]{"http://([^.]*.)?abshost:80"});
+            put("exclude.agents.regexp", new String[]{"[a-zA-Z]*\\/[0-9]*\\.[0-9]*;Some-Agent\\s.*"});
         }};
         doReturn(reg).when(bundleCtx).registerService(any(String[].class), any(), any(Dictionary.class));
         doNothing().when(reg).unregister();
@@ -69,12 +71,19 @@ public class ReferrerFilterTest {
         Assert.assertEquals(null, filter.getHost("http:/admin:admin@somehost:4343/somewhere"));
     }
 
-    private HttpServletRequest getRequest(final String referrer) {
+    private HttpServletRequest getRequest(final String referrer, final String userAgent) {
         final HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getMethod()).thenReturn("POST");
         when(request.getRequestURI()).thenReturn("http://somehost/somewhere");
         when(request.getHeader("referer")).thenReturn(referrer);
+        if (StringUtils.isNotBlank(userAgent)) {
+            when(request.getHeader("User-Agent")).thenReturn(userAgent);
+        }
         return request;
+    }
+
+    private HttpServletRequest getRequest(final String referrer) {
+        return getRequest(referrer, null);
     }
 
     @Test public void testValidRequest() {
@@ -94,5 +103,12 @@ public class ReferrerFilterTest {
         Assert.assertEquals(false, filter.isValidRequest(getRequest("http://abshost:9001")));
         Assert.assertEquals(true, filter.isValidRequest(getRequest("http://another.abshost:80")));
         Assert.assertEquals(false, filter.isValidRequest(getRequest("http://yet.another.abshost:80")));
+    }
+
+    @Test public void testIsBrowserRequest() {
+        String userAgent = "Mozilla/5.0;Some-Agent (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/603.2.4 (KHTML, like Gecko)";
+        Assert.assertEquals(false, filter.isBrowserRequest(getRequest(null, userAgent)));
+        userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/603.2.4 (KHTML, like Gecko)";
+        Assert.assertEquals(true, filter.isBrowserRequest(getRequest(null, userAgent)));
     }
 }

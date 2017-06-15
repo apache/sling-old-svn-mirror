@@ -24,6 +24,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.commons.httpclient.HttpException;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.test.impl.helpers.DefaultJavaVMInstall;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
 import org.apache.sling.ide.test.impl.helpers.FailOnUnsuccessfulEventsRule;

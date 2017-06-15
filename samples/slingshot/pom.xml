@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>27</version>
-        <relativePath/>
+        <version>30</version>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.sample.slingshot</artifactId>
-    <version>0.8.0-SNAPSHOT</version>
+    <version>0.8.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling - Slingshot Demo</name>
@@ -37,9 +37,14 @@
     <properties>
       <!-- If you set this to true, the scripts are mounted through the file resource provider! -->
       <fileMount>false</fileMount>
-      <sling.java.version>7</sling.java.version>
     </properties>
     
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/samples/slingshot</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/samples/slingshot</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/samples/slingshot</url>
+    </scm>
+
     <build>
         <plugins>
             <!-- Bundling the sample project -->
@@ -69,6 +74,27 @@
                     </instructions>
                     <!-- Export SCR metadata to classpath to have them available in unit tests -->
                     <exportScr>true</exportScr>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>slingstart-maven-plugin</artifactId>
+                <version>1.7.0</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>attach-prov-model</id>
+                        <goals>
+                            <goal>attach-slingfeature</goal>
+                            <goal>attach-modelarchive</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <setFeatureVersions>true</setFeatureVersions>
+                    <attach>
+                        <type>jar</type>
+                    </attach>
                 </configuration>
             </plugin>
             <plugin>

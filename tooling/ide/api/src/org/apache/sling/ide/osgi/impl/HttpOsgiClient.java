@@ -21,6 +21,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,11 +45,12 @@ import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.osgi.SourceReference;
 import org.apache.sling.ide.transport.RepositoryInfo;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.osgi.framework.Version;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.stream.JsonReader;
 
 public class HttpOsgiClient implements OsgiClient {
 
@@ -59,6 +62,44 @@ public class HttpOsgiClient implements OsgiClient {
     public HttpOsgiClient(RepositoryInfo repositoryInfo) {
 
         this.repositoryInfo = repositoryInfo;
+    }
+    
+    private static final class BundleInfo {
+        private String symbolicName;
+        private String version;
+
+        public String getSymbolicName() {
+            return symbolicName;
+        }
+
+        public Version getVersion() {
+            return new Version(version);
+        }
+    }
+
+    static Version getBundleVersionFromReader(String bundleSymbolicName, Reader reader) throws IOException {
+        Gson gson = new Gson();
+        try (JsonReader jsonReader = new JsonReader(reader)) {
+            // wait for 'data' attribute
+            jsonReader.beginObject();
+            while (jsonReader.hasNext()) {
+                String name = jsonReader.nextName();
+                if (name.equals("data")) {
+                    jsonReader.beginArray();
+                    while (jsonReader.hasNext()) {
+                        // read json for individual bundle
+                        BundleInfo bundleInfo = gson.fromJson(jsonReader, BundleInfo.class);
+                        if (bundleSymbolicName.equals(bundleInfo.getSymbolicName())) {
+                            return bundleInfo.getVersion();
+                        }
+                    }
+                    jsonReader.endArray();
+                } else {
+                    jsonReader.skipValue();
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -73,24 +114,11 @@ public class HttpOsgiClient implements OsgiClient {
                 throw new HttpException("Got status code " + result + " for call to " + method.getURI());
             }
 
-            try ( InputStream input = method.getResponseBodyAsStream() ) {
-
-                JSONObject object = new JSONObject(new JSONTokener(new InputStreamReader(input)));
-    
-                JSONArray bundleData = object.getJSONArray("data");
-                for (int i = 0; i < bundleData.length(); i++) {
-                    JSONObject bundle = bundleData.getJSONObject(i);
-                    String remotebundleSymbolicName = bundle.getString("symbolicName");
-                    Version bundleVersion = new Version(bundle.getString("version"));
-    
-                    if (bundleSymbolicName.equals(remotebundleSymbolicName)) {
-                        return bundleVersion;
-                    }
-                }
-    
-                return null;
+            try ( InputStream input = method.getResponseBodyAsStream();
+                  Reader reader = new InputStreamReader(input, StandardCharsets.US_ASCII)) {
+                return getBundleVersionFromReader(bundleSymbolicName, reader);
             }
-        } catch (IOException | JSONException e) {
+        } catch (IOException e) {
             throw new OsgiClientException(e);
         } finally {
             method.releaseConnection();
@@ -187,6 +215,24 @@ public class HttpOsgiClient implements OsgiClient {
         }.installBundle();        
     }
     
+    private static final class SourceReferenceFromJson {
+        @SerializedName("__type__")
+        private String type; // should be "maven" 
+        private String groupId;
+        private String artifactId;
+        private String version;
+        
+        public boolean isMavenType() {
+            return "maven".equals(type);
+        }
+        
+        public MavenSourceReferenceImpl getMavenSourceReference() {
+            if (!isMavenType()) {
+                throw new IllegalStateException("The type is not a Maven source reference but a " + type);
+            }
+            return new MavenSourceReferenceImpl(groupId, artifactId, version);
+        }
+    }
     @Override
     public List<SourceReference> findSourceReferences() throws OsgiClientException {
         GetMethod method = new GetMethod(repositoryInfo.appendPath("system/sling/tooling/sourceReferences.json"));
@@ -197,35 +243,53 @@ public class HttpOsgiClient implements OsgiClient {
             if (result != HttpStatus.SC_OK) {
                 throw new HttpException("Got status code " + result + " for call to " + method.getURI());
             }
-
+            Gson gson = new Gson();
             List<SourceReference> refs = new ArrayList<>();
-            try ( InputStream input = method.getResponseBodyAsStream() ) {
-
-                JSONArray bundles = new JSONArray(new JSONTokener(new InputStreamReader(input)));
-                for ( int i = 0 ; i < bundles.length(); i++) {
-                    JSONObject bundle = bundles.getJSONObject(i);
-                    JSONArray references = bundle.getJSONArray("sourceReferences");
-                    for ( int j = 0 ; j < references.length(); j++ ) {
-                        JSONObject reference = references.getJSONObject(j);
-                        if ( !"maven".equals(reference.get("__type__")) ) {
-                            // unknown type, skipping
-                            continue;
+            try (JsonReader jsonReader = new JsonReader(
+                    new InputStreamReader(method.getResponseBodyAsStream(), StandardCharsets.US_ASCII))) {
+                jsonReader.beginArray();
+                while (jsonReader.hasNext()) {
+                    if (jsonReader.nextName().equals("sourceReference")){
+                        SourceReferenceFromJson sourceReference = gson.fromJson(jsonReader, SourceReference.class);
+                        if (sourceReference.isMavenType()) {
+                            refs.add(sourceReference.getMavenSourceReference());
                         }
-                        
-                        refs.add(new MavenSourceReferenceImpl(reference.getString("groupId"), reference.getString("artifactId"), reference.getString("version")));
+                    } else {
+                        jsonReader.skipValue();
                     }
                 }
-    
-    
+                jsonReader.endArray();
                 return refs;
             }
-        } catch (IOException | JSONException e) {
+        } catch (IOException e) {
             throw new OsgiClientException(e);
         } finally {
             method.releaseConnection();
-        }        
+        }
     }
 
+    /**
+     * Encapsulates the JSON response from the tooling.installer
+     */
+    private static final class BundleInstallerResult {
+        private String status; // either OK or FAILURE
+        private String message;
+        
+        public boolean hasMessage() {
+            if (message != null && message.length() > 0) {
+                return true;
+            }
+            return false;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+        
+        public boolean isSuccessful() {
+            return "OK".equalsIgnoreCase(status);
+        }
+    }
     static abstract class LocalBundleInstaller {
 
         private final HttpClient httpClient;
@@ -242,47 +306,35 @@ public class HttpOsgiClient implements OsgiClient {
 
             try {
                 configureRequest(method);
-
+                Gson gson = new Gson();
                 int status = httpClient.executeMethod(method);
-                if (status != 200) {
-                    try {
-                        JSONObject result = parseResult(method);
-                        if (result.has("message")) {
-                            throw new OsgiClientException(result.getString("message"));
+                
+                try (JsonReader jsonReader = new JsonReader(
+                        new InputStreamReader(method.getResponseBodyAsStream(), StandardCharsets.UTF_8))) {
+                    BundleInstallerResult result = null;
+                    if (status != 200) {
+                        try {
+                            result = gson.fromJson(jsonReader, BundleInstallerResult.class);
+                            if (result.hasMessage()) {
+                                throw new OsgiClientException(result.getMessage());
+                            }
+                        } catch (JsonParseException e) {
+                            // ignore, fallback to status code reporting
                         }
-                    } catch (JSONException e) {
-                        // ignore, fallback to status code reporting
+                        throw new OsgiClientException("Method execution returned status " + status);
                     }
-                    throw new OsgiClientException("Method execution returned status " + status);
+                    result = gson.fromJson(jsonReader, BundleInstallerResult.class);
+                    if (!result.isSuccessful()) {
+                        String errorMessage = !result.hasMessage() ? "Bundle deployment failed, please check the Sling logs"
+                                : result.getMessage();
+                        throw new OsgiClientException(errorMessage);
+                    }
                 }
-
-                JSONObject obj = parseResult(method);
-
-                if ("OK".equals(obj.getString("status"))) {
-                    return;
-                }
-
-                String errorMessage = obj.has("message") ? "Bundle deployment failed, please check the Sling logs"
-                        : obj.getString("message");
-
-                throw new OsgiClientException(errorMessage);
-
             } catch (IOException e) {
                 throw new OsgiClientException(e);
-            } catch (JSONException e) {
-                throw new OsgiClientException(
-                        "Response is not valid JSON. The InstallServlet is probably not installed at the expected location",
-                        e);
             } finally {
                 method.releaseConnection();
             }
-        }
-
-        private JSONObject parseResult(PostMethod method) throws IOException, JSONException {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            IOUtils.copy(method.getResponseBodyAsStream(), out);
-
-            return new JSONObject(new String(out.toByteArray(), "UTF-8"));
         }
 
         abstract void configureRequest(PostMethod method) throws IOException;

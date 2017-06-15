@@ -27,6 +27,7 @@ import java.util.Map;
  * <p>
  * The resource usually has properties, as returned from <tt>{@link #getProperties()}</tt>. If no properties are found,
  * it means that the resource is only a reference and not that it is an empty resource.
+ * If a property contains multiple values it is being represented by an array type.
  * </p>
  * 
  * <p>

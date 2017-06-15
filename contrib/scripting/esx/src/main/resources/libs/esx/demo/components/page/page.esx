@@ -1,0 +1,45 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import math from "calculator";
+import pathInfo from "pathinfo";
+import moment from "moment";
+import BlogComponent from "BlogComponent"
+import $ from "jquery";
+
+class PageComponent extends BlogComponent {
+  constructor() {
+    super();
+    var template = pathInfo.hasSelector("small") ?"/templates/listing-small.html" : "/templates/listing.html";
+    this.partialContentTemplateURL = __dirname + template;
+  }
+  init() {
+    var self = this;
+    var list = [];
+    var posts = require("resource!" + this.basePath + "/posts").children;
+    posts.forEach(function(post){
+        var blogPostModel = {};
+        var createdAt = parseInt(post.getDateTimeProperty("jcr:created"));
+        blogPostModel.content = self.transformMarkdown(post.properties.content);
+        blogPostModel.properties = post.properties;
+        blogPostModel.path = pathInfo.hasSelector("small") ? post.path + ".small": post.path;
+        blogPostModel.date = moment(createdAt).format('MMMM Do YYYY, h:mm:ss a');
+        list.push(blogPostModel);
+    });
+    this.model.posts = list;
+  }
+}
+module.exports = new PageComponent();

@@ -24,28 +24,26 @@ import java.util.regex.PatternSyntaxException;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.SlingValidationException;
-import org.apache.sling.validation.spi.DefaultValidationResult;
-import org.apache.sling.validation.spi.ValidationContext;
+import org.apache.sling.validation.ValidationResult;
+import org.apache.sling.validation.spi.ValidatorContext;
 import org.apache.sling.validation.spi.Validator;
+import org.apache.sling.validation.spi.support.DefaultValidationResult;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Performs regular expressions validation on the supplied data with the help of the {@link Pattern} class. This {@code Validator} expects a
  * mandatory parameter in the arguments map: {@link RegexValidator#REGEX_PARAM}.
  */
-@Component()
-@Service(Validator.class)
+@Component(property=Validator.PROPERTY_VALIDATOR_ID+"=org.apache.sling.validation.core.RegexValidator")
 public class RegexValidator implements Validator<String> {
 
-    public static final String I18N_KEY_PATTERN_DOES_NOT_MATCH = "sling.validator.regex.pattern-does-not-match";
-    public static final String REGEX_PARAM = "regex";
+    public static final @Nonnull String I18N_KEY_PATTERN_DOES_NOT_MATCH = "sling.validator.regex.pattern-does-not-match";
+    public static final @Nonnull String REGEX_PARAM = "regex";
 
     @Override
-    public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidationContext context, @Nonnull ValueMap arguments)
+    public @Nonnull ValidationResult validate(@Nonnull String data, @Nonnull ValidatorContext context, @Nonnull ValueMap arguments)
             throws SlingValidationException {
         String regex = arguments.get(REGEX_PARAM, "");
         if (StringUtils.isEmpty(regex)) {
@@ -56,7 +54,7 @@ public class RegexValidator implements Validator<String> {
             if (pattern.matcher((String)data).matches()) {
                 return DefaultValidationResult.VALID;
             }
-            return new DefaultValidationResult(context.getLocation(), context.getSeverity(), I18N_KEY_PATTERN_DOES_NOT_MATCH, regex);
+            return new DefaultValidationResult(context, I18N_KEY_PATTERN_DOES_NOT_MATCH, regex);
         } catch (PatternSyntaxException e) {
             throw new SlingValidationException("Given pattern in argument '" + REGEX_PARAM + "' is invalid", e);
         }

@@ -29,56 +29,73 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.sling.commons.mime.MimeTypeService;
-import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.log.LogService;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 /**
  * The <code>MimeTypeServiceImpl</code> is the official implementation of the
  * {@link MimeTypeService} interface.
  */
-@Component(metatype = true, label = "%mime.service.name", description = "%mime.service.description")
-@Service(MimeTypeService.class)
-@Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling MIME Type Service")
-@Reference(name = "MimeTypeProvider", referenceInterface = MimeTypeProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+@Component(service = MimeTypeService.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            Constants.SERVICE_DESCRIPTION + "=Apache Sling MIME Type Service"
+    })
+@Designate(ocd = MimeTypeServiceImpl.Config.class)
 public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     public static final String CORE_MIME_TYPES = "/META-INF/core_mime.types";
 
     public static final String MIME_TYPES = "/META-INF/mime.types";
 
-    @Property(unbounded = PropertyUnbounded.ARRAY)
-    private static final String PROP_MIME_TYPES = "mime.types";
+    @ObjectClassDefinition(name = "Apache Sling MIME Type Service",
+            description = "The Sling MIME Type Service provides support for " +
+                "maintaining and configuring MIME Type mappings.")
+    public @interface Config {
 
-    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
+        @AttributeDefinition(name = "MIME Types",
+                description = "Configures additional MIME type mappings in the "+
+                 "traditional mime.types file format: Each property is a blank space separated "+
+                 "list of strings where the first string is the MIME type and the rest of the "+
+                 "strings are filename extensions referring to the MIME type. Using this "+
+                 "property additional MIME type mappings may be defined. Existing MIME type "+
+                 "mappings cannot be redefined and setting such mappings in this property "+
+                 "has no effect. For a list of existing mappings refer to the MIME Types page.")
+        String[] mime_types();
+    }
+
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL, policy=ReferencePolicy.DYNAMIC)
     private volatile LogService logService;
 
-    private Map<String, String> mimeTab = new HashMap<String, String>();
+    private Map<String, String> mimeTab = new HashMap<>();
 
-    private Map<String, String> extensionMap = new HashMap<String, String>();
+    private Map<String, String> extensionMap = new HashMap<>();
 
     private MimeTypeProvider[] typeProviders;
 
-    private List<MimeTypeProvider> typeProviderList = new ArrayList<MimeTypeProvider>();
+    private List<MimeTypeProvider> typeProviderList = new ArrayList<>();
 
     private ServiceRegistration webConsolePluginService;
 
     // --------- MimeTypeService interface
 
+    @Override
     public String getMimeType(String name) {
         if (name == null) {
             return null;
@@ -98,6 +115,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         return type;
     }
 
+    @Override
     public String getExtension(String mimeType) {
         if (mimeType == null) {
             return null;
@@ -116,6 +134,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         return ext;
     }
 
+    @Override
     public void registerMimeType(String mimeType, String... extensions) {
         if (mimeType == null || mimeType.length() == 0 || extensions == null
             || extensions.length == 0) {
@@ -159,6 +178,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         }
     }
 
+    @Override
     public void registerMimeType(InputStream mimeTabStream) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(
             mimeTabStream, "ISO-8859-1"));
@@ -177,16 +197,17 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     // ---------- SCR implementation -------------------------------------------
 
-    protected void activate(ComponentContext context) {
-        context.getBundleContext().addBundleListener(this);
+    @Activate
+    protected void activate(final BundleContext context, final Config config) {
+        context.addBundleListener(this);
 
         // register core and default sling mime types
-        Bundle bundle = context.getBundleContext().getBundle();
+        Bundle bundle = context.getBundle();
         registerMimeType(bundle.getEntry(CORE_MIME_TYPES));
         registerMimeType(bundle.getEntry(MIME_TYPES));
 
         // register maps of existing bundles
-        Bundle[] bundles = context.getBundleContext().getBundles();
+        Bundle[] bundles = context.getBundles();
         for (int i = 0; i < bundles.length; i++) {
             if ((bundles[i].getState() & (Bundle.RESOLVED | Bundle.STARTING
                 | Bundle.ACTIVE | Bundle.STOPPING)) != 0
@@ -196,10 +217,8 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         }
 
         // register configuration properties
-        String[] configTypes = OsgiUtil.toStringArray(context.getProperties().get(
-            PROP_MIME_TYPES));
-        if (configTypes != null) {
-            for (String configType : configTypes) {
+        if (config.mime_types() != null) {
+            for (final String configType : config.mime_types()) {
                 registerMimeType(configType);
             }
         }
@@ -207,21 +226,22 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         try {
             MimeTypeWebConsolePlugin plugin = new MimeTypeWebConsolePlugin(this);
 
-            Dictionary<String, String> props = new Hashtable<String, String>();
+            Dictionary<String, String> props = new Hashtable<>();
             props.put("felix.webconsole.label", MimeTypeWebConsolePlugin.LABEL);
             props.put("felix.webconsole.title", MimeTypeWebConsolePlugin.TITLE);
             props.put("felix.webconsole.category", "Sling");
             props.put("felix.webconsole.css", MimeTypeWebConsolePlugin.CSS_REFS);
 
-            webConsolePluginService = context.getBundleContext().registerService(
+            webConsolePluginService = context.registerService(
                 "javax.servlet.Servlet", plugin, props);
         } catch (Throwable t) {
             // don't care, we thus don't have the console plugin
         }
     }
 
-    protected void deactivate(ComponentContext context) {
-        context.getBundleContext().removeBundleListener(this);
+    @Deactivate
+    protected void deactivate(final BundleContext context) {
+        context.removeBundleListener(this);
 
         if (webConsolePluginService != null) {
             webConsolePluginService.unregister();
@@ -229,6 +249,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         }
     }
 
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     protected void bindMimeTypeProvider(MimeTypeProvider mimeTypeProvider) {
         synchronized (this.typeProviderList) {
             this.typeProviderList.add(mimeTypeProvider);
@@ -245,9 +266,14 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     // ---------- BundleListener ----------------------------------------------
 
+    @Override
     public void bundleChanged(BundleEvent event) {
         if (event.getType() == BundleEvent.RESOLVED) {
-            this.registerMimeType(event.getBundle().getEntry(MIME_TYPES));
+            try {
+                this.registerMimeType(event.getBundle().getEntry(MIME_TYPES));
+            } catch (IllegalStateException ie) {
+                log(LogService.LOG_INFO, "bundleChanged: an issue while registering the mime type occurred", null);
+            }
         }
     }
 

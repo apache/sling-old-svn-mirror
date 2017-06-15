@@ -18,18 +18,12 @@
  */
 package org.apache.sling.testing.mock.sling;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
@@ -48,11 +42,11 @@ import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.PropertyDefinitionTemplate;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory;
 import org.apache.jackrabbit.commons.cnd.TemplateBuilderFactory;
+import org.apache.sling.testing.mock.osgi.ManifestScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -231,41 +225,7 @@ public final class NodeTypeDefinitionScanner {
      * @return List of node type definition class paths
      */
     private static List<String> findeNodeTypeDefinitions() {
-        List<String> nodeTypeDefinitions = new ArrayList<String>();
-        try {
-            Enumeration<URL> resEnum = NodeTypeDefinitionScanner.class.getClassLoader().getResources(JarFile.MANIFEST_NAME);
-            while (resEnum.hasMoreElements()) {
-                try {
-                    URL url = (URL)resEnum.nextElement();
-                    InputStream is = url.openStream();
-                    if (is != null) {
-                        try {
-                            Manifest manifest = new Manifest(is);
-                            Attributes mainAttribs = manifest.getMainAttributes();
-                            String nodeTypeDefinitionList = mainAttribs.getValue("Sling-Nodetypes");
-                            String[] nodeTypeDefinitionArray = StringUtils.split(nodeTypeDefinitionList, ",");
-                            if (nodeTypeDefinitionArray != null) {
-                                for (String nodeTypeDefinition : nodeTypeDefinitionArray) {
-                                    if (!StringUtils.isBlank(nodeTypeDefinition)) {
-                                        nodeTypeDefinitions.add(StringUtils.trim(nodeTypeDefinition));
-                                    }
-                                }
-                            }
-                        }
-                        finally {
-                            is.close();
-                        }
-                    }
-                }
-                catch (Throwable ex) {
-                    log.warn("Unable to read JAR manifest.", ex);
-                }
-            }
-        }
-        catch (IOException ex2) {
-            log.warn("Unable to read JAR manifests.", ex2);
-        }
-        return nodeTypeDefinitions; 
+        return new ArrayList<String>(ManifestScanner.getValues("Sling-Nodetypes"));
     }
     
     public static NodeTypeDefinitionScanner get() {

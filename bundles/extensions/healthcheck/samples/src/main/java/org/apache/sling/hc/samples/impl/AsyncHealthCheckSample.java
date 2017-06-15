@@ -18,7 +18,6 @@
 package org.apache.sling.hc.samples.impl;
 
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Service;
@@ -41,32 +40,33 @@ import org.slf4j.LoggerFactory;
 public class AsyncHealthCheckSample implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(AsyncHealthCheckSample.class);
-    
-    private final AtomicInteger counter = new AtomicInteger();
-    
-    public static final int PERIOD_SECONDS = 5;
+    private static final long start = System.currentTimeMillis();
     
     @Override
     public Result execute() {
         
-        final long toWait = (long)(Math.random() * 2 * PERIOD_SECONDS);
-        log.info("{} - Waiting {} seconds to simulate an expensive operation...", this, toWait);
-        try {
-            Thread.sleep(toWait * 1000L);
-        } catch(InterruptedException iex) {
-            log.warn("Sleep interrupted", iex);
-        }
-
-        final int value =  counter.incrementAndGet();
+        final long value = secondsFromStart();
         log.info("{} - counter set to {}", this, value);
         
         final FormattingResultLog resultLog = new FormattingResultLog();
 
         resultLog.info("{} - counter value set to {} at {}", this, value, new Date());
         if(value % 2 != 0) {
-            resultLog.warn("Counter value ({}) is not even", value);
+            // Generate various states as examples
+            final String template = "Counter value ({}) is not {} at {}";
+            if(value % 3 == 0) {
+                resultLog.critical(template, value, "a multiple of 3 (critical)", new Date());
+            } else if(value % 5 == 0) {
+                resultLog.healthCheckError(template, value, "a multiple of 5 (healthCheckError)", new Date());
+            } else {
+                resultLog.warn(template, value, "even (warn)", new Date());
+            }
         }
         return new Result(resultLog);
+    }
+    
+    private long secondsFromStart() {
+        return (System.currentTimeMillis() - start) / 1000L;
     }
  
 }

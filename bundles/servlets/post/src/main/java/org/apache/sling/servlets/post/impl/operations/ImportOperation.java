@@ -49,10 +49,16 @@ public class ImportOperation extends AbstractCreateOperation {
     /**
      * Reference to the content importer service
      */
-    private ContentImporter contentImporter;
+    private Object contentImporter;
 
-    public void setContentImporter(ContentImporter importer) {
+    public void setContentImporter(Object importer) {
         this.contentImporter = importer;
+    }
+
+    public void unsetContentImporter(Object importer) {
+        if ( this.contentImporter == importer ) {
+            this.contentImporter = null;
+        }
     }
 
     private String getRequestParamAsString(SlingHttpServletRequest request, String key) {
@@ -65,198 +71,204 @@ public class ImportOperation extends AbstractCreateOperation {
 
     @Override
     protected void doRun(SlingHttpServletRequest request, PostResponse response, final List<Modification> changes)
-            throws RepositoryException {
-        ContentImporter importer = contentImporter;
-        if (importer == null) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Missing content importer for import");
-            return;
-        }
-        Map<String, RequestProperty> reqProperties = collectContent(request,
-             response);
-
-        VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
-
-        // do not change order unless you have a very good reason.
-        Session session = request.getResourceResolver().adaptTo(Session.class);
-
+            throws PersistenceException {
         try {
-            processCreate(request.getResourceResolver(), reqProperties, response, changes, versioningConfiguration);
-        } catch ( final PersistenceException pe) {
-            if ( pe.getCause() instanceof RepositoryException ) {
-                throw (RepositoryException)pe.getCause();
-            }
-            throw new RepositoryException(pe);
-        }
-        String path = response.getPath();
-        Node node = null;
-        try {
-            node = (Node) session.getItem(path);
-        } catch ( RepositoryException e ) {
-            log.warn(e.getMessage(),e);
-            // was not able to resolve the node
-        } catch ( ClassCastException e) {
-            log.warn(e.getMessage(),e);
-            // it was not a node
-        }
-        if (node == null) {
-
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND,
-                    "Missing target node " + path + " for import");
-            return;
-        }
-
-        String contentType = getRequestParamAsString(request, SlingPostConstants.RP_CONTENT_TYPE);
-        if (contentType == null) {
-            response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
-            "Required :contentType parameter is missing");
-            return;
-        }
-
-        //import options passed as request parameters.
-        final boolean replace = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_REPLACE));
-        final boolean replaceProperties = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_REPLACE_PROPERTIES));
-        final boolean checkin = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_CHECKIN));
-        final boolean autoCheckout = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_AUTO_CHECKOUT));
-
-        String basePath = getItemPath(request);
-        basePath = removeAndValidateWorkspace(basePath, request.getResourceResolver().adaptTo(Session.class));
-        if (basePath.endsWith("/")) {
-            //remove the trailing slash
-            basePath = basePath.substring(0, basePath.length() - 1);
-        }
-
-        // default to creating content
-        response.setCreateRequest(true);
-
-        final String targetName;
-        //check if a name was posted to use as the name of the imported root node
-        if (getRequestParamAsString(request, SlingPostConstants.RP_NODE_NAME) != null) {
-            // exact name
-            targetName = getRequestParamAsString(request, SlingPostConstants.RP_NODE_NAME);
-            if (targetName.length() > 0 && node.hasNode(targetName)) {
-                if (replace) {
-                    response.setCreateRequest(false);
-                } else {
-                    response.setStatus(
-                        HttpServletResponse.SC_PRECONDITION_FAILED,
-                        "Cannot import " + path + "/" + targetName
-                            + ": node exists");
-                    return;
-                }
-            }
-        } else if (getRequestParamAsString(request, SlingPostConstants.RP_NODE_NAME_HINT) != null) {
-            // node name hint only
-            String nodePath = generateName(request, basePath);
-            String name = nodePath.substring(nodePath.lastIndexOf('/') + 1);
-            targetName = name;
-        } else {
-            // no name posted, so the import won't create a root node
-            targetName = "";
-        }
-        final String contentRootName = targetName + "." + contentType;
-
-        try {
-            InputStream contentStream = null;
-        	RequestParameter contentParameter = request.getRequestParameter(SlingPostConstants.RP_CONTENT);
-            if (contentParameter != null) {
-                contentStream = contentParameter.getInputStream();
-            } else {
-                RequestParameter contentFile = request.getRequestParameter(SlingPostConstants.RP_CONTENT_FILE);
-                if (contentFile != null) {
-                    contentStream = contentFile.getInputStream();
-                }
-            }
-
-            if (contentStream == null) {
-                response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
-                        "Missing content for import");
+            Object importer = contentImporter;
+            if (importer == null) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "Missing content importer for import");
                 return;
-            } else {
-                importer.importContent(node, contentRootName, contentStream,
-                        new ImportOptions() {
+            }
+            Map<String, RequestProperty> reqProperties = collectContent(request,
+                 response);
 
-                            @Override
-                            public boolean isCheckin() {
-                                return checkin;
-                            }
+            VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
-							@Override
-							public boolean isAutoCheckout() {
-								return autoCheckout;
-							}
+            // do not change order unless you have a very good reason.
+            Session session = request.getResourceResolver().adaptTo(Session.class);
 
-							@Override
-                            public boolean isIgnoredImportProvider(
-                                    String extension) {
-                                // this probably isn't important in this context.
-                                return false;
-                            }
+            processCreate(request.getResourceResolver(), reqProperties, response, changes, versioningConfiguration);
 
-                            @Override
-                            public boolean isOverwrite() {
-                                return replace;
-                            }
+            String path = response.getPath();
+            Node node = null;
+            try {
+                node = (Node) session.getItem(path);
+            } catch ( RepositoryException e ) {
+                log.warn(e.getMessage(),e);
+                // was not able to resolve the node
+            } catch ( ClassCastException e) {
+                log.warn(e.getMessage(),e);
+                // it was not a node
+            }
+            if (node == null) {
 
-                            /* (non-Javadoc)
-                             * @see org.apache.sling.jcr.contentloader.ImportOptions#isPropertyOverwrite()
-                             */
-                            @Override
-                            public boolean isPropertyOverwrite() {
-                                return replaceProperties;
-                            }
-                        },
-                        new ContentImportListener() {
-
-                            public void onReorder(String orderedPath, String beforeSibbling) {
-                                changes.add(Modification.onOrder(orderedPath, beforeSibbling));
-                            }
-
-                            public void onMove(String srcPath, String destPath) {
-                                changes.add(Modification.onMoved(srcPath, destPath));
-                            }
-
-                            public void onModify(String srcPath) {
-                                changes.add(Modification.onModified(srcPath));
-                            }
-
-                            public void onDelete(String srcPath) {
-                                changes.add(Modification.onDeleted(srcPath));
-                            }
-
-                            public void onCreate(String srcPath) {
-                                changes.add(Modification.onCreated(srcPath));
-                            }
-
-                            public void onCopy(String srcPath, String destPath) {
-                                changes.add(Modification.onCopied(srcPath, destPath));
-                            }
-
-                            public void onCheckin(String srcPath) {
-                                changes.add(Modification.onCheckin(srcPath));
-                            }
-                            public void onCheckout(String srcPath) {
-                                changes.add(Modification.onCheckout(srcPath));
-                            }
-                        });
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND,
+                        "Missing target node " + path + " for import");
+                return;
             }
 
-            if (!changes.isEmpty()) {
-                //fill in the data for the response report
-                Modification modification = changes.get(0);
-                if (modification.getType() == ModificationType.CREATE) {
-                    String importedPath = modification.getSource();
-                    response.setLocation(externalizePath(request, importedPath));
-                    response.setPath(importedPath);
-                    int lastSlashIndex = importedPath.lastIndexOf('/');
-                    if (lastSlashIndex != -1) {
-                        String parentPath = importedPath.substring(0, lastSlashIndex);
-                        response.setParentLocation(externalizePath(request, parentPath));
+            String contentType = getRequestParamAsString(request, SlingPostConstants.RP_CONTENT_TYPE);
+            if (contentType == null) {
+                response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
+                "Required :contentType parameter is missing");
+                return;
+            }
+
+            //import options passed as request parameters.
+            final boolean replace = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_REPLACE));
+            final boolean replaceProperties = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_REPLACE_PROPERTIES));
+            final boolean checkin = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_CHECKIN));
+            final boolean autoCheckout = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_AUTO_CHECKOUT));
+
+            String basePath = getResourcePath(request);
+            if (basePath.endsWith("/")) {
+                //remove the trailing slash
+                basePath = basePath.substring(0, basePath.length() - 1);
+            }
+
+            // default to creating content
+            response.setCreateRequest(true);
+
+            final String targetName;
+            //check if a name was posted to use as the name of the imported root node
+            if (getRequestParamAsString(request, SlingPostConstants.RP_NODE_NAME) != null) {
+                // exact name
+                targetName = getRequestParamAsString(request, SlingPostConstants.RP_NODE_NAME);
+                if (targetName.length() > 0 && node.hasNode(targetName)) {
+                    if (replace) {
+                        response.setCreateRequest(false);
+                    } else {
+                        response.setStatus(
+                            HttpServletResponse.SC_PRECONDITION_FAILED,
+                            "Cannot import " + path + "/" + targetName
+                                + ": node exists");
+                        return;
                     }
                 }
+            } else if (getRequestParamAsString(request, SlingPostConstants.RP_NODE_NAME_HINT) != null) {
+                // node name hint only
+                String nodePath = generateName(request, basePath);
+                String name = nodePath.substring(nodePath.lastIndexOf('/') + 1);
+                targetName = name;
+            } else {
+                // no name posted, so the import won't create a root node
+                targetName = "";
             }
-        } catch (IOException e) {
-            throw new RepositoryException(e);
+            final String contentRootName = targetName + "." + contentType;
+            try {
+                InputStream contentStream = null;
+                RequestParameter contentParameter = request.getRequestParameter(SlingPostConstants.RP_CONTENT);
+                if (contentParameter != null) {
+                    contentStream = contentParameter.getInputStream();
+                } else {
+                    RequestParameter contentFile = request.getRequestParameter(SlingPostConstants.RP_CONTENT_FILE);
+                    if (contentFile != null) {
+                        contentStream = contentFile.getInputStream();
+                    }
+                }
+
+                if (contentStream == null) {
+                    response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
+                            "Missing content for import");
+                    return;
+                } else {
+                    ((ContentImporter)importer).importContent(node, contentRootName, contentStream,
+                            new ImportOptions() {
+
+                                @Override
+                                public boolean isCheckin() {
+                                    return checkin;
+                                }
+
+                                @Override
+                                public boolean isAutoCheckout() {
+                                    return autoCheckout;
+                                }
+
+                                @Override
+                                public boolean isIgnoredImportProvider(
+                                        String extension) {
+                                    // this probably isn't important in this context.
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean isOverwrite() {
+                                    return replace;
+                                }
+
+                                /* (non-Javadoc)
+                                 * @see org.apache.sling.jcr.contentloader.ImportOptions#isPropertyOverwrite()
+                                 */
+                                @Override
+                                public boolean isPropertyOverwrite() {
+                                    return replaceProperties;
+                                }
+                            },
+                            new ContentImportListener() {
+
+                                @Override
+                                public void onReorder(String orderedPath, String beforeSibbling) {
+                                    changes.add(Modification.onOrder(orderedPath, beforeSibbling));
+                                }
+
+                                @Override
+                                public void onMove(String srcPath, String destPath) {
+                                    changes.add(Modification.onMoved(srcPath, destPath));
+                                }
+
+                                @Override
+                                public void onModify(String srcPath) {
+                                    changes.add(Modification.onModified(srcPath));
+                                }
+
+                                @Override
+                                public void onDelete(String srcPath) {
+                                    changes.add(Modification.onDeleted(srcPath));
+                                }
+
+                                @Override
+                                public void onCreate(String srcPath) {
+                                    changes.add(Modification.onCreated(srcPath));
+                                }
+
+                                @Override
+                                public void onCopy(String srcPath, String destPath) {
+                                    changes.add(Modification.onCopied(srcPath, destPath));
+                                }
+
+                                @Override
+                                public void onCheckin(String srcPath) {
+                                    changes.add(Modification.onCheckin(srcPath));
+                                }
+                                @Override
+                                public void onCheckout(String srcPath) {
+                                    changes.add(Modification.onCheckout(srcPath));
+                                }
+                            });
+                }
+
+                if (!changes.isEmpty()) {
+                    //fill in the data for the response report
+                    Modification modification = changes.get(0);
+                    if (modification.getType() == ModificationType.CREATE) {
+                        String importedPath = modification.getSource();
+                        response.setLocation(externalizePath(request, importedPath));
+                        response.setPath(importedPath);
+                        int lastSlashIndex = importedPath.lastIndexOf('/');
+                        if (lastSlashIndex != -1) {
+                            String parentPath = importedPath.substring(0, lastSlashIndex);
+                            response.setParentLocation(externalizePath(request, parentPath));
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                throw new PersistenceException(e.getMessage(), e);
+            }
+        } catch ( final RepositoryException re) {
+            throw new PersistenceException(re.getMessage(), re);
         }
+
+
     }
 }

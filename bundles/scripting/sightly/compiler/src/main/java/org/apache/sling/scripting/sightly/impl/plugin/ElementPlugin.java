@@ -18,14 +18,16 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.plugin;
 
+import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.compiler.commands.Conditional;
 import org.apache.sling.scripting.sightly.compiler.commands.OutText;
 import org.apache.sling.scripting.sightly.compiler.commands.OutputVariable;
 import org.apache.sling.scripting.sightly.compiler.commands.VariableBinding;
-import org.apache.sling.scripting.sightly.compiler.expression.MarkupContext;
-import org.apache.sling.scripting.sightly.impl.compiler.PushStream;
 import org.apache.sling.scripting.sightly.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.compiler.expression.ExpressionNode;
+import org.apache.sling.scripting.sightly.compiler.expression.MarkupContext;
+import org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall;
+import org.apache.sling.scripting.sightly.impl.compiler.PushStream;
 import org.apache.sling.scripting.sightly.impl.compiler.frontend.CompilerContext;
 import org.apache.sling.scripting.sightly.impl.filter.ExpressionContext;
 
@@ -40,7 +42,7 @@ public class ElementPlugin extends AbstractPlugin {
 
         return new DefaultPluginInvoke() {
 
-            private final ExpressionNode node = compilerContext.adjustToContext(expression, MarkupContext.ELEMENT_NAME, ExpressionContext
+            private final ExpressionNode node = adjustContext(compilerContext, expression, MarkupContext.ELEMENT_NAME, ExpressionContext
                     .ELEMENT).getRoot();
             private String tagVar = compilerContext.generateVariable("tagVar");
 
@@ -86,5 +88,17 @@ public class ElementPlugin extends AbstractPlugin {
             }
         };
 
+    }
+
+    private Expression adjustContext(CompilerContext compilerContext, Expression expression, MarkupContext markupContext,
+                                     ExpressionContext expressionContext) {
+        ExpressionNode root = expression.getRoot();
+        if (root instanceof RuntimeCall) {
+            RuntimeCall runtimeCall = (RuntimeCall) root;
+            if (runtimeCall.getFunctionName().equals(RuntimeFunction.XSS)) {
+                return expression;
+            }
+        }
+        return compilerContext.adjustToContext(expression, markupContext, expressionContext);
     }
 }

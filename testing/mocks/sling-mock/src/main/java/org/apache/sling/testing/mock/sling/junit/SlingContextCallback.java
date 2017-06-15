@@ -18,22 +18,16 @@
  */
 package org.apache.sling.testing.mock.sling.junit;
 
-import java.io.IOException;
-
-import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.testing.mock.osgi.context.ContextCallback;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Callback-interface for application-specific setup and teardown operations to
+ * Callback interface for application-specific setup and teardown operations to
  * customize the {@link SlingContext} JUnit rule.
  */
-public interface SlingContextCallback {
+@ConsumerType
+public interface SlingContextCallback extends ContextCallback<SlingContext> {
 
-    /**
-     * Execute callback action
-     * @param context Sling context
-     * @throws IOException I/O exception
-     * @throws PersistenceException Persistence exception
-     */
-    void execute(SlingContext context) throws IOException, PersistenceException;
+    // specialized version of ContextCallback
 
 }

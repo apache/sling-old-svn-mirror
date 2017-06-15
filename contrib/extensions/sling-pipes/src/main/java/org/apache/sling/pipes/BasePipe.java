@@ -16,6 +16,11 @@
  */
 package org.apache.sling.pipes;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -23,18 +28,20 @@ import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
 /**
- * provides generic utilities for a pipe
+ * provides generic utilities for a pipe, is also a dummy pipe (outputs its input, without changing anything)
  */
 public class BasePipe implements Pipe {
-    Logger logger = LoggerFactory.getLogger(BasePipe.class);
+
+    private final Logger logger = LoggerFactory.getLogger(BasePipe.class);
+
     public static final String RESOURCE_TYPE = "slingPipes/base";
-    protected static final String DRYRUN_KEY = "dryRun";
+    public static final String DRYRUN_KEY = "dryRun";
+    public static final String READ_ONLY = "readOnly";
+    public static final String PN_STATUS = "status";
+    public static final String PN_STATUS_MODIFIED = "statusModified";
+    public static final String STATUS_STARTED = "started";
+    public static final String STATUS_FINISHED = "finished";
     protected static final String DRYRUN_EXPR = "${" + DRYRUN_KEY + "}";
 
     protected ResourceResolver resolver;
@@ -43,6 +50,7 @@ public class BasePipe implements Pipe {
     protected ContainerPipe parent;
     protected String distributionAgent;
     protected PipeBindings bindings;
+    protected ReferencePipe referrer;
 
     // used by pipes using complex JCR configurations
     public static final List<String> IGNORED_PROPERTIES = Arrays.asList(new String[]{"jcr:lastModified", "jcr:primaryType", "jcr:created", "jcr:createdBy"});
@@ -60,10 +68,21 @@ public class BasePipe implements Pipe {
         this.parent = parent;
     }
 
+    @Override
+    public Resource getResource() {
+        return resource;
+    }
+
     protected Plumber plumber;
 
     private String name;
 
+    /**
+     * Pipe Constructor
+     * @param plumber plumber
+     * @param resource configuration resource
+     * @throws Exception in case configuration is not working
+     */
     public BasePipe(Plumber plumber, Resource resource) throws Exception {
         this.resource = resource;
         properties = resource.adaptTo(ValueMap.class);
@@ -74,6 +93,7 @@ public class BasePipe implements Pipe {
         bindings = new PipeBindings(resource);
     }
 
+    @Override
     public boolean isDryRun() {
         if (dryRunObject == null) {
             Object run =  bindings.isBindingDefined(DRYRUN_KEY) ? bindings.instantiateObject(DRYRUN_EXPR) : false;
@@ -83,6 +103,7 @@ public class BasePipe implements Pipe {
         return dryRun;
     }
 
+    @Override
     public String toString() {
         return name + " " + "(path: " + resource.getPath() + ", dryRun: " + isDryRun() + ", modifiesContent: " + modifiesContent() + ")";
     }
@@ -92,13 +113,14 @@ public class BasePipe implements Pipe {
         return false;
     }
 
+    @Override
     public String getName(){
         return name;
     }
 
     /**
      * Get pipe's expression, instanciated or not
-     * @return
+     * @return configured expression
      */
     public String getExpr(){
         String rawExpression = properties.get(PN_EXPR, "");
@@ -107,7 +129,7 @@ public class BasePipe implements Pipe {
 
     /**
      * Get pipe's path, instanciated or not
-     * @return
+     * @return configured path (can be empty)
      */
     public String getPath() {
         String rawPath = properties.get(PN_PATH, "");
@@ -127,11 +149,19 @@ public class BasePipe implements Pipe {
         return configuredInput;
     }
 
+    /**
+     * Retrieves previous pipe if contained by a parent, or referrer's
+     * @return pipe before this one or the referrer's can be null in case there is no parent
+     */
+    protected Pipe getPreviousPipe(){
+        return referrer == null ? (parent != null ? parent.getPreviousPipe(this) : null) : referrer.getPreviousPipe();
+    }
+
     @Override
     public Resource getInput() {
         Resource resource = getConfiguredInput();
         if (resource == null && parent != null){
-            Pipe previousPipe = parent.getPreviousPipe(this);
+            Pipe previousPipe = getPreviousPipe();
             if (previousPipe != null) {
                 return bindings.getExecutedResource(previousPipe.getName());
             }
@@ -163,15 +193,19 @@ public class BasePipe implements Pipe {
 
     /**
      * default execution, just returns current resource
-     * @return
+     * @return output of this pipe, which is here the input resource
      */
     public Iterator<Resource> getOutput(){
-        return Collections.singleton(getInput()).iterator();
+        Resource resource = getInput();
+        if (resource != null){
+            return Collections.singleton(resource).iterator();
+        }
+        return EMPTY_ITERATOR;
     }
 
     /**
      * Get configuration node
-     * @return
+     * @return configuration node if any
      */
     public Resource getConfiguration() {
         return resource.getChild(NN_CONF);
@@ -182,5 +216,13 @@ public class BasePipe implements Pipe {
         return distributionAgent;
     }
 
+    @Override
+    public void setReferrer(ReferencePipe pipe) {
+        referrer = pipe;
+    }
+
+    /**
+     * Empty resource iterator
+     */
     public static final Iterator<Resource> EMPTY_ITERATOR = Collections.emptyIterator();
 }

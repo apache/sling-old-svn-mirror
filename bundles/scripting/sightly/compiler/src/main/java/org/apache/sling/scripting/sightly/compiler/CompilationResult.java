@@ -22,8 +22,7 @@ import java.util.List;
 
 import org.apache.sling.scripting.sightly.compiler.commands.Command;
 import org.apache.sling.scripting.sightly.compiler.commands.CommandStream;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * This class encapsulates the result of a compile operation performed by the {@link SightlyCompiler}.

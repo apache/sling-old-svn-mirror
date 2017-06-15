@@ -18,7 +18,6 @@
  */
 package org.apache.sling.discovery.base.its.setup.mock;
 
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.base.commons.BaseViewChecker;
@@ -28,7 +27,7 @@ import org.apache.sling.discovery.base.connectors.ping.ConnectorRegistry;
 import org.apache.sling.settings.SlingSettingsService;
 
 public class DummyViewChecker extends BaseViewChecker {
-    
+
     protected SlingSettingsService slingSettingsService;
 
     protected ResourceResolverFactory resourceResolverFactory;

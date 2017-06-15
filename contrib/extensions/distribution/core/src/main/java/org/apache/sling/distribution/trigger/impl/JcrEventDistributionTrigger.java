@@ -38,10 +38,13 @@ import org.slf4j.LoggerFactory;
 public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger implements DistributionTrigger {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final boolean deep;
     private final String[] ignoredPathsPatterns;
 
-    public JcrEventDistributionTrigger(SlingRepository repository, Scheduler scheduler, ResourceResolverFactory resolverFactory, String path, String serviceName, String[] ignoredPathsPatterns) {
+    public JcrEventDistributionTrigger(SlingRepository repository, Scheduler scheduler, ResourceResolverFactory resolverFactory,
+                                       String path, boolean deep, String serviceName, String[] ignoredPathsPatterns) {
         super(repository, scheduler, resolverFactory, path, serviceName);
+        this.deep = deep;
         this.ignoredPathsPatterns = ignoredPathsPatterns;
     }
 
@@ -68,7 +71,7 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
                 distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, true, replicatingPath);
             } else {
                 distributionRequest = new SimpleDistributionRequest(Event.NODE_REMOVED == event.getType() ?
-                        DistributionRequestType.DELETE : DistributionRequestType.ADD, replicatingPath);
+                        DistributionRequestType.DELETE : DistributionRequestType.ADD, deep, replicatingPath);
             }
 
             log.info("distributing {}", distributionRequest);
@@ -89,6 +92,7 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
 
         for (String pattern : ignoredPathsPatterns) {
             if (path.matches(pattern)) {
+                log.debug("path {} ignored", path);
                 return true;
             }
         }

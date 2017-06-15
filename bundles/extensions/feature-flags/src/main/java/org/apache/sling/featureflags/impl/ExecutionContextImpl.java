@@ -23,9 +23,11 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.featureflags.ExecutionContext;
 import org.apache.sling.featureflags.Feature;
+import org.apache.sling.featureflags.Features;
 
 /**
  * Implementation of the provider context.
@@ -40,18 +42,25 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     private final Map<String, Boolean> featureCache;
 
-    public ExecutionContextImpl(final HttpServletRequest request) {
+    private final Features features;
+
+    public ExecutionContextImpl(final Features features, final HttpServletRequest request) {
         ResourceResolver resourceResolver = null;
         if (request != null) {
-            Object resolverObject = request.getAttribute(REQUEST_ATTRIBUTE_RESOLVER);
-            if (resolverObject instanceof ResourceResolver) {
-                resourceResolver = (ResourceResolver) resolverObject;
+            if ( request instanceof SlingHttpServletRequest ) {
+                resourceResolver = ((SlingHttpServletRequest)request).getResourceResolver();
+            } else {
+                Object resolverObject = request.getAttribute(REQUEST_ATTRIBUTE_RESOLVER);
+                if (resolverObject instanceof ResourceResolver) {
+                    resourceResolver = (ResourceResolver) resolverObject;
+                }
             }
         }
 
         this.request = request;
         this.resourceResolver = resourceResolver;
         this.featureCache = new HashMap<String, Boolean>();
+        this.features = features;
     }
 
     @Override
@@ -64,11 +73,18 @@ public class ExecutionContextImpl implements ExecutionContext {
         return this.resourceResolver;
     }
 
-    boolean isEnabled(Feature feature) {
+    @Override
+    public Features getFeatures() {
+        return this.features;
+    }
+
+    boolean isEnabled(final Feature feature) {
         final String name = feature.getName();
         Boolean entry = this.featureCache.get(name);
         if (entry == null) {
-            entry = Boolean.valueOf(feature.isEnabled(this));
+            // put false in the cache to stop on circular calls
+            this.featureCache.put(name, Boolean.FALSE);
+            entry = feature.isEnabled(this);
             this.featureCache.put(name, entry);
         }
         return entry;

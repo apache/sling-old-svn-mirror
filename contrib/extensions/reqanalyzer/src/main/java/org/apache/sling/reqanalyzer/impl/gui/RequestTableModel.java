@@ -30,11 +30,10 @@ public class RequestTableModel implements TableModel {
     private long previousStamp;
     
     void addRow(String row) {
-        // split row: "%1$7d (%2$tF %2$tT) %3$s%n
+        // split row: "%1$7d %3$s%n
         
         final String stampS = row.substring(0, 7);
-        final int endTimeStamp = row.indexOf(')');
-        final String message = row.substring(endTimeStamp+2); 
+        final String message = row.substring(7); 
         
         long stamp = Long.parseLong(stampS.trim());
         long delta = stamp - this.previousStamp;

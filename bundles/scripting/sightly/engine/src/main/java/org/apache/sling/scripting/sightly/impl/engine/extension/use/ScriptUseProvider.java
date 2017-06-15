@@ -22,20 +22,22 @@ package org.apache.sling.scripting.sightly.impl.engine.extension.use;
 import javax.script.Bindings;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
+import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
+import org.apache.sling.scripting.sightly.impl.utils.ScriptUtils;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,36 +49,40 @@ import org.slf4j.LoggerFactory;
  * implementation of the {@link SlingScript#eval(SlingBindings)} method for the available script engines from your platform.
  */
 @Component(
-        metatype = true,
-        label = "Apache Sling Scripting Sightly Script Use Provider",
-        description = "The Script Use Provider is responsible for instantiating objects from scripts evaluated by other Sling Scripting " +
-                "Engines."
+        service = UseProvider.class,
+        configurationPid = "org.apache.sling.scripting.sightly.impl.engine.extension.use.ScriptUseProvider",
+        property = {
+                Constants.SERVICE_RANKING + ":Integer=0"
+        }
 )
-@Service(UseProvider.class)
-@Properties({
-        @Property(
-                name = Constants.SERVICE_RANKING,
-                label = "Service Ranking",
-                description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
-                        "Use-object. A higher value represents a higher priority.",
-                intValue = 0,
-                propertyPrivate = false
-        )
-})
 public class ScriptUseProvider implements UseProvider {
+
+    @interface Configuration {
+
+        @AttributeDefinition(
+                name = "Service Ranking",
+                description = "The Service Ranking value acts as the priority with which this Use Provider is queried to return an " +
+                        "Use-object. A higher value represents a higher priority."
+        )
+        int service_ranking() default 0;
+
+    }
 
     private static final Logger log = LoggerFactory.getLogger(ScriptUseProvider.class);
 
+    @Reference
+    private ScriptingResourceResolverProvider scriptingResourceResolverProvider;
+
     @Override
     public ProviderOutcome provide(String scriptName, RenderContext renderContext, Bindings arguments) {
-        RenderContextImpl rci = (RenderContextImpl) renderContext;
-        Bindings globalBindings = rci.getBindings();
+        Bindings globalBindings = renderContext.getBindings();
         Bindings bindings = BindingsUtils.merge(globalBindings, arguments);
         String extension = scriptExtension(scriptName);
         if (extension == null || extension.equals(SightlyScriptEngineFactory.EXTENSION)) {
             return ProviderOutcome.failure();
         }
-        Resource scriptResource = rci.resolveScript(scriptName);
+        Resource scriptResource = ScriptUtils.resolveScript(scriptingResourceResolverProvider.getRequestScopedResourceResolver(),
+                renderContext, scriptName);
         if (scriptResource == null) {
             log.debug("Path does not match an existing resource: {}", scriptName);
             return ProviderOutcome.failure();

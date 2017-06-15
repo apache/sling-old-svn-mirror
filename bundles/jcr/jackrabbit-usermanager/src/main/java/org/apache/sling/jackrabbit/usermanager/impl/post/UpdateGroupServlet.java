@@ -16,6 +16,8 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,26 +25,25 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.Servlet;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jackrabbit.usermanager.UpdateGroup;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * <p>
@@ -56,18 +57,18 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
  * <code>/system/userManager/group/testGroup</code>. This servlet responds at
  * <code>/system/userManager/group/testGroup.update.html</code>
  * </p>
- * <h4>Methods</h4>
+ * <h3>Methods</h3>
  * <ul>
  * <li>POST</li>
  * </ul>
- * <h4>Post Parameters</h4>
+ * <h3>Post Parameters</h3>
  * <dl>
  * <dt>*</dt>
  * <dd>Any additional parameters become properties of the group node (optional)</dd>
  * <dt>*@Delete</dt>
  * <dd>The property is deleted, eg prop1@Delete</dd>
  * </dl>
- * <h4>Response</h4>
+ * <h3>Response</h3>
  * <dl>
  * <dt>200</dt>
  * <dd>Success, a redirect is sent to the group's resource locator. The redirect comes with
@@ -77,43 +78,44 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
  * <dt>500</dt>
  * <dd>Failure</dd>
  * </dl>
- * <h4>Example</h4>
+ * <h3>Example</h3>
  * 
  * <code>
  * curl -Fprop1=value2 -Fproperty1=value1 http://localhost:8080/system/userManager/group/testGroup.update.html
  * </code>
  */
-@Component (immediate=true, metatype=true, 
-		label="%updateGroup.post.operation.name",
-		description="%updateGroup.post.operation.description")
-@Service (value={
-	Servlet.class,
-	UpdateGroup.class
-})		
-@Properties ({
-	@Property (name="sling.servlet.resourceTypes",
-			value="sling/group"),
-	@Property (name="sling.servlet.methods",
-			value="POST"),
-	@Property (name="sling.servlet.selectors",
-			value="update"),
-    @Property (name=AbstractAuthorizablePostServlet.PROP_DATE_FORMAT,
-            value={
-            "EEE MMM dd yyyy HH:mm:ss 'GMT'Z",
-            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
-            "yyyy-MM-dd'T'HH:mm:ss",
-            "yyyy-MM-dd",
-            "dd.MM.yyyy HH:mm:ss",
-            "dd.MM.yyyy"
-            })
+
+@Component(service = {Servlet.class, UpdateGroup.class},
+property = {
+		   "sling.servlet.resourceTypes=sling/group",
+		   "sling.servlet.methods=POST",
+		   "sling.servlet.selectors=update",
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=EEE MMM dd yyyy HH:mm:ss 'GMT'Z", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd'T'HH:mm:ss.SSSZ", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd'T'HH:mm:ss", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=yyyy-MM-dd", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=dd.MM.yyyy HH:mm:ss", 
+		   AbstractAuthorizablePostServlet.PROP_DATE_FORMAT + "=dd.MM.yyyy"
 })
 public class UpdateGroupServlet extends AbstractGroupPostServlet 
         implements UpdateGroup {
     private static final long serialVersionUID = -8292054361992488797L;
 
     @Reference
-    private JcrResourceResolverFactory resourceResolverFactory;
+    private ResourceResolverFactory resourceResolverFactory;
     
+    @Override
+    @Activate
+    protected void activate(final Map<String, Object> props) {
+        super.activate(props);
+    }
+
+    @Override
+    @Deactivate
+    protected void deactivate() {
+        super.deactivate();
+    }
+
     /*
      * (non-Javadoc)
      * @see
@@ -155,7 +157,7 @@ public class UpdateGroupServlet extends AbstractGroupPostServlet
         String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
             + group.getID();
 
-        Map<String, RequestProperty> reqProperties = collectContent(properties, groupPath);
+        Collection<RequestProperty> reqProperties = collectContent(properties);
         try {
             // cleanup any old content (@Delete parameters)
             processDeletes(group, reqProperties, changes);
@@ -167,10 +169,14 @@ public class UpdateGroupServlet extends AbstractGroupPostServlet
             ResourceResolver resourceResolver = null;
             try {
                 //create a resource resolver to resolve the relative paths used for group membership values
-                resourceResolver = resourceResolverFactory.getResourceResolver(jcrSession);
+            	final Map<String, Object> authInfo = new HashMap<String, Object>();
+            	authInfo.put(org.apache.sling.jcr.resource.api.JcrResourceConstants.AUTHENTICATION_INFO_SESSION, jcrSession);
+                resourceResolver = resourceResolverFactory.getResourceResolver(authInfo);
                 Resource baseResource = resourceResolver.getResource(groupPath);
                 updateGroupMembership(baseResource, properties, group, changes);
-            } finally {
+            } catch (LoginException e) {
+				throw new RepositoryException(e);
+			} finally {
                 if (resourceResolver != null) {
                     resourceResolver.close();
                 }

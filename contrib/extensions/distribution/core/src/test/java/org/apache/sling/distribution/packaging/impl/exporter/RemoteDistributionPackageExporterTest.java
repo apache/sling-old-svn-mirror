@@ -29,12 +29,14 @@ import java.util.List;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.HttpConfiguration;
 import org.junit.Test;
 
 /**
@@ -48,7 +50,7 @@ public class RemoteDistributionPackageExporterTest {
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         String[] endpoints = new String[0];
         RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
-                packageBuilder, distributionTransportSecretProvider, endpoints, 1);
+                packageBuilder, distributionTransportSecretProvider, endpoints, 1, new HttpConfiguration(10000));
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         final List<DistributionPackage> distributionPackages = new ArrayList<DistributionPackage>();
@@ -56,6 +58,21 @@ public class RemoteDistributionPackageExporterTest {
             @Override
             public void process(DistributionPackage distributionPackage) {
                 distributionPackages.add(distributionPackage);
+            }
+
+            @Override
+            public List<DistributionResponse> getAllResponses() {
+                return null;
+            }
+
+            @Override
+            public int getPackagesCount() {
+                return 0;
+            }
+
+            @Override
+            public long getPackagesSize() {
+                return 0;
             }
         });
         assertNotNull(distributionPackages);
@@ -68,7 +85,7 @@ public class RemoteDistributionPackageExporterTest {
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         String[] endpoints = new String[0];
         RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(mock(DefaultDistributionLog.class),
-                packageBuilder, distributionTransportSecretProvider, endpoints, 1);
+                packageBuilder, distributionTransportSecretProvider, endpoints, 1, new HttpConfiguration(10000));
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = remotedistributionPackageExporter.getPackage(resourceResolver, "123");

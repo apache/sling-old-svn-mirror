@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.testing.rules</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.2-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Testing Rules</name>
@@ -37,11 +37,11 @@
     </description>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/http/rules</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/http/rules</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/http/rules</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/rules</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/rules</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/rules</url>
     </scm>
-    
+
     <build>
         <plugins>
            <plugin>
@@ -72,12 +72,12 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.clients</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>1.0.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.serversetup</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>1.0.2-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.sling</groupId>
@@ -87,7 +87,7 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
        <dependency>
             <groupId>org.apache.felix</groupId>

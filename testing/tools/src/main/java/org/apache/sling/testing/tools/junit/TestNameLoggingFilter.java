@@ -30,8 +30,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -42,25 +44,31 @@ import org.slf4j.MDC;
  */
 @Component
 @Service
-@Property(name = "pattern",value="/.*")
+@Properties({
+    @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, value="/"),
+    @Property(name = HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+              value = "(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)")
+})
 public class TestNameLoggingFilter implements Filter{
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
+    @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         // nothing to init
     }
 
+    @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
         final HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
         final String className = httpRequest.getHeader(TEST_CLASS);
-        
+
         if(className == null) {
             filterChain.doFilter(servletRequest,servletResponse);
             return;
         }
-        
+
         final String testName = httpRequest.getHeader(TEST_NAME);
         try {
             MDC.put(TEST_NAME,testName);
@@ -78,6 +86,7 @@ public class TestNameLoggingFilter implements Filter{
         }
     }
 
+    @Override
     public void destroy() {
         // nothing to destroy
     }

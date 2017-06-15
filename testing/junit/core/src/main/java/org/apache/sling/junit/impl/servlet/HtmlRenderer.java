@@ -41,31 +41,26 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
     public static final String EXTENSION = "html";
     private PrintWriter output;
 
-    /** @inheritDoc */
     public Renderer createRenderer() {
         return new HtmlRenderer();
     }
 
-    /** @inheritDoc */
     public boolean appliesTo(TestSelector s) {
         // This is our default renderer, applies to the empty
         // extension as well
         return EXTENSION.equals(s.getExtension()) || "".equals(s.getExtension());
     }
 
-    /** @inheritDoc */
     public String getExtension() {
         return EXTENSION;
     }
 
-    /** @inheritDoc */
     public void info(String cssClass, String str) {
         output.println("<p class='" + cssClass + "'>");
         HtmlFilter.escape(output, str);
         output.println("</p>");
     }
 
-    /** @inheritDoc */
     public void list(String cssClass, Collection<String> data) {
         output.println("<ul class='testNames'>");
         for(String str : data) {
@@ -76,14 +71,12 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         output.println("</ul>");
     }
 
-    /** @inheritDoc */
     public void title(int level, String title) {
         output.print("<h" + level + ">");
         HtmlFilter.escape(output, title);
         output.print("</h" + level + ">");
     }
 
-    /** @inheritDoc */
     public void link(String info, String url, String method) {
         output.println("<div class='link'>");
 
@@ -106,7 +99,6 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         output.println("</div>");
     }
 
-    /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
         if(output != null) {
             throw new IllegalStateException("Output Writer already set");
@@ -124,14 +116,12 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         output.println("</h1>");
     }
 
-    /** @inheritDoc */
     public void cleanup() {
         output.println("</body>");
         output.println("</html>");
         output = null;
     }
 
-    /** @inheritDoc */
     public RunListener getRunListener() {
         return this;
     }

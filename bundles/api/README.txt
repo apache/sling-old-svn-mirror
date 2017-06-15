@@ -1,6 +1,6 @@
 Apache Sling API
 
-The Sling API defines an extension to the Servlet API 2.4 to
+The Sling API defines an extension to the Servlet API 3.0 to
 provide access to content and unified access to request
 parameters hiding the differences between the different methods
 of transferring parameters from client to server. Note that the
@@ -12,8 +12,8 @@ Getting Started
 ===============
 
 This component uses an Apache Maven (http://maven.apache.org/) build
-environment. It requires a Java 6 JDK (or higher) and Maven (http://maven.apache.org/)
-3.0.5 or later. We recommend to use the latest Maven version.
+environment. It requires a Java 7 JDK (or higher) and Maven (http://maven.apache.org/)
+3.3.9 or later. We recommend to use the latest Maven version.
 
 If you have Maven installed, you can compile and
 package the jar using the following command:

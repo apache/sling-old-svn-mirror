@@ -19,7 +19,9 @@
 package org.apache.sling.samples.fling.internal;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -33,15 +35,17 @@ import javax.servlet.ServletException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.messaging.MessageService;
 import org.apache.sling.commons.messaging.Result;
 import org.apache.sling.samples.fling.form.Form;
 import org.apache.sling.samples.fling.form.FormFactory;
+import org.apache.sling.scripting.thymeleaf.DefaultSlingContext;
 import org.apache.sling.validation.ValidationResult;
 import org.apache.sling.validation.ValidationService;
 import org.apache.sling.validation.model.ValidationModel;
@@ -53,7 +57,6 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.ITemplateEngine;
-import org.thymeleaf.context.Context;
 import org.thymeleaf.context.IContext;
 
 @Component(
@@ -72,6 +75,12 @@ public class FormServlet extends SlingAllMethodsServlet {
         policyOption = ReferencePolicyOption.GREEDY
     )
     private volatile ValidationService validationService;
+
+    @Reference(
+        policy = ReferencePolicy.DYNAMIC,
+        policyOption = ReferencePolicyOption.GREEDY
+    )
+    private volatile ResourceResolverFactory resourceResolverFactory;
 
     @Reference(
         policy = ReferencePolicy.DYNAMIC,
@@ -99,10 +108,16 @@ public class FormServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doPost(@Nonnull SlingHttpServletRequest request, @Nonnull SlingHttpServletResponse response) throws ServletException, IOException {
-        final ValueMap parameters = request.adaptTo(ValueMap.class);
+        final Map<String, Object> base = new LinkedHashMap<>();
+        final ValueMapDecorator parameters = new ValueMapDecorator(base);
+        final Enumeration<String> names = request.getParameterNames();
+        while (names.hasMoreElements()) {
+            final String name = names.nextElement();
+            parameters.put(name, request.getRequestParameter(name));
+        }
         logger.debug("parameters: {}", parameters);
 
-        final String formType = parameters.get("formType", String.class);
+        final String formType = request.getParameter("formType");
         logger.debug("form type is '{}'", formType);
 
         final Form form = FormFactory.build(formType, parameters);
@@ -129,13 +144,19 @@ public class FormServlet extends SlingAllMethodsServlet {
         }
 
         // render form with message template
-        final String template = "/etc/messaging/form/comment.txt"; // TODO
-        final Map<String, Object> variables = new HashMap<>();
-        variables.put(SlingBindings.RESOLVER, request.getResourceResolver()); // TODO service resource resolver?
-        variables.put("form", form);
-        final IContext context = new Context(Locale.ENGLISH, variables);
-        logger.debug("rendering message template '{}' with variables: {}", template, variables);
-        final String message = templateEngine.process(template, context);
+        final String template = "/apps/fling/messaging/form/comment.txt"; // TODO
+        final Map<String, Object> variables = Collections.singletonMap("form", form);
+
+        final String message;
+        try (final ResourceResolver resourceResolver = resourceResolverFactory.getServiceResourceResolver(null)) {
+            final IContext context = new DefaultSlingContext(resourceResolver, Locale.ENGLISH, variables);
+            logger.debug("rendering message template '{}' with variables: {}", template, variables);
+            message = templateEngine.process(template, context);
+        } catch (Exception e) { // TODO
+            logger.error("sending message failed: {}", e.getMessage(), e); // TODO
+            fail(form, 500, request, response);
+            return;
+        }
         logger.debug("message: '{}'", message);
 
         try {

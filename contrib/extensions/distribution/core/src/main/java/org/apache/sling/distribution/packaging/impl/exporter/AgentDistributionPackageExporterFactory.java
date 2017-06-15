@@ -18,8 +18,9 @@
  */
 package org.apache.sling.distribution.packaging.impl.exporter;
 
-import javax.annotation.Nonnull;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -31,15 +32,13 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.common.DistributionException;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilderProvider;
+import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
-import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.DistributionPackageExporter;
-import org.apache.sling.distribution.packaging.DistributionPackageBuilderProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * OSGi configuration factory for {@link AgentDistributionPackageExporter}s
@@ -52,8 +51,6 @@ import org.slf4j.LoggerFactory;
 @Service(value = DistributionPackageExporter.class)
 @Property(name="webconsole.configurationFactory.nameHint", value="Exporter name: {name}")
 public class AgentDistributionPackageExporterFactory implements DistributionPackageExporter {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * name of this exporter.

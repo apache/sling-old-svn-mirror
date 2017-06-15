@@ -93,4 +93,12 @@ public class KeyValueMap<T>
     public int size() {
         return this.properties.size();
     }
+
+    /**
+     * Clear the map
+     * @since 1.7
+     */
+    public void clear() {
+        this.properties.clear();
+    }
 }

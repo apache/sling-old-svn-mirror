@@ -21,7 +21,6 @@ package org.apache.sling.spi.resource.provider;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.path.PathSet;
-
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -32,17 +31,30 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ProviderContext {
 
+    /** This bit is set in {@link ResourceProvider#update(long)} if observation listeners changed. */
     long OBSERVATION_LISTENER_CHANGED = 1;
+
+    /** This bit is set in {@link ResourceProvider#update(long)} if exclude paths changed. */
     long EXCLUDED_PATHS_CHANGED       = 2;
 
     /**
      * Get the observation reporter for this instance.
+     * If anything related to observation configuration changes,
+     * {@link ResourceProvider#update(long)} is called. From that point on
+     * this method needs to be called to get the updated/new observation
+     * reporter. The instance previously returned (before update was called)
+     * becomes invalid and must not be used anymore.
+     *
      * @return The observation reporter.
      */
     @Nonnull ObservationReporter getObservationReporter();
 
     /**
      * Set of paths which are "hidden" by other resource providers.
+     * If anything related to observation configuration changes,
+     * {@link ResourceProvider#update(long)} is called. From that point on
+     * this method will return a new path set with the updated/changed
+     * exclude paths.
      * @return A set of paths. The set might be empty
      */
     PathSet getExcludedPaths();

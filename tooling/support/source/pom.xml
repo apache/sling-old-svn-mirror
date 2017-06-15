@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.tooling.support.source</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Tooling Support Source</name>
@@ -48,11 +48,24 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Embed-Dependency>
+                            org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter.class
+                        </Embed-Dependency>
+                    </instructions>
+                </configuration>
            </plugin>
         </plugins>
     </build>
     
     <dependencies>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.9.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
@@ -69,9 +82,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
+        <!-- override version to OSGi 4.3.0 to support BundleRevision -->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
+            <!-- use the Java 7 compliant dependency: http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html -->
+            <version>4.3.1</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -81,12 +97,6 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.6</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

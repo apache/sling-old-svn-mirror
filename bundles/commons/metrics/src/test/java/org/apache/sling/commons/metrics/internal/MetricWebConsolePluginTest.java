@@ -145,7 +145,7 @@ public class MetricWebConsolePluginTest {
         assertTable("data-counters", page);
         assertTable("data-timers", page);
         assertTable("data-histograms", page);
-        assertTable("data-guages", page);
+        assertTable("data-gauges", page);
     }
 
     private void assertTable(String name, HtmlPage page) {

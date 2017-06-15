@@ -19,15 +19,12 @@ package org.apache.sling.servlets.post.impl.operations;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -53,7 +50,7 @@ public class DeleteOperation extends AbstractPostOperation {
     @Override
     protected void doRun(final SlingHttpServletRequest request,
             final PostResponse response, final List<Modification> changes)
-            throws RepositoryException {
+    throws PersistenceException {
 
         // SLING-3203: selectors, extension and suffix make no sense here and
         // might lead to deleting other resources than the one the user means.
@@ -91,25 +88,17 @@ public class DeleteOperation extends AbstractPostOperation {
      */
     private void deleteResource(final Resource resource,
             final List<Modification> changes,
-            VersioningConfiguration versioningConfiguration,
-            boolean deleteChunks) throws RepositoryException {
-        final Node node = resource.adaptTo(Node.class);
-        if (node != null) {
-            if (deleteChunks) {
-                uploadHandler.deleteChunks(node);
-            } else {
-                checkoutIfNecessary(node.getParent(), changes,
-                    versioningConfiguration);
-            }
+            final VersioningConfiguration versioningConfiguration,
+            final boolean deleteChunks)
+    throws PersistenceException {
+        if (deleteChunks) {
+            uploadHandler.deleteChunks(resource);
+        } else {
+            this.jcrSsupport.checkoutIfNecessary(resource.getParent(), changes,
+                versioningConfiguration);
         }
-        try {
-            resource.getResourceResolver().delete(resource);
-        } catch (final PersistenceException pe) {
-            if (pe.getCause() instanceof RepositoryException) {
-                throw (RepositoryException) pe.getCause();
-            }
-            throw new RepositoryException(pe);
-        }
+
+        resource.getResourceResolver().delete(resource);
 
         changes.add(Modification.onDeleted(resource.getPath()));
     }

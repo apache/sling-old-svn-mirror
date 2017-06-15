@@ -35,10 +35,15 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
+import org.apache.sling.distribution.monitor.impl.MonitoringDistributionQueueProvider;
+import org.apache.sling.distribution.monitor.impl.ReverseDistributionAgentMBean;
+import org.apache.sling.distribution.monitor.impl.ReverseDistributionAgentMBeanImpl;
+import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.impl.exporter.RemoteDistributionPackageExporter;
@@ -47,8 +52,8 @@ import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
-import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.HttpConfiguration;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -71,7 +76,7 @@ import org.osgi.framework.BundleContext;
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
 @Property(name="webconsole.configurationFactory.nameHint", value="Agent name: {name}")
-public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFactory {
+public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFactory<ReverseDistributionAgentMBean> {
 
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentConstants.PN_NAME;
@@ -113,19 +118,21 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
     @Property(intValue = 100, label = "Pull Items", description = "Number of subsequent pull requests to make.")
     private static final String PULL_ITEMS = "pull.items";
 
+    /**
+     * timeout for HTTP requests
+     */
+    @Property(label = "HTTP connection timeout", intValue = 10, description = "The connection timeout for HTTP requests (in seconds).")
+    public static final String HTTP = "http.conn.timeout";
 
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
             "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "requestAuthorizationStrategy")
     private DistributionRequestAuthorizationStrategy requestAuthorizationStrategy;
 
-
     @Property(name = "transportSecretProvider.target", label = "Transport Secret Provider", description = "The target reference for the DistributionTransportSecretProvider used to obtain the credentials used for accessing the remote endpoints, " +
             "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
     @Reference(name = "transportSecretProvider")
-    private
-    DistributionTransportSecretProvider transportSecretProvider;
-
+    private DistributionTransportSecretProvider transportSecretProvider;
 
     @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
             "e.g. use target=(name=...) to bind to services by name.", value = SettingsUtils.COMPONENT_NAME_DEFAULT)
@@ -154,6 +161,9 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
     @Reference
     private SlingRepository slingRepository;
 
+    public ReverseDistributionAgentFactory() {
+        super(ReverseDistributionAgentMBean.class);
+    }
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -176,7 +186,7 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
 
     @Override
     protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog) {
-        String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
         boolean queueProcessingEnabled = PropertiesUtil.toBoolean(config.get(QUEUE_PROCESSING_ENABLED), true);
 
         String[] exporterEndpoints = PropertiesUtil.toStringArray(config.get(EXPORTER_ENDPOINTS), new String[0]);
@@ -184,9 +194,13 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
 
         int pullItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
 
-        DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, exporterEndpoints, pullItems);
+        Integer timeout = PropertiesUtil.toInteger(HTTP, 10) * 1000;
+        HttpConfiguration httpConfiguration = new HttpConfiguration(timeout);
+
+        DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder,
+                transportSecretProvider, exporterEndpoints, pullItems, httpConfiguration);
         DistributionPackageImporter packageImporter = new LocalDistributionPackageImporter(agentName, distributionEventFactory, packageBuilder);
-        DistributionQueueProvider queueProvider = new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
+        DistributionQueueProvider queueProvider = new MonitoringDistributionQueueProvider(new JobHandlingDistributionQueueProvider(agentName, jobManager, context), context);
 
         DistributionQueueDispatchingStrategy exportQueueStrategy = new SingleQueueDispatchingStrategy();
         DistributionQueueDispatchingStrategy importQueueStrategy = null;
@@ -201,4 +215,10 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
                 queueProvider, exportQueueStrategy, importQueueStrategy, distributionEventFactory, resourceResolverFactory, slingRepository, distributionLog, allowedRequests, null, 0);
 
     }
+
+    @Override
+    protected ReverseDistributionAgentMBean createMBeanAgent(DistributionAgent agent, Map<String, Object> osgiConfiguration) {
+        return new ReverseDistributionAgentMBeanImpl(agent, osgiConfiguration);
+    }
+
 }

@@ -17,8 +17,5 @@
  * under the License.
  */
 
-@Version("1.0.2")
+@org.osgi.annotation.versioning.Version("1.0.3")
 package org.apache.sling.installer.api.jmx;
-
-import aQute.bnd.annotation.Version;
-

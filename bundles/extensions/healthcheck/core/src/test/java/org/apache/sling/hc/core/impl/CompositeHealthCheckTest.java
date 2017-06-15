@@ -18,12 +18,15 @@
 package org.apache.sling.hc.core.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -32,9 +35,13 @@ import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.apache.sling.hc.core.impl.executor.ExecutionResult;
 import org.apache.sling.hc.util.HealthCheckFilter;
 import org.apache.sling.hc.util.HealthCheckMetadata;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -77,14 +84,28 @@ public class CompositeHealthCheckTest {
         executionResults.add(createExecutionResult("Check 1", testTags, new Result(Result.Status.INFO, "Good")));
         executionResults.add(createExecutionResult("Check 2", testTags, new Result(Result.Status.CRITICAL, "Bad")));
 
-        when(healthCheckExecutor.execute(testTags)).thenReturn(executionResults);
+        when(healthCheckExecutor.execute(any(HealthCheckSelector.class))).thenReturn(executionResults);
 
         Result result = compositeHealthCheck.execute();
 
-        verify(healthCheckExecutor, times(1)).execute(testTags);
+        verify(healthCheckExecutor, times(1)).execute(argThat(selectorWithTags(testTags)));
 
         assertEquals(Result.Status.CRITICAL, result.getStatus());
 
+    }
+
+    private Matcher<HealthCheckSelector> selectorWithTags(final String[] tags) {
+        return new TypeSafeMatcher<HealthCheckSelector>() {
+            @Override
+            protected boolean matchesSafely(HealthCheckSelector healthCheckSelector) {
+                return Arrays.equals(healthCheckSelector.tags(), tags) && healthCheckSelector.names() == null;
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("a select with tags (" + Arrays.toString(tags) +") and no names.");
+            }
+        };
     }
 
     private HealthCheckExecutionResult createExecutionResult(String name, String[] testTags, Result result) {
@@ -104,10 +125,11 @@ public class CompositeHealthCheckTest {
         doReturn(hcRef).when(componentContext).getServiceReference();
         compositeHealthCheck.setFilterTags(filterTags);
 
-        compositeHealthCheck.setHealthCheckFilter(new HealthCheckFilter(null) { // not using @Spy because varargs matcher does not work with spies
+        compositeHealthCheck.setHealthCheckFilter(new HealthCheckFilter(null) {
 
             @Override
-            public ServiceReference[] getTaggedHealthCheckServiceReferences(String... tags) {
+            public ServiceReference[] getHealthCheckServiceReferences(HealthCheckSelector selector) {
+                String[] tags = selector.tags();
                 ServiceReference[] result = new ServiceReference[] {};
                 if (tags.length > 0) {
                     if (tags[0].equals(filterTags[0])) {
@@ -121,7 +143,7 @@ public class CompositeHealthCheckTest {
 
         Result result = compositeHealthCheck.execute();
 
-        verify(healthCheckExecutor, never()).execute(Matchers.any(String[].class));
+        verify(healthCheckExecutor, never()).execute(any(HealthCheckSelector.class));
         assertEquals(Result.Status.HEALTH_CHECK_ERROR, result.getStatus());
     }
 
@@ -141,7 +163,8 @@ public class CompositeHealthCheckTest {
         compositeHealthCheck.setHealthCheckFilter(new HealthCheckFilter(null) {
 
             @Override
-            public ServiceReference[] getTaggedHealthCheckServiceReferences(String... tags) { // not using @Spy because varargs matcher does not work with spies
+            public ServiceReference[] getHealthCheckServiceReferences(HealthCheckSelector selector) {
+                String[] tags = selector.tags();
                 ServiceReference[] result = new ServiceReference[] {};
                 if (tags.length > 0) {
                     if (tags[0].equals(filterTags[0])) {
@@ -160,7 +183,7 @@ public class CompositeHealthCheckTest {
 
         Result result = compositeHealthCheck.execute();
 
-        verify(healthCheckExecutor, never()).execute(Matchers.any(String[].class));
+        verify(healthCheckExecutor, never()).execute(any(HealthCheckSelector.class));
         assertEquals(Result.Status.HEALTH_CHECK_ERROR, result.getStatus());
     }
 

@@ -242,7 +242,6 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     // create the tenant
                     Resource tenantRes = createTenantResource(adminResolver, tenantId, properties);
                     TenantImpl tenant = new TenantImpl(tenantRes);
-                    adminResolver.commit();
                     customizeTenant(tenantRes, tenant, true);
                     adminResolver.commit();
 
@@ -422,7 +421,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         T result = null;
 
         try {
-            resolver = factory.getAdministrativeResourceResolver(null);
+            resolver = factory.getServiceResourceResolver(null);
             result = task.call(resolver);
         } catch (LoginException le) {
             // unexpected, thus ignore

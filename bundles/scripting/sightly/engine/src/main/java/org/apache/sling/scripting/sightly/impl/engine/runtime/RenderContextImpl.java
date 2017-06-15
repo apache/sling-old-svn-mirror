@@ -22,39 +22,27 @@ import java.util.Map;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.scripting.SlingScriptConstants;
-import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.engine.ExtensionRegistryService;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
-import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.render.AbstractRuntimeObjectModel;
+import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
 
 /**
- * Rendering context for Sightly rendering units.
+ * Rendering context for HTL rendering units.
  */
 public class RenderContextImpl implements RenderContext {
 
     private static final AbstractRuntimeObjectModel OBJECT_MODEL = new SlingRuntimeObjectModel();
 
     private final Bindings bindings;
-    private final ResourceResolver scriptResourceResolver;
     private final ExtensionRegistryService extensionRegistryService;
-    private final SlingScriptHelper sling;
 
     public RenderContextImpl(ScriptContext scriptContext) {
         bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
-        scriptResourceResolver = (ResourceResolver) scriptContext.getAttribute(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER,
-                SlingScriptConstants.SLING_SCOPE);
-        bindings.put(SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, scriptResourceResolver);
-        sling = BindingsUtils.getHelper(bindings);
-        extensionRegistryService = sling.getService(ExtensionRegistryService.class);
+        extensionRegistryService = BindingsUtils.getHelper(bindings).getService(ExtensionRegistryService.class);
     }
 
     @Override
@@ -79,21 +67,6 @@ public class RenderContextImpl implements RenderContext {
             throw new SightlyException("Runtime extension is not available: " + functionName);
         }
         return extension.call(this, arguments);
-    }
-
-    public ResourceResolver getScriptResourceResolver() {
-        return scriptResourceResolver;
-    }
-
-    public Resource resolveScript(String scriptIdentifier) {
-        SlingHttpServletRequest request = BindingsUtils.getRequest(bindings);
-        Resource caller = ResourceResolution.getResourceForRequest(scriptResourceResolver, request);
-        Resource result = ResourceResolution.getResourceFromSearchPath(caller, scriptIdentifier);
-        if (result == null) {
-            caller = sling.getScript().getScriptResource();
-            result = ResourceResolution.getResourceFromSearchPath(caller, scriptIdentifier);
-        }
-        return result;
     }
 
 }

@@ -18,6 +18,7 @@ package org.apache.sling.scripting.sightly.compiler.java;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
 
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
@@ -32,6 +33,7 @@ import org.apache.sling.scripting.sightly.java.compiler.JavaClassBackendCompiler
 import org.apache.sling.scripting.sightly.java.compiler.RenderUnit;
 import org.apache.sling.scripting.sightly.render.AbstractRuntimeObjectModel;
 import org.apache.sling.scripting.sightly.render.RenderContext;
+import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
@@ -44,50 +46,98 @@ public class JavaClassBackendCompilerTest {
         JavaClassBackendCompiler backendCompiler = new JavaClassBackendCompiler();
         SightlyCompiler sightlyCompiler = new SightlyCompiler();
         sightlyCompiler.compile(compilationUnit, backendCompiler);
-        ClassInfo classInfo = new ClassInfo() {
+        ClassInfo classInfo = buildClassInfo("testScript");
+        String source = backendCompiler.build(classInfo);
+        StringWriter writer = new StringWriter();
+        Bindings bindings = new SimpleBindings();
+        RenderContext renderContext = buildRenderContext(bindings);
+        render(writer, classInfo, source, renderContext, new SimpleBindings());
+        String expectedOutput = IOUtils.toString(this.getClass().getResourceAsStream("/test-output.html"), "UTF-8");
+        assertEquals(expectedOutput, writer.toString());
+    }
+
+    @Test
+    public void sling_6094_1() throws Exception {
+        CompilationUnit compilationUnit = TestUtils.readScriptFromClasspath("/SLING-6094.1.html");
+        JavaClassBackendCompiler backendCompiler = new JavaClassBackendCompiler();
+        SightlyCompiler sightlyCompiler = new SightlyCompiler();
+        sightlyCompiler.compile(compilationUnit, backendCompiler);
+        ClassInfo classInfo = buildClassInfo("sling_6094_1");
+        String source = backendCompiler.build(classInfo);
+        StringWriter writer = new StringWriter();
+        Bindings bindings = new SimpleBindings();
+        bindings.put("img", new HashMap<String, Object>(){{
+            put("attributes", new HashMap<String, String>() {{
+                put("v-bind:src", "replaced");
+            }});
+        }});
+        RenderContext renderContext = buildRenderContext(bindings);
+        render(writer, classInfo, source, renderContext, new SimpleBindings());
+        String expectedOutput = IOUtils.toString(this.getClass().getResourceAsStream("/SLING-6094.1.output.html"), "UTF-8");
+        assertEquals(expectedOutput, writer.toString());
+    }
+
+    @Test
+    public void sling_6094_2() throws Exception {
+        CompilationUnit compilationUnit = TestUtils.readScriptFromClasspath("/SLING-6094.2.html");
+        JavaClassBackendCompiler backendCompiler = new JavaClassBackendCompiler();
+        SightlyCompiler sightlyCompiler = new SightlyCompiler();
+        sightlyCompiler.compile(compilationUnit, backendCompiler);
+        ClassInfo classInfo = buildClassInfo("sling_6094_2");
+        String source = backendCompiler.build(classInfo);
+        StringWriter writer = new StringWriter();
+        Bindings bindings = new SimpleBindings();
+        RenderContext renderContext = buildRenderContext(bindings);
+        render(writer, classInfo, source, renderContext, new SimpleBindings());
+        String expectedOutput = IOUtils.toString(this.getClass().getResourceAsStream("/SLING-6094.2.output.html"), "UTF-8");
+        assertEquals(expectedOutput, writer.toString());
+    }
+
+    private ClassInfo buildClassInfo(final String info) {
+        return new ClassInfo() {
             @Override
             public String getSimpleClassName() {
-                return "Test";
+                return "Test_" + info;
             }
 
             @Override
             public String getPackageName() {
-                return "org.example.test";
+                return "org.apache.sling.scripting.sightly.compiler.java";
             }
 
             @Override
             public String getFullyQualifiedClassName() {
-                return "org.example.test.Test";
+                return "org.apache.sling.scripting.sightly.compiler.java.Test_" + info;
             }
         };
-        String source = backendCompiler.build(classInfo);
-        ClassLoader classLoader = JavaClassBackendCompilerTest.class.getClassLoader();
-        CharSequenceJavaCompiler<RenderUnit> compiler = new CharSequenceJavaCompiler<>(classLoader, null);
-        Class<RenderUnit> newClass = compiler.compile(classInfo.getFullyQualifiedClassName(), source, new Class<?>[]{});
-        RenderUnit renderUnit = newClass.newInstance();
-        StringWriter writer = new StringWriter();
-        PrintWriter printWriter = new PrintWriter(writer);
-        RenderContext renderContext = new RenderContext() {
+    }
+
+    private RenderContext buildRenderContext(final Bindings bindings) {
+        return new RenderContext() {
             @Override
-            public AbstractRuntimeObjectModel getObjectModel() {
+            public RuntimeObjectModel getObjectModel() {
                 return new AbstractRuntimeObjectModel() {};
             }
 
             @Override
             public Bindings getBindings() {
-                return new SimpleBindings();
+                return bindings;
             }
 
             @Override
             public Object call(String functionName, Object... arguments) {
-                assert arguments.length == 2;
-                // for this test case only the xss runtime function will be called; return the unfiltered input
                 return arguments[0];
             }
         };
-        renderUnit.render(printWriter, renderContext, new SimpleBindings());
-        String expectedOutput = IOUtils.toString(this.getClass().getResourceAsStream("/test-output.html"), "UTF-8");
-        assertEquals(expectedOutput, writer.toString());
+    }
 
+    private void render(StringWriter writer, ClassInfo classInfo, String source, RenderContext renderContext, Bindings arguments) throws
+            Exception {
+        ClassLoader classLoader = JavaClassBackendCompilerTest.class.getClassLoader();
+        CharSequenceJavaCompiler<RenderUnit> compiler = new CharSequenceJavaCompiler<>(classLoader, null);
+        Class<RenderUnit> newClass = compiler.compile(classInfo.getFullyQualifiedClassName(), source);
+        RenderUnit renderUnit = newClass.newInstance();
+        PrintWriter printWriter = new PrintWriter(writer);
+        renderUnit.render(printWriter, renderContext, arguments);
     }
 }

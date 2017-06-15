@@ -25,7 +25,7 @@ public class LogFactory {
      * having to care about factories.
      *
      * @param clazz Class from which a log name will be derived
-     *
+     * @return The log
      * @exception LogConfigurationException if a suitable <code>Log</code>
      *  instance cannot be returned
      */
@@ -44,7 +44,7 @@ public class LogFactory {
      * @param name Logical name of the <code>Log</code> instance to be
      *  returned (the meaning of this name is only known to the underlying
      *  logging implementation that is being wrapped)
-     *
+     * @return The log
      * @exception LogConfigurationException if a suitable <code>Log</code>
      *  instance cannot be returned
      */

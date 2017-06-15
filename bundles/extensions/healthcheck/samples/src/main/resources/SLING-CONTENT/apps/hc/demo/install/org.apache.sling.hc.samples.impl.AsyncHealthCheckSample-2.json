@@ -1,0 +1,8 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "hc.name" : "Sticky Asynchronous Health Check sample", 
+    "hc.tags" : ["async", "sticky"],
+    "hc.mbean.name" : "StickyAsyncHealthCheckSample", 
+    "hc.async.cronExpression" : "*/1 * * * * ?", 
+    "hc.warningsStickForMinutes" : 1
+}

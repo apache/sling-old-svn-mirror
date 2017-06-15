@@ -44,11 +44,12 @@ import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Pax exam options and utilities to test Sling applications
- *  The basic idea is to get a vanilla Sling launchpad instance
- *  setup with a minimal amount of boilerplate code.
- *  See {@link SlingSetupTest} for an example.
- * */
+/**
+ * Pax exam options and utilities to test Sling applications
+ * The basic idea is to get a vanilla Sling launchpad instance
+ * setup with a minimal amount of boilerplate code.
+ * See SlingSetupTest for an example.
+ */
 public class SlingPaxOptions {
     private static final Logger log = LoggerFactory.getLogger(SlingPaxOptions.class);
     public static final int DEFAULT_SLING_START_LEVEL = 30;
@@ -68,8 +69,11 @@ public class SlingPaxOptions {
         return result;
     }
     
-    /** When reading bundle lists, ignore bundles which have symbolic names
-     *  starting with one of the supplied prefixes */
+    /**
+     * When reading bundle lists, ignore bundles which have symbolic names
+     * starting with one of the supplied prefixes
+     * @param symbolicNamePrefix Symbolic name prefixes
+     */
     public static void setIgnoredBundles(String ... symbolicNamePrefix) {
         if(symbolicNamePrefix == null || symbolicNamePrefix.length == 0) {
             ignoredBundlePrefixes = new String[] {};
@@ -78,13 +82,20 @@ public class SlingPaxOptions {
         }
     }
     
-    /** Get run modes to use for our tests, as set by the sling.run.modes property */
+    /**
+     * Get run modes to use for our tests, as set by the sling.run.modes property
+     * @return Run modes
+     */
     public static Collection<String> getTestRunModes() {
         final String runModes = System.getProperty("sling.run.modes", DEFAULT_RUN_MODES);
         return Arrays.asList(runModes.split(","));
     }
     
-    /** @param launchpadVersion null means use the latest */
+    /**
+     * Set default launchpad options
+     * @param launchpadVersion null means use the latest
+     * @return Composite option
+     */
     public static CompositeOption defaultLaunchpadOptions(String launchpadVersion) {
         final String paxLogLevel = System.getProperty("pax.exam.log.level", "INFO");
         
@@ -219,7 +230,10 @@ public class SlingPaxOptions {
         return slingBundleList("org.apache.sling", "org.apache.sling.launchpad", version, "xml", "bundlelist");
     }
     
-    /** @param version can be null, to use default */ 
+    /**
+     * Felix remote shell bundles
+     * @return Composite option
+     */ 
     public static CompositeOption felixRemoteShellBundles() {
         final String gogoVersion = "0.10.0";
         return new DefaultCompositeOption(

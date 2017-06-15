@@ -64,11 +64,6 @@
 "use strict";
 
 var hasStacks = false;
-try {
-    throw new Error();
-} catch (e) {
-    hasStacks = !!e.stack;
-}
 
 // All code after this point will be filtered from stack traces reported
 // by Q.
@@ -324,21 +319,8 @@ if (typeof ReturnValue !== "undefined") {
     };
 }
 
-// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
-// engine that has a deployed base of browsers that support generators.
-// However, SM's generators use the Python-inspired semantics of
-// outdated ES6 drafts.  We would like to support ES6, but we'd also
-// like to make it possible to use generators in deployed browsers, so
-// we also support Python-style generators.  At some point we can remove
-// this block.
-var hasES6Generators;
-try {
-    /* jshint evil: true, nonew: false */
-    new Function("(function* (){ yield 1; })");
-    hasES6Generators = true;
-} catch (e) {
-    hasES6Generators = false;
-}
+// modified this line for Apache Sling, since Rhino doesn't provide support for ES6
+var hasES6Generators = false;
 
 // long stack traces
 

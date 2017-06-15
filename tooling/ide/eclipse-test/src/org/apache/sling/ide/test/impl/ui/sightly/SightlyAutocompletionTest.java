@@ -30,7 +30,10 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.swtbot.eclipse.finder.SWTWorkbenchBot;
 import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotEclipseEditor;
+import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotView;
 import org.eclipse.swtbot.swt.finder.junit.SWTBotJunit4ClassRunner;
+import org.eclipse.swtbot.swt.finder.waits.DefaultCondition;
+import org.eclipse.swtbot.swt.finder.widgets.SWTBotTree;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotTreeItem;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -90,7 +93,7 @@ public class SightlyAutocompletionTest {
         public List<String> call() throws Exception {
             
             // create faceted project
-            IProject contentProject = projectRule.getProject();
+            final IProject contentProject = projectRule.getProject();
 
             ProjectAdapter project = new ProjectAdapter(contentProject);
             project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
@@ -101,13 +104,35 @@ public class SightlyAutocompletionTest {
             
             // create basic html file
             project.createOrUpdateFile(Path.fromOSString("jcr_root/index.html"), new ByteArrayInputStream("".getBytes()));
-            Thread.sleep(1000); // TODO - wait for project to be registered in the UI
-            
+
             // ensure that we get the tree from the project explorer
-            bot.viewByTitle("Project Explorer").setFocus();
+            SWTBotView projectExplorer = bot.viewByTitle("Project Explorer");
+            projectExplorer.setFocus();
             
+            final SWTBotTree explorerTree = projectExplorer.bot().tree();
+
+            // wait until the project is displayed in the project explorer
+            bot.waitUntil(new DefaultCondition() {
+                @Override
+                public boolean test() throws Exception {
+                    SWTBotTreeItem[] treeItems = explorerTree.getAllItems();
+
+                    for (SWTBotTreeItem treeItem : treeItems) {
+                        if ( contentProject.getName().equals(treeItem.getText()) ) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+                @Override
+                public String getFailureMessage() {
+                    return "No project named '" + contentProject.getName() + "' found in the Project Explorer.";
+                }
+            });
+
             // open editor
-            SWTBotTreeItem projectItem = bot.tree().expandNode(contentProject.getName());
+            SWTBotTreeItem projectItem = explorerTree.expandNode(contentProject.getName());
             // it seems that two 'jcr_root' nodes confuse SWTBot so we expand and navigate manually
             SWTBotTreeItem folderNode = projectItem.getItems()[0].expand();
             folderNode.getItems()[0].select().doubleClick();

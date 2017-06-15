@@ -42,8 +42,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.sling.commons.log.logback.integration.ITConfigFragments.RESET_EVENT_TOPIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -62,6 +65,9 @@ public class ITAppenderServices extends LogTestBase {
 
     private ServiceRegistration sr;
 
+    @Inject
+    private EventAdmin eventAdmin;
+
     static {
         // uncomment to enable debugging of this test class
         // paxRunnerVmOption = DEBUG_VM_OPTION;
@@ -70,7 +76,10 @@ public class ITAppenderServices extends LogTestBase {
 
     @Override
     protected Option addExtraOptions() {
-        return composite(configAdmin(), mavenBundle("commons-io", "commons-io").versionAsInProject());
+        return composite(
+                configAdmin(), mavenBundle("commons-io", "commons-io").versionAsInProject(),
+                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin").versionAsInProject()
+        );
     }
 
     @Test
@@ -168,6 +177,32 @@ public class ITAppenderServices extends LogTestBase {
         assertEquals(2, ta.events.size());
     }
 
+    @Test
+    public void appenderRestartPostReset() throws Exception{
+        final TestAppender ta = registerAppender("ROOT");
+        delay();
+
+        assertTrue(ta.isStarted());
+        final int stopCount = ta.stopCount;
+        final int startCount = ta.startCount;
+
+        eventAdmin.sendEvent(new Event(RESET_EVENT_TOPIC, (Dictionary)null));
+
+        new RetryLoop(new RetryLoop.Condition() {
+            @Override
+            public String getDescription() {
+                return "Stopcount not increased";
+            }
+
+            @Override
+            public boolean isTrue() throws Exception {
+                return ta.stopCount > stopCount && ta.startCount > startCount;
+            }
+        }, 10, 100);
+
+        assertTrue(ta.isStarted());
+    }
+
     @After
     public void unregisterAppender(){
         sr.unregister();
@@ -187,6 +222,8 @@ public class ITAppenderServices extends LogTestBase {
     private static class TestAppender extends AppenderBase<ILoggingEvent> {
         final List<ILoggingEvent> events = new ArrayList<ILoggingEvent>();
         final List<String> msgs = new ArrayList<String>();
+        int stopCount;
+        int startCount;
 
         @Override
         protected void append(ILoggingEvent eventObject) {
@@ -202,6 +239,18 @@ public class ITAppenderServices extends LogTestBase {
         public void reset(){
             events.clear();
             msgs.clear();
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+            stopCount++;
+        }
+
+        @Override
+        public void start() {
+            super.start();
+            startCount++;
         }
     }
 

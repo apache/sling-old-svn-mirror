@@ -20,6 +20,7 @@ package org.apache.sling.resourceresolver.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.sling.resourceresolver.impl.legacy.LegacyResourceProviderWhiteboard;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
@@ -49,8 +50,8 @@ public class FactoryPreconditions {
     private volatile List<RequiredProvider> requiredProviders;
 
     public void activate(final BundleContext bc,
-            final String[] legycyConfiguration,
-            final String[] namesConfiguration,
+            final Set<String> legycyConfiguration,
+            final Set<String> namesConfiguration,
             final ResourceProviderTracker tracker) {
         synchronized ( this ) {
             this.tracker = tracker;
@@ -58,36 +59,28 @@ public class FactoryPreconditions {
             final List<RequiredProvider> rps = new ArrayList<RequiredProvider>();
             if ( legycyConfiguration != null ) {
                 final Logger logger = LoggerFactory.getLogger(getClass());
-                for(final String r : legycyConfiguration) {
-                    if ( r != null && r.trim().length() > 0 ) {
-                        final String value = r.trim();
-                        RequiredProvider rp = new RequiredProvider();
-                        if ( value.startsWith("(") ) {
-                            try {
-                                rp.filter = bc.createFilter(value);
-                            } catch (final InvalidSyntaxException e) {
-                                logger.warn("Ignoring invalid filter syntax for required provider: " + value, e);
-                                rp = null;
-                            }
-                        } else {
-                            rp.pid = value;
+                for(final String value : legycyConfiguration) {
+                    RequiredProvider rp = new RequiredProvider();
+                    if ( value.startsWith("(") ) {
+                        try {
+                            rp.filter = bc.createFilter(value);
+                        } catch (final InvalidSyntaxException e) {
+                            logger.warn("Ignoring invalid filter syntax for required provider: " + value, e);
+                            rp = null;
                         }
-                        if ( rp != null ) {
-                            rps.add(rp);
-                        }
+                    } else {
+                        rp.pid = value;
+                    }
+                    if ( rp != null ) {
+                        rps.add(rp);
                     }
                 }
             }
             if ( namesConfiguration != null ) {
-                for(final String r : namesConfiguration) {
-                    if( r != null ) {
-                        final String value = r.trim();
-                        if ( !value.isEmpty() ) {
-                            final RequiredProvider rp = new RequiredProvider();
-                            rp.name = value;
-                            rps.add(rp);
-                        }
-                    }
+                for(final String value : namesConfiguration) {
+	                final RequiredProvider rp = new RequiredProvider();
+	                rp.name = value;
+	                rps.add(rp);
                 }
             }
             this.requiredProviders = rps;

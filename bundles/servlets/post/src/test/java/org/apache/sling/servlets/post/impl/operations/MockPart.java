@@ -34,12 +34,13 @@ public class MockPart implements Part {
     private String contentType;
     private InputStream inputStream;
 
-    public MockPart(String name, String contentType, String submittedFileName, long size, InputStream inputStream) {
+    public MockPart(String name, String contentType, String submittedFileName, long size, InputStream inputStream, Map<String, Object> headers) {
         this.name = name;
         this.contentType = contentType;
         this.submittedFileName = submittedFileName;
         this.size = size;
         this.inputStream = inputStream;
+        this.headers = headers;
     }
 
     @Override

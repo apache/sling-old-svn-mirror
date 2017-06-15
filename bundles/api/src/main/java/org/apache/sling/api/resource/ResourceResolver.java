@@ -32,7 +32,7 @@ import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>ResourceResolver</code> defines the service API which may be used
- * to resolve {@link Resource} objects. The resource resolver is available to
+ * to resolve {@link org.apache.sling.api.resource.Resource} objects. The resource resolver is available to
  * the request processing servlet through the
  * {@link org.apache.sling.api.SlingHttpServletRequest#getResourceResolver()}
  * method.
@@ -698,6 +698,10 @@ public interface ResourceResolver extends Adaptable, Closeable {
     /**
      * Returns <code>true</code> if the resource type or any of the resource's
      * super type(s) equals the given resource type.
+     * 
+     * In case the type of the given resource or the given resource type starts with one of the resource resolver's search paths
+     * it is converted to a relative resource type by stripping off the resource resolver's search path 
+     * before doing the comparison.
      *
      * @param resource The resource to check
      * @param resourceType The resource type to check this resource against.

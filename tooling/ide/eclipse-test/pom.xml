@@ -77,6 +77,9 @@
                     <systemProperties>
                         <launchpad.http.port>${http.port}</launchpad.http.port>
                     </systemProperties>
+                    <environmentVariables>
+                        <SWT_GTK3>0</SWT_GTK3>
+                    </environmentVariables>
                 </configuration>
             </plugin>
             <plugin>

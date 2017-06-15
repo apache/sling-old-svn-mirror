@@ -229,6 +229,8 @@
 			<includes>
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.javaEEFilter" />
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorJcrContent" />
+				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorVaultMetaInf" />
+				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorProvisioningModel" />
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.linkHelper"/>	
 			</includes>
 		</viewerContentBinding>
@@ -239,11 +241,11 @@
      	   name="Sling content project Java EE filter"
      	   class="org.apache.sling.ide.eclipse.ui.nav.ContentViewerFilter"
            id="org.apache.sling.ide.eclipse-ui.javaEEFilter"
-           description="Hides Java EE deployment descriptors for content projects."
+           description="Hides multiple Java EE contributions for Sling content projects."
            activeByDefault="true">
       </commonFilter>
       <navigatorContent
-            appearsBefore="org.eclipse.jst.jee.ui.ejb"
+            appearsBefore="org.apache.sling.ide.eclipse-ui.navigatorVaultMetaInf"
             contentProvider="org.apache.sling.ide.eclipse.ui.nav.JcrContentContentProvider"
             icon="icons/obj16/sling_misc.gif"
             id="org.apache.sling.ide.eclipse-ui.navigatorJcrContent"
@@ -298,6 +300,7 @@
 		   </actionProvider>
      <override
            policy="InvokeAlwaysRegardlessOfSuppressedExt"
+           
            suppressedExtensionId="org.eclipse.ui.navigator.resourceContent">
      </override>
      <commonSorter
@@ -317,7 +320,69 @@
      </dropAssistant>
         
       </navigatorContent>
-   </extension>
+      <!-- dedicated content provider which lists the META-INF/filevault directly below the projects -->
+      <navigatorContent id="org.apache.sling.ide.eclipse-ui.navigatorVaultMetaInf" 
+           name="FileVault Synchronization/Packaging Settings"
+           appearsBefore="org.eclipse.jst.jee.ui.ejb"
+           contentProvider="org.apache.sling.ide.eclipse.ui.nav.FileVaultMetaInfContentProvider"
+           labelProvider="org.apache.sling.ide.eclipse.ui.nav.FileVaultMetaInfLabelProvider"
+           icon="icons/obj16/sling_misc.gif">
+          <triggerPoints>
+              <and>
+                  <!-- only trigger for Sling Content Projects -->
+                  <adapt type="org.eclipse.core.resources.IResource">
+                      <test property="org.eclipse.wst.common.project.facet.core.projectFacet" value="sling.content"/>
+                  </adapt>
+                  <or>
+                      <!-- and either IProject or FileVaultMetaInfRootFolder -->
+                      <instanceof value="org.eclipse.core.resources.IProject" />
+                      <instanceof value="org.apache.sling.ide.eclipse.ui.nav.model.FileVaultMetaInfRootFolder" />
+                  </or>
+              </and>
+          </triggerPoints>
+          <possibleChildren>
+              <and>
+                  <!-- only trigger for Sling Content Projects -->
+                  <adapt type="org.eclipse.core.resources.IResource">
+                      <test property="org.eclipse.wst.common.project.facet.core.projectFacet" value="sling.content"/>
+                  </adapt>         
+	              <instanceof 
+	                     value="org.eclipse.core.resources.IResource" /> 
+             </and>
+          </possibleChildren>
+      </navigatorContent>
+  	  <!-- content provider for provisioning model -->
+      <navigatorContent id="org.apache.sling.ide.eclipse-ui.navigatorProvisioningModel" 
+           name="Provisioning Model"
+           appearsBefore="org.eclipse.jst.jee.ui.ejb"
+           contentProvider="org.apache.sling.ide.eclipse.ui.nav.ProvisioningModelContentProvider"
+           labelProvider="org.apache.sling.ide.eclipse.ui.nav.ProvisioningModelLabelProvider"
+           icon="icons/obj16/sling_misc.gif">
+          <triggerPoints>
+              <and>
+                  <!-- only trigger for Sling Launchpad Projects -->
+                  <adapt type="org.eclipse.core.resources.IResource">
+                      <test property="org.eclipse.wst.common.project.facet.core.projectFacet" value="sling.launchpad"/>
+                  </adapt>
+                  <or>
+                      <!-- and either IProject or ProvisioningModelRootFolder -->
+                      <instanceof value="org.eclipse.core.resources.IProject" />
+                      <instanceof value="org.apache.sling.ide.eclipse.ui.nav.model.ProvisioningModelRootFolder" />
+                  </or>
+              </and>
+          </triggerPoints>
+          <possibleChildren>
+              <and>
+                  <!-- only trigger for Sling Launchpad Projects -->
+                  <adapt type="org.eclipse.core.resources.IResource">
+                      <test property="org.eclipse.wst.common.project.facet.core.projectFacet" value="sling.launchpad"/>
+                  </adapt>         
+	              <instanceof 
+	                     value="org.eclipse.core.resources.IResource" /> 
+             </and>
+          </possibleChildren>
+      </navigatorContent>
+   </extension>   
    <extension
          point="org.eclipse.core.runtime.adapters">
       <factory
@@ -374,6 +439,9 @@
               	<test
 	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
     				value="sling.bundle"/>
+              	<test
+	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+    				value="sling.launchpad"/>
     		  </or>
 			</not>               
          </definition>
@@ -612,7 +680,7 @@
       		adaptable="true"
       		class="org.apache.sling.ide.eclipse.ui.internal.JcrNodeDecorator"
             id="org.apache.sling.ide.eclipse-ui.JcrNodeDecorator"
-            label="JCR Node decorator"
+            label="JCR Node Decorator"
             lightweight="true"
             state="true">
             <enablement>
@@ -620,6 +688,7 @@
                    name="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
             	</objectClass>
             </enablement>
+            <description>Adds the primary type of each JCR node as suffix.</description>
       </decorator>
    </extension>
    <extension
@@ -743,4 +812,16 @@
             file="templates/jsp-templates.xml"
             translations="templates/jsp-templates.properties"/>
     </extension>    
+    
+    <extension point="org.eclipse.ui.keywords">
+      <keyword id="org.apache.sling.ide.eclipse" label="sling ide"/>
+    </extension>
+    
+    <extension point="org.eclipse.ui.preferencePages">
+      <page id="org.apache.sling.ide.eclipse.ui.SlingIdePreferencePage"
+            class="org.apache.sling.ide.eclipse.ui.SlingIdePreferencePage"
+            name="Sling IDE">
+         <keywordReference id="org.apache.sling.ide.eclipse"/>
+      </page>
+    </extension>
 </plugin>    

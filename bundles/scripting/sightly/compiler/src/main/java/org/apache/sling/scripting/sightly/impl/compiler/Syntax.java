@@ -23,7 +23,7 @@ import java.util.Arrays;
 import org.apache.sling.scripting.sightly.impl.plugin.PluginCallInfo;
 
 /**
- * Sightly Syntax specific elements.
+ * HTL Syntax specific elements.
  */
 public class Syntax {
 
@@ -40,9 +40,9 @@ public class Syntax {
     public static final String CONTEXT_OPTION = "context";
 
     /**
-     * Checks whether a piece of text represents a Sightly comment
+     * Checks whether a piece of text represents a HTL comment
      * @param text - the text
-     * @return - true if it is a Sightly comment, false otherwise
+     * @return - true if it is a HTL comment, false otherwise
      */
     public static boolean isSightlyComment(String text) {
         String trimmed = text.trim();

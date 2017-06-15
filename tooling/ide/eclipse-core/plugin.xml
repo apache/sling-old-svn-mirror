@@ -87,6 +87,21 @@
   		<action facet="sling.bundle" version="1.0" type="UNINSTALL">
   			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingBundleFacetUninstallDelegate"/>
   		</action>
+  		
+		<project-facet id="sling.launchpad">
+			<label>Launchpad module</label>
+			<description>Packaging module which contains a provisioning model which can be assembled into a launchpad.</description>
+		</project-facet>
+		
+  		<project-facet-version facet="sling.launchpad" version="1.0"/>
+  		
+  		<action facet="sling.launchpad" version="1.0" type="INSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadFacetInstallDelegate"/>
+  		</action>
+
+  		<action facet="sling.launchpad" version="1.0" type="UNINSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadFacetUninstallDelegate"/>
+  		</action>
 	</extension>  
 
 	<!-- Define the Sling launchpad runtime type -->
@@ -201,10 +216,28 @@
    </extension>
    
    <extension
+         id="validationMarker"
+         name="Sling IDE Validation Marker"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.wst.validation.problemmarker"/>
+      <persistent value="true"/>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.ide.markerSupport">
+        <markerTypeCategory
+              name="Sling IDE">
+           <markerTypeReference
+               id="org.apache.sling.ide.eclipse-core.validationMarker">
+           </markerTypeReference>
+       </markerTypeCategory>
+   </extension>
+   
+   <extension
          id="bundleValidator"
          point="org.eclipse.wst.validation.validatorV2"
          name="Sling Bundle Validator">
-      <validator class="org.apache.sling.ide.eclipse.internal.validation.BundleProjectValidator">
+      <validator class="org.apache.sling.ide.eclipse.internal.validation.BundleProjectValidator" markerId="org.apache.sling.ide.eclipse-core.validationMarker">
       	<include>
           <rules>
           	<facet
@@ -212,6 +245,11 @@
           	</facet>
           </rules>
       	</include>
+        <include>
+          <rules>
+            <file name="MANIFEST.MF" caseSensitive="true" type="file" />
+          </rules>
+        </include>
       </validator>
    </extension>
    
@@ -219,7 +257,7 @@
          id="contentProjectValidator"
          point="org.eclipse.wst.validation.validatorV2"
          name="Sling Content Project Validator">
-      <validator class="org.apache.sling.ide.eclipse.internal.validation.ContentProjectValidator">
+      <validator class="org.apache.sling.ide.eclipse.internal.validation.ContentProjectValidator" markerId="org.apache.sling.ide.eclipse-core.validationMarker">
       	<include>
           <rules>
           	<facet
@@ -230,7 +268,7 @@
       </validator>
    </extension>
    
-   <!-- disable XML validation for content projects -->
+   <!-- disable general XML validation for content projects -->
     <extension id="org.apache.sling.ide.excludeXmlValidator" point="org.eclipse.wst.validation.exclude">
     	<validator id="org.eclipse.wst.xml.core.xml">
 			<exclude>
@@ -241,9 +279,54 @@
 		</validator>
  	</extension>
  	
+ 	<!-- but enable our own XML validator based on the default XML validator ignoring any missing grammar, look at org.eclipse.wst.xml.core -> plugin.xml on how to configure -->
+    <extension id="xml" name="XML Validator for Sling Content Projects" point="org.eclipse.wst.validation.validatorV2">
+      <validator
+            build="true"
+            class="org.apache.sling.ide.eclipse.internal.validation.IgnoreMissingGrammarXmlValidator"
+            manual="true"
+            sourceid="org.eclipse.wst.xml.ui.internal.validation.DelegatingSourceValidatorForXML"
+            version="3"
+            markerId="org.eclipse.wst.xml.core.validationMarker">
+         <include>
+            <rules>
+               <contentType id="org.eclipse.core.runtime.xml"></contentType>
+               <contentType id="org.eclipse.wst.xml.core.xmlsource"></contentType>
+               <contentType id="org.eclipse.wst.xml.core.xslsource"></contentType>
+               <contentType id="org.eclipse.jst.jsp.core.tldsource"></contentType>
+               <fileext
+                     caseSensitive="false"
+                     ext="xml">
+               </fileext>
+            </rules>
+         </include>
+         <include>
+             <rules>
+                <!--only enable for sling.content projects -->
+                <facet id="sling.content"/>
+             </rules>
+         </include>
+         <exclude>
+            <rules>
+				<projectNature id="org.eclipse.jst.j2ee.ejb.EJBNature"/>
+				<projectNature id="org.eclipse.jst.j2ee.EARNature"/>
+    			<file caseSensitive="true" name=".project" type="file"/>
+    			<file caseSensitive="true" name=".classpath" type="file"/>
+    			<file caseSensitive="true" name=".settings"  type="folder"/>
+            </rules>
+         </exclude>
+      </validator>
+   </extension>
+ 	
+ 	
  	<!-- Store project preferences in the filesystem -->
  	<extension id="org.apache.sling.ide.preferences" point="org.eclipse.core.runtime.preferences">
  		<scope name="project" class="org.eclipse.core.internal.resources.ProjectPreferences">
  		</scope>
  	</extension>
+ 	
+ 	<extension point="org.eclipse.core.runtime.preferences">
+      <initializer class="org.apache.sling.ide.eclipse.core.internal.PreferencesInitializer">
+      </initializer>
+    </extension>
 </plugin>    

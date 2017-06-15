@@ -17,7 +17,6 @@
 package org.apache.sling.sample.slingshot.model;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ValueMap;
 
 public class StreamInfo extends PropertiesSupport {
 

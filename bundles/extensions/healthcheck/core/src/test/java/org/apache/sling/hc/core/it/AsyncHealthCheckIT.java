@@ -29,6 +29,8 @@ import javax.inject.Inject;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
+import static org.junit.Assert.fail;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -50,37 +52,62 @@ public class AsyncHealthCheckIT {
     public Option[] config() {
         return U.config();
     }
-
-    @Test
-    public void testAsyncHealthCheck() throws InterruptedException {
-        final String id = UUID.randomUUID().toString();
-        final AtomicInteger counter = new AtomicInteger(Integer.MIN_VALUE);
-        final HealthCheck hc = new HealthCheck() {
+    
+    final AtomicInteger counter = new AtomicInteger(Integer.MIN_VALUE);
+    
+    final static int MAX_VALUE = 12345678;
+    
+    class TestHC implements HealthCheck  {
             @Override
             public Result execute() {
                 final int v = counter.incrementAndGet();
-                return new Result(Result.Status.OK, "counter is now " + v);
+                return new Result(v > MAX_VALUE ? Result.Status.WARN : Result.Status.OK, "counter is now " + v);
             }
-            
-        };
-        
+    }
+    
+    private ServiceRegistration register(HealthCheck hc, String id, int stickyMinutes) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(HealthCheck.NAME, "name_" + id);
         props.put(HealthCheck.TAGS, id);
         props.put(HealthCheck.ASYNC_CRON_EXPRESSION, "*/1 * * * * ?");
         
-        @SuppressWarnings("rawtypes")
-        final ServiceRegistration reg = bundleContext.registerService(HealthCheck.class.getName(), hc, props);
+        if(stickyMinutes > 0) {
+            props.put(HealthCheck.WARNINGS_STICK_FOR_MINUTES, stickyMinutes);
+        }
+        
+        final ServiceRegistration result = bundleContext.registerService(HealthCheck.class.getName(), hc, props);
+        
+        // Wait for HC to be registered
+        U.expectHealthChecks(1, executor, id);
+        
+        return result;
+    }
+    
+    private void assertStatus(String id, Result.Status expected, long maxMsec, String msg) throws InterruptedException {
+        final long timeout = System.currentTimeMillis() + 5000L;
+        while(System.currentTimeMillis() < timeout) {
+            final Result.Status actual = executor.execute(HealthCheckSelector.tags(id)).get(0).getHealthCheckResult().getStatus();
+            if(actual == expected) {
+                return;
+            }
+            Thread.sleep(100L);
+        }
+        fail("Did not get status " + expected + " after " + maxMsec + " msec " + msg);
+    }
+
+    @Test
+    public void testAsyncHealthCheckExecution() throws InterruptedException {
+        final String id = UUID.randomUUID().toString();
+        final HealthCheck hc = new TestHC();
+        final ServiceRegistration reg = register(hc, id, 0);
+        final long maxMsec = 5000L;
         
         try {
-            // Wait for HC to be registered
-            U.expectHealthChecks(1, executor, id);
-            
-            // Now reset the counter and check that HC increments it even if we don't
+            // Reset the counter and check that HC increments it even if we don't
             // use the executor
             {
                 counter.set(0);
-                final long timeout = System.currentTimeMillis() + 5000L;
+                final long timeout = System.currentTimeMillis() + maxMsec;
                 while(System.currentTimeMillis() < timeout) {
                     if(counter.get() > 0) {
                         break;
@@ -91,20 +118,61 @@ public class AsyncHealthCheckIT {
             }
             
             // Verify that we get the right log
-            final String msg = executor.execute(id).get(0).getHealthCheckResult().iterator().next().getMessage();
+            final String msg = executor.execute(HealthCheckSelector.tags(id)).get(0).getHealthCheckResult().iterator().next().getMessage();
             assertTrue("Expecting the right message: " + msg, msg.contains("counter is now"));
             
             // And verify that calling executor lots of times doesn't increment as much
             final int previous = counter.get();
             final int n = 100;
             for(int i=0; i < n; i++) {
-                executor.execute(id);
+                executor.execute(HealthCheckSelector.tags(id));
             }
             assertTrue("Expecting counter to increment asynchronously", counter.get() < previous + n);
+            
+            // Verify that results are not sticky
+            assertStatus(id, Result.Status.OK, maxMsec, "before WARN");
+            counter.set(MAX_VALUE + 1);
+            assertStatus(id, Result.Status.WARN, maxMsec, "right after WARN");
+            counter.set(0);
+            assertStatus(id, Result.Status.OK, maxMsec, "after resetting counter");
+            
         } finally {
             reg.unregister();
         }
         
+    }
+    
+    @Test
+    public void testAsyncHealthCheckWithStickyResults() throws InterruptedException {
+        final String id = UUID.randomUUID().toString();
+        final HealthCheck hc = new TestHC();
+        final long maxMsec = 5000L;
+        final int stickyMinutes = 1;
+        final ServiceRegistration reg = register(hc, id, stickyMinutes);
+        
+        try {
+            assertStatus(id, Result.Status.OK, maxMsec, "before WARN");
+            counter.set(MAX_VALUE + 1);
+            assertStatus(id, Result.Status.WARN, maxMsec, "right after WARN");
+            counter.set(0);
+            
+            // Counter should be incremented after a while, and in range, but with sticky WARN result
+            final long timeout = System.currentTimeMillis() + maxMsec;
+            boolean ok = false;
+            while(System.currentTimeMillis() < timeout) {
+                if(counter.get() > 0 && counter.get() < MAX_VALUE) {
+                    ok = true;
+                    break;
+                }
+                Thread.sleep(100L);
+            }
+            
+            assertTrue("expecting counter to be incremented", ok);
+            assertStatus(id, Result.Status.WARN, maxMsec, "after resetting counter, expecting sticky result");
+            
+        } finally {
+            reg.unregister();
+        }
     }
 
 }

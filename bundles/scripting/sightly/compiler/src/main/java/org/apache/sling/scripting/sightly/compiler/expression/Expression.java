@@ -25,7 +25,7 @@ import java.util.Map;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.BinaryOperation;
 
 /**
- * This class represents a Sightly Expression.
+ * This class represents a HTL Expression.
  */
 public final class Expression {
 

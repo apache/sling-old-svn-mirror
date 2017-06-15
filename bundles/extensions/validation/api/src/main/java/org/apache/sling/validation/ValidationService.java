@@ -27,11 +27,10 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.model.ValidationModel;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
- * The {@code ValidationService} provides methods for finding {@link ValidationModel} services.
+ * The {@code ValidationService} provides methods for finding {@link ValidationModel}s and to trigger validations against those.
  */
 @ProviderType
 public interface ValidationService {
@@ -69,8 +68,9 @@ public interface ValidationService {
      * @param model    the model with which to perform the validation
      * @return a {@link ValidationResult} that provides the necessary information
      * @throws SlingValidationException if one validator was called with invalid arguments
+     * @throws IllegalStateException if a validator id referenced in the given model could not be resolved
      */
-    @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model) throws SlingValidationException;
+    @Nonnull ValidationResult validate(@Nonnull Resource resource, @Nonnull ValidationModel model) throws SlingValidationException, IllegalStateException;
 
     /**
      * Validates a {@link ValueMap} or any object adaptable to a {@code ValueMap} using a specific {@link ValidationModel}. Since the
@@ -97,6 +97,6 @@ public interface ValidationService {
      * @throws IllegalArgumentException in case resourceType is absolute but outside of the search paths or if no validation model could be found (and enforceValidation is {@code true}).
      * @throws SlingValidationException if one validator was called with invalid arguments
      */
-    @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate filter, boolean considerResourceSuperTypeModels) throws IllegalStateException, IllegalArgumentException, SlingValidationException;
+    @Nonnull ValidationResult validateResourceRecursively(@Nonnull Resource resource, boolean enforceValidation, Predicate<Resource> filter, boolean considerResourceSuperTypeModels) throws IllegalStateException, IllegalArgumentException, SlingValidationException;
 
 }

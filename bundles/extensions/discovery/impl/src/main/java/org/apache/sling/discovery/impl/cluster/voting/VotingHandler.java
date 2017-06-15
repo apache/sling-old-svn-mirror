@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 @Component(immediate = true)
 @Service(value = {VotingHandler.class})
 public class VotingHandler implements EventHandler {
-    
+
     public static enum VotingDetail {
         PROMOTED,
         WINNING,
@@ -71,9 +71,10 @@ public class VotingHandler implements EventHandler {
         UNCHANGED,
         TIMEDOUT
     }
-    
+
     private final static Comparator<VotingView> VOTING_COMPARATOR = new Comparator<VotingView>() {
 
+        @Override
         public int compare(VotingView o1, VotingView o2) {
             if (o1 == o2) {
                 return 0;
@@ -88,7 +89,7 @@ public class VotingHandler implements EventHandler {
             return (o1.getVotingId().compareTo(o2.getVotingId()));
         }
     };
-    
+
     /** the name used for the period job with the scheduler **/
     protected String NAME = "discovery.impl.analyzeVotings.runner.";
 
@@ -114,7 +115,7 @@ public class VotingHandler implements EventHandler {
     private volatile boolean activated;
 
     private ComponentContext context;
-    
+
     private ServiceRegistration eventHandlerRegistration;
 
     /** for testing only **/
@@ -137,7 +138,7 @@ public class VotingHandler implements EventHandler {
         activated = false;
         logger.info("deactivate: deactivated slingId: {}, this: {}", slingId, this);
     }
-    
+
     @Activate
     protected void activate(final ComponentContext context) {
         slingId = slingSettingsService.getSlingId();
@@ -145,8 +146,8 @@ public class VotingHandler implements EventHandler {
                 + "." + slingId);
         this.context = context;
         activated = true;
-        
-        // once activated, register the eventHandler so that we can 
+
+        // once activated, register the eventHandler so that we can
         // start receiving and processing votings...
         registerEventHandler();
         logger.info("activated: activated ("+slingId+")");
@@ -179,6 +180,7 @@ public class VotingHandler implements EventHandler {
     /**
      * handle repository changes and react to ongoing votings
      */
+    @Override
     public void handleEvent(final Event event) {
         if (!activated) {
             return;
@@ -198,7 +200,7 @@ public class VotingHandler implements EventHandler {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resolverFactory
-                    .getAdministrativeResourceResolver(null);
+                    .getServiceResourceResolver(null);
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
@@ -252,14 +254,14 @@ public class VotingHandler implements EventHandler {
                 }
                 // SLING-3406: committing resourceResolver/session here, while we're in the synchronized
                 resourceResolver.commit();
-                
+
                 // for test verification
                 result.put(winningVote, VotingDetail.PROMOTED);
                 return result;
             } else {
         		logger.info("analyzeVotings: there is a winning vote. No need to vote any further. Expecting it to get promoted to established: "
             				+ winningVote);
-        		
+
         		result.put(winningVote, VotingDetail.WINNING);
             	return result;
             }
@@ -317,7 +319,7 @@ public class VotingHandler implements EventHandler {
                 continue;
             }
             if (yesVote != null) {
-                // as soon as I found the one I should vote yes for, 
+                // as soon as I found the one I should vote yes for,
                 // vote no for the rest
                 if (!votedNo) {
                     logger.info("analyzeVotings: already voted yes, so voting no for: "+voting);
@@ -351,7 +353,7 @@ public class VotingHandler implements EventHandler {
         logger.debug("analyzeVotings: result: my yes vote was for: " + yesVote);
         return result;
     }
-    
+
     public void cleanupTimedoutVotings(final ResourceResolver resourceResolver) {
         List<VotingView> timedoutVotings = VotingHelper
                 .listTimedoutVotings(resourceResolver,
@@ -410,7 +412,7 @@ public class VotingHandler implements EventHandler {
             previousViewsResource = ResourceHelper
                     .getOrCreateResource(
                             resourceResolver,
-                            config.getPreviousViewPath());            
+                            config.getPreviousViewPath());
         }
 
         // step 2: retire the existing established view.
@@ -427,7 +429,7 @@ public class VotingHandler implements EventHandler {
 	                logger.debug("promote: moving the old established view to previous views: "
 	                        + retiredView.getPath());
             	}
-                ResourceHelper.moveResource(retiredView, 
+                ResourceHelper.moveResource(retiredView,
                         previousViewsResource.getPath()
                                 + "/" + retiredView.getName());
             } else {

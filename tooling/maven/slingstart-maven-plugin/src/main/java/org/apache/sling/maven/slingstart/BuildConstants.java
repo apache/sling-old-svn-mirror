@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.provisioning.model.ModelConstants;
+import org.apache.sling.provisioning.model.io.ModelArchiveWriter;
 
 public abstract class BuildConstants {
 
@@ -54,6 +55,8 @@ public abstract class BuildConstants {
     public static final String CLASSIFIER_APP = "app";
 
     public static final String CLASSIFIER_WEBAPP = "webapp";
+
+    public static final String CLASSIFIER_MAR = ModelArchiveWriter.DEFAULT_EXTENSION;
 
     // Manifest attributes
 

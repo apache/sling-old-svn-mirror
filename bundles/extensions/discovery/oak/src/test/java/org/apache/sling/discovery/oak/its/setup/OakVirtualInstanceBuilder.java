@@ -56,11 +56,11 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
     private SimulatedLeaseCollection leaseCollection;
     private OakBacklogClusterSyncService consistencyService;
     private SyncTokenService syncTokenService;
-    
+
     public SimulatedLeaseCollection getSimulatedLeaseCollection() {
         return leaseCollection;
     }
-    
+
     @Override
     public VirtualInstanceBuilder createNewRepository() throws Exception {
         nodeStore = new MemoryNodeStore();
@@ -69,7 +69,7 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
         leaseCollection = new SimulatedLeaseCollection();
         return this;
     }
-    
+
     @Override
     public VirtualInstanceBuilder useRepositoryOf(VirtualInstanceBuilder other) throws Exception {
         if (!(other instanceof OakVirtualInstanceBuilder)) {
@@ -95,7 +95,7 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
     public Object[] getAdditionalServices(VirtualInstance instance) throws Exception {
         return null;
     }
-    
+
     public IdMapService getIdMapService() {
         if (idMapService==null) {
             idMapService = createIdMapService();
@@ -111,39 +111,39 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
     protected ClusterViewService createClusterViewService() {
         return OakClusterViewService.testConstructor(getSlingSettingsService(), getResourceResolverFactory(), getIdMapService(), getConfig());
     }
-    
+
     OakTestConfig getConfig() {
         if (config==null) {
             config = createConfig();
         }
         return config;
     }
-    
+
     @Override
     public ModifiableTestBaseConfig getConnectorConfig() {
         return getConfig();
     }
-    
+
     private OakTestConfig createConfig() {
         OakTestConfig c = new OakTestConfig();
         c.setDiscoveryResourcePath(path);
         return c;
     }
-    
+
     @Override
     protected ViewChecker createViewChecker() throws Exception {
         getOakViewChecker();
         return new ViewChecker() {
-            
+
             private final Logger logger = LoggerFactory.getLogger(getClass());
 
             private SimulatedLease lease = new SimulatedLease(getResourceResolverFactory(), leaseCollection, getSlingId());
-            
+
             protected void activate(ComponentContext c) throws Throwable {
                 OakViewChecker pinger = getOakViewChecker();
                 PrivateAccessor.invoke(pinger, "activate", new Class[] {ComponentContext.class}, new Object[] {c});
             }
-            
+
             @Override
             public void checkView() {
                 try {
@@ -152,11 +152,11 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
                     logger.error("run: could not update lease: "+e);
                 }
             }
-            
+
             public void run() {
                 heartbeatAndCheckView();
             }
-            
+
             @Override
             public void heartbeatAndCheckView() {
 //                next step is try to simulate the logic
@@ -199,7 +199,7 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
         }
         return consistencyService;
     }
-    
+
     private OakBacklogClusterSyncService createOakBacklogClusterSyncService() {
         return OakBacklogClusterSyncService.testConstructorAndActivate(getConfig(), getIdMapService(), getSlingSettingsService(), getResourceResolverFactory());
     }
@@ -210,7 +210,7 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
         }
         return syncTokenService;
     }
-    
+
     private SyncTokenService createSyncTokenService() {
         return SyncTokenService.testConstructorAndActivate(getConfig(), getResourceResolverFactory(), getSlingSettingsService());
     }
@@ -218,14 +218,14 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
     @Override
     protected BaseDiscoveryService createDiscoveryService() throws Exception {
         return OakDiscoveryService.testConstructor(
-                getSlingSettingsService(), 
-                getAnnouncementRegistry(), 
-                getConnectorRegistry(), 
-                getClusterViewService(), 
-                getConfig(), 
-                getOakViewChecker(), 
-                getScheduler(), 
-                getIdMapService(), 
+                getSlingSettingsService(),
+                getAnnouncementRegistry(),
+                getConnectorRegistry(),
+                getClusterViewService(),
+                getConfig(),
+                getOakViewChecker(),
+                getScheduler(),
+                getIdMapService(),
                 getOakBacklogClusterSyncService(),
                 getSyncTokenService(),
                 getResourceResolverFactory());
@@ -257,14 +257,14 @@ public class OakVirtualInstanceBuilder extends VirtualInstanceBuilder {
         };
         return result;
     }
-    
+
     @Override
     protected void resetRepo() throws Exception {
         leaseCollection.reset();
         ResourceResolver rr = null;
         Session l = null;
         try {
-            rr = factory.getAdministrativeResourceResolver(null);
+            rr = factory.getServiceResourceResolver(null);
             l = rr.adaptTo(Session.class);
             l.removeItem("/var");
             l.save();

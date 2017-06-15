@@ -24,11 +24,9 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import java.io.IOException;
-
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.adapter.SlingAdaptable;
-import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.junit.Before;
@@ -63,7 +61,7 @@ public class SlingContextTest {
         .build();
 
     @Before
-    public void setUp() throws IOException, PersistenceException {
+    public void setUp() throws Exception {
         verify(contextBeforeSetup).execute(context);
         verify(contextAfterSetup).execute(context);
     }
@@ -137,6 +135,22 @@ public class SlingContextTest {
         // test overlay adapter with dynamic adaption
         assertEquals("testMessage3-dynamic", new TestAdaptable("testMessage3").adaptTo(String.class));
     }
+    
+    @Test
+    public void testResourceBuilder() {
+        
+        context.build().resource("/test1", "prop1", "value1")
+            .siblingsMode()
+            .resource("a")
+            .resource("b");
+        
+        Resource test1 = context.resourceResolver().getResource("/test1");
+        assertNotNull(test1);
+        assertEquals("value1", test1.getValueMap().get("prop1", String.class));
+        assertNotNull(test1.getChild("a"));
+        assertNotNull(test1.getChild("b"));
+    }
+    
     
     private void prepareInitialAdapterFactory() {
         // register "traditional" adapter factory without specific service ranking

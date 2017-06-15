@@ -44,7 +44,7 @@ public class OakDiscoveryServiceTest {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public final class SimpleCommonsConfig implements DiscoveryLiteConfig {
-        
+
         private long bgIntervalMillis;
         private long bgTimeoutMillis;
 
@@ -52,7 +52,7 @@ public class OakDiscoveryServiceTest {
             this.bgIntervalMillis = bgIntervalMillis;
             this.bgTimeoutMillis = bgTimeoutMillis;
         }
-        
+
         @Override
         public String getSyncTokenPath() {
             return "/var/synctokens";
@@ -77,7 +77,7 @@ public class OakDiscoveryServiceTest {
 
     @Test
     public void testBindBeforeActivate() throws Exception {
-        OakVirtualInstanceBuilder builder = 
+        OakVirtualInstanceBuilder builder =
                 (OakVirtualInstanceBuilder) new OakVirtualInstanceBuilder()
                 .setDebugName("test")
                 .newRepository("/foo/bar", true);
@@ -87,7 +87,7 @@ public class OakDiscoveryServiceTest {
         // make sure the discovery-lite descriptor is marked as not final
         // such that the view is not already set before we want it to be
         discoBuilder.setFinal(false);
-        DescriptorHelper.setDiscoveryLiteDescriptor(builder.getResourceResolverFactory(), 
+        DescriptorHelper.setDiscoveryLiteDescriptor(builder.getResourceResolverFactory(),
                 discoBuilder);
         IdMapService idMapService = IdMapService.testConstructor(new SimpleCommonsConfig(1000, -1), new DummySlingSettingsService(slingId), builder.getResourceResolverFactory());
         assertTrue(idMapService.waitForInit(2000));
@@ -109,7 +109,7 @@ public class OakDiscoveryServiceTest {
         // will actually detect a valid new, different view and send out an event -
         // exactly as we want to
         discoBuilder.setFinal(true);
-        DescriptorHelper.setDiscoveryLiteDescriptor(builder.getResourceResolverFactory(), 
+        DescriptorHelper.setDiscoveryLiteDescriptor(builder.getResourceResolverFactory(),
                 discoBuilder);
         discoveryService.checkForTopologyChange();
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
@@ -120,18 +120,18 @@ public class OakDiscoveryServiceTest {
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(2, listener.countEvents()); // should now have gotten an INIT too
     }
-    
+
     @Test
     public void testDescriptorSeqNumChange() throws Exception {
         logger.info("testDescriptorSeqNumChange: start");
-        OakVirtualInstanceBuilder builder1 = 
+        OakVirtualInstanceBuilder builder1 =
                 (OakVirtualInstanceBuilder) new OakVirtualInstanceBuilder()
                 .setDebugName("instance1")
                 .newRepository("/foo/barry/foo/", true)
                 .setConnectorPingInterval(999)
                 .setConnectorPingTimeout(999);
         VirtualInstance instance1 = builder1.build();
-        OakVirtualInstanceBuilder builder2 = 
+        OakVirtualInstanceBuilder builder2 =
                 (OakVirtualInstanceBuilder) new OakVirtualInstanceBuilder()
                 .setDebugName("instance2")
                 .useRepositoryOf(instance1)
@@ -139,15 +139,15 @@ public class OakDiscoveryServiceTest {
                 .setConnectorPingTimeout(999);
         VirtualInstance instance2 = builder2.build();
         logger.info("testDescriptorSeqNumChange: created both instances, binding listener...");
-        
+
         DummyListener listener = new DummyListener();
         OakDiscoveryService discoveryService = (OakDiscoveryService) instance1.getDiscoveryService();
         discoveryService.bindTopologyEventListener(listener);
-        
+
         logger.info("testDescriptorSeqNumChange: waiting 2sec, listener should not get anything yet");
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(0, listener.countEvents());
-        
+
         logger.info("testDescriptorSeqNumChange: issuing 2 heartbeats with each instance should let the topology get established");
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();
@@ -157,21 +157,21 @@ public class OakDiscoveryServiceTest {
         logger.info("testDescriptorSeqNumChange: listener should get an event within 2sec from now at latest");
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(1, listener.countEvents());
-        
+
         ResourceResolverFactory factory = instance1.getResourceResolverFactory();
-        ResourceResolver resolver = factory.getAdministrativeResourceResolver(null);
-        
+        ResourceResolver resolver = factory.getServiceResourceResolver(null);
+
         instance1.heartbeatsAndCheckView();
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(1, listener.countEvents());
-        
+
         // increment the seqNum by 2 - simulating a coming and going instance
         // while we were sleeping
         SimulatedLeaseCollection c = builder1.getSimulatedLeaseCollection();
         c.incSeqNum(2);
         logger.info("testDescriptorSeqNumChange: incremented seqnum by 2 - issuing another heartbeat should trigger a topology change");
         instance1.heartbeatsAndCheckView();
-        
+
         // due to the nature of the syncService/minEventDelay we now explicitly first sleep 2sec before waiting for async events for another 2sec
         logger.info("testDescriptorSeqNumChange: sleeping 2sec for topology change to happen");
         Thread.sleep(2000);

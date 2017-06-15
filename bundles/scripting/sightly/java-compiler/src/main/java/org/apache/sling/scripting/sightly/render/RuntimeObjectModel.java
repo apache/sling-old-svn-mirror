@@ -17,13 +17,14 @@
 package org.apache.sling.scripting.sightly.render;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The {@code RuntimeObjectModel} provides various utility object inspection &amp; conversion methods that can be applied to runtime
- * objects when executing Sightly scripts.
+ * objects when executing HTL scripts.
  */
 @ProviderType
 public interface RuntimeObjectModel {
@@ -43,6 +44,22 @@ public interface RuntimeObjectModel {
      * @return {@code true} if the {@code target} is a collection or is backed by one, {@code false} otherwise
      */
     boolean isCollection(Object target);
+
+    /**
+     * Checks if the provided object represents a number or not.
+     *
+     * @param target the target object
+     * @return {@code true} if the {@code target} is a number, {@code false} otherwise
+     */
+    boolean isNumber(Object target);
+
+    /**
+     * Checks if the provided object represents a date or calendar.
+     *
+     * @param target the target object
+     * @return {@code true} if the {@code target} is a date or calendar, {@code false} otherwise
+     */
+    boolean isDate(Object target);
 
     /**
      * Resolve a property of a target object and return its value. The property can
@@ -69,6 +86,14 @@ public interface RuntimeObjectModel {
      * @return the numeric representation
      */
     Number toNumber(Object object);
+
+    /**
+     * Convert the given object to a {@link Date} object
+     *
+     * @param object the target object
+     * @return the date represented by the {@code object}
+     */
+    Date toDate(Object object);
 
     /**
      * Convert the given object to a string.

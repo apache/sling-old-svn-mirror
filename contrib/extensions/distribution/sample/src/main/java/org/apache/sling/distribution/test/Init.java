@@ -29,6 +29,7 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.SimpleCredentials;
 import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.commons.JcrUtils;
@@ -44,7 +45,7 @@ import javax.jcr.Session;
 @Component(immediate = true)
 public class Init {
 
-    Logger log = LoggerFactory.getLogger(getClass());
+    final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
     SlingRepository slingRepository;
@@ -57,7 +58,7 @@ public class Init {
             final String serviceUserName = "testDistributionUser";
             final String distributorUserName = "testDistributorUser";
 
-            Session session = slingRepository.loginAdministrative(null);
+            Session session = slingRepository.login(new SimpleCredentials("admin", "admin".toCharArray()));
 
             JackrabbitSession jackrabittSession  = (JackrabbitSession) session;
             UserManager userManager = jackrabittSession.getUserManager();
@@ -87,8 +88,9 @@ public class Init {
             User defaultAgentUser = createOrGetServiceUser(userManager, defaultAgentUserName);
 
             if (defaultAgentUser != null) {
+                AccessControlUtils.addAccessControlEntry(session, "/var/sling/distribution/packages", defaultAgentUser.getPrincipal(), new String[]{ Privilege.JCR_ALL }, true);
                 ((User) distributorUser).getImpersonation().grantImpersonation(defaultAgentUser.getPrincipal());
-                ((User) serviceUser).getImpersonation().grantImpersonation(defaultAgentUser.getPrincipal());
+                serviceUser.getImpersonation().grantImpersonation(defaultAgentUser.getPrincipal());
             }
 
             session.save();

@@ -28,10 +28,20 @@ public class Poller {
 
     private static final long DEFAULT_POLL_WAIT_MILLIS = 5000;
     private static final long DEFAULT_DELAY_MILLIS = 100;
+    
+    private long timeoutMillis;
+    
+    public Poller() {
+        this(DEFAULT_POLL_WAIT_MILLIS);
+    }
+    
+    public Poller(long timeoutMillis) {
+        this.timeoutMillis = timeoutMillis;
+    }
 
     public void pollUntilSuccessful(Runnable r) throws InterruptedException {
 
-        long cutoff = System.currentTimeMillis() + DEFAULT_POLL_WAIT_MILLIS;
+        long cutoff = System.currentTimeMillis() + timeoutMillis;
 
         Throwable lastError = null;
 
@@ -54,7 +64,7 @@ public class Poller {
                 }
 
                 throw new AssertionFailedError("Runnable " + r + " did not succeed in the allocated "
-                        + DEFAULT_POLL_WAIT_MILLIS + " ms");
+                        + timeoutMillis + " ms");
             }
 
             Thread.sleep(DEFAULT_DELAY_MILLIS);

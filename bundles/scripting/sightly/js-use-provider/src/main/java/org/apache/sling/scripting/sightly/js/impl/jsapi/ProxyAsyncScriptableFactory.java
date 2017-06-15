@@ -23,18 +23,18 @@ import javax.script.ScriptEngine;
 import javax.script.SimpleBindings;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.js.impl.rhino.HybridObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component
-@Service(ProxyAsyncScriptableFactory.class)
+@Component(
+        service = ProxyAsyncScriptableFactory.class
+)
 public class ProxyAsyncScriptableFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyAsyncScriptableFactory.class);
@@ -56,7 +56,7 @@ public class ProxyAsyncScriptableFactory {
 
         private String clazz;
         private Bindings bindings;
-        private Set<String> scriptNSUse = new HashSet<String>();
+        private Set<String> scriptNSUse = new HashSet<>();
 
         public ShadowScriptableObject(String clazz, Bindings bindings) {
             this.clazz = clazz;

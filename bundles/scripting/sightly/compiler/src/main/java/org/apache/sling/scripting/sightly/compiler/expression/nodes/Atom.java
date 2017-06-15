@@ -20,7 +20,7 @@ package org.apache.sling.scripting.sightly.compiler.expression.nodes;
 
 import org.apache.sling.scripting.sightly.compiler.expression.ExpressionNode;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * An {@code Atom} defines an {@link ExpressionNode} that can be translated to simple text, like identifiers or primitive constants

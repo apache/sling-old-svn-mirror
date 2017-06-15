@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -52,6 +53,7 @@ import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.UpdateHandler;
 import org.apache.sling.installer.api.UpdateResult;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -87,7 +89,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	/** Counters, used for statistics and testing */
-	private final long [] counters = new long[COUNTERS_COUNT];
+	private final AtomicLongArray counters = new AtomicLongArray(COUNTERS_COUNT);
 	public static final int SCAN_FOLDERS_COUNTER = 0;
     public static final int UPDATE_FOLDERS_LIST_COUNTER = 1;
     public static final int RUN_LOOP_COUNTER = 2;
@@ -103,7 +105,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
     private static final String ENCODING = "UTF-8";
 
     /** Default regexp for watched folders */
-    public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install|config$";
+    public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/(install|config)$";
 
     /**
      * ComponentContext property that overrides the folder name regexp
@@ -162,6 +164,9 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
     @Reference
     private OsgiInstaller installer;
 
+    @Reference
+    private ServiceUserMapped serviceUserMapped;
+
     /** The component context. */
     private volatile ComponentContext componentContext;
 
@@ -209,7 +214,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
 
             try {
                 // open session
-                session = repository.loginAdministrative(repository.getDefaultWorkspace());
+                session = repository.loginService(/* subservice name */null, repository.getDefaultWorkspace());
 
                 for (final String path : cfg.getRoots()) {
                     listeners.add(new RootFolderListener(session, path, updateFoldersListTimer, cfg));
@@ -320,7 +325,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                 }
             }
             logger.info("Background thread {} done", Thread.currentThread().getName());
-            counters[RUN_LOOP_COUNTER] = -1;
+            counters.set(RUN_LOOP_COUNTER, -1);
         }
 
         public InstallerConfig getConfiguration() {
@@ -417,7 +422,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
         Session s = null;
 
         try {
-            s = repository.loginAdministrative(repository.getDefaultWorkspace());
+            s = repository.loginService(/* subservice name */null, repository.getDefaultWorkspace());
             if (!s.itemExists(rootPath) || !s.getItem(rootPath).isNode() ) {
                 logger.info("Bundles root node {} not found, ignored", rootPath);
             } else {
@@ -504,6 +509,13 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                                 "JCR Provider scanning would not be performed", cfg.getPauseScanNodePath());
                         pauseMessageLogged = true;
                     }
+
+                    try {
+                        Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC);
+                    } catch(InterruptedException ignored) {
+                        logger.debug("InterruptedException in scanningIsPaused block");
+                    }
+
                     return;
                 } else if (pauseMessageLogged) {
                     pauseMessageLogged = false;
@@ -521,7 +533,8 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                     session.refresh(false);
                     didRefresh = true;
                 }
-                counters[SCAN_FOLDERS_COUNTER]++;
+                counters.incrementAndGet(SCAN_FOLDERS_COUNTER);
+
                 final WatchedFolder.ScanResult sr = wf.scan();
                 boolean toDo = false;
                 if ( sr.toAdd.size() > 0 ) {
@@ -546,7 +559,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                     didRefresh = true;
                 }
                 updateFoldersListTimer.reset();
-                counters[UPDATE_FOLDERS_LIST_COUNTER]++;
+                counters.incrementAndGet(UPDATE_FOLDERS_LIST_COUNTER);
                 final List<String> toRemove = updateFoldersList(cfg, session);
                 if ( toRemove.size() > 0 ) {
                     logger.info("Removing resource from OSGi installer (folder deleted): {}", toRemove);
@@ -569,7 +582,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                 }
             }
         }
-        counters[RUN_LOOP_COUNTER]++;
+        counters.incrementAndGet(RUN_LOOP_COUNTER);
     }
 
     boolean scanningIsPaused(final InstallerConfig cfg, final Session session) throws RepositoryException {
@@ -582,15 +595,15 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
                 while (childItr.hasNext()) {
                     nodeNames.add(childItr.nextNode().getName());
                 }
-                logger.debug("Found child nodes {} at path {}. Scanning would be paused", nodeNames, cfg.getPauseScanNodePath());
+                logger.debug("Found child nodes {} at path {}. Scanning will be paused", nodeNames, cfg.getPauseScanNodePath());
             }
             return result;
         }
         return false;
     }
 
-    long [] getCounters() {
-        return counters;
+    long getCounterValue(int key) {
+        return counters.get(key);
     }
 
     /**
@@ -636,7 +649,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
             logger.debug("Removing artifact at {}", path);
             Session session = null;
             try {
-                session = this.repository.loginAdministrative(null);
+                session = repository.loginService(/* subservice name */null, repository.getDefaultWorkspace());
                 if ( session.itemExists(path) ) {
                     session.getItem(path).remove();
                     session.save();
@@ -713,7 +726,7 @@ public class JcrInstaller implements UpdateHandler, ManagedService {
 
         Session session = null;
         try {
-            session = this.repository.loginAdministrative(null);
+            session = repository.loginService(/* subservice name */null, repository.getDefaultWorkspace());
 
             final String path;
             boolean resourceIsMoved = true;

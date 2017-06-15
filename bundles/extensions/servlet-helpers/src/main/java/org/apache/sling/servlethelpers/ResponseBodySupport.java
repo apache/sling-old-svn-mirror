@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
@@ -54,6 +55,14 @@ class ResponseBodySupport {
                 @Override
                 public void write(int b) throws IOException {
                     outputStream.write(b);
+                }
+                @Override
+                public boolean isReady() {
+                    return true;
+                }
+                @Override
+                public void setWriteListener(WriteListener writeListener) {
+                    throw new UnsupportedOperationException();
                 }
             };
         }

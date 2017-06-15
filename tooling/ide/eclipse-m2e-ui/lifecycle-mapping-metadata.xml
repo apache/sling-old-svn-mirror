@@ -1,20 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    Licensed to the Apache Software Foundation (ASF) under one or
-    more contributor license agreements. See the NOTICE file
-    distributed with this work for additional information regarding
-    copyright ownership. The ASF licenses this file to you under the
-    Apache License, Version 2.0 (the "License"); you may not use
-    this file except in compliance with the License. You may obtain
-    a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0 Unless required by
-    applicable law or agreed to in writing, software distributed
-    under the License is distributed on an "AS IS" BASIS, WITHOUT
-    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions
-    and limitations under the License.
--->
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
+    license agreements. See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership. The ASF licenses this file to
+    you under the Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain a copy of
+    the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+    by applicable law or agreed to in writing, software distributed under the
+    License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+    OF ANY KIND, either express or implied. See the License for the specific
+    language governing permissions and limitations under the License. -->
 <lifecycleMappingMetadata>
     <pluginExecutions>
         <pluginExecution>
@@ -23,57 +17,91 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <versionRange>[1.0.0,)</versionRange>
                 <goals>
-                    <goal>manifest</goal>
                     <goal>bundle</goal>
                 </goals>
             </pluginExecutionFilter>
             <action>
                 <configurator>
-                    <id>org.apache.sling.ide.eclipse.m2e.bundleconfigurator</id>
+                    <id>org.apache.sling.ide.eclipse.m2e.bundlePluginProjectConfigurator</id>
+                </configurator>
+            </action>
+        </pluginExecution>
+        <pluginExecution>
+            <pluginExecutionFilter>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>bnd-maven-plugin</artifactId>
+                <versionRange>[2.4.1,)</versionRange>
+                <goals>
+                    <goal>bnd-process</goal>
+                </goals>
+            </pluginExecutionFilter>
+            <action>
+                <!-- bind primary configurator also to m-b-p goals, otherwise secondaryTo attribute does not work, if the primary configurator 
+                    is only bound to another plugin execution) -->
+                <configurator>
+                    <id>org.eclipse.m2e.jdt.javaConfigurator</id>
+                </configurator>
+            </action>
+        </pluginExecution>
+        <pluginExecution>
+            <pluginExecutionFilter>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>bnd-maven-plugin</artifactId>
+                <versionRange>[2.4.1,)</versionRange>
+                <goals>
+                    <goal>bnd-process</goal>
+                </goals>
+            </pluginExecutionFilter>
+            <action>
+                <configurator>
+                    <id>org.apache.sling.ide.eclipse.m2e.bndPluginProjectConfigurator</id>
+                </configurator>
+            </action>
+        </pluginExecution>
+        <pluginExecution>
+            <pluginExecutionFilter>
+                <groupId>com.day.jcr.vault</groupId>
+                <artifactId>content-package-maven-plugin</artifactId>
+                <versionRange>[0.0.10,2)</versionRange>
+                <goals>
+                    <goal>package</goal>
+                </goals>
+            </pluginExecutionFilter>
+            <action>
+                <configurator>
+                    <id>org.apache.sling.ide.eclipse.m2e.configurator</id>
+                </configurator>
+            </action>
+        </pluginExecution>
+        <pluginExecution>
+            <pluginExecutionFilter>
+                <groupId>com.day.jcr.vault</groupId>
+                <artifactId>content-package-maven-plugin</artifactId>
+                <versionRange>[0.0.10,2)</versionRange>
+                <goals>
+                    <goal>install</goal>
+                </goals>
+            </pluginExecutionFilter>
+            <action>
+                <ignore>
+                    <message>content-package-maven-plugin goal "install" is ignored</message>
+                </ignore>
+            </action>
+        </pluginExecution>
+        <pluginExecution>
+            <pluginExecutionFilter>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>slingstart-maven-plugin</artifactId>
+                <versionRange>[1.0.0,)</versionRange>
+                <goals>
+                    <goal>package</goal>
+                </goals>
+            </pluginExecutionFilter>
+            <action>
+                <configurator>
+                    <id>org.apache.sling.ide.eclipse.m2e.slingstartConfigurator</id>
                 </configurator>
             </action>
         </pluginExecution>
     </pluginExecutions>
-  
-  <lifecycleMappings>
-    <lifecycleMapping>
-      <packagingType>content-package</packagingType>
-      <lifecycleMappingId>org.apache.sling.ide.eclipse.m2e.contentPackageLifecycleMapping</lifecycleMappingId>
-      <pluginExecutions>
-        <pluginExecution>
-          <pluginExecutionFilter>
-            <groupId>com.day.jcr.vault</groupId>
-            <artifactId>content-package-maven-plugin</artifactId>
-            <versionRange>[0.0.10,2)</versionRange>
-            <goals>
-              <goal>package</goal>
-            </goals>
-          </pluginExecutionFilter>
-          <action>
-            <configurator>
-              <id>org.apache.sling.ide.eclipse.m2e.configurator</id>
-            </configurator>
-          </action>
-        </pluginExecution>
-           
-        <pluginExecution>
-          <pluginExecutionFilter>
-          
-            <groupId>com.day.jcr.vault</groupId>
-            <artifactId>content-package-maven-plugin</artifactId>
-            <versionRange>[0.0.10,2)</versionRange>
-            <goals>
-              <goal>install</goal>
-            </goals>
-          </pluginExecutionFilter>
-          <action>
-           <ignore>
-               <message>content-package-maven-plugin goal "install" is ignored</message>
-           </ignore>
-          </action>
-        </pluginExecution>
-      </pluginExecutions>
-    </lifecycleMapping>
-    
-  </lifecycleMappings>    
 </lifecycleMappingMetadata>

@@ -20,12 +20,15 @@
 package org.apache.sling.commons.metrics.internal;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.Locale;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.felix.utils.json.JSONWriter;
 
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.Counter;
@@ -37,8 +40,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Reporter;
 import com.codahale.metrics.Snapshot;
 import com.codahale.metrics.Timer;
-import org.json.JSONException;
-import org.json.JSONWriter;
 
 class JSONReporter implements Reporter, Closeable {
 
@@ -147,7 +148,7 @@ class JSONReporter implements Reporter, Closeable {
                     registry.getHistograms(filter),
                     registry.getMeters(filter),
                     registry.getTimers(filter));
-        } catch (JSONException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -159,10 +160,10 @@ class JSONReporter implements Reporter, Closeable {
 
     private void report(SortedMap<String, Gauge> gauges, SortedMap<String, Counter> counters,
                         SortedMap<String, Histogram> histograms, SortedMap<String, Meter> meters,
-                        SortedMap<String, Timer> timers) throws JSONException {
+                        SortedMap<String, Timer> timers) throws IOException {
         json.object();
         if (!gauges.isEmpty()) {
-            json.key("guages").object();
+            json.key("gauges").object();
             for (Map.Entry<String, Gauge> entry : gauges.entrySet()) {
                 printGauge(entry);
             }
@@ -205,7 +206,7 @@ class JSONReporter implements Reporter, Closeable {
 
     }
 
-    private void printTimer(Map.Entry<String, Timer> e) throws JSONException {
+    private void printTimer(Map.Entry<String, Timer> e) throws IOException {
         json.key(e.getKey()).object();
         Timer timer = e.getValue();
         Snapshot snapshot = timer.getSnapshot();
@@ -233,7 +234,7 @@ class JSONReporter implements Reporter, Closeable {
         json.endObject();
     }
 
-    private void printMeter(Map.Entry<String, Meter> e) throws JSONException {
+    private void printMeter(Map.Entry<String, Meter> e) throws IOException {
         json.key(e.getKey()).object();
         Meter meter = e.getValue();
         json.key("count").value(e.getValue().getCount());
@@ -245,7 +246,7 @@ class JSONReporter implements Reporter, Closeable {
         json.endObject();
     }
 
-    private void printHistogram(Map.Entry<String, Histogram> e) throws JSONException {
+    private void printHistogram(Map.Entry<String, Histogram> e) throws IOException {
         json.key(e.getKey()).object();
         json.key("count").value(e.getValue().getCount());
 
@@ -264,13 +265,13 @@ class JSONReporter implements Reporter, Closeable {
         json.endObject();
     }
 
-    private void printCounter(Map.Entry<String, Counter> e) throws JSONException {
+    private void printCounter(Map.Entry<String, Counter> e) throws IOException {
         json.key(e.getKey()).object();
         json.key("count").value(e.getValue().getCount());
         json.endObject();
     }
 
-    private void printGauge(Map.Entry<String, Gauge> e) throws JSONException {
+    private void printGauge(Map.Entry<String, Gauge> e) throws IOException {
         json.key(e.getKey()).object();
         Object v = e.getValue().getValue();
         json.key("value").value(jsonSafeValue(v));

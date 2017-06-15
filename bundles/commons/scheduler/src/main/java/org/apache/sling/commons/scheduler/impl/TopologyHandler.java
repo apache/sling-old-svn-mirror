@@ -16,20 +16,29 @@
  */
 package org.apache.sling.commons.scheduler.impl;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Service;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * Optional service - if the Sling discovery service is running, additional features
  *                    are available
  */
-@Component
-@Service(value=TopologyEventListener.class)
+@Component(
+    service = TopologyEventListener.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
+)
 public class TopologyHandler implements TopologyEventListener {
 
     @Activate
@@ -45,13 +54,21 @@ public class TopologyHandler implements TopologyEventListener {
     /**
      * @see org.apache.sling.discovery.TopologyEventListener#handleTopologyEvent(org.apache.sling.discovery.TopologyEvent)
      */
+    @Override
     public void handleTopologyEvent(final TopologyEvent event) {
         if ( event.getType() == Type.TOPOLOGY_INIT || event.getType() == Type.TOPOLOGY_CHANGED ) {
+            final List<String> ids = new ArrayList<>();
+            for(final InstanceDescription desc : event.getNewView().getInstances()) {
+                ids.add(desc.getSlingId());
+            }
+            Collections.sort(ids);
             QuartzJobExecutor.IS_LEADER.set(event.getNewView().getLocalInstance().isLeader());
             QuartzJobExecutor.DISCOVERY_INFO_AVAILABLE.set(true);
+            QuartzJobExecutor.SLING_IDS.set(ids.toArray(new String[ids.size()]));
         } else if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
             QuartzJobExecutor.IS_LEADER.set(false);
             QuartzJobExecutor.DISCOVERY_INFO_AVAILABLE.set(false);
+            QuartzJobExecutor.SLING_IDS.set(null);
         }
     }
 }

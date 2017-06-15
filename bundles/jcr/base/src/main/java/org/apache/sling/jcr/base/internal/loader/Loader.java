@@ -190,7 +190,7 @@ public class Loader implements BundleListener {
      * @param bundle The bundle.
      */
     private void registerNamespaces(final Bundle bundle) throws RepositoryException {
-        final String definition = (String) bundle.getHeaders().get(NAMESPACES_BUNDLE_HEADER);
+        final String definition = bundle.getHeaders().get(NAMESPACES_BUNDLE_HEADER);
         if ( definition != null ) {
             logger.debug("registerNamespaces: Bundle {} tries to register: {}",
                     getBundleIdentifier(bundle), definition);
@@ -241,7 +241,7 @@ public class Loader implements BundleListener {
 
     private boolean registerNodeTypes(Bundle bundle, boolean isRetry) throws RepositoryException {
         // TODO: define header referring to mapper files
-        String typesHeader = (String) bundle.getHeaders().get(NODETYPES_BUNDLE_HEADER);
+        String typesHeader = bundle.getHeaders().get(NODETYPES_BUNDLE_HEADER);
         if (typesHeader == null) {
             // no node types in the bundle, return with success
             logger.debug("registerNodeTypes: Bundle {} has no nodetypes",

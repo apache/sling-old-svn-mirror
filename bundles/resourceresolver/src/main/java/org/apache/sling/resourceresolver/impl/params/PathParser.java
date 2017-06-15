@@ -74,12 +74,12 @@ class PathParser {
         }
 
         // indexOf shortcut for the most common case
-        final int di = path.indexOf('.');
         final int si = path.indexOf(';');
-        if (di == -1 && si == -1) {
+        if (si == -1) {
             return;
         }
 
+        final int di = path.indexOf('.');
         final char[] chars = path.toCharArray();
         final ParametersParser parametersParser = new ParametersParser();
 
@@ -150,7 +150,7 @@ class PathParser {
             paramsStart = paramsEnd = -1;
         } else {
             cutPath(path, paramsStart, paramsEnd);
-            parameters = parametersParser.getParameters();
+            parameters = Collections.unmodifiableMap(parametersParser.getParameters());
         }
     }
 

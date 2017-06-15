@@ -36,6 +36,7 @@ import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.testmodels.classes.ResourcePathAllOptionalModel;
 import org.apache.sling.models.testmodels.classes.ResourcePathModel;
+import org.apache.sling.models.testmodels.classes.ResourcePathModelWrapping;
 import org.apache.sling.models.testmodels.classes.ResourcePathPartialModel;
 import org.junit.Before;
 import org.junit.Test;
@@ -112,7 +113,8 @@ public class ResourcePathInjectionTest {
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(2, 2000));
         factory.bindInjector(new ResourcePathInjector(), new ServicePropertiesMap(3, 2500));
         factory.bindStaticInjectAnnotationProcessorFactory(new ResourcePathInjector(), new ServicePropertiesMap(3, 2500));
-        factory.adapterImplementations.addClassesAsAdapterAndImplementation(ResourcePathModel.class, ResourcePathPartialModel.class, ResourcePathAllOptionalModel.class);
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(ResourcePathModel.class, ResourcePathPartialModel.class,
+                ResourcePathAllOptionalModel.class, ResourcePathModelWrapping.class);
     }
 
     @Test
@@ -183,6 +185,14 @@ public class ResourcePathInjectionTest {
         
         ResourcePathPartialModel model = factory.getAdapter(adaptable, ResourcePathPartialModel.class);
         assertNull(model);
+    }
+
+    @Test
+    public void TestWithArrayWrapping() {
+        ResourcePathModelWrapping model = factory.getAdapter(adaptable, ResourcePathModelWrapping.class);
+        assertNotNull(model);
+        assertTrue(model.getFromPath().length > 0);
+        assertTrue(model.getMultipleResources().length > 0);
     }
 
 }

@@ -18,6 +18,8 @@
  */
 package org.apache.sling.distribution.util.impl;
 
+import javax.annotation.Nonnull;
+
 import static java.lang.Math.min;
 
 import java.io.File;
@@ -52,7 +54,7 @@ final class ByteBufferBackedInputStream extends InputStream {
         return memory.get() & 0xFF;
     }
 
-    public int read(byte[] bytes, int off, int len) throws IOException {
+    public int read(@Nonnull byte[] bytes, int off, int len) throws IOException {
         if (!memory.hasRemaining()) {
             if (fileInputStream != null) {
                 return fileInputStream.read(bytes, off, len);

@@ -115,7 +115,7 @@ public class RequestData {
     /**
      * The name of the request attribute to override the max call number (-1 for infinite or integer value).
      */
-    private static String REQUEST_MAX_CALL_OVERRIDE = SlingMainServlet.PROP_MAX_CALL_COUNTER;
+    private static String REQUEST_MAX_CALL_OVERRIDE = "sling.max.calls";
 
     private static SlingMainServlet SLING_MAIN_SERVLET;
 
@@ -218,7 +218,7 @@ public class RequestData {
 
         // Getting the RequestProgressTracker from the request attributes like
         // this should not be generally used, it's just a way to pass it from
-        // its creation point to here, so it's made available via 
+        // its creation point to here, so it's made available via
         // the Sling request's getRequestProgressTracker method.
         final Object o = request.getAttribute(RequestProgressTracker.class.getName());
         if(o instanceof SlingRequestProgressTracker) {

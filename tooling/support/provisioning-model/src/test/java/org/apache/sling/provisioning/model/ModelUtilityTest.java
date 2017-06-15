@@ -252,4 +252,20 @@ public class ModelUtilityTest {
         assertNotNull(ModelUtility.validate(m));
         f.getRunModes().remove(rmC);
     }
+
+    @Test public void testValidateFeatureVersion() {
+        final Model m = new Model();
+        final Feature f = m.getOrCreateFeature("f");
+
+        // no version -> no error
+        assertNull(ModelUtility.validate(m));
+
+        f.setVersion("1.0");
+        // valid version -> no error
+        assertNull(ModelUtility.validate(m));
+
+        f.setVersion("foo");
+        // invalid version -> error
+        assertNotNull(ModelUtility.validate(m));
+    }
 }

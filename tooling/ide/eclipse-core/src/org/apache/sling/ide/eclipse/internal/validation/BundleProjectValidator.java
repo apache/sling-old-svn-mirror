@@ -16,18 +16,13 @@
  */
 package org.apache.sling.ide.eclipse.internal.validation;
 
-import org.apache.sling.ide.eclipse.core.internal.Activator;
-import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.wst.validation.AbstractValidator;
 import org.eclipse.wst.validation.ValidationEvent;
 import org.eclipse.wst.validation.ValidationResult;
 import org.eclipse.wst.validation.ValidationState;
-import org.eclipse.wst.validation.ValidatorMessage;
 
 public class BundleProjectValidator extends AbstractValidator {
 
@@ -44,24 +39,16 @@ public class BundleProjectValidator extends AbstractValidator {
             return res;
         }
 
-        IFile m = (IFile) resource;
-
-        Logger pluginLogger = Activator.getDefault() .getPluginLogger();
-
         try {
-
-            for (IFile descriptor : scValidator.findMissingScrDescriptors(m)) {
-                ValidatorMessage dsMessage = ValidatorMessage.create(
-                        "No DS descriptor found at path " + descriptor.getProjectRelativePath(), m);
-                dsMessage.setAttribute(IMarker.LOCATION, m.getName());
-                dsMessage.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-
-                res.add(dsMessage);
-
+            // sync resource with filesystem if necessary
+            if (!resource.isSynchronized(IResource.DEPTH_ZERO)) {
+                resource.refreshLocal(IResource.DEPTH_ZERO, null);
             }
-
+            for (IFile descriptor : scValidator.findMissingScrDescriptors((IFile)resource)) {
+                addValidatorMessage(res, resource, "No DS descriptor found at path " + descriptor.getProjectRelativePath() +".");
+            }
         } catch (CoreException e) {
-            pluginLogger.warn("Failed validating project " + resource.getFullPath(), e);
+            getLogger().warn("Failed validating project " + resource.getFullPath(), e);
         }
         
         return res;

@@ -21,10 +21,10 @@ package org.apache.sling.scripting.sightly;
 
 import java.util.Set;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * A {@code Record} is a key-value immutable object understood by the Sightly runtime, used for abstracting complex objects like Sightly
+ * A {@code Record} is a key-value immutable object understood by the HTL runtime, used for abstracting complex objects like Sightly
  * templates (declared with the {@code data-sly-template} block element) or objects that need to be translated from Java to JavaScript
  * and back.
  *

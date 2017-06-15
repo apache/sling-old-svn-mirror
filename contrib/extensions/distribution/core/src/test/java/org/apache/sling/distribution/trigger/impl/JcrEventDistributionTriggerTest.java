@@ -40,11 +40,11 @@ public class JcrEventDistributionTriggerTest {
     public void testProcessEventWithoutPathProperty() throws Exception {
         SlingRepository repository = mock(SlingRepository.class);
         Scheduler scheduler = mock(Scheduler.class);
-        ResourceResolverFactory resolverFactory  = mock(ResourceResolverFactory.class);
+        ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
         String path = "/some/path";
         String serviceName = "serviceId";
-        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, null);
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, false, serviceName, null);
         Event event = mock(Event.class);
         DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);
         assertNull(distributionRequest);
@@ -54,14 +54,46 @@ public class JcrEventDistributionTriggerTest {
     public void testProcessEventWithPathProperty() throws Exception {
         SlingRepository repository = mock(SlingRepository.class);
         Scheduler scheduler = mock(Scheduler.class);
-        ResourceResolverFactory resolverFactory  = mock(ResourceResolverFactory.class);
+        ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
         String path = "/some/path";
         String serviceName = "serviceId";
-        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, null);
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, false, serviceName, null);
         Event event = mock(Event.class);
         when(event.getPath()).thenReturn("/some/path/generating/event");
         DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);
         assertNotNull(distributionRequest);
+    }
+
+    @Test
+    public void testProcessEventOnIgnoredPattern() throws Exception {
+        SlingRepository repository = mock(SlingRepository.class);
+        Scheduler scheduler = mock(Scheduler.class);
+        ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
+
+        String path = "/home/users";
+        String serviceName = "serviceId";
+        String[] ignoredPaths = new String[]{"/home/users/\\w"};
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, false, serviceName, ignoredPaths);
+        Event event = mock(Event.class);
+        when(event.getPath()).thenReturn("/home/users/a");
+        DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);
+        assertNull(distributionRequest);
+    }
+
+    @Test
+    public void testProcessEventOnMultipleIgnoredPattern() throws Exception {
+        SlingRepository repository = mock(SlingRepository.class);
+        Scheduler scheduler = mock(Scheduler.class);
+        ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
+
+        String path = "/home/users";
+        String serviceName = "serviceId";
+        String[] ignoredPaths = new String[]{".*/.tokens.*", ".*/.rep:cache.*"};
+        JcrEventDistributionTrigger jcrEventdistributionTrigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, false, serviceName, ignoredPaths);
+        Event event = mock(Event.class);
+        when(event.getPath()).thenReturn("/home/users/3/3U3HxUUzJJ60BdN4lEDJ/.tokens/2017-01-10T15.52.37.842+01.00");
+        DistributionRequest distributionRequest = jcrEventdistributionTrigger.processEvent(event);
+        assertNull(distributionRequest);
     }
 }

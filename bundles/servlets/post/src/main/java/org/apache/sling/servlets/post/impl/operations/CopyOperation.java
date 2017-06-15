@@ -18,14 +18,9 @@ package org.apache.sling.servlets.post.impl.operations;
 
 import java.util.List;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeType;
-
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.VersioningConfiguration;
 
@@ -42,143 +37,39 @@ public class CopyOperation extends AbstractCopyMoveOperation {
     }
 
     @Override
-    protected Item execute(List<Modification> changes, Item source,
-            String destParent, String destName,
-            VersioningConfiguration versioningConfiguration) throws RepositoryException {
-
-        Item destItem = copy(source, (Node) source.getSession().getItem(destParent), destName);
-
-        String dest = destParent + "/" + destName;
-        changes.add(Modification.onCopied(source.getPath(), dest));
-        log.debug("copy {} to {}", source, dest);
-        return destItem;
+    protected Resource execute(final List<Modification> changes,
+            final Resource source,
+            final String destParent,
+            final String destName,
+            final VersioningConfiguration versioningConfiguration)
+    throws PersistenceException {
+        final Resource parentRsrc = source.getResourceResolver().getResource(destParent);
+        // check if the item is backed by JCR
+        final Object item = this.jcrSsupport.getItem(source);
+        final Object parentItem = this.jcrSsupport.getNode(parentRsrc);
+        if ( item == null || parentItem == null ) {
+            // no JCR, copy via resources
+            final Resource result = copy(source, parentRsrc);
+            changes.add(Modification.onCopied(source.getPath(), result.getPath()));
+            return result;
+        } else {
+            final String dest = this.jcrSsupport.copy(item, parentItem, destName);
+            changes.add(Modification.onCopied(source.getPath(), dest));
+            log.debug("copy {} to {}", source, dest);
+            return source.getResourceResolver().getResource(dest);
+        }
     }
 
     /**
-     * Copy the <code>src</code> item into the <code>dstParent</code> node.
-     * The name of the newly created item is set to <code>name</code>.
-     *
-     * @param src The item to copy to the new location
-     * @param dstParent The node into which the <code>src</code> node is to be
-     *            copied
-     * @param name The name of the newly created item. If this is
-     *            <code>null</code> the new item gets the same name as the
-     *            <code>src</code> item.
-     * @throws RepositoryException May be thrown in case of any problem copying
-     *             the content.
-     * @see #copy(Node, Node, String)
-     * @see #copy(Property, Node, String)
+     * Copy the source as a child resource to the parent
      */
-    static Item copy(Item src, Node dstParent, String name)
-            throws RepositoryException {
-        if (src.isNode()) {
-            return copy((Node) src, dstParent, name);
+    private Resource copy(final Resource source, final Resource dest)
+    throws PersistenceException {
+        final ValueMap vm = source.getValueMap();
+        final Resource result = source.getResourceResolver().create(dest, source.getName(), vm);
+        for(final Resource c : source.getChildren()) {
+            copy(c, result);
         }
-        return copy((Property) src, dstParent, name);
+        return result;
     }
-
-    /**
-     * Copy the <code>src</code> node into the <code>dstParent</code> node.
-     * The name of the newly created node is set to <code>name</code>.
-     * <p>
-     * This method does a recursive (deep) copy of the subtree rooted at the
-     * source node to the destination. Any protected child nodes and and
-     * properties are not copied.
-     *
-     * @param src The node to copy to the new location
-     * @param dstParent The node into which the <code>src</code> node is to be
-     *            copied
-     * @param name The name of the newly created node. If this is
-     *            <code>null</code> the new node gets the same name as the
-     *            <code>src</code> node.
-     * @throws RepositoryException May be thrown in case of any problem copying
-     *             the content.
-     */
-    static Item copy(Node src, Node dstParent, String name)
-            throws RepositoryException {
-
-        if(isAncestorOrSameNode(src, dstParent)) {
-            throw new RepositoryException(
-                    "Cannot copy ancestor " + src.getPath() + " to descendant " + dstParent.getPath());
-        }
-        
-        // ensure destination name
-        if (name == null) {
-            name = src.getName();
-        }
-
-        // ensure new node creation
-        if (dstParent.hasNode(name)) {
-            dstParent.getNode(name).remove();
-        }
-
-        // create new node
-        Node dst = dstParent.addNode(name, src.getPrimaryNodeType().getName());
-        for (NodeType mix : src.getMixinNodeTypes()) {
-            dst.addMixin(mix.getName());
-        }
-
-        // copy the properties
-        for (PropertyIterator iter = src.getProperties(); iter.hasNext();) {
-            copy(iter.nextProperty(), dst, null);
-        }
-
-        // copy the child nodes
-        for (NodeIterator iter = src.getNodes(); iter.hasNext();) {
-            Node n = iter.nextNode();
-            if (!n.getDefinition().isProtected()) {
-                copy(n, dst, null);
-            }
-        }
-        return dst;
-    }
-    
-    /** @return true if src is an ancestor node of dest, or if
-     *  both are the same node */
-    static boolean isAncestorOrSameNode(Node src, Node dest) throws RepositoryException {
-        if(src.getPath().equals("/")) {
-            return true;
-        } else if(src.getPath().equals(dest.getPath())) {
-            return true;
-        } else if(dest.getPath().startsWith(src.getPath() + "/")) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Copy the <code>src</code> property into the <code>dstParent</code>
-     * node. The name of the newly created property is set to <code>name</code>.
-     * <p>
-     * If the source property is protected, this method does nothing.
-     *
-     * @param src The property to copy to the new location
-     * @param dstParent The node into which the <code>src</code> property is
-     *            to be copied
-     * @param name The name of the newly created property. If this is
-     *            <code>null</code> the new property gets the same name as the
-     *            <code>src</code> property.
-     * @throws RepositoryException May be thrown in case of any problem copying
-     *             the content.
-     */
-    static Item copy(Property src, Node dstParent, String name)
-            throws RepositoryException {
-        if (!src.getDefinition().isProtected()) {
-            if (name == null) {
-                name = src.getName();
-            }
-
-            // ensure new property creation
-            if (dstParent.hasProperty(name)) {
-                dstParent.getProperty(name).remove();
-            }
-
-            if (src.getDefinition().isMultiple()) {
-                return dstParent.setProperty(name, src.getValues());
-            }
-            return dstParent.setProperty(name, src.getValue());
-        }
-        return null;
-    }
-
 }

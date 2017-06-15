@@ -367,7 +367,7 @@ public class ResourceProviderTracker implements ResourceProviderStorageProvider 
         final ObservationReporter or = this.providerReporter;
         if ( or != null ) {
             final ResourceChange change = new ResourceChange(event.isAdd ? ChangeType.PROVIDER_ADDED : ChangeType.PROVIDER_REMOVED,
-                    event.path, false, null, null, null);
+                    event.path, false);
             or.reportChanges(Collections.singletonList(change), false);
         }
     }

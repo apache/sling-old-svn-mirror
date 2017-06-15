@@ -21,6 +21,7 @@ package org.apache.sling.distribution.servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.IOUtils;
@@ -31,6 +32,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.packaging.DistributionPackageProcessor;
 import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
@@ -120,6 +122,21 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
                     // everything ok
                     response.setStatus(200);
                     log.debug("exported package {} was sent (and deleted={}), bytes written {}", new Object[]{packageId, delete, bytesCopied});
+                }
+
+                @Override
+                public List<DistributionResponse> getAllResponses() {
+                    return null;
+                }
+
+                @Override
+                public int getPackagesCount() {
+                    return 0;
+                }
+
+                @Override
+                public long getPackagesSize() {
+                    return 0;
                 }
             });
 

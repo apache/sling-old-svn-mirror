@@ -20,7 +20,7 @@ package org.apache.sling.discovery;
 
 import java.util.Set;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * A topology view is a cross-cluster list of instances and clusters

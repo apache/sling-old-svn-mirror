@@ -21,6 +21,11 @@ import org.apache.sling.api.resource.Resource;
 
 public abstract class SlingshotUtil {
 
+    /**
+     * Get the user id for a resource
+     * @param resource The resource of a user
+     * @return The user id or {@code null}.
+     */
     public static String getUserId(final Resource resource) {
         final String prefix = SlingshotConstants.APP_ROOT_PATH + "/";
 
@@ -39,6 +44,11 @@ public abstract class SlingshotUtil {
         return id;
     }
 
+    /**
+     * Get the user content path for the resource
+     * @param resource The resource
+     * @return The user content path or {@code null}.
+     */
     public static String getContentPath(final Resource resource) {
         final String prefix = SlingshotConstants.APP_ROOT_PATH + "/users/" + getUserId(resource) + "/";
 
@@ -49,6 +59,11 @@ public abstract class SlingshotUtil {
         return null;
     }
 
+    /**
+     * Checks whether the request is from a known user or from anonymous
+     * @param request The request
+     * @return {@code true} if it is a known user.
+     */
     public static boolean isUser(final SlingHttpServletRequest request) {
         final boolean isUser = request.getRemoteUser() != null && !request.getRemoteUser().equals("anonymous");
         return isUser;

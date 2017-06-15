@@ -17,30 +17,28 @@
 
 package org.apache.sling.servlets.post.impl.operations;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.util.Text;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.ModifiableValueMap;
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.servlets.post.AbstractPostOperation;
-import org.apache.sling.servlets.post.Modification;
-import org.apache.sling.servlets.post.PostResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException; // required due to AbstractPostOperation signature.
-import javax.servlet.ServletContext;
-import javax.servlet.http.Part;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.Part;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.util.Text;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.PostResponse;
+import org.apache.sling.servlets.post.impl.helper.StreamedChunk;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Performs a streamed modification of the content.
@@ -58,12 +56,6 @@ import java.util.Map;
 public class StreamedUploadOperation extends AbstractPostOperation {
     private static final Logger LOG = LoggerFactory.getLogger(StreamedUploadOperation.class);
     public static final String NT_FILE = "nt:file";
-    public static final String NT_RESOURCE = "nt:resource";
-    public static final String JCR_LASTMODIFIED = "jcr:lastModified";
-    public static final String JCR_MIMETYPE = "jcr:mimeType";
-    public static final String JCR_DATA = "jcr:data";
-    private static final String MT_APP_OCTET = "application/octet-stream";
-    private static final String JCR_CONTENT = "jcr:content";
     private ServletContext servletContext;
 
     public void setServletContext(final ServletContext servletContext) {
@@ -83,36 +75,30 @@ public class StreamedUploadOperation extends AbstractPostOperation {
     }
 
     @Override
-    protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes) throws RepositoryException {
-        try {
-            Iterator<Part> partsIterator = (Iterator<Part>) request.getAttribute("request-parts-iterator");
-            Map<String, List<String>> formFields = new HashMap<String, List<String>>();
-            boolean streamingBodies = false;
-            while (partsIterator.hasNext()) {
-                Part part = partsIterator.next();
-                String name = part.getName();
+    protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes)
+    throws PersistenceException {
+        @SuppressWarnings("unchecked")
+        Iterator<Part> partsIterator = (Iterator<Part>) request.getAttribute("request-parts-iterator");
+        Map<String, List<String>> formFields = new HashMap<>();
+        boolean streamingBodies = false;
+        while (partsIterator.hasNext()) {
+            Part part = partsIterator.next();
+            String name = part.getName();
 
-                if (isFormField(part)) {
-                    addField(formFields, name, part);
-                    if (streamingBodies) {
-                        LOG.warn("Form field {} was sent after the bodies started to be streamed. " +
-                                "Will not have been available to all streamed bodies. " +
-                                "It is recommended to send all form fields before streamed bodies in the POST ", name);
-                    }
-                } else {
-                    streamingBodies = true;
-                    // process the file body and commit.
-                    writeContent(request.getResourceResolver(), part, formFields, response, changes);
-
+            if (isFormField(part)) {
+                addField(formFields, name, part);
+                if (streamingBodies) {
+                    LOG.warn("Form field {} was sent after the bodies started to be streamed. " +
+                            "Will not have been available to all streamed bodies. " +
+                            "It is recommended to send all form fields before streamed bodies in the POST ", name);
                 }
-            }
-        } catch ( final PersistenceException pe) {
-            if ( pe.getCause() instanceof RepositoryException ) {
-                throw (RepositoryException)pe.getCause();
-            }
-            throw new RepositoryException(pe);
-        }
+            } else {
+                streamingBodies = true;
+                // process the file body and commit.
+                writeContent(request.getResourceResolver(), part, formFields, response, changes);
 
+            }
+        }
     }
 
     /**
@@ -124,7 +110,7 @@ public class StreamedUploadOperation extends AbstractPostOperation {
     private void addField(Map<String, List<String>> formFields, String name, Part part) {
         List<String> values = formFields.get(name);
         if ( values == null ) {
-            values = new ArrayList<String>();
+            values = new ArrayList<>();
             formFields.put(name, values);
         }
         try {
@@ -160,40 +146,17 @@ public class StreamedUploadOperation extends AbstractPostOperation {
         }
         String name = getUploadName(part);
         Resource fileResource = parentResource.getChild(name);
-        Map<String, Object> fileProps = new HashMap<String, Object>();
+        Map<String, Object> fileProps = new HashMap<>();
         if (fileResource == null) {
             fileProps.put("jcr:primaryType", NT_FILE);
             fileResource = parentResource.getResourceResolver().create(parentResource, name, fileProps);
         }
 
 
-
-        Map<String, Object> resourceProps = new HashMap<String, Object>();
-        resourceProps.put("jcr:primaryType", NT_RESOURCE);
-        resourceProps.put(JCR_LASTMODIFIED, Calendar.getInstance());
-        // TODO: Should all the formFields be added to the prop map ?
-        resourceProps.put(JCR_MIMETYPE, getContentType(part));
-        try {
-            resourceProps.put(JCR_DATA, part.getInputStream());
-        } catch (IOException e) {
-            throw new PersistenceException("Error while retrieving inputstream from request part.", e);
-        }
-        Resource result = fileResource.getChild(JCR_CONTENT);
-        if ( result != null ) {
-            final ModifiableValueMap vm = result.adaptTo(ModifiableValueMap.class);
-            if ( vm == null ) {
-                throw new PersistenceException("Resource at " + fileResource.getPath() + '/' + JCR_CONTENT + " is not modifiable.");
-            }
-            vm.putAll(resourceProps);
-        } else {
-            result = parentResource.getResourceResolver().create(fileResource, JCR_CONTENT, resourceProps);
-        }
-        // Commit must be called to perform to cause streaming so the next part can be found.
+        StreamedChunk chunk = new StreamedChunk(part, formFields, servletContext);
+        Resource result = chunk.store(fileResource, changes);
         result.getResourceResolver().commit();
 
-        for( String key : resourceProps.keySet()) {
-            changes.add(Modification.onModified(result.getPath() + '/' + key));
-        }
     }
 
     /**
@@ -211,7 +174,14 @@ public class StreamedUploadOperation extends AbstractPostOperation {
      * @return
      */
     private String getUploadName(Part part) {
-        String name = part.getSubmittedFileName();
+        // only return non null if the submitted file name is non null.
+        // the Sling API states that if the field name is '*' then the submitting file name is used,
+        // otherwise the field name is used.
+        String name = part.getName();
+        String fileName = part.getSubmittedFileName();
+        if ("*".equals(name)) {
+            name = fileName;
+        }
         // strip of possible path (some browsers include the entire path)
         name = name.substring(name.lastIndexOf('/') + 1);
         name = name.substring(name.lastIndexOf('\\') + 1);
@@ -228,31 +198,6 @@ public class StreamedUploadOperation extends AbstractPostOperation {
     }
 
 
-    /**
-     * Get the content type of the part.
-     * @param part
-     * @return
-     */
-    private String getContentType(final Part part) {
-        String contentType = part.getContentType();
-        if (contentType != null) {
-            int idx = contentType.indexOf(';');
-            if (idx > 0) {
-                contentType = contentType.substring(0, idx);
-            }
-        }
-        if (contentType == null || contentType.equals(MT_APP_OCTET)) {
-            // try to find a better content type
-            ServletContext ctx = this.servletContext;
-            if (ctx != null) {
-                contentType = ctx.getMimeType(part.getSubmittedFileName());
-            }
-            if (contentType == null || contentType.equals(MT_APP_OCTET)) {
-                contentType = MT_APP_OCTET;
-            }
-        }
-        return contentType;
-    }
 
 
 

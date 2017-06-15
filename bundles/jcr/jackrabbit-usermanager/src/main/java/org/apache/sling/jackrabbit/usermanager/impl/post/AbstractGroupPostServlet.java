@@ -44,9 +44,11 @@ public abstract class AbstractGroupPostServlet extends
      * the ":member" value ends with @Delete it is removed from the group
      * membership, otherwise it is added to the group membership.
      * 
-     * @param request
-     * @param authorizable
-     * @throws RepositoryException
+     * @param baseResource the group resource of the {@code authorizable}
+     * @param properties the request parameters
+     * @param authorizable the group to update
+     * @param changes the changes which are done by this operation (list is extended)
+     * @throws RepositoryException when updating the membership failed
      */
     protected void updateGroupMembership(Resource baseResource,
                                         Map<String, ?> properties,

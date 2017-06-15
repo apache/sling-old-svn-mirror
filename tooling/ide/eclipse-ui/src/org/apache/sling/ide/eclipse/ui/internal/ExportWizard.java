@@ -62,7 +62,7 @@ public class ExportWizard extends Wizard {
                 @Override
                 public void run(final IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
                     final ResourceChangeCommandFactory factory = new ResourceChangeCommandFactory(Activator
-                            .getDefault().getSerializationManager());
+                            .getDefault().getSerializationManager(), Activator.getDefault().getPreferences().getIgnoredFileNamesForSync());
 
                     final Repository[] selectedServer = new Repository[1];
                     Display.getDefault().syncExec(new Runnable() {

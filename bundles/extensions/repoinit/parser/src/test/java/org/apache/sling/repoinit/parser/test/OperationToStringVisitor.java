@@ -19,11 +19,14 @@ package org.apache.sling.repoinit.parser.test;
 
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.sling.repoinit.parser.operations.AclLine;
 import org.apache.sling.repoinit.parser.operations.CreatePath;
 import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
+import org.apache.sling.repoinit.parser.operations.CreateUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
+import org.apache.sling.repoinit.parser.operations.DeleteUser;
 import org.apache.sling.repoinit.parser.operations.RegisterNodetypes;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.apache.sling.repoinit.parser.operations.RegisterNamespace;
@@ -52,6 +55,24 @@ class OperationToStringVisitor implements OperationVisitor {
     }
 
     @Override
+    public void visitCreateUser(CreateUser u) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(u.toString());
+        if(u.getPassword() != null) {
+            sb.append(", password=").append(u.getPassword());
+        }
+        if(u.getPasswordEncoding() != null) {
+            sb.append(", passwordEncoding=").append(u.getPasswordEncoding());
+        }
+        out.println(sb.toString());
+    }
+
+    @Override
+    public void visitDeleteUser(DeleteUser u) {
+        out.println(u.toString());
+    }
+
+    @Override
     public void visitSetAclPrincipal(SetAclPrincipals s) {
         out.print(s.getClass().getSimpleName());
         out.print(" for ");
@@ -59,6 +80,9 @@ class OperationToStringVisitor implements OperationVisitor {
             out.print(p);
             out.print(' ');
         }
+
+        dumpAclOptions(s.getOptions());
+
         out.println();
         dumpAclLines(s.getLines());
     }
@@ -71,6 +95,9 @@ class OperationToStringVisitor implements OperationVisitor {
             out.print(p);
             out.print(' ');
         }
+
+        dumpAclOptions(s.getOptions());
+
         out.println();
         dumpAclLines(s.getLines());
     }
@@ -94,6 +121,12 @@ class OperationToStringVisitor implements OperationVisitor {
         for(AclLine line : c) {
             out.print("  ");
             out.println(line);
+        }
+    }
+
+    private void dumpAclOptions(List<String> options){
+        if(options != null && options.size() > 0){
+            out.print("ACLOptions="+options);
         }
     }
 }

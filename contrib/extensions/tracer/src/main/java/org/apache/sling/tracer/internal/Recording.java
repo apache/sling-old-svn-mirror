@@ -34,6 +34,11 @@ interface Recording {
         public void registerTracker(RequestProgressTracker tracker) {
 
         }
+
+        @Override
+        public void recordCategory(String loggerName) {
+
+        }
     };
 
     void log(TracerConfig tc, Level level, String logger, FormattingTuple tuple);
@@ -44,4 +49,6 @@ interface Recording {
      * @param tracker from current request
      */
     void registerTracker(RequestProgressTracker tracker);
+
+    void recordCategory(String loggerName);
 }

@@ -20,22 +20,41 @@ package org.apache.sling.jcr.base;
 
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
 /** Minimal AbstractSlingRepositoryManager used for testing */
-class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
+public class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
+
+    public static final String WHITELIST_ALL = "*";
+
+    public static final String WHITELIST_NONE = "";
 
     private final Repository repository;
 
-    MockSlingRepositoryManager(Repository repository) {
+    private boolean loginAdminDisabled;
+
+    private Set<String> loginAdminWhitelist;
+
+    public MockSlingRepositoryManager(Repository repository) {
+        this(repository, false, WHITELIST_ALL);
+    }
+
+    public MockSlingRepositoryManager(Repository repository, boolean loginAdminDisabled, String... loginAdminWhitelist) {
         this.repository = repository;
+        this.loginAdminDisabled = loginAdminDisabled;
+        this.loginAdminWhitelist = new HashSet<>(Arrays.asList(loginAdminWhitelist));
+        this.loginAdminWhitelist.remove(WHITELIST_NONE);
     }
 
     @Override
@@ -71,5 +90,14 @@ class MockSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Override
     protected void disposeRepository(Repository repository) {
+    }
+
+    @Override
+    protected boolean allowLoginAdministrativeForBundle(final Bundle bundle) {
+        return loginAdminWhitelist.contains("*") || loginAdminWhitelist.contains(bundle.getSymbolicName());
+    }
+
+    public void activate(BundleContext context) {
+        start(context, new Config(null, loginAdminDisabled));
     }
 }

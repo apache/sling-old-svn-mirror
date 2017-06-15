@@ -18,8 +18,9 @@
  */
 package org.apache.sling.distribution.trigger.impl;
 
-import javax.annotation.Nonnull;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -31,13 +32,12 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
-import org.apache.sling.distribution.common.DistributionException;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.osgi.framework.BundleContext;
 
 @Component(metatype = true,
         label = "Apache Sling Distribution Trigger - Jcr Event Triggers Factory",
@@ -71,6 +71,12 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
     @Property(label = "Service Name", description = "The service used to listen for jcr events")
     private static final String SERVICE_NAME = "serviceName";
 
+    /**
+     * use deep distribution
+     */
+    @Property(label = "Use deep distribution", description = "Distribute entire subtree of the event node path", boolValue = false)
+    private static final String DEEP = "deep";
+
 
     private JcrEventDistributionTrigger trigger;
 
@@ -85,14 +91,14 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
 
 
     @Activate
-    public void activate(BundleContext bundleContext, Map<String, Object> config) {
+    public void activate(Map<String, Object> config) {
         String path = PropertiesUtil.toString(config.get(PATH), null);
         String serviceName = SettingsUtils.removeEmptyEntry(PropertiesUtil.toString(config.get(SERVICE_NAME), null));
         String[] ignoredPathsPatterns = PropertiesUtil.toStringArray(config.get(IGNORED_PATHS_PATTERNS), null);
         ignoredPathsPatterns = SettingsUtils.removeEmptyEntries(ignoredPathsPatterns);
+        boolean deep = PropertiesUtil.toBoolean(config.get(DEEP), false);
 
-
-        trigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, serviceName, ignoredPathsPatterns);
+        trigger = new JcrEventDistributionTrigger(repository, scheduler, resolverFactory, path, deep, serviceName, ignoredPathsPatterns);
         trigger.enable();
     }
 

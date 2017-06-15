@@ -28,7 +28,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>29-SNAPSHOT</version>
+    <version>31-SNAPSHOT</version>
 
     <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
@@ -59,7 +59,7 @@
         <!--
             Java API and class file compliance. This property supports
             one of three values:
-              - 6: Java 6 
+              - 6: Java 6
               - 7: Java 7 (default)
               - 8: Java 8
             Using anything else causes the set-bundle-required-execution-environment
@@ -144,6 +144,22 @@
                                 <requireMavenVersion>
                                     <version>3.3.9</version>
                                 </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>ban-maven-scr-plugin</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedPlugins>
+                                    <excludes>
+                                        <exclude>org.apache.felix:maven-scr-plugin</exclude>
+                                    </excludes>
+                                    <message>Felix SCR annotations and the maven-scr-plugin are no longer supported - please migrate to OSGi annotations or stick with Sling Parent 29.</message>
+                                </bannedPlugins>
                             </rules>
                         </configuration>
                     </execution>
@@ -269,10 +285,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.release</groupId>
+                        <artifactId>maven-release-oddeven-policy</artifactId>
+                        <version>2.5.3</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
-                    <tagBase>
-                        https://svn.apache.org/repos/asf/sling/tags
-                    </tagBase>
+                    <projectVersionPolicyId>OddEvenVersionPolicy</projectVersionPolicyId>
+                    <tagBase>https://svn.apache.org/repos/asf/sling/tags</tagBase>
                 </configuration>
             </plugin>
             <plugin>
@@ -300,6 +322,8 @@
                         <exclude>**/*.rej</exclude>
                         <!-- Exclude Java crash log files -->
                         <exclude>hs_err_*.log</exclude>
+                        <!-- Lucene index details (Oak 1.6) -->
+                        <exclude>**/repository/index/*/index-details.txt</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -318,7 +342,7 @@
                 <plugin>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>maven-sling-plugin</artifactId>
-                    <version>2.1.8</version>
+                    <version>2.3.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.sling</groupId>
@@ -337,6 +361,11 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.0.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
                     <version>2.8.2</version>
                     <configuration>
@@ -345,44 +374,14 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
-                    <artifactId>maven-scr-plugin</artifactId>
-                    <version>1.22.0</version>
-                    <!-- As QDox is trying to inspect/load the classes
-                         we have to add a slf4j implementation to the
-                         class path of the plugin - we usually use
-                         a static field for the logger and during class
-                         loading this field requires an slf4j implementation!
-                     -->
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-simple</artifactId>
-                            <version>1.7.6</version>
-                        </dependency>
-                    </dependencies>
-                    <executions>
-                        <execution>
-                            <id>generate-scr-scrdescriptor</id>
-                            <goals>
-                                <goal>scr</goal>
-                            </goals>
-                            <configuration>
-                                <strictMode>true</strictMode>
-                                <properties>
-                                    <service.vendor>The Apache Software Foundation</service.vendor>
-                                </properties>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>3.2.0</version>
+                    <version>3.3.0</version>
                     <inherited>true</inherited>
                     <configuration>
                         <outputDirectory>${basedir}/target/classes</outputDirectory>
                         <obrRepository>NONE</obrRepository>
+                        <!-- Export SCR metadata to classpath to have them available in unit tests -->
+                        <exportScr>true</exportScr>
                         <instructions>
                             <Bundle-Category>sling</Bundle-Category>
                             <Bundle-DocURL>
@@ -391,8 +390,6 @@
                             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-RequiredExecutionEnvironment>${sling.bree}</Bundle-RequiredExecutionEnvironment>
-                            <!-- Disable the new ScrPlugin for now -->
-                            <_plugin>org.apache.felix.bundleplugin.BlueprintPlugin,aQute.lib.spring.SpringXMLType</_plugin>
                         </instructions>
                     </configuration>
                     <executions>
@@ -401,6 +398,16 @@
                             <goals>
                                 <goal>baseline</goal>
                             </goals>
+                        </execution>
+                        <!-- Configure extra execution of 'manifest' in process-classes phase to make sure SCR metadata is generated before unit test runs -->
+                        <execution>
+                            <id>scr-metadata</id>
+                            <goals>
+                                <goal>manifest</goal>
+                            </goals>
+                            <configuration>
+                                <supportIncrementalBuild>true</supportIncrementalBuild>
+                            </configuration>
                         </execution>
                     </executions>
                 </plugin>
@@ -422,7 +429,7 @@
                 <plugin>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>slingstart-maven-plugin</artifactId>
-                    <version>1.4.4</version>
+                    <version>1.7.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.cargo</groupId>
@@ -491,6 +498,16 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.18.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.18.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.servicemix.tooling</groupId>
+                    <artifactId>depends-maven-plugin</artifactId>
+                    <version>1.3.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -1091,6 +1108,14 @@
                 <scope>provided</scope>
             </dependency>
 
+            <!-- dependency injection annotations -->
+            <dependency>
+                <groupId>javax.inject</groupId>
+                <artifactId>javax.inject</artifactId>
+                <version>1</version>
+                <scope>provided</scope>
+            </dependency>
+
             <!-- JCR API -->
             <dependency>
                 <groupId>javax.jcr</groupId>
@@ -1128,7 +1153,7 @@
                 <version>1.3.0</version>
                 <scope>provided</scope>
             </dependency>
-             
+
 
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
@@ -1157,12 +1182,12 @@
                 <scope>test</scope>
             </dependency>
 
-         
+
             <!-- DEPRECATED: Use official OSGi annotations -->
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.scr.annotations</artifactId>
-                <version>1.11.0</version>
+                <version>1.12.0</version>
                 <scope>provided</scope>
             </dependency>
 
@@ -1190,17 +1215,6 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.metatype.annotations</artifactId>
-        </dependency>
-
-        <!-- DEPRECATED: OSGi support annotations -->
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-        </dependency>
-        <!-- DEPRECATED: OSGi support annotations -->
-        <dependency>
-            <groupId>biz.aQute.bnd</groupId>
-            <artifactId>biz.aQute.bndlib</artifactId>
         </dependency>
     </dependencies>
 

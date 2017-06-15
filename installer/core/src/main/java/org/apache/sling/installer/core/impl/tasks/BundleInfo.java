@@ -48,7 +48,7 @@ public class BundleInfo {
 
     private BundleInfo(Bundle b) {
         this.symbolicName = b.getSymbolicName();
-        this.version = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
+        this.version = b.getVersion();
         this.state = b.getState();
         this.id = b.getBundleId();
     }
@@ -82,17 +82,17 @@ public class BundleInfo {
             }
             if ( matchingBundles.size() > 0 ) {
                 final Version searchVersion = (version == null ? null : new Version(version));
-                if ( searchVersion == null || searchVersion.compareTo(getBundleVersion(matchingBundles.get(0))) == 0 ) {
+                if ( searchVersion == null || searchVersion.compareTo(matchingBundles.get(0).getVersion()) == 0 ) {
                     match = matchingBundles.get(0);
                 }
                 for(int i=1; i<matchingBundles.size(); i++) {
                     final Bundle current = matchingBundles.get(i);
                     if ( searchVersion == null ) {
-                        if ( getBundleVersion(match).compareTo(getBundleVersion(current)) < 0 ) {
+                        if ( match.getVersion().compareTo(current.getVersion()) < 0 ) {
                             match = current;
                         }
                     } else {
-                        if ( searchVersion.compareTo(getBundleVersion(current)) == 0 ) {
+                        if ( searchVersion.compareTo(current.getVersion()) == 0 ) {
                             match = current;
                             break;
                         }
@@ -101,10 +101,6 @@ public class BundleInfo {
             }
         }
         return match;
-    }
-
-    private static Version getBundleVersion(final Bundle b) {
-        return new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
     }
 
     /**

@@ -18,7 +18,7 @@
  */
 package org.apache.sling.discovery;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The discovery service can be used to get the current topology view.

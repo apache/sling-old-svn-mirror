@@ -28,12 +28,12 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 
 /**
- * Initialize a Sling application project by extracting bundles into the correct
- * locations.
+ * Create a Sling quickstart package (either JAR or WAR) based on the referenced model.
  */
 @Mojo(
         name = "package",
@@ -44,6 +44,13 @@ import org.codehaus.plexus.archiver.jar.JarArchiver;
 public class PackageMojo extends AbstractSlingStartMojo {
 
     private static final String[] EXCLUDES_MANIFEST = new String[] {"META-INF/MANIFEST.MF"};
+
+
+    /**
+     * If set to {@code true} creates a WAR artifact in addition to the standalone JAR from the model.
+     */
+    @Parameter(defaultValue="false")
+    protected boolean createWebapp;
 
     /**
      * The Jar archiver.
@@ -64,7 +71,6 @@ public class PackageMojo extends AbstractSlingStartMojo {
     private void packageStandaloneApp(final Map<String, File> globalContentsMap) throws MojoExecutionException {
         this.getLog().info("Packaging standalone jar...");
 
-        final File buildDirectory = new File(this.project.getBuild().getDirectory());
         @SuppressWarnings("unchecked")
         final Map<String, File> contentsMap = (Map<String, File>) this.project.getContextValue(BuildConstants.CONTEXT_STANDALONE);
 
@@ -75,8 +81,7 @@ public class PackageMojo extends AbstractSlingStartMojo {
             fis = new FileInputStream(manifestFile);
             final Manifest mf = new Manifest(fis);
 
-            final File outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".jar");
-
+            final File outputFile = getBuildFile(".jar");
             final JarArchiverHelper helper = new JarArchiverHelper(jarArchiver, this.project, outputFile, mf);
             helper.addDirectory(buildOutputDirectory, null, EXCLUDES_MANIFEST);
 
@@ -104,10 +109,10 @@ public class PackageMojo extends AbstractSlingStartMojo {
             @SuppressWarnings("unchecked")
             final Map<String, File> contentsMap = (Map<String, File>) this.project.getContextValue(BuildConstants.CONTEXT_WEBAPP);
 
-            final File buildOutputDirectory = new File(buildDirectory, BuildConstants.WEBAPP_OUTDIR);
-            final File outputFile = new File(buildDirectory, this.project.getArtifactId() + "-" + this.project.getVersion() + ".war");
+            final File outputFile = getBuildFile(".war");
 
             final JarArchiverHelper helper = new JarArchiverHelper(this.jarArchiver, this.project, outputFile);
+            final File buildOutputDirectory = new File(buildDirectory, BuildConstants.WEBAPP_OUTDIR);
             helper.addDirectory(buildOutputDirectory, null, EXCLUDES_MANIFEST);
 
             helper.addArtifacts(globalContentsMap, "WEB-INF/");
@@ -117,5 +122,22 @@ public class PackageMojo extends AbstractSlingStartMojo {
 
             projectHelper.attachArtifact(project, BuildConstants.TYPE_WAR, BuildConstants.CLASSIFIER_WEBAPP, outputFile);
         }
+    }
+
+    /**
+     *
+     * @param extension the extension including the leading dot to be used for the file name.
+     * @return the absolute file name of the to be created artifact.
+     */
+    private File getBuildFile(final String extension) {
+        final File buildDirectory = new File(this.project.getBuild().getDirectory());
+        final File buildFile;
+        if ( BuildConstants.PACKAGING_SLINGSTART.equals(project.getPackaging()) ) {
+            buildFile = new File(buildDirectory, this.project.getBuild().getFinalName() + extension);
+        } else {
+            // make sure this filename does not conflict with any other project artifacts (primary or secondary)
+            buildFile = new File(buildDirectory, this.project.getBuild().getFinalName() + ".launchpad" + extension);
+        }
+        return buildFile;
     }
 }

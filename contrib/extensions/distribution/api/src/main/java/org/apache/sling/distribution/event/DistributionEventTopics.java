@@ -26,26 +26,26 @@ import aQute.bnd.annotation.ProviderType;
 @ProviderType
 public interface DistributionEventTopics {
 
-    public static final String EVENT_BASE = "org/apache/sling/distribution";
+    String EVENT_BASE = "org/apache/sling/distribution";
 
     /**
      * event for package created
      */
-    public static final String AGENT_PACKAGE_CREATED = EVENT_BASE + "/agent/package/created";
+    String AGENT_PACKAGE_CREATED = EVENT_BASE + "/agent/package/created";
 
     /**
      * event for package queued
      */
-    public static final String AGENT_PACKAGE_QUEUED = EVENT_BASE + "/agent/package/queued";
+    String AGENT_PACKAGE_QUEUED = EVENT_BASE + "/agent/package/queued";
 
     /**
      * event for package distributed
      */
-    public static final String AGENT_PACKAGE_DISTRIBUTED = EVENT_BASE + "/agent/package/distributed";
+    String AGENT_PACKAGE_DISTRIBUTED = EVENT_BASE + "/agent/package/distributed";
 
 
     /**
      * event for package imported
      */
-    public static final String IMPORTER_PACKAGE_IMPORTED = EVENT_BASE + "/importer/package/imported";
+    String IMPORTER_PACKAGE_IMPORTED = EVENT_BASE + "/importer/package/imported";
 }

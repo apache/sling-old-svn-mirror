@@ -26,7 +26,6 @@ import org.apache.sling.discovery.base.its.AbstractDiscoveryServiceTest;
 import org.apache.sling.discovery.base.its.setup.VirtualInstance;
 import org.apache.sling.discovery.base.its.setup.VirtualInstanceBuilder;
 import org.apache.sling.discovery.commons.providers.base.DummyListener;
-import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
 import org.apache.sling.discovery.impl.setup.FullJR2VirtualInstanceBuilder;
 import org.junit.Test;
@@ -46,7 +45,7 @@ public class DiscoveryServiceImplTest extends AbstractDiscoveryServiceTest {
     public void testLocalClusterSyncTokenIdChange() throws Exception {
         logger.info("testLocalClusterSyncTokenIdChange: start");
         logger.info("testLocalClusterSyncTokenIdChange: creating instance1...");
-        FullJR2VirtualInstanceBuilder builder1 = 
+        FullJR2VirtualInstanceBuilder builder1 =
                 (FullJR2VirtualInstanceBuilder) new FullJR2VirtualInstanceBuilder()
                 .setDebugName("instance1")
                 .newRepository("/var/testLocalClusterSyncTokenIdChange/", true)
@@ -55,7 +54,7 @@ public class DiscoveryServiceImplTest extends AbstractDiscoveryServiceTest {
                 .setMinEventDelay(0);
         VirtualInstance instance1 = builder1.build();
         logger.info("testLocalClusterSyncTokenIdChange: creating instance2...");
-        FullJR2VirtualInstanceBuilder builder2 = 
+        FullJR2VirtualInstanceBuilder builder2 =
                 (FullJR2VirtualInstanceBuilder) new FullJR2VirtualInstanceBuilder()
                 .setDebugName("instance2")
                 .useRepositoryOf(instance1)
@@ -63,15 +62,15 @@ public class DiscoveryServiceImplTest extends AbstractDiscoveryServiceTest {
                 .setConnectorPingTimeout(999)
                 .setMinEventDelay(0);
         VirtualInstance instance2 = builder2.build();
-        
+
         logger.info("testLocalClusterSyncTokenIdChange: registering listener...");
         DummyListener listener = new DummyListener();
         DiscoveryServiceImpl discoveryService = (DiscoveryServiceImpl) instance1.getDiscoveryService();
         discoveryService.bindTopologyEventListener(listener);
-        
+
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(0, listener.countEvents());
-        
+
         logger.info("testLocalClusterSyncTokenIdChange: doing some heartbeating...");
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();
@@ -83,10 +82,10 @@ public class DiscoveryServiceImplTest extends AbstractDiscoveryServiceTest {
         logger.info("testLocalClusterSyncTokenIdChange: expecting to have received the INIT...");
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(1, listener.countEvents());
-        
+
         ResourceResolverFactory factory = instance1.getResourceResolverFactory();
-        ResourceResolver resolver = factory.getAdministrativeResourceResolver(null);
-        
+        ResourceResolver resolver = factory.getServiceResourceResolver(null);
+
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();
         Thread.sleep(1000);
@@ -94,14 +93,14 @@ public class DiscoveryServiceImplTest extends AbstractDiscoveryServiceTest {
         logger.info("testLocalClusterSyncTokenIdChange: after another heartbeat nothing more should have been triggered...");
         assertEquals(0, discoveryService.getViewStateManager().waitForAsyncEvents(2000));
         assertEquals(1, listener.countEvents());
-        
+
         // simulate a change in the establishedView's viewId - which can be
         // achieved by triggering a revoting - which should result with the
         // same view cos the instances have not changed
         HeartbeatHandler heartbeatHandler = (HeartbeatHandler) instance1.getViewChecker();
         logger.info("testLocalClusterSyncTokenIdChange: forcing a new voting to start...");
         heartbeatHandler.startNewVoting();
-        
+
         logger.info("testLocalClusterSyncTokenIdChange: doing some heartbeats to finish the voting...");
         instance1.heartbeatsAndCheckView();
         instance2.heartbeatsAndCheckView();

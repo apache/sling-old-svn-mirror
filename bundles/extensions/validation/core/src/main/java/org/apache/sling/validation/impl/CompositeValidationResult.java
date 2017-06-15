@@ -18,21 +18,28 @@
  */
 package org.apache.sling.validation.impl;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.spi.DefaultValidationResult;
+import org.apache.sling.validation.spi.Validator;
+import org.apache.sling.validation.spi.support.DefaultValidationResult;
 
 /**
- * Aggregates multiple {@link ValidationResult}s.
+ * Aggregates multiple {@link ValidationResult}s. Should not be from {@link Validator}s.
  */
-public class CompositeValidationResult implements ValidationResult {
+public class CompositeValidationResult implements ValidationResult, Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1019113908128276733L;
     private final @Nonnull List<ValidationResult> results;
 
     public CompositeValidationResult() {
@@ -43,8 +50,8 @@ public class CompositeValidationResult implements ValidationResult {
         results.add(result);
     }
 
-    public void addFailure(@Nonnull String location, Integer severity, @Nonnull String message, Object... messageArguments) {
-        results.add(new DefaultValidationResult(location, severity, message, messageArguments));
+    public void addFailure(@Nonnull String location, int severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String message, Object... messageArguments) {
+        results.add(new DefaultValidationResult(location, severity, defaultResourceBundle, message, messageArguments));
     }
 
     /**
@@ -70,5 +77,10 @@ public class CompositeValidationResult implements ValidationResult {
             }
         }
         return failures;
+    }
+
+    @Override
+    public String toString() {
+        return "CompositeValidationResult [results=" + results + "]";
     }
 }
