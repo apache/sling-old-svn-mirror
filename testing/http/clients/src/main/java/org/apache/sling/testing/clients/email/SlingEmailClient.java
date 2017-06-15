@@ -24,6 +24,7 @@ import static org.apache.http.HttpStatus.SC_OK;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.http.Header;
@@ -91,6 +92,15 @@ public final class SlingEmailClient extends SlingClient {
 			JsonNode messages = mapper.readTree(response.getContent());
 			for ( JsonNode emailNode : messages.get("messages") ) {
 				EmailMessage msg = new EmailMessage(emailNode.get(PN_CONTENT).getTextValue());
+				Iterator<String> fieldNames = emailNode.getFieldNames();
+				while ( fieldNames.hasNext() ) {
+					String fieldName = fieldNames.next();
+					if ( fieldName.equals(PN_CONTENT) ) {
+						continue;
+					}
+					msg.addHeader(fieldName, emailNode.get(fieldName).getTextValue());
+				}
+					
 				emails.add(msg);
 			}
 		} catch (IOException e) {
