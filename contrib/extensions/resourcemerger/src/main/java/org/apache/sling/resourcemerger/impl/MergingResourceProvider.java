@@ -297,10 +297,12 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
         final String relativePath = getRelativePath(parent.getPath());
 
         if (relativePath != null) {
+            // candidates is the list of holders from which the children are being constructed!
             final List<ResourceHolder> candidates = new ArrayList<ResourceHolder>();
 
             final Iterator<Resource> resources = picker.pickResources(resolver, relativePath, parent).iterator();
-
+            
+            // start with the base resource
             boolean isUnderlying = true;
             while (resources.hasNext()) {
                 Resource parentResource = resources.next();
@@ -313,16 +315,21 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
                     while (iter.hasNext()) {
                         final ResourceHolder holder = iter.next();
                         if (handler.isHidden(holder.name, false)) {
-                            iter.remove();
+                            iter.remove(); // remove from the candidates list
                         }
                     }
                 }
                 
+                int previousChildPositionInCandidateList = -1;
+                
+                // get children of current resource (might be overlaid resource)
                 for (final Resource child : parentResource.getChildren()) {
                     final String rsrcName = child.getName();
+                    // the holder which should end up in the children list
                     ResourceHolder holder = null;
                     int childPositionInCandidateList = -1;
-                    // check if is this an overlaid resource (i.e. has the resource with the same name already be exposed through the underlying resource)
+                    
+                    // check if this an overlaid resource (i.e. has the resource with the same name already be exposed through the underlying resource)
                     for (int index=0; index < candidates.size(); index++) {
                         ResourceHolder current = candidates.get(index);
                         if (current.name.equals(rsrcName)) {
@@ -331,14 +338,24 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
                             break;
                         }
                     }
+                    // for new resources, i.e. no underlying resource found...
                     if (holder == null) {
                         // remove the hidden child resources from the local resource
                         if (handler != null && handler.isHidden(rsrcName, true)) {
                             continue; // skip this child
                         }
                         holder = new ResourceHolder(rsrcName);
-                        candidates.add(holder);
-                    } 
+                        if (previousChildPositionInCandidateList != -1) {
+                            // either add after the previous child position
+                            candidates.add(previousChildPositionInCandidateList+1, holder);
+                            previousChildPositionInCandidateList++;
+                        } else {
+                            // or add to the end of the list
+                            candidates.add(holder);
+                            previousChildPositionInCandidateList = candidates.size() - 1;
+                        }
+                    }
+                    // in all cases the holder should get the current child!
                     holder.resources.add(child);
 
                     // Check if children need reordering
@@ -357,15 +374,20 @@ public class MergingResourceProvider extends ResourceProvider<Void> {
                             index++;
                         }
                     }
-
+                    // either reorder because of explicit reording property
                     if (orderBeforeIndex > -1) {
                         candidates.add(orderBeforeIndex, holder);
                         candidates.remove(candidates.size() - 1);
+                        previousChildPositionInCandidateList = orderBeforeIndex;
                     } else {
-                        // if there was no explicit order, just assume the order given by the overlying resource
-                        if (childPositionInCandidateList != -1) {
-                            candidates.add(holder);
+                        // or reorder because overlaid resource has a different order
+                        if (childPositionInCandidateList != -1 && previousChildPositionInCandidateList != -1) {
                             candidates.remove(childPositionInCandidateList);
+                            if (childPositionInCandidateList < previousChildPositionInCandidateList) {
+                                previousChildPositionInCandidateList--;
+                            }
+                            candidates.add(previousChildPositionInCandidateList+1, holder);
+                            previousChildPositionInCandidateList++;
                         }
                     }
                 }
