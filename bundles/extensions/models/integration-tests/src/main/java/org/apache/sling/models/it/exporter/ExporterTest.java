@@ -91,6 +91,8 @@ public class ExporterTest {
                     "sling/exp/base");
             ResourceUtil.getOrCreateResource(adminResolver, baseComponentPath, properties, null, false);
 
+            ResourceUtil.getOrCreateResource(adminResolver, baseComponentPath + "/child", Collections.<String, Object>emptyMap(), null, false);
+
             properties.put(SlingConstants.NAMESPACE_PREFIX + ":" + SlingConstants.PROPERTY_RESOURCE_TYPE,
                     "sling/exp-request/base");
             ResourceUtil.getOrCreateResource(adminResolver, baseRequestComponentPath, properties, null, false);
