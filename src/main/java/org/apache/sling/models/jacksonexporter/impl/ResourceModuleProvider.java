@@ -49,7 +49,7 @@ public class ResourceModuleProvider implements ModuleProvider {
     private void activate(Map<String, Object> props) {
         final int maxRecursionLevels = PropertiesUtil.toInteger(props.get(PROP_MAX_RECURSION_LEVELS), DEFAULT_MAX_RECURSION_LEVELS);
         this.moduleInstance = new SimpleModule();
-        SimpleSerializers serializers = new SimpleSerializers();
+        ModelSkippingSerializers serializers = new ModelSkippingSerializers();
         serializers.addSerializer(Resource.class, new ResourceSerializer(maxRecursionLevels));
         moduleInstance.setSerializers(serializers);
     }
