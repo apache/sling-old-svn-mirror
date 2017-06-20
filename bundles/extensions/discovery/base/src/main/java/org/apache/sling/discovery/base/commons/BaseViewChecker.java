@@ -215,7 +215,7 @@ public abstract class BaseViewChecker implements ViewChecker, Runnable {
     protected void doCheckView() {
         // check the remotes first
         if (getAnnouncementRegistry() == null) {
-            logger.error("announcementRegistry is null");
+            logger.info("announcementRegistry is null (will check view again later)");
             return;
         }
         getAnnouncementRegistry().checkExpiredAnnouncements();
