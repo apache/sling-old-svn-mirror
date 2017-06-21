@@ -31,11 +31,8 @@ public class QueueMBeanImpl extends AbstractJobStatistics {
 
     public QueueMBeanImpl(Queue queue) {
         this.name = queue.getName();
-        if (queue instanceof Statistics) {
-            this.statistics = (Statistics) queue;
-        } else {
-            this.statistics = new EmptyStatistics();
-        }
+        Statistics stats = queue instanceof Statistics ? (Statistics) queue : queue.getStatistics();
+        this.statistics = stats != null ? stats : new EmptyStatistics();
     }
 
     @Override
