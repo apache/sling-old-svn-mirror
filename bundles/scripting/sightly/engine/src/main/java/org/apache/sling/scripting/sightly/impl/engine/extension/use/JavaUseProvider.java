@@ -24,8 +24,7 @@ import java.util.regex.Pattern;
 import javax.script.Bindings;
 import javax.servlet.ServletRequest;
 
-import org.apache.sling.api.adapter.*;
-
+import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -99,7 +98,7 @@ public class JavaUseProvider implements UseProvider {
                 LOG.debug("Attempting to load class {} from the classloader cache.", identifier);
                 Class<?> cls = classLoaderWriter.getClassLoader().loadClass(identifier);
 
-            if (arguments.containsKey("adaptable")) {
+                if (arguments.containsKey("adaptable")) {
                     Object adaptable = arguments.get("adaptable");
                     LOG.debug("adaptable {}", adaptable);
 
@@ -113,11 +112,11 @@ public class JavaUseProvider implements UseProvider {
                             LOG.error("error during adapting...", e);
                         }
                     }
-            }
+                 }
 
-            if (result != null) {
-                return ProviderOutcome.success(result);
-            }
+                 if (result != null) {
+                    return ProviderOutcome.success(result);
+                 }
 
                 // attempt OSGi service load
                 result = sling.getService(cls);
