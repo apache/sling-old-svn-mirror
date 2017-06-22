@@ -559,7 +559,7 @@
               </command>
               <command
               	commandId="org.apache.sling.ide.eclipse.ui.actions.openHtmlInBrowserHandler"
-              	icon="platform:/plugin/org.eclipse.ui.browser/icons/obj16/internal_browser.gif"
+              	icon="icons/obj16/internal_browser.png"
               	label="&amp;Open .html (on server) in browser">
                  <visibleWhen
                        checkEnabled="false">
