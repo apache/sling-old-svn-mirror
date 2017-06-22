@@ -32,7 +32,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.resourcemerger.impl.picker.OverridingResourcePicker;
+import org.apache.sling.resourcemerger.impl.picker.ResourceTypeHierarchyBasedResourcePicker;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
@@ -40,7 +40,7 @@ import org.apache.sling.testing.resourceresolver.MockResourceResolverFactoryOpti
 import org.junit.Before;
 import org.junit.Test;
 
-public class MergedResourceProviderTestForOverridingPicker {
+public class MergedResourceProviderTestForResourceTypeBasedPicker {
 
     private static final String SUPER_TYPE = "sling:resourceSuperType";
 
@@ -99,7 +99,7 @@ public class MergedResourceProviderTestForOverridingPicker {
                     .resource("z")
                     .commit();
 
-        this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), false, true);
+        this.provider = new MergingResourceProvider("/override", new ResourceTypeHierarchyBasedResourcePicker(), false, true);
         this.ctx = new BasicResolveContext(resolver);
     }
 

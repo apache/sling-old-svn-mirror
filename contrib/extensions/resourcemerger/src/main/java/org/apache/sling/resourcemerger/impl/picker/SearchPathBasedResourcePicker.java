@@ -38,12 +38,12 @@ import org.apache.sling.resourcemerger.impl.MergedResourceConstants;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
 
 @Component(name="org.apache.sling.resourcemerger.impl.MergedResourceProviderFactory",
-           label = "Apache Sling Merged Resource Provider Factory",
-           description = "This resource provider delivers merged resources based on the search paths.",
+           label = "Apache Sling Resource Merger - Search Path Based Resource Picker",
+           description = "This resource picker delivers merged resources based on the search paths (overlay approach).",
            metatype=true)
 @Service(value={MergedResourcePicker2.class, ResourceMergerService.class})
 @Properties({
-    @Property(name=MergedResourcePicker2.MERGE_ROOT, value=MergingResourcePicker.DEFAULT_ROOT,
+    @Property(name=MergedResourcePicker2.MERGE_ROOT, value=SearchPathBasedResourcePicker.DEFAULT_ROOT,
             label="Root",
             description="The mount point of merged resources"),
     @Property(name=MergedResourcePicker2.READ_ONLY, boolValue=true,
@@ -52,10 +52,9 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
 
 })
 /**
- * The <code>MergedResourceProviderFactory</code> creates merged resource
- * providers and implements the <code>ResourceMergerService</code>.
+ * The <code>SearchPathBasedResourcePicker</code> delivers merged resources based on the resource resolver's search path.
  */
-public class MergingResourcePicker implements MergedResourcePicker2, ResourceMergerService {
+public class SearchPathBasedResourcePicker implements MergedResourcePicker2, ResourceMergerService {
 
     public static final String DEFAULT_ROOT = "/mnt/overlay";
 

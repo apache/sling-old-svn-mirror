@@ -35,7 +35,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.resourcemerger.impl.picker.MergingResourcePicker;
+import org.apache.sling.resourcemerger.impl.picker.SearchPathBasedResourcePicker;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.testing.resourceresolver.MockHelper;
@@ -44,7 +44,7 @@ import org.apache.sling.testing.resourceresolver.MockResourceResolverFactoryOpti
 import org.junit.Before;
 import org.junit.Test;
 
-public class MergedResourceProviderTestForMergingPicker {
+public class MergedResourceProviderTestForSearchPathBasedPicker {
 
     private ResourceResolver resolver;
 
@@ -86,7 +86,7 @@ public class MergedResourceProviderTestForMergingPicker {
                                           .resource("/libs/b").resource("c").resource("d").resource("e").resource("f")
                                         .commit();
 
-        this.provider = new CRUDMergingResourceProvider("/merged", new MergingResourcePicker(), false);
+        this.provider = new CRUDMergingResourceProvider("/merged", new SearchPathBasedResourcePicker(), false);
         this.ctx = new BasicResolveContext(resolver);
     }
 

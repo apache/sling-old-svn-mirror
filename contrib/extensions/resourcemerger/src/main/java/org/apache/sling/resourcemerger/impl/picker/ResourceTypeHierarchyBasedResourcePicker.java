@@ -35,19 +35,19 @@ import org.apache.sling.resourcemerger.impl.StubResource;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker2;
 
 @Component(name = "org.apache.sling.resourcemerger.picker.overriding",
-        label = "Apache Sling Overriding Resource Picker",
-    description = "This resource picker delivers merged resources based on the resource type hierarchy.",
+        label = "Apache Sling Resource Merger - Resource Type Hierarchy Based Resource Picker",
+    description = "This resource picker delivers merged resources based on the resource type hierarchy (override approach).",
     metatype = true, policy = ConfigurationPolicy.REQUIRE)
 @Service
 @Properties({
-    @Property(name = MergedResourcePicker2.MERGE_ROOT, value = OverridingResourcePicker.DEFAULT_ROOT,
+    @Property(name = MergedResourcePicker2.MERGE_ROOT, value = ResourceTypeHierarchyBasedResourcePicker.DEFAULT_ROOT,
             label = "Root", description = "Root path at which merged resources will be available."),
     @Property(name=MergedResourcePicker2.READ_ONLY, boolValue=true,
     label="Read Only",
     description="Specifies if the resources are read-only or can be modified."),
     @Property(name=MergedResourcePicker2.TRAVERSE_PARENT, boolValue=true, propertyPrivate=true)
 })
-public class OverridingResourcePicker implements MergedResourcePicker2 {
+public class ResourceTypeHierarchyBasedResourcePicker implements MergedResourcePicker2 {
 
     public static final String DEFAULT_ROOT = "/mnt/override";
 
