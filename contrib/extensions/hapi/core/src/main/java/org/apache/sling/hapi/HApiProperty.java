@@ -18,9 +18,12 @@
  ******************************************************************************/
 package org.apache.sling.hapi;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * A Hypermedia API property for a {@link HApiType}
  */
+@ProviderType
 public interface HApiProperty {
 
     /**

@@ -19,12 +19,15 @@
 
 package org.apache.sling.hapi;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import java.util.List;
 import java.util.Map;
 
 /**
  * A Hypermedia API type.
  */
+@ProviderType
 public interface HApiType {
 
     /**

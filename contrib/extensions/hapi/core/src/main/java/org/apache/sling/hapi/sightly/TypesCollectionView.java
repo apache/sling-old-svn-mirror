@@ -27,12 +27,14 @@ import org.apache.sling.hapi.HApiType;
 import org.apache.sling.hapi.HApiTypesCollection;
 import org.apache.sling.hapi.HApiUtil;
 import org.apache.sling.scripting.sightly.pojo.Use;
+import org.osgi.annotation.versioning.ProviderType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
 import java.util.Collection;
 
+@ProviderType
 public class TypesCollectionView implements Use {
     private static final Logger LOG = LoggerFactory.getLogger(TypesCollectionView.class);
 
