@@ -20,10 +20,12 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
@@ -40,6 +42,7 @@ import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.logging.Log;
 
 /**
@@ -66,17 +69,22 @@ public class JspCServletContext implements ServletContext {
     /**
      * Servlet context attributes.
      */
-    protected Hashtable<String, Object> attributes;
+    private Hashtable<String, Object> attributes;
 
     /**
      * The log writer we will write log messages to.
      */
-    protected Log log;
+    private Log log;
 
     /**
      * The base URL (document root) for this context.
      */
-    protected URL resourceBaseURL;
+    private URL resourceBaseURL;
+
+    /**
+     * alternative base urls
+     */
+    private List<URL> baseURLs = new ArrayList<>();
 
     /**
      * Create a new instance of this ServletContext implementation.
@@ -85,9 +93,18 @@ public class JspCServletContext implements ServletContext {
      * @param resourceBaseURL Resource base URL
      */
     public JspCServletContext(Log log, URL resourceBaseURL) {
-        attributes = new Hashtable<>();
+        this.attributes = new Hashtable<>();
         this.log = log;
         this.resourceBaseURL = resourceBaseURL;
+        this.baseURLs.add(resourceBaseURL);
+    }
+
+    /**
+     * Adds an alternative base url for finding resources.
+     * @param altBaseURL alternative resource base
+     */
+    public void addAlternativeBaseURL(URL altBaseURL) {
+        this.baseURLs.add(altBaseURL);
     }
 
     // --------------------------------------------------------- Public Methods
@@ -181,7 +198,7 @@ public class JspCServletContext implements ServletContext {
      */
     @Override
     public String getRealPath(String path) {
-        if (!resourceBaseURL.getProtocol().equals("file")) {
+        if (!"file".equals(resourceBaseURL.getProtocol())) {
             return null;
         }
 
@@ -223,26 +240,23 @@ public class JspCServletContext implements ServletContext {
         }
 
         if (!path.startsWith("/")) {
-            throw new MalformedURLException("Path '" + path
-                + "' does not start with '/'");
+            throw new MalformedURLException("Path '" + path + "' does not start with '/'");
         }
 
-        URL url = new URL(resourceBaseURL, path.substring(1));
-        InputStream is = null;
-        try {
-            is = url.openStream();
-        } catch (Throwable t) {
-            url = null;
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (Throwable t2) {
-                    // Ignore
-                }
+        for (URL base: baseURLs) {
+            URL url = new URL(base, path.substring(1));
+            InputStream is = null;
+            try {
+                is = url.openStream();
+                // open stream succeeds, so resource exists.
+                return url;
+            } catch (Throwable t) {
+                // ignore
+            } finally {
+                IOUtils.closeQuietly(is);
             }
         }
-        return url;
+        return null;
     }
 
     /**
@@ -284,13 +298,12 @@ public class JspCServletContext implements ServletContext {
             return (thePaths);
         }
 
-        String theFiles[] = theBaseDir.list();
-        for (int i = 0; i < theFiles.length; i++) {
-            File testFile = new File(basePath + File.separator + theFiles[i]);
+        for (String theFile : theBaseDir.list()) {
+            File testFile = new File(basePath + File.separator + theFile);
             if (testFile.isFile()) {
-                thePaths.add(path + theFiles[i]);
+                thePaths.add(path + theFile);
             } else if (testFile.isDirectory()) {
-                thePaths.add(path + theFiles[i] + "/");
+                thePaths.add(path + theFile + "/");
             }
         }
 
