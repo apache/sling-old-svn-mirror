@@ -129,7 +129,7 @@ public final class AuthConstants {
     /**
     * The name of the request attribute containing the list of
     * request URI suffixes handled by the default authenticator
-    * <code>org.apache.sling.auth.core.impl.SlingAuthenticator<code>.
+    * <code>org.apache.sling.auth.core.impl.SlingAuthenticator</code>.
     * The authenticator will populate this attribute so that login JSPs
     * can post j_username and j_password to the correct URI.
     * 
