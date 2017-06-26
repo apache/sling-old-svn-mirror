@@ -22,9 +22,9 @@
  * of utility functions in the {@link org.apache.sling.auth.core.AuthUtil}
  * class.
  *
- * @version 1.2.2
+ * @version 1.3.2
  */
-@org.osgi.annotation.versioning.Version("1.2.2")
+@org.osgi.annotation.versioning.Version("1.3.2")
 package org.apache.sling.auth.core;
 
 
