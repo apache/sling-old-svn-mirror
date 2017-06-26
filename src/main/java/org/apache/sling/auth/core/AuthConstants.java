@@ -132,6 +132,8 @@ public final class AuthConstants {
     * <code>org.apache.sling.auth.core.impl.SlingAuthenticator<code>.
     * The authenticator will populate this attribute so that login JSPs
     * can post j_username and j_password to the correct URI.
+    * 
+    * @since 1.3.2 (bundle version 1.4.0)
     */
     public static final String ATTR_REQUEST_AUTH_URI_SUFFIX = "org.apache.sling.api.include.auth_uri_suffix";
     
