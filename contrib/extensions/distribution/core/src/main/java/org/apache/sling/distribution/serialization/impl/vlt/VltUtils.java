@@ -35,6 +35,7 @@ import java.util.NavigableMap;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.zip.Deflater;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -154,6 +155,11 @@ public class VltUtils {
         String root = getPackageRoot(filter.getFilterSets(), packageRoots);
         opts.setRootPath(root);
         opts.setMountPath(root);
+
+        // Set the zlib compression level to "best speed"
+        // This level enables the FileVault improvement
+        // covered by JCRVLT-163.
+        opts.setCompressionLevel(Deflater.BEST_SPEED);
 
         return opts;
     }
