@@ -471,6 +471,11 @@ public class SlingAuthenticator implements Authenticator,
 
     private boolean doHandleSecurity(HttpServletRequest request, HttpServletResponse response) {
 
+    	// 0. Check for request attribute; set if not present
+    	Object authUriSufficesAttr = request.getAttribute(AuthConstants.ATTR_REQUEST_AUTH_URI_SUFFIX);
+    	if (authUriSufficesAttr == null && authUriSuffices != null)
+    		request.setAttribute(AuthConstants.ATTR_REQUEST_AUTH_URI_SUFFIX, authUriSuffices);
+
         // 1. Ask all authentication handlers to try to extract credentials
         final AuthenticationInfo authInfo = getAuthenticationInfo(request, response);
 
