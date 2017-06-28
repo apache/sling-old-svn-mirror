@@ -359,7 +359,9 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     @Override
     public boolean isResourceType(Resource resource, String resourceType) {
-        return resource.getResourceType().equals(resourceType);
+        return resource.getResourceType().equals(resourceType)
+            || resource.getResourceSuperType().equals(resourceType)
+            || resource.adaptTo(ValueMap.class).get("jcr:primaryType", "").equals(resourceType);
     }
 
     @Override
