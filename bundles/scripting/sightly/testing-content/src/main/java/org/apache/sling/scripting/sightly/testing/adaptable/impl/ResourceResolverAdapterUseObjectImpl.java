@@ -18,9 +18,9 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.testing.adaptable.impl;
 
-import org.apache.sling.scripting.sightly.testing.adaptable.ResourceAdapterUseObject;
+import org.apache.sling.scripting.sightly.testing.adaptable.ResourceResolverAdapterUseObject;
 
-public class ResourceResolverAdapterUseObjectImpl implements ResourceAdapterUseObject {
+public class ResourceResolverAdapterUseObjectImpl implements ResourceResolverAdapterUseObject {
 
     private String title;
 

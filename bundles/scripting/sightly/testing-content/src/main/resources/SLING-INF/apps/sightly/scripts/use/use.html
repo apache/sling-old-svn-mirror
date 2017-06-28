@@ -25,6 +25,7 @@
           data-sly-use.resmodel="org.apache.sling.scripting.sightly.testing.models.ResourceModel"
           data-sly-use.reqadapt="org.apache.sling.scripting.sightly.testing.adaptable.RequestAdapterUseObject"
           data-sly-use.resadapt="org.apache.sling.scripting.sightly.testing.adaptable.ResourceAdapterUseObject"
+          data-sly-use.rradapt="${'org.apache.sling.scripting.sightly.testing.adaptable.ResourceResolverAdapterUseObject' @ adaptable = request.resourceResolver}"
           data-sly-use.osgi="org.apache.sling.scripting.sightly.testing.use.TestService"
           data-sly-use.repoNoPkg="RepoPojoNoPkg"
           data-sly-use.testEnum="TestEnumHolder">
@@ -37,5 +38,6 @@
         <div id="osgi">${osgi.sayHello}</div>
         <div id="repopojo-nopkg">${repoNoPkg.FIELD}</div>
         <div id="test-enum">${testEnum.constantValue}</div>
+        <div id="rradapt">${rradapt.title}</div>
     </body>
 </html>

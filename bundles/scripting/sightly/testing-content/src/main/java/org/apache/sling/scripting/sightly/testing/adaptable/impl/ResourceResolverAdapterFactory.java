@@ -48,8 +48,8 @@ public class ResourceResolverAdapterFactory implements AdapterFactory {
     @Override
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
         if (type == ResourceResolverAdapterUseObject.class && adaptable instanceof ResourceResolver) {
-           String title = "test";
-            return (AdapterType) new ResourceResolverAdapterUseObjectImpl(title);
+           String title = "SUCCESS";
+           return (AdapterType) new ResourceResolverAdapterUseObjectImpl(title);
         }
         return null;
     }
