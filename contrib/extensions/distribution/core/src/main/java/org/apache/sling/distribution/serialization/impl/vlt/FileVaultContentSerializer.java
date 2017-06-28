@@ -20,28 +20,24 @@ package org.apache.sling.distribution.serialization.impl.vlt;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
+import org.apache.jackrabbit.vault.fs.io.Archive;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
+import org.apache.jackrabbit.vault.fs.io.Importer;
+import org.apache.jackrabbit.vault.fs.io.ZipStreamArchive;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
-import org.apache.jackrabbit.vault.packaging.PackageManager;
+import org.apache.jackrabbit.vault.packaging.PackageException;
 import org.apache.jackrabbit.vault.packaging.Packaging;
-import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.packaging.impl.FileDistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
@@ -106,42 +102,28 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
 
     @Override
     public void importFromStream(ResourceResolver resourceResolver, InputStream inputStream) throws DistributionException {
-
         Session session = null;
-        OutputStream outputStream = null;
-        File file = null;
-        boolean isTmp = true;
+        Archive archive = null;
         try {
             session = getSession(resourceResolver);
             ImportOptions importOptions = VltUtils.getImportOptions(aclHandling, importMode, autosaveThreshold);
-
-            if (inputStream instanceof FileDistributionPackage.PackageInputStream) {
-                file = ((FileDistributionPackage.PackageInputStream) inputStream).getFile();
-                isTmp = false;
-            } else {
-                file = File.createTempFile("distrpck-tmp-" + System.nanoTime(), "." + TYPE);
+            Importer importer = new Importer(importOptions);
+            archive = new ZipStreamArchive(inputStream);
+            archive.open(false);
+            importer.run(archive, session.getRootNode());
+            if (importer.hasErrors() && importOptions.isStrict()) {
+                throw new PackageException("Errors during import.");
             }
-
-            outputStream = new BufferedOutputStream(new FileOutputStream(file));
-
-            IOUtils.copy(inputStream, outputStream);
-            IOUtils.closeQuietly(outputStream);
-
-            PackageManager packageManager = packaging.getPackageManager();
-            VaultPackage vaultPackage = packageManager.open(file);
-
-            vaultPackage.extract(session, importOptions);
-
-            vaultPackage.close();
+            if (session.hasPendingChanges()) {
+                session.save();
+            }
         } catch (Exception e) {
             throw new DistributionException(e);
         } finally {
-            IOUtils.closeQuietly(outputStream);
-            if (isTmp) {
-                FileUtils.deleteQuietly(file);
-            }
-
             ungetSession(session);
+            if (archive != null) {
+                archive.close();
+            }
         }
 
     }

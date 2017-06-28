@@ -213,6 +213,8 @@ public class VltUtils {
             opts.setImportMode(ImportMode.UPDATE);
         }
 
+        opts.setPatchKeepInRepo(false);
+
         if (autosaveThreshold >= 0) {
             opts.setAutoSaveThreshold(autosaveThreshold);
         }

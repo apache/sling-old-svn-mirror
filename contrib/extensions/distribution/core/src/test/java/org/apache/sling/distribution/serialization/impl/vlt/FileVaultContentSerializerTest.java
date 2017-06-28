@@ -31,14 +31,16 @@ import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.PackageManager;
 import org.apache.jackrabbit.vault.packaging.Packaging;
-import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.serialization.DistributionExportFilter;
 import org.apache.sling.distribution.serialization.DistributionExportOptions;
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.apache.sling.testing.resourceresolver.MockHelper;
-import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -50,14 +52,20 @@ import static org.mockito.Mockito.*;
  */
 public class FileVaultContentSerializerTest {
 
+    @Rule
+    public final SlingContext context = new SlingContext(ResourceResolverType.JCR_OAK);
+
     @Before
     public void setUp() throws Exception {
-        ResourceResolver resourceResolver = new MockResourceResolverFactory().getResourceResolver(null);
-        MockHelper helper = MockHelper.create(resourceResolver).resource("/libs").p("prop", "value")
+        // create test content
+        MockHelper helper = MockHelper.create(context.resourceResolver()).resource("/libs").p("prop", "value")
                 .resource("sub").p("sub", "hello")
                 .resource(".sameLevel")
                 .resource("/apps").p("foo", "baa");
         helper.commit();
+        // register sling node types
+        Session session = context.resourceResolver().adaptTo(Session.class);
+        RepositoryUtil.registerSlingNodeTypes(session);
     }
 
     @Test
@@ -117,22 +125,8 @@ public class FileVaultContentSerializerTest {
         FileVaultContentSerializer fileVaultContentSerializer = new FileVaultContentSerializer("vlt", packaging, importMode,
                 aclHandling, packageRoots, nodeFilters, propertyFilters, useReferences, thershold);
 
-        ResourceResolver sessionResolver = mock(ResourceResolver.class);
-        Session session = mock(Session.class);
-
         File file = new File(getClass().getResource("/vlt/dp.vlt").getFile());
 
-        PackageManager pm = mock(PackageManager.class);
-        VaultPackage vaultPackage = mock(VaultPackage.class);
-        when(pm.open(any(File.class))).thenReturn(vaultPackage);
-        when(packaging.getPackageManager()).thenReturn(pm);
-
-        Workspace workspace = mock(Workspace.class);
-        ObservationManager observationManager = mock(ObservationManager.class);
-        when(workspace.getObservationManager()).thenReturn(observationManager);
-        when(session.getWorkspace()).thenReturn(workspace);
-        when(sessionResolver.adaptTo(Session.class)).thenReturn(session);
-
-        fileVaultContentSerializer.importFromStream(sessionResolver, new FileInputStream(file));
+        fileVaultContentSerializer.importFromStream(context.resourceResolver(), new FileInputStream(file));
     }
 }
