@@ -21,7 +21,6 @@ package org.apache.sling.testing.resourceresolver;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +39,7 @@ public class IsResourceTypeTest {
     private ResourceResolver resolver;
 
     @Before
-    public final void setUp() throws IOException, LoginException {
+    public final void setUp() throws LoginException {
         resolver = new MockResourceResolverFactory().getResourceResolver(null);
     }
     
