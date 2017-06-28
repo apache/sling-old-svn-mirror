@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -359,7 +360,34 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     @Override
     public boolean isResourceType(Resource resource, String resourceType) {
-        return resource.getResourceType().equals(resourceType);
+        boolean result = false;
+        if ( resource != null && resourceType != null ) {
+             // Check if the resource is of the given type. This method first checks the
+             // resource type of the resource, then its super resource type and continues
+             //  to go up the resource super type hierarchy.
+             if (ResourceTypeUtil.areResourceTypesEqual(resourceType, resource.getResourceType(), getSearchPath())) {
+                 result = true;
+             } else {
+                 Set<String> superTypesChecked = new HashSet<>();
+                 String superType = this.getParentResourceType(resource);
+                 while (!result && superType != null) {
+                     if (ResourceTypeUtil.areResourceTypesEqual(resourceType, superType, getSearchPath())) {
+                         result = true;
+                     } else {
+                         superTypesChecked.add(superType);
+                         superType = this.getParentResourceType(superType);
+                         if (superType != null && superTypesChecked.contains(superType)) {
+                             throw new SlingException("Cyclic dependency for resourceSuperType hierarchy detected on resource " + resource.getPath()) {
+                                // anonymous class to avoid problem with null cause
+                                private static final long serialVersionUID = 1L;
+                             };
+                         }
+                     }
+                 }
+             }
+
+        }
+        return result;
     }
 
     @Override
