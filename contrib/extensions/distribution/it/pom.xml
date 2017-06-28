@@ -325,7 +325,7 @@
 
                         <sling.additional.bundle.1>httpcore-osgi</sling.additional.bundle.1>
                         <sling.additional.bundle.2>httpclient-osgi</sling.additional.bundle.2>
-                        <sling.additional.bundle.35>org.apache.sling.event</sling.additional.bundle.35>
+                        <sling.additional.bundle.3>org.apache.sling.event</sling.additional.bundle.3>
                         <sling.additional.bundle.4>org.apache.sling.hc.core</sling.additional.bundle.4>
                         <sling.additional.bundle.5>org.apache.jackrabbit.vault</sling.additional.bundle.5>
                         <sling.additional.bundle.6>org.apache.sling.distribution.api</sling.additional.bundle.6>
@@ -333,6 +333,7 @@
                         <sling.additional.bundle.8>org.apache.sling.distribution.sample</sling.additional.bundle.8>
                         <sling.additional.bundle.9>${project.build.finalName}.jar</sling.additional.bundle.9>
                         <sling.additional.bundle.10>org.apache.sling.commons.johnzon</sling.additional.bundle.10>
+                        <sling.additional.bundle.11>commons-collections</sling.additional.bundle.11>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -383,6 +384,12 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.2</version>
             <scope>provided</scope>
         </dependency>
 
