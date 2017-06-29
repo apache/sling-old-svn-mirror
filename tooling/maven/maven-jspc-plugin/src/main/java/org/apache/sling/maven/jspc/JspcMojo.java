@@ -30,8 +30,6 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import javax.servlet.ServletContext;
-
 import org.apache.commons.logging.impl.LogFactoryImpl;
 import org.apache.commons.logging.impl.SimpleLog;
 import org.apache.maven.artifact.Artifact;
@@ -77,6 +75,12 @@ public class JspcMojo extends AbstractMojo implements Options {
      */
     @Parameter( property = "jspc.sourceDirectory", defaultValue = "${project.build.scriptSourceDirectory}")
     private File sourceDirectory;
+
+    /**
+     * List of alternative resource directories used during compiling.
+     */
+    @Parameter
+    private File[] resourceDirectories = new File[0];
 
     /**
      * Target directory for the compiled JSP classes.
@@ -160,7 +164,7 @@ public class JspcMojo extends AbstractMojo implements Options {
 
     private List<String> pages = new ArrayList<String>();
 
-    private ServletContext context;
+    private JspCServletContext context;
 
     private JspRuntimeContext rctxt;
 
@@ -354,6 +358,12 @@ public class JspcMojo extends AbstractMojo implements Options {
         }
 
         context = new JspCServletContext(getLog(), new URL("file:" + uriSourceRoot.replace('\\', '/') + '/'));
+        for (File resourceDir: resourceDirectories) {
+            String root = resourceDir.getCanonicalPath().replace('\\', '/');
+            URL altUrl = new URL("file:" + root + "/");
+            context.addAlternativeBaseURL(altUrl);
+        }
+
         tldLocationsCache = new JspCTldLocationsCache(context, true, loader);
 
         JavaCompiler compiler = new EclipseJavaCompiler();
