@@ -113,7 +113,7 @@ public class RepositoryInitializersTest {
         
         assertStart(true);
         
-        assertTestInitializerProperty("1,2,3,");
+        assertTestInitializerProperty("3,2,1,");
         assertAdditionalRepositoryServices(1);
     }
     
@@ -125,7 +125,7 @@ public class RepositoryInitializersTest {
         
         assertStart(true);
         
-        assertTestInitializerProperty("3,2,1,");
+        assertTestInitializerProperty("1,2,3,");
         assertAdditionalRepositoryServices(1);
     }
     
