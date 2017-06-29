@@ -215,16 +215,12 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
                     return;
                 }
 
-                // if this is a SNAPSHOT version we always trigger a reinstall 
-                // (this workaround can be removed once https://issues.apache.org/jira/browse/JCRVLT-155 is implemented)
-                if (!pkgId.getVersionString().endsWith("-SNAPSHOT")) {
-                    // check if package was installed previously by some other means (or even by a previous run of the installer)
-                    if (pkg.isInstalled()) {
-                        String message = MessageFormat.format("Package {0} was installed externally. Marking as installed.", pkgId);
-                        logger.info(message);
-                        this.setFinishedState(ResourceState.INSTALLED, null, message);
-                        return;
-                    }
+                // check if package was installed previously by some other means (or even by a previous run of the installer)
+                if (pkg.isInstalled()) {
+                    String message = MessageFormat.format("Package {0} was installed externally. Marking as installed.", pkgId);
+                    logger.info(message);
+                    this.setFinishedState(ResourceState.INSTALLED, null, message);
+                    return;
                 }
 
                 // check if dependencies are installed
