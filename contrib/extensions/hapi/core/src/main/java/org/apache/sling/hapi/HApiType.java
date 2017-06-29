@@ -27,6 +27,7 @@ import java.util.Map;
 /**
  * A Hypermedia API type.
  */
+
 @ProviderType
 public interface HApiType {
 
