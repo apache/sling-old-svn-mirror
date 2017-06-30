@@ -21,19 +21,27 @@ package org.apache.sling.installer.factory.packages.impl;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipInputStream;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.vault.fs.io.Archive;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
+import org.apache.jackrabbit.vault.fs.io.ZipStreamArchive;
 import org.apache.jackrabbit.vault.packaging.Dependency;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.JcrPackageManager;
+import org.apache.jackrabbit.vault.packaging.PackageException;
 import org.apache.jackrabbit.vault.packaging.PackageId;
+import org.apache.jackrabbit.vault.packaging.PackageProperties;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.ChangeStateTask;
@@ -52,30 +60,29 @@ import org.osgi.framework.Version;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-/**
- * The package transformer:
+/** The package transformer:
  * <ul>
- *   <li>detects content packages (ResourceTransformer)
- *   <li>and creates tasks for installing / removing of content packages
+ * <li>detects content packages (ResourceTransformer)
+ * <li>and creates tasks for installing / removing of content packages
  * </ul>
- */
-@Component( service = {ResourceTransformer.class, InstallTaskFactory.class})
+*/
+@Component(service = { ResourceTransformer.class, InstallTaskFactory.class })
+@Designate(ocd=PackageTransformerConfiguration.class)
 public class PackageTransformer implements ResourceTransformer, InstallTaskFactory {
 
     /** The attribute holding the package id. */
     private static final String ATTR_PCK_ID = "package-id";
 
-    /** The resource type for packages. */
-    private static final String RESOURCE_TYPE = "content-package";
+    /** The resource types for packages. */
+    private static final String RESOURCE_TYPE_REGULAR = "content-package";
+    private static final String RESOURCE_TYPE_HOLLOW = "content-package-hollow";
 
-    /**
-     * The logger.
-     */
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    /** The logger. */
+    private static final Logger logger = LoggerFactory.getLogger(PackageTransformer.class);
 
     @Reference
     private SlingRepository repository;
@@ -93,9 +100,7 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
         this.configuration = configuration;
     }
 
-    /**
-     * @see org.apache.sling.installer.api.tasks.ResourceTransformer#transform(org.apache.sling.installer.api.tasks.RegisteredResource)
-     */
+    /** @see org.apache.sling.installer.api.tasks.ResourceTransformer#transform(org.apache.sling.installer.api.tasks.RegisteredResource) */
     @Override
     public TransformationResult[] transform(final RegisteredResource resource) {
         if (resource.getType().equals(InstallableResource.TYPE_FILE)) {
@@ -104,11 +109,10 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
         return null;
     }
 
-    /**
-     * Check if the resource is a content package
+    /** Check if the resource is a content package
+     * 
      * @param resource The resource
-     * @return {@code null} if not a content package, a result otherwise
-     */
+     * @return {@code null} if not a content package, a result otherwise */
     private TransformationResult[] checkForPackage(final RegisteredResource resource) {
         // first check if this is a zip archive
         try (final ZipInputStream zin = new ZipInputStream(new BufferedInputStream(resource.getInputStream()))) {
@@ -127,25 +131,34 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
             session = repository.loginAdministrative(null);
 
             final JcrPackageManager pckMgr = pkgSvc.getPackageManager(session);
-            pck = pckMgr.upload(resource.getInputStream(), true, true);
-            if (pck.isValid()) {
-                final PackageId pid = pck.getDefinition().getId();
-                final Map<String, Object> attrs = new HashMap<String, Object>();
-                attrs.put(ATTR_PCK_ID, pid.toString());
+            final TransformationResult tr = new TransformationResult();
+            if (configuration.shouldCreateHollowPackages()) {
+                tr.setResourceType(RESOURCE_TYPE_HOLLOW);
+                // TODO: getting the real package id, currently this requires opening and extracting the archive (and copying files)
+                // Solved with https://issues.apache.org/jira/browse/JCRVLT-187
+                // for now we just take the filename from the URL
+                tr.setId(extractNameFromUrl(resource.getURL()));
+            } else {
+                pck = pckMgr.upload(resource.getInputStream(), true, true);
+                if (pck.isValid()) {
+                    final PackageId pid = pck.getDefinition().getId();
+                    final Map<String, Object> attrs = new HashMap<String, Object>();
+                    attrs.put(ATTR_PCK_ID, pid.toString());
+                    tr.setId(pid.getGroup() + ':' + pid.getName());
+                    tr.setResourceType(RESOURCE_TYPE_REGULAR);
+                    tr.setAttributes(attrs);
 
-                final TransformationResult tr = new TransformationResult();
-                tr.setId(pid.getGroup() + ':' + pid.getName());
-                tr.setResourceType(RESOURCE_TYPE);
-                tr.setAttributes(attrs);
-
-                // version
-                final String version = pid.getVersionString();
-                if ( version.length() > 0 ) {
-                    tr.setVersion(new Version(cleanupVersion(version)));
+                    // version
+                    final String version = pid.getVersionString();
+                    if (version.length() > 0) {
+                        tr.setVersion(new Version(cleanupVersion(version)));
+                    }
+                } else {
+                    logger.warn("Package from resource {} is invalid", resource);
+                    return null;
                 }
-
-                return new TransformationResult[] {tr};
             }
+            return new TransformationResult[] { tr };
         } catch (final Exception ioe) {
             logger.debug("Unable to check content package " + resource.getURL(), ioe);
         } finally {
@@ -160,39 +173,75 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
     }
 
     /**
-     * @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.TaskResourceGroup)
+     * Converts all separators to the Unix separator of forward slash.
+     *
+     * @param path  the path to be changed, null ignored
+     * @return the updated path
      */
+    private static String separatorsToUnix(String path) {
+        if (path == null || path.indexOf('\\') == -1) {
+            return path;
+        }
+        return path.replace('\\', '/');
+    }
+
+    private static String extractNameFromUrl(String url) {
+        String lastIdPart = separatorsToUnix(url);;
+        final int pos = lastIdPart.lastIndexOf('/');
+        if ( pos != -1 ) {
+            lastIdPart = lastIdPart.substring(pos + 1);
+        }
+        return lastIdPart;
+    }
+
+    /** @see org.apache.sling.installer.api.tasks.InstallTaskFactory#createTask(org.apache.sling.installer.api.tasks.TaskResourceGroup) */
     @Override
     public InstallTask createTask(final TaskResourceGroup toActivate) {
         final TaskResource resource = toActivate.getActiveResource();
-        if (resource == null || !resource.getType().equals(RESOURCE_TYPE)) {
+        if (resource == null) {
+            logger.warn("The given resource to createTask is null");
             return null;
         }
 
-        // extract the package id
-        final String id = (String)resource.getAttribute(ATTR_PCK_ID);
-        final PackageId pkgId = PackageId.fromString(id);
-        if (pkgId == null) {
-            logger.error("Error during processing of {}: Package id is wrong/null.", resource);
-            return new ChangeStateTask(toActivate, ResourceState.IGNORED);
+        InstallTask task = null;
+        switch (resource.getType()) {
+        case RESOURCE_TYPE_REGULAR:
+            // extract the package id
+            final String id = (String) resource.getAttribute(ATTR_PCK_ID);
+            final PackageId pkgId = PackageId.fromString(id);
+            if (pkgId == null) {
+                logger.error("Error during processing of {}: Package id is wrong/null.", resource);
+                return new ChangeStateTask(toActivate, ResourceState.IGNORED);
+            }
+            if (resource.getState() == ResourceState.INSTALL) {
+                task = new InstallPackageTask(pkgId, toActivate);
+            } else {
+                task = new UninstallPackageTask(pkgId, toActivate);
+            }
+            break;
+        case RESOURCE_TYPE_HOLLOW:
+            if (resource.getState() == ResourceState.INSTALL) {
+                task = new InstallHollowPackageTask(toActivate);
+            } else {
+                // most probably uninstallation is not successful because this has also been installed as hollow-package!
+                logger.info("Do not uninstall {}: Hollow-Packages cannot be uninstalled.", resource);
+                return new ChangeStateTask(toActivate, ResourceState.IGNORED);
+            }
+            break;
+        default:
+            logger.error("Unupported type of {}: {}.", resource, resource.getType());
+            task = new ChangeStateTask(toActivate, ResourceState.IGNORED);
         }
-
-        if (resource.getState() == ResourceState.INSTALL) {
-            return new InstallPackageTask(pkgId, toActivate);
-        }
-        return new UninstallPackageTask(pkgId, toActivate);
+        return task;
     }
 
-    /**
-     * Task for installing a package.
-     */
-    private class InstallPackageTask extends InstallTask {
+    private abstract class AbstractPackageInstallTask extends InstallTask {
 
-        private final PackageId pkgId;
+        protected final String name;
 
-        public InstallPackageTask(final PackageId pkgId, final TaskResourceGroup erl) {
+        public AbstractPackageInstallTask(final String name, final TaskResourceGroup erl) {
             super(erl);
-            this.pkgId = pkgId;
+            this.name = name;
         }
 
         @Override
@@ -206,8 +255,42 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
                 session = repository.loginAdministrative(null);
                 final JcrPackageManager pkgMgr = pkgSvc.getPackageManager(session);
 
-                // open package
-                pkg = pkgMgr.open(pkgId);
+                doExecute(ctx, pkgMgr, resource);
+            } catch (final Exception e) {
+                String message = MessageFormat.format("Error while processing {0} content package task of {1} due to {2}, no retry.", name, resource,
+                        e.getLocalizedMessage());
+                logger.error(message, e);
+                this.setFinishedState(ResourceState.IGNORED, null, message);
+            } finally {
+                if (pkg != null) {
+                    pkg.close();
+                }
+                if (session != null) {
+                    session.logout();
+                }
+            }
+        }
+
+        protected abstract void doExecute(final InstallationContext ctx, final JcrPackageManager pkgMgr, final TaskResource resource)
+                throws RepositoryException, PackageException, IOException;
+    }
+
+    /** Task for installing a package. */
+    private class InstallPackageTask extends AbstractPackageInstallTask {
+        private final PackageId pkgId;
+        
+        public InstallPackageTask(final PackageId pkgId, final TaskResourceGroup erl) {
+            super("install", erl);
+            this.pkgId = pkgId;
+        }
+
+        @Override
+        protected void doExecute(final InstallationContext ctx, final JcrPackageManager pkgMgr, final TaskResource resource)
+                throws RepositoryException, PackageException, IOException {
+
+            // open package
+            JcrPackage pkg = pkgMgr.open(pkgId);
+            try {
                 if (pkg == null) {
                     String message = MessageFormat.format("Error during installation of {0}: Package {1} missing.", resource, pkgId);
                     logger.error(message);
@@ -241,22 +324,14 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
                     ctx.log("Content package extracted: {}", resource);
                 }
 
-                
                 setFinishedState(ResourceState.INSTALLED);
 
-                // notify retry handler to install dependend packages.
+                // notify retry handler to install dependent packages.
                 retryHandler.scheduleRetry();
 
-            } catch (final Exception e) {
-                String message = MessageFormat.format("Error while processing install task of {0} due to {1}, no retry.", resource, e.getLocalizedMessage());
-                logger.error(message, e);
-                this.setFinishedState(ResourceState.IGNORED, null, message);
             } finally {
                 if (pkg != null) {
                     pkg.close();
-                }
-                if (session != null) {
-                    session.logout();
                 }
             }
         }
@@ -267,117 +342,133 @@ public class PackageTransformer implements ResourceTransformer, InstallTaskFacto
         }
     }
 
-    /**
-     * Task for uninstalling a package.
-     */
-    private final class UninstallPackageTask extends InstallTask {
+    private final class InstallHollowPackageTask extends AbstractPackageInstallTask {
 
-        private final PackageId pkgId;
-
-        public UninstallPackageTask(final PackageId pkgId, final TaskResourceGroup erl) {
-            super(erl);
-            this.pkgId = pkgId;
+        public InstallHollowPackageTask(TaskResourceGroup erl) {
+            super("install-hollow", erl);
         }
 
         @Override
-        public void execute(final InstallationContext ctx) {
-            Session session = null;
-            JcrPackage pkg = null;
+        protected void doExecute(InstallationContext ctx, JcrPackageManager pkgMgr, TaskResource resource)
+                throws RepositoryException, PackageException, IOException {
+            Archive archive = new ZipStreamArchive(resource.getInputStream());
+            JcrPackage oldPackage = null;
             try {
-                session = repository.loginAdministrative(null);
-                final JcrPackageManager pkgMgr = pkgSvc.getPackageManager(session);
-
-                pkg = pkgMgr.open(this.pkgId);
-                if ( pkg != null ) {
-                    final ImportOptions opts = new ImportOptions();
-                    pkg.uninstall(opts);
-                }
-
-            } catch (final Exception e) {
-                logger.error("Error while processing uninstall task of {}.", pkgId, e);
+                archive.open(false);
+                // we always have to do that, as there is no possibility to figure out whether the same package has already been installed
+                // https://issues.apache.org/jira/browse/JCRVLT-188
+                final ImportOptions opts = new ImportOptions();
+                pkgMgr.extract(archive, opts, true);
             } finally {
-                if (pkg != null) {
-                    pkg.close();
-                }
-                if (session != null) {
-                    session.logout();
+                archive.close();
+                if (oldPackage != null) {
+                    oldPackage.close();
                 }
             }
-            ctx.log("Uninstalled content package {}", getResource());
-            setFinishedState(ResourceState.UNINSTALLED);
-            retryHandler.scheduleRetry();
+        }
+
+        @Override
+        public String getSortKey() {
+            return "35-" + getResource().getEntityId();
+        }
+
+    }
+
+    /** Task for uninstalling a package. */
+    private final class UninstallPackageTask extends AbstractPackageInstallTask {
+
+        private PackageId pkgId;
+
+        public UninstallPackageTask(final PackageId pkgId, final TaskResourceGroup erl) {
+            super("uninstall", erl);
+            this.pkgId = pkgId;
         }
 
         @Override
         public String getSortKey() {
             return "55-" + getResource().getEntityId();
         }
+
+        @Override
+        protected void doExecute(InstallationContext ctx, JcrPackageManager pkgMgr, TaskResource resource)
+                throws RepositoryException, PackageException, IOException {
+            JcrPackage pkg = pkgMgr.open(this.pkgId);
+            try {
+                if (pkg != null) {
+                    final ImportOptions opts = new ImportOptions();
+                    pkg.uninstall(opts);
+                }
+            } finally {
+                if (pkg != null) {
+                    pkg.close();
+                }
+            }
+            ctx.log("Uninstalled content package {}", getResource());
+            setFinishedState(ResourceState.UNINSTALLED);
+            retryHandler.scheduleRetry();
+        }
     }
 
-    private static final Pattern FUZZY_VERSION = Pattern.compile( "(\\d+)(\\.(\\d+)(\\.(\\d+))?)?([^a-zA-Z0-9](.*))?",
-            Pattern.DOTALL );
+    private static final Pattern FUZZY_VERSION = Pattern.compile("(\\d+)(\\.(\\d+)(\\.(\\d+))?)?([^a-zA-Z0-9](.*))?",
+            Pattern.DOTALL);
 
-    /**
-     * Clean up version parameters. Other builders use more fuzzy definitions of
-     * the version syntax. This method cleans up such a version to match an OSGi
-     * version.
+    /** Clean up version parameters. Other builders use more fuzzy definitions of the version syntax. This method cleans up such a version
+     * to match an OSGi version.
      *
      * @param version The version string to clean up
-     * @return the clean version
-     */
+     * @return the clean version */
     private static String cleanupVersion(final String version) {
         final StringBuilder result = new StringBuilder();
-        final Matcher m = FUZZY_VERSION.matcher( version );
-        if ( m.matches() ) {
-            final String major = m.group( 1 );
-            final String minor = m.group( 3 );
-            final String micro = m.group( 5 );
-            final String qualifier = m.group( 7 );
+        final Matcher m = FUZZY_VERSION.matcher(version);
+        if (m.matches()) {
+            final String major = m.group(1);
+            final String minor = m.group(3);
+            final String micro = m.group(5);
+            final String qualifier = m.group(7);
 
-            if ( major != null ) {
-                result.append( major );
-                if ( minor != null ) {
-                    result.append( "." );
-                    result.append( minor );
-                    if ( micro != null ) {
-                        result.append( "." );
-                        result.append( micro );
-                        if ( qualifier != null ) {
-                            result.append( "." );
-                            cleanupModifier( result, qualifier );
+            if (major != null) {
+                result.append(major);
+                if (minor != null) {
+                    result.append(".");
+                    result.append(minor);
+                    if (micro != null) {
+                        result.append(".");
+                        result.append(micro);
+                        if (qualifier != null) {
+                            result.append(".");
+                            cleanupModifier(result, qualifier);
                         }
-                    } else if ( qualifier != null ) {
-                        result.append( ".0." );
-                        cleanupModifier( result, qualifier );
+                    } else if (qualifier != null) {
+                        result.append(".0.");
+                        cleanupModifier(result, qualifier);
                     } else {
-                        result.append( ".0" );
+                        result.append(".0");
                     }
-                } else if ( qualifier != null ) {
-                    result.append( ".0.0." );
-                    cleanupModifier( result, qualifier );
+                } else if (qualifier != null) {
+                    result.append(".0.0.");
+                    cleanupModifier(result, qualifier);
                 } else {
-                    result.append( ".0.0" );
+                    result.append(".0.0");
                 }
             }
         } else {
-            result.append( "0.0.0." );
-            cleanupModifier( result, version );
+            result.append("0.0.0.");
+            cleanupModifier(result, version);
         }
         return result.toString();
     }
 
-
-    private static void cleanupModifier( final StringBuilder result, final String modifier ) {
-        for ( int i = 0; i < modifier.length(); i++ ) {
-            char c = modifier.charAt( i );
-            if ( ( c >= '0' && c <= '9' )
-              || ( c >= 'a' && c <= 'z' )
-              || ( c >= 'A' && c <= 'Z' )
-              || c == '_'
-              || c == '-' ) {
-                result.append( c );
+    private static void cleanupModifier(final StringBuilder result, final String modifier) {
+        for (int i = 0; i < modifier.length(); i++) {
+            char c = modifier.charAt(i);
+            if ((c >= '0' && c <= '9')
+                    || (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || c == '_'
+                    || c == '-') {
+                result.append(c);
             } else {
-                result.append( '_' );
+                result.append('_');
             }
         }
     }
