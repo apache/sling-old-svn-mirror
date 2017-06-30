@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.api;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.Repository;
@@ -52,7 +54,7 @@ public interface SlingRepository extends Repository {
      *
      * @return null if the configured default workspace name is empty, SLING-256
      */
-    String getDefaultWorkspace();
+    @CheckForNull String getDefaultWorkspace();
 
     /**
      * Returns a session to the given workspace which has administrative powers.
@@ -135,5 +137,5 @@ public interface SlingRepository extends Repository {
      * @throws RepositoryException If another error occurs.
      * @since 2.3
      */
-    Session impersonateFromService(String subServiceName, Credentials credentials, String workspaceName) throws LoginException, RepositoryException;
+    Session impersonateFromService(String subServiceName, @Nonnull Credentials credentials, String workspaceName) throws LoginException, RepositoryException;
 }

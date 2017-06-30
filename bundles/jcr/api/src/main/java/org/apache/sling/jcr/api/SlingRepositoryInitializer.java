@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.api;
 
+import javax.annotation.Nonnull;
+
 import org.osgi.annotation.versioning.ConsumerType;
 
 /**
@@ -38,5 +40,5 @@ public interface SlingRepositoryInitializer {
      *  @throws Exception If anything happens that should prevent
      *      the SlingRepository service from being registered.
      */
-    public void processRepository(SlingRepository repo) throws Exception;
+    public void processRepository(@Nonnull SlingRepository repo) throws Exception;
 }
