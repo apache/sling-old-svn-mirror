@@ -181,7 +181,7 @@
  		<dependency>
 			<groupId>org.apache.sling</groupId>
 			<artifactId>org.apache.sling.discovery.commons</artifactId>
-			<version>1.0.23-SNAPSHOT</version>
+			<version>1.0.20</version>
   		</dependency>
         <!-- besides including discovery.commons' normal jar above, 
               for testing a few test helper classes are also reused.
