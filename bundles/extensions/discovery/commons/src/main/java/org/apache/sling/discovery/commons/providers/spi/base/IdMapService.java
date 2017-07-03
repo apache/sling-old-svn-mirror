@@ -74,8 +74,8 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
 
     private long me;
 
-    private final Map<Integer, String> oldIdMapCache = new HashMap<Integer, String>();
-    private final Map<Integer, String> idMapCache = new HashMap<Integer, String>();
+    private final Map<Integer, String> oldIdMapCache = new HashMap<>();
+    private final Map<Integer, String> idMapCache = new HashMap<>();
 
     private long lastCacheInvalidation = -1;
 
@@ -130,7 +130,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
             logger.info("registerEventHandler: bundleContext is null - cannot register");
             return;
         }
-        Dictionary<String,Object> properties = new Hashtable<String,Object>();
+        Dictionary<String,Object> properties = new Hashtable<>();
         properties.put(Constants.SERVICE_DESCRIPTION, "IdMap Change Listener.");
         properties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         String[] topics = new String[] {
@@ -198,7 +198,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
             // or when my clusterNodeId is already mapped to another slingId
             // in both cases: clean that up
             boolean foundMe = false;
-            for (String aKey : new HashSet<String>(idmap.keySet())) {
+            for (String aKey : new HashSet<>(idmap.keySet())) {
                 Object value = idmap.get(aKey);
                 if (value instanceof Number) {
                     Number n = (Number)value;
@@ -301,7 +301,7 @@ public class IdMapService extends AbstractServiceWithBackgroundCheck implements 
     private Map<Integer, String> readIdMap(ResourceResolver resourceResolver) throws PersistenceException {
         Resource resource = ResourceHelper.getOrCreateResource(resourceResolver, getIdMapPath());
         ValueMap idmapValueMap = resource.adaptTo(ValueMap.class);
-        Map<Integer, String> idmap = new HashMap<Integer, String>();
+        Map<Integer, String> idmap = new HashMap<>();
         for (String slingId : idmapValueMap.keySet()) {
             Object value = idmapValueMap.get(slingId);
             if (value instanceof Number) {
