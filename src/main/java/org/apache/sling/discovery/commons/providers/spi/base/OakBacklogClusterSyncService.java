@@ -206,7 +206,7 @@ public class OakBacklogClusterSyncService extends AbstractServiceWithBackgroundC
             }
 
             ClusterView cluster = view.getLocalInstance().getClusterView();
-            Set<String> slingIds = new HashSet<>();
+            Set<String> slingIds = new HashSet<String>();
             for (InstanceDescription instance : cluster.getInstances()) {
                 slingIds.add(instance.getSlingId());
             }
