@@ -107,7 +107,10 @@ public class MapEntry implements Comparable<MapEntry> {
         for (int i = 0; i < URL_WITH_PORT_MATCH.length; i++) {
             final Matcher m = URL_WITH_PORT_MATCH[i].matcher(uriPath);
             if (m.find()) {
-                return m.replaceAll(URL_WITH_PORT_REPLACEMENT[i]);
+            	if (!isRegExp(m.replaceAll("$1$2")))
+            	{
+                    return m.replaceAll(URL_WITH_PORT_REPLACEMENT[i]);
+            	}
             }
         }
 
