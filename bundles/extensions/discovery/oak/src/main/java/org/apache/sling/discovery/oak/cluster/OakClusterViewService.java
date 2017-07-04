@@ -179,6 +179,20 @@ public class OakClusterViewService implements ClusterViewService {
             }
             String leaderElectionId = getLeaderElectionId(resourceResolver,
                     slingId);
+            // SLING-6924 : leaderElectionId can be null here
+            // this means that another instance is just starting up, has already
+            // created its oak lease, thus is already visible from an oak discover-lite
+            // point of view - but upper level code here in discovery.oak has not yet
+            // set the leaderElectionId. This is rare but valid case
+            if (leaderElectionId == null) {
+                // then at this stage the clusterView is not yet established
+                // in a few moments it will but at this point not.
+                // so falling back to treating this as NO_ESTABLISHED_VIEW
+                // and with the heartbeat interval this situation will
+                // resolve itself upon one of the next pings
+                throw new UndefinedClusterViewException(Reason.NO_ESTABLISHED_VIEW,
+                        "no leaderElectionId available yet for slingId="+slingId);
+            }
             leaderElectionIds.put(id, leaderElectionId);
         }
 
@@ -293,9 +307,20 @@ public class OakClusterViewService implements ClusterViewService {
             throw new IllegalStateException("slingId must not be null");
         }
         final String myClusterNodePath = config.getClusterInstancesPath()+"/"+slingId;
-        ValueMap resourceMap = resourceResolver.getResource(myClusterNodePath)
-                .adaptTo(ValueMap.class);
+        // SLING-6924 case 1 : /var/discovery/oak/clusterInstances/<slingId> can be non existant == null
+        final Resource myClusterNode = resourceResolver.getResource(myClusterNodePath);
+        if (myClusterNode == null) {
+            // SLING-6924 : return null case 1
+            return null;
+        }
+        ValueMap resourceMap = myClusterNode.adaptTo(ValueMap.class);
+        // SLING-6924 case 2 : /var/discovery/oak/clusterInstances/<slingId> can exist BUT leaderElectionId not yet set
+        //    namely the "leaderElectionId" is only written when resetLeaderElectionId() is called - which happens
+        //    on OakViewChecker.activate (or when isolated) - and this activate *can* happen after properties
+        //    or announcements have been written - those end up below /var/discovery/oak/clusterInstances/<slingId>/
         String result = resourceMap.get("leaderElectionId", String.class);
+        
+        // SLING-6924 : return null case 2 (if leaderElectionId is indeed null, that is)
         return result;
     }
 
