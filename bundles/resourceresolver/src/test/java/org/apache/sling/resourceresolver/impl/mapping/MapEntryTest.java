@@ -137,7 +137,14 @@ public class MapEntryTest {
             "gurk/sling.apache.org.456/");
         assertEqualUriPath("gurk/sling.apache.org.789/site/index.html",
             "gurk/sling.apache.org.789/site/index.html");
-
+        
+        // SLING-6996: test that regex pattern are accepted
+        assertEqualUriPath("http/localhost.\\d*", "http/localhost.\\d*");
+        assertEqualUriPath("http/localhost.\\d*/site/index.html", 
+        		"http/localhost.\\d*/site/index.html");
+        assertEqualUriPath("http/(.*)", "http/(.*)");
+        assertEqualUriPath("http/(.*)/site/index.html", 
+        		"http/(.*)/site/index.html");
     }
 
     @Test public void test_isRegExp() {
