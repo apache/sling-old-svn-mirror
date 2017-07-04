@@ -39,6 +39,7 @@
       <oak.version>1.4.4</oak.version>
       <!-- by default Slow tests are excluded - use -PincludeSlowTests to include them -->
       <sling.excluded.surefire.groups>org.apache.sling.commons.testing.junit.categories.Slow</sling.excluded.surefire.groups>
+      <sling.java.version>7</sling.java.version>
     </properties>
 
     <scm>
