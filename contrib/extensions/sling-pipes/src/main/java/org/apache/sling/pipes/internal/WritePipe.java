@@ -45,7 +45,6 @@ public class WritePipe extends BasePipe {
     private static final Logger logger = LoggerFactory.getLogger(WritePipe.class);
     public static final String RESOURCE_TYPE = "slingPipes/write";
     Node confTree;
-    String resourceExpression;
     private List<Resource> propertiesToRemove;
     Pattern addPatch = Pattern.compile("\\+\\[(.*)\\]");
     Pattern multi = Pattern.compile("\\[(.*)\\]");
@@ -62,7 +61,6 @@ public class WritePipe extends BasePipe {
             throw new Exception("write pipe is misconfigured: it should have a configuration node");
         }
         confTree = getConfiguration().adaptTo(Node.class);
-        resourceExpression = getPath();
     }
 
 
