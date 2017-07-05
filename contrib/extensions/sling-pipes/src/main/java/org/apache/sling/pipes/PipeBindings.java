@@ -55,9 +55,17 @@ public class PipeBindings {
 
     ScriptContext scriptContext = new SimpleScriptContext();
 
+    /**
+     * add ${path.pipeName} binding allowing to retrieve pipeName's current resource path
+     */
     public static final String PATH_BINDING = "path";
-
     Map<String, String> pathBindings = new HashMap<>();
+
+    /**
+     * add ${name.pipeName} binding allowing to retrieve pipeName's current resource name
+     */
+    public static final String NAME_BINDING = "name";
+    Map<String, String> nameBindings = new HashMap<>();
 
     Map<String, Resource> outputResources = new HashMap<>();
 
@@ -71,6 +79,9 @@ public class PipeBindings {
         engine.setContext(scriptContext);
         //add path bindings where path.MyPipe will give MyPipe current resource path
         getBindings().put(PATH_BINDING, pathBindings);
+
+        //add name bindings where name.MyPipe will give MyPipe current resource name
+        getBindings().put(NAME_BINDING, nameBindings);
 
         //additional bindings (global variables to use in child pipes expressions)
         Resource additionalBindings = resource.getChild(NN_ADDITIONALBINDINGS);
@@ -152,6 +163,7 @@ public class PipeBindings {
         outputResources.put(pipe.getName(), resource);
         if (resource != null) {
             pathBindings.put(pipe.getName(), resource.getPath());
+            nameBindings.put(pipe.getName(), resource.getName());
         }
         addBinding(pipe.getName(), pipe.getOutputBinding());
     }
