@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.script.ScriptException;
@@ -122,5 +123,16 @@ public class PipeBindingsTest extends AbstractPipeTest {
         PipeBindings bindings = new PipeBindings(resource);
         Number expression = (Number)bindings.instantiateObject("${testSumFunction(1,2)}");
         assertEquals("computed expression have testSum script's functionavailable", 3, expression.intValue());
+    }
+
+    @Test
+    public void testNameBinding() throws Exception {
+        Pipe pipe = getPipe(PATH_PIPE + "/" + ContainerPipeTest.NN_ONEPIPE);
+        Iterator<Resource> output = pipe.getOutput();
+        output.next();
+        PipeBindings bindings = pipe.getBindings();
+        assertEquals("first name binding should be apple", bindings.instantiateExpression("${name.dummyParent}"), "apple");
+        output.next();
+        assertEquals("second name binding should be banana", bindings.instantiateExpression("${name.dummyParent}"), "banana");
     }
 }
