@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.event.jobs.Job;
 
 /**
@@ -77,12 +78,26 @@ public interface Plumber {
      */
     void registerPipe(String type, Class<? extends BasePipe> pipeClass);
 
+
+    /**
+     * returns wether or not a pipe type is registered
+     * @param type
+     * @return
+     */
+    boolean isTypeRegistered(String type);
+
     /**
      * status of the pipe
      * @param pipeResource resource corresponding to the pipe
      * @return
      */
     String getStatus(Resource pipeResource);
+
+    /**
+     * Provides a builder helping quickly build & execute a pipe
+     * @return
+     */
+    PipeBuilder getBuilder(ResourceResolver resolver);
 
     /**
      * returns true if the pipe is considered to be running

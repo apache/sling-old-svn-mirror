@@ -20,7 +20,7 @@
     "sling:resourceType": "slingPipes/filter",
     "conf":{
       "jcr:primaryType": "nt:unstructured",
-      "slingPipesFilter_test":"${fruit.worm === 'true'}"
+      "slingPipesFilter_test":"${fruit.worm}"
     }
   },
   "simple": {

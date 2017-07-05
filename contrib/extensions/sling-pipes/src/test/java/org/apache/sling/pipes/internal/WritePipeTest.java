@@ -57,7 +57,7 @@ public class WritePipeTest extends AbstractPipeTest {
         assertTrue("this pipe should be marked as content modifier", pipe.modifiesContent());
         pipe.getOutput();
         context.resourceResolver().commit();
-        ValueMap properties =  context.resourceResolver().getResource("/content/fruits/apple").adaptTo(ValueMap.class);
+        ValueMap properties =  context.resourceResolver().getResource(PATH_APPLE).adaptTo(ValueMap.class);
         assertTrue("There should be hasSeed set to true", properties.get("hasSeed", false));
         assertArrayEquals("Colors should be correctly set", new String[]{"green", "red"}, properties.get("colors", String[].class));
         assertFalse("worm property should be gone (${null} conf)", properties.get("worm", false));
@@ -116,7 +116,7 @@ public class WritePipeTest extends AbstractPipeTest {
         assertTrue("this pipe should be marked as content modifier", pipe.modifiesContent());
         pipe.getOutput();
         context.resourceResolver().commit();
-        Resource appleResource = context.resourceResolver().getResource("/content/fruits/apple");
+        Resource appleResource = context.resourceResolver().getResource(PATH_APPLE);
         ValueMap properties =  appleResource.adaptTo(ValueMap.class);
         assertTrue("There should be hasSeed set to true", properties.get("hasSeed", false));
         assertArrayEquals("Colors should be correctly set", new String[]{"green", "red"}, properties.get("colors", String[].class));

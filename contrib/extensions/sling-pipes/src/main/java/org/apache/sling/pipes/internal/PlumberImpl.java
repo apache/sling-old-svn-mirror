@@ -52,13 +52,7 @@ import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
-import org.apache.sling.pipes.BasePipe;
-import org.apache.sling.pipes.ContainerPipe;
-import org.apache.sling.pipes.OutputWriter;
-import org.apache.sling.pipes.Pipe;
-import org.apache.sling.pipes.PipeBindings;
-import org.apache.sling.pipes.Plumber;
-import org.apache.sling.pipes.ReferencePipe;
+import org.apache.sling.pipes.*;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -243,6 +237,11 @@ public class PlumberImpl implements Plumber, JobConsumer {
         registry.put(type, pipeClass);
     }
 
+    @Override
+    public boolean isTypeRegistered(String type) {
+        return registry.containsKey(type);
+    }
+
     /**
      * writes the status of the pipe
      * @param pipe
@@ -268,6 +267,12 @@ public class PlumberImpl implements Plumber, JobConsumer {
             }
         }
         return STATUS_FINISHED;
+    }
+
+    @Override
+    public PipeBuilder getBuilder(ResourceResolver resolver) {
+        PipeBuilder builder = new PipeBuilderImpl(resolver, this);
+        return builder;
     }
 
     @Override

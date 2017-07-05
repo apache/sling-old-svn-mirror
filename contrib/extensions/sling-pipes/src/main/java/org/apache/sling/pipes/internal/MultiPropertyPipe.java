@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class MultiPropertyPipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(MultiPropertyPipe.class);
-    public static final String RESOURCE_TYPE = "slingPipes/multiProperty";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "multiProperty";
 
     public MultiPropertyPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);

@@ -35,7 +35,8 @@ public class BasePipe implements Pipe {
 
     private final Logger logger = LoggerFactory.getLogger(BasePipe.class);
 
-    public static final String RESOURCE_TYPE = "slingPipes/base";
+    public static final String RT_PREFIX = "slingPipes/";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "base";
     public static final String DRYRUN_KEY = "dryRun";
     public static final String READ_ONLY = "readOnly";
     public static final String PN_STATUS = "status";
