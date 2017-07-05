@@ -66,6 +66,11 @@
                             org.apache.felix.inventory;resolution:=optional,
                             *
                         </Import-Package>
+                        <Export-Package>
+                        	org.apache.sling.event.jobs,
+                        	org.apache.sling.event.jobs.consumer,
+                        	org.apache.sling.event.jobs.jmx
+                        </Export-Package>
                        <DynamicImport-Package>
                             javax.servlet,
                             javax.servlet.http,
@@ -80,7 +85,8 @@
                         <Embed-Dependency>
                             jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/ISO8601.*|org/apache/jackrabbit/util/XMLChar.*",
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*",
-                            quartz;inline="org/quartz/CronExpression.*|org/quartz/ValueSet.*"
+                            quartz;inline="org/quartz/CronExpression.*|org/quartz/ValueSet.*",
+                            org.apache.sling.event.api
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -362,12 +368,10 @@
             <version>1</version>
             <scope>test</scope>
         </dependency>
-<!-- SLING-6739 : update once sling.event.api is released (and then remove identical packages in this bundle)
-         <dependency>
-        	<groupId>org.apache.sling</groupId>
-        	<artifactId>org.apache.sling.event.api</artifactId>
-        	<version>1.0.0</version>
-        	<type>bundle</type>
-        </dependency>
- -->    </dependencies>
+    	<dependency>
+    		<groupId>org.apache.sling</groupId>
+    		<artifactId>org.apache.sling.event.api</artifactId>
+    		<version>1.0.0</version>
+    	</dependency>
+    </dependencies>
 </project>
