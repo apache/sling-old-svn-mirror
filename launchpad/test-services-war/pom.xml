@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>26</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
@@ -46,24 +46,8 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-                <configuration>
-                    <supportedProjectTypes>
-                        <supportedProjectType>war</supportedProjectType>
-                    </supportedProjectTypes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <executions>
-                    <execution>
-                        <id>war-manifest</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>manifest</goal>
-                        </goals>
-                    </execution>
                     <execution>
                         <id>emma-bundle</id>
                         <configuration>
@@ -81,6 +65,7 @@
                         <Bundle-Classpath>.,WEB-INF/classes</Bundle-Classpath>
                     </instructions>
                     <supportedProjectTypes>
+                        <supportedProjectType>bundle</supportedProjectType>
                         <supportedProjectType>war</supportedProjectType>
                     </supportedProjectTypes>
                 </configuration>
@@ -92,11 +77,15 @@
                     <archive>
                         <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
                     </archive>
-                    <packagingExcludes>WEB-INF/lib/*.jar,WEB-INF/classes/META-INF/*</packagingExcludes>
+                    <packagingExcludes>WEB-INF/lib/*.jar,WEB-INF/classes/META-INF/*,WEB-INF/classes/OSGI-INF/*</packagingExcludes>
                     <webResources>
                         <resource>
                             <directory>${project.build.outputDirectory}/META-INF</directory>
                             <targetPath>META-INF</targetPath>
+                        </resource>
+                        <resource>
+                            <directory>${project.build.outputDirectory}/OSGI-INF</directory>
+                            <targetPath>OSGI-INF</targetPath>
                         </resource>
                     </webResources>
                 </configuration>
@@ -116,7 +105,11 @@
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -125,16 +118,11 @@
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-            <scope>provided</scope>
+            <artifactId>osgi.cmpn</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
