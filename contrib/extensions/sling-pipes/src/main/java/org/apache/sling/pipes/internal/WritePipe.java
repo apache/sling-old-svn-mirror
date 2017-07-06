@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 public class WritePipe extends BasePipe {
     private static final Logger logger = LoggerFactory.getLogger(WritePipe.class);
-    public static final String RESOURCE_TYPE = "slingPipes/write";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "write";
     Node confTree;
     private List<Resource> propertiesToRemove;
     Pattern addPatch = Pattern.compile("\\+\\[(.*)\\]");

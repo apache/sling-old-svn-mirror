@@ -25,6 +25,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PathPipe extends BasePipe {
 
-    public static final String RESOURCE_TYPE = "slingPipes/path";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "path";
     public static final String PN_NODETYPE = "nodeType";
     public static final String PN_AUTOSAVE = "autosave";
 

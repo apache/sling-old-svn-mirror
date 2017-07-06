@@ -3,7 +3,7 @@
   "index":["apple","banana"],
   "apple":{
     "jcr:primaryType":"nt:unstructured",
-    "worm":"true",
+    "worm": true,
     "isnota":{
       "jcr:primaryType":"nt:unstructured",
       "pea":{

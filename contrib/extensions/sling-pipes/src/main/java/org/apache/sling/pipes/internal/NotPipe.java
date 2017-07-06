@@ -29,7 +29,7 @@ import org.apache.sling.pipes.ReferencePipe;
  */
 public class NotPipe extends ReferencePipe {
 
-    public static final String RESOURCE_TYPE = "slingPipes/not";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "not";
 
     public NotPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);

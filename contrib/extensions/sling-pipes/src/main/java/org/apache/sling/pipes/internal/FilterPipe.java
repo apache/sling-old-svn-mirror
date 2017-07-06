@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public class FilterPipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(FilterPipe.class);
-    public static final String RESOURCE_TYPE = "slingPipes/filter";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "filter";
     public static final String PREFIX_FILTER = "slingPipesFilter_";
     public static final String PN_NOT = PREFIX_FILTER + "not";
     public static final String PN_NOCHILDREN = PREFIX_FILTER + "noChildren";
