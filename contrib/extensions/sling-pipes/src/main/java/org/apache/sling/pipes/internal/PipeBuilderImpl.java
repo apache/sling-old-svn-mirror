@@ -51,8 +51,8 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     /**
      * protected constructor (to only allow internal classes to build it out)
-     * @param resolver
-     * @param plumber
+     * @param resolver resolver with which the pipe will be built and executed
+     * @param plumber instance of the plumber
      */
     protected PipeBuilderImpl(ResourceResolver resolver, Plumber plumber){
         this.plumber = plumber;
@@ -129,7 +129,7 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     /**
      * check of presence of a current step, fails loudly if it's not the case
-     * @throws IllegalAccessException
+     * @throws IllegalAccessException exception thrown if current step is not present
      */
     protected void checkCurrentStep() throws IllegalAccessException {
         if (currentStep == null){
@@ -175,7 +175,7 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     /**
      * build a time + random based path under /var/pipes
-     * @return
+     * @return full path of future Pipe
      */
     protected String buildPipePath() {
         final Calendar now = Calendar.getInstance();
@@ -204,11 +204,7 @@ public class PipeBuilderImpl implements PipeBuilder {
         return plumber.getPipe(pipeResource);
     }
 
-    /**
-     * builds & run configured pipe
-     * @return
-     * @throws Exception
-     */
+    @Override
     public Set<String> run() throws Exception {
         Pipe pipe = this.build();
         return plumber.execute(resolver, pipe, null, new NopWriter(), true);

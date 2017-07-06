@@ -55,7 +55,7 @@ public abstract class OutputWriter {
      * @param request request from which writer will output
      * @param response response on which writer will output
      * @throws IOException error handling streams
-     * @throws JSONException in case invalid json is written
+     * @throws JsonException in case invalid json is written
      */
     public void init(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException {
         max = request.getParameter(PARAM_SIZE) != null ? Integer.parseInt(request.getParameter(PARAM_SIZE)) : NB_MAX;
@@ -70,14 +70,14 @@ public abstract class OutputWriter {
      * @param request request from which writer will output
      * @param response response on which writer will output
      * @throws IOException error handling streams
-     * @throws JSONException in case invalid json is written
+     * @throws JsonException in case invalid json is written
      */
     protected abstract void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException;
 
     /**
      * Write a given resource
      * @param resource resource that will be written
-     * @throws JSONException in case write fails
+     * @throws JsonException in case write fails
      */
     public void write(Resource resource) throws JsonException {
         if (size++ < max) {
@@ -88,20 +88,20 @@ public abstract class OutputWriter {
     /**
      * Write a given resource
      * @param resource resource that will be written
-     * @throws JSONException in case write fails
+     * @throws JsonException in case write fails
      */
     protected abstract void writeItem(Resource resource) throws JsonException;
 
     /**
      * writes the end of the output
-     * @throws JSONException in case invalid json is written
+     * @throws JsonException in case invalid json is written
      */
 
     public abstract void ends() throws JsonException;
 
     /**
-     *
-     * @param pipe
+     * Setter
+     * @param pipe pipe this writer should be associated with
      */
     public void setPipe(Pipe pipe) {
         this.pipe = pipe;
