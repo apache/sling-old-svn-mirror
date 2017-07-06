@@ -40,9 +40,9 @@ public interface Plumber {
 
     /**
      * executes in a background thread
-     * @param resolver
-     * @param path
-     * @param bindings
+     * @param resolver resolver used for registering the execution (id will be checked against the configuration)
+     * @param path path of the pipe to execute
+     * @param bindings additional bindings to use when executing
      * @return Job if registered, null otherwise
      */
     Job executeAsync(ResourceResolver resolver, String path, Map bindings);
@@ -81,28 +81,29 @@ public interface Plumber {
 
     /**
      * returns wether or not a pipe type is registered
-     * @param type
-     * @return
+     * @param type resource type tested
+     * @return true if the type is registered, false if not
      */
     boolean isTypeRegistered(String type);
 
     /**
      * status of the pipe
      * @param pipeResource resource corresponding to the pipe
-     * @return
+     * @return status of the pipe, can be blank, 'started' or 'finished'
      */
     String getStatus(Resource pipeResource);
 
     /**
-     * Provides a builder helping quickly build & execute a pipe
-     * @return
+     * Provides a builder helping quickly build and execute a pipe
+     * @param resolver resource resolver that will be used for building the pipe
+     * @return instance of PipeBuilder
      */
     PipeBuilder getBuilder(ResourceResolver resolver);
 
     /**
      * returns true if the pipe is considered to be running
      * @param pipeResource resource corresponding to the pipe
-     * @return
+     * @return true if still running
      */
     boolean isRunning(Resource pipeResource);
 }

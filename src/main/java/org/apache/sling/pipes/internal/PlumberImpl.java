@@ -118,7 +118,6 @@ public class PlumberImpl implements Plumber, JobConsumer {
         registerPipe(PathPipe.RESOURCE_TYPE, PathPipe.class);
         registerPipe(FilterPipe.RESOURCE_TYPE, FilterPipe.class);
         registerPipe(NotPipe.RESOURCE_TYPE, NotPipe.class);
-
     }
 
     @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
@@ -210,11 +209,11 @@ public class PlumberImpl implements Plumber, JobConsumer {
 
     /**
      * Persists pipe change if big enough, or ended, and eventually distribute changes
-     * @param resolver
-     * @param pipe
-     * @param paths
+     * @param resolver resolver to use
+     * @param pipe pipe at the origin of the changes,
+     * @param paths paths that have been changed,
      * @param currentResource if running, null if ended
-     * @throws PersistenceException
+     * @throws PersistenceException in case save fails
      */
     protected void persist(ResourceResolver resolver, Pipe pipe, Set<String> paths, Resource currentResource) throws Exception {
         if  (pipe.modifiesContent() && resolver.hasChanges() && !pipe.isDryRun()){
@@ -243,9 +242,10 @@ public class PlumberImpl implements Plumber, JobConsumer {
     }
 
     /**
-     * writes the status of the pipe
-     * @param pipe
-     * @param status
+     * writes the status of the pipe, also update <code>PN_STATUS_MODIFIED</code> date
+     * @param pipe target pipe
+     * @param status status to write
+     * @throws RepositoryException in case write goes wrong
      */
     protected void writeStatus(Pipe pipe, String status) throws RepositoryException {
         if (StringUtils.isNotBlank(status)){

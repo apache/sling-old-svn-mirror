@@ -44,10 +44,13 @@ public interface Pipe {
      */
     String NN_CONF = "conf";
 
+    /**
+     * Distribution agent (for distributing output resources)
+     */
     String PN_DISTRIBUTION_AGENT = "distribution.agent";
 
     /**
-     * returns true if that pipe will modify content during its execution
+     * returns true if that pipe modifies content during its execution
      * @return true for write / false for read
      */
     boolean modifiesContent();
@@ -92,7 +95,7 @@ public interface Pipe {
 
     /**
      * get the pipe configuration resource
-     * @return
+     * @return Pipe configruation root resource
      */
     Resource getResource();
 

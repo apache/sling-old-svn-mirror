@@ -82,6 +82,13 @@ public class PlumberServlet extends SlingAllMethodsServlet {
         execute(request, response, true);
     }
 
+    /**
+     * Execution of a pipe corresponding to a request
+     * @param request original request
+     * @param response given response
+     * @param writeAllowed should we consider this execution is about to modify content
+     * @throws ServletException in case something is wrong...
+     */
     protected void execute(SlingHttpServletRequest request, SlingHttpServletResponse response, boolean writeAllowed) throws ServletException {
         String path = request.getResource().getResourceType().equals(Plumber.RESOURCE_TYPE) ? request.getParameter(PARAM_PATH) : request.getResource().getPath();
         try {
@@ -109,8 +116,9 @@ public class PlumberServlet extends SlingAllMethodsServlet {
 
     /**
      * Converts request into pipe bindings
-     * @param request
-     * @return
+     * @param request from where to extract bindings
+     * @param writeAllowed should we consider this execution is about to modify content
+     * @return map of bindings
      */
     protected Map getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed){
         Map bindings = new HashMap<>();
@@ -130,6 +138,14 @@ public class PlumberServlet extends SlingAllMethodsServlet {
         return bindings;
     }
 
+    /**
+     * Retrieve an output writer depending on the request
+     * @param request original request against which writers will be tested
+     * @param response response writers will point to
+     * @return instance of the created writer
+     * @throws IOException bad handling of I/O streams,
+     * @throws JsonException bad handling of json output
+     */
     OutputWriter getWriter(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException {
         OutputWriter[] candidates = new OutputWriter[]{new CustomJsonWriter(), new CustomWriter(), new DefaultOutputWriter()};
         for (OutputWriter candidate : candidates) {

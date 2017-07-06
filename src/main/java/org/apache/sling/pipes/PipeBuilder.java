@@ -21,138 +21,151 @@ import org.apache.sling.api.resource.PersistenceException;
 import java.util.Set;
 
 /**
- * Builder & Runner of a pipe, based on a fluent API, for script & java usage.
+ * Builder and Runner of a pipe, based on a fluent API, for script and java usage.
  */
 public interface PipeBuilder {
     /**
      * attach a new pipe to the current context
-     * @param type
-     * @return
+     * @param type resource type (should be registered by the plumber)
+     * @return updated instance of PipeBuilder
      */
     PipeBuilder pipe(String type);
 
     /**
      * attach a move pipe to the current context
-     * @param expr
-     * @return
+     * @param expr target of the resource to move
+     * @return updated instance of PipeBuilder
      */
     PipeBuilder mv(String expr);
 
     /**
      * attach a write pipe to the current context
      * @param conf configuration parameters
-     * @return
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder write(Object... conf) throws IllegalAccessException;
 
     /**
      * attach a filter pipe to the current context
      * @param conf configuration parameters
-     * @return
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder filter(Object... conf) throws IllegalAccessException;
 
     /**
      * attach an authorizable pipe to the current context
-     * @param conf
-     * @return
+     * @param conf configuration key value pairs for authorizable (see pipe's doc)
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder auth(Object... conf) throws IllegalAccessException;
 
     /**
      * attach a xpath pipe to the current context
      * @param expr xpath expression
-     * @return
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder xpath(String expr) throws IllegalAccessException;
 
     /**
      * attach a sling query pipe to the current context
      * @param expr sling query expression
-     * @return
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder $(String expr) throws IllegalAccessException;
 
     /**
      * attach a rm pipe to the current context
-     * @return
+     * @return updated instance of PipeBuilder
      */
     PipeBuilder rm();
 
     /**
      * attach a json pipe to the current context
      * @param expr json expr or URL
-     * @return
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder json(String expr) throws IllegalAccessException;
 
     /**
      * Attach a path pipe to the current context
-     * @param expr
-     * @return
+     * @param expr path to create
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder mkdir(String expr) throws IllegalAccessException;
 
     /**
      * attach a base pipe to the current context
      * @param path pipe path
-     * @return
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder echo(String path) throws IllegalAccessException;
 
     /**
-     * attach a new pipe to the current context
-     * @return
+     * attach a parent pipe to the current context
+     * @return updated instance of PipeBuilder
      */
     PipeBuilder parent();
 
     /**
      * parameterized current pipe in the context
-     * @param param
-     * @param value
-     * @return
+     * @param param key (property name) of the property
+     * @param value value of te property
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder with(String param, String value) throws IllegalAccessException;
 
     /**
-     * add an expr configuration to the current pipe in the context
-     * @param value
-     * @return
+     * set an expr configuration to the current pipe in the context
+     * @param value expression value
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder expr(String value) throws IllegalAccessException;
 
     /**
      * sets a pipe name, important in case you want to reuse it in another expression
-     * @param name
-     * @return
-     * @throws IllegalAccessException
+     * @param name to overwrite default binding name (otherwise it will be "one", "two", ...)
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder name(String name) throws IllegalAccessException;
 
     /**
-     * add a path configuration to the current pipe in the context
-     * @param value
-     * @return
+     * set a path configuration to the current pipe in the context
+     * @param value path value
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder path(String value) throws IllegalAccessException;
 
     /**
      * Building up a set of configurations for the current pipe
-     * @param properties
-     * @return
+     * @param properties configuration key value pairs (must be an even number of arguments)
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called in a bad time
      */
     PipeBuilder conf(Object... properties) throws IllegalAccessException;
 
     /**
      * builds a configured pipe
-     * @return
+     * @return Created (not executed) Pipe instance
+     * @throws PersistenceException error occuring when saving the pipe configuration
      */
     Pipe build() throws PersistenceException;
 
     /**
-     * builds & run configured pipe
-     * @return
-     * @throws Exception
+     * builds and run configured pipe
+     * @return set of resource path, output of the pipe execution
+     * @throws Exception exceptions thrown by the build or the pipe execution itself
      */
     Set<String> run() throws Exception;
 }
