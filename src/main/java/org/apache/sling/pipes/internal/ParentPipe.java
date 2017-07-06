@@ -28,7 +28,7 @@ import org.apache.sling.pipes.Plumber;
  */
 public class ParentPipe extends BasePipe {
 
-    public static final String RESOURCE_TYPE = "slingPipes/parent";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "parent";
 
     public ParentPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);

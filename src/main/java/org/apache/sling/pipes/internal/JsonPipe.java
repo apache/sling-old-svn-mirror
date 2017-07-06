@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JsonPipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(JsonPipe.class);
-    public static final String RESOURCE_TYPE = "slingPipes/json";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "json";
 
     HttpClient client;
 

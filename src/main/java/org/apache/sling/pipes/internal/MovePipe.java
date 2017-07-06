@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 public class MovePipe extends BasePipe {
     Logger logger = LoggerFactory.getLogger(MovePipe.class);
 
-    public static final String RESOURCE_TYPE = "slingPipes/mv";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "mv";
 
     public MovePipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);

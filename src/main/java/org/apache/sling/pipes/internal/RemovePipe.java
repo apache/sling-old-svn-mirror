@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RemovePipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(RemovePipe.class);
-    public static final String RESOURCE_TYPE = "slingPipes/rm";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "rm";
 
     /**
      * In case input resource is a node and configuration is set, only configured properties,
