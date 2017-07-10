@@ -46,10 +46,12 @@ public class MappingConfigAmendment implements Comparable<MappingConfigAmendment
         int service_ranking() default 0;
 
         @AttributeDefinition(name = "Service Mappings",
-            description = "Provides mappings from service name to user names. "
-                + "Each entry is of the form 'bundleId [ \":\" subServiceName ] \"=\" userName' "
-                + "where bundleId and subServiceName identify the service and userName "
-                + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.")
+            description = "Provides mappings from service name to user (and optionally principal) names. "
+                + "Each entry is of the form 'bundleId [ \":\" subServiceName ] \"=\" userName' | \"[\" principalNames \"]\" "
+                + "where bundleId and subServiceName identify the service and userName/principalNames "
+                + "defines the name(s) of the user/principals to provide to the service. "
+                + "'principalNames is defined to be a comma separated list of principal names. "
+                + "Invalid entries are logged and ignored.")
         String[] user_mapping() default {};
 
         // Internal Name hint for web console.

@@ -21,6 +21,7 @@ package org.apache.sling.serviceusermapping.impl;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -62,16 +63,49 @@ public class MappingInventoryPrinter implements InventoryPrinter {
         return m.map(m.getServiceName(), m.getSubServiceName());
     }
 
+    private String[] getMappedPrincipalNames(Mapping m) {
+        Iterable<String> principalNames = m.mapPrincipals(m.getServiceName(), m.getSubServiceName());
+        if (principalNames == null) {
+            return null;
+        } else {
+            List<String> l = new ArrayList<>();
+            for (String pName : principalNames) {
+                l.add(pName);
+            }
+            return l.toArray(new String[l.size()]);
+        }
+    }
+
     private SortedMap<String, List<Mapping>> getMappingsByUser(List<Mapping> mappings) {
         SortedMap<String, List<Mapping>> result = new TreeMap<String, List<Mapping>>();
         for(Mapping m : mappings) {
             final String user = getMappedUser(m);
-            List<Mapping> list = result.get(user);
-            if(list == null) {
-                list = new ArrayList<Mapping>();
-                result.put(user, list);
+            if (user != null) {
+                List<Mapping> list = result.get(user);
+                if (list == null) {
+                    list = new ArrayList<Mapping>();
+                    result.put(user, list);
+                }
+                list.add(m);
             }
-            list.add(m);
+        }
+        return result;
+    }
+
+    private SortedMap<String, List<Mapping>> getMappingsByPrincipalName(List<Mapping> mappings) {
+        SortedMap<String, List<Mapping>> result = new TreeMap<String, List<Mapping>>();
+        for(Mapping m : mappings) {
+            final String[] principalNames = getMappedPrincipalNames(m);
+            if (principalNames != null) {
+                for (String pName : principalNames) {
+                    List<Mapping> list = result.get(pName);
+                    if (list == null) {
+                        list = new ArrayList<Mapping>();
+                        result.put(pName, list);
+                    }
+                    list.add(m);
+                }
+            }
         }
         return result;
     }
@@ -80,23 +114,42 @@ public class MappingInventoryPrinter implements InventoryPrinter {
         w.object();
         w.key("serviceName").value(m.getServiceName());
         w.key("subServiceName").value(m.getSubServiceName());
-        w.key("user").value(getMappedUser(m));
+        String[] pNames = getMappedPrincipalNames(m);
+        if (pNames != null) {
+            w.key("principals").value(pNames);
+        } else {
+            w.key("user").value(getMappedUser(m));
+        }
         w.endObject();
     }
 
     private void renderJson(PrintWriter out) throws IOException {
         final List<Mapping> data = mapper.getActiveMappings();
         final Map<String, List<Mapping>> byUser = getMappingsByUser(data);
+        final Map<String, List<Mapping>> byPrincipalName = getMappingsByPrincipalName(data);
 
         final JSONWriter w = new JSONWriter(out);
         w.object();
         w.key("title").value("Service User Mappings");
         w.key("mappingsCount").value(data.size());
         w.key("uniqueUsersCount").value(byUser.keySet().size());
+        w.key("uniquePrincipalsCount").value(byPrincipalName.keySet().size());
 
         w.key("mappingsByUser");
         w.object();
         for(Map.Entry<String, List<Mapping>> e : byUser.entrySet()) {
+            w.key(e.getKey());
+            w.array();
+            for(Mapping m : e.getValue()) {
+                asJSON(w,m);
+            }
+            w.endArray();
+        }
+        w.endObject();
+
+        w.key("mappingsByPrincipal");
+        w.object();
+        for(Map.Entry<String, List<Mapping>> e : byPrincipalName.entrySet()) {
             w.key(e.getKey());
             w.array();
             for(Mapping m : e.getValue()) {
@@ -117,21 +170,40 @@ public class MappingInventoryPrinter implements InventoryPrinter {
         final String sub = m.getSubServiceName();
         w.print(sub == null ? "" : sub);
         w.print(SEP);
-        w.println(getMappedUser(m));
+        String[] principalNames = getMappedPrincipalNames(m);
+        if (principalNames != null) {
+            w.println(Arrays.toString(principalNames));
+        } else {
+            w.println(getMappedUser(m));
+        }
     }
 
     private void renderText(PrintWriter out) {
         final List<Mapping> data = mapper.getActiveMappings();
-        final Map<String, List<Mapping>> byUser = getMappingsByUser(data);
 
-        final String formatInfo = " (format: service name / sub service name / user)";
+        final Map<String, List<Mapping>> byUser = getMappingsByUser(data);
 
         out.print("*** Mappings by user (");
         out.print(byUser.keySet().size());
         out.print(" users):");
-        out.println(formatInfo);
+        out.println(" (format: service name / sub service name / user)");
 
         for(Map.Entry<String, List<Mapping>> e : byUser.entrySet()) {
+            out.print("  ");
+            out.println(e.getKey());
+            for(Mapping m : e.getValue()) {
+                asText(out, m, "    ");
+            }
+        }
+
+        final Map<String, List<Mapping>> byPrincipalName = getMappingsByPrincipalName(data);
+
+        out.print("*** Mappings by principals (");
+        out.print(byPrincipalName.keySet().size());
+        out.print(" principals):");
+        out.println(" (format: service name / sub service name / principal names)");
+
+        for(Map.Entry<String, List<Mapping>> e : byPrincipalName.entrySet()) {
             out.print("  ");
             out.println(e.getKey());
             for(Mapping m : e.getValue()) {

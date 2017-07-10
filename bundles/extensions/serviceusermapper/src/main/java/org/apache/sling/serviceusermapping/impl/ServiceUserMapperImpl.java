@@ -35,6 +35,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.sling.serviceusermapping.ServicePrincipalsValidator;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.apache.sling.serviceusermapping.ServiceUserValidator;
@@ -65,9 +66,10 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
         @AttributeDefinition(name = "Service Mappings",
             description = "Provides mappings from service name to user names. "
-                + "Each entry is of the form 'bundleId [ \":\" subServiceName ] \"=\" userName' "
+                + "Each entry is of the form 'bundleId [ \":\" subServiceName ] \"=\" userName' | \"[\" principalNames \"]\" "
                 + "where bundleId and subServiceName identify the service and userName "
-                + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.")
+                + "defines the name of the user to provide to the service; alternative the the mapping"
+                + "can define a comma separated set of principalNames instead of the userName. Invalid entries are logged and ignored.")
         String[] user_mapping() default {};
 
         @AttributeDefinition(name = "Default User",
@@ -95,7 +97,9 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     private Mapping[] activeMappings = new Mapping[0];
 
-    private final List<ServiceUserValidator> validators = new CopyOnWriteArrayList<>();
+    private final List<ServiceUserValidator> userValidators = new CopyOnWriteArrayList<>();
+
+    private final List<ServicePrincipalsValidator> principalsValidators = new CopyOnWriteArrayList<>();
 
     private SortedMap<Mapping, Registration> activeRegistrations = new TreeMap<>();
 
@@ -166,7 +170,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
      */
     @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy= ReferencePolicy.DYNAMIC)
     protected synchronized void bindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
-        validators.add(serviceUserValidator);
+        userValidators.add(serviceUserValidator);
         restartAllActiveServiceUserMappedServices();
     }
 
@@ -175,7 +179,26 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
      * @param serviceUserValidator
      */
     protected synchronized void unbindServiceUserValidator(final ServiceUserValidator serviceUserValidator) {
-        validators.remove(serviceUserValidator);
+        userValidators.remove(serviceUserValidator);
+        restartAllActiveServiceUserMappedServices();
+    }
+
+    /**
+     * bind the servicePrincipalsValidator
+     * @param servicePrincipalsValidator
+     */
+    @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy= ReferencePolicy.DYNAMIC)
+    protected synchronized void bindServicePrincipalsValidator(final ServicePrincipalsValidator servicePrincipalsValidator) {
+        principalsValidators.add(servicePrincipalsValidator);
+        restartAllActiveServiceUserMappedServices();
+    }
+
+    /**
+     * unbind the servicePrincipalsValidator
+     * @param servicePrincipalsValidator
+     */
+    protected synchronized void unbindServicePrincipalsValidator(final ServicePrincipalsValidator servicePrincipalsValidator) {
+        principalsValidators.remove(servicePrincipalsValidator);
         restartAllActiveServiceUserMappedServices();
     }
 
@@ -191,6 +214,21 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         log.debug(
                 "getServiceUserID(bundle {}, subServiceName {}) returns [{}] (raw userId={}, valid={})",
                 new Object[] { bundle, subServiceName, result, userId, valid });
+        return result;
+    }
+
+    /**
+     * @see org.apache.sling.serviceusermapping.ServiceUserMapper#getServicePrincipalNames(org.osgi.framework.Bundle, java.lang.String)
+     */
+    @Override
+    public Iterable<String> getServicePrincipalNames(Bundle bundle, String subServiceName) {
+        final String serviceName = getServiceName(bundle);
+        final Iterable<String> names = internalGetPrincipalNames(serviceName, subServiceName);
+        final boolean valid = areValidPrincipals(names, serviceName, subServiceName);
+        final Iterable<String> result = valid ? names : null;
+        log.debug(
+                "getServicePrincipalNames(bundle {}, subServiceName {}) returns [{}] (raw principalNames={}, valid={})",
+                new Object[] { bundle, subServiceName, result, names, valid});
         return result;
     }
 
@@ -393,8 +431,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             log.debug("isValidUser: userId is null -> invalid");
             return false;
         }
-        if ( !validators.isEmpty() ) {
-            for (final ServiceUserValidator validator : validators) {
+        if ( !userValidators.isEmpty() ) {
+            for (final ServiceUserValidator validator : userValidators) {
                 if ( validator.isValid(userId, serviceName, subServiceName) ) {
                     log.debug("isValidUser: Validator {} accepts userId [{}] -> valid", validator, userId);
                     return true;
@@ -406,6 +444,64 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             log.debug("isValidUser: No active validators for userId [{}] -> valid", userId);
             return true;
         }
+    }
+
+    private boolean areValidPrincipals(final Iterable<String> principalNames, final String serviceName, final String subServiceName) {
+        if (principalNames == null) {
+            log.debug("areValidPrincipals: principalNames are null -> invalid");
+            return false;
+        }
+        if ( !principalsValidators.isEmpty() ) {
+            for (final ServicePrincipalsValidator validator : principalsValidators) {
+                if ( validator.isValid(principalNames, serviceName, subServiceName) ) {
+                    log.debug("areValidPrincipals: Validator {} accepts principal names [{}] -> valid", validator, principalNames);
+                    return true;
+                }
+            }
+            log.debug("areValidPrincipals: No validator accepted principal names [{}] -> invalid", principalNames);
+            return false;
+        } else {
+            log.debug("areValidPrincipals: No active validators for principal names [{}] -> valid", principalNames);
+            return true;
+        }
+    }
+
+    private Iterable<String> internalGetPrincipalNames(final String serviceName, final String subServiceName) {
+        log.debug(
+                "internalGetPrincipalNames: {} active mappings, looking for mapping for {}/{}",
+                new Object[] { this.activeMappings.length, serviceName, subServiceName });
+
+        for (final Mapping mapping : this.activeMappings) {
+            final Iterable<String> principalNames = mapping.mapPrincipals(serviceName, subServiceName);
+            if (principalNames != null) {
+                log.debug("Got principalNames [{}] from {}/{}", new Object[] {principalNames, serviceName, subServiceName });
+                return principalNames;
+            }
+        }
+
+        for (Mapping mapping : this.activeMappings) {
+            final Iterable<String> principalNames = mapping.mapPrincipals(serviceName, null);
+            if (principalNames != null) {
+                log.debug("Got principalNames [{}] from {}/{}", new Object[] {principalNames, serviceName });
+                return principalNames;
+            }
+        }
+
+        // second round without serviceInfo
+        log.debug(
+                "internalGetPrincipalNames: {} active mappings, looking for mapping for {}/<no subServiceName>",
+                this.activeMappings.length, serviceName);
+
+        for (Mapping mapping : this.activeMappings) {
+            final Iterable<String> principalNames = mapping.mapPrincipals(serviceName, null);
+            if (principalNames != null) {
+                log.debug("Got principalNames [{}] from {}/<no subServiceName>", principalNames, serviceName);
+                return principalNames;
+            }
+        }
+
+        log.debug("internalGetPrincipalNames: no mapping found.");
+        return null;
     }
 
     static String getServiceName(final Bundle bundle) {
