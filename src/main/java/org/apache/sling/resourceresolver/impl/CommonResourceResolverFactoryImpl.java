@@ -46,6 +46,7 @@ import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntriesHandler;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
+import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -471,23 +472,29 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     public Map<String, Object> getServiceUserAuthenticationInfo(final String subServiceName)
     throws LoginException {
         // get an administrative resource resolver
-        // Ensure a mapped user name: If no user is defined for a bundle
+        // Ensure a mapped user name or principal names: If no user/principal name(s)
+        // is/are defined for a bundle
         // acting as a service, the user may be null. We can decide whether
         // this should yield guest access or no access at all. For now
         // no access is granted if there is no service user defined for
         // the bundle.
     	final Bundle bundle = this.activator.getBundleContext().getBundle();
-        final String userName = this.activator.getServiceUserMapper().getServiceUserID(bundle, subServiceName);
-        if (userName == null) {
-            throw new LoginException("Cannot derive user name for bundle "
-                + bundle + " and sub service " + subServiceName);
+
+        ServiceUserMapper mapper = this.activator.getServiceUserMapper();
+        final Iterable<String> principalNames = mapper.getServicePrincipalNames(bundle, subServiceName);
+        final String userName = (principalNames == null) ? mapper.getServiceUserID(bundle, subServiceName) : null;
+        if (principalNames == null && userName == null) {
+            throw new LoginException("Cannot derive user name or principal names for bundle "
+                            + bundle + " and sub service " + subServiceName);
         }
 
         final Map<String, Object> authenticationInfo = new HashMap<>();
         // ensure proper user name and service bundle
         authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
-        authenticationInfo.put(ResourceResolverFactory.USER, userName);
         authenticationInfo.put(ResourceProvider.AUTH_SERVICE_BUNDLE, bundle);
+        if (userName != null) {
+            authenticationInfo.put(ResourceResolverFactory.USER, userName);
+        }
 
         return authenticationInfo;
     }
