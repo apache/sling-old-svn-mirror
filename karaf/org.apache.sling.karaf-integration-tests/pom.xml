@@ -92,7 +92,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.engine</artifactId>
-      <version>2.6.6</version>
+      <version>2.6.8</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -196,18 +196,16 @@
       <scope>test</scope>
     </dependency>
     <!-- Couchbase -->
-    <!--
     <dependency>
-      <groupId>org.couchbase.mock</groupId>
+      <groupId>com.couchbase.mock</groupId>
       <artifactId>CouchbaseMock</artifactId>
-      <version>1.4.1</version>
+      <version>1.5.4</version>
       <scope>test</scope>
     </dependency>
-    -->
     <dependency>
       <groupId>com.couchbase.client</groupId>
       <artifactId>couchbase-client</artifactId>
-      <version>1.4.12</version>
+      <version>1.4.13</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -284,6 +282,9 @@
             </executions>
             <configuration>
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
+              <excludes>
+                <exclude>**/SlingLaunchpadOak*IT.*</exclude>
+              </excludes>
             </configuration>
           </plugin>
         </plugins>
