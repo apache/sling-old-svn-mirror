@@ -138,7 +138,7 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public PipeBuilder with(String param, String value) throws IllegalAccessException {
+    public PipeBuilder with(String param, Object value) throws IllegalAccessException {
         checkCurrentStep();
         currentStep.properties.put(param, value);
         return this;
