@@ -121,7 +121,7 @@ public interface PipeBuilder {
      * @return updated instance of PipeBuilder
      * @throws IllegalAccessException in case it's called in a bad time
      */
-    PipeBuilder with(String param, String value) throws IllegalAccessException;
+    PipeBuilder with(String param, Object value) throws IllegalAccessException;
 
     /**
      * set an expr configuration to the current pipe in the context
