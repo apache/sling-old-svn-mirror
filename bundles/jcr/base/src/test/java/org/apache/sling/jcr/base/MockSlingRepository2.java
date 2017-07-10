@@ -35,4 +35,9 @@ class MockSlingRepository2 extends AbstractSlingRepository2 {
         // Assuming we run on a test repo with no access control
         return getRepository().login();
     }
+
+    @Override
+    protected Session createServiceSession(Iterable<String> principalNames, String workspace) throws RepositoryException {
+        return getRepository().login();
+    }
 }
