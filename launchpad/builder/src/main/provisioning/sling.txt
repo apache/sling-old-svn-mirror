@@ -91,7 +91,7 @@
     org.apache.sling/org.apache.sling.commons.log.webconsole/1.0.0
 
 [artifacts startLevel=10]
-    org.apache.felix/org.apache.felix.http.sslfilter/1.1.0
+    org.apache.felix/org.apache.felix.http.sslfilter/1.2.2
     org.apache.felix/org.apache.felix.scr/2.0.8
     org.apache.felix/org.apache.felix.metatype/1.1.2
     org.apache.tika/tika-core/1.14
