@@ -17,6 +17,8 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.lang.reflect.Method;
+import java.security.Principal;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -28,6 +30,7 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.serviceusermapping.ServicePrincipalsValidator;
 import org.apache.sling.serviceusermapping.ServiceUserValidator;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
@@ -41,18 +44,19 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the {@link org.apache.sling.serviceusermapping.ServiceUserValidator}
- * interface that verifies that all registered service users are represented by
+ * and {@link org.apache.sling.serviceusermapping.ServicePrincipalsValidator}
+ * interfaces that verifies that all registered service users/principals are represented by
  * {@link org.apache.jackrabbit.api.security.user.User#isSystemUser() system users}
  * in the underlying JCR repository.
  *
  * @see org.apache.jackrabbit.api.security.user.User#isSystemUser()
  */
 @Designate(ocd = JcrSystemUserValidator.Config.class)
-@Component(service = ServiceUserValidator.class,
+@Component(service = {ServiceUserValidator.class, ServicePrincipalsValidator.class},
            property = {
                    Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
            })
-public class JcrSystemUserValidator implements ServiceUserValidator {
+public class JcrSystemUserValidator implements ServiceUserValidator, ServicePrincipalsValidator {
 
     @ObjectClassDefinition(
             name = "Apache Sling JCR System User Validator",
@@ -74,6 +78,7 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
     private final Method isSystemUserMethod;
 
     private final Set<String> validIds = new CopyOnWriteArraySet<String>();
+    private final Set<String> validPrincipalNames = new CopyOnWriteArraySet<String>();
 
     private boolean allowOnlySystemUsers;
 
@@ -142,6 +147,68 @@ public class JcrSystemUserValidator implements ServiceUserValidator {
         }
     }
 
+    @Override
+    public boolean isValid(Iterable<String> servicePrincipalNames, String serviceName, String subServiceName) {
+        if (servicePrincipalNames == null) {
+            log.debug("The provided service principal names are null");
+            return false;
+        }
+        if (!allowOnlySystemUsers) {
+            log.debug("There is no enforcement of JCR system users, therefore service principal names '{}' are valid", servicePrincipalNames);
+            return true;
+        }
+        Session administrativeSession = null;
+        UserManager userManager = null;
+        Set<String> invalid = new HashSet<>();
+        try {
+            for (final String pName : servicePrincipalNames) {
+                if (validPrincipalNames.contains(pName)) {
+                    log.debug("The provided service principal name '{}' has been already validated and is a known JCR system user", pName);
+                } else {
+                    /*
+                     * TODO: Instead of using the deprecated loginAdministrative
+                     * method, this bundle could be configured with an appropriate
+                     * user for service authentication and do:
+                     *     tmpSession = repository.loginService(null, workspace);
+                     * For now, we keep loginAdministrative as switching to a service user
+                     * will result in a endless recursion (this method checks if
+                     * a sservice user is allowed, so using a service user here
+                     * calls this method again...and again...and again)
+                     */
+                    if (administrativeSession == null) {
+                        administrativeSession = repository.loginAdministrative(null);
+                        if (administrativeSession instanceof JackrabbitSession) {
+                            userManager = ((JackrabbitSession) administrativeSession).getUserManager();
+                        } else {
+                            log.debug("Unable to validate service user principals, JackrabbitSession expected.");
+                            return false;
+                        }
+                    }
+
+                    Authorizable authorizable = userManager.getAuthorizable(new Principal() {
+                        @Override
+                        public String getName() {
+                            return pName;
+                        }
+                    });
+                    if (authorizable != null && !authorizable.isGroup() && (isSystemUser((User) authorizable))) {
+                        validPrincipalNames.add(pName);
+                        log.debug("The provided service principal name {} is a known JCR system user", pName);
+                    } else {
+                        log.warn("The provided service principal name '{}' is not a known JCR system user id and therefore not allowed in the Sling Service User Mapper.", pName);
+                        invalid.add(pName);
+                    }
+                }
+            }
+        } catch (final RepositoryException e) {
+            log.warn("Could not get user information", e);
+        } finally {
+            if (administrativeSession != null) {
+                administrativeSession.logout();
+            }
+        }
+        return invalid.isEmpty();
+    }
 
     private boolean isSystemUser(final User user){
         if (isSystemUserMethod != null) {
