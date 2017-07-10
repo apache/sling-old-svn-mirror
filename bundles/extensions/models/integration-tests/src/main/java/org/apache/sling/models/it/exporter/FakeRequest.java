@@ -35,10 +35,13 @@ class FakeRequest implements HttpServletRequest {
 
     private final String path;
 
+    private final StringBuffer requestUrl;
+
     private final Map<String, Object> attributes = new HashMap<String, Object>();
 
     FakeRequest(String path) {
         this.path = path;
+        this.requestUrl = new StringBuffer("http://notarealhost").append(path);
     }
 
     @Override
@@ -128,7 +131,7 @@ class FakeRequest implements HttpServletRequest {
 
     @Override
     public StringBuffer getRequestURL() {
-        return null;
+        return requestUrl;
     }
 
     @Override
@@ -273,7 +276,7 @@ class FakeRequest implements HttpServletRequest {
 
     @Override
     public Enumeration getLocales() {
-        return null;
+        return Collections.emptyEnumeration();
     }
 
     @Override
