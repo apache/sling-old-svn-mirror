@@ -18,14 +18,22 @@
  */
 package org.apache.sling.serviceusermapping.impl;
 
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNull;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.sling.serviceusermapping.ServicePrincipalsValidator;
 import org.apache.sling.serviceusermapping.ServiceUserValidator;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -43,6 +51,10 @@ public class ServiceUserMapperImplTest {
     private static final String BUNDLE_SYMBOLIC2 = "bundle2";
 
     private static final String BUNDLE_SYMBOLIC3 = "bundle3";
+
+    private static final String BUNDLE_SYMBOLIC4 = "bundle4";
+
+    private static final String BUNDLE_SYMBOLIC5 = "bundle5";
 
     private static final String SUB = "sub";
 
@@ -62,6 +74,10 @@ public class ServiceUserMapperImplTest {
 
     private static final Bundle BUNDLE3;
 
+    private static final Bundle BUNDLE4;
+
+    private static final Bundle BUNDLE5;
+
     static {
         BUNDLE1 = mock(Bundle.class);
         when(BUNDLE1.getSymbolicName()).thenReturn(BUNDLE_SYMBOLIC1);
@@ -71,6 +87,12 @@ public class ServiceUserMapperImplTest {
 
         BUNDLE3 = mock(Bundle.class);
         when(BUNDLE3.getSymbolicName()).thenReturn(BUNDLE_SYMBOLIC3);
+
+        BUNDLE4 = mock(Bundle.class);
+        when(BUNDLE4.getSymbolicName()).thenReturn(BUNDLE_SYMBOLIC4);
+
+        BUNDLE5 = mock(Bundle.class);
+        when(BUNDLE5.getSymbolicName()).thenReturn(BUNDLE_SYMBOLIC5);
     }
 
     @Test
@@ -182,6 +204,125 @@ public class ServiceUserMapperImplTest {
         TestCase.assertEquals(SAMPLE_SUB, sum.getServiceUserID(BUNDLE1, SUB));
         TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, SUB));
     }
+
+    @Test
+    public void test_getServicePrincipalNames() {
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {
+                BUNDLE_SYMBOLIC1 + "=[" + SAMPLE + "]", //
+                BUNDLE_SYMBOLIC2 + "=[ " + ANOTHER + " ]", //
+                BUNDLE_SYMBOLIC3 + "=[" + SAMPLE + "," + ANOTHER + "]", //
+                BUNDLE_SYMBOLIC4 + "=[ " + SAMPLE + ", " + ANOTHER + " ]", //
+                BUNDLE_SYMBOLIC5 + "=[]", //
+                BUNDLE_SYMBOLIC1 + ":" + SUB + "=[" + SAMPLE_SUB + "]", //
+                BUNDLE_SYMBOLIC2 + ":" + SUB + "=[" + SAMPLE_SUB + "," + ANOTHER_SUB + "]" //
+        });
+
+        final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
+        sum.configure(null, config);
+
+        assertEqualPrincipalNames(sum.getServicePrincipalNames(BUNDLE1, null), SAMPLE);
+        assertEqualPrincipalNames(sum.getServicePrincipalNames(BUNDLE2, null), ANOTHER);
+        assertEqualPrincipalNames(sum.getServicePrincipalNames(BUNDLE3, null), SAMPLE, ANOTHER);
+        assertEqualPrincipalNames(sum.getServicePrincipalNames(BUNDLE4, null), SAMPLE, ANOTHER);
+        assertEqualPrincipalNames(sum.getServicePrincipalNames(BUNDLE5, null));
+        assertEqualPrincipalNames(sum.getServicePrincipalNames(BUNDLE1, SUB), SAMPLE_SUB);
+        assertEqualPrincipalNames(sum.getServicePrincipalNames(BUNDLE2, SUB), SAMPLE_SUB, ANOTHER_SUB);
+    }
+
+    @Test
+    public void test_getServicePrincipalNames_EmptySubService() {
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {
+                BUNDLE_SYMBOLIC1 + "=[" + SAMPLE + "]", //
+                BUNDLE_SYMBOLIC2 + "=[ " + ANOTHER + " ]", //
+        });
+
+        final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
+        sum.configure(null, config);
+
+        assertEqualPrincipalNames(sum.getServicePrincipalNames(BUNDLE1, ""), SAMPLE);
+        assertEqualPrincipalNames(sum.getServicePrincipalNames(BUNDLE2, ""), ANOTHER);
+    }
+
+    @Test
+    public void test_getServicePrincipalNames_WithUserNameConfig() {
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {
+                BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
+                BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
+        });
+        when(config.user_default()).thenReturn(NONE);
+        when(config.user_enable_default_mapping()).thenReturn(false);
+
+        final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
+        sum.configure(null, config);
+
+        assertNull(sum.getServicePrincipalNames(BUNDLE1, null));
+        assertNull(SAMPLE_SUB, sum.getServicePrincipalNames(BUNDLE1, SUB));
+    }
+
+    @Test
+    public void test_getServicePrincipalNames_IgnoresDefaultUser() {
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_default()).thenReturn(NONE);
+        when(config.user_enable_default_mapping()).thenReturn(true);
+
+        final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
+        sum.configure(null, config);
+
+        assertNull(sum.getServicePrincipalNames(BUNDLE1, null));
+        assertNull(sum.getServicePrincipalNames(BUNDLE1, SUB));
+    }
+
+    @Test
+    public void test_getServicePrincipalnames_WithServicePrincipalsValidator() {
+        ServiceUserMapperImpl.Config config = mock(ServiceUserMapperImpl.Config.class);
+        when(config.user_mapping()).thenReturn(new String[] {
+                BUNDLE_SYMBOLIC1 + "=[" + SAMPLE + "]", //
+                BUNDLE_SYMBOLIC2 + "=[" + SAMPLE + "," + ANOTHER + "]", //
+                BUNDLE_SYMBOLIC1 + ":" + SUB + "=[" + SAMPLE + "," + SAMPLE_SUB + "]", //
+                BUNDLE_SYMBOLIC2 + ":" + SUB + "=[" + ANOTHER_SUB + "," + SAMPLE_SUB + "," + SAMPLE + "]"//
+        });
+
+        final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
+        sum.configure(null, config);
+        ServicePrincipalsValidator validator = new ServicePrincipalsValidator() {
+            @Override
+            public boolean isValid(Iterable<String> servicePrincipalNames, String serviceName, String subServiceName) {
+                for (String pName : servicePrincipalNames) {
+                    if (SAMPLE.equals(pName)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
+        sum.bindServicePrincipalsValidator(validator);
+
+        assertNull(sum.getServicePrincipalNames(BUNDLE1, null));
+        assertNull(sum.getServicePrincipalNames(BUNDLE2, null));
+        assertNull(sum.getServicePrincipalNames(BUNDLE1, SUB));
+        assertNull(sum.getServicePrincipalNames(BUNDLE2, SUB));
+    }
+
+    private static void assertEqualPrincipalNames(Iterable<String> result, String... expected) {
+        if (expected == null) {
+            assertNull(result);
+        } else if (expected.length == 0) {
+            assertFalse(result.iterator().hasNext());
+        } else {
+            Set<String> resultSet = new HashSet<>();
+            Iterator<String> it = result.iterator();
+            while (it.hasNext()) {
+                resultSet.add(it.next());
+            }
+            Set<String> expectedSet = new HashSet<>();
+            expectedSet.addAll(Arrays.asList(expected));
+            assertEquals(expectedSet, resultSet);
+        }
+    }
+
 
     @Test
     public void test_amendment() {
