@@ -67,12 +67,10 @@ def modules = [
         location: 'bundles/commons/metrics'
     ],
     [
-        location: 'bundles/commons/org.apache.sling.commons.messaging.mail',
-        jdks: ["1.8"]
+        location: 'bundles/commons/org.apache.sling.commons.messaging.mail'
     ],
     [
-        location: 'bundles/commons/org.apache.sling.commons.messaging',
-        jdks: ["1.8"]
+        location: 'bundles/commons/org.apache.sling.commons.messaging'
     ],
     [
         location: 'bundles/engine'
@@ -90,8 +88,7 @@ def modules = [
         location: 'bundles/extensions/caconfig/impl'
     ],
     [
-        location: 'bundles/extensions/caconfig/integration-tests',
-        jdks: ["1.8"]
+        location: 'bundles/extensions/caconfig/integration-tests'
     ],
     [
         location: 'bundles/extensions/caconfig/spi'
@@ -184,12 +181,10 @@ def modules = [
         location: 'bundles/extensions/models/integration-tests'
     ],
     [
-        location: 'bundles/extensions/models/validation-impl',
-        jdks: ["1.8"]
+        location: 'bundles/extensions/models/validation-impl'
     ],
     [
-        location: 'bundles/extensions/org.apache.sling.resource.presence',
-        jdks: ["1.8"]
+        location: 'bundles/extensions/org.apache.sling.resource.presence'
     ],
     [
         location: 'bundles/extensions/serviceusermapper'
@@ -198,20 +193,16 @@ def modules = [
         location: 'bundles/extensions/settings'
     ],
     [
-        location: 'bundles/extensions/validation/api',
-        jdks: ["1.8"]
+        location: 'bundles/extensions/validation/api'
     ],
     [
-        location: 'bundles/extensions/validation/core',
-        jdks: ["1.8"]
+        location: 'bundles/extensions/validation/core'
     ],
     [
-        location: 'bundles/extensions/validation/examples',
-        jdks: ["1.8"]
+        location: 'bundles/extensions/validation/examples'
     ],
     [
-        location: 'bundles/extensions/validation/test-services',
-        jdks: ["1.8"]
+        location: 'bundles/extensions/validation/test-services'
     ],
     [
         location: 'bundles/extensions/webconsolebranding'
@@ -349,8 +340,7 @@ def modules = [
         downstream: ['bundles/scripting/sightly/testing']
     ],
     [
-        location: 'bundles/scripting/sightly/testing',
-        jdks: ['1.8']
+        location: 'bundles/scripting/sightly/testing'
     ],
     [
         location: 'bundles/servlets/get'
@@ -429,8 +419,7 @@ def modules = [
         location: 'contrib/extensions/datasource'
     ],
     [
-        location: "contrib/extensions/sling-pipes",
-        jdks: ["1.8"]
+        location: "contrib/extensions/sling-pipes"
     ],
     [
         location: 'contrib/extensions/distribution/api'
@@ -439,8 +428,7 @@ def modules = [
         location: 'contrib/extensions/distribution/core'
     ],
     [
-        location: 'contrib/extensions/distribution/it',
-        jdks: ['1.8'],
+        location: 'contrib/extensions/distribution/it'
         archive: ["**/logs/error.log"]
     ],
     [
@@ -480,8 +468,7 @@ def modules = [
         location: 'contrib/extensions/resourcemerger'
     ],
     [
-        location: 'contrib/extensions/rewriter',
-        jdks: ['1.8']
+        location: 'contrib/extensions/rewriter'
     ],
     [
         location: 'contrib/extensions/security'
@@ -547,8 +534,7 @@ def modules = [
         location: 'contrib/launchpad/testing'
     ],
     [
-        location: 'contrib/scripting/freemarker',
-        jdks: ['1.8']
+        location: 'contrib/scripting/freemarker'
     ],
     [
         location: 'contrib/scripting/groovy'
@@ -563,8 +549,7 @@ def modules = [
         location: 'contrib/scripting/xproc'
     ],
     [
-        location: 'contrib/scripting/org.apache.sling.scripting.thymeleaf',
-        jdks: ['1.8']
+        location: 'contrib/scripting/org.apache.sling.scripting.thymeleaf'
     ],
     [
         location: "installer/console"
@@ -600,89 +585,70 @@ def modules = [
         location: "installer/providers/file"
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-distribution',
-        jdks: ["1.8"]
+        location: 'karaf/org.apache.sling.karaf-distribution'
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-features',
-        jdks: ["1.8"]
+        location: 'karaf/org.apache.sling.karaf-features'
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-integration-tests',
-        jdks: ["1.8"]
+        location: 'karaf/org.apache.sling.karaf-integration-tests'
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests',
-        jdks: ["1.8"]
+        location: 'karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests'
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-repoinit',
-        jdks: ["1.8"]
+        location: 'karaf/org.apache.sling.karaf-repoinit'
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-configs',
-        jdks: ["1.8"]
+        location: 'karaf/org.apache.sling.karaf-configs'
     ],
     [
-        location: 'launchpad/api',
-        jdks: ["1.8"]
+        location: 'launchpad/api'
     ],
     [
-        location: 'launchpad/base',
-        jdks: ["1.8"]
+        location: 'launchpad/base'
     ],
     [
         location: 'launchpad/builder',
-        jdks: ["1.8"],
         downstream: ["launchpad/testing", "launchpad/testing-war"],
         archive: ["**/logs/error.log"]
     ],
     [
         location: 'launchpad/content',
-        jdks: ["1.8"],
         downstream: ['launchpad/builder']
     ],
     [
-        location: 'launchpad/installer',
-        jdks: ["1.8"]
+        location: 'launchpad/installer'
     ],
     [
-        location: 'launchpad/integration-tests',
-        jdks: ["1.8"]
+        location: 'launchpad/integration-tests'
     ],
     [
         location: 'launchpad/test-bundles',
-        jdks: ["1.8"],
         downstream: ["launchpad/testing", "launchpad/testing-war"]
     ],
     [
         location: 'launchpad/test-fragment',
-        jdks: ["1.8"],
         downstream: ["launchpad/test-bundles"]
     ],
     [
         location: 'launchpad/test-services-war',
-        jdks: ["1.8"],
         downstream: ["launchpad/test-bundles"]
     ],
     [
         location: 'launchpad/test-services',
-        jdks: ["1.8"],
         downstream: ["launchpad/test-bundles"]
     ],
     [
         location: 'launchpad/testing-war',
-        jdks: ["1.8"],
         archive: ["**/logs/error.log"]
     ],
     [
         location: 'launchpad/testing',
-        jdks: ["1.8"],
         archive: ["**/logs/error.log"]
     ],
     [
-        location: "parent",
-        jdks: ["1.7"]
+        location: "parent"
     ],
     [
         location: 'samples/accessmanager-ui'
@@ -697,8 +663,7 @@ def modules = [
         location: 'samples/espblog'
     ],
     [
-        location: 'samples/fling',
-        jdks: ["1.8"]
+        location: 'samples/fling'
     ],
     [
         location: 'samples/framework-fragment'
@@ -803,8 +768,7 @@ def modules = [
         location: 'testing/samples/bundle-with-it'
     ],
     [
-        location: 'testing/samples/module-with-it',
-        jdks: ["1.8"]
+        location: 'testing/samples/module-with-it'
     ],
     [
         location: 'testing/sling-pax-util'
@@ -822,8 +786,7 @@ def modules = [
         location: 'testing/serversetup'
     ],
     [
-        location: 'testing/org.apache.sling.testing.paxexam',
-        jdks: ["1.8"]
+        location: 'testing/org.apache.sling.testing.paxexam'
     ],
     [
         location: 'tooling/bnd/caconfig-bnd-plugin'
@@ -839,7 +802,7 @@ def modules = [
     ],
     [
         location: 'tooling/support/source'
-    ],
+    ]
 ]
 
 // TODO - move job definitions to separate file to separate data from code
@@ -847,7 +810,7 @@ def modules = [
 // should be sorted from the oldest to the latest version
 // so that artifacts built using the oldest version are
 // deployed for maximum compatibility
-def defaultJdks = ["1.7", "1.8"]
+def defaultJdks = ["1.8"]
 def defaultMvn = "Maven 3.3.9"
 def defaultSlave = "ubuntu"
 
