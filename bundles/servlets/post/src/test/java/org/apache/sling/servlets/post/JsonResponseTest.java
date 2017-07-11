@@ -107,6 +107,14 @@ public class JsonResponseTest extends TestCase {
         }
     }
 
+    public void testNoChangesOnError() throws Exception {
+        res.onChange("modified", "argument1");
+        res.setError(new Exception("some exception"));
+        JsonObject obj = res.getJson();
+        assertTrue(obj.containsKey("changes"));
+        assertEquals(0, obj.getJsonArray("changes").size());
+    }
+
     private static JsonValue assertProperty(JsonObject obj, String key) {
         assertTrue("JSON object does not have property " + key, obj.containsKey(key));
         return obj.get(key);
