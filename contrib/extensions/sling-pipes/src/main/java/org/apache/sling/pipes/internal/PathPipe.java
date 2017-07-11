@@ -18,83 +18,61 @@ package org.apache.sling.pipes.internal;
 
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.StringTokenizer;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
+import org.apache.sling.query.util.IteratorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
+
 /**
  * creates or get given expression's path and returns corresponding resource
+ * this pipe can be configured with the following properties:
+ * <ul>
+ *     <li><code>nodeType</code> resource type with which the leaf node of the created path will be created</li>
+ *     <li><code>intermediateType</code> resource type with which intermediate nodse of the created path will be created</li>
+ *     <li><code>autosave</code> flag indicating wether this pipe should triggers a commit at the end of the execution</li>
+ * </ul>
  */
 public class PathPipe extends BasePipe {
 
     public static final String RESOURCE_TYPE = RT_PREFIX + "path";
-    public static final String PN_NODETYPE = "nodeType";
+    public static final String PN_RESOURCETYPE = "nodeType";
+    public static final String PN_INTERMEDIATE = "intermediateType";
     public static final String PN_AUTOSAVE = "autosave";
+    public static final String SLASH = "/";
 
-    String nodeType;
-
+    String resourceType;
+    String intermediateType;
     boolean autosave;
 
     private final Logger logger = LoggerFactory.getLogger(PathPipe.class);
 
     public PathPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
-        nodeType = properties.get(PN_NODETYPE, "sling:Folder");
+        resourceType = properties.get(PN_RESOURCETYPE, NT_SLING_FOLDER);
+        intermediateType = properties.get(PN_INTERMEDIATE, NT_SLING_FOLDER);
         autosave = properties.get(PN_AUTOSAVE, true);
+    }
+
+    @Override
+    public boolean modifiesContent() {
+        return true;
     }
 
     @Override
     public Iterator<Resource> getOutput() {
         Iterator<Resource> output = Collections.emptyIterator();
         String expression = getExpr();
-        Node leaf = null;
-        boolean transientChange = false;
         try {
-            String relativePath = expression.substring(1);
-            Node parentNode = resolver.adaptTo(Session.class).getRootNode();
-            if (!parentNode.hasNode(relativePath)) {
-                Node node = parentNode;
-                int pos = relativePath.lastIndexOf('/');
-                if (pos != -1) {
-                    final StringTokenizer st = new StringTokenizer(relativePath.substring(0, pos), "/");
-                    while (st.hasMoreTokens()) {
-                        final String token = st.nextToken();
-                        if (!node.hasNode(token)) {
-                            try {
-                                node.addNode(token, nodeType);
-                                transientChange = true;
-                            } catch (RepositoryException re) {
-                                // we ignore this as this folder might be created from a different task
-                                node.getSession().refresh(false);
-                            }
-                        }
-                        node = node.getNode(token);
-                    }
-                    relativePath = relativePath.substring(pos + 1);
-                }
-                if (!node.hasNode(relativePath)) {
-                    node.addNode(relativePath, nodeType);
-                    transientChange = true;
-                }
-                leaf = node.getNode(relativePath);
-            }
-            if (leaf == null) {
-                leaf = parentNode.getNode(relativePath);
-            }
-            if (transientChange && autosave){
-                resolver.adaptTo(Session.class).save();
-            }
-            output =  Collections.singleton(resolver.getResource(leaf.getPath())).iterator();
-        } catch (RepositoryException e){
+            String path = expression.startsWith(SLASH) ? expression : getInput().getPath() + SLASH + expression;
+            output = IteratorUtils.singleElementIterator(ResourceUtil.getOrCreateResource(resolver, path, resourceType, intermediateType, autosave));
+        } catch (PersistenceException e){
             logger.error ("Not able to create path {}", expression, e);
         }
         return output;
