@@ -428,7 +428,7 @@ def modules = [
         location: 'contrib/extensions/distribution/core'
     ],
     [
-        location: 'contrib/extensions/distribution/it'
+        location: 'contrib/extensions/distribution/it',
         archive: ["**/logs/error.log"]
     ],
     [
