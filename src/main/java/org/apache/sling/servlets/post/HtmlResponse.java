@@ -113,7 +113,11 @@ public class HtmlResponse extends AbstractPostResponse {
         // get changelog
         changes.insert(0, "<pre>");
         changes.append("</pre>");
-        setProperty(PN_CHANGE_LOG, changes.toString());
+        if (getError() == null) {
+            setProperty(PN_CHANGE_LOG, changes.toString());
+        } else {
+            setProperty(PN_CHANGE_LOG, "");
+        }
 
         Writer out = response.getWriter();
         
