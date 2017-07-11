@@ -14,34 +14,111 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.it.exporter;
+package org.apache.sling.models.testing.rtbound;
+
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.request.RequestDispatcherOptions;
+import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.request.RequestParameterMap;
+import org.apache.sling.api.request.RequestPathInfo;
+import org.apache.sling.api.request.RequestProgressTracker;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 
-class FakeRequest implements HttpServletRequest {
+public class FakeRequest implements SlingHttpServletRequest {
 
-    private final String path;
+    private final Resource resource;
 
-    private final StringBuffer requestUrl;
+    public FakeRequest(Resource r) {
+        this.resource = r;
+    }
 
-    private final Map<String, Object> attributes = new HashMap<String, Object>();
+    @Override
+    public Resource getResource() {
+        return resource;
+    }
 
-    FakeRequest(String path) {
-        this.path = path;
-        this.requestUrl = new StringBuffer("http://notarealhost").append(path);
+    @Override
+    public ResourceResolver getResourceResolver() {
+        return null;
+    }
+
+    @Override
+    public RequestPathInfo getRequestPathInfo() {
+        return null;
+    }
+
+    @Override
+    public RequestParameter getRequestParameter(String s) {
+        return null;
+    }
+
+    @Override
+    public RequestParameter[] getRequestParameters(String s) {
+        return new RequestParameter[0];
+    }
+
+    @Override
+    public RequestParameterMap getRequestParameterMap() {
+        return null;
+    }
+
+    @Override
+    public RequestDispatcher getRequestDispatcher(String s, RequestDispatcherOptions requestDispatcherOptions) {
+        return null;
+    }
+
+    @Override
+    public RequestDispatcher getRequestDispatcher(Resource resource, RequestDispatcherOptions requestDispatcherOptions) {
+        return null;
+    }
+
+    @Override
+    public RequestDispatcher getRequestDispatcher(Resource resource) {
+        return null;
+    }
+
+    @Override
+    public Cookie getCookie(String s) {
+        return null;
+    }
+
+    @Override
+    public String getResponseContentType() {
+        return null;
+    }
+
+    @Override
+    public Enumeration<String> getResponseContentTypes() {
+        return null;
+    }
+
+    @Override
+    public ResourceBundle getResourceBundle(Locale locale) {
+        return null;
+    }
+
+    @Override
+    public ResourceBundle getResourceBundle(String s, Locale locale) {
+        return null;
+    }
+
+    @Override
+    public RequestProgressTracker getRequestProgressTracker() {
+        return null;
     }
 
     @Override
@@ -55,17 +132,17 @@ class FakeRequest implements HttpServletRequest {
     }
 
     @Override
-    public long getDateHeader(String name) {
+    public long getDateHeader(String s) {
         return 0;
     }
 
     @Override
-    public String getHeader(String name) {
+    public String getHeader(String s) {
         return null;
     }
 
     @Override
-    public Enumeration getHeaders(String name) {
+    public Enumeration getHeaders(String s) {
         return null;
     }
 
@@ -75,18 +152,18 @@ class FakeRequest implements HttpServletRequest {
     }
 
     @Override
-    public int getIntHeader(String name) {
+    public int getIntHeader(String s) {
         return 0;
     }
 
     @Override
     public String getMethod() {
-        return "GET";
+        return null;
     }
 
     @Override
     public String getPathInfo() {
-        return path;
+        return null;
     }
 
     @Override
@@ -110,7 +187,7 @@ class FakeRequest implements HttpServletRequest {
     }
 
     @Override
-    public boolean isUserInRole(String role) {
+    public boolean isUserInRole(String s) {
         return false;
     }
 
@@ -131,16 +208,16 @@ class FakeRequest implements HttpServletRequest {
 
     @Override
     public StringBuffer getRequestURL() {
-        return requestUrl;
+        return null;
     }
 
     @Override
     public String getServletPath() {
-        return "";
+        return null;
     }
 
     @Override
-    public HttpSession getSession(boolean create) {
+    public HttpSession getSession(boolean b) {
         return null;
     }
 
@@ -170,8 +247,8 @@ class FakeRequest implements HttpServletRequest {
     }
 
     @Override
-    public Object getAttribute(String name) {
-        return attributes.get(name);
+    public Object getAttribute(String s) {
+        return null;
     }
 
     @Override
@@ -185,7 +262,7 @@ class FakeRequest implements HttpServletRequest {
     }
 
     @Override
-    public void setCharacterEncoding(String env) throws UnsupportedEncodingException {
+    public void setCharacterEncoding(String s) throws UnsupportedEncodingException {
 
     }
 
@@ -205,7 +282,7 @@ class FakeRequest implements HttpServletRequest {
     }
 
     @Override
-    public String getParameter(String name) {
+    public String getParameter(String s) {
         return null;
     }
 
@@ -215,13 +292,13 @@ class FakeRequest implements HttpServletRequest {
     }
 
     @Override
-    public String[] getParameterValues(String name) {
+    public String[] getParameterValues(String s) {
         return new String[0];
     }
 
     @Override
     public Map getParameterMap() {
-        return Collections.EMPTY_MAP;
+        return null;
     }
 
     @Override
@@ -260,13 +337,13 @@ class FakeRequest implements HttpServletRequest {
     }
 
     @Override
-    public void setAttribute(String name, Object o) {
-        attributes.put(name, o);
+    public void setAttribute(String s, Object o) {
+
     }
 
     @Override
-    public void removeAttribute(String name) {
-        attributes.remove(name);
+    public void removeAttribute(String s) {
+
     }
 
     @Override
@@ -276,7 +353,7 @@ class FakeRequest implements HttpServletRequest {
 
     @Override
     public Enumeration getLocales() {
-        return Collections.emptyEnumeration();
+        return null;
     }
 
     @Override
@@ -285,12 +362,12 @@ class FakeRequest implements HttpServletRequest {
     }
 
     @Override
-    public RequestDispatcher getRequestDispatcher(String path) {
+    public RequestDispatcher getRequestDispatcher(String s) {
         return null;
     }
 
     @Override
-    public String getRealPath(String path) {
+    public String getRealPath(String s) {
         return null;
     }
 
@@ -312,5 +389,10 @@ class FakeRequest implements HttpServletRequest {
     @Override
     public int getLocalPort() {
         return 0;
+    }
+
+    @Override
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> aClass) {
+        return null;
     }
 }

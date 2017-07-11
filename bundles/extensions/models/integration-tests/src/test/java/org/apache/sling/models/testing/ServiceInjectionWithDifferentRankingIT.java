@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.it;
+package org.apache.sling.models.testing;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -34,35 +34,24 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.junit.Activator;
-import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
-import org.apache.sling.junit.annotations.TestReference;
+import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.models.factory.ModelFactory;
 import org.apache.sling.models.it.models.ServiceInjectionTestModel;
 import org.apache.sling.models.it.services.SimpleService;
 import org.apache.sling.models.it.services.SimpleServiceWithCustomRanking;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.util.tracker.ServiceTracker;
 
-@RunWith(SlingAnnotationsTestRunner.class)
-public class ServiceInjectionWithDifferentRankingTest {
+public class ServiceInjectionWithDifferentRankingIT {
 
-    @TestReference
-    ConfigurationAdmin configAdmin;
+    @Rule
+    public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "SM_Teleporter");
 
-    @TestReference
-    private ResourceResolverFactory rrFactory;
-
-    @TestReference
-    private ServiceTracker serviceTracker;
-
-    @TestReference
     private ModelFactory modelFactory;
 
     private String value;
@@ -74,6 +63,8 @@ public class ServiceInjectionWithDifferentRankingTest {
 
     @Before
     public void setUp() throws Exception {
+        ResourceResolverFactory rrFactory = teleporter.getService(ResourceResolverFactory.class);
+        modelFactory = teleporter.getService(ModelFactory.class);
         value = RandomStringUtils.randomAlphanumeric(10);
 
         resolver = rrFactory.getAdministrativeResourceResolver(null);

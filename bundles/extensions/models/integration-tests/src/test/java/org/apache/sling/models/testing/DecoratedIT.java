@@ -14,34 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.it;
+package org.apache.sling.models.testing;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceWrapper;
-import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
-import org.apache.sling.junit.annotations.TestReference;
+import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.models.factory.ModelFactory;
 import org.apache.sling.models.it.models.SelfModel;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
 
 import static org.junit.Assert.*;
 
-@RunWith(SlingAnnotationsTestRunner.class)
-public class DecoratedTest {
+public class DecoratedIT {
 
-    @TestReference
-    private ResourceResolverFactory rrFactory;
+    @Rule
+    public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "SM_Teleporter");
 
-    @TestReference
     private ModelFactory modelFactory;
 
     private ResourceResolver resolver;
@@ -50,7 +47,8 @@ public class DecoratedTest {
     
     @Before
     public void setUp() throws Exception {
-
+        ResourceResolverFactory rrFactory = teleporter.getService(ResourceResolverFactory.class);
+        modelFactory = teleporter.getService(ModelFactory.class);
         resolver = rrFactory.getAdministrativeResourceResolver(null);
         Session session = resolver.adaptTo(Session.class);
         Node rootNode = session.getRootNode();

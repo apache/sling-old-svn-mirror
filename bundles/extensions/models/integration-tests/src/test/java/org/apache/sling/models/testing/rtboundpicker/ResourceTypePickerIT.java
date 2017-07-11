@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.it.rtboundpicker;
+package org.apache.sling.models.testing.rtboundpicker;
 
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -23,31 +23,31 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
-import org.apache.sling.junit.annotations.TestReference;
-import org.apache.sling.models.factory.ModelFactory;
+import org.apache.sling.junit.rules.TeleporterRule;
+import org.apache.sling.models.it.rtboundpicker.BaseComponent;
+import org.apache.sling.models.it.rtboundpicker.SubRTComponent;
+import org.apache.sling.models.it.rtboundpicker.TestComponent;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@RunWith(SlingAnnotationsTestRunner.class)
-public class ResourceTypePickerTest {
+public class ResourceTypePickerIT {
 
-    @TestReference
+    @Rule
+    public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "SM_Teleporter");
+
     private ResourceResolverFactory rrFactory;
-
-    @TestReference
-    private ModelFactory modelFactory;
 
     private final String baseComponentPath = "/content/rtpicker/baseComponent";
     private final String childComponentPath = "/content/rtpicker/childComponent";
 
     @Before
     public void setup() throws LoginException, PersistenceException {
+        rrFactory = teleporter.getService(ResourceResolverFactory.class);
         ResourceResolver adminResolver = null;
         try {
             adminResolver = rrFactory.getAdministrativeResourceResolver(null);

@@ -14,36 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.it;
+package org.apache.sling.models.testing;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
-import org.apache.sling.junit.annotations.TestReference;
-import org.apache.sling.models.it.models.SourceObject;
-import org.apache.sling.models.it.models.ViaModel;
+import org.apache.sling.junit.rules.TeleporterRule;
+import org.apache.sling.models.it.models.SlingPropertyAnnotationTestModel;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-@RunWith(SlingAnnotationsTestRunner.class)
-public class ViaTest {
+public class InjectorSpecificAnnotationIT {
 
-    @TestReference
-    private ResourceResolverFactory rrFactory;
-
-    @TestReference
-    private AdapterManager adapterManager;
+    @Rule
+    public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "SM_Teleporter");
 
     @Test
     public void test() throws Exception {
+        ResourceResolverFactory rrFactory = teleporter.getService(ResourceResolverFactory.class);
         String value = RandomStringUtils.randomAlphanumeric(10);
 
         ResourceResolver resolver = null;
@@ -57,9 +53,8 @@ public class ViaTest {
             session.save();
 
             Resource resource = resolver.getResource(createdNode.getPath());
-            SourceObject obj = new SourceObject(resource);
 
-            ViaModel model = adapterManager.getAdapter(obj, ViaModel.class);
+            SlingPropertyAnnotationTestModel model = resource.adaptTo(SlingPropertyAnnotationTestModel.class);
 
             assertNotNull("Model is null", model);
             assertEquals("Test Property is not set correctly", value, model.getTestProperty());

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.it;
+package org.apache.sling.models.testing;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -29,25 +29,23 @@ import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
-import org.apache.sling.junit.annotations.TestReference;
+import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.models.it.implpicker.CustomLastImplementationPicker;
 import org.apache.sling.models.it.models.implextend.ImplementsInterfacePropertyModel;
 import org.apache.sling.models.it.models.implextend.ImplementsInterfacePropertyModel2;
 import org.apache.sling.models.it.models.implextend.InvalidSampleServiceInterface;
 import org.apache.sling.models.it.models.implextend.SampleServiceInterface;
 import org.apache.sling.models.it.models.implextend.SimplePropertyModel;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(SlingAnnotationsTestRunner.class)
-public class ImplementsExtendsTest {
+public class ImplementsExtendsIT {
 
-    @TestReference
-    private ResourceResolverFactory rrFactory;
+    @Rule
+    public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "SM_Teleporter");
 
-    @TestReference
     private AdapterManager adapterManager;
 
     private String firstValue;
@@ -59,6 +57,8 @@ public class ImplementsExtendsTest {
     
     @Before
     public void setUp() throws Exception {
+        ResourceResolverFactory rrFactory = teleporter.getService(ResourceResolverFactory.class);
+        adapterManager = teleporter.getService(AdapterManager.class);
         firstValue = RandomStringUtils.randomAlphanumeric(10);
         thirdValue = RandomStringUtils.randomAlphanumeric(10);
 
@@ -71,6 +71,14 @@ public class ImplementsExtendsTest {
         session.save();
 
         resource = resolver.getResource(createdNode.getPath());
+    }
+
+    @After
+    public void after() throws Exception {
+
+        if (resolver != null) {
+            resolver.close();
+        }
     }
     
     /**

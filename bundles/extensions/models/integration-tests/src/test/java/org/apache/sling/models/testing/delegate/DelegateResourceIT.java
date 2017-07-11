@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.it.delegate;
+package org.apache.sling.models.testing.delegate;
 
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -23,24 +23,24 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
-import org.apache.sling.junit.annotations.TestReference;
+import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.models.it.delegate.resource.DelegateBaseModel;
 import org.apache.sling.models.it.delegate.resource.DelegateExtendedModel;
 import org.apache.sling.models.it.delegate.resource.DelegateInterface;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
 
-@RunWith(SlingAnnotationsTestRunner.class)
-public class DelegateResourceTest {
+public class DelegateResourceIT {
 
-    @TestReference
+    @Rule
+    public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "SM_Teleporter");
+
     private ResourceResolverFactory rrFactory;
 
     private final String baseComponentPath = "/content/delegate/baseComponent";
@@ -48,6 +48,7 @@ public class DelegateResourceTest {
 
     @Before
     public void setup() throws LoginException, PersistenceException {
+        rrFactory = teleporter.getService(ResourceResolverFactory.class);
         ResourceResolver adminResolver = null;
         try {
             adminResolver = rrFactory.getAdministrativeResourceResolver(null);

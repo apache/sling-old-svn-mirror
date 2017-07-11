@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.it;
+package org.apache.sling.models.testing;
 
 import static org.junit.Assert.*;
 
@@ -25,21 +25,19 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
-import org.apache.sling.junit.annotations.TestReference;
+import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.models.it.models.ConstructorInjectionTestModel;
 import org.apache.sling.models.it.models.InterfaceInjectionTestModel;
 import org.apache.sling.models.it.models.FieldInjectionTestModel;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(SlingAnnotationsTestRunner.class)
-public class SimpleTest {
+public class SimpleIT {
 
-    @TestReference
-    private ResourceResolverFactory rrFactory;
+    @Rule
+    public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "SM_Teleporter");
     
     private String value;
     private String childValue;
@@ -49,6 +47,7 @@ public class SimpleTest {
     
     @Before
     public void setUp() throws Exception {
+        ResourceResolverFactory rrFactory = teleporter.getService(ResourceResolverFactory.class);
         value = RandomStringUtils.randomAlphanumeric(10);
         childValue = RandomStringUtils.randomAlphanumeric(10);
 

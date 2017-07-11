@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.it.exporter;
+package org.apache.sling.models.testing.exporter;
 
 import java.io.InputStream;
 import java.io.StringReader;
@@ -37,25 +37,23 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.engine.SlingRequestProcessor;
-import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
-import org.apache.sling.junit.annotations.TestReference;
+import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.models.factory.MissingExporterException;
 import org.apache.sling.models.factory.ModelFactory;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(SlingAnnotationsTestRunner.class)
-public class ExporterTest {
+public class ExporterIT {
 
-    @TestReference
+    @Rule
+    public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "SM_Teleporter");
+
     private ResourceResolverFactory rrFactory;
 
-    @TestReference
     private ModelFactory modelFactory;
 
-    @TestReference
     private SlingRequestProcessor slingRequestProcessor;
 
     private final String baseComponentPath = "/content/exp/baseComponent";
@@ -72,6 +70,10 @@ public class ExporterTest {
 
     @Before
     public void setup() throws Exception {
+        rrFactory = teleporter.getService(ResourceResolverFactory.class);
+        modelFactory = teleporter.getService(ModelFactory.class);
+        slingRequestProcessor = teleporter.getService(SlingRequestProcessor.class);
+
         ResourceResolver adminResolver = null;
         try {
             adminResolver = rrFactory.getAdministrativeResourceResolver(null);

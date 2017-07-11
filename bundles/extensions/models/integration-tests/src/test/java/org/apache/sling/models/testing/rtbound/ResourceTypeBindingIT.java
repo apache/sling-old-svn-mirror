@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.it.rtbound;
+package org.apache.sling.models.testing.rtbound;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,21 +26,23 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
-import org.apache.sling.junit.annotations.TestReference;
+import org.apache.sling.junit.rules.TeleporterRule;
 import org.apache.sling.models.factory.ModelFactory;
+import org.apache.sling.models.it.rtbound.BaseComponent;
+import org.apache.sling.models.it.rtbound.ExtendedComponent;
+import org.apache.sling.models.it.rtbound.FromRequestComponent;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(SlingAnnotationsTestRunner.class)
-public class ResourceTypeBindingTest {
+public class ResourceTypeBindingIT {
 
-    @TestReference
+    @Rule
+    public final TeleporterRule teleporter = TeleporterRule.forClass(getClass(), "SM_Teleporter");
+
     private ResourceResolverFactory rrFactory;
 
-    @TestReference
     private ModelFactory modelFactory;
 
     private final String baseComponentPath = "/content/rt/baseComponent";
@@ -51,6 +53,9 @@ public class ResourceTypeBindingTest {
 
     @Before
     public void setup() throws LoginException, PersistenceException {
+        rrFactory = teleporter.getService(ResourceResolverFactory.class);
+        modelFactory = teleporter.getService(ModelFactory.class);
+
         ResourceResolver adminResolver = null;
         try {
             adminResolver = rrFactory.getAdministrativeResourceResolver(null);
