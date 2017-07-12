@@ -100,7 +100,7 @@ public class JcrProviderStateFactory {
                             isLoginAdministrative ? "admin" : "service",
                             bundle.getSymbolicName(),
                             bundle.getBundleId());
-                    throw new LoginException("Repository unavailable"); // TODO: correct ??
+                    throw new LoginException("Repository unavailable");
                 }
 
                 try {
