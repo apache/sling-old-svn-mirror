@@ -82,7 +82,7 @@ public class JcrMixedTest {
     @Test
     public void testFiles() {
         assertFile(fsroot, "folder1/file1a.txt", "file1a");
-        assertFile(fsroot, "folder1/file1b.txt", "file1b");
+        assertFile(fsroot, "folder1/sling:file1b.txt", "file1b");
         assertFile(fsroot, "folder1/folder11/file11a.txt", "file11a");
         assertFile(fsroot, "folder2/content.json", null);
 
@@ -97,7 +97,7 @@ public class JcrMixedTest {
     public void testListChildren() {
         assertThat(root, ResourceMatchers.containsChildren("fs-test"));
         assertThat(fsroot, ResourceMatchers.hasChildren("folder1", "folder2", "folder99"));
-        assertThat(fsroot.getChild("folder1"), ResourceMatchers.hasChildren("file1a.txt", "file1b.txt", "file1c.txt"));
+        assertThat(fsroot.getChild("folder1"), ResourceMatchers.hasChildren("file1a.txt", "sling:file1b.txt", "file1c.txt"));
     }
 
 }
