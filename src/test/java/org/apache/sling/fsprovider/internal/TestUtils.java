@@ -39,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.fsprovider.internal.FileMonitor.ResourceChange;
+import org.apache.sling.fsprovider.internal.mapper.Escape;
 import org.apache.sling.hamcrest.ResourceMatchers;
 import org.apache.sling.testing.mock.osgi.MapUtil;
 import org.apache.sling.testing.mock.osgi.context.AbstractContextPlugin;
@@ -85,8 +86,7 @@ class TestUtils {
         assertEquals("nt:file", file.getResourceType());
         
         assertNull(file.getResourceSuperType());
-        assertEquals(file.getName(), file.adaptTo(File.class).getName());
-        assertTrue(StringUtils.contains(file.adaptTo(URL.class).toString(), file.getName()));
+        assertEquals(file.getName(), Escape.fileToResourceName(file.adaptTo(File.class).getName()));
         
         if (content != null) {
             try {
