@@ -46,14 +46,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
-@SuppressWarnings("deprecation")
 @Adaptable(adaptableClass=Resource.class, adapters={
         @Adapter({Node.class, Map.class, Item.class, ValueMap.class}),
         @Adapter(value=InputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node.")
 })
 class JcrNodeResource extends JcrItemResource<Node> { // this should be package private, see SLING-1414
-
-    private static volatile boolean LOG_DEPRECATED_MAP = true;
 
     /** marker value for the resourceSupertType before trying to evaluate */
     private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
