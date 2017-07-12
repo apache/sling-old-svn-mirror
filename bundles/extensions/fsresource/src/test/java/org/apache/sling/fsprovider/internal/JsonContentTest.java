@@ -89,7 +89,7 @@ public class JsonContentTest {
     @Test
     public void testFiles() {
         assertFile(fsroot, "folder1/file1a.txt", "file1a");
-        assertFile(fsroot, "folder1/file1b.txt", "file1b");
+        assertFile(fsroot, "folder1/sling:file1b.txt", "file1b");
         assertFile(fsroot, "folder1/folder11/file11a.txt", "file11a");
         assertNull(fsroot.getChild("folder2/content.json"));
         assertFile(fsroot, "folder2/content/file2content.txt", "file2content");
@@ -100,7 +100,7 @@ public class JsonContentTest {
     public void testListChildren() {
         assertThat(root, ResourceMatchers.containsChildren("fs-test"));
         assertThat(fsroot, ResourceMatchers.hasChildren("folder1", "folder2"));
-        assertThat(fsroot.getChild("folder1"), ResourceMatchers.hasChildren("folder11", "file1a.txt", "file1b.txt"));
+        assertThat(fsroot.getChild("folder1"), ResourceMatchers.hasChildren("folder11", "file1a.txt", "sling:file1b.txt"));
         assertThat(fsroot.getChild("folder2"), ResourceMatchers.hasChildren("folder21", "content"));
     }
 
@@ -280,6 +280,13 @@ public class JsonContentTest {
         assertNotNull(node);
         assertEquals("/my/super/type", node.getProperty("sling:resourceSuperType").getString());
         assertEquals("en", node.getProperty("jcr:language").getString());
+    }
+
+    @Test
+    public void testContent2() throws RepositoryException {
+        Resource content2 = fsroot.getChild("folder2/content/sling:content2");
+        assertNotNull(content2);
+        assertEquals("app:Page", content2.getResourceType());
     }
 
 }

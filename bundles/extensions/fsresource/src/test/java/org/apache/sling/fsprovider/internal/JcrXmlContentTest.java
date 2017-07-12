@@ -79,7 +79,7 @@ public class JcrXmlContentTest {
     @Test
     public void testFiles() {
         assertFile(fsroot, "folder1/file1a.txt", "file1a");
-        assertFile(fsroot, "folder1/file1b.txt", "file1b");
+        assertFile(fsroot, "folder1/sling:file1b.txt", "file1b");
         assertFile(fsroot, "folder1/folder11/file11a.txt", "file11a");
         assertFile(fsroot, "folder2/content.json", null);
         assertNull(fsroot.getChild("folder3/content.jcr.xml"));
@@ -89,7 +89,7 @@ public class JcrXmlContentTest {
     public void testListChildren() {
         assertThat(root, ResourceMatchers.containsChildren("fs-test"));
         assertThat(fsroot, ResourceMatchers.hasChildren("folder1", "folder2"));
-        assertThat(fsroot.getChild("folder1"), ResourceMatchers.hasChildren("folder11", "file1a.txt", "file1b.txt"));
+        assertThat(fsroot.getChild("folder1"), ResourceMatchers.hasChildren("folder11", "file1a.txt", "sling:file1b.txt"));
         assertThat(fsroot.getChild("folder2"), ResourceMatchers.hasChildren("folder21", "content"));
     }
 
