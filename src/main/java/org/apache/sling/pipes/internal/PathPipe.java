@@ -24,7 +24,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
-import org.apache.sling.query.util.IteratorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +70,7 @@ public class PathPipe extends BasePipe {
         String expression = getExpr();
         try {
             String path = expression.startsWith(SLASH) ? expression : getInput().getPath() + SLASH + expression;
-            output = IteratorUtils.singleElementIterator(ResourceUtil.getOrCreateResource(resolver, path, resourceType, intermediateType, autosave));
+            output = Collections.singleton(ResourceUtil.getOrCreateResource(resolver, path, resourceType, intermediateType, autosave)).iterator();
         } catch (PersistenceException e){
             logger.error ("Not able to create path {}", expression, e);
         }
