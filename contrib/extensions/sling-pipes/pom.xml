@@ -55,7 +55,6 @@
           <instructions>
             <Import-Package>
               org.apache.sling.distribution;resolution:=optional,
-              org.apache.sling.query;version=3.0.0,
               *
             </Import-Package>
             <Embed-Dependency>
