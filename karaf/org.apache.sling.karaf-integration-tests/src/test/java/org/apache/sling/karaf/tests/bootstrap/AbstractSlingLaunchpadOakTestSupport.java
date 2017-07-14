@@ -342,12 +342,6 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
         }
     }
 
-    // TODO: see SLING-4841 why the template method pattern was removed
-    //@Test
-    //public final void checkRepositoryDescriptors() {
-    //    doCheckRepositoryDescriptors();
-    //}
-
     @Test
     public void testSingleValueInputStream() throws RepositoryException {
         Session s = slingRepository.loginAdministrative(null);
