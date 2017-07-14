@@ -25,14 +25,12 @@ import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Inject;
 import javax.jcr.Credentials;
-import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -92,7 +90,6 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
 
     // see org.apache.sling.jcr.repository.it.CommonTests
 
-    private final List<String> toDelete = new LinkedList<String>();
     private final AtomicInteger uniqueNameCounter = new AtomicInteger();
     protected static final Integer TEST_SCALE = Integer.getInteger("test.scale", 1);
 
@@ -167,11 +164,6 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
         protected abstract void exec() throws Exception;
     }
 
-    private <ItemType extends Item> ItemType deleteAfterTests(ItemType it) throws RepositoryException {
-        toDelete.add(it.getPath());
-        return it;
-    }
-
     /** Verify that admin can create and retrieve a node of the specified type.
      * @return the path of the test node that was created.
      */
@@ -199,27 +191,6 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
 
     protected String uniqueName(String hint) {
         return hint + "_" + uniqueNameCounter.incrementAndGet() + "_" + System.currentTimeMillis();
-    }
-
-    @After
-    public void deleteTestItems() throws RepositoryException {
-        if(toDelete.isEmpty()) {
-            return;
-
-        }
-
-        final Session s = slingRepository.loginAdministrative(null);
-        try {
-            for(String path : toDelete) {
-                if(s.itemExists(path)) {
-                    s.getItem(path).remove();
-                }
-            }
-            s.save();
-            toDelete.clear();
-        } finally {
-            s.logout();
-        }
     }
 
     @Test
@@ -320,7 +291,7 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
         try {
             final String path = "XPATH_QUERY_" + System.currentTimeMillis();
             final String absPath = "/" + path;
-            final Node n = deleteAfterTests(s.getRootNode().addNode(path));
+            final Node n = s.getRootNode().addNode(path);
             n.addMixin("mix:title");
             s.save();
 
@@ -347,7 +318,7 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
         Session s = slingRepository.loginAdministrative(null);
         try {
             final String path = getClass().getSimpleName() + System.currentTimeMillis();
-            final Node child = deleteAfterTests(s.getRootNode().addNode(path));
+            final Node child = s.getRootNode().addNode(path);
             final Property p = child.setProperty("foo", "bar");
             s.save();
             assertNotNull(p.getBinary().getStream());
@@ -362,7 +333,7 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
         final Session s = slingRepository.loginAdministrative(null);
         try {
             final String path = getClass().getSimpleName() + System.currentTimeMillis();
-            final Node child = deleteAfterTests(s.getRootNode().addNode(path));
+            final Node child = s.getRootNode().addNode(path);
             final Property p = child.setProperty("foo", new String[] { "bar", "wii " });
             s.save();
             try {
@@ -441,7 +412,6 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
             counter = new JcrEventsCounter();
 
             final Node n = s.getRootNode().addNode(path.substring(1), "sling:MessageEntry");
-            toDelete.add(n.getPath());
             n.setProperty("sling:key", "foo");
             n.setProperty("sling:message", "bar");
             s.save();
