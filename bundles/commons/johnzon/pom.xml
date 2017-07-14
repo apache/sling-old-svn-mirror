@@ -39,7 +39,6 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
-                    <skip>true</skip>
                     <instructions>
                         <Export-Package>
                             javax.json.*;-split-package:=first
