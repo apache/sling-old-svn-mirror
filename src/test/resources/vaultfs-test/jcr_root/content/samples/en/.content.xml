@@ -188,4 +188,8 @@
   </jcr:content>
   <tools />
   <conference />
+  <extra jcr:primaryType="nt:unstructured">
+    <extracontent/>
+    <binaryfile.xml/>
+  </extra>
 </jcr:root>
