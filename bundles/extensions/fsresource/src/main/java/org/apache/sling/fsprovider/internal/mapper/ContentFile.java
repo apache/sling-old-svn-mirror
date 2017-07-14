@@ -26,6 +26,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.fsprovider.internal.mapper.valuemap.ValueMapUtil;
 import org.apache.sling.fsprovider.internal.parser.ContentElement;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
+import org.apache.sling.jcr.contentparser.ContentType;
 
 /**
  * Reference to a file that contains a content fragment (e.g. JSON, JCR XML).
@@ -36,6 +37,7 @@ public final class ContentFile {
     private final String path;
     private final String subPath;
     private final ContentFileCache contentFileCache;
+    private final ContentType contentType;
     private boolean contentInitialized;
     private ContentElement content;
     private ValueMap valueMap;
@@ -47,10 +49,22 @@ public final class ContentFile {
      * @param contentFileCache Content file cache
      */
     public ContentFile(File file, String path, String subPath, ContentFileCache contentFileCache) {
+        this(file, path, subPath, contentFileCache, null);
+    }
+
+    /**
+     * @param file File with content fragment
+     * @param path Root path of the content file
+     * @param subPath Relative path addressing content fragment inside file
+     * @param contentFileCache Content file cache
+     * @param contentType Content type
+     */
+    public ContentFile(File file, String path, String subPath, ContentFileCache contentFileCache, ContentType contentType) {
         this.file = file;
         this.path = path;
         this.subPath = subPath;
         this.contentFileCache = contentFileCache;
+        this.contentType = contentType;
     }
 
     /**
@@ -80,7 +94,7 @@ public final class ContentFile {
      */
     public ContentElement getContent() {
         if (!contentInitialized) {
-            ContentElement rootContent = contentFileCache.get(path, file);
+            ContentElement rootContent = contentFileCache.get(path, file, contentType);
             if (subPath == null) {
                 content = rootContent;
             }
