@@ -21,15 +21,15 @@
 
     <artifactId>org.apache.sling.commons.johnzon</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
 
     <name>Apache Johnzon Wrapper Library</name>
     <description>Apache Johnzon powered javax.json library</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/johnzon</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/johnzon</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/johnzon</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.johnzon-1.0.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.commons.johnzon-1.0.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.commons.johnzon-1.0.2</url>
     </scm>
 
     <build>
