@@ -75,15 +75,38 @@ class ContentFileParserUtil {
         if (!file.exists()) {
             return null;
         }
+        if (StringUtils.endsWith(file.getName(), JSON_SUFFIX)) {
+            return parse(file, ContentType.JSON);
+        }
+        else if (StringUtils.equals(file.getName(), DOT_CONTENT_XML) || StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
+            return parse(file, ContentType.JCR_XML);
+        }
+        else if (StringUtils.endsWith(file.getName(), XML_SUFFIX) && !StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
+            return parse(file, ContentType.XML);
+        }
+        return null;
+    }
+    
+    /**
+     * Parse content from file.
+     * @param file File. Type is detected automatically.
+     * @param contentType Content type
+     * @return Content or null if content could not be parsed.
+     */
+    public static ContentElement parse(File file, ContentType contentType) {
+        if (!file.exists()) {
+            return null;
+        }
         try {
-            if (StringUtils.endsWith(file.getName(), JSON_SUFFIX)) {
+            switch (contentType) {
+            case JSON:
                 return parse(JSON_PARSER, file);
-            }
-            else if (StringUtils.equals(file.getName(), DOT_CONTENT_XML) || StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
-                return parse(JCR_XML_PARSER, file);
-            }
-            else if (StringUtils.endsWith(file.getName(), XML_SUFFIX) && !StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
+            case XML:
                 return parse(XML_PARSER, file);
+            case JCR_XML:
+                return parse(JCR_XML_PARSER, file);
+               default:
+                    throw new IllegalArgumentException("Unexpected content type: " + contentType);
             }
         }
         catch (Throwable ex) {
