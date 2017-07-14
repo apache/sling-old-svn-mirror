@@ -284,10 +284,6 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
                 <!-- SLING-5414 Launchpad/Provisioning Model only -->
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/provisioning/EmbeddedModelTest.*</exclude>
-                <!-- TODO AuthenticationResponseCodeTest.testValidatingCorrectFormCredentials:80 » Socket -->
-                <!-- TODO AuthenticationResponseCodeTest.testValidatingIncorrectCookie:118->assertXReason:245 » IO -->
-                <!-- TODO AuthenticationResponseCodeTest.testValidatingIncorrectHttpBasicCredentials:134->assertXReason:245 » IO -->
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
