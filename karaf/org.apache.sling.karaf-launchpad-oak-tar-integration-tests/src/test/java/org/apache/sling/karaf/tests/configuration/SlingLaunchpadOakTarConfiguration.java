@@ -86,7 +86,8 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             ),
             // bundle for test (contains repoinit.txt)
             testBundle(),
-            // misc (legacy, snapshots, ...) stuff
+            // legacy
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.json").versionAsInProject(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").versionAsInProject(),
             // test support
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.core").versionAsInProject(),
@@ -96,9 +97,7 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.test-fragment").versionAsInProject(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.tools").versionAsInProject(),
             mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpcore-osgi").versionAsInProject(),
-            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpclient-osgi").versionAsInProject(),
-            // TODO remove (required by org.apache.sling.junit.core)
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.json").version("2.0.20")
+            mavenBundle().groupId("org.apache.httpcomponents").artifactId("httpclient-osgi").versionAsInProject()
         );
     }
 
