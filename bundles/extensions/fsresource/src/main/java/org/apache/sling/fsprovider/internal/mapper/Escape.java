@@ -79,7 +79,7 @@ public final class Escape {
     /**
      * Converts resource name to file name.
      * Allows all characters, but URL-encodes characters that are in the list of {@link #RESERVED_CHARS}.
-     * @param name Resource name or path
+     * @param path Resource name or path
      * @return File name or path
      */
     public static String resourceToFileName(String path) {
