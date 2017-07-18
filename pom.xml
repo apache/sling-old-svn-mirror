@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.resourceresolver</artifactId>
-    <version>1.5.27-SNAPSHOT</version>
+    <version>1.5.28</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Resource Resolver</name>
@@ -37,13 +37,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/resourceresolver
+            scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourceresolver-1.5.28
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/resourceresolver
+            scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourceresolver-1.5.28
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/sling/trunk/bundles/resourceresolver
+            http://svn.apache.org/viewvc/sling/tags/org.apache.sling.resourceresolver-1.5.28
         </url>
     </scm>
 
@@ -114,7 +114,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.serviceusermapper</artifactId>
-            <version>1.3.3-SNAPSHOT</version>
+            <version>1.3.4</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
