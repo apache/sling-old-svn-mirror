@@ -85,17 +85,18 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
     private final BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
 
-    private final ScriptEngineFactory scriptEngineFactory;
+    private final SlingModelsScriptEngineFactory scriptEngineFactory;
     
     public ModelPackageBundleListener(BundleContext bundleContext,
                                       ModelAdapterFactory factory,
                                       AdapterImplementations adapterImplementations,
-                                      BindingsValuesProvidersByContext bindingsValuesProvidersByContext) {
+                                      BindingsValuesProvidersByContext bindingsValuesProvidersByContext,
+                                      SlingModelsScriptEngineFactory scriptEngineFactory) {
         this.bundleContext = bundleContext;
         this.factory = factory;
         this.adapterImplementations = adapterImplementations;
         this.bindingsValuesProvidersByContext = bindingsValuesProvidersByContext;
-        this.scriptEngineFactory = new ExporterScriptEngineFactory(bundleContext.getBundle());
+        this.scriptEngineFactory = scriptEngineFactory;
         this.bundleTracker = new BundleTracker(bundleContext, Bundle.ACTIVE, this);
         this.bundleTracker.open();
     }
