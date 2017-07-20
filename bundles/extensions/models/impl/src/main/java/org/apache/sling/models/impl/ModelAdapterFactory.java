@@ -56,6 +56,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.osgi.RankedServices;
@@ -204,6 +205,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     @Reference
     private BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
 
+    @Reference
+    private AdapterManager adapterManager;
+
     ModelPackageBundleListener listener;
 
     final AdapterImplementations adapterImplementations = new AdapterImplementations();
@@ -216,6 +220,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private ThreadLocal<ThreadInvocationCounter> invocationCountThreadLocal;
 
     private Map<Object, Map<Class, Object>> adapterCache;
+
+    private SlingModelsScriptEngineFactory scriptEngineFactory;
 
     // use a smaller initial capacity than the default as we expect a relatively small number of
     // adapters per adaptable
@@ -1022,7 +1028,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         this.jobRegistration = bundleContext.registerService(Runnable.class.getName(), this, properties);
 
-        this.listener = new ModelPackageBundleListener(ctx.getBundleContext(), this, this.adapterImplementations, bindingsValuesProvidersByContext);
+        this.scriptEngineFactory = new SlingModelsScriptEngineFactory(bundleContext.getBundle());
+        this.listener = new ModelPackageBundleListener(ctx.getBundleContext(), this, this.adapterImplementations, bindingsValuesProvidersByContext, scriptEngineFactory);
 
         Hashtable<Object, Object> printerProps = new Hashtable<Object, Object>();
         printerProps.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
@@ -1245,6 +1252,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         } else {
             throw result.getThrowable();
         }
+    }
+
+    @Override
+    public <T> T getModelFromWrappedRequest(@Nonnull SlingHttpServletRequest request, @Nonnull Resource resource, @Nonnull Class<T> targetClass) {
+        return new ResourceOverridingRequestWrapper(request, resource, adapterManager,
+                scriptEngineFactory, bindingsValuesProvidersByContext).adaptTo(targetClass);
     }
 
 }
