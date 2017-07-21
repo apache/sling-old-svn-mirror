@@ -198,6 +198,12 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     )
     private static final String MONITORING_QUEUE_SIZE = "monitoringQueueSize";
 
+    @Property(cardinality = 100,
+              label = "Paths mapping",
+              description = "List of paths that require be mapped." +
+              "The format is {sourcePattern}={destinationPattern}, e.g. /etc/(.*)=/var/$1/some or simply /data=/bak")
+    private static final String PATHS_MAPPING = "pathsMapping";
+
     @Reference
     private Packaging packaging;
 
@@ -242,8 +248,12 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
             aclHandling = AccessControlHandling.valueOf(aclHandlingString.trim());
         }
 
+        // check the mount path patterns, if any
+        Map<String, String> pathsMapping = PropertiesUtil.toMap(config.get(PATHS_MAPPING), new String[0]);
+        pathsMapping = SettingsUtils.removeEmptyEntries(pathsMapping);
+
         DistributionContentSerializer contentSerializer = new FileVaultContentSerializer(name, packaging, importMode, aclHandling,
-                packageRoots, packageNodeFilters, packagePropertyFilters, useBinaryReferences, autosaveThreshold);
+                packageRoots, packageNodeFilters, packagePropertyFilters, useBinaryReferences, autosaveThreshold, pathsMapping);
 
         DistributionPackageBuilder wrapped;
         if ("filevlt".equals(type)) {

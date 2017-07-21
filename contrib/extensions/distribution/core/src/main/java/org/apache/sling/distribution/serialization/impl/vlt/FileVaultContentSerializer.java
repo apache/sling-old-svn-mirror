@@ -18,16 +18,21 @@
  */
 package org.apache.sling.distribution.serialization.impl.vlt;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
+import org.apache.jackrabbit.vault.fs.config.MetaInf;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.Archive;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
@@ -55,6 +60,15 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
     private static final String VERSION = "0.0.1";
     private static final String PACKAGE_GROUP = "sling/distribution";
 
+    /**
+     * The custom <code>Path-Mapping</code> property.
+     */
+    private static final String PATH_MAPPING_PROPERTY = "Path-Mapping";
+
+    private static final String MAPPING_SEPARATOR = "=";
+
+    private static final String MAPPING_DELIMITER = ";";
+
     private final Packaging packaging;
     private final ImportMode importMode;
     private final AccessControlHandling aclHandling;
@@ -64,9 +78,11 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
     private final TreeMap<String, List<String>> propertyFilters;
     private final boolean useBinaryReferences;
     private final String name;
+    private final Map<String, String> exportPathMapping;
 
     public FileVaultContentSerializer(String name, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots,
-                                      String[] nodeFilters, String[] propertyFilters, boolean useBinaryReferences, int autosaveThreshold) {
+                                      String[] nodeFilters, String[] propertyFilters, boolean useBinaryReferences, int autosaveThreshold,
+                                      Map<String, String> exportPathMapping) {
         this.name = name;
         this.packaging = packaging;
         this.importMode = importMode;
@@ -76,6 +92,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
         this.nodeFilters = VltUtils.parseFilters(nodeFilters);
         this.propertyFilters = VltUtils.parseFilters(propertyFilters);
         this.useBinaryReferences = useBinaryReferences;
+        this.exportPathMapping = exportPathMapping;
     }
 
     @Override
@@ -87,7 +104,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
             String packageName = TYPE + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
 
             WorkspaceFilter filter = VltUtils.createFilter(exportOptions.getRequest(), nodeFilters, propertyFilters);
-            ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION, useBinaryReferences);
+            ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION, useBinaryReferences, exportPathMapping);
 
             log.debug("assembling package {} user {}", packageGroup + '/' + packageName + "-" + VERSION, resourceResolver.getUserID());
 
@@ -110,6 +127,29 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
             Importer importer = new Importer(importOptions);
             archive = new ZipStreamArchive(inputStream);
             archive.open(false);
+
+            // retrieve the mapping
+            MetaInf metaInf = archive.getMetaInf();
+            if (metaInf != null) {
+                Properties metaInfProperties = metaInf.getProperties();
+                if (metaInfProperties != null) {
+                    String pathsMappingProperty = metaInfProperties.getProperty(PATH_MAPPING_PROPERTY);
+
+                    if (pathsMappingProperty != null && !pathsMappingProperty.isEmpty()) {
+                        RegexpPathMapping pathMapping = new RegexpPathMapping();
+
+                        StringTokenizer pathsMappingTokenizer = new StringTokenizer(pathsMappingProperty, MAPPING_DELIMITER);
+                        while (pathsMappingTokenizer.hasMoreTokens()) {
+                            String[] pathMappingHeader = pathsMappingTokenizer.nextToken().split(MAPPING_SEPARATOR);
+                            pathMapping.addMapping(pathMappingHeader[0], pathMappingHeader[1]);
+                        }
+
+                        importOptions.setPathMapping(pathMapping);
+                    }
+                }
+            }
+
+            // now import the content
             importer.run(archive, session.getRootNode());
             if (importer.hasErrors() && importOptions.isStrict()) {
                 throw new PackageException("Errors during import.");

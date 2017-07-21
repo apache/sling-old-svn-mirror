@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
@@ -81,7 +82,7 @@ public class FileVaultContentSerializerTest {
         boolean useReferences = false;
         int threshold = 1024;
         FileVaultContentSerializer fileVaultContentSerializer = new FileVaultContentSerializer("vlt", packaging, importMode,
-                aclHandling, packageRoots, nodeFilters, propertyFilters, useReferences, threshold);
+                aclHandling, packageRoots, nodeFilters, propertyFilters, useReferences, threshold, new HashMap<String, String>());
 
         ResourceResolver sessionResolver = mock(ResourceResolver.class);
         Session session = mock(Session.class);
@@ -123,7 +124,7 @@ public class FileVaultContentSerializerTest {
         boolean useReferences = false;
         int thershold = 1024;
         FileVaultContentSerializer fileVaultContentSerializer = new FileVaultContentSerializer("vlt", packaging, importMode,
-                aclHandling, packageRoots, nodeFilters, propertyFilters, useReferences, thershold);
+                aclHandling, packageRoots, nodeFilters, propertyFilters, useReferences, thershold, new HashMap<String, String>());
 
         File file = new File(getClass().getResource("/vlt/dp.vlt").getFile());
 
