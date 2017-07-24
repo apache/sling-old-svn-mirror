@@ -23,9 +23,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.sling.commons.metrics.Counter;
+import org.apache.sling.commons.metrics.MetricsService;
+import org.apache.sling.commons.metrics.Timer;
 import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.quartz.Job;
@@ -42,6 +46,8 @@ import org.slf4j.LoggerFactory;
  */
 public class QuartzJobExecutor implements Job {
 
+    static final int DEFAULT_SLOW_JOB_THRESHOLD_MILLIS = 1000;
+    
     /** Is discovery available? */
     public static final AtomicBoolean DISCOVERY_AVAILABLE = new AtomicBoolean(false);
 
@@ -66,14 +72,90 @@ public class QuartzJobExecutor implements Job {
         public final String providedName;
         public final String name;
         public final String[] runOn;
+        
+        // SLING-5965 : piggybacking metrics field onto JobDesc
+        // to avoid having to create yet another object per job execution.
+        // creating such an additional object would require a bit more JVM-GC.
+        // but to keep JobDesc close to what it was originally intended for
+        // ('describing a job') keeping everything additional private
+        private final MetricsService metricsService;
+        private final Counter runningJobsCounter;
+        private final Counter overallRunningJobsCounter;
+        private final Timer jobDurationTimer;
+        // keeping a copy of the slowThresholdSecs to avoid having NPE when job is finished due to reconfig
+        private final long slowThresholdMillis;
+        private long jobStart = -1;
 
         public JobDesc(final JobDataMap data) {
             this.job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
             this.name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
             this.providedName = (String)data.get(QuartzScheduler.DATA_MAP_PROVIDED_NAME);
             this.runOn = (String[])data.get(QuartzScheduler.DATA_MAP_RUN_ON);
+            
+            // initialize metrics fields
+            final QuartzScheduler localQuartzScheduler = (QuartzScheduler) data.get(QuartzScheduler.DATA_MAP_QUARTZ_SCHEDULER);
+            MetricsService localMetricsService = null;
+            ConfigHolder localConfigHolder = null;
+            if (localQuartzScheduler != null) {
+                // shouldn't be null but for paranoia
+                localMetricsService = localQuartzScheduler.metricsService;
+                localConfigHolder = localQuartzScheduler.configHolder;
+            }
+            // localMetricsService might be null during deactivation
+            metricsService = localMetricsService == null ? MetricsService.NOOP : localMetricsService;
+            // mainConfiguration might be null during deactivation
+            slowThresholdMillis = localConfigHolder != null ? localConfigHolder.slowThresholdMillis() : DEFAULT_SLOW_JOB_THRESHOLD_MILLIS;
+            
+            String metricsSuffix = "";
+            final String filterName = MetricsHelper.deriveFilterName(localConfigHolder, job);
+            if (filterName != null) {
+                metricsSuffix = ".filter." + filterName;
+            } else {
+                // no filter matches -> try (custom) thread pool
+                final String threadPoolName = data.getString(QuartzScheduler.DATA_MAP_THREAD_POOL_NAME);
+                if (threadPoolName != null) {
+                    // 'tp' stands for thread pool
+                    metricsSuffix = ".tp." + threadPoolName;
+                }
+            }
+            
+            runningJobsCounter = metricsService.counter(QuartzScheduler.METRICS_NAME_RUNNING_JOBS + metricsSuffix);
+            jobDurationTimer = metricsService.timer(QuartzScheduler.METRICS_NAME_TIMER + metricsSuffix);
+            overallRunningJobsCounter = metricsSuffix.length() == 0 ? null
+                    : metricsService.counter(QuartzScheduler.METRICS_NAME_RUNNING_JOBS);
+        }
+        
+        private void measureJobStart() {
+            // measure job start
+            if (overallRunningJobsCounter != null) overallRunningJobsCounter.increment();
+            runningJobsCounter.increment();
+            jobStart = System.currentTimeMillis();
         }
 
+        private void measureJobEnd() {
+            if (jobStart == -1) {
+                // then measureJobStart was never invoked - hence not measuring anything
+                return;
+            }
+            
+            if (overallRunningJobsCounter != null) overallRunningJobsCounter.decrement();
+            runningJobsCounter.decrement();
+            final long elapsedMillis = System.currentTimeMillis() - jobStart;
+            // depending on slowness either measure via a separate 'slow' or the normal timer
+            // (and this triage can only be done by manual measuring)
+            if (slowThresholdMillis > 0 && elapsedMillis > slowThresholdMillis) {
+                // if the job was slow we (only) add it to a separate '.slow.' timer
+                // the idea being to not "pollute" the normal timer which would
+                // get quite skewed metrics otherwise with slow jobs around
+                final String slowTimerName = QuartzScheduler.METRICS_NAME_TIMER + ".slow."
+                        + MetricsHelper.asMetricsSuffix(this.name);
+                metricsService.timer(slowTimerName).update(elapsedMillis, TimeUnit.MILLISECONDS);
+            } else {
+                // if the job was not slow, then measure it normally
+                jobDurationTimer.update(elapsedMillis, TimeUnit.MILLISECONDS);
+            }
+        }
+        
         public boolean isKnownJob() {
             return this.job != null && this.name != null;
         }
@@ -230,6 +312,7 @@ public class QuartzJobExecutor implements Job {
             return;
         }
 
+        desc.measureJobStart();
         String origThreadName = Thread.currentThread().getName();
         try {
             Thread.currentThread().setName(origThreadName + "-" + desc.name);
@@ -255,6 +338,7 @@ public class QuartzJobExecutor implements Job {
             logger.error("Exception during job execution of " + desc + " : " + t.getMessage(), t);
         } finally {
             Thread.currentThread().setName(origThreadName);
+            desc.measureJobEnd();
         }
     }
 

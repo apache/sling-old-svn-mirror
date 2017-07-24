@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -94,12 +95,28 @@ public class QuartzScheduler implements BundleListener {
     /** Map key for the bundle information (Long). */
     static final String DATA_MAP_SERVICE_ID = "QuartzJobScheduler.serviceId";
 
+    /** Map key for the quartz scheduler */
+    static final String DATA_MAP_QUARTZ_SCHEDULER = "QuartzJobScheduler.QuartzScheduler";
+    
+    static final String DATA_MAP_THREAD_POOL_NAME = "QuartzJobScheduler.threadPoolName";
+
+    static final String METRICS_NAME_RUNNING_JOBS = "commons.scheduler.running.jobs";
+
+    static final String METRICS_NAME_TIMER = "commons.scheduler.timer";
+
+    static final String METRICS_NAME_OLDEST_RUNNING_JOB_MILLIS = "commons.scheduler.oldest.running.job.millis";
+
     /** Default logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference
     private ThreadPoolManager threadPoolManager;
 
+    @Reference 
+    MetricsService metricsService;
+    
+    ConfigHolder configHolder;
+    
     /** The quartz schedulers. */
     private final Map<String, SchedulerProxy> schedulers = new HashMap<>();
 
@@ -128,6 +145,8 @@ public class QuartzScheduler implements BundleListener {
         }
         ctx.addBundleListener(this);
 
+        this.configHolder = new ConfigHolder(configuration);
+        
         this.active = true;
     }
 
@@ -254,6 +273,8 @@ public class QuartzScheduler implements BundleListener {
         }
         jobDataMap.put(DATA_MAP_NAME, jobName);
         jobDataMap.put(DATA_MAP_LOGGER, this.logger);
+        jobDataMap.put(DATA_MAP_QUARTZ_SCHEDULER, this);
+        jobDataMap.put(DATA_MAP_THREAD_POOL_NAME, getThreadPoolName(options.threadPoolName));
         if ( bundleId != null ) {
             jobDataMap.put(DATA_MAP_BUNDLE_ID, bundleId);
         }
