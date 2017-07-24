@@ -267,7 +267,7 @@ public class MapEntries implements
 
         try {
             this.refreshResolverIfNecessary(resolverRefreshed);
-            final Resource resource = resolver.getResource(path);
+            final Resource resource = this.resolver != null ? resolver.getResource(path) : null;
             if (resource != null) {
                 boolean changed = doAddVanity(resource);
                 if (this.factory.isOptimizeAliasResolutionEnabled() && resource.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS)) {
@@ -289,7 +289,7 @@ public class MapEntries implements
 
             try {
                 this.refreshResolverIfNecessary(resolverRefreshed);
-                final Resource resource = resolver.getResource(path);
+                final Resource resource = this.resolver != null ? resolver.getResource(path) : null;
                 if (resource != null) {
                     boolean changed = false;
                     if ( isValidVanityPath ) {
@@ -395,7 +395,7 @@ public class MapEntries implements
                     this.aliasMap.remove(contentPath);
                 }
 
-                Resource containingResource = this.resolver.getResource(resourcePath);
+                Resource containingResource = this.resolver != null ? this.resolver.getResource(resourcePath) : null;
 
                 if (containingResource != null) {
                     if (containingResource.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS)) {
@@ -684,8 +684,10 @@ public class MapEntries implements
                 this.initializing.lock();
 
                 try {
-                    refreshResolverIfNecessary(resolverRefreshed);
-                    doUpdateConfiguration();
+                    if (this.resolver != null) {
+                        refreshResolverIfNecessary(resolverRefreshed);
+                        doUpdateConfiguration();
+                    }
                 } finally {
                     this.initializing.unlock();
                 }
