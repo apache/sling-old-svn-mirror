@@ -43,4 +43,22 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
             description="If a job is to be run on a single instance only, disable distribution and always run on leader."
         )
     boolean scheduler_useleaderforsingle() default false;
+
+    @AttributeDefinition(
+            name = "Metrics Filters",
+            description="Whether the metrics (sling:commons.scheduler.*) should be grouped by filters. "
+                    + "If configured this grouping happens before any thread pool grouping. "
+                    + "Filter format: filter1=ParticularJob"
+            )
+    String[] metrics_filters();
+    
+    @AttributeDefinition(
+            name = "Slow Job Threshold (millis)",
+            description="duration in millis after which a job is considered slow."
+                    + " Slow jobs are detected while measuring oldest running jobs (via a Gauge) and when the job is finished."
+                    + " In the former case a temporary gauge is added with the job name as the suffix."
+                    + " In the latter case a permanent timer is added, also with the job name as the suffix."
+                    + " 0 or a negative value disables this feature."
+        )
+    int slowThresholdMillis() default QuartzJobExecutor.DEFAULT_SLOW_JOB_THRESHOLD_MILLIS;
 }
