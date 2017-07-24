@@ -79,15 +79,19 @@ For example a "forward" agent can be defined specifying
 The sample package contains endpoints for exposing configuration for distribution agents.
 The _DistributionConfigurationResourceProviderFactory_ is used to expose agent configurations as resources.
 
+```
   {
       "jcr:primaryType": "sling:OsgiConfig",
       "provider.roots": [ "/libs/sling/distribution/settings/agents" ],
       "kind" : "agent"
   }
+```
 
 Distribution agents' configurations can be retrieved via `HTTP GET`:
 
-- `http -a admin:admin -v -f GET http://localhost:8080/libs/sling/distribution/settings/agents/{agentName}`
+```
+$ curl -u admin:admin http://localhost:8080/libs/sling/distribution/settings/agents/{agentName}.json
+```
 
 ### Distribution agents services
 
@@ -97,12 +101,13 @@ The _DistributionConfigurationResourceProviderFactory_ allows one to configure H
 The sample package contains endpoints for exposing distribution agents.
 The _DistributionServiceResourceProviderFactory_ is used to expose agent services as resources.
 
+```
  {
      "jcr:primaryType": "sling:OsgiConfig",
      "provider.roots": [ "/libs/sling/distribution/services/agents" ],
      "kind" : "agent"
  }
-
+```
 
 Distribution agents can be triggered by sending `HTTP POST` requests to
 
@@ -148,11 +153,17 @@ In order to configure the "forward" distribution workflow, that transfers conten
 
 Send `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/publish` with parameters `action=ADD` and `path=/content`
 
-- create/update content
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=ADD path=/content/sample1```
-- delete content
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=DELETE path=/content/sample1```
+#### Create/update content
 
+```
+$ curl -v -u admin:admin http://localhost:8080/libs/sling/distribution/services/agents/publish -d 'action=ADD' -d 'path=/content/sample1'
+```
+
+#### Delete content
+
+```
+$ curl -v -u admin:admin http://localhost:8080/libs/sling/distribution/services/agents/publish -d 'action= DELETE' -d 'path=/content/sample1'
+```
 
 ### Reverse distribution
 
@@ -164,10 +175,12 @@ In order to configure the "reverse" distribution workflow, that transfers conten
 Send `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/publish-reverse` with parameters `action=PULL`
 
 
-- create/update content
+#### Create/update content
 
-```http -a admin:admin -v -f POST http://localhost:8081/libs/sling/distribution/services/agents/reverse action=ADD path=/content/sample1```
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish-reverse action=PULL```
+```
+$ curl -u admin:admin http://localhost:8081/libs/sling/distribution/services/agents/reverse -d 'action=ADD' -d 'path=/content/sample1'
+$ curl -u admin:admin http://localhost:8080/libs/sling/distribution/services/agents/publish-reverse -d 'action=PULL'
+```
 
 ### Sync distribution
 
@@ -180,12 +193,12 @@ In order to configure the "sync" distribution workflow, that transfers content f
 Send `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/pubsync` with parameters `action=PULL`
 
 
-- create/update content
+#### Create/update content
 
-```http -a admin:admin -v -f POST http://localhost:8081/libs/sling/distribution/services/agents/reverse-pubsync action=ADD path=/content/sample1```
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/pubsync action=PULL```
-
-
+```
+$ curl -u admin:admin http://localhost:8081/libs/sling/distribution/services/agents/reverse-pubsync -d 'action=ADD' -d 'path=/content/sample1'
+$ curl -u admin:admin http://localhost:8080/libs/sling/distribution/services/agents/pubsync -d 'action=PULL'
+```
 
 ### Installation
 
