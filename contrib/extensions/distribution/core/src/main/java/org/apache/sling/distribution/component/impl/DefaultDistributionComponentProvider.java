@@ -32,12 +32,14 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
+import org.apache.sling.distribution.agent.impl.DistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.packaging.DistributionPackageBuilder;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.trigger.DistributionTrigger;
 
 /**
  * {@link DistributionComponentProvider} OSGi service.
@@ -51,6 +53,8 @@ import org.apache.sling.distribution.transport.DistributionTransportSecretProvid
         @Reference(name = "distributionQueueProvider", referenceInterface = DistributionQueueProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionQueueDistributionStrategy", referenceInterface = DistributionQueueDispatchingStrategy.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionTransportSecretProvider", referenceInterface = DistributionTransportSecretProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+        @Reference(name = "distributionTrigger", referenceInterface = DistributionTrigger.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+        @Reference(name = "distributionRequestAuthorizationStrategy", referenceInterface = DistributionRequestAuthorizationStrategy.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionPackageBuilder", referenceInterface = DistributionPackageBuilder.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
 @Service(DistributionComponentProvider.class)
@@ -71,6 +75,10 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
     private final Map<String, DistributionComponent<DistributionPackageExporter>> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageExporter>>();
 
     private final Map<String, DistributionComponent<DistributionPackageBuilder>> distributionPackageBuilderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageBuilder>>();
+
+    private final Map<String, DistributionComponent<DistributionTrigger>> distributionTriggerMap = new ConcurrentHashMap<String, DistributionComponent<DistributionTrigger>>();
+
+    private final Map<String, DistributionComponent<DistributionRequestAuthorizationStrategy>> distributionRequestAuthorizationStrategy = new ConcurrentHashMap<String, DistributionComponent<DistributionRequestAuthorizationStrategy>>();
 
     public DistributionComponent<?> getComponent(DistributionComponentKind kind, String componentName) {
         Map<String, DistributionComponent<?>> componentMap = getComponentMap(kind.asClass());
@@ -114,9 +122,13 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
             return (Map) distributionTransportSecretProviderMap;
         } else if (type.isAssignableFrom(DistributionPackageBuilder.class)) {
             return (Map) distributionPackageBuilderMap;
+        } else if (type.isAssignableFrom(DistributionTrigger.class)) {
+            return (Map) distributionTriggerMap;
+        } else if (type.isAssignableFrom(DistributionRequestAuthorizationStrategy.class)) {
+            return (Map) distributionRequestAuthorizationStrategy;
         }
 
-        return null;
+        throw new IllegalArgumentException(String.format("Components of type: %s are not supported", type));
     }
 
     // (un)binding methods
@@ -176,6 +188,23 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
     public void unbindDistributionPackageBuilder(DistributionPackageBuilder distributionPackageBuilder, Map<String, Object> config) {
         remove(DistributionPackageBuilder.class, distributionPackageBuilder, config);
     }
+
+    public void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
+        put(DistributionTrigger.class, distributionTrigger, config);
+    }
+
+    public void unbindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
+        remove(DistributionTrigger.class, distributionTrigger, config);
+    }
+
+    public void bindDistributionRequestAuthorizationStrategy(DistributionRequestAuthorizationStrategy distributionRequestAuthorizationStrategy, Map<String, Object> config) {
+        put(DistributionRequestAuthorizationStrategy.class, distributionRequestAuthorizationStrategy, config);
+    }
+
+    public void unbindDistributionRequestAuthorizationStrategy(DistributionRequestAuthorizationStrategy distributionRequestAuthorizationStrategy, Map<String, Object> config) {
+        remove(DistributionRequestAuthorizationStrategy.class, distributionRequestAuthorizationStrategy, config);
+    }
+
 
     // internals
 
