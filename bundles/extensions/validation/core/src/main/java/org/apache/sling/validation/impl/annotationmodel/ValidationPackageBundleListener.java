@@ -54,15 +54,15 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
 
     private final BundleTracker bundleTracker;
 
-    private final ValidationModelRegister validationModelRegister;
+    private final ValidationModelRegistry validationModelRegistry;
 
     /** Instantiates a new Validation package bundle listener.
      *
      * @param bundleContext the bundle context
      * @param validationModelImplementation the validation model implementation */
     public ValidationPackageBundleListener(BundleContext bundleContext,
-            ValidationModelRegister validationModelImplementation) {
-        this.validationModelRegister = validationModelImplementation;
+            ValidationModelRegistry validationModelImplementation) {
+        this.validationModelRegistry = validationModelImplementation;
         this.bundleTracker = new BundleTracker(bundleContext, Bundle.ACTIVE, this);
         this.bundleTracker.open();
     }
@@ -76,7 +76,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
 
     @Override
     public void removedBundle(Bundle bundle, BundleEvent event, Object object) {
-        validationModelRegister.removeValidationModels(bundle);
+        validationModelRegistry.removeValidationModels(bundle);
 
     }
 
@@ -89,7 +89,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
         this.bundleTracker.close();
     }
 
-    /** Extracts all the class names which are set in bundle's package headers or class headers properties.
+    /** Extracts all the class names which are set in bundle's package headers or class headers arguments.
      * 
      * @param bundle from which class names should be extracted
      * @return Set of class names */
@@ -117,7 +117,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
             }
 
             List<ValidationModel> validationModels = new AnnotationValidationModelBuilder().build(implType);
-            validationModelRegister.registerValidationModelsByBundle(bundle, validationModels);
+            validationModelRegistry.registerValidationModelsByBundle(bundle, validationModels);
 
         } catch (ClassNotFoundException e) {
             LOG.warn("Unable to load class", e);
@@ -126,7 +126,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
 
     /** Extracts Class names from Class Header parameter.
      * 
-     * @param headers properties, which contain Classes Header
+     * @param headers arguments, which contain Classes Header
      * @return Set of class names */
     private HashSet<String> getClassHeaderClassNames(@Nonnull Dictionary<String, String> headers) {
         return Optional.ofNullable(StringUtils.deleteWhitespace(headers.get(CLASSES_HEADER)))

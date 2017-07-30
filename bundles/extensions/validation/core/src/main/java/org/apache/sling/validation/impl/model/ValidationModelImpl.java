@@ -39,7 +39,7 @@ public class ValidationModelImpl implements ValidationModel {
 
     /**
      * Only used from {@link ValidationModelBuilder}
-     * Copy all modifiable properties.
+     * Copy all modifiable arguments.
      * @param resourceProperties
      * @param validatedResourceType
      * @param applicablePaths
@@ -52,7 +52,7 @@ public class ValidationModelImpl implements ValidationModel {
         this.validatedResourceType = validatedResourceType;
         
         if (resourceProperties.isEmpty() && children.isEmpty()) {
-            throw new IllegalArgumentException("Neither children nor properties set in validation model for " + validatedResourceType + "'");
+            throw new IllegalArgumentException("Neither children nor arguments set in validation model for " + validatedResourceType + "'");
         }
         // if this collection is empty, make it contain on entry with the emty string (means no restriction)
         if (applicablePaths.isEmpty()) {

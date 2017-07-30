@@ -21,38 +21,21 @@ package org.apache.sling.validation.impl.annotationmodel.builders;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
-import org.apache.sling.validation.annotations.Validate;
 
 /**
  * The Abstract annotation builder, providing common functionality for Annotation Based Resource Property and Child Resource Builders.
- * Common properties:
+ * Common arguments:
  *
  *  - name is taken either from @ChildResource, @ValueMapValue annotations' name property or from actual field name.
  *  i.e. @ChildResource(name="childName") or @ValueMapValue(name="propertyName")
  *
- *  - nameRegex is taken from @Validate regex property i.e. @Validate(regex="*")
  *
  */
 public abstract class AbstractAnnotationBuilder {
 
-    private String nameRegex;
     private String name;
-
-    /**
-     * Sets name regex from @Validate annotation. @Validate(regex="*")
-     * @param field the field
-     */
-    public void setNameRegex(Field field) {
-        if (field.isAnnotationPresent(Validate.class)) {
-            Validate validate = field.getAnnotation(Validate.class);
-            if (StringUtils.isNotBlank(validate.regex())) {
-                this.nameRegex = validate.regex();
-            }
-        }
-    }
 
     /**
      * Checks if property should be Required or Optional.
@@ -89,15 +72,6 @@ public abstract class AbstractAnnotationBuilder {
         } else {
             name = annotationName;
         }
-    }
-
-    /**
-     * Getter for name regex property.
-     *
-     * @return the name regex
-     */
-    public String getNameRegex() {
-        return nameRegex;
     }
 
     /**

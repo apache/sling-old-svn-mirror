@@ -34,7 +34,7 @@ import org.osgi.framework.Bundle;
 @RunWith(MockitoJUnitRunner.class)
 public class ValidationModelImplementationTest {
 
-    private ValidationModelRegister validationModelRegister = new ValidationModelRegister();
+    private ValidationModelRegistry validationModelRegistry = new ValidationModelRegistry();
 
     @Mock
     private Bundle bundle;
@@ -53,15 +53,15 @@ public class ValidationModelImplementationTest {
 
     @Test
     public void testValidationModelsRegistration() throws Exception {
-        validationModelRegister.registerValidationModelsByBundle(bundle, Arrays.asList(model, model2, model));
-        assertNotNull(validationModelRegister.getValidationModelsByResourceType("validating/resource/type"));
-        assertEquals(2, validationModelRegister.getValidationModelsByResourceType("validating/resource/type").size());
-        assertEquals(1, validationModelRegister.getValidationModelsByResourceType("second/type").size());
+        validationModelRegistry.registerValidationModelsByBundle(bundle, Arrays.asList(model, model2, model));
+        assertNotNull(validationModelRegistry.getValidationModelsByResourceType("validating/resource/type"));
+        assertEquals(2, validationModelRegistry.getValidationModelsByResourceType("validating/resource/type").size());
+        assertEquals(1, validationModelRegistry.getValidationModelsByResourceType("second/type").size());
     }
 
     @Test
     public void testEmpty() throws Exception {
-        assertNotNull(validationModelRegister.getValidationModelsByResourceType("validating/resource/type"));
+        assertNotNull(validationModelRegistry.getValidationModelsByResourceType("validating/resource/type"));
     }
 
 }

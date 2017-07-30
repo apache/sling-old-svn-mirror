@@ -30,8 +30,8 @@ import javax.annotation.Nonnull;
 import org.apache.sling.validation.model.ValidationModel;
 import org.osgi.framework.Bundle;
 
-/** The Validation model register keeps all registered validation models. */
-final class ValidationModelRegister {
+/** The Validation model registry keeps all registered validation models. */
+final class ValidationModelRegistry {
 
     private final ConcurrentMap<Bundle, ConcurrentHashMap<String, List<ValidationModel>>> validationModels = new ConcurrentHashMap<>();
 

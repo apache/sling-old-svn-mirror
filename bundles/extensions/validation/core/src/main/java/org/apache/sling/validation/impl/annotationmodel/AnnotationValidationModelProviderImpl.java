@@ -32,13 +32,13 @@ import org.slf4j.LoggerFactory;
  * AnnotationValidationModelProviderImpl provides Validation Models based on Annotations.
  * It is responsible for creation and registering of ValidationPackageBundleListener.
  */
-@Component(immediate = true, service = ValidationModelProvider.class)
+@Component(service = ValidationModelProvider.class)
 public class AnnotationValidationModelProviderImpl implements ValidationModelProvider {
 
     private static final Logger log = LoggerFactory.getLogger(AnnotationValidationModelProviderImpl.class);
 
     private ValidationPackageBundleListener listener;
-    private final ValidationModelRegister validationModelRegister = new ValidationModelRegister();
+    private final ValidationModelRegistry validationModelRegistry = new ValidationModelRegistry();
 
     /**
      * Activate.
@@ -48,14 +48,14 @@ public class AnnotationValidationModelProviderImpl implements ValidationModelPro
      */
     @Activate
     protected void activate(final ComponentContext ctx) {
-        this.listener = new ValidationPackageBundleListener(ctx.getBundleContext(), this.validationModelRegister);
+        this.listener = new ValidationPackageBundleListener(ctx.getBundleContext(), this.validationModelRegistry);
     }
 
     @Override
     @Nonnull
     public List<ValidationModel> getValidationModels(@Nonnull String relativeResourceType) throws IllegalStateException {
         log.debug("Get Validation Model for resource type: {}", relativeResourceType);
-        return validationModelRegister.getValidationModelsByResourceType(relativeResourceType);
+        return validationModelRegistry.getValidationModelsByResourceType(relativeResourceType);
 
     }
 
@@ -66,7 +66,7 @@ public class AnnotationValidationModelProviderImpl implements ValidationModelPro
     @Deactivate
     protected void deactivate() {
         this.listener.unregisterAll();
-        this.validationModelRegister.removeAll();
+        this.validationModelRegistry.removeAll();
     }
 
 }

@@ -27,18 +27,18 @@ import org.apache.sling.models.annotations.injectorspecific.ChildResource;
 import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 import org.apache.sling.validation.annotations.Validate;
-import org.apache.sling.validation.annotations.ValidationPaths;
+import org.apache.sling.validation.annotations.ApplicableValidationPaths;
 
 /**
  * @author karolis.mackevicius@netcentric.biz
  * @since 06/05/17
  */
 @Model(adaptables = Resource.class, resourceType = "sling/validation/test/example", validation = ValidationStrategy.REQUIRED)
-@ValidationPaths(paths = "/content/test")
+@ApplicableValidationPaths(paths = "/content/test")
 public class TextModel {
 
     @ValueMapValue
-    @Validate(validatorId = "MinimumLengthValidator", properties = {"minLength=10"})
+    @Validate(validatorId = "MinimumLengthValidator", arguments = {"minLength=10"})
     private String testString;
 
     @ChildResource

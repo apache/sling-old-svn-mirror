@@ -53,7 +53,7 @@ public class AnnotationResourcePropertyBuilder extends AbstractAnnotationBuilder
         if (field.isAnnotationPresent(Validate.class)) {
             addValidator(field.getAnnotation(Validate.class));
         }
-        setNameRegex(field);
+
         if (field.isAnnotationPresent(ValueMapValue.class)) {
             ValueMapValue valueMapValue = field.getAnnotation(ValueMapValue.class);
             if (isOptional(defaultInjectionStrategy, valueMapValue.injectionStrategy())) {
@@ -74,8 +74,8 @@ public class AnnotationResourcePropertyBuilder extends AbstractAnnotationBuilder
      */
     private void addValidator(Validate validate) {
 
-        if (StringUtils.isNotBlank(validate.validatorId()) && validate.properties().length > 0) {
-            Map<String, Object> arguments = Arrays.asList(validate.properties())
+        if (StringUtils.isNotBlank(validate.validatorId()) && validate.arguments().length > 0) {
+            Map<String, Object> arguments = Arrays.asList(validate.arguments())
                     .parallelStream()
                     .map(str -> str.split("="))
                     .filter(str -> str.length == SPLIT_LENGTH)

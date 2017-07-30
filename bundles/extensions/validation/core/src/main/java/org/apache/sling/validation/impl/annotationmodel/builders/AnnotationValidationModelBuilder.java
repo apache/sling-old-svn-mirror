@@ -34,7 +34,7 @@ import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.injectorspecific.ChildResource;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
-import org.apache.sling.validation.annotations.ValidationPaths;
+import org.apache.sling.validation.annotations.ApplicableValidationPaths;
 import org.apache.sling.validation.impl.model.ValidationModelBuilder;
 import org.apache.sling.validation.model.ResourceProperty;
 import org.apache.sling.validation.model.ValidationModel;
@@ -67,8 +67,8 @@ public class AnnotationValidationModelBuilder {
 
         Model model = clazz.getAnnotation(Model.class);
 
-        String[] paths = Optional.ofNullable(clazz.getAnnotation(ValidationPaths.class))
-                .map(ValidationPaths::paths)
+        String[] paths = Optional.ofNullable(clazz.getAnnotation(ApplicableValidationPaths.class))
+                .map(ApplicableValidationPaths::paths)
                 .orElse(EMPTY_PATHS);
 
         modelBuilder.addApplicablePaths(paths);

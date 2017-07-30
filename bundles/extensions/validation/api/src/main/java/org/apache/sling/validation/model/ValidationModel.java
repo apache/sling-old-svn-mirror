@@ -32,9 +32,9 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface ValidationModel {
 
     /**
-     * Returns the properties validated by this model.
+     * Returns the arguments validated by this model.
      *
-     * @return the properties list (never {@code null}, but might be empty list)
+     * @return the arguments list (never {@code null}, but might be empty list)
      */
     @Nonnull Collection<ResourceProperty> getResourceProperties();
 

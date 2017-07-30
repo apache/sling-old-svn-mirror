@@ -34,18 +34,18 @@ import java.lang.annotation.Target;
 public @interface Validate {
 
     /**
-     * Validator id, with which it is registered.
+     * Validate the annotated element with a Validator having the given id.
      *
      * @return the string
      */
-    String validatorId() default "";
+    String validatorId();
 
     /**
-     * Properties array to be passed for validator.
+     * Parametrisation being passed to the validator given by the id. Each string entry must have the format <key>=<value>
      *
-     * @return validator properties
+     * @return validator arguments
      */
-    String[] properties() default {};
+    String[] arguments() default {};
 
     /**
      * Validation Error Severity.
@@ -53,11 +53,4 @@ public @interface Validate {
      * @return the Severity
      */
     int severity() default 0;
-
-    /**
-     * Regex string.
-     *
-     * @return regex
-     */
-    String regex() default "";
 }

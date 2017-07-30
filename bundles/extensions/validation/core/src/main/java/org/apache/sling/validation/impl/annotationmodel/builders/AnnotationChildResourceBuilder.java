@@ -34,7 +34,7 @@ import org.apache.sling.validation.model.ResourceProperty;
 
 /**
  * The Annotation based child resources builder.
- * It creates Child Resource and its' properties/children according to declared field and its' annotations.
+ * It creates Child Resource and its' arguments/children according to declared field and its' annotations.
  * Child Resources are considered Injected Sling Model fields.
  */
 public class AnnotationChildResourceBuilder extends AbstractAnnotationBuilder {
@@ -57,19 +57,18 @@ public class AnnotationChildResourceBuilder extends AbstractAnnotationBuilder {
         org.apache.sling.models.annotations.injectorspecific.ChildResource child = field
                 .getAnnotation(org.apache.sling.models.annotations.injectorspecific.ChildResource.class);
         setName(field, child.name());
-        setNameRegex(field);
 
         if(isMultiple(field)) {
             ChildResource childResource = new ChildResourceImpl(StringUtils.EMPTY, ANYTHING_REGEX, !isOptional(defaultInjectionStrategy, child.injectionStrategy()), resourceProperties, children);
-            return new ChildResourceImpl(getName(), getNameRegex(), !isOptional(defaultInjectionStrategy, child.injectionStrategy()), Collections.emptyList(), Collections.singletonList(childResource));
+            return new ChildResourceImpl(getName(), StringUtils.EMPTY, !isOptional(defaultInjectionStrategy, child.injectionStrategy()), Collections.emptyList(), Collections.singletonList(childResource));
         }
-        return new ChildResourceImpl(getName(), getNameRegex(), !isOptional(defaultInjectionStrategy, child.injectionStrategy()), resourceProperties, children);
+        return new ChildResourceImpl(getName(), StringUtils.EMPTY, !isOptional(defaultInjectionStrategy, child.injectionStrategy()), resourceProperties, children);
     }
 
     /**
-     * Add resource properties.
+     * Add resource arguments.
      *
-     * @param properties the properties
+     * @param properties the arguments
      * @return the annotation child resource builder
      */
     public AnnotationChildResourceBuilder addResourceProperties(@Nonnull Collection<ResourceProperty> properties) {
