@@ -35,6 +35,7 @@ import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.OSGiServiceInjector;
 import org.apache.sling.models.impl.injectors.RequestAttributeInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
+import org.apache.sling.models.impl.via.BeanPropertyViaProvider;
 import org.apache.sling.models.testmodels.classes.InjectorSpecificAnnotationModel;
 import org.junit.Before;
 import org.junit.Test;
@@ -105,6 +106,7 @@ public class InjectorSpecificAnnotationTest {
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 4L));
         factory.bindStaticInjectAnnotationProcessorFactory(osgiInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 5L));
+        factory.bindViaProvider(new BeanPropertyViaProvider(), null);
 
         SlingBindings bindings = new SlingBindings();
         bindings.setLog(log);

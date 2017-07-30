@@ -22,11 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonBuilderFactory;
 import javax.json.JsonException;
-import javax.json.JsonValue;
-import javax.json.JsonWriter;
 import javax.json.stream.JsonGenerator;
 import javax.servlet.http.HttpServletResponse;
 
@@ -85,6 +81,7 @@ public class JsonRenderer extends RunListener implements Renderer,RendererFactor
         if(writer != null) {
             try {
                 writer.writeEnd();
+                writer.flush();
             } catch(JsonException jex) {
                 log.warn("JsonException in cleanup()", jex);
             }

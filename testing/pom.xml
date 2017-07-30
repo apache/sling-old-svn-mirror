@@ -92,6 +92,7 @@
     <module>samples/bundle-with-it</module>
     <module>samples/module-with-it</module>
     <module>org.apache.sling.testing.paxexam</module>
+    <module>email</module>
   </modules>
 
 </project>

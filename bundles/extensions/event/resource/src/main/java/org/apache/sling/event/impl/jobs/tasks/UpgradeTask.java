@@ -120,7 +120,7 @@ public class UpgradeTask {
                     final ValueMap vm = ResourceHelper.getValueMap(rsrc);
                     final String targetId = caps.detectTarget(topicName, vm, info);
 
-                    final Map<String, Object> props = new HashMap<String, Object>(vm);
+                    final Map<String, Object> props = new HashMap<>(vm);
                     final String newPath;
                     if ( targetId != null ) {
                         newPath = configuration.getAssginedJobsPath() + '/' + targetId + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
@@ -198,7 +198,7 @@ public class UpgradeTask {
         try {
             final ValueMap vm = ResourceHelper.getValueMap(jobResource);
             // check for binary properties
-            Map<String, Object> binaryProperties = new HashMap<String, Object>();
+            Map<String, Object> binaryProperties = new HashMap<>();
             final ObjectInputStream ois = vm.get("slingevent:properties", ObjectInputStream.class);
             if ( ois != null ) {
                 try {

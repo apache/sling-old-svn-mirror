@@ -16,9 +16,9 @@
  */
 package org.apache.sling.pipes;
 
-import org.apache.sling.api.resource.Resource;
-
 import java.util.Iterator;
+
+import org.apache.sling.api.resource.Resource;
 
 /**
  * Pipe interface
@@ -44,10 +44,13 @@ public interface Pipe {
      */
     String NN_CONF = "conf";
 
+    /**
+     * Distribution agent (for distributing output resources)
+     */
     String PN_DISTRIBUTION_AGENT = "distribution.agent";
 
     /**
-     * returns true if that pipe will modify content during its execution
+     * returns true if that pipe modifies content during its execution
      * @return true for write / false for read
      */
     boolean modifiesContent();
@@ -88,6 +91,13 @@ public interface Pipe {
      * @return input, configured or previous pipe
      */
     Resource getInput();
+
+
+    /**
+     * get the pipe configuration resource
+     * @return Pipe configruation root resource
+     */
+    Resource getResource();
 
     /**
      * returns the binding output used in container pipe's expression

@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.it;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
-import static org.apache.sling.distribution.it.DistributionUtils.distribute;
 import static org.apache.sling.distribution.it.DistributionUtils.distributeDeep;
 
 import java.io.ByteArrayInputStream;
@@ -28,7 +27,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.junit.Test;
 import org.junit.runner.RunWith;

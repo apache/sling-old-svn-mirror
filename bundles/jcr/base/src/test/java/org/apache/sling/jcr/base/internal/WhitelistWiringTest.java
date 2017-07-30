@@ -89,6 +89,11 @@ public class WhitelistWiringTest {
             protected Session createAdministrativeSession(String workspace) throws RepositoryException {
                 return Mockito.mock(Session.class);
             }
+
+            @Override
+            protected Session createServiceSession(Iterable<String> principalNames, String workspace) {
+                return Mockito.mock(Session.class);
+            }
         };
     }
     

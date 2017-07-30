@@ -37,9 +37,12 @@ import org.apache.sling.servlets.get.impl.helpers.JsonRendererServlet;
 import org.apache.sling.servlets.get.impl.helpers.PlainTextRendererServlet;
 import org.apache.sling.servlets.get.impl.helpers.StreamRendererServlet;
 import org.apache.sling.servlets.get.impl.helpers.XMLRendererServlet;
+import org.apache.sling.xss.XSSAPI;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
@@ -151,6 +154,9 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
     private boolean enableXml;
 
+    @Reference(policyOption = ReferencePolicyOption.GREEDY)
+    private XSSAPI xssApi;
+
     @Activate
     protected void activate(Config cfg) {
         this.aliases = cfg.aliases();
@@ -174,37 +180,66 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         this.indexFiles = null;
     }
 
+    private Servlet getDefaultRendererServlet(final String type) {
+        Servlet servlet = null;
+        if ( StreamRendererServlet.EXT_RES.equals(type) ) {
+            servlet = new StreamRendererServlet(index, indexFiles);
+        } else if ( HtmlRendererServlet.EXT_HTML.equals(type) ) {
+            servlet = new HtmlRendererServlet(xssApi);
+        } else if ( PlainTextRendererServlet.EXT_TXT.equals(type) ) {
+            servlet = new PlainTextRendererServlet();
+        } else if (JsonRendererServlet.EXT_JSON.equals(type) ) {
+            servlet = new JsonRendererServlet(jsonMaximumResults);
+        } else if ( XMLRendererServlet.EXT_XML.equals(type) ) {
+            try {
+                servlet = new XMLRendererServlet();
+            } catch (Throwable t) {
+                logger.warn("Support for getting XML is currently disabled " +
+                        "in the servlets get module. Check whether the JCR API is available.");
+            }
+        }
+        if ( servlet != null ) {
+            try {
+                servlet.init(getServletConfig());
+            } catch (Throwable t) {
+                logger.error("Error while initializing servlet " + servlet, t);
+                servlet = null;
+            }
+        }
+        return servlet;
+    }
+
     @Override
     public void init() throws ServletException {
         super.init();
 
+        // use the servlet for rendering StreamRendererServlet.EXT_RES as the
+        // streamer servlet
+        streamerServlet = getDefaultRendererServlet(StreamRendererServlet.EXT_RES);
+
         // Register renderer servlets
-        setupServlet(rendererMap, StreamRendererServlet.EXT_RES,
-            new StreamRendererServlet(index, indexFiles));
+        rendererMap.put(StreamRendererServlet.EXT_RES, streamerServlet);
 
         if (enableHtml) {
-            setupServlet(rendererMap, HtmlRendererServlet.EXT_HTML,
-                new HtmlRendererServlet());
+            rendererMap.put(HtmlRendererServlet.EXT_HTML,
+                    getDefaultRendererServlet(HtmlRendererServlet.EXT_HTML));
         }
 
         if (enableTxt) {
-            setupServlet(rendererMap, PlainTextRendererServlet.EXT_TXT,
-                new PlainTextRendererServlet());
+            rendererMap.put(PlainTextRendererServlet.EXT_TXT,
+                    getDefaultRendererServlet(PlainTextRendererServlet.EXT_TXT));
         }
 
         if (enableJson) {
-            setupServlet(rendererMap, JsonRendererServlet.EXT_JSON,
-                new JsonRendererServlet(jsonMaximumResults));
+            rendererMap.put(JsonRendererServlet.EXT_JSON,
+                    getDefaultRendererServlet(JsonRendererServlet.EXT_JSON));
         }
 
         if (enableXml) {
-            setupServlet(rendererMap, XMLRendererServlet.EXT_XML,
-                new XMLRendererServlet());
+            rendererMap.put(XMLRendererServlet.EXT_XML,
+                    getDefaultRendererServlet(XMLRendererServlet.EXT_XML));
         }
 
-        // use the servlet for rendering StreamRendererServlet.EXT_RES as the
-        // streamer servlet
-        streamerServlet = rendererMap.get(StreamRendererServlet.EXT_RES);
 
         // check additional aliases
         if (this.aliases != null) {
@@ -212,7 +247,10 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
                 final int pos = m.indexOf(':');
                 if (pos != -1) {
                     final String type = m.substring(0, pos);
-                    final Servlet servlet = rendererMap.get(type);
+                    Servlet servlet = rendererMap.get(type);
+                    if ( servlet == null ) {
+                        servlet = getDefaultRendererServlet(type);
+                    }
                     if (servlet != null) {
                         final String extensions = m.substring(pos + 1);
                         final StringTokenizer st = new StringTokenizer(
@@ -221,6 +259,8 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
                             final String ext = st.nextToken();
                             rendererMap.put(ext, servlet);
                         }
+                    } else {
+                        logger.warn("Unable to enable renderer alias(es) for {} - type not supported", m);
                     }
                 }
             }
@@ -298,15 +338,5 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         rendererMap.clear();
 
         super.destroy();
-    }
-
-    private void setupServlet(Map<String, Servlet> rendererMap, String key,
-            Servlet servlet) {
-        try {
-            servlet.init(getServletConfig());
-            rendererMap.put(key, servlet);
-        } catch (Throwable t) {
-            logger.error("Error while initializing servlet " + servlet, t);
-        }
     }
 }

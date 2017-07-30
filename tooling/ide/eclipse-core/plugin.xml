@@ -87,6 +87,21 @@
   		<action facet="sling.bundle" version="1.0" type="UNINSTALL">
   			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingBundleFacetUninstallDelegate"/>
   		</action>
+  		
+		<project-facet id="sling.launchpad">
+			<label>Launchpad module</label>
+			<description>Packaging module which contains a provisioning model which can be assembled into a launchpad.</description>
+		</project-facet>
+		
+  		<project-facet-version facet="sling.launchpad" version="1.0"/>
+  		
+  		<action facet="sling.launchpad" version="1.0" type="INSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadFacetInstallDelegate"/>
+  		</action>
+
+  		<action facet="sling.launchpad" version="1.0" type="UNINSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadFacetUninstallDelegate"/>
+  		</action>
 	</extension>  
 
 	<!-- Define the Sling launchpad runtime type -->

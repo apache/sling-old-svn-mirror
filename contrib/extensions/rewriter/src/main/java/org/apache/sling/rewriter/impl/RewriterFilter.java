@@ -25,25 +25,25 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.rewriter.ProcessorManager;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This filter activates the rewriter for the output.
  *
  */
-@Component
-@Service(value=Filter.class)
-@Properties({
-    @Property(name="sling.filter.scope",value={"request", "error"}),
-    @Property(name="service.ranking",intValue=2500)
-})
+@Component(
+        service = Filter.class,
+        property = {
+                "sling.filter.scope=request",
+                "sling.filter.scope=error",
+                Constants.SERVICE_RANKING + ":Integer=2500"
+        }
+)
 public class RewriterFilter implements Filter {
 
     @Reference

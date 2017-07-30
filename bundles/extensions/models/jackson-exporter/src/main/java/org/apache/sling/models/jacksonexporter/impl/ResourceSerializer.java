@@ -96,7 +96,7 @@ public class ResourceSerializer extends JsonSerializer<Resource> implements Reso
         // the child nodes
         if (recursionLevelActive(currentRecursionLevel)) {
             for (final Resource n : resource.getChildren()) {
-                jgen.writeObjectFieldStart(n.getName());
+                jgen.writeFieldName(n.getName());
                 create(n, jgen, currentRecursionLevel + 1, provider);
             }
         }

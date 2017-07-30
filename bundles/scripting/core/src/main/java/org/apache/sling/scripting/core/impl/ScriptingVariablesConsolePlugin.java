@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -35,6 +36,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
     property = {
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
         WebConsoleConstants.PLUGIN_LABEL + "=" + ScriptingVariablesConsolePlugin.LABEL,
         WebConsoleConstants.PLUGIN_TITLE + "=" + ScriptingVariablesConsolePlugin.TITLE,
         "felix.webconsole.category=sling"
@@ -45,12 +47,12 @@ public class ScriptingVariablesConsolePlugin extends AbstractWebConsolePlugin {
     protected static final String LABEL = "scriptingvariables";
     protected static final String TITLE = "Scripting Variables";
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 261709110347150295L;
-    
+
     private static final String JS_RES_PATH = "scriptingvariables/ui/scriptingvariables.js";
-    
+
     /**
      * The script engine manager.
      */
@@ -61,11 +63,11 @@ public class ScriptingVariablesConsolePlugin extends AbstractWebConsolePlugin {
     }
 
     /**
-     * Automatically called from 
+     * Automatically called from
      * <a href="https://github.com/apache/felix/blob/4a60744d0f88f351551e4cb4673eb60b8fbd21d3/webconsole/src/main/java/org/apache/felix/webconsole/AbstractWebConsolePlugin.java#L510">AbstractWebConsolePlugin#spoolResource</a>
-     * 
+     *
      * @param path the requested path
-     * @return either a URL from which to spool the resource requested through the given path or {@code null} 
+     * @return either a URL from which to spool the resource requested through the given path or {@code null}
      */
     public URL getResource(String path) {
         if (path.endsWith(JS_RES_PATH)) {
@@ -92,7 +94,7 @@ public class ScriptingVariablesConsolePlugin extends AbstractWebConsolePlugin {
         pw.append("<div id='content'>");
         pw.append("<table class='content'  cellpadding='0' cellspacing='0' width='100%'>");
         pw.append("<tr><th colspan='3' class='content container'>Sling Scripting Variables</th></tr>");
-        pw.append("<tr class='content'><td class='content' colspan='3'>Provide a resource path url and script engine (via extension) and then click on 'Retrieve Variables' to expose all script bindings variables for context 'request' which are available for that resource and script engine.</td></tr>"); 
+        pw.append("<tr class='content'><td class='content' colspan='3'>Provide a resource path url and script engine (via extension) and then click on 'Retrieve Variables' to expose all script bindings variables for context 'request' which are available for that resource and script engine.</td></tr>");
         pw.append("<tr class='content'>");
         pw.append("<td class='content'>Resource Url (without selectors and extension)</td> ");
         pw.append("<td class='content' colspan='2'><input type ='text' name='form.path' placeholder='path' required='required' value='/' ");

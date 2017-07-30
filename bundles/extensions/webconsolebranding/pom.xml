@@ -24,12 +24,12 @@
         <artifactId>sling</artifactId>
         <groupId>org.apache.sling</groupId>
         <version>26</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.extensions.webconsolebranding</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Web Console Branding</name>

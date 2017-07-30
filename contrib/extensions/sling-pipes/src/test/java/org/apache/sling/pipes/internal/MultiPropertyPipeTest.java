@@ -16,17 +16,17 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Iterator;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Iterator;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * testing normal case of MV Property Pipe

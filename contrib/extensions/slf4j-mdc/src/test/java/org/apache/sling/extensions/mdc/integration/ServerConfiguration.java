@@ -87,7 +87,7 @@ public class ServerConfiguration {
                 mavenBundle("org.apache.felix", "org.apache.felix.http.jetty").versionAsInProject().startLevel(3),
                 mavenBundle("org.apache.felix", "org.apache.felix.http.whiteboard").versionAsInProject().startLevel(5),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr").versionAsInProject(),
-                wrappedBundle(mavenBundle("org.json", "json").versionAsInProject()),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.johnzon").versionAsInProject(),
                 systemProperty("pax.exam.osgi.unresolved.fail").value("fail"),
                 systemProperty("org.osgi.service.http.port").value(getServerPort()),
                 cleanCaches(),

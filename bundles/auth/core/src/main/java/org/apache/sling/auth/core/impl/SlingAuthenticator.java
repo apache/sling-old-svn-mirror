@@ -471,6 +471,14 @@ public class SlingAuthenticator implements Authenticator,
 
     private boolean doHandleSecurity(HttpServletRequest request, HttpServletResponse response) {
 
+        // 0. Check for request attribute; set if not present
+        Object authUriSufficesAttr = request
+                .getAttribute(AuthConstants.ATTR_REQUEST_AUTH_URI_SUFFIX);
+        if (authUriSufficesAttr == null && authUriSuffices != null) {
+            request.setAttribute(AuthConstants.ATTR_REQUEST_AUTH_URI_SUFFIX,
+                    authUriSuffices);
+        }
+
         // 1. Ask all authentication handlers to try to extract credentials
         final AuthenticationInfo authInfo = getAuthenticationInfo(request, response);
 
@@ -543,7 +551,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AbstractAuthenticationHandlerHolder> holderList = holdersArray[m];
             if ( holderList != null ) {
                 for (AbstractAuthenticationHandlerHolder holder : holderList) {
-                    if (path.startsWith(holder.path)) {
+                    if (isNodeRequiresAuthHandler(path, holder.path)) {
                         log.debug("login: requesting authentication using handler: {}",
                             holder);
 
@@ -604,7 +612,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AbstractAuthenticationHandlerHolder> holderSet = holdersArray[m];
             if (holderSet != null) {
                 for (AbstractAuthenticationHandlerHolder holder : holderSet) {
-                    if (path.startsWith(holder.path)) {
+                    if (isNodeRequiresAuthHandler(path, holder.path)) {
                         log.debug("logout: dropping authentication using handler: {}",
                             holder);
 
@@ -723,7 +731,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AbstractAuthenticationHandlerHolder> local = localArray[m];
             if (local != null) {
                 for (AbstractAuthenticationHandlerHolder holder : local) {
-                    if (path.startsWith(holder.path)) {
+                    if (isNodeRequiresAuthHandler(path, holder.path)){
                         final AuthenticationInfo authInfo = holder.extractCredentials(
                             request, response);
 
@@ -917,7 +925,7 @@ public class SlingAuthenticator implements Authenticator,
             final Collection<AuthenticationRequirementHolder> holders = holderSetArray[m];
             if (holders != null) {
                 for (AuthenticationRequirementHolder holder : holders) {
-                    if (path.startsWith(holder.path)) {
+                    if (isNodeRequiresAuthHandler(path, holder.path)) {
                         return !holder.requiresAuthentication();
                     }
                 }
@@ -928,6 +936,34 @@ public class SlingAuthenticator implements Authenticator,
         return false;
     }
 
+   private boolean isNodeRequiresAuthHandler(String path, String holderPath) {
+        if (path == null || holderPath == null) {
+            return false;
+        }
+        
+        if (("/").equals(holderPath)) {
+            return true;
+        }
+        
+        int holderPathLength = holderPath.length();
+        
+        if (path.length() < holderPathLength) {
+            return false;
+        }
+        
+        if (path.equals(holderPath)) {
+            return true;
+        }
+        
+        if (path.startsWith(holderPath)) {
+            if (path.charAt(holderPathLength) == '/' || path.charAt(holderPathLength) == '.') {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    
     /**
      * Returns credentials to use for anonymous resource access. If an anonymous
      * user is configued, this returns an {@link AuthenticationInfo} instance

@@ -24,14 +24,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -101,7 +102,7 @@ public class UserPrivilegesInfoTest {
 	 * to add a new user.
 	 */
 	@Test 
-	public void testCanAddUser() throws JSONException, IOException {
+	public void testCanAddUser() throws JsonException, IOException {
 		testUserId = H.createTestUser();
 
 		String getUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".privileges-info.json";
@@ -111,7 +112,7 @@ public class UserPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		assertEquals(false, jsonObj.getBoolean("canAddUser"));
 	}
@@ -121,7 +122,7 @@ public class UserPrivilegesInfoTest {
 	 * to add a new group.
 	 */
 	@Test 
-	public void testCanAddGroup() throws IOException, JSONException {
+	public void testCanAddGroup() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 
 		String getUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".privileges-info.json";
@@ -131,7 +132,7 @@ public class UserPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		assertEquals(false, jsonObj.getBoolean("canAddGroup"));
 	}
@@ -141,7 +142,7 @@ public class UserPrivilegesInfoTest {
 	 * to update the properties of the specified user.
 	 */
 	@Test 
-	public void testCanUpdateUserProperties() throws IOException, JSONException {
+	public void testCanUpdateUserProperties() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 
 		//1. verify user can update thier own properties
@@ -152,7 +153,7 @@ public class UserPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		//user can update their own properties
 		assertEquals(true, jsonObj.getBoolean("canUpdateProperties"));
@@ -166,7 +167,7 @@ public class UserPrivilegesInfoTest {
 
 		String json2 = H.getAuthenticatedContent(testUser2Creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
-		JSONObject jsonObj2 = new JSONObject(json2);
+		JsonObject jsonObj2 = JsonUtil.parseObject(json2);
 		
 		//user can not update other users properties
 		assertEquals(false, jsonObj2.getBoolean("canUpdateProperties"));
@@ -177,7 +178,7 @@ public class UserPrivilegesInfoTest {
 	 * to update the properties of the specified group.
 	 */
 	@Test 
-	public void testCanUpdateGroupProperties() throws IOException, JSONException {
+	public void testCanUpdateGroupProperties() throws IOException, JsonException {
 		testGroupId = H.createTestGroup();
 		testUserId = H.createTestUser();
 
@@ -189,7 +190,7 @@ public class UserPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		//normal user can not update group properties
 		assertEquals(false, jsonObj.getBoolean("canUpdateProperties"));
@@ -200,7 +201,7 @@ public class UserPrivilegesInfoTest {
 	 * to remove the specified user.
 	 */
 	@Test 
-	public void testCanRemoveUser() throws IOException, JSONException {
+	public void testCanRemoveUser() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 
 		//1. verify user can not remove themselves
@@ -211,7 +212,7 @@ public class UserPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		//user can not remove themselves
 		assertEquals(false, jsonObj.getBoolean("canRemove"));
@@ -225,7 +226,7 @@ public class UserPrivilegesInfoTest {
 
 		String json2 = H.getAuthenticatedContent(testUser2Creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json2);
-		JSONObject jsonObj2 = new JSONObject(json2);
+		JsonObject jsonObj2 = JsonUtil.parseObject(json2);
 		
 		//user can not delete other users
 		assertEquals(false, jsonObj2.getBoolean("canRemove"));
@@ -236,7 +237,7 @@ public class UserPrivilegesInfoTest {
 	 * to remove the specified group.
 	 */
 	@Test 
-	public void testCanRemoveGroup() throws IOException, JSONException {
+	public void testCanRemoveGroup() throws IOException, JsonException {
 		testGroupId = H.createTestGroup();
 		testUserId = H.createTestUser();
 
@@ -248,7 +249,7 @@ public class UserPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		//normal user can not remove group
 		assertEquals(false, jsonObj.getBoolean("canRemove"));
@@ -259,7 +260,7 @@ public class UserPrivilegesInfoTest {
 	 * to update the membership of the specified group.
 	 */
 	@Test 
-	public void testCanUpdateGroupMembers() throws IOException, JSONException {
+	public void testCanUpdateGroupMembers() throws IOException, JsonException {
 		testGroupId = H.createTestGroup();
 		testUserId = H.createTestUser();
 
@@ -271,7 +272,7 @@ public class UserPrivilegesInfoTest {
 
 		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
+		JsonObject jsonObj = JsonUtil.parseObject(json);
 		
 		//normal user can not remove group
 		assertEquals(false, jsonObj.getBoolean("canUpdateGroupMembers"));

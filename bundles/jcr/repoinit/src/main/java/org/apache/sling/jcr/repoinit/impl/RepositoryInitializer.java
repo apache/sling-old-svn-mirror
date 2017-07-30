@@ -62,6 +62,7 @@ public class RepositoryInitializer implements SlingRepositoryInitializer {
                 + " format is either model@repoinit:<provisioning model URL> or raw:<raw URL>")
         String[] references() default {};
     }
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 

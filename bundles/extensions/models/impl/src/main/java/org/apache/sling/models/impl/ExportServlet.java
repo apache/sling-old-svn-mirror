@@ -54,27 +54,17 @@ class ExportServlet extends SlingSafeMethodsServlet {
 
     private final Logger logger;
 
-    /** The context string to use to select BindingsValuesProviders */
-    private static final String BINDINGS_CONTEXT = BindingsValuesProvider.DEFAULT_CONTEXT;
-
-    /** embed this value so as to avoid a dependency on a newer Sling API than otherwise necessary. */
-    private static final String RESOLVER = "resolver";
-
-    /** The set of protected keys. */
-    private static final Set<String> PROTECTED_KEYS =
-            new HashSet<String>(Arrays.asList(REQUEST, RESPONSE, READER, SLING, RESOURCE, RESOLVER, OUT, LOG));
-
     private final String exporterName;
     private final String registeredSelector;
     private final BundleContext bundleContext;
     private final ModelFactory modelFactory;
     private final BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
-    private final ScriptEngineFactory scriptEngineFactory;
+    private final SlingModelsScriptEngineFactory scriptEngineFactory;
     private final ExportedObjectAccessor accessor;
     private final Map<String, String> baseOptions;
 
     public ExportServlet(BundleContext bundleContext, ModelFactory modelFactory,
-                         BindingsValuesProvidersByContext bindingsValuesProvidersByContext, ScriptEngineFactory scriptFactory,
+                         BindingsValuesProvidersByContext bindingsValuesProvidersByContext, SlingModelsScriptEngineFactory scriptFactory,
                          Class<?> annotatedClass, String registeredSelector, String exporterName, ExportedObjectAccessor accessor,
                          Map<String, String> baseOptions) {
         this.bundleContext = bundleContext;
@@ -128,26 +118,14 @@ class ExportServlet extends SlingSafeMethodsServlet {
         SimpleBindings bindings = new SimpleBindings();
         bindings.put(SLING, scriptHelper);
         bindings.put(RESOURCE, request.getResource());
-        bindings.put(RESOLVER, request.getResource().getResourceResolver());
+        bindings.put(SlingModelsScriptEngineFactory.RESOLVER, request.getResource().getResourceResolver());
         bindings.put(REQUEST, request);
         bindings.put(RESPONSE, response);
         bindings.put(READER, request.getReader());
         bindings.put(OUT, response.getWriter());
         bindings.put(LOG, logger);
 
-        final Collection<BindingsValuesProvider> bindingsValuesProviders =
-                bindingsValuesProvidersByContext.getBindingsValuesProviders(scriptEngineFactory, BINDINGS_CONTEXT);
-
-        if (!bindingsValuesProviders.isEmpty()) {
-            Set<String> protectedKeys = new HashSet<String>();
-            protectedKeys.addAll(PROTECTED_KEYS);
-
-            ProtectedBindings protectedBindings = new ProtectedBindings(bindings, protectedKeys);
-            for (BindingsValuesProvider provider : bindingsValuesProviders) {
-                provider.addBindings(protectedBindings);
-            }
-
-        }
+        scriptEngineFactory.invokeBindingsValuesProviders(bindingsValuesProvidersByContext, bindings);
 
         SlingBindings slingBindings = new SlingBindings();
         slingBindings.putAll(bindings);

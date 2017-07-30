@@ -24,12 +24,12 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>30</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.launchpad.testing-war</artifactId>
     <packaging>slingstart</packaging>
-    <version>9-SNAPSHOT</version>
+    <version>10-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Testing WAR version</name>
     <description>
@@ -57,7 +57,7 @@
         <test.host>localhost</test.host>
 
         <!-- optionally exclude some integration tests  -->
-        <failsafe.exclude></failsafe.exclude>
+        <failsafe.exclude />
 
         <slf4j.version>1.7.6</slf4j.version>
         <logback.version>1.1.2</logback.version>
@@ -203,11 +203,16 @@
         <dependency>
              <groupId>org.apache.sling</groupId>
              <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
-             <version>1.0.3-SNAPSHOT</version>
+             <version>1.0.5-SNAPSHOT</version>
              <scope>test</scope>
         </dependency>
 
         <!-- Dependencies for the Test Build and Run -->
+         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+        </dependency>
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>

@@ -26,17 +26,17 @@ The Sling Content Distribution module consists of the following bundles:
  
 ## Design
 
-The Sling Content Distribution module main design goals resume in being: _Reliable_, _extensible_ and _simple_.
+The Sling Content Distribution aims to be: _Reliable_, _simple_ and _extensible_.
 
 Reliability means that the system should be able to keep working also in presence of failures regarding I/O, network, etc.
 An example of such problems is when pushing content from instance A to instance B fails because B is unreachable: in such 
  scenarios instance A should be able to keep pushing (pulling, etc.) content to other instances seamlessly. Another example
  is when delivery of a certain content (package) fails too many times the distribution module should be able to either drop 
  it or move it into a different "bucket" of failed items.
+Simplicity means that this module should be able to accomplish its tasks by providing clear, minimal and easy to use APIs together 
+with smart but not overly complicated or "hacky" implementations (see ["Simple software is hard"](http://events.linuxfoundation.org/events/apachecon-europe/program/schedule)).
 Extensibility means that the Sling Content Distribution module provides a set of APIs for distributing resources where each
 component coming into place during the distribution lifecycle can be extended or totally replaced.
-Simplicity means that this module should be able to accomplish its tasks by providing clear and easy to use APIs together 
-with smart but not overly complicated or "hacky" implementations (see Bertrand's talk ["Simple software is hard"](http://events.linuxfoundation.org/events/apachecon-europe/program/schedule)).
 
 A distribution _request_ represents the need of aggregating some resources and to copy them from / to another Sling instance.
 Such requests are handled by _agents_ that are the main entry point for working with the distribution module.
@@ -65,37 +65,33 @@ _package_.
 
 Distribution agents configurations are proper OSGi configurations (backed by nodes of type `sling:OsgiConfig` in the repository).
 
-
-
 There are specialized factories for each supported scenario:
 - "forward" agents, see [ForwardDistributionAgentFactory-publish.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/publish/org.apache.sling.distribution.agent.impl.ForwardDistributionAgentFactory-publish.json).
 - "reverse" agents, see [ReverseDistributionAgentFactory-publish-reverse.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/publish-reverse/org.apache.sling.distribution.agent.impl.ReverseDistributionAgentFactory-publish-reverse.json).
 - "sync" agents, see [SyncDistributionAgentFactory-pubsync.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/pubsync/org.apache.sling.distribution.agent.impl.SyncDistributionAgentFactory-pubsync.json).
 - "queue" agents, see [QueueDistributionAgentFactory-reverse.json](sample/src/main/resources/SLING-CONTENT/libs/sling/distribution/install.publish/reverse/org.apache.sling.distribution.agent.impl.QueueDistributionAgentFactory-reverse.json).
 
-
 For example a "forward" agent can be defined specifying
 - The name of the agent (name property)
 - The sub service name used to access content and build packages (serviceName property)
 - The endpoints where the packages are to be imported (packageImporter.endpoints property)
 
-
-
 The sample package contains endpoints for exposing configuration for distribution agents.
 The _DistributionConfigurationResourceProviderFactory_ is used to expose agent configurations as resources.
 
+```
   {
       "jcr:primaryType": "sling:OsgiConfig",
       "provider.roots": [ "/libs/sling/distribution/settings/agents" ],
       "kind" : "agent"
   }
-
+```
 
 Distribution agents' configurations can be retrieved via `HTTP GET`:
 
-- `http -a admin:admin -v -f GET http://localhost:8080/libs/sling/distribution/settings/agents/{agentName}`
-
-
+```
+$ curl -u admin:admin http://localhost:8080/libs/sling/distribution/settings/agents/{agentName}.json
+```
 
 ### Distribution agents services
 
@@ -105,12 +101,13 @@ The _DistributionConfigurationResourceProviderFactory_ allows one to configure H
 The sample package contains endpoints for exposing distribution agents.
 The _DistributionServiceResourceProviderFactory_ is used to expose agent services as resources.
 
+```
  {
      "jcr:primaryType": "sling:OsgiConfig",
      "provider.roots": [ "/libs/sling/distribution/services/agents" ],
      "kind" : "agent"
  }
-
+```
 
 Distribution agents can be triggered by sending `HTTP POST` requests to
 
@@ -156,11 +153,17 @@ In order to configure the "forward" distribution workflow, that transfers conten
 
 Send `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/publish` with parameters `action=ADD` and `path=/content`
 
-- create/update content
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=ADD path=/content/sample1```
-- delete content
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=DELETE path=/content/sample1```
+#### Create/update content
 
+```
+$ curl -v -u admin:admin http://localhost:8080/libs/sling/distribution/services/agents/publish -d 'action=ADD' -d 'path=/content/sample1'
+```
+
+#### Delete content
+
+```
+$ curl -v -u admin:admin http://localhost:8080/libs/sling/distribution/services/agents/publish -d 'action= DELETE' -d 'path=/content/sample1'
+```
 
 ### Reverse distribution
 
@@ -172,10 +175,12 @@ In order to configure the "reverse" distribution workflow, that transfers conten
 Send `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/publish-reverse` with parameters `action=PULL`
 
 
-- create/update content
+#### Create/update content
 
-```http -a admin:admin -v -f POST http://localhost:8081/libs/sling/distribution/services/agents/reverse action=ADD path=/content/sample1```
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish-reverse action=PULL```
+```
+$ curl -u admin:admin http://localhost:8081/libs/sling/distribution/services/agents/reverse -d 'action=ADD' -d 'path=/content/sample1'
+$ curl -u admin:admin http://localhost:8080/libs/sling/distribution/services/agents/publish-reverse -d 'action=PULL'
+```
 
 ### Sync distribution
 
@@ -188,12 +193,12 @@ In order to configure the "sync" distribution workflow, that transfers content f
 Send `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/pubsync` with parameters `action=PULL`
 
 
-- create/update content
+#### Create/update content
 
-```http -a admin:admin -v -f POST http://localhost:8081/libs/sling/distribution/services/agents/reverse-pubsync action=ADD path=/content/sample1```
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/pubsync action=PULL```
-
-
+```
+$ curl -u admin:admin http://localhost:8081/libs/sling/distribution/services/agents/reverse-pubsync -d 'action=ADD' -d 'path=/content/sample1'
+$ curl -u admin:admin http://localhost:8080/libs/sling/distribution/services/agents/pubsync -d 'action=PULL'
+```
 
 ### Installation
 

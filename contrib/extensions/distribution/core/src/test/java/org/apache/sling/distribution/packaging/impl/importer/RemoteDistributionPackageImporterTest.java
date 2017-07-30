@@ -23,6 +23,7 @@ import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.HttpConfiguration;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -41,7 +42,7 @@ public class RemoteDistributionPackageImporterTest {
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         Map<String, String> endpoints = new HashMap<String, String>();
         RemoteDistributionPackageImporter remotedistributionPackageImporter = new RemoteDistributionPackageImporter(mock(DefaultDistributionLog.class),
-                distributionTransportSecretProvider, endpoints);
+                distributionTransportSecretProvider, endpoints, new HttpConfiguration(10000));
         endpoints.put("default","http://endpoint");
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);

@@ -16,12 +16,12 @@
  */
 package org.apache.sling.pipes.dummies;
 
+import java.util.Collections;
+import java.util.Iterator;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
-
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * this pipe has nothing in output

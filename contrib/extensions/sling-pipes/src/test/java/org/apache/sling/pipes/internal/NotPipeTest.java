@@ -17,11 +17,11 @@
 
 package org.apache.sling.pipes.internal;
 
+import static org.junit.Assert.assertFalse;
+
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
 
 public class NotPipeTest extends AbstractPipeTest {
 

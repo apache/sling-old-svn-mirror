@@ -115,7 +115,6 @@ class WatchedFolder {
      */
     public ScanResult scan() throws RepositoryException {
         logger.debug("Scanning {}", path);
-        needsScan = false;
 
         Node folder = null;
         if (session.itemExists(path)) {
@@ -149,6 +148,8 @@ class WatchedFolder {
             existingResourceUrls.add(r.getId());
             digests.put(r.getId(), r.getDigest());
         }
+
+        needsScan = false;
 
         return result;
     }

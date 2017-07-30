@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
+
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test redirects */
@@ -183,7 +185,7 @@ public class RedirectTest extends HttpTestBase {
     }
 
     /** test JSON result for .json requests with sling:target */
-    public void testRedirectJson() throws JSONException, IOException {
+    public void testRedirectJson() throws JsonException, IOException {
         // create a sling:redirect node without a target
         Map<String, String> props = new HashMap<String, String>();
         props.put("sling:resourceType", "sling:redirect");
@@ -201,14 +203,14 @@ public class RedirectTest extends HttpTestBase {
 
         // the json data
         String jsonString = get.getResponseBodyAsString();
-        JSONObject json = new JSONObject(jsonString);
+        JsonObject json = JsonUtil.parseObject(jsonString);
 
-        assertEquals("sling:redirect", json.get("sling:resourceType"));
-        assertEquals("/index.html", json.get("sling:target"));
+        assertEquals("sling:redirect", json.getString("sling:resourceType"));
+        assertEquals("/index.html", json.getString("sling:target"));
     }
 
     /** test JSON result for .json requests with sling:target */
-    public void testRedirectJson2() throws JSONException, IOException {
+    public void testRedirectJson2() throws JsonException, IOException {
         // create a sling:redirect node without a target
         Map<String, String> props = new HashMap<String, String>();
         props.put("sling:resourceType", "sling:redirect");
@@ -225,9 +227,9 @@ public class RedirectTest extends HttpTestBase {
 
         // the json data
         String jsonString = get.getResponseBodyAsString();
-        JSONObject json = new JSONObject(jsonString);
+        JsonObject json = JsonUtil.parseObject(jsonString);
 
-        assertEquals("sling:redirect", json.get("sling:resourceType"));
+        assertEquals("sling:redirect", json.getString("sling:resourceType"));
     }
 
 }

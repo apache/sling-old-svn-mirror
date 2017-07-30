@@ -18,8 +18,10 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -308,17 +310,21 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
             queryParameters) {
         for (Map.Entry<String, Object> entry : queryParameters.entrySet()) {
             Object entryValue = entry.getValue();
-            if (runtimeObjectModel.isCollection(entryValue)) {
-                Collection<Object> collection = runtimeObjectModel.toCollection(entryValue);
-                Collection<String> values = new ArrayList<>(collection.size());
-                for (Object o : collection) {
-                    values.add(runtimeObjectModel.toString(o));
+            try {
+                if (runtimeObjectModel.isCollection(entryValue)) {
+                    Collection<Object> collection = runtimeObjectModel.toCollection(entryValue);
+                    Collection<String> values = new ArrayList<>(collection.size());
+                    for (Object o : collection) {
+                        values.add(URLEncoder.encode(runtimeObjectModel.toString(o), "UTF-8"));
+                    }
+                    parameters.put(entry.getKey(), values);
+                } else {
+                    Collection<String> values = new ArrayList<>(1);
+                    values.add(URLEncoder.encode(runtimeObjectModel.toString(entryValue), "UTF-8"));
+                    parameters.put(entry.getKey(), values);
                 }
-                parameters.put(entry.getKey(), values);
-            } else {
-                Collection<String> values = new ArrayList<>(1);
-                values.add(runtimeObjectModel.toString(entryValue));
-                parameters.put(entry.getKey(), values);
+            } catch (UnsupportedEncodingException e) {
+                throw new SightlyException(e);
             }
         }
     }
@@ -385,7 +391,7 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
             } else {
                 this.path = processingPath.substring(0, pathLength);
             }
-            String query = uri.getQuery();
+            String query = uri.getRawQuery();
             if (StringUtils.isNotEmpty(query)) {
                 String[] keyValuePairs = query.split("&");
                 for (String keyValuePair : keyValuePairs) {

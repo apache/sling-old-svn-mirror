@@ -47,6 +47,7 @@
     </scm>
     
     <modules>
+        <module>api</module>
         <module>core</module>
         <module>samples</module>
         <module>support</module>

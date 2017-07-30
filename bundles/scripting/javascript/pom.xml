@@ -29,7 +29,7 @@
     </parent>
 
     <artifactId>org.apache.sling.scripting.javascript</artifactId>
-    <version>2.0.31-SNAPSHOT</version>
+    <version>3.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting JavaScript Support</name>
@@ -69,16 +69,8 @@
                         </_removeheaders>
                         <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
-                        <_plugin>org.apache.felix.scrplugin.bnd.SCRDescriptorBndPlugin;destdir=${project.build.outputDirectory};</_plugin>
                     </instructions>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.felix</groupId>
-                        <artifactId>org.apache.felix.scr.bnd</artifactId>
-                        <version>1.7.2</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>
@@ -147,11 +139,6 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

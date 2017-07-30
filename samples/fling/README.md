@@ -1,7 +1,7 @@
 Sling Fling Sample
 ==================
 
-This is a sample using _Sling Models_, _Sling Query_, _Sling Scripting Thymeleaf_, _Sling Validation_ (latest snapshot), _Sling Commons Messaging_ (latest snapshot) and _Sling Commons Messaging Mail_ (latest snapshot).
+This is a sample using _Sling Models_, _Sling Query_, _Sling Scripting Thymeleaf_, _Sling Validation_, _Sling Commons Messaging_ (latest snapshot) and _Sling Commons Messaging Mail_ (latest snapshot).
 
 **As it is using some snapshots it might be unstable from time to time, feel free to ask on our mailing list if unsure!**
 

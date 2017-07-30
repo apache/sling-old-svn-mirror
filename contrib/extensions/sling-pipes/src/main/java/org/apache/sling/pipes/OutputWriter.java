@@ -16,51 +16,94 @@
  */
 package org.apache.sling.pipes;
 
+import java.io.IOException;
+
+import javax.json.JsonException;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.json.JSONException;
-
-import java.io.IOException;
 
 /**
  * defines how pipe's output get written to a servlet response
  */
-public interface OutputWriter {
+public abstract class OutputWriter {
 
-    String KEY_SIZE = "size";
+    public static final String KEY_SIZE = "size";
 
-    String KEY_ITEMS = "items";
+    public static final String KEY_ITEMS = "items";
+
+    public static final String PARAM_SIZE = KEY_SIZE;
+
+    public static final int NB_MAX = 10;
+
+    protected int size;
+
+    protected int max = NB_MAX;
+
+    protected Pipe pipe;
 
     /**
      *
      * @param request current request
      * @return true if this writer handles that request
      */
-    boolean handleRequest(SlingHttpServletRequest request);
+    public abstract boolean handleRequest(SlingHttpServletRequest request);
 
     /**
      * Init the writer, writes beginning of the output
      * @param request request from which writer will output
      * @param response response on which writer will output
-     * @param pipe pipe whose output will be written
      * @throws IOException error handling streams
-     * @throws JSONException in case invalid json is written
+     * @throws JsonException in case invalid json is written
      */
-    void init(SlingHttpServletRequest request, SlingHttpServletResponse response, Pipe pipe) throws IOException, JSONException;
+    public void init(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException {
+        max = request.getParameter(PARAM_SIZE) != null ? Integer.parseInt(request.getParameter(PARAM_SIZE)) : NB_MAX;
+        if (max < 0) {
+            max = Integer.MAX_VALUE;
+        }
+        initInternal(request, response);
+    }
+
+    /**
+     * Init the writer, writes beginning of the output
+     * @param request request from which writer will output
+     * @param response response on which writer will output
+     * @throws IOException error handling streams
+     * @throws JsonException in case invalid json is written
+     */
+    protected abstract void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException;
 
     /**
      * Write a given resource
      * @param resource resource that will be written
-     * @throws JSONException in case write fails
+     * @throws JsonException in case write fails
      */
-    void writeItem(Resource resource) throws JSONException;
+    public void write(Resource resource) throws JsonException {
+        if (size++ < max) {
+            writeItem(resource);
+        }
+    }
+
+    /**
+     * Write a given resource
+     * @param resource resource that will be written
+     * @throws JsonException in case write fails
+     */
+    protected abstract void writeItem(Resource resource) throws JsonException;
 
     /**
      * writes the end of the output
-     * @param size size of the overall result
-     * @throws JSONException in case invalid json is written
+     * @throws JsonException in case invalid json is written
      */
 
-    void ends(int size) throws JSONException;
+    public abstract void ends() throws JsonException;
+
+    /**
+     * Setter
+     * @param pipe pipe this writer should be associated with
+     */
+    public void setPipe(Pipe pipe) {
+        this.pipe = pipe;
+    }
 }

@@ -19,18 +19,19 @@ package org.apache.sling.resource.inventory.impl;
 
 import java.util.Iterator;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 
 public class ResourceTraversor {
 
-    private final JSONObject startObject;
+    private final JsonObjectBuilder startObject;
 
     private final Resource startResource;
 
-    public ResourceTraversor(final Resource resource)
-    throws JSONException {
+    public ResourceTraversor(final Resource resource) {
         this.startResource = resource;
         this.startObject = this.adapt(resource);
     }
@@ -38,25 +39,25 @@ public class ResourceTraversor {
     /**
      * Recursive descent from startResource, collecting JSONObjects into
      * startObject.
-     * @throws JSONException
+     * @throws JsonException
      */
-    public void collectResources() throws JSONException {
+    public void collectResources() throws JsonException {
         collectChildren(startResource, this.startObject);
     }
 
     /**
      * @param resource
      * @param currentLevel
-     * @throws JSONException
+     * @throws JsonException
      */
     private void collectChildren(final Resource resource,
-            final JSONObject jsonObj)
-    throws JSONException {
+            final JsonObjectBuilder jsonObj)
+    throws JsonException {
 
         final Iterator<Resource> children = resource.listChildren();
         while (children.hasNext()) {
             final Resource res = children.next();
-            final JSONObject json = collectResource(res, jsonObj);
+            final JsonObjectBuilder json = collectResource(res, jsonObj);
             collectChildren(res, json);
         }
     }
@@ -68,10 +69,10 @@ public class ResourceTraversor {
      * @param level The level where this resource is located.
      * @throws JSONException
      */
-    private JSONObject collectResource(final Resource resource, final JSONObject parent)
-    throws JSONException {
-        final JSONObject o = adapt(resource);
-        parent.put(resource.getName(), o);
+    private JsonObjectBuilder collectResource(final Resource resource, final JsonObjectBuilder parent)
+    throws JsonException {
+        final JsonObjectBuilder o = adapt(resource);
+        parent.add(resource.getName(), o);
         return o;
     }
 
@@ -82,11 +83,11 @@ public class ResourceTraversor {
      * @return The JSON representation of the Resource
      * @throws JSONException
      */
-    private JSONObject adapt(final Resource resource) throws JSONException {
+    private JsonObjectBuilder adapt(final Resource resource) throws JsonException {
         return JsonObjectCreator.create(resource);
     }
 
-    public JSONObject getJSONObject() {
-        return startObject;
+    public JsonObject getJsonObject() {
+        return startObject.build();
     }
 }

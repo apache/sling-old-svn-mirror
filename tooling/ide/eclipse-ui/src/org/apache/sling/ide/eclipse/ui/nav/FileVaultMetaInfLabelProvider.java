@@ -68,7 +68,7 @@ public class FileVaultMetaInfLabelProvider implements ILabelProvider {
     public String getText(Object element) {
         if (element instanceof FileVaultMetaInfRootFolder) {
             FileVaultMetaInfRootFolder fileVaultMetaInfRootFolder = (FileVaultMetaInfRootFolder) element;
-            return fileVaultMetaInfRootFolder.getFolder().getProjectRelativePath().toPortableString();
+            return fileVaultMetaInfRootFolder.getProjectRelativePath().toPortableString();
         }
         return null;
     }

@@ -74,9 +74,9 @@ public class PathEntry extends ImportOptions {
     public static final String AUTOCHECKOUT_DIRECTIVE = "autoCheckout";
 
     /**
-     * The ignore content readers directive specifying whether the available {@link ContentReader}s
-     * should be used during content loading. This is a string value that defaults to the empty
-     * string..
+     * The ignore content readers directive specifying whether the available 
+     * {@link org.apache.sling.jcr.contentloader.ContentReader}s should be used during
+     * content loading. This is a string value that defaults to the emptystring.
      * @since 2.0.4
      */
     public static final String IGNORE_CONTENT_READERS_DIRECTIVE = "ignoreImportProviders";

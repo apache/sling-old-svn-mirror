@@ -18,8 +18,11 @@
  ******************************************************************************/
 package org.apache.sling.hapi;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import java.util.Map;
 
+@ProviderType
 public interface MicrodataAttributeHelper {
 
     /**

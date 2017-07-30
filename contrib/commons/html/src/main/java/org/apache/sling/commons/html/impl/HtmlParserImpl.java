@@ -20,11 +20,16 @@ package org.apache.sling.commons.html.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.html.HtmlParser;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.ccil.cowan.tagsoup.Parser;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.w3c.dom.Document;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -32,8 +37,19 @@ import org.xml.sax.SAXException;
 import org.xml.sax.ext.LexicalHandler;
 
 @Component
-@Service(value=HtmlParser.class)
+@Designate(ocd = HtmlParserImpl.Config.class)
 public class HtmlParserImpl implements HtmlParser {
+	
+    @ObjectClassDefinition(name="Apache Sling HTML Parser", description="Parser configuration")
+    static @interface Config {
+ 
+        @AttributeDefinition(name = "Parser Properties",
+                description = "Additional properties to be applied to the underlying parser in the format of key=[true|false]")
+        String[] properties();
+    
+    }
+    
+    private Map<String,Boolean> features;
 
     /**
      * @see org.apache.sling.commons.html.HtmlParser#parse(java.io.InputStream, java.lang.String, org.xml.sax.ContentHandler)
@@ -43,6 +59,9 @@ public class HtmlParserImpl implements HtmlParser {
         final Parser parser = new Parser();
         if ( ch instanceof LexicalHandler ) {
             parser.setProperty("http://xml.org/sax/properties/lexical-handler", ch);
+        }
+        for (String feature : features.keySet()){
+            parser.setProperty(feature, features.get(feature));
         }
         parser.setContentHandler(ch);
         final InputSource source = new InputSource(stream);
@@ -68,6 +87,9 @@ public class HtmlParserImpl implements HtmlParser {
 
         try {
             parser.setProperty("http://xml.org/sax/properties/lexical-handler", builder);
+            for (String feature : features.keySet()) {
+                parser.setProperty(feature, features.get(feature));
+            }
             parser.setContentHandler(builder);
             parser.parse(source);
         } catch (SAXException se) {
@@ -77,5 +99,13 @@ public class HtmlParserImpl implements HtmlParser {
             throw (IOException) new IOException("Unable to parse xml.").initCause(se);
         }
         return builder.getDocument();
+    }
+    
+    @Activate
+    private void activate(Config config) {
+    	Map<String,String> temp = PropertiesUtil.toMap(config.properties(), new String[]{});
+    	for (String key : temp.keySet()){
+    		features.put(key, Boolean.valueOf(temp.get(key)));
+    	}
     }
 }

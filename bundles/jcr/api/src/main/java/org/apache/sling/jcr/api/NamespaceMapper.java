@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.api;
 
+import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -39,6 +40,5 @@ public interface NamespaceMapper {
      * @param session The new session
      * @throws RepositoryException If anything goes wrong
      */
-    void defineNamespacePrefixes(Session session)
-    throws RepositoryException;
+    void defineNamespacePrefixes(@Nonnull Session session) throws RepositoryException;
 }

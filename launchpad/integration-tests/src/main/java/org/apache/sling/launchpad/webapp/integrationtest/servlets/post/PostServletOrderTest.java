@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 
 /** Test the order option for node creation via the MicrojaxPostServlet */
 public class PostServletOrderTest extends HttpTestBase {
@@ -192,17 +194,16 @@ public class PostServletOrderTest extends HttpTestBase {
         //assertJavascript(expected, content, TEST_SCRIPT);
         try {
             String actual = "";
-            JSONObject obj = new JSONObject(content);
-            JSONArray n = obj.names();
-            for (int i=0; i<n.length(); i++) {
-                String name = n.getString(i);
+            JsonObject obj = JsonUtil.parseObject(content);
+            
+            for (String name : obj.keySet()) {
                 Object o = obj.get(name);
-                if (o instanceof JSONObject) {
+                if (o instanceof JsonObject) {
                     actual += name + ",";
                 }
             }
             assertEquals(expected, actual);
-        } catch (JSONException e) {
+        } catch (JsonException e) {
             throw new IOException(e.toString());
         }
     }

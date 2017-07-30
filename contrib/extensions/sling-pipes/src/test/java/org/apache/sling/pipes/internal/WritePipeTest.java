@@ -16,18 +16,23 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Iterator;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import java.util.Iterator;
-
-import static org.junit.Assert.*;
 
 /**
  * test write
@@ -52,7 +57,7 @@ public class WritePipeTest extends AbstractPipeTest {
         assertTrue("this pipe should be marked as content modifier", pipe.modifiesContent());
         pipe.getOutput();
         context.resourceResolver().commit();
-        ValueMap properties =  context.resourceResolver().getResource("/content/fruits/apple").adaptTo(ValueMap.class);
+        ValueMap properties =  context.resourceResolver().getResource(PATH_APPLE).adaptTo(ValueMap.class);
         assertTrue("There should be hasSeed set to true", properties.get("hasSeed", false));
         assertArrayEquals("Colors should be correctly set", new String[]{"green", "red"}, properties.get("colors", String[].class));
         assertFalse("worm property should be gone (${null} conf)", properties.get("worm", false));
@@ -64,8 +69,10 @@ public class WritePipeTest extends AbstractPipeTest {
      */
     public static void assertPiped(Resource resource) {
         ValueMap properties = resource.adaptTo(ValueMap.class);
+        String[] array = new String[]{"cabbage","carrot"};
         assertArrayEquals("Second fruit should have been correctly instantiated & patched, added to the first", new String[]{"apple","banana"}, properties.get("fruits", String[].class));
-        assertArrayEquals("Fixed mv should be there", new String[]{"cabbage","carrot"}, properties.get("fixedVegetables", String[].class));
+        assertArrayEquals("Fixed mv should be there", array, properties.get("fixedVegetables", String[].class));
+        assertArrayEquals("Expr fixed mv should there and computed", array, properties.get("computedVegetables", String[].class));
     }
 
     @Test
@@ -109,7 +116,7 @@ public class WritePipeTest extends AbstractPipeTest {
         assertTrue("this pipe should be marked as content modifier", pipe.modifiesContent());
         pipe.getOutput();
         context.resourceResolver().commit();
-        Resource appleResource = context.resourceResolver().getResource("/content/fruits/apple");
+        Resource appleResource = context.resourceResolver().getResource(PATH_APPLE);
         ValueMap properties =  appleResource.adaptTo(ValueMap.class);
         assertTrue("There should be hasSeed set to true", properties.get("hasSeed", false));
         assertArrayEquals("Colors should be correctly set", new String[]{"green", "red"}, properties.get("colors", String[].class));

@@ -55,6 +55,9 @@
                         <Sling-Initial-Content>
                             initial-content; uninstall:=true
                         </Sling-Initial-Content>
+                        <Embed-Dependency>
+                            org.apache.felix.utils;inline=org/apache/felix/utils/json/JSONWriter.class
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -62,6 +65,12 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.9.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
@@ -112,11 +121,6 @@
             <artifactId>org.apache.sling.api</artifactId>
             <version>2.4.2</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>

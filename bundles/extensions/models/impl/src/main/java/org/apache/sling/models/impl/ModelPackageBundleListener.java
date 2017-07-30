@@ -68,6 +68,11 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
      */
     private static final String PROP_IMPLEMENTATION_CLASS = "models.adapter.implementationClass";
 
+    /**
+     * Service registration property letting the Adapter Manager the adapter is OK to be in a private package
+     */
+    public static final String PROP_ALLOWED_IN_PRIVATE = "adapter.allowed.in.private.package";
+
     private static final Logger log = LoggerFactory.getLogger(ModelPackageBundleListener.class);
 
     private final BundleContext bundleContext;
@@ -80,17 +85,18 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
     private final BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
 
-    private final ScriptEngineFactory scriptEngineFactory;
+    private final SlingModelsScriptEngineFactory scriptEngineFactory;
     
     public ModelPackageBundleListener(BundleContext bundleContext,
                                       ModelAdapterFactory factory,
                                       AdapterImplementations adapterImplementations,
-                                      BindingsValuesProvidersByContext bindingsValuesProvidersByContext) {
+                                      BindingsValuesProvidersByContext bindingsValuesProvidersByContext,
+                                      SlingModelsScriptEngineFactory scriptEngineFactory) {
         this.bundleContext = bundleContext;
         this.factory = factory;
         this.adapterImplementations = adapterImplementations;
         this.bindingsValuesProvidersByContext = bindingsValuesProvidersByContext;
-        this.scriptEngineFactory = new ExporterScriptEngineFactory(bundleContext.getBundle());
+        this.scriptEngineFactory = scriptEngineFactory;
         this.bundleTracker = new BundleTracker(bundleContext, Bundle.ACTIVE, this);
         this.bundleTracker.open();
     }
@@ -149,34 +155,33 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                 }
                 // register adapter only if given adapters are valid
                 if (validateAdapterClasses(implType, adapterTypes)) {
-                    for (Class<?> adapterType : adapterTypes) {
-                        adapterImplementations.add(adapterType, implType);
-                    }
-                    ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
-                    regs.add(reg);
+                    if (adapterImplementations.addAll(implType, adapterTypes)) {
+                        ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
+                        regs.add(reg);
 
-                    String[] resourceTypes = annotation.resourceType();
-                    for (String resourceType : resourceTypes) {
-                        if (StringUtils.isNotEmpty(resourceType)) {
-                            for (Class<?> adaptable : annotation.adaptables()) {
-                                adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, implType);
-                                ExportServlet.ExportedObjectAccessor accessor = null;
-                                if (adaptable == Resource.class) {
-                                    accessor = new ExportServlet.ResourceAccessor(implType);
-                                } else if (adaptable == SlingHttpServletRequest.class) {
-                                    accessor = new ExportServlet.RequestAccessor(implType);
-                                }
-                                Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
-                                if (exporterAnnotation != null) {
-                                    registerExporter(bundle, implType, resourceType, exporterAnnotation, regs, accessor);
-                                }
-                                Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
-                                if (exportersAnnotation != null) {
-                                    for (Exporter ann : exportersAnnotation.value()) {
-                                        registerExporter(bundle, implType, resourceType, ann, regs, accessor);
+                        String[] resourceTypes = annotation.resourceType();
+                        for (String resourceType : resourceTypes) {
+                            if (StringUtils.isNotEmpty(resourceType)) {
+                                for (Class<?> adaptable : annotation.adaptables()) {
+                                    adapterImplementations.registerModelToResourceType(bundle, resourceType, adaptable, implType);
+                                    ExportServlet.ExportedObjectAccessor accessor = null;
+                                    if (adaptable == Resource.class) {
+                                        accessor = new ExportServlet.ResourceAccessor(implType);
+                                    } else if (adaptable == SlingHttpServletRequest.class) {
+                                        accessor = new ExportServlet.RequestAccessor(implType);
                                     }
-                                }
+                                    Exporter exporterAnnotation = implType.getAnnotation(Exporter.class);
+                                    if (exporterAnnotation != null) {
+                                        registerExporter(bundle, implType, resourceType, exporterAnnotation, regs, accessor);
+                                    }
+                                    Exporters exportersAnnotation = implType.getAnnotation(Exporters.class);
+                                    if (exportersAnnotation != null) {
+                                        for (Exporter ann : exportersAnnotation.value()) {
+                                            registerExporter(bundle, implType, resourceType, ann, regs, accessor);
+                                        }
+                                    }
 
+                                }
                             }
                         }
                     }
@@ -262,6 +267,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
         registrationProps.put(AdapterFactory.ADAPTER_CLASSES, toStringArray(adapterTypes));
         registrationProps.put(AdapterFactory.ADAPTABLE_CLASSES, toStringArray(adaptableTypes));
         registrationProps.put(PROP_IMPLEMENTATION_CLASS, implType.getName());
+        registrationProps.put(PROP_ALLOWED_IN_PRIVATE, true);
 
         if (StringUtils.isNotBlank(condition)) {
             registrationProps.put(PROP_ADAPTER_CONDITION, condition);

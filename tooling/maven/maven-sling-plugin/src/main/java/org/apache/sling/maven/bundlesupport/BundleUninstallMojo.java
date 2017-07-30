@@ -18,19 +18,13 @@
  */
 package org.apache.sling.maven.bundlesupport;
 
-import static org.apache.sling.maven.bundlesupport.JsonSupport.JSON_MIME_TYPE;
-
 import java.io.File;
 
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.sling.maven.bundlesupport.deploy.BundleDeploymentMethod;
+import org.apache.sling.maven.bundlesupport.deploy.DeployContext;
 import org.apache.sling.maven.bundlesupport.fsresource.SlingInitialContentMounter;
 
 /**
@@ -78,97 +72,11 @@ public class BundleUninstallMojo extends AbstractBundleInstallMojo {
 
         configure(targetURL, bundleFile);
 
-        switch (deployMethod) {
-        case SlingPostServlet:
-            postToSling(targetURL, bundleFile);
-            break;
-        case WebConsole:
-            postToFelix(targetURL, bundleName);
-            break;
-        case WebDAV:
-            deleteViaWebDav(targetURL, bundleFile);
-            break;
-        // sanity check to make sure it gets handled in some fashion
-        default:
-            throw new MojoExecutionException("Unrecognized BundleDeployMethod " + deployMethod);
-        }
-    }
-
-    protected void deleteViaWebDav(String targetURL, File file)
-        throws MojoExecutionException {
-
-        final DeleteMethod delete = new DeleteMethod(getURLWithFilename(targetURL, file.getName()));
-
-        try {
-
-            int status = getHttpClient().executeMethod(delete);
-            if (status >= 200 && status < 300) {
-                getLog().info("Bundle uninstalled");
-            } else {
-                getLog().error(
-                    "Uninstall failed, cause: "
-                        + HttpStatus.getStatusText(status));
-            }
-        } catch (Exception ex) {
-            throw new MojoExecutionException("Uninstall from " + targetURL
-                + " failed, cause: " + ex.getMessage(), ex);
-        } finally {
-            delete.releaseConnection();
-        }
-    }
-
-    @Override
-    protected void postToSling(String targetURL, File file)
-        throws MojoExecutionException {
-        final PostMethod post = new PostMethod(getURLWithFilename(targetURL, file.getName()));
-
-        try {
-            // Add SlingPostServlet operation flag for deleting the content
-            Part[] parts = new Part[1];
-            parts[0] = new StringPart(":operation", "delete");
-            post.setRequestEntity(new MultipartRequestEntity(parts,
-                    post.getParams()));
-
-            // Request JSON response from Sling instead of standard HTML
-            post.setRequestHeader("Accept", JSON_MIME_TYPE);
-
-            int status = getHttpClient().executeMethod(post);
-            if (status == HttpStatus.SC_OK) {
-                getLog().info("Bundle uninstalled");
-            } else {
-                getLog().error(
-                    "Uninstall failed, cause: "
-                        + HttpStatus.getStatusText(status));
-            }
-        } catch (Exception ex) {
-            throw new MojoExecutionException("Uninstall from " + targetURL
-                + " failed, cause: " + ex.getMessage(), ex);
-        } finally {
-            post.releaseConnection();
-        }
-    }
-
-    protected void postToFelix(String targetURL, String symbolicName)
-    throws MojoExecutionException {
-        final PostMethod post = new PostMethod(targetURL + "/bundles/" + symbolicName);
-        post.addParameter("action", "uninstall");
-
-        try {
-
-            int status = getHttpClient().executeMethod(post);
-            if (status == HttpStatus.SC_OK) {
-                getLog().info("Bundle uninstalled");
-            } else {
-                getLog().error(
-                    "Uninstall failed, cause: "
-                        + HttpStatus.getStatusText(status));
-            }
-        } catch (Exception ex) {
-            throw new MojoExecutionException("Uninstall from " + targetURL
-                + " failed, cause: " + ex.getMessage(), ex);
-        } finally {
-            post.releaseConnection();
-        }
+        deployMethod.execute().undeploy(targetURL, bundleFile, bundleName, new DeployContext()
+                .log(getLog())
+                .httpClient(getHttpClient())
+                .failOnError(failOnError)
+                .mimeType(mimeType));
     }
 
     @Override

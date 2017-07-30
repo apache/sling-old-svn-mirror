@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.jcr.contentparser</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.2.5-SNAPSHOT</version>
 
     <name>Apache Sling JCR Content Parser</name>
     <description>
@@ -78,9 +78,9 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.johnzon</groupId>
-            <artifactId>johnzon-core</artifactId>
-            <version>1.0.0</version>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -121,6 +121,12 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>15.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.johnzon</groupId>
+            <artifactId>johnzon-core</artifactId>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

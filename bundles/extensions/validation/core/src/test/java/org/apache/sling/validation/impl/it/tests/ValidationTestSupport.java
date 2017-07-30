@@ -99,7 +99,8 @@ public class ValidationTestSupport extends TestSupport {
             slingExtensionI18n(),
             slingExtensionResourcePresence(),
             slingInstallerProviderJcr(),
-            mavenBundle().groupId("org.apache.commons").artifactId("commons-collections4").versionAsInProject()
+            mavenBundle().groupId("org.apache.commons").artifactId("commons-collections4").versionAsInProject(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.johnzon").versionAsInProject()
         );
     }
 

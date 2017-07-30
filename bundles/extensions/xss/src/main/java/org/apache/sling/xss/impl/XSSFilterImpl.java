@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.apache.sling.xss.ProtectionContext;
 import org.apache.sling.xss.XSSFilter;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -51,6 +52,7 @@ import org.slf4j.LoggerFactory;
 @Component(
         service = {ResourceChangeListener.class, XSSFilter.class},
         property = {
+                Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
                 ResourceChangeListener.CHANGES + "=ADDED",
                 ResourceChangeListener.CHANGES + "=CHANGED",
                 ResourceChangeListener.CHANGES + "=REMOVED",
@@ -59,7 +61,7 @@ import org.slf4j.LoggerFactory;
 )
 public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, ExternalResourceChangeListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(XSSFilterImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(XSSFilterImpl.class);
 
     // Default href configuration copied from the config.xml supplied with AntiSamy
     static final Attribute DEFAULT_HREF_ATTRIBUTE = new Attribute(
@@ -83,10 +85,10 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
     private final XSSFilterRule plainHtmlContext = new PlainTextToHtmlContentContext();
 
     // policies cache
-    private Map<String, PolicyHandler> policies = new ConcurrentHashMap<>();
+    private final Map<String, PolicyHandler> policies = new ConcurrentHashMap<>();
 
     @Reference
-    private ResourceResolverFactory resourceResolverFactory = null;
+    private ResourceResolverFactory resourceResolverFactory;
 
     @Reference
     private ServiceUserMapped serviceUserMapped;
@@ -95,7 +97,7 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
     public void onChange(@Nonnull List<ResourceChange> resourceChanges) {
         for (ResourceChange change : resourceChanges) {
             if (change.getPath().endsWith(DEFAULT_POLICY_PATH)) {
-                LOGGER.info("Detected policy file change ({}) at {}. Updating default handler.", change.getType().name(), change.getPath());
+                logger.info("Detected policy file change ({}) at {}. Updating default handler.", change.getType().name(), change.getPath());
                 updateDefaultHandler();
             }
         }
@@ -187,49 +189,44 @@ public class XSSFilterImpl implements XSSFilter, ResourceChangeListener, Externa
 
     private synchronized void updateDefaultHandler() {
         this.defaultHandler = null;
-        ResourceResolver xssResourceResolver = null;
-        try {
-            xssResourceResolver = resourceResolverFactory.getServiceResourceResolver(null);
+        try (final ResourceResolver xssResourceResolver = resourceResolverFactory.getServiceResourceResolver(null)) {
             Resource policyResource = xssResourceResolver.getResource(DEFAULT_POLICY_PATH);
             if (policyResource != null) {
                 try (InputStream policyStream = policyResource.adaptTo(InputStream.class)) {
                     setDefaultHandler(new PolicyHandler(policyStream));
-                    LOGGER.info("Installed default policy from {}.", policyResource.getPath());
+                    logger.info("Installed default policy from {}.", policyResource.getPath());
                 } catch (Exception e) {
                     Throwable[] suppressed = e.getSuppressed();
                     if (suppressed.length > 0) {
                         for (Throwable t : suppressed) {
-                            LOGGER.error("Unable to load policy from " + policyResource.getPath(), t);
+                            logger.error("Unable to load policy from " + policyResource.getPath(), t);
                         }
                     }
-                    LOGGER.error("Unable to load policy from " + policyResource.getPath(), e);
+                    logger.error("Unable to load policy from " + policyResource.getPath(), e);
                 }
-            } else {
-                // the content was not installed but the service is active; let's use the embedded file for the default handler
-                LOGGER.warn("Could not find a policy file at the default location {}. Attempting to use the default resource embedded in" +
-                        " the bundle.", DEFAULT_POLICY_PATH);
-                try (InputStream policyStream = this.getClass().getClassLoader().getResourceAsStream(EMBEDDED_POLICY_PATH)) {
-                    setDefaultHandler(new PolicyHandler(policyStream));
-                    LOGGER.info("Installed default policy from the embedded {} file from the bundle.", EMBEDDED_POLICY_PATH);
-                } catch (Exception e) {
-                    Throwable[] suppressed = e.getSuppressed();
-                    if (suppressed.length > 0) {
-                        for (Throwable t : suppressed) {
-                            LOGGER.error("Unable to load policy from embedded policy file.", t);
-                        }
+            }
+        } catch (final LoginException e) {
+            logger.error("Unable to load the default policy file.", e);
+        }
+        if (defaultHandler == null) {
+            // the content was not installed but the service is active; let's use the embedded file for the default handler
+            logger.info("Could not find a policy file at the default location {}. Attempting to use the default resource embedded in" +
+                    " the bundle.", DEFAULT_POLICY_PATH);
+            try (InputStream policyStream = this.getClass().getClassLoader().getResourceAsStream(EMBEDDED_POLICY_PATH)) {
+                setDefaultHandler(new PolicyHandler(policyStream));
+                logger.info("Installed default policy from the embedded {} file from the bundle.", EMBEDDED_POLICY_PATH);
+            } catch (Exception e) {
+                Throwable[] suppressed = e.getSuppressed();
+                if (suppressed.length > 0) {
+                    for (Throwable t : suppressed) {
+                        logger.error("Unable to load policy from embedded policy file.", t);
                     }
-                    LOGGER.error("Unable to load policy from embedded policy file.", e);
                 }
+                logger.error("Unable to load policy from embedded policy file.", e);
             }
-            if (defaultHandler == null) {
-                throw new IllegalStateException("Cannot load a default policy handler.");
-            }
-        } catch (LoginException e) {
-            LOGGER.error("Unable to load the default policy file.", e);
-        } finally {
-            if (xssResourceResolver != null) {
-                xssResourceResolver.close();
-            }
+        }
+        if (defaultHandler == null) {
+            throw new IllegalStateException("Cannot load a default policy handler.");
         }
     }
 

@@ -16,18 +16,6 @@
  */
 package org.apache.sling.pipes.internal;
 
-import org.apache.sling.api.resource.ModifiableValueMap;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.pipes.BasePipe;
-import org.apache.sling.pipes.Plumber;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -37,14 +25,26 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.Plumber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * pipe that writes to configured resource
  */
 public class WritePipe extends BasePipe {
     private static final Logger logger = LoggerFactory.getLogger(WritePipe.class);
-    public static final String RESOURCE_TYPE = "slingPipes/write";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "write";
     Node confTree;
-    String resourceExpression;
     private List<Resource> propertiesToRemove;
     Pattern addPatch = Pattern.compile("\\+\\[(.*)\\]");
     Pattern multi = Pattern.compile("\\[(.*)\\]");
@@ -61,11 +61,11 @@ public class WritePipe extends BasePipe {
             throw new Exception("write pipe is misconfigured: it should have a configuration node");
         }
         confTree = getConfiguration().adaptTo(Node.class);
-        resourceExpression = getPath();
     }
 
+
     /**
-     * convert the configured value (can be an expression) in a value that can be written in a resource.
+     * convert the configured string value (can be an expression) in a value that can be written in a resource.
      * also handles patch for multivalue properties like <code>+[value]</code> in which case <code>value</code>
      * is added to the MV property
      * @param resource resource to which value will be written
@@ -73,28 +73,39 @@ public class WritePipe extends BasePipe {
      * @param expression configured value to write
      * @return actual value to write to the resource
      */
+    protected Object computeValue(Resource resource, String key, String expression){
+        Object value = bindings.instantiateObject((String) expression);
+        if (value != null && value instanceof String) {
+            //in that case we treat special case like MV or patches
+            String sValue = (String)value;
+            Matcher patch = addPatch.matcher(sValue);
+            if (patch.matches()) {
+                String newValue = patch.group(1);
+                String[] actualValues = resource.adaptTo(ValueMap.class).get(key, String[].class);
+                List<String> newValues = actualValues != null ? new LinkedList<>(Arrays.asList(actualValues)) : new ArrayList<String>();
+                if (!newValues.contains(newValue)) {
+                    newValues.add(newValue);
+                }
+                return newValues.toArray(new String[newValues.size()]);
+            }
+            Matcher multiMatcher = multi.matcher(sValue);
+            if (multiMatcher.matches()) {
+                return multiMatcher.group(1).split(",");
+            }
+        }
+        return value;
+    }
+
+
     protected Object computeValue(Resource resource, String key, Object expression) {
         if (expression instanceof String) {
-            Object value = bindings.instantiateObject((String) expression);
-            if (value != null && value instanceof String) {
-                //in that case we treat special case like MV or patches
-                String sValue = (String)value;
-                Matcher patch = addPatch.matcher(sValue);
-                if (patch.matches()) {
-                    String newValue = patch.group(1);
-                    String[] actualValues = resource.adaptTo(ValueMap.class).get(key, String[].class);
-                    List<String> newValues = actualValues != null ? new LinkedList<>(Arrays.asList(actualValues)) : new ArrayList<String>();
-                    if (!newValues.contains(newValue)) {
-                        newValues.add(newValue);
-                    }
-                    return newValues.toArray(new String[newValues.size()]);
-                }
-                Matcher multiMatcher = multi.matcher(sValue);
-                if (multiMatcher.matches()) {
-                    return multiMatcher.group(1).split(",");
-                }
+            return computeValue(resource, key, (String)expression);
+        } else if (expression instanceof String[]){
+            List<String> values = new ArrayList<>();
+            for (String expr : (String[])expression){
+                values.add((String)computeValue(resource, key, expr));
             }
-            return value;
+            return values.toArray(new String[values.size()]);
         }
         return expression;
     }

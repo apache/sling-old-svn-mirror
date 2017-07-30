@@ -314,6 +314,17 @@ class MockSession implements Session {
         isLive = false;
     }
 
+    @Override
+    public Object getAttribute(final String name) {
+        return null;
+    }
+
+    @Override
+    public String[] getAttributeNames() {
+        return new String[0];
+    }
+
+    
     // --- unsupported operations ---
     @Override
     public void addLockToken(final String lt) {
@@ -341,16 +352,6 @@ class MockSession implements Session {
     @Override
     public void exportSystemView(final String absPath, final OutputStream out, final boolean skipBinary,
             final boolean noRecurse) throws RepositoryException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object getAttribute(final String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String[] getAttributeNames() {
         throw new UnsupportedOperationException();
     }
 

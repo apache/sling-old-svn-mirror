@@ -28,16 +28,13 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class DistributionUtils {
     private static final Logger log = LoggerFactory.getLogger(DistributionUtils.class);
-    private static final String AUTHENTICATION_INFO_SESSION = "user.jcr.credentials";
 
     public static ResourceResolver loginService(ResourceResolverFactory resolverFactory, String serviceName) throws LoginException {
         Map<String, Object> authInfo = new HashMap<String, Object>();
@@ -84,16 +81,7 @@ public class DistributionUtils {
         try {
             Map<String, Object> authenticationInfo = new HashMap<String, Object>();
 
-            if (subServiceName == null && user != null) {
-                try {
-                    Session session = slingRepository.impersonateFromService(service, new SimpleCredentials(user, new char[0]), null);
-                    authenticationInfo.put(AUTHENTICATION_INFO_SESSION, session);
-                } catch (NoSuchMethodError nsme) {
-                    log.warn("without sling.jcr.api 2.3.0 content will be aggregated using service {}", service);
-                    Session session = slingRepository.loginService(service, null);
-                    authenticationInfo.put(AUTHENTICATION_INFO_SESSION, session);
-                }
-            } else {
+            if (subServiceName != null) {
                 authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
             }
             resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
@@ -101,8 +89,6 @@ public class DistributionUtils {
             return resourceResolver;
         } catch (LoginException le) {
             throw new DistributionException(le);
-        } catch (RepositoryException re) {
-            throw new DistributionException(re);
         }
     }
 }

@@ -102,7 +102,6 @@
         <module>bundles/commons/classloader</module>
         <module>bundles/commons/fsclassloader</module>
         <module>bundles/commons/compiler</module>
-        <module>bundles/commons/json</module>
         <module>bundles/commons/log</module>
         <module>bundles/commons/log-webconsole</module>
         <module>bundles/commons/logservice</module>

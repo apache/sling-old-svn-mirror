@@ -16,12 +16,15 @@
  */
 package org.apache.sling.junit.remote.testrunner;
 
+import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.JSONTokener;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+
+import org.apache.sling.jcr.contentparser.impl.JsonTicksConverter;
 import org.apache.sling.junit.remote.httpclient.RemoteTestHttpClient;
 import org.apache.sling.testing.tools.http.RequestCustomizer;
 import org.apache.sling.testing.tools.http.RequestExecutor;
@@ -111,14 +114,14 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
                 "json"
                 );
         executor.assertContentType("application/json");
-        final JSONArray json = new JSONArray(new JSONTokener((executor.getContent())));
+        final JsonArray json = Json.createReader(new StringReader(JsonTicksConverter.tickToDoubleQuote(executor.getContent()))).readArray();
 
         // Response contains an array of objects identified by 
         // their INFO_TYPE, extract the tests
         // based on this vlaue
-        for(int i = 0 ; i < json.length(); i++) {
-            final JSONObject obj = json.getJSONObject(i);
-            if("test".equals(obj.getString("INFO_TYPE"))) {
+        for(int i = 0 ; i < json.size(); i++) {
+            final JsonObject obj = json.getJsonObject(i);
+            if(obj.containsKey("INFO_TYPE") && "test".equals(obj.getString("INFO_TYPE"))) {
                 children.add(new SlingRemoteTest(testClass, obj));
             }
         }

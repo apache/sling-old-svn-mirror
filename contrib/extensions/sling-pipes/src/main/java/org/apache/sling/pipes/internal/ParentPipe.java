@@ -16,19 +16,19 @@
  */
 package org.apache.sling.pipes.internal;
 
+import java.util.Collections;
+import java.util.Iterator;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
-
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * very simple pipe, returning parent resource of input resource
  */
 public class ParentPipe extends BasePipe {
 
-    public static final String RESOURCE_TYPE = "slingPipes/parent";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "parent";
 
     public ParentPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);

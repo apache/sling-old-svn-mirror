@@ -1,0 +1,65 @@
+<!--/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Licensed to the Apache Software Foundation (ASF) under one or more
+  ~ contributor license agreements.  See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright ownership.
+  ~ The ASF licenses this file to You under the Apache License, Version 2.0
+  ~ (the "License"); you may not use this file except in compliance with
+  ~ the License.  You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/-->
+<body data-sly-use.edit="org.apache.sling.samples.htlblog.models.Edit">
+<!--/* Include our nav as inherited through our resourceSuperType. */-->
+<sly data-sly-include="nav.html"></sly>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-6">
+            <!--/* If we are editing a page, show the post title. */-->
+            <h1 data-sly-test.isEdit="${edit.post}">Editing ${edit.post.title}</h1>
+            <!--/* If we are not editing a page, show the create new. */-->
+            <h1 data-sly-test="${!isEdit}">Create New</h1>
+        </div>
+    </div>
+    <!--/* If we are editing, our action is our resource path. If not, we are adding a new resource to posts. */-->
+    <form method="POST" action="${isEdit ? edit.post.getPath : '/content/htlblog/posts/*'}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="${edit.post.title}"/>
+        </div>
+        <div class="form-group">
+            <label for="content-body">Body</label>
+            <textarea name="body" class="form-control" rows="10" id="content-body">${edit.post.body}</textarea>
+        </div>
+        
+        <div class="form-group" data-sly-test="${!edit.post.featuredImagePath}">
+            <label for="content-body">Featured Image</label>
+            <input type="file" name="featuredImage/*"/>
+            <input type="hidden" name="featuredImage/*@TypeHint" value="nt:file" />
+        </div>
+
+        <div class="form-group">
+            <input data-sly-test="${isEdit}" type="text" class="form-control" name="created" value="${edit.post.created}" disabled/>
+        </div>
+        
+        <!--/* These fields are special fields supported by the Sling Post Servlet. */-->
+        <input type="hidden" name="created"/>
+        <input type="hidden" name="createdBy"/>
+        <input type="hidden" name="jcr:primaryType" value="nt:unstructured"/>
+        <input type="hidden" name="sling:resourceType" value="htlblog/public/post"/>
+        <input type="hidden" name=":redirect" value="/content/htlblog/posts.html" />
+
+        <div class="text-right">
+            <input type="submit" value="Post" class="btn btn-default btn-primary">
+        </div>
+        <sly data-sly-test="${edit.post.featuredImagePath}">
+            <h2>Featured Image</h2>
+            <img src="${edit.post.featuredImagePath}" alt="Featured Image" class="featured-image"/>
+        </sly>
+    </form>
+</div>

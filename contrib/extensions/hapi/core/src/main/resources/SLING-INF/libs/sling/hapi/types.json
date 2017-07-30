@@ -211,5 +211,5 @@
         "fqdn": "org.apache.sling.hapi.common.hapi_typescollection",
         "name": "hapi_typescollection",
         "sling:resourceType": "sling/hapi/components/type"
-    },
+    }
 }

@@ -43,6 +43,8 @@ import org.osgi.service.prefs.BackingStoreException;
 public abstract class ProjectUtil {
 
     private static final String PROPERTY_SYNC_ROOT = Activator.PLUGIN_ID + ".content_sync_root";
+    private static final String PROPERTY_PROVISIONING_MODEL_DIR = Activator.PLUGIN_ID + ".provisioning_model_dir";
+    
     private static final String PROPERTY_SYNC_ROOT_DEFAULT_VALUE = "jcr_root";
     
     private static final QualifiedName PROPERTY_SYNC_ROOT_OLD = new QualifiedName(Activator.PLUGIN_ID, "sync_root");
@@ -149,17 +151,49 @@ public abstract class ProjectUtil {
      */
     public static void setSyncDirectoryPath(IProject project, IPath path) {
         
-        IScopeContext projectScope = new ProjectScope(project);
+        setPathPersistentProperty(project, path, PROPERTY_SYNC_ROOT);
+    }
+
+	private static void setPathPersistentProperty(IProject project, IPath path, String propertyName) {
+		
+		IScopeContext projectScope = new ProjectScope(project);
         IEclipsePreferences projectNode = projectScope.getNode(Activator.PLUGIN_ID);
         if ( projectNode != null ) {
-            projectNode.put(PROPERTY_SYNC_ROOT, path.toPortableString());
+            projectNode.put(propertyName, path.toPortableString());
             try {
                 projectNode.flush();
             } catch (BackingStoreException e) {
                 Activator.getDefault().getPluginLogger().error(e.getMessage(), e);
             }
         }
-    }
+	}
+
+	public static IPath getProvisioningModelPath(IProject project) {
+		
+		if ( project == null || !project.isOpen() || !ProjectHelper.isLaunchpadProject(project)) {
+			return null;
+		}
+		
+        IScopeContext projectScope = new ProjectScope(project);
+        IEclipsePreferences projectNode = projectScope.getNode(Activator.PLUGIN_ID);
+        if ( projectNode == null ) {
+        	return null;
+        }
+        
+        String propertyValue = projectNode.get(PROPERTY_PROVISIONING_MODEL_DIR, null);
+        if ( propertyValue == null ) {
+        	return null;
+        }
+		
+		return Path.fromPortableString(propertyValue);
+	}
+	
+	public static void setProvisioningModelPath(IProject project, IPath modelPath) {
+		
+		setPathPersistentProperty(project, modelPath, PROPERTY_PROVISIONING_MODEL_DIR);
+		
+	}
+	
     
     /**
      * Loads a filter for the specified project

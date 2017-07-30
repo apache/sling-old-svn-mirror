@@ -20,8 +20,8 @@
 [feature name=sling-validation]
 
 [artifacts]
-    org.apache.sling/org.apache.sling.validation.api/1.0.0-SNAPSHOT
-    org.apache.sling/org.apache.sling.validation.core/1.0.0-SNAPSHOT
+    org.apache.sling/org.apache.sling.validation.api/1.0.0
+    org.apache.sling/org.apache.sling.validation.core/1.0.0
 
 [:repoinit]
     create service user sling-validation

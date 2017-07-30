@@ -18,9 +18,10 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
 
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.JsonObject;
+
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 
 public class BundleContentTest extends HttpTestBase {
 
@@ -45,14 +46,14 @@ public class BundleContentTest extends HttpTestBase {
     /**
      * Test fix for SLING-1733 - BundleResourceProvider fails to find resources when multiple bundles have the same Sling-Bundle-Resources path
      */
-    public void testBundleContentParentFromMultipleBundles() throws IOException, JSONException {
+    public void testBundleContentParentFromMultipleBundles() throws IOException{
         final String content = getContent(HTTP_BASE_URL + "/system.1.json", CONTENT_TYPE_JSON);
-        JSONObject jsonObj = new JSONObject(content);
+        JsonObject jsonObj = JsonUtil.parseObject(content);
 
         //provided by the servlets.post bundle
-        assertTrue("Expected sling.js in the /system folder", jsonObj.has("sling.js"));
+        assertTrue("Expected sling.js in the /system folder", jsonObj.containsKey("sling.js"));
 
         //provided by the launchpad.test-services bundle
-        assertTrue("Expected sling-1733.txt in the /system folder", jsonObj.has("sling-1733.txt"));
+        assertTrue("Expected sling-1733.txt in the /system folder", jsonObj.containsKey("sling-1733.txt"));
     }
 }

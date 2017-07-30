@@ -50,7 +50,7 @@ public class DeleteOperation extends AbstractPostOperation {
     @Override
     protected void doRun(final SlingHttpServletRequest request,
             final PostResponse response, final List<Modification> changes)
-            throws PersistenceException {
+    throws PersistenceException {
 
         // SLING-3203: selectors, extension and suffix make no sense here and
         // might lead to deleting other resources than the one the user means.

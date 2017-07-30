@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.validation.core</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <properties>
         <sling.java.version>8</sling.java.version>
@@ -110,7 +110,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.validation.api</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -221,7 +221,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.validation.test-services</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -229,6 +229,14 @@
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
             <version>1.9.4</version>
             <scope>test</scope>
+            <exclusions>
+            	<exclusion>
+            		<groupId>org.apache.sling</groupId>
+            		<artifactId>
+            			org.apache.sling.commons.json
+            		</artifactId>
+            	</exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -251,8 +259,14 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.johnzon</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.15-SNAPSHOT</version>
+            <version>1.0.17-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <!-- testing -->

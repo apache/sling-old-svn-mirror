@@ -33,10 +33,7 @@ import org.slf4j.LoggerFactory;
 @Designate(factory=true, ocd=MappingConfigAmendment.Config.class)
 @Component(name = "org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended",
            configurationPolicy=ConfigurationPolicy.REQUIRE,
-           service={MappingConfigAmendment.class},
-           property= {
-                   "webconsole.configurationFactory.nameHint=Mapping: {user.mapping}",
-           })
+           service={MappingConfigAmendment.class})
 public class MappingConfigAmendment implements Comparable<MappingConfigAmendment> {
 
     @ObjectClassDefinition(name ="Apache Sling Service User Mapper Service Amendment",
@@ -49,11 +46,17 @@ public class MappingConfigAmendment implements Comparable<MappingConfigAmendment
         int service_ranking() default 0;
 
         @AttributeDefinition(name = "Service Mappings",
-            description = "Provides mappings from service name to user names. "
-                + "Each entry is of the form 'bundleId [ \":\" subServiceName ] \"=\" userName' "
-                + "where bundleId and subServiceName identify the service and userName "
-                + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.")
+            description = "Provides mappings from service name to user (and optionally principal) names. "
+                + "Each entry is of the form 'bundleId [ \":\" subServiceName ] \"=\" userName' | \"[\" principalNames \"]\" "
+                + "where bundleId and subServiceName identify the service and userName/principalNames "
+                + "defines the name(s) of the user/principals to provide to the service. "
+                + "'principalNames is defined to be a comma separated list of principal names. "
+                + "Invalid entries are logged and ignored.")
         String[] user_mapping() default {};
+
+        // Internal Name hint for web console.
+        String webconsole_configurationFactory_nameHint() default "Mapping: {user.mapping}";
+
     }
 
     /** default logger */

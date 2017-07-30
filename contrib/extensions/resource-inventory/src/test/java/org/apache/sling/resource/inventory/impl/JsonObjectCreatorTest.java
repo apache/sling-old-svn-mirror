@@ -19,11 +19,12 @@ package org.apache.sling.resource.inventory.impl;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResource;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
@@ -60,15 +61,15 @@ public class JsonObjectCreatorTest {
         });
         Resource resource = new MockResource("/some/path", properties, resolver);
 
-        JSONObject json = JsonObjectCreator.create(resource);
+        JsonObject json = JsonObjectCreator.create(resource).build();
 
-        assertEquals(10, json.get("byte"));
-        assertEquals(10, json.get("int"));
-        assertEquals("10.0", json.get("float"));
-        assertEquals("10.0", json.get("double"));
-        assertEquals("10", json.get("string"));
-        assertEquals(false, json.get("boolean"));
-        assertEquals("object", json.get("object"));
+        assertEquals(10, json.getInt("byte"));
+        assertEquals(10, json.getInt("int"));
+        assertEquals("10.0", json.getString("float"));
+        assertEquals("10.0", json.getString("double"));
+        assertEquals("10", json.getString("string"));
+        assertEquals(false, json.getBoolean("boolean"));
+        assertEquals("object", json.getString("object"));
     }
 
     @Test
@@ -87,27 +88,27 @@ public class JsonObjectCreatorTest {
         properties.put("charArray", new char[]{'a', 'b'});
         Resource resource = new MockResource("/some/path", properties, resolver);
 
-        JSONObject json = JsonObjectCreator.create(resource);
-        assertEquals(0, json.getJSONArray("emptyArray").length());
-        JSONArray array;
-        array = json.getJSONArray("stringArray");
-        assertEquals("10", array.get(0));
-        array = json.getJSONArray("intArray");
-        assertEquals(10, array.get(0));
-        array = json.getJSONArray("doubleArray");
-        assertEquals("10.0", array.get(0));
-        array = json.getJSONArray("byteArray");
-        assertEquals("10", array.get(0));
-        array = json.getJSONArray("floatArray");
-        assertEquals("10.0", array.get(0));
-        array = json.getJSONArray("shortArray");
-        assertEquals("10", array.get(0));
-        array = json.getJSONArray("longArray");
-        assertEquals(10L, array.get(0));
-        array = json.getJSONArray("booleanArray");
-        assertEquals(true, array.get(0));
-        array = json.getJSONArray("charArray");
-        assertEquals("a", array.get(0));
+        JsonObject json = JsonObjectCreator.create(resource).build();
+        assertEquals(0, json.getJsonArray("emptyArray").size());
+        JsonArray array;
+        array = json.getJsonArray("stringArray");
+        assertEquals("10", array.getString(0));
+        array = json.getJsonArray("intArray");
+        assertEquals(10, array.getInt(0));
+        array = json.getJsonArray("doubleArray");
+        assertEquals("10.0", array.getString(0));
+        array = json.getJsonArray("byteArray");
+        assertEquals("10", array.getString(0));
+        array = json.getJsonArray("floatArray");
+        assertEquals("10.0", array.getString(0));
+        array = json.getJsonArray("shortArray");
+        assertEquals("10", array.getString(0));
+        array = json.getJsonArray("longArray");
+        assertEquals(10L, array.getJsonNumber(0).longValue());
+        array = json.getJsonArray("booleanArray");
+        assertEquals(true, array.getBoolean(0));
+        array = json.getJsonArray("charArray");
+        assertEquals("a", array.getString(0));
 
     }
 
@@ -122,10 +123,10 @@ public class JsonObjectCreatorTest {
                 .commit();
         Resource resource = resolver.getResource("/some");
 
-        JSONObject json = JsonObjectCreator.create(resource);
-        assertEquals("v1", json.get("p1"));
-        JSONObject path = json.getJSONObject("path");
-        assertEquals("v2", path.get("p2"));
+        JsonObject json = JsonObjectCreator.create(resource).build();
+        assertEquals("v1", json.getString("p1"));
+        JsonObject path = json.getJsonObject("path");
+        assertEquals("v2", path.getString("p2"));
 
     }
 }

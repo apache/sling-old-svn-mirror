@@ -36,7 +36,7 @@ public interface DistributionRequest {
      * @return the type of the request as a {@link DistributionRequestType}
      */
     @Nonnull
-    public DistributionRequestType getRequestType();
+    DistributionRequestType getRequestType();
 
     /**
      * Get the root paths for this distribution request

@@ -22,7 +22,7 @@
 
     <artifactId>org.apache.sling.launchpad</artifactId>
     <packaging>slingstart</packaging>
-    <version>9-SNAPSHOT</version>
+    <version>10-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Application Builder</name>
     <description>
@@ -73,7 +73,7 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.7.0</version>
+                <version>1.7.6</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>

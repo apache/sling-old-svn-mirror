@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,6 +53,7 @@ import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.apache.sling.hc.util.HealthCheckFilter;
 import org.apache.sling.hc.util.HealthCheckMetadata;
@@ -171,9 +173,29 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         }
     }
 
+    @Override
+    public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector) {
+        return execute(selector, new HealthCheckExecutionOptions());
+    }
+
+    @Override
+    public List<HealthCheckExecutionResult> execute(HealthCheckSelector selector, HealthCheckExecutionOptions options) {
+        logger.debug("Starting executing checks for filter selector {} and execution options {}", selector, options);
+
+        final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
+        try {
+            final ServiceReference[] healthCheckReferences = filter.getHealthCheckServiceReferences(selector, options.isCombineTagsWithOr());
+
+            return this.execute(healthCheckReferences, options);
+        } finally {
+            filter.dispose();
+        }
+    }
+
     /**
      * @see org.apache.sling.hc.api.execution.HealthCheckExecutor#execute(String[])
      */
+    @SuppressWarnings("deprecation")
     @Override
     public List<HealthCheckExecutionResult> execute(final String... tags) {
         return execute(/*default options*/new HealthCheckExecutionOptions(), tags);
@@ -182,18 +204,10 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     /**
      * @see org.apache.sling.hc.api.execution.HealthCheckExecutor#execute(HealthCheckExecutionOptions, String...)
      */
+    @SuppressWarnings("deprecation")
     @Override
     public List<HealthCheckExecutionResult> execute(HealthCheckExecutionOptions options, final String... tags) {
-        logger.debug("Starting executing checks for tags {} and execution options {}", tags == null ? "*" : tags, options);
-
-        final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
-        try {
-            final ServiceReference[] healthCheckReferences = filter.getTaggedHealthCheckServiceReferences(options.isCombineTagsWithOr(), tags);
-
-            return this.execute(healthCheckReferences, options);
-        } finally {
-            filter.dispose();
-        }
+        return execute(HealthCheckSelector.tags(tags), options);
     }
 
     /**
@@ -236,13 +250,13 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     }
 
     private void createResultsForDescriptors(final List<HealthCheckMetadata> healthCheckDescriptors,
-            final Collection<HealthCheckExecutionResult> results, HealthCheckExecutionOptions options) {
+            final List<HealthCheckExecutionResult> results, HealthCheckExecutionOptions options) {
         // -- All methods below check if they can transform a healthCheckDescriptor into a result
         // -- if yes the descriptor is removed from the list and the result added
 
         // get async results
         if (!options.isForceInstantExecution()) {
-            asyncHealthCheckExecutor.collectAsyncResults(healthCheckDescriptors, results);
+            asyncHealthCheckExecutor.collectAsyncResults(healthCheckDescriptors, results, healthCheckResultCache);
         }
         
         // reuse cached results where possible
@@ -256,6 +270,22 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         // wait for futures at most until timeout (but will return earlier if all futures are finished)
         waitForFuturesRespectingTimeout(futures, options);
         collectResultsFromFutures(futures, results);
+
+        // respect sticky results if configured via HealthCheck.WARNINGS_STICK_FOR_MINUTES
+        appendStickyResultLogIfConfigured(results);
+
+    }
+
+    private void appendStickyResultLogIfConfigured(List<HealthCheckExecutionResult> results) {
+        ListIterator<HealthCheckExecutionResult> resultsIt = results.listIterator();
+        while (resultsIt.hasNext()) {
+            HealthCheckExecutionResult result = resultsIt.next();
+            Long warningsStickForMinutes = result.getHealthCheckMetadata().getWarningsStickForMinutes();
+            if (warningsStickForMinutes != null && warningsStickForMinutes > 0) {
+                result = healthCheckResultCache.createExecutionResultWithStickyResults(result);
+                resultsIt.set(result);
+            }
+        }
     }
 
     private HealthCheckExecutionResult createResultsForDescriptor(final HealthCheckMetadata metadata) {

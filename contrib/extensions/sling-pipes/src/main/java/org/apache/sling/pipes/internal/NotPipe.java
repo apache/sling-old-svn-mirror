@@ -16,12 +16,12 @@
  */
 package org.apache.sling.pipes.internal;
 
+import java.util.Collections;
+import java.util.Iterator;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.ReferencePipe;
-
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * executes a pipe referred in the configuration, but invert output:
@@ -29,7 +29,7 @@ import java.util.Iterator;
  */
 public class NotPipe extends ReferencePipe {
 
-    public static final String RESOURCE_TYPE = "slingPipes/not";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "not";
 
     public NotPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);

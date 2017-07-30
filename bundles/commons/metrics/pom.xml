@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.commons.metrics</artifactId>
     <packaging>bundle</packaging>
-    <version>1.2.1-SNAPSHOT</version>
+    <version>1.2.3-SNAPSHOT</version>
 
     <name>Apache Sling Metrics</name>
     <description>

@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.commons.collections.map.LRUMap;
+import org.apache.sling.jcr.contentparser.ContentType;
 
 /**
  * Cache for parsed content from content files (e.g. JSON, JCR XML).
@@ -52,12 +53,28 @@ public final class ContentFileCache {
      * @return Content or null
      */
     public ContentElement get(String path, File file) {
+        return get(path, file, null);
+    }
+    
+    /**
+     * Get content.
+     * @param path Path (used as cache key).
+     * @param file File
+     * @param contentType Content type - if null type is auto-detected
+     * @return Content or null
+     */
+    public ContentElement get(String path, File file, ContentType contentType) {
         ContentElement content = null;
         if (contentCache != null) {
             content = contentCache.get(path);
         }
         if (content == null) {
-            content = ContentFileParserUtil.parse(file);
+            if (contentType != null) {
+                content = ContentFileParserUtil.parse(file, contentType);
+            }
+            else {
+                content = ContentFileParserUtil.parse(file);
+            }
             if (content == null) {
                 content = NULL_ELEMENT;
             }

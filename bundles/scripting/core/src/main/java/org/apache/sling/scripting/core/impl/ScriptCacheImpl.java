@@ -49,8 +49,8 @@ import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.core.impl.helper.CachingMap;
 import org.apache.sling.serviceusermapping.ServiceUserMapped;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -66,9 +66,12 @@ import org.slf4j.LoggerFactory;
     reference = @Reference(
         name = "ScriptEngineFactory",
         service = ScriptEngineFactory.class,
-        cardinality = ReferenceCardinality.OPTIONAL,
+        cardinality = ReferenceCardinality.MULTIPLE,
         policy = ReferencePolicy.DYNAMIC
-    )
+    ),
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    }
 )
 @Designate(
     ocd = ScriptCacheImplConfiguration.class
@@ -79,7 +82,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, ExternalResourceChangeListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ScriptCacheImpl.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(ScriptCacheImpl.class);
 
     public static final int DEFAULT_CACHE_SIZE = 65536;
 
@@ -91,19 +94,17 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
     private String[] searchPaths = {};
 
     // use a static policy so that we can reconfigure the watched script files if the search paths are changed
-    @Reference(
-        policy = ReferencePolicy.STATIC
-    )
-    private ResourceResolverFactory rrf = null;
+    @Reference
+    private ResourceResolverFactory rrf;
 
     @Reference
-    private ThreadPoolManager threadPoolManager = null;
+    private ThreadPoolManager threadPoolManager;
 
     private ThreadPool threadPool;
     private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
     private final Lock readLock = rwl.readLock();
     private final Lock writeLock = rwl.writeLock();
-    boolean active = false;
+    private volatile boolean active = false;
 
     @Reference
     private ServiceUserMapped serviceUserMapped;
@@ -210,10 +211,9 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
     }
 
     @Activate
-    @SuppressWarnings("unused")
-    protected void activate(ScriptCacheImplConfiguration configuration, ComponentContext componentContext) {
+    protected void activate(ScriptCacheImplConfiguration configuration, BundleContext bundleCtx) {
         threadPool = threadPoolManager.get("Script Cache Thread Pool");
-        bundleContext = componentContext.getBundleContext();
+        bundleContext = bundleCtx;
         additionalExtensions = configuration.org_apache_sling_scripting_cache_additional__extensions();
         int newMaxCacheSize = configuration.org_apache_sling_scripting_cache_size();
         if (newMaxCacheSize != DEFAULT_CACHE_SIZE) {
@@ -238,7 +238,6 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
         active = true;
     }
 
-    @SuppressWarnings("unchecked")
     private void configureCache() {
         writeLock.lock();
         try {
@@ -248,12 +247,12 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
             }
             internalMap.clear();
             extensions.addAll(Arrays.asList(additionalExtensions));
-            if (extensions.size() > 0) {
+            if (!extensions.isEmpty()) {
                 Set<String> globPatterns = new HashSet<>(extensions.size());
                 for (String extension : extensions) {
                     globPatterns.add("glob:**/*." + extension);
                 }
-                Dictionary<String, Object> resourceChangeListenerProperties = new Hashtable<String, Object>();
+                Dictionary<String, Object> resourceChangeListenerProperties = new Hashtable<>();
                 resourceChangeListenerProperties.put(ResourceChangeListener.PATHS, globPatterns.toArray(new String[globPatterns.size()]));
                 resourceChangeListenerProperties.put(ResourceChangeListener.CHANGES,
                         new String[]{ResourceChange.ChangeType.CHANGED.name(), ResourceChange.ChangeType.REMOVED.name()});
@@ -270,8 +269,7 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
     }
 
     @Deactivate
-    @SuppressWarnings("unused")
-    protected void deactivate(ComponentContext componentContext) {
+    protected void deactivate() {
         internalMap.clear();
         if (resourceChangeListener != null) {
             resourceChangeListener.unregister();
@@ -284,7 +282,7 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
         active = false;
     }
 
-    protected void bindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory, Map<String, Object> properties) {
+    protected void bindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
         ScriptEngine engine = scriptEngineFactory.getScriptEngine();
         if (engine instanceof Compilable) {
             /**
@@ -299,7 +297,7 @@ public class ScriptCacheImpl implements ScriptCache, ResourceChangeListener, Ext
         }
     }
 
-    protected void unbindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory, Map<String, Object> properties) {
+    protected void unbindScriptEngineFactory(ScriptEngineFactory scriptEngineFactory) {
         for (String extension : scriptEngineFactory.getExtensions()) {
             extensions.remove(extension);
         }

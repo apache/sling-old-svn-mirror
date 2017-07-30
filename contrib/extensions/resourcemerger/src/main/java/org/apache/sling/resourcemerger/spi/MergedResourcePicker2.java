@@ -68,7 +68,7 @@ public interface MergedResourcePicker2 {
      *
      * @param resolver the ResourceResolver
      * @param relativePath the path relative to the merge root
-     * @param relatedResource an optional resource which is related to the given path (parent or child)
+     * @param relatedResource an optional resource which is related to the given path (always the parent resource or {@code null})
      * @return a List of Resource objects
      */
     List<Resource> pickResources(ResourceResolver resolver, String relativePath, Resource relatedResource);

@@ -30,8 +30,8 @@ public class LaunchpadReadyIT {
     @Test
     public void testLaunchpadReady() throws Exception {
         SlingClient client = SLING_INSTANCE_RULE.getAdminClient();
-        client.waitUntilExists("/apps/sightly", 100, 100);
-        client.waitUntilExists("/sightlytck", 100, 100);
+        client.waitUntilExists("/apps/sightly", 1000, 20);
+        client.waitUntilExists("/sightlytck", 1000, 20);
     }
 
 }

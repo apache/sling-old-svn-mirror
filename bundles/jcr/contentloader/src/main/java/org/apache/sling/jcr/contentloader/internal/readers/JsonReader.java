@@ -46,6 +46,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentReader;
+import static org.apache.sling.jcr.contentparser.impl.JsonTicksConverter.tickToDoubleQuote;
 
 /**
  * The <code>JsonReader</code> Parses a Json document on content load and creates the
@@ -160,7 +161,7 @@ public class JsonReader implements ContentReader {
             }
             Map<String, Object> config = new HashMap<>();
             config.put("org.apache.johnzon.supports-comments", true);
-            JsonObject json = Json.createReaderFactory(config).createReader(new StringReader(jsonString)).readObject();
+            JsonObject json = Json.createReaderFactory(config).createReader(new StringReader(tickToDoubleQuote(jsonString))).readObject();
             this.createNode(null, json, contentCreator);
         } catch (JsonException je) {
             throw (IOException) new IOException(je.getMessage()).initCause(je);
@@ -336,6 +337,9 @@ public class JsonReader implements ContentReader {
      *     ],
      *  }
      *  </code>
+     *  @param obj Object
+     *  @param contentCreator Content creator
+     *  @throws RepositoryException Repository exception
      */
     protected void createPrincipals(Object obj, ContentCreator contentCreator) throws RepositoryException {
     	if (obj instanceof JsonObject) {
@@ -463,5 +467,4 @@ public class JsonReader implements ContentReader {
 		//do the work.
 		contentCreator.createAce(principalID, grantedPrivileges, deniedPrivileges, order);
     }
-
 }

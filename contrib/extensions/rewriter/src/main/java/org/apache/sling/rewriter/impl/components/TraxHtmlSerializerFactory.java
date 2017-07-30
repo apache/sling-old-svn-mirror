@@ -16,18 +16,17 @@
  */
 package org.apache.sling.rewriter.impl.components;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.rewriter.SerializerFactory;
+import org.osgi.service.component.annotations.Component;
 
 
 /**
  * This sax serializer serializes html-
  */
-@Component
-@Service(value=SerializerFactory.class)
-@Property(name="pipeline.type",value="trax-html-serializer")
+@Component(service = SerializerFactory.class,
+    property = {
+            "pipeline.type=trax-html-serializer"
+    })
 public class TraxHtmlSerializerFactory extends AbstractTraxSerializerFactory {
 
     @Override

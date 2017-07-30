@@ -26,12 +26,15 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -58,6 +61,9 @@ import org.slf4j.LoggerFactory;
  */
 @Component(
     service = QuartzScheduler.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    },
     immediate = true
 )
 @Designate(
@@ -67,6 +73,9 @@ public class QuartzScheduler implements BundleListener {
 
     /** Map key for the job object */
     static final String DATA_MAP_OBJECT = "QuartzJobScheduler.Object";
+
+    /** Map key for the provided job name */
+    static final String DATA_MAP_PROVIDED_NAME = "QuartzJobScheduler.JobName";
 
     /** Map key for the job name */
     static final String DATA_MAP_NAME = "QuartzJobScheduler.JobName";
@@ -86,14 +95,30 @@ public class QuartzScheduler implements BundleListener {
     /** Map key for the bundle information (Long). */
     static final String DATA_MAP_SERVICE_ID = "QuartzJobScheduler.serviceId";
 
+    /** Map key for the quartz scheduler */
+    static final String DATA_MAP_QUARTZ_SCHEDULER = "QuartzJobScheduler.QuartzScheduler";
+    
+    static final String DATA_MAP_THREAD_POOL_NAME = "QuartzJobScheduler.threadPoolName";
+
+    static final String METRICS_NAME_RUNNING_JOBS = "commons.scheduler.running.jobs";
+
+    static final String METRICS_NAME_TIMER = "commons.scheduler.timer";
+
+    static final String METRICS_NAME_OLDEST_RUNNING_JOB_MILLIS = "commons.scheduler.oldest.running.job.millis";
+
     /** Default logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference
     private ThreadPoolManager threadPoolManager;
 
+    @Reference 
+    MetricsService metricsService;
+    
+    ConfigHolder configHolder;
+    
     /** The quartz schedulers. */
-    private final Map<String, SchedulerProxy> schedulers = new HashMap<String, SchedulerProxy>();
+    private final Map<String, SchedulerProxy> schedulers = new HashMap<>();
 
     private volatile String defaultPoolName;
 
@@ -111,6 +136,8 @@ public class QuartzScheduler implements BundleListener {
         // SLING-2261 Prevent Quartz from checking for updates
         System.setProperty("org.terracotta.quartz.skipUpdateCheck", Boolean.TRUE.toString());
 
+        QuartzJobExecutor.FORCE_LEADER.set(configuration.scheduler_useleaderforsingle());
+
         defaultPoolName = configuration.poolName();
         allowedPoolNames = configuration.allowedPoolNames();
         if (allowedPoolNames == null) {
@@ -118,6 +145,8 @@ public class QuartzScheduler implements BundleListener {
         }
         ctx.addBundleListener(this);
 
+        this.configHolder = new ConfigHolder(configuration);
+        
         this.active = true;
     }
 
@@ -132,7 +161,7 @@ public class QuartzScheduler implements BundleListener {
         final Map<String, SchedulerProxy> proxies;
         synchronized ( this.schedulers ) {
             this.active = false;
-            proxies = new HashMap<String, SchedulerProxy>(this.schedulers);
+            proxies = new HashMap<>(this.schedulers);
             this.schedulers.clear();
         }
         for(final SchedulerProxy proxy : proxies.values()) {
@@ -186,7 +215,7 @@ public class QuartzScheduler implements BundleListener {
             final Map<String, SchedulerProxy> proxies;
             synchronized ( this.schedulers ) {
                 if ( this.active ) {
-                    proxies = new HashMap<String, SchedulerProxy>(this.schedulers);
+                    proxies = new HashMap<>(this.schedulers);
                 } else {
                     proxies = Collections.emptyMap();
                 }
@@ -239,8 +268,13 @@ public class QuartzScheduler implements BundleListener {
 
         jobDataMap.put(DATA_MAP_OBJECT, job);
 
+        if ( options.providedName != null ) {
+            jobDataMap.put(DATA_MAP_PROVIDED_NAME, options.providedName);
+        }
         jobDataMap.put(DATA_MAP_NAME, jobName);
         jobDataMap.put(DATA_MAP_LOGGER, this.logger);
+        jobDataMap.put(DATA_MAP_QUARTZ_SCHEDULER, this);
+        jobDataMap.put(DATA_MAP_THREAD_POOL_NAME, getThreadPoolName(options.threadPoolName));
         if ( bundleId != null ) {
             jobDataMap.put(DATA_MAP_BUNDLE_ID, bundleId);
         }
@@ -251,6 +285,10 @@ public class QuartzScheduler implements BundleListener {
             jobDataMap.put(DATA_MAP_CONFIGURATION, options.configuration);
         }
         if ( options.runOn != null) {
+            if ( options.runOn.length > 1
+                 || (!Scheduler.VALUE_RUN_ON_LEADER.equals(options.runOn[0]) && !Scheduler.VALUE_RUN_ON_SINGLE.equals(options.runOn[0]))) {
+                logger.warn("Job {} ({}) is scheduled to run on specific Sling Instances. This feature is deprecated. Please don't use it anymore.", jobName, job);
+            }
             jobDataMap.put(DATA_MAP_RUN_ON, options.runOn);
         }
 
@@ -403,7 +441,7 @@ public class QuartzScheduler implements BundleListener {
         final Map<String, SchedulerProxy> proxies;
         synchronized ( this.schedulers ) {
             if ( this.active ) {
-                proxies = new HashMap<String, SchedulerProxy>(this.schedulers);
+                proxies = new HashMap<>(this.schedulers);
             } else {
                 proxies = Collections.emptyMap();
             }
@@ -530,7 +568,7 @@ public class QuartzScheduler implements BundleListener {
         if ( jobName != null ) {
             final Map<String, SchedulerProxy> proxies;
             synchronized ( this.schedulers ) {
-                proxies = new HashMap<String, SchedulerProxy>(this.schedulers);
+                proxies = new HashMap<>(this.schedulers);
             }
             for(final SchedulerProxy proxy : proxies.values()) {
                 synchronized ( proxy ) {
@@ -577,6 +615,7 @@ public class QuartzScheduler implements BundleListener {
         }
 
         synchronized ( proxy ) {
+            opts.providedName = opts.name;
             final String name;
             if ( opts.name != null ) {
                 // if there is already a job with the name, remove it first
@@ -604,7 +643,7 @@ public class QuartzScheduler implements BundleListener {
      */
     Map<String, SchedulerProxy> getSchedulers() {
         synchronized ( this.schedulers ) {
-            return new HashMap<String, SchedulerProxy>(this.schedulers);
+            return new HashMap<>(this.schedulers);
         }
     }
 }

@@ -80,7 +80,8 @@ public class LocalDistributionPackageImporterTest {
                 new String[0],
                 new String[0],
                 false,
-                -1
+                -1,
+                null
         );
 
         DistributionPackageBuilder builder =

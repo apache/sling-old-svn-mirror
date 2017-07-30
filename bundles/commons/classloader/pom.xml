@@ -49,8 +49,8 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-        <pax-exam.version>4.9.1</pax-exam.version>
-        <pax-link.version>2.4.7</pax-link.version>
+        <pax-exam.version>4.11.0</pax-exam.version>
+        <pax-link.version>2.5.2</pax-link.version>
     </properties>
 
     <build>

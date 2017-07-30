@@ -28,6 +28,7 @@ import javax.jcr.Session;
 import org.apache.sling.repoinit.parser.operations.AclLine;
 import org.apache.sling.repoinit.parser.operations.CreatePath;
 import org.apache.sling.repoinit.parser.operations.PathSegmentDefinition;
+import org.apache.sling.repoinit.parser.operations.RestrictionClause;
 import org.apache.sling.repoinit.parser.operations.SetAclPaths;
 import org.apache.sling.repoinit.parser.operations.SetAclPrincipals;
 
@@ -56,7 +57,8 @@ class AclVisitor extends DoNothingVisitor {
     private void setAcl(AclLine line, Session s, List<String> principals, List<String> paths, List<String> privileges, boolean isAllow) {
         try {
             log.info("Adding ACL '{}' entry '{}' for {} on {}", isAllow ? "allow" : "deny", privileges, principals, paths);
-            AclUtil.setAcl(s, principals, paths, privileges, isAllow);
+            List<RestrictionClause> restrictions = line.getRestrictions();
+            AclUtil.setAcl(s, principals, paths, privileges, isAllow, restrictions);
         } catch(Exception e) {
             throw new RuntimeException("Failed to set ACL (" + e.toString() + ") " + line, e);
         }

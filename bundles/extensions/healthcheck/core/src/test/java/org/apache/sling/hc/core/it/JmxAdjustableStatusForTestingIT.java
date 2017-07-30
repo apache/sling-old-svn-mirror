@@ -33,6 +33,7 @@ import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.api.ResultLog.Entry;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.junit.After;
 import org.junit.Before;
@@ -66,7 +67,7 @@ public class JmxAdjustableStatusForTestingIT {
 	}
 	
 	private void assertResult(String tag, Result.Status expected) {
-        final Result result = getOverallResult(executor.execute(tag));
+        final Result result = getOverallResult(executor.execute(HealthCheckSelector.tags(tag)));
         assertEquals("Expected status " + expected + " for tag " + tag, expected, result.getStatus());
 	}
 

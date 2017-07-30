@@ -18,10 +18,6 @@
  */
 package org.apache.sling.discovery.commons.providers.spi.base;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -34,6 +30,11 @@ import org.apache.sling.discovery.commons.providers.BaseTopologyView;
 import org.apache.sling.discovery.commons.providers.spi.ClusterSyncService;
 import org.apache.sling.discovery.commons.providers.util.ResourceHelper;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * Implements the syncToken idea: each instance stores a key-value
@@ -45,17 +46,19 @@ import org.apache.sling.settings.SlingSettingsService;
  * (thus all topology-dependent activity is now stalled and waiting)
  * and are aware of the new discoveryLite view.
  */
-@Component(immediate = false)
-@Service(value = { ClusterSyncService.class, SyncTokenService.class })
+@Component(service = { ClusterSyncService.class, SyncTokenService.class },
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    })
 public class SyncTokenService extends AbstractServiceWithBackgroundCheck implements ClusterSyncService {
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     protected DiscoveryLiteConfig commonsConfig;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     protected ResourceResolverFactory resourceResolverFactory;
 
-    @Reference
+    @Reference(policyOption=ReferencePolicyOption.GREEDY)
     protected SlingSettingsService settingsService;
 
     protected ClusterSyncHistory clusterSyncHistory = new ClusterSyncHistory();

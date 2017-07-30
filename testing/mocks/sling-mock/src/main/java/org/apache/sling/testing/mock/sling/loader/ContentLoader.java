@@ -20,6 +20,7 @@ package org.apache.sling.testing.mock.sling.loader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +35,7 @@ import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.contentparser.ContentParser;
 import org.apache.sling.jcr.contentparser.ContentParserFactory;
 import org.apache.sling.jcr.contentparser.ContentType;
+import org.apache.sling.jcr.contentparser.JsonParserFeature;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
 import org.osgi.framework.BundleContext;
@@ -65,7 +67,8 @@ public final class ContentLoader {
     private static ContentParser JSON_PARSER = ContentParserFactory.create(ContentType.JSON, new ParserOptions()
             .detectCalendarValues(true)
             .ignorePropertyNames(IGNORED_NAMES)
-            .ignoreResourceNames(IGNORED_NAMES));
+            .ignoreResourceNames(IGNORED_NAMES)
+            .jsonParserFeatures(EnumSet.of(JsonParserFeature.COMMENTS, JsonParserFeature.QUOTE_TICK)));
 
     private final ResourceResolver resourceResolver;
     private final BundleContext bundleContext;
@@ -208,7 +211,7 @@ public final class ContentLoader {
     /**
      * Import binary file as nt:file binary node into repository. Auto-creates
      * parent hierarchies as nt:unstrucured nodes if missing. Mime type is
-     * auto-detected from resource name.
+     * auto-detected from either {@code classpathResource} or {@code path}.
      * @param classpathResource Classpath resource URL for binary file.
      * @param path Path to mount binary data to (parent nodes created
      *            automatically)
@@ -220,7 +223,7 @@ public final class ContentLoader {
             throw new IllegalArgumentException("Classpath resource not found: " + classpathResource);
         }
         try {
-            return binaryFile(is, path, detectMimeTypeFromName(path));
+            return binaryFile(is, path, detectMimeTypeFromNames(classpathResource, path));
         } finally {
             try {
                 is.close();
@@ -265,7 +268,7 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryFile(InputStream inputStream, String path) {
-        return binaryFile(inputStream, path, detectMimeTypeFromName(path));
+        return binaryFile(inputStream, path, detectMimeTypeFromNames(path));
     }
 
     /**
@@ -297,7 +300,7 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryFile(InputStream inputStream, Resource parentResource, String name) {
-        return binaryFile(inputStream, parentResource, name, detectMimeTypeFromName(name));
+        return binaryFile(inputStream, parentResource, name, detectMimeTypeFromNames(name));
     }
 
     /**
@@ -329,7 +332,7 @@ public final class ContentLoader {
     /**
      * Import binary file as nt:resource binary node into repository.
      * Auto-creates parent hierarchies as nt:unstrucured nodes if missing. Mime
-     * type is auto-detected from resource name.
+     * type is auto-detected from {@code classpathResource} or {@code path}.
      * @param classpathResource Classpath resource URL for binary file.
      * @param path Path to mount binary data to (parent nodes created
      *            automatically)
@@ -341,7 +344,7 @@ public final class ContentLoader {
             throw new IllegalArgumentException("Classpath resource not found: " + classpathResource);
         }
         try {
-            return binaryResource(is, path, detectMimeTypeFromName(path));
+            return binaryResource(is, path, detectMimeTypeFromNames(classpathResource, path));
         } finally {
             try {
                 is.close();
@@ -386,7 +389,7 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryResource(InputStream inputStream, String path) {
-        return binaryResource(inputStream, path, detectMimeTypeFromName(path));
+        return binaryResource(inputStream, path, detectMimeTypeFromNames(path));
     }
 
     /**
@@ -418,7 +421,7 @@ public final class ContentLoader {
      * @return Resource with binary data
      */
     public Resource binaryResource(InputStream inputStream, Resource parentResource, String name) {
-        return binaryResource(inputStream, parentResource, name, detectMimeTypeFromName(name));
+        return binaryResource(inputStream, parentResource, name, detectMimeTypeFromNames(name));
     }
 
     /**
@@ -445,19 +448,22 @@ public final class ContentLoader {
     }
 
     /**
-     * Detected mime type from name (file extension) using Mime Type service.
+     * Detected mime type from any of the given names (evaluating the file extension) using Mime Type service.
      * Fallback to application/octet-stream.
-     * @param name Node name
+     * @param names The names from which to derive the mime type
      * @return Mime type (never null)
      */
-    private String detectMimeTypeFromName(String name) {
+    private String detectMimeTypeFromNames(String... names) {
         String mimeType = null;
-        String fileExtension = StringUtils.substringAfterLast(name, ".");
-        if (bundleContext != null && StringUtils.isNotEmpty(fileExtension)) {
-            ServiceReference<MimeTypeService> ref = bundleContext.getServiceReference(MimeTypeService.class);
-            if (ref != null) {
-                MimeTypeService mimeTypeService = (MimeTypeService)bundleContext.getService(ref);
-                mimeType = mimeTypeService.getMimeType(fileExtension);
+        for (String name : names) {
+            String fileExtension = StringUtils.substringAfterLast(name, ".");
+            if (bundleContext != null && StringUtils.isNotEmpty(fileExtension)) {
+                ServiceReference<MimeTypeService> ref = bundleContext.getServiceReference(MimeTypeService.class);
+                if (ref != null) {
+                    MimeTypeService mimeTypeService = (MimeTypeService)bundleContext.getService(ref);
+                    mimeType = mimeTypeService.getMimeType(fileExtension);
+                    break;
+                }
             }
         }
         return StringUtils.defaultString(mimeType, CONTENTTYPE_OCTET_STREAM);

@@ -31,7 +31,7 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.scripting.sightly.compiler.java</artifactId>
-    <version>1.0.9-SNAPSHOT</version>
+    <version>1.0.11-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting HTL Java Compiler</name>

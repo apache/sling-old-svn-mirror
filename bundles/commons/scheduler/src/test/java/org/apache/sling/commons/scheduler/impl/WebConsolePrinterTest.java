@@ -73,6 +73,9 @@ public class WebConsolePrinterTest {
             assertRegexp(reader.readLine(), ".*ThreadPool.*testName.*");
             assertRegexp(reader.readLine(), ".*Id.*");
             reader.readLine();
+            reader.readLine();
+            assertRegexp(reader.readLine(), ".*Active.*Jobs.*");
+            reader.readLine();
             assertRegexp(reader.readLine(), "^Job.*testName[123].*");
             assertRegexp(reader.readLine(), "^Trigger.*Trigger.*DEFAULT.testName[123].*");
             reader.readLine();

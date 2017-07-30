@@ -116,28 +116,28 @@ public class JSONResponse extends AbstractPostResponse {
                     .add("message", error.getMessage()));
         }
         JsonArrayBuilder changesBuilder = Json.createArrayBuilder();
-        for (Map<String, Object> entry : changes) {
-            JsonObjectBuilder entryBuilder = Json.createObjectBuilder();
-            entryBuilder.add(PROP_TYPE, (String) entry.get(PROP_TYPE));
-            
-            Object arguments = entry.get(PROP_ARGUMENT);
-            
-            if (arguments != null) {
-                if (arguments instanceof List) {
-                    JsonArrayBuilder argumentsBuilder = Json.createArrayBuilder();
-                    
-                    for (String argument : ((List<String>) arguments))
-                    {
-                        argumentsBuilder.add(argument);
+        if (this.error == null) {
+            for (Map<String, Object> entry : changes) {
+                JsonObjectBuilder entryBuilder = Json.createObjectBuilder();
+                entryBuilder.add(PROP_TYPE, (String) entry.get(PROP_TYPE));
+
+                Object arguments = entry.get(PROP_ARGUMENT);
+
+                if (arguments != null) {
+                    if (arguments instanceof List) {
+                        JsonArrayBuilder argumentsBuilder = Json.createArrayBuilder();
+
+                        for (String argument : ((List<String>) arguments)) {
+                            argumentsBuilder.add(argument);
+                        }
+
+                        entryBuilder.add(PROP_ARGUMENT, argumentsBuilder);
+                    } else {
+                        entryBuilder.add(PROP_ARGUMENT, (String) arguments);
                     }
-                    
-                    entryBuilder.add(PROP_ARGUMENT, argumentsBuilder);
                 }
-                else {
-                    entryBuilder.add(PROP_ARGUMENT, (String) arguments);
-                }
+                changesBuilder.add(entryBuilder);
             }
-            changesBuilder.add(entryBuilder);
         }
         jsonBuilder.add(PROP_CHANGES, changesBuilder);
         return jsonBuilder.build();

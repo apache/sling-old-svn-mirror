@@ -28,7 +28,7 @@
     
     <artifactId>org.apache.sling.models.api</artifactId>
     <packaging>bundle</packaging>
-    <version>1.3.3-SNAPSHOT</version>
+    <version>1.3.5-SNAPSHOT</version>
     <name>Apache Sling Models API</name>
     <description>Apache Sling Models API</description>
     <scm>

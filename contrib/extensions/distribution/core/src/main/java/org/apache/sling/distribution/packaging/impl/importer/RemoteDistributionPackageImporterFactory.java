@@ -40,6 +40,7 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.HttpConfiguration;
 
 /**
  * OSGi configuration factory for {@link RemoteDistributionPackageImporter}s.
@@ -83,7 +84,10 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
 
         DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.IMPORTER, importerName, RemoteDistributionPackageImporter.class, DefaultDistributionLog.LogLevel.ERROR);
 
-        importer = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, endpoints);
+        // default to 10s, we can expose it if needed
+        HttpConfiguration httpConfiguration = new HttpConfiguration(10000);
+
+        importer = new RemoteDistributionPackageImporter(distributionLog, transportSecretProvider, endpoints, httpConfiguration);
 
     }
 

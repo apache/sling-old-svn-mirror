@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>29</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
@@ -62,11 +62,43 @@
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
                 <configuration>
-                    <excludes>
-                        <exclude>src/main/resources/libs/esx/demo/node_modules/**</exclude>
+                    <excludes>                        
+                        <exclude>**/node_modules/**</exclude>
+                        <exclude>node</exclude>
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+               <groupId>com.github.eirslett</groupId>
+               <artifactId>frontend-maven-plugin</artifactId>
+               <version>1.4</version>
+               <executions>
+                <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                 </execution>
+                <execution>
+                    <id>npm install</id>
+                    <goals>
+                        <goal>npm</goal>
+                    </goals>
+                </execution>                 
+                <execution>
+                    <id>gulp build</id>
+                    <goals>
+                        <goal>gulp</goal>
+                    </goals>
+                    <phase>generate-resources</phase>
+                </execution>                 
+                 </executions>
+                    <configuration>
+                        <nodeVersion>v7.8.0</nodeVersion>
+                    </configuration>               
+                
+             </plugin>            
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
@@ -163,12 +195,7 @@
             <version>2.1.8</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.19-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

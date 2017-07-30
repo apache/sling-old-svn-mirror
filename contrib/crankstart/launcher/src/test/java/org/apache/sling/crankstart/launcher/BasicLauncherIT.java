@@ -7,12 +7,13 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.UUID;
 
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
 import org.apache.sling.crankstart.junit.CrankstartSetup;
@@ -162,16 +163,16 @@ public class BasicLauncherIT {
                 osgiConsole.getBundleState(symbolicName));
         
         // Start level is in the props array, with key="Start Level"
-        final JSONObject status = U.getBundleData(C, client, symbolicName);
-        final JSONArray props = status.getJSONArray("data").getJSONObject(0).getJSONArray("props");
+        final JsonObject status = U.getBundleData(C, client, symbolicName);
+        final JsonArray props = status.getJsonArray("data").getJsonObject(0).getJsonArray("props");
         final String KEY = "key";
         final String SL = "Start Level";
         boolean found = false;
-        for(int i=0; i < props.length(); i++) {
-            final JSONObject o = props.getJSONObject(i);
-            if(o.has(KEY) && SL.equals(o.getString(KEY))) {
+        for(int i=0; i < props.size(); i++) {
+            final JsonObject o = props.getJsonObject(i);
+            if(o.containsKey(KEY) && SL.equals(o.getString(KEY))) {
                 found = true;
-                assertEquals("Expecting the start level that's set in provisioning model", "99", o.getString("value"));
+                assertEquals("Expecting the start level that's set in provisioning model", 99, o.getInt("value"));
             }
         }
         assertTrue("Expecting start level to be found in JSON output", found);

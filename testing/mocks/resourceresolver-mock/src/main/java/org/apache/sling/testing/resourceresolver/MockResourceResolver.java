@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -359,7 +360,34 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     @Override
     public boolean isResourceType(Resource resource, String resourceType) {
-        return resource.getResourceType().equals(resourceType);
+        boolean result = false;
+        if ( resource != null && resourceType != null ) {
+             // Check if the resource is of the given type. This method first checks the
+             // resource type of the resource, then its super resource type and continues
+             //  to go up the resource super type hierarchy.
+             if (ResourceTypeUtil.areResourceTypesEqual(resourceType, resource.getResourceType(), getSearchPath())) {
+                 result = true;
+             } else {
+                 Set<String> superTypesChecked = new HashSet<>();
+                 String superType = this.getParentResourceType(resource);
+                 while (!result && superType != null) {
+                     if (ResourceTypeUtil.areResourceTypesEqual(resourceType, superType, getSearchPath())) {
+                         result = true;
+                     } else {
+                         superTypesChecked.add(superType);
+                         superType = this.getParentResourceType(superType);
+                         if (superType != null && superTypesChecked.contains(superType)) {
+                             throw new SlingException("Cyclic dependency for resourceSuperType hierarchy detected on resource " + resource.getPath()) {
+                                // anonymous class to avoid problem with null cause
+                                private static final long serialVersionUID = 1L;
+                             };
+                         }
+                     }
+                 }
+             }
+
+        }
+        return result;
     }
 
     @Override
@@ -371,6 +399,33 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         this.temporaryResources.put(path, props);
     }
 
+    @Override
+    public String getParentResourceType(Resource resource) {
+        String resourceSuperType = null;
+        if ( resource != null ) {
+            resourceSuperType = resource.getResourceSuperType();
+            if (resourceSuperType == null) {
+                resourceSuperType = this.getParentResourceType(resource.getResourceType());
+            }
+        }
+        return resourceSuperType;
+    }
+
+    @Override
+    public String getParentResourceType(String resourceType) {
+        // normalize resource type to a path string
+        final String rtPath = (resourceType == null ? null : ResourceUtil.resourceTypeToPath(resourceType));
+        // get the resource type resource and check its super type
+        String resourceSuperType = null;
+        if ( rtPath != null ) {
+            final Resource rtResource = getResource(rtPath);
+            if (rtResource != null) {
+                resourceSuperType = rtResource.getResourceSuperType();
+            }
+        }
+        return resourceSuperType;
+    }
+    
     // part of Resource API 2.6.0
     public boolean hasChildren(Resource resource) {
         return this.listChildren(resource).hasNext();
@@ -391,16 +446,6 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     @Override
     @Deprecated
     public Resource resolve(final HttpServletRequest request) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getParentResourceType(Resource resource) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getParentResourceType(String resourceType) {
         throw new UnsupportedOperationException();
     }
 

@@ -153,6 +153,7 @@ public interface ContentCreator {
      * @param order             specifies the position of the ACE in the containing ACL. (may be null)
      *                          Value should be one of these:
      *                          <table>
+     *                          <caption>Values</caption>
      *                          <tr><td>first</td><td>Place the target ACE as the first amongst its siblings</td></tr>
      *                          <tr><td>last</td><td>Place the target ACE as the last amongst its siblings</td></tr>
      *                          <tr><td>before xyz</td><td>Place the target ACE immediately before the sibling whose name is xyz</td></tr>

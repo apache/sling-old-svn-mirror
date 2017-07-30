@@ -86,11 +86,39 @@ public class SlingHealthCheckProcessor implements AnnotationProcessor {
         }
 
         // generate HC PropertyDescriptions
-        generatePropertyDescriptor(cad, classDescription, metatype, "name", HealthCheck.NAME, PropertyType.String, "Name", "Name of the Health Check", false);
-        generatePropertyDescriptor(cad, classDescription, metatype, "tags", HealthCheck.TAGS, PropertyType.String, "Tags", "List of tags", true);
-        generatePropertyDescriptor(cad, classDescription, metatype, "mbeanName", HealthCheck.MBEAN_NAME, PropertyType.String, "MBean", "MBean name (leave empty for not using JMX)", false);
-        generatePropertyDescriptor(cad, classDescription, metatype, "asyncCronExpression",  HealthCheck.ASYNC_CRON_EXPRESSION, PropertyType.String, "Cron expression", "Cron expression for asynchronous execution (leave empty for synchronous execution)", false);
-        generatePropertyDescriptor(cad, classDescription, metatype, "resultCacheTtlInMs", "hc.resultCacheTtlInMs" /* use constant once API is released */, PropertyType.Long , "Result Cache TTL", "TTL for results. The value -1 (default) uses the global configuration in health check executor. Redeployment of a HC always invalidates its cached result.", false);
+        generatePropertyDescriptor(cad, classDescription, metatype, "name", HealthCheck.NAME, PropertyType.String,
+                "Name", "Name of the Health Check", false);
+        generatePropertyDescriptor(cad, classDescription, metatype, "tags", HealthCheck.TAGS, PropertyType.String,
+                "Tags", "List of tags", true);
+        generatePropertyDescriptor(cad, classDescription, metatype, "mbeanName", HealthCheck.MBEAN_NAME, PropertyType.String,
+                "MBean", "MBean name (leave empty for not using JMX)", false);
+        generatePropertyDescriptor(cad, classDescription, metatype, "asyncCronExpression", HealthCheck.ASYNC_CRON_EXPRESSION, PropertyType.String,
+                "Cron expression", "Cron expression for asynchronous execution (leave empty for synchronous execution)", false);
+
+        String resultCacheTtlInMsPropName = "resultCacheTtlInMs";
+        if (cad.getValue(resultCacheTtlInMsPropName) != null) {
+            generatePropertyDescriptor(cad, classDescription, metatype, resultCacheTtlInMsPropName, HealthCheck.RESULT_CACHE_TTL_IN_MS, PropertyType.Long,
+                    "Result Cache TTL",
+                    "TTL for results. The value -1 (default) uses the global configuration in health check executor. "
+                            + "Redeployment of a HC always invalidates its cached result.",
+                    false);
+        }
+
+        String warningsStickForMinutesPropName = "warningsStickForMinutes";
+        if (cad.getValue(warningsStickForMinutesPropName) != null) {
+            generatePropertyDescriptor(cad, classDescription, metatype, warningsStickForMinutesPropName,
+                    "hc.warningsStickForMinutes" /* use constant once API is released */,
+                    PropertyType.Long, "Sticky Warnings",
+                    "If given, warning results (that is WARN,  CRITICAL or HEALTH_CHECK_ERROR) from the past executions will be "
+                            + "taken into account as well for the given minutes (use  Integer.MAX_VALUE for indefinitely). "
+                            + "By default this is disabled (value -1).",
+                    false);
+        }
+    }
+
+    private boolean isLongDefaultValue(final ClassAnnotation cad, String propName) {
+        Object value = cad.getValue(propName);
+        return value == null || ((Long) value) == -1;
     }
 
     /** Generates a property descriptor of type {@link PropertyType} */

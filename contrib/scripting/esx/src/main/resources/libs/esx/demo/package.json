@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "handlebars": "^4.0.6",
+    "jquery": "^3.2.1",
     "marked": "^0.3.6",
     "moment": "^2.18.0",
     "underscore": "^1.8.3"

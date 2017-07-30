@@ -25,9 +25,9 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.FileAppender;
 import org.apache.felix.scr.annotations.*;
 import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.utils.json.JSONWriter;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.tail.LogFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +90,6 @@ public class LogTailerWebConsolePlugin extends AbstractWebConsolePlugin {
                 }
 
                 JSONWriter json = new JSONWriter(response.getWriter());
-                json.setTidy(true);
                 json.object();
 
                 boolean reverse = false;

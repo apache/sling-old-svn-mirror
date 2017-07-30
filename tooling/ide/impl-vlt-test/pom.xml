@@ -108,6 +108,12 @@
           <scope>test</scope>
       </dependency>
       <dependency>
+         <groupId>org.apache.jackrabbit.vault</groupId>
+          <artifactId>vault-davex</artifactId>
+          <version>${vault.version}</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
           <groupId>org.apache.sling.ide</groupId>
           <artifactId>org.apache.sling.ide.api</artifactId>
           <version>${project.version}</version>
@@ -117,7 +123,7 @@
 
     <properties>
         <!-- must match the version being referenced in the pom.xml of filevault -->
-        <jackrabbit.version>2.11.3</jackrabbit.version>
-        <vault.version>3.1.30</vault.version>
+        <jackrabbit.version>2.14.0</jackrabbit.version>
+        <vault.version>3.1.38</vault.version>
     </properties>
 </project>

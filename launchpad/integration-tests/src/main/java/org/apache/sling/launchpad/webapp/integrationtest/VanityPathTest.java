@@ -22,9 +22,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.json.JsonException;
+
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.launchpad.webapp.integrationtest.util.EventsCounterUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -55,7 +56,7 @@ public class VanityPathTest extends HttpTestBase {
         resetMappingEventCount();
     }
 
-    private void resetMappingEventCount() throws JSONException, IOException {
+    private void resetMappingEventCount() throws JsonException, IOException {
         mappingEventCount = EventsCounterUtil.getEventsCount(this, MAPPING_UPDATE_TOPIC);
     }
 
@@ -158,7 +159,7 @@ public class VanityPathTest extends HttpTestBase {
     }
 
     /** test vanity path on a path with an extension with a redirect */
-    public void testRedirectOnPathWithExtension() throws IOException, JSONException {
+    public void testRedirectOnPathWithExtension() throws IOException, JsonException {
         // create a node with a vanity path
         Map<String, String> props = new HashMap<String, String>();
         props.put("jcr:mixinTypes", "sling:VanityPath");

@@ -32,7 +32,7 @@
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.xss</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.19-SNAPSHOT</version>
+    <version>2.0.1-SNAPSHOT</version>
 
     <name>Apache Sling XSS Protection Bundle</name>
     <description>
@@ -90,6 +90,9 @@
                             !org.apache.xml.resolver,
                             !org.apache.xml.resolver.readers,
                             !org.apache.log,
+                            !javax.mail.internet,
+                            !javax.servlet.jsp,
+                            !javax.servlet.jsp.tagext,
                             !sun.io,
                             *
                         </Import-Package>
@@ -287,7 +290,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.johnzon</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>

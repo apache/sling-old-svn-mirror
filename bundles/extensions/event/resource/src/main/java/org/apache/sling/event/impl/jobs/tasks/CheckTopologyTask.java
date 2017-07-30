@@ -140,7 +140,7 @@ public class CheckTopologyTask {
                                             final ValueMap vm = ResourceHelper.getValueMap(rsrc);
                                             final String targetId = caps.detectTarget(topicName, vm, info);
 
-                                            final Map<String, Object> props = new HashMap<String, Object>(vm);
+                                            final Map<String, Object> props = new HashMap<>(vm);
                                             props.remove(Job.PROPERTY_JOB_STARTED_TIME);
 
                                             final String newPath;
@@ -251,7 +251,7 @@ public class CheckTopologyTask {
 
                             if ( targetId != null ) {
                                 final String newPath = configuration.getAssginedJobsPath() + '/' + targetId + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
-                                final Map<String, Object> props = new HashMap<String, Object>(vm);
+                                final Map<String, Object> props = new HashMap<>(vm);
                                 props.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueName);
                                 props.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
                                 props.remove(Job.PROPERTY_JOB_STARTED_TIME);
@@ -287,7 +287,7 @@ public class CheckTopologyTask {
                         try {
                             final ValueMap vm = ResourceHelper.getValueMap(rsrc);
                             final String newPath = configuration.getUnassignedJobsPath() + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
-                            final Map<String, Object> props = new HashMap<String, Object>(vm);
+                            final Map<String, Object> props = new HashMap<>(vm);
                             props.remove(Job.PROPERTY_JOB_QUEUE_NAME);
                             props.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
                             props.remove(Job.PROPERTY_JOB_STARTED_TIME);

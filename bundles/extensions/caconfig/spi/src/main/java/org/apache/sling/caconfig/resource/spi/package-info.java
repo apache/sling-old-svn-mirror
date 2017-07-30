@@ -1,4 +1,4 @@
-    /*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,5 +19,5 @@
 /**
  * SPI for applications hooking into the configuration resource infrastructure for parameterizing and customizing.
  */
-@org.osgi.annotation.versioning.Version("2.0.0")
+@org.osgi.annotation.versioning.Version("2.1.0")
 package org.apache.sling.caconfig.resource.spi;

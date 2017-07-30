@@ -16,6 +16,12 @@
  */
 package org.apache.sling.pipes;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
@@ -26,10 +32,6 @@ import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * this abstract class for pipes implements a plumber with all registered pipes, plus some test ones, and give some paths,
@@ -53,7 +55,11 @@ public class AbstractPipeTest {
     @Before
     public void setup(){
         PlumberImpl plumberImpl = new PlumberImpl();
-        plumberImpl.activate();
+        PlumberImpl.Configuration configuration = mock(PlumberImpl.Configuration.class);
+        when(configuration.authorizedUsers()).thenReturn(new String[]{});
+        when(configuration.serviceUser()).thenReturn(null);
+        when(configuration.bufferSize()).thenReturn(PlumberImpl.DEFAULT_BUFFER_SIZE);
+        plumberImpl.activate(configuration);
         plumberImpl.registerPipe("slingPipes/dummyNull", DummyNull.class);
         plumberImpl.registerPipe("slingPipes/dummySearch", DummySearch.class);
         plumber = plumberImpl;

@@ -26,7 +26,7 @@ import javax.jcr.Node;
 
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.junit.Ignore;
 
 @Ignore

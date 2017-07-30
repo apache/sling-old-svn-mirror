@@ -20,7 +20,7 @@ package org.apache.sling.discovery;
 
 import java.util.Map;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * An InstanceDescription represents and contains information about an

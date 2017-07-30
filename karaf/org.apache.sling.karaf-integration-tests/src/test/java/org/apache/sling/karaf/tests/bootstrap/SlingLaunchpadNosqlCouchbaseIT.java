@@ -22,11 +22,10 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
+import com.couchbase.mock.CouchbaseMock;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.karaf.testing.KarafTestSupport;
-// import org.couchbase.mock.CouchbaseMock;
 import org.junit.AfterClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -47,27 +46,23 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfi
 @ExamReactorStrategy(PerClass.class)
 public class SlingLaunchpadNosqlCouchbaseIT extends KarafTestSupport {
 
-    // private static CouchbaseMock couchbase;
+    private static CouchbaseMock couchbase;
 
     @Inject
     @Filter(timeout = 300000)
     public ResourceProviderFactory resourceProviderFactory;
 
     protected void startCouchbase(final int port) throws IOException, InterruptedException {
-        /*
         couchbase = new CouchbaseMock("localhost", port, 10, 1024);
         couchbase.start();
         couchbase.waitForStartup();
-        */
     }
 
     @AfterClass // TODO does it work? (no - not supported by Pax Exam)
     public static void stopCouchbase() throws Exception {
-        /*
         if (couchbase != null) {
             couchbase.stop();
         }
-        */
     }
 
     @Configuration
@@ -81,7 +76,7 @@ public class SlingLaunchpadNosqlCouchbaseIT extends KarafTestSupport {
             editConfigurationFilePut("etc/org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config.config", "clientId", "sling-resourceprovider-couchbase"),
             editConfigurationFilePut("etc/org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config.config", "bucketName", "sling"),
             editConfigurationFilePut("etc/org.apache.sling.nosql.couchbase.client.CouchbaseClient.factory.config.config", "enabled", "true"),
-            // wrappedBundle(mavenBundle().groupId("org.couchbase.mock").artifactId("CouchbaseMock").versionAsInProject()),
+            wrappedBundle(mavenBundle().groupId("com.couchbase.mock").artifactId("CouchbaseMock").versionAsInProject()),
             wrappedBundle(mavenBundle().groupId("com.couchbase.client").artifactId("couchbase-client").versionAsInProject()),
             wrappedBundle(mavenBundle().groupId("com.intellij").artifactId("annotations").versionAsInProject()),
             mavenBundle().groupId("com.google.code.gson").artifactId("gson").versionAsInProject(),
@@ -93,7 +88,6 @@ public class SlingLaunchpadNosqlCouchbaseIT extends KarafTestSupport {
     }
 
     @Test
-    @Ignore
     public void testResourceProviderFactory() {
         assertNotNull(resourceProviderFactory);
         assertEquals("org.apache.sling.nosql.couchbase.resourceprovider.impl.CouchbaseNoSqlResourceProviderFactory", resourceProviderFactory.getClass().getName());

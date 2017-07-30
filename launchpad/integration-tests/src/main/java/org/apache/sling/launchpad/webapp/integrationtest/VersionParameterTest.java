@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
+
 import org.apache.commons.httpclient.HttpException;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 public class VersionParameterTest extends HttpTestBase {
@@ -44,7 +46,7 @@ public class VersionParameterTest extends HttpTestBase {
         params.put("jcr:mixinTypes", "mix:versionable");
     }
 
-    private String createVersionableNode() throws IOException, JSONException {
+    private String createVersionableNode() throws IOException, JsonException {
         params.put(":checkinNewVersionableNodes", "true");
         params.put("prop", "v1");
         final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, params);
@@ -63,7 +65,7 @@ public class VersionParameterTest extends HttpTestBase {
         return location;
     }
 
-    public void testVersionParameter() throws IOException, JSONException, InterruptedException {
+    public void testVersionParameter() throws IOException, JsonException, InterruptedException {
         waitUntilSlingIsStable();
         final String location = createVersionableNode();
         assertEquals("v2", getProp(location + ".json;v=1.1"));
@@ -81,8 +83,8 @@ public class VersionParameterTest extends HttpTestBase {
         fail("Sling instance fails to respond with status 200");
     }
     
-    private String getProp(String url) throws JSONException, IOException {
-        final JSONObject content = new JSONObject(getContent(url, CONTENT_TYPE_JSON));
+    private String getProp(String url) throws JsonException, IOException {
+        final JsonObject content = JsonUtil.parseObject(getContent(url, CONTENT_TYPE_JSON));
         return content.getString("prop");
     }
 }

@@ -18,8 +18,9 @@ package org.apache.sling.junit.remote.testrunner;
 
 import java.io.IOException;
 
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+
 import org.junit.runner.Description;
 
 /** Info about a remote tests, as provided by the Sling JUnit servlet */
@@ -33,12 +34,12 @@ class SlingRemoteTest {
     public static final String FAILURE = "failure";
     public static final String TRACE = "trace";
     
-    SlingRemoteTest(Class<?> testClass, JSONObject json) throws JSONException {
+    SlingRemoteTest(Class<?> testClass, JsonObject json) throws JsonException {
         this.testClass = testClass;
-        description = json.getString(DESCRIPTION);
-        failure = json.has(FAILURE) ? json.getString(FAILURE) : null;
+        description = json.containsKey(DESCRIPTION) ? json.getString(DESCRIPTION) : null;
+        failure = json.containsKey(FAILURE) ? json.getString(FAILURE) : null;
         if (failure != null) {
-            trace = json.has(TRACE) ? json.getString(TRACE) : null;
+            trace = json.containsKey(TRACE) ? json.getString(TRACE) : null;
         } else {
             trace = null;
         }

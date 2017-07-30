@@ -35,6 +35,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReaderFactory;
 import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
 
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -238,11 +239,6 @@ public class Announcement {
     public String getOwnerId() {
         return ownerId;
     }
-
-    /** Convert this announcement into a json object **/
-    public JsonObject asJSONObject() {
-        return asJSONObject(false);
-    }
     
     /** Convert this announcement into a json object **/
     private JsonObject asJSONObject(boolean filterTimes) {
@@ -329,7 +325,7 @@ public class Announcement {
                 .getJsonArray("topologyAnnouncements");
         
         for (int i = 0; i < subAnnouncements.size(); i++) {
-            String subAnnouncementJSON = subAnnouncements.getString(i);
+            String subAnnouncementJSON = subAnnouncements.get(i).toString();
             result.addIncomingTopologyAnnouncement(fromJSON(subAnnouncementJSON));
         }
         return result;
@@ -416,7 +412,7 @@ public class Announcement {
 
     /** Convert this announcement into json **/
     public String asJSON() {
-        return asJSON(asJSONObject());
+        return asJSON(asJSONObject(false));
     }
     
     private static String asJSON(JsonValue json) {

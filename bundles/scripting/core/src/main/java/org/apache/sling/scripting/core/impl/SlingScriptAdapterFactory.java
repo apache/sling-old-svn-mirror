@@ -29,6 +29,7 @@ import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
 import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -43,8 +44,8 @@ import org.osgi.service.component.annotations.Reference;
         MimeTypeProvider.class
     },
     property = {
-        "service.vendor=The Apache Software Foundation",
-        "service.description=Default SlingScriptResolver",
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+        Constants.SERVICE_DESCRIPTION + "=Default SlingScriptResolver",
         "adaptables=org.apache.sling.api.resource.Resource",
         "adapters=org.apache.sling.api.scripting.SlingScript",
         "adapters=javax.servlet.Servlet",
@@ -68,7 +69,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
      */
     @Reference
     private SlingScriptEngineManager scriptEngineManager;
-    
+
     /**
      * The BindingsValuesProviderTracker
      */
@@ -80,6 +81,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
 
     // ---------- AdapterFactory -----------------------------------------------
 
+    @Override
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
 
@@ -89,7 +91,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
 
         ScriptEngine engine = scriptEngineManager.getEngineByExtension(ext);
         if (engine != null) {
-            final Collection<BindingsValuesProvider> bindingsValuesProviders = 
+            final Collection<BindingsValuesProvider> bindingsValuesProviders =
                     bindingsValuesProviderTracker.getBindingsValuesProviders(engine.getFactory(), BINDINGS_CONTEXT);
             // unchecked cast
             return (AdapterType) new DefaultSlingScript(this.bundleContext,
@@ -113,6 +115,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
      *            name contains no dot, the entire name is considered the
      *            extension.
      */
+    @Override
     public String getMimeType(String name) {
         name = name.substring(name.lastIndexOf('.') + 1);
         ScriptEngine se = scriptEngineManager.getEngineByExtension(name);
@@ -135,6 +138,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
      *
      * @param mimeType The MIME type to be mapped to an extension.
      */
+    @Override
     public String getExtension(String mimeType) {
         ScriptEngine se = scriptEngineManager.getEngineByMimeType(mimeType);
         if (se != null) {

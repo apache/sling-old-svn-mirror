@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>org.apache.sling.commons.log</artifactId>
-  <version>5.0.1-SNAPSHOT</version>
+  <version>5.0.3-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
     <name>Apache Sling SLF4J Implementation (Logback)</name>

@@ -33,6 +33,7 @@ import java.util.List;
 
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.junit.Before;
@@ -138,4 +139,59 @@ public class HealthCheckResultCacheTest {
         
     }
     
+    private HealthCheckMetadata setupHealthCheckMetadataWithStickyResults(long id, long warningsStickForMinutes) {
+        reset(serviceRef);
+        doReturn(id).when(serviceRef).getProperty(Constants.SERVICE_ID);
+        doReturn(warningsStickForMinutes).when(serviceRef).getProperty(HealthCheck.WARNINGS_STICK_FOR_MINUTES);
+        doReturn("HC id=" + id).when(serviceRef).getProperty(HealthCheck.NAME);
+        return new HealthCheckMetadata(serviceRef);
+    }
+
+    @Test
+    public void testCreateExecutionResultWithStickyResults() {
+        
+        HealthCheckMetadata hcWithStickyResultsSet = setupHealthCheckMetadataWithStickyResults(1, 2 /* 2 minutes */);
+        ExecutionResult currentResult = spy(new ExecutionResult(hcWithStickyResultsSet, new Result(Result.Status.OK, "result for hc"), 1));
+        HealthCheckExecutionResult overallResultWithStickyResults = healthCheckResultCache.createExecutionResultWithStickyResults(currentResult);
+        assertTrue("Exact same result is expected if no history exists", currentResult == overallResultWithStickyResults);
+
+        // add 4 minutes old WARN to cache
+        ExecutionResult oldWarnResult = spy(new ExecutionResult(hcWithStickyResultsSet, new Result(Result.Status.WARN, "result for hc"), 1));
+        doReturn(new Date(System.currentTimeMillis() - DUR_4_MIN)).when(oldWarnResult).getFinishedAt();
+        healthCheckResultCache.updateWith(oldWarnResult);
+
+        // check that it is not used
+        currentResult = new ExecutionResult(hcWithStickyResultsSet, new Result(Result.Status.OK, "result for hc"), 1);
+        overallResultWithStickyResults = healthCheckResultCache.createExecutionResultWithStickyResults(currentResult);
+        assertTrue("Exact same result is expected if WARN HC Result is too old", currentResult == overallResultWithStickyResults);
+
+        // change WARN to 1 minute age
+        doReturn(new Date(System.currentTimeMillis() - DUR_1_MIN)).when(oldWarnResult).getFinishedAt();
+        overallResultWithStickyResults = healthCheckResultCache.createExecutionResultWithStickyResults(currentResult);
+        assertTrue("Expect newly created result as sticky result should be taken into account", currentResult != overallResultWithStickyResults);
+        assertEquals("Expect status to be taken over from old, sticky WARN", Result.Status.WARN,
+                overallResultWithStickyResults.getHealthCheckResult().getStatus());
+        assertEquals("Expect 4 entries, two each for current and WARN", 4, getLogMsgCount(overallResultWithStickyResults));
+
+        // add 1 minutes old CRITICAL to cache
+        ExecutionResult oldCriticalResult = spy(new ExecutionResult(hcWithStickyResultsSet, new Result(Result.Status.CRITICAL, "result for hc"), 1));
+        doReturn(new Date(System.currentTimeMillis() - DUR_1_MIN)).when(oldCriticalResult).getFinishedAt();
+        healthCheckResultCache.updateWith(oldCriticalResult);
+
+        overallResultWithStickyResults = healthCheckResultCache.createExecutionResultWithStickyResults(currentResult);
+        assertTrue("Expect newly created result as sticky result should be taken into account", currentResult != overallResultWithStickyResults);
+        assertEquals("Expect status to be taken over from old, sticky CRITICAL", Result.Status.CRITICAL,
+                overallResultWithStickyResults.getHealthCheckResult().getStatus());
+        assertEquals("Expect six entries, two each for current, WARN and CRITICAL result", 6, getLogMsgCount(overallResultWithStickyResults));
+
+    }
+
+    private int getLogMsgCount(HealthCheckExecutionResult result) {
+        int count = 0;
+        for (ResultLog.Entry entry : result.getHealthCheckResult()) {
+            count++;
+        }
+        return count;
+    }
+
 }

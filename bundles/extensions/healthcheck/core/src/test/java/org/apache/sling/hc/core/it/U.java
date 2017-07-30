@@ -33,6 +33,7 @@ import java.util.List;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.api.execution.HealthCheckSelector;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 
@@ -52,7 +53,7 @@ public class U {
         final long timeout = System.currentTimeMillis() + 10000L;
         int count = 0;
         while(System.currentTimeMillis() < timeout) {
-            final List<HealthCheckExecutionResult> results = executor.execute(options, tags);
+            final List<HealthCheckExecutionResult> results = executor.execute(HealthCheckSelector.tags(tags), options);
             count = results.size();
             if(count== howMany) {
                 return;
@@ -106,6 +107,7 @@ public class U {
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.johnzon").versionAsInProject(),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.hc.api").versionAsInProject(),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.1.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.2.8"),
                     mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.2"),
