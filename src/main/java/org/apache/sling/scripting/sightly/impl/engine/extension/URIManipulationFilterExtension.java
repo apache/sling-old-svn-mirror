@@ -21,23 +21,30 @@ package org.apache.sling.scripting.sightly.impl.engine.extension;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.io.FilenameUtils;
+import javax.annotation.Nonnull;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.request.RequestPathInfo;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.render.RuntimeObjectModel;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(
         service = RuntimeExtension.class,
@@ -64,6 +71,7 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
     public static final String ADD_QUERY = "addQuery";
     public static final String REMOVE_QUERY = "removeQuery";
 
+    private static final Logger LOG = LoggerFactory.getLogger(URIManipulationFilterExtension.class);
 
     @Override
     @SuppressWarnings("unchecked")
@@ -72,156 +80,224 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
         RuntimeObjectModel runtimeObjectModel = renderContext.getObjectModel();
         String uriString = runtimeObjectModel.toString(arguments[0]);
         Map<String, Object> options = runtimeObjectModel.toMap(arguments[1]);
-        StringBuilder sb = new StringBuilder();
-        PathInfo pathInfo = new PathInfo(uriString);
-        uriAppender(sb, SCHEME, options, pathInfo.getScheme());
-        if (sb.length() > 0) {
-            sb.append(":");
-            sb.append(StringUtils.defaultIfEmpty(pathInfo.getBeginPathSeparator(), "//"));
-        }
-        if (sb.length() > 0) {
-            uriAppender(sb, DOMAIN, options, pathInfo.getHost());
-        } else {
-            String domain = getOption(DOMAIN, options, pathInfo.getHost());
-            if (StringUtils.isNotEmpty(domain)) {
-                sb.append("//").append(domain);
-            }
-        }
-        if (pathInfo.getPort() > -1) {
-            sb.append(":").append(pathInfo.getPort());
-        }
-        String prependPath = getOption(PREPEND_PATH, options, StringUtils.EMPTY);
-        if (prependPath == null) {
-            prependPath = StringUtils.EMPTY;
-        }
-        String path = getOption(PATH, options, pathInfo.getPath());
-        if (StringUtils.isEmpty(path)) {
-            // if the path is forced to be empty don't remove the path
-            path = pathInfo.getPath();
-        }
-        if (StringUtils.isNotEmpty(path) && !"/".equals(path)) {
-            if (StringUtils.isNotEmpty(prependPath)) {
-                if (sb.length() > 0 && !prependPath.startsWith("/")) {
-                    prependPath = "/" + prependPath;
-                }
-                if (!prependPath.endsWith("/")) {
-                    prependPath += "/";
-                }
-            }
 
+        try {
+            URI originalUri = new URI(uriString);
+            // read in https://docs.oracle.com/javase/7/docs/api/java/net/URI.html in section "Identities"
+            // which constructors to use for which use case
+            final URI transformedUri;
+            final String scheme = getOption(SCHEME, options, originalUri.getScheme(), true);
+            final String fragment = getOption(FRAGMENT, options, originalUri.getFragment(), false);
 
-            String appendPath = getOption(APPEND_PATH, options, StringUtils.EMPTY);
-            if (appendPath == null) {
-                appendPath = StringUtils.EMPTY;
-            }
-            if (StringUtils.isNotEmpty(appendPath)) {
-                if (!appendPath.startsWith("/")) {
-                    appendPath = "/" + appendPath;
+            // first check which type of URI
+            if (originalUri.isOpaque()) {
+                // only scheme and fragment is relevant
+                transformedUri = new URI(scheme, originalUri.getSchemeSpecificPart(), fragment);
+                return transformedUri.toString();
+            } else {
+                // only server-based authorities are supported
+                try {
+                    originalUri = originalUri.parseServerAuthority();
+                } catch (URISyntaxException e) {
+                    LOG.warn("Only server-based authorities are supported for non-opaque URLs");
+                    throw e;
                 }
-            }
-            String newPath;
-            try {
-                newPath = new URI(prependPath + path + appendPath).normalize().getPath();
-            } catch (URISyntaxException e) {
-                newPath = prependPath + path + appendPath;
-            }
-            if (sb.length() > 0 && sb.lastIndexOf("/") != sb.length() - 1 && StringUtils.isNotEmpty(newPath) && !newPath.startsWith("/")) {
-                sb.append("/");
-            }
-            sb.append(newPath);
-            Set<String> selectors = pathInfo.getSelectors();
-            handleSelectors(runtimeObjectModel, selectors, options);
-            for (String selector : selectors) {
-                if (StringUtils.isNotBlank(selector) && !selector.contains(" ")) {
-                    // make sure not to append empty or invalid selectors
-                    sb.append(".").append(selector);
-                }
-            }
-            String extension = getOption(EXTENSION, options, pathInfo.getExtension());
-            if (StringUtils.isNotEmpty(extension)) {
-                sb.append(".").append(extension);
-            }
+                final String host = getOption(DOMAIN, options, originalUri.getHost(), true);
+                final String path = getPath(runtimeObjectModel, originalUri.getPath(), options, scheme != null || host != null);
+                final String escapedQuery = getEscapedQuery(runtimeObjectModel, originalUri.getRawQuery(), options);
 
-            String prependSuffix = getOption(PREPEND_SUFFIX, options, StringUtils.EMPTY);
-            if (StringUtils.isNotEmpty(prependSuffix)) {
-                if (!prependSuffix.startsWith("/")) {
-                    prependSuffix = "/" + prependSuffix;
-                }
-                if (!prependSuffix.endsWith("/")) {
-                    prependSuffix += "/";
-                }
+                // the URI constructor will escape the % in the query part again, we must revert that
+                transformedUri = new URI(scheme, originalUri.getUserInfo(), host, originalUri.getPort(), path, escapedQuery,
+                        fragment);
+                return unescapePercentInQuery(transformedUri.toString());
             }
-            String pathInfoSuffix = pathInfo.getSuffix();
-            String suffix = getOption(SUFFIX, options, pathInfoSuffix == null ? StringUtils.EMPTY : pathInfoSuffix);
-            if (suffix == null) {
-                suffix = StringUtils.EMPTY;
-            }
-            String appendSuffix = getOption(APPEND_SUFFIX, options, StringUtils.EMPTY);
-            if (StringUtils.isNotEmpty(appendSuffix)) {
-                appendSuffix = "/" + appendSuffix;
-            }
-            String newSuffix = FilenameUtils.normalize(prependSuffix + suffix + appendSuffix, true);
-            if (StringUtils.isNotEmpty(newSuffix)) {
-                if (!newSuffix.startsWith("/")) {
-                    sb.append("/");
-                }
-                sb.append(newSuffix);
-            }
-
-        } else if ("/".equals(path)) {
-            sb.append(path);
+        } catch (URISyntaxException e) {
+            LOG.warn("Cannot manipulate invalid URI '{}'", uriString, e);
         }
-        Map<String, Collection<String>> parameters = pathInfo.getParameters();
-        handleParameters(runtimeObjectModel, parameters, options);
-        if (sb.length() > 0 && !parameters.isEmpty()) {
-            if (StringUtils.isEmpty(path)) {
-                sb.append("/");
-            }
-            sb.append("?");
-            for (Map.Entry<String, Collection<String>> entry : parameters.entrySet()) {
-                for (String value : entry.getValue()) {
-                    sb.append(entry.getKey()).append("=").append(value).append("&");
-                }
-            }
-            // delete the last &
-            sb.deleteCharAt(sb.length() - 1);
-        }
-        String fragment = getOption(FRAGMENT, options, pathInfo.getFragment());
-        if (StringUtils.isNotEmpty(fragment)) {
-            sb.append("#").append(fragment);
-        }
-        return sb.toString();
+        return uriString;
     }
 
-    private void uriAppender(StringBuilder stringBuilder, String option, Map<String, Object> options, String defaultValue) {
-        String value = (String) options.get(option);
+    /**
+     * Decodes the encoding of the percent character itself within the given uri's query i.e. reverts the conversion of {@code %} to
+     * {@code %25}.
+     *
+     * @return the uri with the query partly decoded ({@code %25} decoded to {@code %})
+     * @see <a href="https://blog.stackhunter.com/2014/03/31/encode-special-characters-java-net-uri/">How to Encode Special Characters in
+     * Java’s URI Class</a>
+     * @see <a href="https://stackoverflow.com/q/19917079/5155923">java.net.URI and percent in query parameter value</a>
+     */
+    static String unescapePercentInQuery(String uri) {
+        String[] parts = uri.split("\\?", 2);
+        if (parts.length != 2) {
+            return uri;
+        }
+        // separate fragment
+        String[] suffixParts = parts[1].split("#", 2);
+        final String suffix;
+        final String query;
+        if (suffixParts.length == 2) {
+            query = suffixParts[0];
+            suffix = "#" + suffixParts[1];
+        } else {
+            query = parts[1];
+            suffix = "";
+        }
+        return parts[0] + "?" + query.replaceAll("%25", "%") + suffix;
+    }
+
+    /**
+     * Returns a value from a map.
+     *
+     * @param key               the option name
+     * @param options           the options map
+     * @param defaultValue      the default value to return
+     * @param useDefaultIfEmpty if set to {@code true}, the {@code defaultValue} will be returned when the map contains the required
+     *                          option but its value is the empty string or null
+     * @return either the value from the map for entry with name or {@code defaultValue}; in case {@code useDefaultIfEmpty} is set to
+     * {@code false}, returns null in case the entry present in the map but has an empty string or null value
+     */
+    private String getOption(String key, Map<String, Object> options, String defaultValue, boolean useDefaultIfEmpty) {
+        String value = (String) options.get(key);
         if (StringUtils.isNotEmpty(value)) {
-            stringBuilder.append(value);
-        } else {
-            if (StringUtils.isNotEmpty(defaultValue)) {
-                stringBuilder.append(defaultValue);
-            }
+            return value;
         }
-    }
-
-    private String getOption(String option, Map<String, Object> options, String defaultValue) {
-        if (options.containsKey(option)) {
-            return (String) options.get(option);
-
+        if (options.containsKey(key)) {
+            if (useDefaultIfEmpty) {
+                return defaultValue;
+            } else {
+                return null;
+            }
         }
         return defaultValue;
     }
 
-    private void handleSelectors(RuntimeObjectModel runtimeObjectModel, Set<String> selectors, Map<String, Object> options) {
+    static String concatenateWithSlashes(String... pathParts) {
+        StringBuilder sb = new StringBuilder();
+        for (String pathPart : pathParts) {
+            if (StringUtils.isNotBlank(pathPart)) {
+                if (sb.length() > 0 && !pathPart.startsWith("/") && !sb.toString().endsWith("/")) {
+                    sb.append("/");
+                }
+                if (sb.toString().endsWith("/") && pathPart.startsWith("/")) {
+                    sb.append(pathPart.substring(1));
+                } else {
+                    sb.append(pathPart);
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    private String getPath(RuntimeObjectModel runtimeObjectModel, String originalPath, Map<String, Object> options, boolean isAbsolute) {
+        ModifiableRequestPathInfo requestPathInfo = new ModifiableRequestPathInfo(originalPath);
+        final String prependPath = getOption(PREPEND_PATH, options, StringUtils.EMPTY, true);
+        final String path =
+                getOption(PATH, options, requestPathInfo.getResourcePath(), true); // empty path option should not remove existing path!
+        final String appendPath = getOption(APPEND_PATH, options, StringUtils.EMPTY, true);
+        if (!options.containsKey(PATH) && StringUtils.isEmpty(path)) {
+            // no not prepend/append if path is neither set initially nor through option
+            LOG.debug("Do not modify path because original path was empty and not set through an option either!");
+            // dealing with selectors, extension or suffix is not allowed then either
+            return requestPathInfo.toString();
+        } else {
+            String newPath = concatenateWithSlashes(prependPath, path, appendPath);
+
+            // do we need to make the path absolute?
+            if (isAbsolute && !newPath.startsWith("/")) {
+                newPath = '/' + newPath;
+            }
+            // modify resource path
+            requestPathInfo.setResourcePath(newPath);
+        }
+
+        handleSelectors(runtimeObjectModel, requestPathInfo, options);
+        // handle extension
+        String extension = getOption(EXTENSION, options, requestPathInfo.getExtension(), false);
+        requestPathInfo.setExtension(extension);
+
+        // modify suffix!
+        String prependSuffix = getOption(PREPEND_SUFFIX, options, StringUtils.EMPTY, true);
+        // remove suffix if option is empty
+        String suffix = getOption(SUFFIX, options, requestPathInfo.getSuffix(), false);
+        String appendSuffix = getOption(APPEND_SUFFIX, options, StringUtils.EMPTY, true);
+
+        String newSuffix = concatenateWithSlashes(prependSuffix, suffix, appendSuffix);
+        if (StringUtils.isNotEmpty(newSuffix)) {
+            // make sure it starts with a slash
+            if (!newSuffix.startsWith("/")) {
+                newSuffix = '/' + newSuffix;
+            }
+        }
+        requestPathInfo.setSuffix(newSuffix);
+        return requestPathInfo.toString();
+    }
+
+    private String getEscapedQuery(RuntimeObjectModel runtimeObjectModel, String originalQuery, Map<String, Object> options) {
+        // parse parameters
+        Map<String, Collection<String>> parameters = new LinkedHashMap<>();
+        if (StringUtils.isNotEmpty(originalQuery)) {
+            String[] keyValuePairs = originalQuery.split("&");
+            for (String keyValuePair : keyValuePairs) {
+                String[] pair = keyValuePair.split("=");
+                if (pair.length == 2) {
+                    String param;
+                    try {
+                        param = URLDecoder.decode(pair[0], StandardCharsets.UTF_8.name());
+                    } catch (UnsupportedEncodingException e) {
+                        LOG.warn("Could not decode parameter key '{}'", pair[0], e);
+                        continue;
+                    }
+                    String value;
+                    try {
+                        value = URLDecoder.decode(pair[1], StandardCharsets.UTF_8.name());
+                    } catch (UnsupportedEncodingException e) {
+                        LOG.warn("Could not decode parameter value of parameter '{}': '{}'", param, pair[1], e);
+                        continue;
+                    }
+                    Collection<String> values = parameters.get(param);
+                    if (values == null) {
+                        values = new ArrayList<>();
+                        parameters.put(param, values);
+                    }
+                    values.add(value);
+                }
+            }
+        }
+
+        if (handleParameters(runtimeObjectModel, parameters, options)) {
+            if (!parameters.isEmpty()) {
+                try {
+                    StringBuilder sb = new StringBuilder();
+                    for (Map.Entry<String, Collection<String>> entry : parameters.entrySet()) {
+                        for (String value : entry.getValue()) {
+                            sb.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8.name())).append("=")
+                                    .append(URLEncoder.encode(value, StandardCharsets.UTF_8.name())).append("&");
+                        }
+                    }
+                    // delete the last &
+                    sb.deleteCharAt(sb.length() - 1);
+                    return sb.toString();
+                } catch (UnsupportedEncodingException e) {
+                    throw new SightlyException("Could not encode the parameter values/keys", e);
+                }
+            } else {
+                return null;
+            }
+        }
+        return originalQuery;
+    }
+
+    private void handleSelectors(RuntimeObjectModel runtimeObjectModel, ModifiableRequestPathInfo requestPathInfo,
+                                 Map<String, Object> options) {
         if (options.containsKey(SELECTORS)) {
             Object selectorsOption = options.get(SELECTORS);
             if (selectorsOption == null) {
                 // we want to remove all selectors
-                selectors.clear();
+                requestPathInfo.clearSelectors();
             } else if (selectorsOption instanceof String) {
                 String selectorString = (String) selectorsOption;
                 String[] selectorsArray = selectorString.split("\\.");
-                replaceSelectors(selectors, selectorsArray);
+                requestPathInfo.replaceSelectors(selectorsArray);
             } else if (selectorsOption instanceof Object[]) {
                 Object[] selectorsURIArray = (Object[]) selectorsOption;
                 String[] selectorsArray = new String[selectorsURIArray.length];
@@ -229,14 +305,14 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
                 for (Object selector : selectorsURIArray) {
                     selectorsArray[index++] = runtimeObjectModel.toString(selector);
                 }
-                replaceSelectors(selectors, selectorsArray);
+                requestPathInfo.replaceSelectors(selectorsArray);
             }
         }
         Object addSelectorsOption = options.get(ADD_SELECTORS);
         if (addSelectorsOption instanceof String) {
             String selectorString = (String) addSelectorsOption;
             String[] selectorsArray = selectorString.split("\\.");
-            addSelectors(selectors, selectorsArray);
+            requestPathInfo.addSelectors(selectorsArray);
         } else if (addSelectorsOption instanceof Object[]) {
             Object[] selectorsURIArray = (Object[]) addSelectorsOption;
             String[] selectorsArray = new String[selectorsURIArray.length];
@@ -244,13 +320,13 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
             for (Object selector : selectorsURIArray) {
                 selectorsArray[index++] = runtimeObjectModel.toString(selector);
             }
-            addSelectors(selectors, selectorsArray);
+            requestPathInfo.addSelectors(selectorsArray);
         }
         Object removeSelectorsOption = options.get(REMOVE_SELECTORS);
         if (removeSelectorsOption instanceof String) {
             String selectorString = (String) removeSelectorsOption;
             String[] selectorsArray = selectorString.split("\\.");
-            removeSelectors(selectors, selectorsArray);
+            requestPathInfo.removeSelectors(selectorsArray);
         } else if (removeSelectorsOption instanceof Object[]) {
             Object[] selectorsURIArray = (Object[]) removeSelectorsOption;
             String[] selectorsArray = new String[selectorsURIArray.length];
@@ -258,37 +334,26 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
             for (Object selector : selectorsURIArray) {
                 selectorsArray[index++] = runtimeObjectModel.toString(selector);
             }
-            removeSelectors(selectors, selectorsArray);
+            requestPathInfo.removeSelectors(selectorsArray);
         }
-
-    }
-
-    private void replaceSelectors(Set<String> selectors, String[] selectorsArray) {
-        selectors.clear();
-        selectors.addAll(Arrays.asList(selectorsArray));
-    }
-
-    private void addSelectors(Set<String> selectors, String[] selectorsArray) {
-        selectors.addAll(Arrays.asList(selectorsArray));
-    }
-
-    private void removeSelectors(Set<String> selectors, String[] selectorsArray) {
-        selectors.removeAll(Arrays.asList(selectorsArray));
     }
 
     @SuppressWarnings("unchecked")
-    private void handleParameters(RuntimeObjectModel runtimeObjectModel, Map<String, Collection<String>> parameters, Map<String, Object>
-            options) {
+    private boolean handleParameters(RuntimeObjectModel runtimeObjectModel, Map<String, Collection<String>> parameters,
+                                     Map<String, Object> options) {
+        boolean hasModifiedParameters = false;
         if (options.containsKey(QUERY)) {
             Object queryOption = options.get(QUERY);
             parameters.clear();
             Map<String, Object> queryParameters = runtimeObjectModel.toMap(queryOption);
             addQueryParameters(runtimeObjectModel, parameters, queryParameters);
+            hasModifiedParameters = true;
         }
         Object addQueryOption = options.get(ADD_QUERY);
         if (addQueryOption != null) {
             Map<String, Object> addParams = runtimeObjectModel.toMap(addQueryOption);
             addQueryParameters(runtimeObjectModel, parameters, addParams);
+            hasModifiedParameters = true;
         }
         Object removeQueryOption = options.get(REMOVE_QUERY);
         if (removeQueryOption != null) {
@@ -303,177 +368,106 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
                     }
                 }
             }
+            hasModifiedParameters = true;
         }
+        return hasModifiedParameters;
     }
 
-    private void addQueryParameters(RuntimeObjectModel runtimeObjectModel, Map<String, Collection<String>> parameters, Map<String, Object>
-            queryParameters) {
+    private void addQueryParameters(RuntimeObjectModel runtimeObjectModel, Map<String, Collection<String>> parameters,
+                                    Map<String, Object> queryParameters) {
         for (Map.Entry<String, Object> entry : queryParameters.entrySet()) {
             Object entryValue = entry.getValue();
-            try {
-                if (runtimeObjectModel.isCollection(entryValue)) {
-                    Collection<Object> collection = runtimeObjectModel.toCollection(entryValue);
-                    Collection<String> values = new ArrayList<>(collection.size());
-                    for (Object o : collection) {
-                        values.add(URLEncoder.encode(runtimeObjectModel.toString(o), "UTF-8"));
-                    }
-                    parameters.put(entry.getKey(), values);
-                } else {
-                    Collection<String> values = new ArrayList<>(1);
-                    values.add(URLEncoder.encode(runtimeObjectModel.toString(entryValue), "UTF-8"));
-                    parameters.put(entry.getKey(), values);
+            if (runtimeObjectModel.isCollection(entryValue)) {
+                Collection<Object> collection = runtimeObjectModel.toCollection(entryValue);
+                Collection<String> values = new ArrayList<>(collection.size());
+                for (Object o : collection) {
+                    values.add(runtimeObjectModel.toString(o));
                 }
-            } catch (UnsupportedEncodingException e) {
-                throw new SightlyException(e);
+                parameters.put(entry.getKey(), values);
+            } else {
+                Collection<String> values = new ArrayList<>(1);
+                values.add(runtimeObjectModel.toString(entryValue));
+                parameters.put(entry.getKey(), values);
             }
         }
     }
 
-    public static class PathInfo {
+    static class ModifiableRequestPathInfo implements RequestPathInfo {
 
-        private URI uri;
-        private String path;
-        private Set<String> selectors;
-        private String selectorString;
+        private String resourcePath;
+        private List<String> selectors;
         private String extension;
         private String suffix;
-        private Map<String, Collection<String>> parameters = new LinkedHashMap<>();
 
         /**
-         * Creates a {@code PathInfo} object based on a request path.
+         * Creates the {@link RequestPathInfo} object based on a request path only.
+         * This utility does not take this into account any underlying repository structure and
+         * just uses the first dot to split resource path from the rest!
+         * {@code org.apache.sling.servlets.resolver.internal.DecomposedUrl} uses the same logic!
          *
          * @param path the full normalized path (no '.', '..', or double slashes8) of the request, including the query parameters
          * @throws NullPointerException if the supplied {@code path} is null
          */
-        public PathInfo(String path) {
+        ModifiableRequestPathInfo(String path) {
             if (path == null) {
                 throw new NullPointerException("The path parameter cannot be null.");
             }
-            try {
-                uri = new URI(path);
-            } catch (URISyntaxException e) {
-                throw new SightlyException("The provided path does not represent a valid URI: " + path);
-            }
-            selectors = new LinkedHashSet<>();
-            String processingPath = path;
-            if (uri.getPath() != null) {
-                processingPath = uri.getPath();
-            }
-            int lastDot = processingPath.lastIndexOf('.');
-            if (lastDot > -1) {
-                String afterLastDot = processingPath.substring(lastDot + 1);
-                String[] parts = afterLastDot.split("/");
-                extension = parts[0];
-                if (parts.length > 1) {
-                    // we have a suffix
-                    StringBuilder suffixSB = new StringBuilder();
-                    for (int i = 1; i < parts.length; i++) {
-                        suffixSB.append("/").append(parts[i]);
-                    }
-                    int hashIndex = suffixSB.indexOf("#");
-                    if (hashIndex > -1) {
-                        suffix = suffixSB.substring(0, hashIndex);
-                    } else {
-                        suffix = suffixSB.toString();
-                    }
-                }
-            }
-            int firstDot = processingPath.indexOf('.');
-            if (firstDot < lastDot) {
-                selectorString = processingPath.substring(firstDot + 1, lastDot);
-                String[] selectorsArray = selectorString.split("\\.");
-                selectors.addAll(Arrays.asList(selectorsArray));
-            }
-            int pathLength = processingPath.length() - (selectorString == null ? 0 : selectorString.length() + 1) - (extension == null ? 0:
-                    extension.length() + 1) - (suffix == null ? 0 : suffix.length());
-            if (pathLength == processingPath.length()) {
-                this.path = processingPath;
+            selectors = new LinkedList<>();
+            // get relevant parts
+            int firstDot = path.indexOf('.');
+
+            // the extra path in the request URI
+            final String pathToParse;
+            if (firstDot >= 0) {
+                pathToParse = path.substring(firstDot);
+                resourcePath = path.substring(0, firstDot);
             } else {
-                this.path = processingPath.substring(0, pathLength);
+                pathToParse = "";
+                resourcePath = path;
             }
-            String query = uri.getRawQuery();
-            if (StringUtils.isNotEmpty(query)) {
-                String[] keyValuePairs = query.split("&");
-                for (String keyValuePair : keyValuePairs) {
-                    String[] pair = keyValuePair.split("=");
-                    if (pair.length == 2) {
-                        String param = pair[0];
-                        String value = pair[1];
-                        Collection<String> values = parameters.get(param);
-                        if (values == null) {
-                            values = new ArrayList<>();
-                            parameters.put(param, values);
-                        }
-                        values.add(value);
-                    }
-                }
+
+            // use logic from org.apache.sling.engine.impl.request.SlingRequestPathInfo
+            // separate selectors/ext from the suffix
+            int firstSlash = pathToParse.indexOf('/');
+            String pathToSplit;
+            if (firstSlash < 0) {
+                pathToSplit = pathToParse;
+                suffix = null;
+            } else {
+                pathToSplit = pathToParse.substring(0, firstSlash);
+                suffix = pathToParse.substring(firstSlash);
             }
-        }
 
-        /**
-         * Returns the scheme of this path if the path corresponds to a URI and if the URI provides scheme information.
-         *
-         * @return the scheme or {@code null} if the path does not contain a scheme
-         */
-        public String getScheme() {
-            return uri.getScheme();
-        }
+            int lastDot = pathToSplit.lastIndexOf('.');
 
-        /**
-         * Returns the path separator ("//") if the path defines an absolute URI.
-         *
-         * @return the path separator if the path is an absolute URI, {@code null} otherwise
-         */
-        public String getBeginPathSeparator() {
-            if (uri.isAbsolute()) {
-                return "//";
+            if (lastDot > 1) {
+                // no selectors if splitting would give an empty array
+                String tmpSel = pathToSplit.substring(1, lastDot);
+                selectors.addAll(Arrays.asList(tmpSel.split("\\.")));
+
             }
-            return null;
+
+            // extension only if lastDot is not trailing
+            extension = (lastDot + 1 < pathToSplit.length())
+                    ? pathToSplit.substring(lastDot + 1) : null;
         }
 
-        /**
-         * Returns the host part of the path, if the path defines a URI.
-         *
-         * @return the host if the path defines a URI, {@code null} otherwise
-         */
-        public String getHost() {
-            return uri.getHost();
+        void setExtension(String extension) {
+            this.extension = extension;
         }
 
-        /**
-         * Returns the port if the path defines a URI and if it contains port information.
-         *
-         * @return the port or -1 if no port is defined
-         */
-        public int getPort() {
-            return uri.getPort();
+        void setSuffix(String suffix) {
+            this.suffix = suffix;
         }
 
-        /**
-         * Returns the path from which <i>{@code this}</i> object was built.
-         *
-         * @return the original path
-         */
-        public String getFullPath() {
-            return uri.toString();
+        @Override
+        @Nonnull
+        public String getResourcePath() {
+            return resourcePath;
         }
 
-        /**
-         * Returns the path identifying the resource, without any selectors, extension or query parameters.
-         *
-         * @return the path of the resource
-         */
-        public String getPath() {
-            return path;
-        }
-
-        /**
-         * Returns the selectors set.
-         *
-         * @return the selectors set; if there are no selectors the set will be empty
-         */
-        public Set<String> getSelectors() {
-            return selectors;
+        void setResourcePath(String path) {
+            this.resourcePath = path;
         }
 
         /**
@@ -481,6 +475,7 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
          *
          * @return the extension, if one exists, otherwise {@code null}
          */
+        @Override
         public String getExtension() {
             return extension;
         }
@@ -490,34 +485,68 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
          *
          * @return the selector string, if the path has selectors, otherwise {@code null}
          */
+        @Override
         public String getSelectorString() {
-            return selectorString;
+            throw new UnsupportedOperationException();
         }
 
         /**
-         * Returns the suffix appended to the path. The suffix represents the path segment between the path's extension and the path's fragment.
+         * Returns the suffix appended to the path. The suffix represents the path segment between the path's extension and the path's
+         * fragment.
          *
          * @return the suffix if the path contains one, {@code null} otherwise
          */
+        @Override
         public String getSuffix() {
             return suffix;
         }
 
-        /**
-         * Returns the fragment is this path defines a URI and it contains a fragment.
-         *
-         * @return the fragment, or {@code null} if one doesn't exist
-         */
-        public String getFragment() {
-            return uri.getFragment();
+        @Override
+        @Nonnull
+        public String[] getSelectors() {
+            return selectors.toArray(new String[]{});
         }
 
-        /**
-         * Returns the URI parameters if the provided path defines a URI.
-         * @return the parameters map; can be empty if there are no parameters of if the path doesn't identify a URI
-         */
-        public Map<String, Collection<String>> getParameters() {
-            return parameters;
+        @Override
+        public Resource getSuffixResource() {
+            throw new UnsupportedOperationException();
+        }
+
+        public String toString() {
+            // resourcePath + selectors + extension + suffix
+            StringBuilder sb = new StringBuilder(getResourcePath());
+            if (getSelectors().length > 0) {
+                for (String selector : selectors) {
+                    if (StringUtils.isNotBlank(selector) && !selector.contains(" ")) {
+                        // make sure not to append empty or invalid selectors
+                        sb.append(".").append(selector);
+                    }
+                }
+            }
+            if (StringUtils.isNotEmpty(getExtension())) {
+                sb.append('.').append(getExtension());
+            }
+            if (StringUtils.isNotEmpty(getSuffix())) {
+                sb.append(getSuffix());
+            }
+            return sb.toString();
+        }
+
+        void replaceSelectors(String[] selectorsArray) {
+            selectors.clear();
+            selectors.addAll(Arrays.asList(selectorsArray));
+        }
+
+        void addSelectors(String[] selectorsArray) {
+            selectors.addAll(Arrays.asList(selectorsArray));
+        }
+
+        void removeSelectors(String[] selectorsArray) {
+            selectors.removeAll(Arrays.asList(selectorsArray));
+        }
+
+        void clearSelectors() {
+            selectors.clear();
         }
     }
 
