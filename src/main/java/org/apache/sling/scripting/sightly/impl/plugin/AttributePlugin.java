@@ -62,7 +62,9 @@ public class AttributePlugin extends AbstractPlugin {
     public PluginInvoke invoke(Expression expression, PluginCallInfo callInfo, CompilerContext compilerContext) {
         String attributeName = decodeAttributeName(callInfo);
         if (attributeName != null && MarkupUtils.isSensitiveAttribute(attributeName)) {
-            String warningMessage = String.format("Refusing to generate attribute '%s' for security reasons.", attributeName);
+            String warningMessage = String.format("Sensible attribute (%s) detected: event attributes (on*) and the style attribute " +
+                    "cannot be generated with the data-sly-attribute block element; if you need to output a dynamic value for " +
+                    "this attribute then use an expression with an appropriate context.", attributeName);
             compilerContext.getPushStream().warn(new PushStream.StreamMessage(warningMessage, expression.getRawText()));
             return new DefaultPluginInvoke(); //no-op invocation
         }
