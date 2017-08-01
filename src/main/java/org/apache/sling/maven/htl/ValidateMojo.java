@@ -44,7 +44,7 @@ import org.codehaus.plexus.util.StringUtils;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
- * This goal validates Sightly scripts syntax.
+ * Validates HTL scripts.
  */
 @Mojo(
         name = "validate",
