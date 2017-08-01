@@ -30,6 +30,7 @@
 
     <name>Apache Sling HTL Maven Plugin</name>
     <description>The Apache Sling HTL Maven Plugin provides support for validating HTML Template Language scripts from projects.</description>
+    <url>https://sling.apache.org/components/htl-maven-plugin/</url>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</connection>
