@@ -65,7 +65,8 @@ public class ValidateMojo extends AbstractMojo {
     /**
      * Defines the root folder where this Mojo expects to find Sightly scripts to validate.
      */
-    @Parameter(property = "sourceDirectory", defaultValue = "${project.build.sourceDirectory}")
+    @Parameter(property = "htl.sourceDirectory",
+               defaultValue = "${project.build.sourceDirectory}")
     private File sourceDirectory;
 
     /**
@@ -85,7 +86,8 @@ public class ValidateMojo extends AbstractMojo {
     /**
      * If set to "true" it will fail the build on compiler warnings.
      */
-    @Parameter(property = "failOnWarnings", defaultValue = "false")
+    @Parameter(property = "htl.failOnWarnings",
+               defaultValue = "false")
     private boolean failOnWarnings;
 
     /**
