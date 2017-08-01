@@ -37,6 +37,10 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/htl-maven-plugin</url>
     </scm>
 
+    <prerequisites>
+        <maven>3.3.9</maven><!-- due to https://issues.apache.org/jira/browse/MNG-5440 -->
+    </prerequisites>
+
     <!-- Support for publishing the mvn site. -->
     <distributionManagement>
         <site>
@@ -47,15 +51,47 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.version>3.3.3</maven.version>
+        <maven.version>3.3.9</maven.version>
         <maven.site.path>${project.artifactId}-archives/${project.artifactId}-LATEST</maven.site.path>
     </properties>
+
+    <!-- force maven-plugin-testing-harness to use newer plexus container (https://issues.apache.org/jira/browse/MPLUGINTESTING-53) -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- maven -->
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-core</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-compat</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-model</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-plugin-api</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-aether-provider</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
+            <version>1.0.9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

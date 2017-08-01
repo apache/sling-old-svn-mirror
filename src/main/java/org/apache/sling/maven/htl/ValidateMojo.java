@@ -72,7 +72,7 @@ public class ValidateMojo extends AbstractMojo {
      * List of files to include. Specified as fileset patterns which are relative to the input directory whose contents will be scanned
      * (see the sourceDirectory configuration option).
      */
-    @Parameter
+    @Parameter(defaultValue = DEFAULT_INCLUDES)
     private String[] includes;
 
     /**
@@ -215,8 +215,9 @@ public class ValidateMojo extends AbstractMojo {
     }
 
     private String processIncludes() {
+        // since default = "" leads to null deal with that as well here
         if (includes == null) {
-            return DEFAULT_INCLUDES;
+            return "";
         }
         return join(includes, ',');
     }
