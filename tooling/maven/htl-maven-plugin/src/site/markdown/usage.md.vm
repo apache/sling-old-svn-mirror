@@ -47,7 +47,7 @@ $h3 Configuring Your HTL Maven Plugin
                 <executions>
                     <execution>
                         <goals>
-                            <!-- configure which goals you want to execute -->
+                            <goal>validate</goal>
                         </goals>
                     </execution>
                 </executions>
