@@ -45,10 +45,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-sling-plugin</artifactId>
             </plugin>
@@ -56,15 +52,18 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>scr-metadata</id>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
+                    <exportScr>true</exportScr>
                     <instructions>
                         <Bundle-Category>sling</Bundle-Category>
-                        <Embed-Dependency>
-                            org.apache.sling.commons.osgi;inline=org/apache/sling/commons/osgi/PropertiesUtil.*
-                        </Embed-Dependency>
-                        <Private-Package>
-                            org.apache.sling.security.impl
-                        </Private-Package>
                         <Require-Capability>
                             osgi.implementation;filter:="(&amp;(osgi.implementation=osgi.http)(version=1.0))"
                         </Require-Capability>
@@ -90,31 +89,14 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
             <version>2.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.4</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
