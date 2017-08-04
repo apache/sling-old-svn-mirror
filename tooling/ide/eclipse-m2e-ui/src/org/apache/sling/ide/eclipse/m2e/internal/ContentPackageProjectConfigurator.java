@@ -42,6 +42,7 @@ import org.eclipse.jst.j2ee.web.project.facet.IWebFacetInstallDataModelPropertie
 import org.eclipse.jst.j2ee.web.project.facet.WebFacetInstallDataModelProvider;
 import org.eclipse.jst.j2ee.web.project.facet.WebFacetUtils;
 import org.eclipse.m2e.core.project.configurator.ProjectConfigurationRequest;
+import org.eclipse.ui.statushandlers.StatusManager;
 import org.eclipse.wst.common.frameworks.datamodel.DataModelFactory;
 import org.eclipse.wst.common.frameworks.datamodel.IDataModel;
 import org.eclipse.wst.common.project.facet.core.IFacetedProject;
@@ -129,6 +130,7 @@ public class ContentPackageProjectConfigurator extends AbstractProjectConfigurat
             description.setNatureIds(newNatureIds);
             project.setDescription(description, IResource.KEEP_HISTORY, progressMonitor);
         } else {
+            StatusManager.getManager().handle(status, StatusManager.LOG|StatusManager.SHOW);
             // add marker
             addMarker(pomResource, "Could not add all necessary WTP natures: " + status.getMessage(), IMarker.SEVERITY_ERROR);
         }
