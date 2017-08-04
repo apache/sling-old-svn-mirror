@@ -22,13 +22,11 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.lang.annotation.Annotation;
 import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,21 +37,51 @@ public class ReferrerFilterTest {
 
     protected ReferrerFilter filter;
 
-    @Before public void setup() {
+    @Before
+    public void setup() {
         filter = new ReferrerFilter();
         final BundleContext bundleCtx = mock(BundleContext.class);
         final ServiceRegistration reg = mock(ServiceRegistration.class);
-        final Map<String, Object> props = new HashMap<String, Object>(){{
-            put("allow.hosts", new String[]{"relhost"});
-            put("allow.hosts.regexp", new String[]{"http://([^.]*.)?abshost:80"});
-            put("exclude.agents.regexp", new String[]{"[a-zA-Z]*\\/[0-9]*\\.[0-9]*;Some-Agent\\s.*"});
-        }};
+
+        ReferrerFilter.Config config = new ReferrerFilter.Config() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return null;
+            }
+
+            @Override
+            public boolean allow_empty() {
+                return false;
+            }
+
+            @Override
+            public String[] allow_hosts() {
+                return new String[]{"relhost"};
+            }
+
+            @Override
+            public String[] allow_hosts_regexp() {
+                return new String[]{"http://([^.]*.)?abshost:80"};
+            }
+
+            @Override
+            public String[] filter_methods() {
+                return new String[0];
+            }
+
+            @Override
+            public String[] exclude_agents_regexp() {
+                return new String[]{"[a-zA-Z]*\\/[0-9]*\\.[0-9]*;Some-Agent\\s.*"};
+            }
+        };
+
         doReturn(reg).when(bundleCtx).registerService(any(String[].class), any(), any(Dictionary.class));
         doNothing().when(reg).unregister();
-        filter.activate(bundleCtx, props);
+        filter.activate(bundleCtx, config);
     }
 
-    @Test public void testHostName() {
+    @Test
+    public void testHostName() {
         Assert.assertEquals("somehost", filter.getHost("http://somehost").host);
         Assert.assertEquals("somehost", filter.getHost("http://somehost/somewhere").host);
         Assert.assertEquals("somehost", filter.getHost("http://somehost:4242/somewhere").host);
@@ -76,7 +104,7 @@ public class ReferrerFilterTest {
         when(request.getMethod()).thenReturn("POST");
         when(request.getRequestURI()).thenReturn("http://somehost/somewhere");
         when(request.getHeader("referer")).thenReturn(referrer);
-        if (StringUtils.isNotBlank(userAgent)) {
+        if ( userAgent != null && userAgent.length() > 0 ) {
             when(request.getHeader("User-Agent")).thenReturn(userAgent);
         }
         return request;
@@ -86,7 +114,8 @@ public class ReferrerFilterTest {
         return getRequest(referrer, null);
     }
 
-    @Test public void testValidRequest() {
+    @Test
+    public void testValidRequest() {
         Assert.assertEquals(false, filter.isValidRequest(getRequest(null)));
         Assert.assertEquals(true, filter.isValidRequest(getRequest("relative")));
         Assert.assertEquals(true, filter.isValidRequest(getRequest("/relative/too")));
@@ -105,7 +134,8 @@ public class ReferrerFilterTest {
         Assert.assertEquals(false, filter.isValidRequest(getRequest("http://yet.another.abshost:80")));
     }
 
-    @Test public void testIsBrowserRequest() {
+    @Test
+    public void testIsBrowserRequest() {
         String userAgent = "Mozilla/5.0;Some-Agent (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/603.2.4 (KHTML, like Gecko)";
         Assert.assertEquals(false, filter.isBrowserRequest(getRequest(null, userAgent)));
         userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/603.2.4 (KHTML, like Gecko)";
