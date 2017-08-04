@@ -51,6 +51,7 @@ import org.apache.sling.maven.bundlesupport.fsresource.SlingInitialContentMounte
 /**
  * Creates OSGi configurations for the
  * <a href="https://sling.apache.org/documentation/bundles/accessing-filesystem-resources-extensions-fsresource.html">Apache Sling File System Resource Provider</a>.
+ * @since 2.2.0
  */
 @Mojo(name = "fsmount", requiresProject = true)
 public class FsMountMojo extends AbstractFsMountMojo {
@@ -79,12 +80,14 @@ public class FsMountMojo extends AbstractFsMountMojo {
      * </ol>
      * 
      * This has precedence over the deprecated parameter {@link #usePut}.
+     * @since 2.3.0
      */
     @Parameter(property="sling.deploy.method", required = false, defaultValue = "WebConsole")
     private BundleDeploymentMethod deploymentMethod;
     
     /**
      * Deploy <code>org.apache.sling.fsresource</code> to Sling instance bundle when it is not deployed already.
+     * @since 2.3.0
      */
     @Parameter(required = false, defaultValue = "true")
     private boolean deployFsResourceBundle;
@@ -122,6 +125,7 @@ public class FsMountMojo extends AbstractFsMountMojo {
      *   &lt;/bundlePrerequisite&gt;
      * &lt;/deployFsResourceBundlePrerequisites&gt;
      * </pre>
+     * @since 2.3.0
      */
     @Parameter(required = false)
     private List<BundlePrerequisite> deployFsResourceBundlePrerequisites;
