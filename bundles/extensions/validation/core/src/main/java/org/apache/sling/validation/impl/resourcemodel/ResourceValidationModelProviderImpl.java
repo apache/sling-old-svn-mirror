@@ -75,7 +75,7 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
     public static final @Nonnull String VALIDATORS = "validators";
     public static final @Nonnull String OPTIONAL = "optional";
     public static final @Nonnull String PROPERTY_MULTIPLE = "propertyMultiple";
-    public static final @Nonnull String PROPERTIES = "arguments";
+    public static final @Nonnull String PROPERTIES = "properties";
     public static final @Nonnull String VALIDATION_MODEL_RESOURCE_TYPE = "sling/validation/model";
     public static final @Nonnull String APPLICABLE_PATHS = "applicablePaths";
     public static final @Nonnull String VALIDATING_RESOURCE_TYPE = "validatingResourceType";
@@ -279,10 +279,10 @@ public class ResourceValidationModelProviderImpl implements ValidationModelProvi
         }
     }
 
-    /** Creates a set of the arguments that a resource is expected to have, together with the associated validators.
+    /** Creates a set of the properties that a resource is expected to have, together with the associated validators.
      *
-     * @param propertiesResource the resource identifying the arguments node from a validation model's structure (might be {@code null})
-     * @return a set of arguments or an empty set if no arguments are defined
+     * @param propertiesResource the resource identifying the properties node from a validation model's structure (might be {@code null})
+     * @return a set of properties or an empty set if no properties are defined
      * @see ResourceProperty */
     private @Nonnull List<ResourceProperty> buildProperties(@Nonnull Resource propertiesResource) {
         List<ResourceProperty> properties = new ArrayList<ResourceProperty>();

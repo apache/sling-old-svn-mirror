@@ -23,7 +23,7 @@ import javax.annotation.Nonnull;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.ValidationResult;
-import org.apache.sling.validation.spi.ValidationContext;
+import org.apache.sling.validation.spi.ValidatorContext;
 import org.apache.sling.validation.spi.Validator;
 import org.apache.sling.validation.spi.support.DefaultValidationResult;
 import org.osgi.service.component.annotations.Component;
@@ -37,7 +37,8 @@ public class MinimumLengthValidator implements Validator<String> {
 
     private static final String MIN_LENGTH_FIELD = "minLength";
 
-    @Nonnull @Override public ValidationResult validate(@Nonnull String s, @Nonnull ValidationContext validationContext, @Nonnull ValueMap valueMap) {
+    @Nonnull
+    @Override public ValidationResult validate(@Nonnull String s, @Nonnull ValidatorContext validationContext, @Nonnull ValueMap valueMap) {
         Resource r = validationContext.getResource();
         LOG.debug("validating minimum length of property [{}] in [{}]", validationContext.getLocation(), r != null ? r.getPath() : "null");
         LOG.debug("property [{}] equals [{}]", validationContext.getLocation(), s);

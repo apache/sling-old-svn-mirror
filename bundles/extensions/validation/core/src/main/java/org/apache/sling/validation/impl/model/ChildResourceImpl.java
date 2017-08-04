@@ -118,7 +118,7 @@ public class ChildResourceImpl implements ChildResource {
 
     @Override
     public String toString() {
-        return "ChildResourceImpl [name=" + name + ", namePattern=" + namePattern + ", arguments=" + properties
+        return "ChildResourceImpl [name=" + name + ", namePattern=" + namePattern + ", properties=" + properties
                 + ", children=" + children + ", isRequired=" + isRequired + "]";
     }
 }

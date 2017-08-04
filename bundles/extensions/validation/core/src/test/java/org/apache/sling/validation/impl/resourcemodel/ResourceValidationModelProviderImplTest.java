@@ -318,21 +318,21 @@ public class ResourceValidationModelProviderImplTest {
 
     @Test(expected = IllegalStateException.class)
     public void testGetValidationModelsWithMissingChildrenAndProperties() throws Exception {
-        // create a model with arguments (otherwise build() will already throw an exception)
+        // create a model with properties (otherwise build() will already throw an exception)
         modelBuilder = new ValidationModelBuilder();
         modelBuilder.resourceProperty(new ResourcePropertyBuilder().build("field1"));
         modelBuilder.addApplicablePath("content/site1");
         ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         
         Resource resource = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
-        // make created model invalid by removing the arguments sub resource
-        rr.delete(resource.getChild("arguments"));
+        // make created model invalid by removing the properties sub resource
+        rr.delete(resource.getChild("properties"));
         modelProvider.getValidationModels("sling/validation/test");
     }
 
     @Test
     public void testGetValidationModelsWithComplexValidatorArguments() throws Exception {
-        // create a model with neither children nor arguments
+        // create a model with neither children nor properties
         Map<String, Object> validatorArguments = new HashMap<>();
         validatorArguments.put("key1", "value1");
         validatorArguments.put("key1", "value2");
@@ -350,12 +350,12 @@ public class ResourceValidationModelProviderImplTest {
 
     @Test(expected=IllegalStateException.class)
     public void testGetValidationModelsWithInvalidValidatorArguments1() throws Exception {
-        // create a model with neither children nor arguments
+        // create a model with neither children nor properties
         ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         // create valid model first
         Resource modelResource = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
         // and make parametrization of validator invalid afterwards
-        Resource validatorResource = modelResource.getChild("arguments/field1/validators/validatorId");
+        Resource validatorResource = modelResource.getChild("properties/field1/validators/validatorId");
         ModifiableValueMap validatorArguments = validatorResource.adaptTo(ModifiableValueMap.class);
         validatorArguments.put("validatorArguments", "key1"); // value without "="
         Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
@@ -364,12 +364,12 @@ public class ResourceValidationModelProviderImplTest {
 
     @Test(expected=IllegalStateException.class)
     public void testGetValidationModelsWithInvalidValidatorArguments2() throws Exception {
-        // create a model with neither children nor arguments
+        // create a model with neither children nor properties
         ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         // create valid model first
         Resource modelResource = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
         // and make parametrization of validator invalid afterwards
-        Resource validatorResource = modelResource.getChild("arguments/field1/validators/validatorId");
+        Resource validatorResource = modelResource.getChild("properties/field1/validators/validatorId");
         ModifiableValueMap validatorArguments = validatorResource.adaptTo(ModifiableValueMap.class);
         validatorArguments.put("validatorArguments", "=value2"); // starting with "="
         Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");
@@ -378,12 +378,12 @@ public class ResourceValidationModelProviderImplTest {
 
     @Test(expected=IllegalStateException.class)
     public void testGetValidationModelsWithInvalidValidatorArguments3() throws Exception {
-        // create a model with neither children nor arguments
+        // create a model with neither children nor properties
         ValidationModel model1 = modelBuilder.build("sling/validation/test", libsValidatorsRoot.getPath() + "/testValidationModel1");
         // create valid model first
         Resource modelResource = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", model1);
         // and make parametrization of validator invalid afterwards
-        Resource validatorResource = modelResource.getChild("arguments/field1/validators/validatorId");
+        Resource validatorResource = modelResource.getChild("properties/field1/validators/validatorId");
         ModifiableValueMap validatorArguments = validatorResource.adaptTo(ModifiableValueMap.class);
         validatorArguments.put("validatorArguments", "key1="); // ending with "="
         Collection<ValidationModel> models = modelProvider.getValidationModels("sling/validation/test");

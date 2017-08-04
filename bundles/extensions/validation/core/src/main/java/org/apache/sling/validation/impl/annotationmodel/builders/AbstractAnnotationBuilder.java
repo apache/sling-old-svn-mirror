@@ -26,7 +26,7 @@ import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 
 /**
  * The Abstract annotation builder, providing common functionality for Annotation Based Resource Property and Child Resource Builders.
- * Common arguments:
+ * Common properties:
  *
  *  - name is taken either from @ChildResource, @ValueMapValue annotations' name property or from actual field name.
  *  i.e. @ChildResource(name="childName") or @ValueMapValue(name="propertyName")

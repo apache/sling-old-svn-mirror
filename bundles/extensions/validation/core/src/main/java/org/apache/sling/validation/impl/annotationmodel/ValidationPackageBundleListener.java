@@ -89,7 +89,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
         this.bundleTracker.close();
     }
 
-    /** Extracts all the class names which are set in bundle's package headers or class headers arguments.
+    /** Extracts all the class names which are set in bundle's package headers or class headers properties.
      * 
      * @param bundle from which class names should be extracted
      * @return Set of class names */
@@ -126,7 +126,7 @@ public class ValidationPackageBundleListener implements BundleTrackerCustomizer 
 
     /** Extracts Class names from Class Header parameter.
      * 
-     * @param headers arguments, which contain Classes Header
+     * @param headers properties, which contain Classes Header
      * @return Set of class names */
     private HashSet<String> getClassHeaderClassNames(@Nonnull Dictionary<String, String> headers) {
         return Optional.ofNullable(StringUtils.deleteWhitespace(headers.get(CLASSES_HEADER)))

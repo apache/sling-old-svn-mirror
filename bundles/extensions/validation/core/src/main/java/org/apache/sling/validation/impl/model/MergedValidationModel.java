@@ -30,7 +30,7 @@ import org.apache.sling.validation.model.ValidationModel;
 
 /**
  * Generates a merged validation model out of one base {@link ValidationModel} and 1 or more models to merge.
- * The resource arguments and children are basically concatenated with the exception that
+ * The resource properties and children are basically concatenated with the exception that
  * if a resource property/child with the same name is already defined in the baseModel it is not added again.
  * 
  * That way you can overwrite and even remove validation rules from the model to merge.
@@ -46,7 +46,7 @@ public class MergedValidationModel implements ValidationModel {
     public MergedValidationModel(ValidationModel baseModel, ValidationModel... modelsToMerge) {
         this.baseModel = baseModel;
         
-        // merge resource arguments and child resources: all the ones from the base + different ones from the model to merge
+        // merge resource properties and child resources: all the ones from the base + different ones from the model to merge
         resourcePropertiesMap = new HashMap<String, ResourceProperty>();
         for (ResourceProperty resourceProperty : baseModel.getResourceProperties()) {
             resourcePropertiesMap.put(resourceProperty.getName(), resourceProperty);

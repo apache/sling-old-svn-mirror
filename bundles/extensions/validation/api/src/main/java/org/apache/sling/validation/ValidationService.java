@@ -74,7 +74,7 @@ public interface ValidationService {
 
     /**
      * Validates a {@link ValueMap} or any object adaptable to a {@code ValueMap} using a specific {@link ValidationModel}. Since the
-     * {@code valueMap} only contains the direct arguments of the adapted object, the {@code model}'s descendants description should not
+     * {@code valueMap} only contains the direct properties of the adapted object, the {@code model}'s descendants description should not
      * be queried for this validation operation.
      *
      * @param valueMap the map to validate

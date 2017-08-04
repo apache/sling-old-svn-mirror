@@ -57,9 +57,9 @@ public interface ChildResource {
     boolean isRequired();
 
     /**
-     * Returns the arguments this child resource is expected to have.
+     * Returns the properties this child resource is expected to have.
      *
-     * @return the arguments list. Never {@code null}.
+     * @return the properties list. Never {@code null}.
      */
     @Nonnull Collection<ResourceProperty> getProperties();
     

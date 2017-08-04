@@ -34,7 +34,7 @@ import org.apache.sling.validation.model.ResourceProperty;
 
 /**
  * The Annotation based child resources builder.
- * It creates Child Resource and its' arguments/children according to declared field and its' annotations.
+ * It creates Child Resource and its' properties/children according to declared field and its' annotations.
  * Child Resources are considered Injected Sling Model fields.
  */
 public class AnnotationChildResourceBuilder extends AbstractAnnotationBuilder {
@@ -66,9 +66,9 @@ public class AnnotationChildResourceBuilder extends AbstractAnnotationBuilder {
     }
 
     /**
-     * Add resource arguments.
+     * Add resource properties.
      *
-     * @param properties the arguments
+     * @param properties the properties
      * @return the annotation child resource builder
      */
     public AnnotationChildResourceBuilder addResourceProperties(@Nonnull Collection<ResourceProperty> properties) {

@@ -223,7 +223,7 @@ public class ValidationServiceImpl implements ValidationService{
             valueMap = new ValueMapDecorator(Collections.emptyMap());
         }
 
-        // validate direct arguments of the resource
+        // validate direct properties of the resource
         validateValueMap(valueMap, resource, relativePath, model.getResourceProperties(), result, defaultResourceBundle);
 
         // validate child resources, if any
@@ -370,7 +370,7 @@ public class ValidationServiceImpl implements ValidationService{
                 return;
             }
             
-            // see https://issues.apache.org/jira/browse/SLING-662 for a description on how multivalue arguments are treated with ValueMap
+            // see https://issues.apache.org/jira/browse/SLING-662 for a description on how multivalue properties are treated with ValueMap
             if (validatorMetadata.getType().isArray()) {
                 // ValueMap already returns an array in both cases (property is single value or multivalue)
                 validateValue(result, typedValue, property, relativePath, valueMap, resource, validatorMetadata.getValidator(), validatorInvocation.getParameters(), defaultResourceBundle, severity);

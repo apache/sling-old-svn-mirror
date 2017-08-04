@@ -42,7 +42,7 @@ public interface ValidatorContext {
     @Nonnull String getLocation();
 
     /**
-     * @return all arguments of the validated resource/valuemap (only used for validations considering multiple arguments), never {@code null}.
+     * @return all properties of the validated resource/valuemap (only used for validations considering multiple properties), never {@code null}.
      */
     @Nonnull ValueMap getValueMap();
 
