@@ -122,17 +122,22 @@ public class ContentPackageProjectConfigurator extends AbstractProjectConfigurat
         String[] oldNatureIds = description.getNatureIds();
         Set<String> newNatureIdSet = new TreeSet<String>();
         newNatureIdSet.addAll(Arrays.asList(oldNatureIds));
-        newNatureIdSet.addAll(Arrays.asList(natureIdsToAdd));
-        String[] newNatureIds = newNatureIdSet.toArray(new String[newNatureIdSet.size()]);
-        IStatus status = project.getWorkspace().validateNatureSet(newNatureIds);
-        // check the status and decide what to do
-        if (status.getCode() == IStatus.OK) {
-            description.setNatureIds(newNatureIds);
-            project.setDescription(description, IResource.KEEP_HISTORY, progressMonitor);
+        // check if there is a nature change really requested
+        if (newNatureIdSet.addAll(Arrays.asList(natureIdsToAdd))) {
+            String[] newNatureIds = newNatureIdSet.toArray(new String[newNatureIdSet.size()]);
+            IStatus status = project.getWorkspace().validateNatureSet(newNatureIds);
+            // check the status and decide what to do
+            if (status.getCode() == IStatus.OK) {
+                trace("Modifiying natures of project {1} to {0}", Arrays.toString(newNatureIds), project);
+                description.setNatureIds(newNatureIds);
+                project.setDescription(description, IResource.KEEP_HISTORY, progressMonitor);
+            } else {
+                StatusManager.getManager().handle(status, StatusManager.LOG|StatusManager.SHOW);
+                // add marker
+                addMarker(pomResource, "Could not add all necessary WTP natures: " + status.getMessage(), IMarker.SEVERITY_ERROR);
+            }
         } else {
-            StatusManager.getManager().handle(status, StatusManager.LOG|StatusManager.SHOW);
-            // add marker
-            addMarker(pomResource, "Could not add all necessary WTP natures: " + status.getMessage(), IMarker.SEVERITY_ERROR);
+            trace("Not modifiying natures of project {1} as required natures {0} are already set ", Arrays.toString(natureIdsToAdd), project);
         }
     }
 
