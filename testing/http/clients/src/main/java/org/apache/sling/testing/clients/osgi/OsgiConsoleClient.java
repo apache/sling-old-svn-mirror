@@ -563,6 +563,18 @@ public class OsgiConsoleClient extends SlingClient {
         LOG.info("Starting bundle {} via {}", symbolicName, path);
         this.doPost(path, FormEntityBuilder.create().addParameter("action", "start").build(), SC_OK);
     }
+    
+    /**
+     * Stop a bundle
+     * @param symbolicName the name of the bundle
+     * @throws ClientException
+     */
+    public void stopBundle(String symbolicName) throws ClientException {
+        // To stop the bundle we POST action=stop to its URL
+        final String path = getBundlePath(symbolicName);
+        LOG.info("Stopping bundle {} via {}", symbolicName, path);
+        this.doPost(path, FormEntityBuilder.create().addParameter("action", "stop").build(), SC_OK);
+    }
 
 
     /**
