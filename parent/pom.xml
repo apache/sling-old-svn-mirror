@@ -1183,14 +1183,6 @@
             </dependency>
 
 
-            <!-- DEPRECATED: Use official OSGi annotations -->
-            <dependency>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.scr.annotations</artifactId>
-                <version>1.12.0</version>
-                <scope>provided</scope>
-            </dependency>
-
             <!-- DEPRECATED : Use the osgi.annotation instead -->
             <!-- this version must match the version being used by the maven-bundle-plugin -->
             <dependency>
