@@ -25,17 +25,22 @@
     </parent>
 
     <artifactId>htl-maven-plugin</artifactId>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.9-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache Sling HTL Maven Plugin</name>
     <description>The Apache Sling HTL Maven Plugin provides support for validating HTML Template Language scripts from projects.</description>
+    <url>https://sling.apache.org/components/htl-maven-plugin/</url>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/htl-maven-plugin</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/htl-maven-plugin</url>
     </scm>
+
+    <prerequisites>
+        <maven>3.3.9</maven><!-- due to https://issues.apache.org/jira/browse/MNG-5440 -->
+    </prerequisites>
 
     <!-- Support for publishing the mvn site. -->
     <distributionManagement>
@@ -47,15 +52,48 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.version>3.3.3</maven.version>
+        <site.jira.version.id>12336741,12338350,12338646,12338974,12341271</site.jira.version.id>
+        <maven.version>3.3.9</maven.version>
         <maven.site.path>${project.artifactId}-archives/${project.artifactId}-LATEST</maven.site.path>
     </properties>
+
+    <!-- force maven-plugin-testing-harness to use newer plexus container (https://issues.apache.org/jira/browse/MPLUGINTESTING-53) -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- maven -->
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-core</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-compat</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-model</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-plugin-api</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-aether-provider</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
+            <version>1.0.11-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -195,6 +233,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-changes-plugin</artifactId>
+                <configuration>
+                    <useJql>true</useJql>
+                    <sortColumnNames>Key DESC</sortColumnNames>
+                    <columnNames>Type,Key,Summary,Fix Version</columnNames>
+                    <resolutionIds>Fixed</resolutionIds>
+                </configuration>
             </plugin>
         </plugins>
     </reporting>

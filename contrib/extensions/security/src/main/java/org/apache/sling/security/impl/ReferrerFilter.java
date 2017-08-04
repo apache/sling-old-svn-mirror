@@ -32,7 +32,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -45,29 +44,27 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype=true, description="%referrer.description",
-        label="%referrer.name")
-@Properties({
-    @Property(name=HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN, value="/", propertyPrivate=true),
-    @Property(name=HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-              value="(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)", propertyPrivate=true)
-})
-@Service(value=Filter.class)
+@Component(
+        service = Filter.class,
+        property = {
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_PATTERN + "=/",
+                HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT + "=(" + HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME + "=*)"
+        }
+)
+@Designate(ocd = ReferrerFilter.Config.class)
 public class ReferrerFilter implements Filter {
 
     /**
@@ -91,39 +88,67 @@ public class ReferrerFilter implements Filter {
      */
     private static final String BROWSER_CLASS_OPERA = "Opera";
 
-    /** Logger. */
+    /**
+     * Logger.
+     */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    /** Default value for allow empty. */
-    private static final boolean DEFAULT_ALLOW_EMPTY = false;
+    @ObjectClassDefinition(
+            name = "Apache Sling Referrer Filter",
+            description = "Request filter checking the referrer of modification requests"
+    )
+    public @interface Config {
 
-    /** Allow empty property. */
-    @Property(boolValue=DEFAULT_ALLOW_EMPTY)
-    private static final String PROP_ALLOW_EMPTY = "allow.empty";
+        /**
+         * Allow empty property.
+         */
+        @AttributeDefinition(
+                name = "Allow Empty",
+                description = "Allow an empty or missing referrer"
+        )
+        boolean allow_empty() default false;
 
-    private static final String[] DEFAULT_PROP_HOSTS = {};
+        /**
+         * Allow referrer uri hosts property.
+         */
+        @AttributeDefinition(
+                name = "Allow Hosts",
+                description = "List of allowed hosts for the referrer which are added to the list of default hosts"
+        )
+        String[] allow_hosts() default {};
 
-    /** Allow referrer uri hosts property. */
-    @Property(unbounded=PropertyUnbounded.ARRAY)
-    private static final String PROP_HOSTS = "allow.hosts";
+        /**
+         * Allow referrer regex hosts property
+         */
+        @AttributeDefinition(
+                name = "Allow Regexp Host",
+                description = "List of allowed regexp for the referrer"
+        )
+        String[] allow_hosts_regexp() default {};
 
-    /** Allow referrer regex hosts property */
-    @Property(unbounded=PropertyUnbounded.ARRAY)
-    private static final String PROP_HOSTS_REGEX = "allow.hosts.regexp";
+        /**
+         * Filtered methods property
+         */
+        @AttributeDefinition(
+                name = "Filter Methods",
+                description = "These methods are filtered by the filter"
+        )
+        String[] filter_methods() default {"POST", "PUT", "DELETE"};
 
-    /** Filtered methods property */
-    @Property(unbounded=PropertyUnbounded.ARRAY, value={"POST", "PUT", "DELETE"})
-    private static final String PROP_METHODS = "filter.methods";
+        /**
+         * Excluded regexp user agents property
+         */
+        @AttributeDefinition(
+                name = "Exclude Regexp User Agent",
+                description = "List of regexp for user agents not to check the referrer"
+        )
+        String[] exclude_agents_regexp() default {};
+    }
 
-    private static final String[] DEFAULT_PROP_AGENTS = {};
 
-    /** Excluded regexp user agents property */
-    @Property(unbounded = PropertyUnbounded.ARRAY)
-    private static final String PROP_EXCLUDED_AGENTS_REGEX = "exclude.agents.regexp";
-
-
-
-    /** Do we allow empty referrer? */
+    /**
+     * Do we allow empty referrer?
+     */
     private boolean allowEmpty;
 
     /** Allowed uri referrers */
@@ -144,7 +169,7 @@ public class ReferrerFilter implements Filter {
      * Create a default list of referrers
      */
     private Set<String> getDefaultAllowedReferrers() {
-        final Set<String> referrers = new HashSet<String>();
+        final Set<String> referrers = new HashSet<>();
         try {
             final Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
 
@@ -191,7 +216,7 @@ public class ReferrerFilter implements Filter {
      * Create URLs out of the uri referrer set
      */
     private URL[] createReferrerUrls(final Set<String> referrers) {
-        final List<URL> urls = new ArrayList<URL>();
+        final List<URL> urls = new ArrayList<>();
 
         for(final String ref : referrers) {
             final int pos = ref.indexOf("://");
@@ -210,38 +235,36 @@ public class ReferrerFilter implements Filter {
      * Create Patterns out of the regular expression referrer list
      */
     private Pattern[] createRegexPatterns(final String[] regexps) {
-        final List<Pattern> patterns = new ArrayList<Pattern>();
-        for(final String regexp : regexps) {
-            try {
-                final Pattern pattern  = Pattern.compile(regexp);
-                patterns.add(pattern);
-            } catch (final Exception e) {
-                logger.warn("Unable to create Pattern from {} : {}", new Object[]{regexp, e.getMessage()});
+        final List<Pattern> patterns = new ArrayList<>();
+        if ( regexps != null ) {
+            for(final String regexp : regexps) {
+                try {
+                    final Pattern pattern  = Pattern.compile(regexp);
+                    patterns.add(pattern);
+                } catch (final Exception e) {
+                    logger.warn("Unable to create Pattern from {} : {}", new Object[]{regexp, e.getMessage()});
+                }
             }
         }
         return patterns.toArray(new Pattern[patterns.size()]);
     }
 
     @Activate
-    protected void activate(final BundleContext context, final Map<String, Object> props) {
-        this.allowEmpty = PropertiesUtil.toBoolean(props.get(PROP_ALLOW_EMPTY), DEFAULT_ALLOW_EMPTY);
-
-        final String[] allowRegexHosts = defaultIfEmpty(PropertiesUtil.toStringArray(props.get(PROP_HOSTS_REGEX),
-                DEFAULT_PROP_HOSTS), DEFAULT_PROP_HOSTS);
-        this.allowedRegexReferrers = createRegexPatterns(allowRegexHosts);
-
-        final String[] excludedUserAgents = defaultIfEmpty(PropertiesUtil.toStringArray(props.get(PROP_EXCLUDED_AGENTS_REGEX),
-                DEFAULT_PROP_AGENTS), DEFAULT_PROP_AGENTS);
-        this.excludedRegexUserAgents = createRegexPatterns(excludedUserAgents);
+    protected void activate(final BundleContext context, Config config) {
+        this.allowEmpty = config.allow_empty();
+        this.allowedRegexReferrers = createRegexPatterns(config.allow_hosts_regexp());
+        this.excludedRegexUserAgents = createRegexPatterns(config.exclude_agents_regexp());
 
         final Set<String> allowUriReferrers = getDefaultAllowedReferrers();
-        final String[] allowHosts = defaultIfEmpty(PropertiesUtil.toStringArray(props.get(PROP_HOSTS),
-                DEFAULT_PROP_HOSTS), DEFAULT_PROP_HOSTS);
-        allowUriReferrers.addAll(Arrays.asList(allowHosts));
+        if ( config.allow_hosts() != null ) {
+            allowUriReferrers.addAll(Arrays.asList(config.allow_hosts()));
+        }
         this.allowedUriReferrers = createReferrerUrls(allowUriReferrers);
 
-        this.filterMethods = PropertiesUtil.toStringArray(props.get(PROP_METHODS));
-        if ( this.filterMethods != null && this.filterMethods.length == 1 && (this.filterMethods[0] == null || this.filterMethods[0].trim().length() == 0) ) {
+        this.filterMethods = config.filter_methods();
+        if (this.filterMethods != null
+            &&this.filterMethods.length == 1
+            && (this.filterMethods[0] == null || this.filterMethods[0].trim().length() == 0)) {
             this.filterMethods = null;
         }
         if ( this.filterMethods != null ) {
@@ -259,7 +282,7 @@ public class ReferrerFilter implements Filter {
 
     private ServiceRegistration<Object> registerConfigPrinter(BundleContext bundleContext) {
         final ConfigurationPrinter cfgPrinter = new ConfigurationPrinter();
-        final Dictionary<String, String> serviceProps = new Hashtable<String, String>();
+        final Dictionary<String, String> serviceProps = new Hashtable<>();
         serviceProps.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Referrer Filter Configuration Printer");
         serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
@@ -442,16 +465,6 @@ public class ReferrerFilter implements Filter {
             }
         }
         return false;
-    }
-
-    /**
-     * @return The <code>defaultProperties</code> if <code>properties</code> contains a single empty string,
-     *         <code>properties</code> otherwise.
-     */
-    private String[] defaultIfEmpty(String[] properties, String[] defaultProperties) {
-        return properties.length == 1 && properties[0].trim().length() == 0
-                ? defaultProperties
-                : properties;
     }
 
     /**

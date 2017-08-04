@@ -16,6 +16,8 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
@@ -62,6 +64,25 @@ public class URIManipulationFilterExtensionTest {
     }
 
     @Test
+    public void testUnescapePercentInQuery() throws URISyntaxException {
+        URI testUri = new URI("http", null, "example.com", -1, "/example/search.html", "q=6%25-10%25", "fragment=%");
+        assertEquals("http://example.com/example/search.html?q=6%25-10%25#fragment=%25",
+                URIManipulationFilterExtension.unescapePercentInQuery(testUri.toString()));
+        testUri = new URI("http", null, "example.com", -1, "/example/search.html", "q=6%25-10%25", null);
+        assertEquals("http://example.com/example/search.html?q=6%25-10%25",
+                URIManipulationFilterExtension.unescapePercentInQuery(testUri.toString()));
+    }
+
+    @Test
+    public void testConcatenateWithSlashes() {
+        assertEquals("a/b/c", URIManipulationFilterExtension.concatenateWithSlashes("a", "b", "c"));
+        assertEquals("a/b/c", URIManipulationFilterExtension.concatenateWithSlashes("a", "/b", "c"));
+        assertEquals("a/b/c", URIManipulationFilterExtension.concatenateWithSlashes("a", "/b", "/c"));
+        assertEquals("/b/", URIManipulationFilterExtension.concatenateWithSlashes("/", "b", "/"));
+        assertEquals("/one/two/", URIManipulationFilterExtension.concatenateWithSlashes("/one/", "/two/"));
+    }
+
+    @Test
     public void testPercentEncodedURLs_SLING_6761() {
         assertEquals(
                 "/example/search.html?q=6%25-10%25",
@@ -82,5 +103,32 @@ public class URIManipulationFilterExtensionTest {
         );
     }
 
+    @Test
+    public void testOpaqueUris() {
+        // see SLING_7000
+        assertEquals(
+                "mailto:test@apache.org",
+                underTest.call(renderContext, "mailto:test@apache.org", new LinkedHashMap<String, Object>() {{
+                    put(URIManipulationFilterExtension.EXTENSION, "html");
+                }})
+        );
+        // check other opaque links
 
+        // data url according to https://tools.ietf.org/html/rfc2397
+        String dataUrl =
+                "data:image/gif;base64,R0lGODdhMAAwAPAAAAAAAP///ywAAAAAMAAw" +
+                        "AAAC8IyPqcvt3wCcDkiLc7C0qwyGHhSWpjQu5yqmCYsapyuvUUlvONmOZtfzgFz" +
+                        "ByTB10QgxOR0TqBQejhRNzOfkVJ+5YiUqrXF5Y5lKh/DeuNcP5yLWGsEbtLiOSp" +
+                        "a/TPg7JpJHxyendzWTBfX0cxOnKPjgBzi4diinWGdkF8kjdfnycQZXZeYGejmJl" +
+                        "ZeGl9i2icVqaNVailT6F5iJ90m6mvuTS4OK05M0vDk0Q4XUtwvKOzrcd3iq9uis" +
+                        "F81M1OIcR7lEewwcLp7tuNNkM3uNna3F2JQFo97Vriy/Xl4/f1cf5VWzXyym7PH" +
+                        "hhx4dbgYKAAA7";
+
+        assertEquals(
+                dataUrl,
+                underTest.call(renderContext, dataUrl, new LinkedHashMap<String, Object>() {{
+                    put(URIManipulationFilterExtension.EXTENSION, "html");
+                }})
+        );
+    }
 }

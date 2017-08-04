@@ -28,7 +28,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>31-SNAPSHOT</version>
+    <version>32-SNAPSHOT</version>
 
     <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
@@ -414,7 +414,7 @@
                 <plugin>
                     <groupId>biz.aQute.bnd</groupId>
                     <artifactId>bnd-maven-plugin</artifactId>
-                    <version>3.2.0</version>
+                    <version>3.3.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -1183,20 +1183,12 @@
             </dependency>
 
 
-            <!-- DEPRECATED: Use official OSGi annotations -->
-            <dependency>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.scr.annotations</artifactId>
-                <version>1.12.0</version>
-                <scope>provided</scope>
-            </dependency>
-
             <!-- DEPRECATED : Use the osgi.annotation instead -->
             <!-- this version must match the version being used by the maven-bundle-plugin -->
             <dependency>
                 <groupId>biz.aQute.bnd</groupId>
                 <artifactId>biz.aQute.bndlib</artifactId>
-                <version>3.2.0</version>
+                <version>3.3.0</version>
                 <scope>provided</scope>
             </dependency>
 
