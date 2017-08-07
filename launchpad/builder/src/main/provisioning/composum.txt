@@ -17,7 +17,7 @@
 #  under the License.
 [feature name=composum-console]
 [variables]
-    composum.version=1.8.1
+    composum.version=1.8.2
 
 [artifacts startLevel=20]
 
