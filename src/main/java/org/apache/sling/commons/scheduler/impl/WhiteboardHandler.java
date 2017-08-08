@@ -247,7 +247,6 @@ public class WhiteboardHandler {
     }
 
     private void scheduleJob(final ServiceReference<?> ref, final Object job, final ScheduleOptions scheduleOptions) {
-        ((InternalScheduleOptions)scheduleOptions).providedName = getStringProperty(ref, Scheduler.PROPERTY_SCHEDULER_NAME);
         final String name = getServiceIdentifier(ref);
         final Boolean concurrent = getBooleanProperty(ref, Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
         final String[] runOnOpts = getRunOpts(ref);
@@ -265,6 +264,7 @@ public class WhiteboardHandler {
                 .canRunConcurrently((concurrent != null ? concurrent : true))
                 .threadPoolName(poolName)
                 .onInstancesOnly(runOnOpts);
+        ((InternalScheduleOptions)scheduleOptions).providedName = getStringProperty(ref, Scheduler.PROPERTY_SCHEDULER_NAME);
 
         final long bundleId = ref.getBundle().getBundleId();
         final Long serviceId = getLongProperty(ref, Constants.SERVICE_ID);

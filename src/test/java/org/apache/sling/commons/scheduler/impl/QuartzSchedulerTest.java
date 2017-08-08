@@ -25,9 +25,12 @@ import static org.mockito.Mockito.when;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
@@ -42,9 +45,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerBuilder;
+import org.quartz.impl.matchers.GroupMatcher;
 
 @RunWith(MockitoJUnitRunner.class)
 public class QuartzSchedulerTest {
@@ -326,5 +331,40 @@ public class QuartzSchedulerTest {
         if (quartzScheduler.getSchedulers().isEmpty() && this.proxies != null) {
             sField.set(quartzScheduler, this.proxies);
         }
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testNameAndProvidedName() throws SchedulerException {
+        final Date future = new Date(System.currentTimeMillis() + 1000 * 60 * 60);
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future).name("j1").threadPoolName("tp1"));
+        quartzScheduler.schedule(1L, 1L, new Thread(), quartzScheduler.AT(future)
+                .config(Collections.singletonMap("key", (Serializable)"value")).threadPoolName("tp1"));
+        assertNull(proxies.get("tp1"));
+        // j1 is scheduled named, so both name and provided name should be set to j1
+        JobDetail jobDetail = proxies.get("testName").getScheduler().getJobDetail(JobKey.jobKey("j1"));
+        assertEquals("j1", jobDetail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME));
+        assertEquals("j1", jobDetail.getJobDataMap().get(QuartzScheduler.DATA_MAP_PROVIDED_NAME));
+
+        // search job detail for job without name
+        jobDetail = null;
+        org.quartz.Scheduler scheduler = quartzScheduler.getSchedulers().get("testName").getScheduler();
+        final List<String> groups = scheduler.getJobGroupNames();
+        for(final String group : groups) {
+            final Set<JobKey> keys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group));
+            for(final JobKey key : keys) {
+                final JobDetail detail = scheduler.getJobDetail(key);
+                if ( detail != null
+                     && detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_CONFIGURATION) != null
+                     && ((Map)detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_CONFIGURATION)).get("key").equals("value")) {
+                    jobDetail = detail;
+                    break;
+                }
+            }
+        }
+        // provided name should be null, name is generated
+        assertNotNull(jobDetail);
+        assertNull(jobDetail.getJobDataMap().get(QuartzScheduler.DATA_MAP_PROVIDED_NAME));
+        assertNotNull(jobDetail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME));
     }
 }
