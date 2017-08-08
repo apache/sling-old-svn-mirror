@@ -36,16 +36,6 @@
 
     <url>http://sling.apache.org</url>
 
-    <prerequisites>
-        <!-- This defines only the minimum version for plugins, but not for the build
-             See http://maven.apache.org/ref/3.3.9/maven-model/maven.html#class_prerequisites.
-             Therefore the enforcer plugin needs to verify the maven version. See configuration
-             of the plugin further below
-        -->
-        <maven>3.3.9</maven>
-    </prerequisites>
-
-
     <issueManagement>
         <system>Jira</system>
         <url>http://issues.apache.org/jira/browse/SLING</url>
