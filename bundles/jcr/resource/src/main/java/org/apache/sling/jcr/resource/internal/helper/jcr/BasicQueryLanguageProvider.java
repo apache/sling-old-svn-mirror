@@ -30,15 +30,15 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.internal.helper.JcrResourceUtil;
-import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ProviderContext;
+import org.apache.sling.spi.resource.provider.QueryLanguageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,7 +131,7 @@ public class BasicQueryLanguageProvider implements QueryLanguageProvider<JcrProv
                             final Row jcrRow = rows.nextRow();
                             final String resourcePath = jcrRow.getPath();
                             if ( resourcePath != null && providerContext.getExcludedPaths().matches(resourcePath) == null) {
-                                final Map<String, Object> row = new HashMap<String, Object>();
+                                final Map<String, Object> row = new HashMap<>();
 
                                 boolean didPath = false;
                                 boolean didScore = false;

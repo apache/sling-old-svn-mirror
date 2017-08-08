@@ -29,7 +29,7 @@ import javax.jcr.Session;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionManager;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.sling.api.resource.Resource;
@@ -119,7 +119,7 @@ public class JcrItemResourceFactory {
 
     private Item getHistoricItem(Item item, String versionSpecifier) throws RepositoryException {
         Item currentItem = item;
-        LinkedList<String> relPath = new LinkedList<String>();
+        LinkedList<String> relPath = new LinkedList<>();
         Node version = null;
         while (!"/".equals(currentItem.getPath())) {
             if (isVersionable(currentItem)) {
