@@ -75,7 +75,7 @@ public class QuartzScheduler implements BundleListener {
     static final String DATA_MAP_OBJECT = "QuartzJobScheduler.Object";
 
     /** Map key for the provided job name */
-    static final String DATA_MAP_PROVIDED_NAME = "QuartzJobScheduler.JobName";
+    static final String DATA_MAP_PROVIDED_NAME = "QuartzJobScheduler.ProvidedJobName";
 
     /** Map key for the job name */
     static final String DATA_MAP_NAME = "QuartzJobScheduler.JobName";
@@ -97,7 +97,7 @@ public class QuartzScheduler implements BundleListener {
 
     /** Map key for the quartz scheduler */
     static final String DATA_MAP_QUARTZ_SCHEDULER = "QuartzJobScheduler.QuartzScheduler";
-    
+
     static final String DATA_MAP_THREAD_POOL_NAME = "QuartzJobScheduler.threadPoolName";
 
     static final String METRICS_NAME_RUNNING_JOBS = "commons.scheduler.running.jobs";
@@ -112,11 +112,11 @@ public class QuartzScheduler implements BundleListener {
     @Reference
     private ThreadPoolManager threadPoolManager;
 
-    @Reference 
+    @Reference
     MetricsService metricsService;
-    
+
     ConfigHolder configHolder;
-    
+
     /** The quartz schedulers. */
     private final Map<String, SchedulerProxy> schedulers = new HashMap<>();
 
@@ -146,7 +146,7 @@ public class QuartzScheduler implements BundleListener {
         ctx.addBundleListener(this);
 
         this.configHolder = new ConfigHolder(configuration);
-        
+
         this.active = true;
     }
 
@@ -615,7 +615,6 @@ public class QuartzScheduler implements BundleListener {
         }
 
         synchronized ( proxy ) {
-            opts.providedName = opts.name;
             final String name;
             if ( opts.name != null ) {
                 // if there is already a job with the name, remove it first

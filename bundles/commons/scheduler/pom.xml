@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>30</version>
+        <version>31</version>
         <relativePath />
     </parent>
 
@@ -50,9 +50,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Private-Package>
-                            org.apache.sling.commons.scheduler.impl
-                        </Private-Package>
                         <Import-Package>
                             !commonj.work,
                             !com.mchange.v2.c3p0,

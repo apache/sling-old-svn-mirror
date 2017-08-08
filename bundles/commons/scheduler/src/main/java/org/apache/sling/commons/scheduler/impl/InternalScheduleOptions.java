@@ -30,6 +30,10 @@ import org.quartz.TriggerBuilder;
  */
 public class InternalScheduleOptions implements ScheduleOptions {
 
+    public final TriggerBuilder<? extends Trigger> trigger;
+
+    public final IllegalArgumentException argumentException;
+
     public String providedName;
 
     public String name;
@@ -39,10 +43,6 @@ public class InternalScheduleOptions implements ScheduleOptions {
     public boolean canRunConcurrently = false;
 
     public Map<String, Serializable> configuration;
-
-    public final TriggerBuilder<? extends Trigger> trigger;
-
-    public final IllegalArgumentException argumentException;
 
     public String[] runOn;
 
@@ -71,6 +71,7 @@ public class InternalScheduleOptions implements ScheduleOptions {
     @Override
     public ScheduleOptions name(final String name) {
         this.name = name;
+        this.providedName = name;
         return this;
     }
 
