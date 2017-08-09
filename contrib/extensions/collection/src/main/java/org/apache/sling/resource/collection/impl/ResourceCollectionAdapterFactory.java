@@ -19,15 +19,14 @@
 
 package org.apache.sling.resource.collection.impl;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.resource.collection.ResourceCollection;
 import org.apache.sling.resource.collection.ResourceCollectionManager;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,34 +34,29 @@ import org.slf4j.LoggerFactory;
  * AdapterFactory that adapts Resources to: {@link ResourceCollection}
  * And ResourceResolver to: {@link ResourceCollectionManager)
  */
-@Component
-@Service
-@Property(name = "service.description", value = "Collection Adapter Factory")
+@Component(service = AdapterFactory.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            Constants.SERVICE_DESCRIPTION + "=Apache Sling Resource Collection Adapter Factory",
+            "adapters=org.apache.sling.resource.collection.ResourceCollection",
+            "adapters=org.apache.sling.resource.collection.ResourceCollectionManager",
+            "adaptables=org.apache.sling.api.resource.Resource",
+            "adaptables=org.apache.sling.api.resource.ResourceResolver"
+    })
 public class ResourceCollectionAdapterFactory implements AdapterFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(ResourceCollectionAdapterFactory.class);
+    private final Logger log = LoggerFactory.getLogger(ResourceCollectionAdapterFactory.class);
 
     private static final Class<ResourceCollection> COLLECTION_CLASS = ResourceCollection.class;
 
     private static final Class<ResourceCollectionManager> COLLECTION_MGR_CLASS = ResourceCollectionManager.class;
-
-    @Property(name = "adapters")
-    public static final String[] ADAPTER_CLASSES = {
-        COLLECTION_CLASS.getName(), COLLECTION_MGR_CLASS.getName()
-
-    };
-
-    @Property(name = "adaptables")
-    public static final String[] ADAPTABLE_CLASSES = {
-        Resource.class.getName(), ResourceResolver.class.getName()
-
-    };
 
     @Reference
     private ResourceCollectionManager collectionManager;
 
     // ---------- AdapterFactory -----------------------------------------------
 
+    @Override
     public <AdapterType> AdapterType getAdapter(Object adaptable,
             Class<AdapterType> type) {
         if (adaptable instanceof Resource) {

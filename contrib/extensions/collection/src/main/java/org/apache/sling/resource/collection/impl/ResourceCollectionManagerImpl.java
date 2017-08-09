@@ -22,14 +22,14 @@ package org.apache.sling.resource.collection.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.resource.collection.ResourceCollection;
 import org.apache.sling.resource.collection.ResourceCollectionManager;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +41,10 @@ import org.slf4j.LoggerFactory;
  * This service can be retrieved by looking it up from the
  * service registry or by adapting a {@link ResourceResolver}.
  */
-@Component
-@Service(value=ResourceCollectionManager.class)
+@Component(service=ResourceCollectionManager.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    })
 public class ResourceCollectionManagerImpl implements ResourceCollectionManager {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -50,6 +52,7 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
     /**
      * {@inheritDoc}
      */
+    @Override
     public ResourceCollection getCollection(Resource resource) {
     	if (resource != null) {
     		if (resource.isResourceType(ResourceCollection.RESOURCE_TYPE)) {
@@ -65,6 +68,7 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
     /**
      * {@inheritDoc}
      */
+    @Override
     public ResourceCollection createCollection(Resource parentResource, String name)
             throws PersistenceException {
         return createCollection(parentResource, name, null);
@@ -73,6 +77,7 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
     /**
      * {@inheritDoc}
      */
+    @Override
     public ResourceCollection createCollection(Resource parentResource, String name,
             Map<String, Object> properties) throws PersistenceException {
 
@@ -85,7 +90,7 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
             }
 
             if (properties == null) {
-                properties = new HashMap<String, Object>();
+                properties = new HashMap<>();
             }
 
             if (properties.get(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY) != null
@@ -115,6 +120,7 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
      *
      * @throws PersistenceException
      */
+    @Override
     public boolean deleteCollection(Resource resource)
             throws PersistenceException {
     	if (resource != null) {

@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.resource.collection;
 
 import java.util.Map;
@@ -24,6 +23,7 @@ import java.util.Map;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The <code>ResourceCollectionManager<code> defines the API to get, create and delete
@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ResourceResolver;
  * The ResourceCollectionManager service can be retrieved by looking it up from the
  * service registry or by adapting a {@link ResourceResolver}.
  */
+@ProviderType
 public interface ResourceCollectionManager {
 
     /**
