@@ -21,7 +21,7 @@ package org.apache.sling.scripting.sightly.impl.html.dom;
 import java.io.StringReader;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.scripting.sightly.impl.html.dom.template.*;
 
 import org.junit.Test;
