@@ -28,7 +28,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -70,6 +70,7 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
         this.bundleContext = ctx.getBundleContext();
     }
 
+    @Override
     public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
             @Nonnull DisposalCallbackRegistry callbackRegistry) {
         OSGiService annotation = element.getAnnotation(OSGiService.class);
@@ -123,7 +124,7 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
                 // make highest service ranking being returned first
                 Collections.reverse(references);
                 callbackRegistry.addDisposalCallback(new Callback(refs, bundleContext));
-                List<Object> services = new ArrayList<Object>();
+                List<Object> services = new ArrayList<>();
                 for (ServiceReference ref : references) {
                     Object service = bundleContext.getService(ref);
                     if (service != null) {
@@ -218,7 +219,7 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
         public InjectionStrategy getInjectionStrategy() {
             return annotation.injectionStrategy();
         }
-        
+
         @Override
         @SuppressWarnings("deprecation")
         public Boolean isOptional() {
