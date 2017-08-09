@@ -21,11 +21,12 @@ package org.apache.sling.scripting.sightly.impl.engine.extension.use;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
 import javax.script.Bindings;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngineManager;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptHelper;

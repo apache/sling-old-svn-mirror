@@ -23,10 +23,11 @@ import java.util.Collections;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
+
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;

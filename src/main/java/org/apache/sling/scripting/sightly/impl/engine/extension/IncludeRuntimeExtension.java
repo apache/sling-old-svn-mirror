@@ -21,10 +21,11 @@ package org.apache.sling.scripting.sightly.impl.engine.extension;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Map;
+
 import javax.script.Bindings;
 import javax.servlet.Servlet;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.scripting.SlingScriptHelper;

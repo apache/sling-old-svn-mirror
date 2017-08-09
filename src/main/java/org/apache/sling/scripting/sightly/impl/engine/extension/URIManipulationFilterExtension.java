@@ -34,7 +34,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.sightly.SightlyException;
@@ -512,6 +512,7 @@ public class URIManipulationFilterExtension implements RuntimeExtension {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public String toString() {
             // resourcePath + selectors + extension + suffix
             StringBuilder sb = new StringBuilder(getResourcePath());

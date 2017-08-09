@@ -20,7 +20,7 @@ package org.apache.sling.scripting.sightly.impl.engine.runtime;
 
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.scripting.sightly.Record;
@@ -28,6 +28,7 @@ import org.apache.sling.scripting.sightly.render.AbstractRuntimeObjectModel;
 
 public class SlingRuntimeObjectModel extends AbstractRuntimeObjectModel {
 
+    @Override
     protected Object getProperty(Object target, Object propertyObj) {
         String property = toString(propertyObj);
         if (StringUtils.isEmpty(property)) {
