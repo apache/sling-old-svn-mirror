@@ -16,7 +16,6 @@
  */
 package org.apache.sling.scripting.jsp.taglib.helpers;
 
-import org.apache.commons.lang.StringUtils;
 import org.owasp.esapi.ESAPI;
 
 /**
@@ -38,7 +37,7 @@ public class XSSSupport {
 	/**
 	 * Encodes the unencoded string using the specified mode. This will be
 	 * deferred to the corresponding OWASP ESAPI encoding method.
-	 * 
+	 *
 	 * @param unencoded
 	 *            the unencoded string
 	 * @param mode
@@ -74,12 +73,12 @@ public class XSSSupport {
 	 * Retrieves the encoding mode associated with the specified string. Will
 	 * throw an IllegalArgumentException if the mode string is not a valid mode
 	 * and will throw a NullPointerException if the mode string is null.
-	 * 
+	 *
 	 * @param modeStr
 	 *            the mode string
 	 * @return the encoding mode
 	 */
 	public static ENCODING_MODE getEncodingMode(String modeStr) {
-		return ENCODING_MODE.valueOf(StringUtils.upperCase(modeStr));
+		return ENCODING_MODE.valueOf(modeStr.toUpperCase());
 	}
 }

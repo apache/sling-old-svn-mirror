@@ -21,7 +21,6 @@ import java.io.IOException;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.sling.scripting.jsp.taglib.helpers.XSSSupport;
 import org.apache.sling.scripting.jsp.taglib.helpers.XSSSupport.ENCODING_MODE;
 import org.slf4j.Logger;
@@ -43,7 +42,7 @@ public class EncodeTag extends BodyTagSupport {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
 	 */
 	@Override
@@ -62,7 +61,7 @@ public class EncodeTag extends BodyTagSupport {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see javax.servlet.jsp.tagext.BodyTagSupport#doStartTag()
 	 */
 	@Override
@@ -130,13 +129,13 @@ public class EncodeTag extends BodyTagSupport {
 
 	/**
 	 * Writes the encoded text to the response.
-	 * 
+	 *
 	 * @param encoded
 	 *            the encoded text to write to the page
 	 * @throws JspException
 	 */
 	private void write(String encoded) throws JspException {
-		if (!StringUtils.isEmpty(encoded)) {
+		if (encoded != null && !encoded.isEmpty()) {
 			try {
 				pageContext.getOut().write(encoded);
 			} catch (IOException e) {
