@@ -27,7 +27,6 @@ import javax.script.ScriptEngineManager;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.utils.json.JSONWriter;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -97,7 +96,7 @@ public class SlingBindingsVariablesListJsonServlet extends SlingSafeMethodsServl
         jsonWriter.array();
         // get filter by engine selector
         String requestedExtension = request.getParameter(PARAMETER_EXTENSION);
-        if (StringUtils.isNotBlank(requestedExtension)) {
+        if (requestedExtension != null && !requestedExtension.isEmpty() ) {
             ScriptEngine selectedScriptEngine = scriptEngineManager.getEngineByExtension(requestedExtension);
             if (selectedScriptEngine == null) {
                 throw new IllegalArgumentException("Invalid extension requested: "+requestedExtension);

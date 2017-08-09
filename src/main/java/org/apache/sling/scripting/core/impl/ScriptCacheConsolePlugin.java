@@ -23,16 +23,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.scripting.api.ScriptCache;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
@@ -78,7 +76,7 @@ public class ScriptCacheConsolePlugin extends AbstractWebConsolePlugin {
             throws ServletException, IOException {
         if (scriptCache instanceof ScriptCacheImpl) {
             ScriptCacheImpl scriptCacheImpl = (ScriptCacheImpl) scriptCache;
-            List<String> scripts = new ArrayList<String>(scriptCacheImpl.getCachedScripts());
+            List<String> scripts = new ArrayList<>(scriptCacheImpl.getCachedScripts());
             StringBuilder sb = new StringBuilder();
             sb.append("<script type='text/javascript' src='").append(RESOURCES).append("/").append(SCRIPTCACHE_JS).append("'></script>");
             sb.append("<div id='cached-scripts' class='ui-widget statline'>");
@@ -116,7 +114,7 @@ public class ScriptCacheConsolePlugin extends AbstractWebConsolePlugin {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String script = req.getParameter(POST_SCRIPT);
-        if (StringUtils.isNotEmpty(script)) {
+        if (script != null && !script.isEmpty()) {
             if ("all".equals(script)) {
                 scriptCache.clear();
                 renderContent(req, resp);
