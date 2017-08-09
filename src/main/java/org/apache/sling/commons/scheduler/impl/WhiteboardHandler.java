@@ -131,9 +131,9 @@ public class WhiteboardHandler {
             } else {
                 name = "Registered Service";
             }
+            // now append service id to create a unique identifier
+            name = name + "." + getLongProperty(ref, Constants.SERVICE_ID);
         }
-        // now append service id to create a unique identifier
-        name = name + "." + getLongProperty(ref, Constants.SERVICE_ID);
         return name;
     }
 

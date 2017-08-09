@@ -81,7 +81,7 @@ public class WhiteboardHandlerTest {
         final ServiceRegistration<?> reg = context.registerService(Runnable.class.getName(), service, serviceProps);
         final ServiceReference<?> reference = reg.getReference();
         handler.register(reference, service);
-        JobKey jobKey = JobKey.jobKey(schedulerName + "." + reference.getProperty(Constants.SERVICE_ID));
+        JobKey jobKey = JobKey.jobKey(schedulerName);
 
         assertNotNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
     }
@@ -109,7 +109,7 @@ public class WhiteboardHandlerTest {
         final ServiceRegistration<?> reg = context.registerService(Runnable.class.getName(), service, serviceProps);
         ServiceReference<?> reference = reg.getReference();
         handler.register(reference, service);
-        JobKey jobKey = JobKey.jobKey(schedulerName + "." + reference.getProperty(Constants.SERVICE_ID));
+        JobKey jobKey = JobKey.jobKey(schedulerName);
 
         assertNotNull(quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey));
 
@@ -138,12 +138,12 @@ public class WhiteboardHandlerTest {
         final ServiceRegistration<?> reg = context.registerService(Runnable.class.getName(), service, serviceProps);
         final ServiceReference<?> reference = reg.getReference();
         handler.register(reference, service);
-        JobKey jobKey = JobKey.jobKey(schedulerName + "." + reference.getProperty(Constants.SERVICE_ID));
+        JobKey jobKey = JobKey.jobKey(schedulerName);
 
         JobDetail jobDetail = quartzScheduler.getSchedulers().get("testName").getScheduler().getJobDetail(jobKey);
         assertNotNull(jobDetail);
         assertEquals(schedulerName, jobDetail.getJobDataMap().getString(QuartzScheduler.DATA_MAP_PROVIDED_NAME));
-        assertEquals(schedulerName + "." + reference.getProperty(Constants.SERVICE_ID),
+        assertEquals(schedulerName,
                 jobDetail.getJobDataMap().getString(QuartzScheduler.DATA_MAP_NAME));
     }
 
