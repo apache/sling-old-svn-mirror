@@ -27,7 +27,7 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.hc.api.Result;
@@ -55,11 +55,11 @@ public class ResultJsonSerializer {
 
             result.add("overallResult", overallResult.getStatus().toString());
             JsonArrayBuilder resultsJsonArr = Json.createArrayBuilder();
-            
+
             for (HealthCheckExecutionResult healthCheckResult : executionResults) {
                 resultsJsonArr.add(getJsonForSimpleResult(healthCheckResult, includeDebug));
             }
-            
+
             result.add("results", resultsJsonArr);
         } catch (JsonException e) {
             LOG.info("Could not serialize health check result: " + e, e);
@@ -67,9 +67,9 @@ public class ResultJsonSerializer {
 
         StringWriter writer = new StringWriter();
         Json.createGenerator(writer).write(result.build()).close();
-        
+
         String resultStr = writer.toString();
-        
+
         if (StringUtils.isNotBlank(jsonpCallback)) {
             resultStr = jsonpCallback + "(" + resultStr + ");";
         }
@@ -93,7 +93,7 @@ public class ResultJsonSerializer {
         result.add("tags", tagsArray);
 
         JsonArrayBuilder messagesArr = Json.createArrayBuilder();
-        
+
         for (ResultLog.Entry entry : healthCheckResult.getHealthCheckResult()) {
             if (!includeDebug && entry.getStatus() == Result.Status.DEBUG) {
                 continue;
@@ -109,9 +109,9 @@ public class ResultJsonSerializer {
             }
             messagesArr.add(jsonEntry);
         }
-        
+
         result.add("messages", messagesArr);
-        
+
 
         return result.build();
     }

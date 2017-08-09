@@ -42,12 +42,12 @@ public class U {
 
     // the name of the system property providing the bundle file to be installed and tested
     private static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
-    
+
     /** Wait until the specified number of health checks are seen by supplied executor */
     static void expectHealthChecks(int howMany, HealthCheckExecutor executor, String ... tags) {
         expectHealthChecks(howMany, executor, new HealthCheckExecutionOptions(), tags);
     }
-    
+
     /** Wait until the specified number of health checks are seen by supplied executor */
     static void expectHealthChecks(int howMany, HealthCheckExecutor executor, HealthCheckExecutionOptions options, String ... tags) {
         final long timeout = System.currentTimeMillis() + 10000L;
@@ -66,18 +66,18 @@ public class U {
         }
         fail("Did not get " + howMany + " health checks with tags " + Arrays.asList(tags) + " after " + timeout + " msec (last count=" + count + ")");
     }
-    
+
     static Option[] config() {
         final String localRepo = System.getProperty("maven.repo.local", "");
         final boolean felixShell = "true".equals(System.getProperty("felix.shell", "false"));
-        
+
         final String bundleFileName = System.getProperty(BUNDLE_JAR_SYS_PROP);
         final File bundleFile = new File(bundleFileName);
         if (!bundleFile.canRead()) {
             throw new IllegalArgumentException( "Cannot read from bundle file " + bundleFileName + " specified in the "
                 + BUNDLE_JAR_SYS_PROP + " system property" );
         }
-        
+
         // As we're using the forked pax exam container, we need to add a VM
         // option to activate the jacoco test coverage agent.
         final String coverageCommand = System.getProperty("coverage.command");
@@ -85,7 +85,7 @@ public class U {
         return options(
             when(localRepo.length() > 0).useOptions(
                     systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
-            ),                    
+            ),
             junitBundles(),
             when(coverageCommand != null && coverageCommand.trim().length() > 0).useOptions(
                     CoreOptions.vmOption(coverageCommand)
@@ -120,7 +120,7 @@ public class U {
                     mavenBundle("commons-collections", "commons-collections", "3.2.1"),
                     mavenBundle().groupId("commons-io").artifactId("commons-io").versionAsInProject(),
                     mavenBundle("commons-fileupload", "commons-fileupload", "1.2.2"),
-                    mavenBundle().groupId("commons-lang").artifactId("commons-lang").versionAsInProject()
+                    mavenBundle().groupId("org.apache.commons").artifactId("commons-lang3").versionAsInProject()
             )
         );
     }
