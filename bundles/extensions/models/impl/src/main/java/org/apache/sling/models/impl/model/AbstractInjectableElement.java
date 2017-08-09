@@ -23,8 +23,14 @@ import java.lang.reflect.Type;
 
 import javax.inject.Named;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.sling.models.annotations.*;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.sling.models.annotations.Default;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Optional;
+import org.apache.sling.models.annotations.Required;
+import org.apache.sling.models.annotations.Source;
+import org.apache.sling.models.annotations.Via;
+import org.apache.sling.models.annotations.ViaProviderType;
 import org.apache.sling.models.annotations.via.BeanProperty;
 import org.apache.sling.models.impl.ModelAdapterFactory;
 import org.apache.sling.models.impl.ReflectionUtil;

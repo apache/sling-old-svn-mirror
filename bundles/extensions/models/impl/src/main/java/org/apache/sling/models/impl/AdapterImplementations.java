@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -51,15 +51,15 @@ final class AdapterImplementations {
     private static final Logger log = LoggerFactory.getLogger(AdapterImplementations.class);
 
     private final ConcurrentMap<String,ConcurrentNavigableMap<String,ModelClass<?>>> adapterImplementations
-            = new ConcurrentHashMap<String,ConcurrentNavigableMap<String,ModelClass<?>>>();
+            = new ConcurrentHashMap<>();
 
     private final ConcurrentMap<String,ModelClass<?>> modelClasses
-            = new ConcurrentHashMap<String,ModelClass<?>>();
-    
-    private final ConcurrentMap<String, Class<?>> resourceTypeMappingsForResources = new ConcurrentHashMap<String, Class<?>>();
-    private final ConcurrentMap<String, Class<?>> resourceTypeMappingsForRequests = new ConcurrentHashMap<String, Class<?>>();
-    private final ConcurrentMap<Bundle, List<String>> resourceTypeRemovalListsForResources = new ConcurrentHashMap<Bundle, List<String>>();
-    private final ConcurrentMap<Bundle, List<String>> resourceTypeRemovalListsForRequests = new ConcurrentHashMap<Bundle, List<String>>();
+            = new ConcurrentHashMap<>();
+
+    private final ConcurrentMap<String, Class<?>> resourceTypeMappingsForResources = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Class<?>> resourceTypeMappingsForRequests = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Bundle, List<String>> resourceTypeRemovalListsForResources = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Bundle, List<String>> resourceTypeRemovalListsForRequests = new ConcurrentHashMap<>();
 
     private volatile ImplementationPicker[] sortedImplementationPickers = new ImplementationPicker[0];
     private volatile StaticInjectAnnotationProcessorFactory[] sortedStaticInjectAnnotationProcessorFactories = new StaticInjectAnnotationProcessorFactory[0];
@@ -71,7 +71,7 @@ final class AdapterImplementations {
     public ImplementationPicker[] getImplementationPickers() {
         return this.sortedImplementationPickers;
     }
-    
+
     public StaticInjectAnnotationProcessorFactory[] getStaticInjectAnnotationProcessorFactories() {
         return sortedStaticInjectAnnotationProcessorFactories;
     }
@@ -81,13 +81,13 @@ final class AdapterImplementations {
         this.sortedStaticInjectAnnotationProcessorFactories = factories.toArray(new StaticInjectAnnotationProcessorFactory[factories.size()]);
         updateProcessorFactoriesInModelClasses();
     }
-    
+
     /**
      * Updates all {@link ModelClass} instances with updates list of static inject annotation processor factories.
      */
     private void updateProcessorFactoriesInModelClasses() {
         Iterator<ModelClass<?>> items = modelClasses.values().iterator();
-        updateProcessorFactoriesInModelClasses(items);        
+        updateProcessorFactoriesInModelClasses(items);
         Iterator<ConcurrentNavigableMap<String,ModelClass<?>>> mapItems = adapterImplementations.values().iterator();
         while (mapItems.hasNext()) {
             ConcurrentNavigableMap<String,ModelClass<?>> mapItem = mapItems.next();
@@ -100,7 +100,7 @@ final class AdapterImplementations {
             item.updateProcessorFactories(sortedStaticInjectAnnotationProcessorFactories);
         }
     }
-    
+
     /** Add implementation mapping for the given model class (implementation is the model class itself).
      * Only used for testing purposes. Use {@link #addAll(Class, Class...)} in case you want to register a different implementation.
      * @param modelClasses the model classes to register
@@ -110,7 +110,7 @@ final class AdapterImplementations {
             addAll(modelClass, modelClass);
         }
     }
-    
+
     /**
      * Add implementation mapping for the given adapter types.
      * @param implType Implementation type
@@ -140,7 +140,7 @@ final class AdapterImplementations {
                     ConcurrentNavigableMap<String, ModelClass<?>> implementations = adapterImplementations.get(key);
                     if (implementations == null) {
                         // to have a consistent ordering independent of bundle loading use a ConcurrentSkipListMap that sorts by class name
-                        implementations = new ConcurrentSkipListMap<String, ModelClass<?>>();
+                        implementations = new ConcurrentSkipListMap<>();
                         adapterImplementations.put(key, implementations);
                     }
                     implementations.put(implType.getName(), modelClass);
@@ -149,7 +149,7 @@ final class AdapterImplementations {
         }
         return true;
     }
-    
+
     /**
      * Remove implementation mapping for the given adapter type.
      * @param adapterTypeName Adapter type name
@@ -191,7 +191,7 @@ final class AdapterImplementations {
     @SuppressWarnings("unchecked")
     public <ModelType> ModelClass<ModelType> lookup(Class<ModelType> adapterType, Object adaptable) {
         String key = adapterType.getName();
-        
+
         // lookup in cache for models without adapter classes
         ModelClass<ModelType> modelClass = (ModelClass<ModelType>)modelClasses.get(key);
         if (modelClass!=null) {
@@ -205,7 +205,7 @@ final class AdapterImplementations {
         }
         Collection<ModelClass<?>> implementationsCollection = implementations.values();
         ModelClass<?>[] implementationWrappersArray = implementationsCollection.toArray(new ModelClass<?>[implementationsCollection.size()]);
-        
+
         // prepare array for implementation picker
         Class<?>[] implementationsArray = new Class<?>[implementationsCollection.size()];
         for (int i=0; i<implementationWrappersArray.length; i++) {
@@ -233,7 +233,7 @@ final class AdapterImplementations {
     @SuppressWarnings("unchecked")
     public <ModelType> boolean isModelClass(Class<ModelType> adapterType) {
         String key = adapterType.getName();
-        
+
         // lookup in cache for models without adapter classes
         ModelClass<ModelType> modelClass = (ModelClass<ModelType>)modelClasses.get(key);
         if (modelClass!=null) {

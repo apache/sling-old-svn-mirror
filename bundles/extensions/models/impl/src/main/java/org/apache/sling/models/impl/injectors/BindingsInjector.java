@@ -22,7 +22,7 @@ import java.lang.reflect.Type;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletRequest;
 
-import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
@@ -47,6 +47,7 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
         return "script-bindings";
     }
 
+    @Override
     public Object getValue(@Nonnull Object adaptable, String name, @Nonnull Type type, @Nonnull AnnotatedElement element,
             @Nonnull DisposalCallbackRegistry callbackRegistry) {
         if (adaptable == ObjectUtils.NULL) {
@@ -98,7 +99,7 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
         public InjectionStrategy getInjectionStrategy() {
             return annotation.injectionStrategy();
         }
-        
+
         @Override
         @SuppressWarnings("deprecation")
         public Boolean isOptional() {

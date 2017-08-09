@@ -16,8 +16,15 @@
  */
 package org.apache.sling.models.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,7 +32,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
@@ -67,12 +74,12 @@ public class ResourceModelInterfacesTest {
         factory.activate(componentCtx);
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(2, 2));
         factory.bindInjector(new ChildResourceInjector(), new ServicePropertiesMap(1, 1));
-        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SimplePropertyModel.class, ResourceModelWithRequiredField.class, ChildResourceModel.class, ChildValueMapModel.class, ParentModel.class, ChildModel.class); 
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SimplePropertyModel.class, ResourceModelWithRequiredField.class, ChildResourceModel.class, ChildValueMapModel.class, ParentModel.class, ChildModel.class);
     }
 
     @Test
     public void testSimplePropertyModel() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("first", "first-value");
         map.put("third", "third-value");
         map.put("fourth", true);
@@ -93,7 +100,7 @@ public class ResourceModelInterfacesTest {
 
     @Test
     public void testRequiredPropertyModel() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("first", "first-value");
         map.put("third", "third-value");
         ValueMap vm = spy(new ValueMapDecorator(map));
