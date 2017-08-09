@@ -18,18 +18,17 @@
  */
 package org.apache.sling.jcr.contentloader;
 
-import aQute.bnd.annotation.ConsumerType;
-
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
- * Encapsulates the options for the content import. 
+ * Encapsulates the options for the content import.
  */
 @ConsumerType
 public abstract class ImportOptions {
 
 	/**
 	 * Specifies whether imported nodes should overwrite existing nodes.
-	 * NOTE: this means the existing node will be deleted and a new node 
+	 * NOTE: this means the existing node will be deleted and a new node
 	 * will be created in the same location.
 	 * @return true to overwrite nodes, false otherwise
 	 */
@@ -61,7 +60,7 @@ public abstract class ImportOptions {
 	/**
 	 * Check if the content reader for the given file extension should
 	 * be ignored.
-	 * 
+	 *
 	 * @param extension the extension to check
 	 * @return true to ignore the reader, false otherwise
 	 */

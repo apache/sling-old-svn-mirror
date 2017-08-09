@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.contentloader;
 
-import org.apache.commons.lang.StringUtils;
-
 public class ContentTypeUtil {
 
     public static final String EXT_JSON = ".json";
@@ -44,20 +42,20 @@ public class ContentTypeUtil {
     public static final String TYPE_JAR = "application/java-archive";
 
     public static String detectContentType(final String filename) {
-        if (StringUtils.isNotBlank(filename)) {
-            if (StringUtils.endsWithIgnoreCase(filename, EXT_JSON)) {
+        if (filename != null && !filename.isEmpty()) {
+            if ( filename.toLowerCase().endsWith(EXT_JSON) ) {
                 return TYPE_JSON;
             }
-            if (StringUtils.endsWithIgnoreCase(filename, EXT_JCR_XML)) {
+            if ( filename.toLowerCase().endsWith(EXT_JCR_XML)) {
                 return TYPE_JCR_XML;
             }
-            if (StringUtils.endsWithIgnoreCase(filename, EXT_XML)) {
+            if ( filename.toLowerCase().endsWith(EXT_XML)) {
                 return TYPE_XML;
             }
-            if (StringUtils.endsWithIgnoreCase(filename, EXT_ZIP)) {
+            if ( filename.toLowerCase().endsWith(EXT_ZIP)) {
                 return TYPE_ZIP;
             }
-            if (StringUtils.endsWithIgnoreCase(filename, EXT_JAR)) {
+            if ( filename.toLowerCase().endsWith(EXT_JAR)) {
                 return TYPE_JAR;
             }
         }
@@ -65,7 +63,7 @@ public class ContentTypeUtil {
     }
 
     public static String getDefaultExtension(final String contentType) {
-        if (StringUtils.isNotBlank(contentType)) {
+        if (contentType != null && !contentType.isEmpty()) {
             if (TYPE_JSON.equalsIgnoreCase(contentType)) {
                 return EXT_JSON;
             }

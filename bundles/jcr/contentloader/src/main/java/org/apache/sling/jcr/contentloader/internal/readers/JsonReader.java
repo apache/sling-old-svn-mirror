@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.contentloader.internal.readers;
 
+import static org.apache.sling.jcr.contentparser.impl.JsonTicksConverter.tickToDoubleQuote;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,13 +42,10 @@ import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentReader;
-import static org.apache.sling.jcr.contentparser.impl.JsonTicksConverter.tickToDoubleQuote;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * The <code>JsonReader</code> Parses a Json document on content load and creates the
@@ -97,11 +96,11 @@ import static org.apache.sling.jcr.contentparser.impl.JsonTicksConverter.tickToD
  *
  * </pre>
  */
-@Component
-@Service
-@Properties({
-    @Property(name = ContentReader.PROPERTY_EXTENSIONS, value = "json"),
-    @Property(name = ContentReader.PROPERTY_TYPES, value = "application/json")
+@Component(service = ContentReader.class,
+property = {
+    Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+    ContentReader.PROPERTY_EXTENSIONS + "=json",
+    ContentReader.PROPERTY_TYPES + "=application/json"
 })
 public class JsonReader implements ContentReader {
 
@@ -111,7 +110,7 @@ public class JsonReader implements ContentReader {
     private static final String NAME = "jcr:name:";
     private static final String URI = "jcr:uri:";
 
-    protected static final Set<String> ignoredNames = new HashSet<String>();
+    protected static final Set<String> ignoredNames = new HashSet<>();
     static {
         ignoredNames.add("jcr:primaryType");
         ignoredNames.add("jcr:mixinTypes");
@@ -123,7 +122,7 @@ public class JsonReader implements ContentReader {
         ignoredNames.add("jcr:created");
     }
 
-    private static final Set<String> ignoredPrincipalPropertyNames = new HashSet<String>();
+    private static final Set<String> ignoredPrincipalPropertyNames = new HashSet<>();
     static {
     	ignoredPrincipalPropertyNames.add("name");
     	ignoredPrincipalPropertyNames.add("isgroup");
@@ -137,6 +136,7 @@ public class JsonReader implements ContentReader {
     /**
      * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.ContentCreator)
      */
+    @Override
     public void parse(java.net.URL url, ContentCreator contentCreator)
     throws IOException, RepositoryException {
         InputStream ins = null;
@@ -153,6 +153,7 @@ public class JsonReader implements ContentReader {
         }
     }
 
+    @Override
     public void parse(InputStream ins, ContentCreator contentCreator) throws IOException, RepositoryException {
         try {
             String jsonString = toString(ins).trim();
@@ -368,7 +369,7 @@ public class JsonReader implements ContentReader {
     	boolean isGroup = json.getBoolean("isgroup", false);
 
     	//collect the extra property names to assign to the new principal
-    	Map<String, Object> extraProps = new LinkedHashMap<String, Object>();
+    	Map<String, Object> extraProps = new LinkedHashMap<>();
 		for(Map.Entry<String, JsonValue> entry : json.entrySet()) {
 			String propName = entry.getKey();
 			if (!ignoredPrincipalPropertyNames.contains(propName)) {

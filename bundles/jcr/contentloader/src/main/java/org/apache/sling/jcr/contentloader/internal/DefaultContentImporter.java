@@ -27,12 +27,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentImporter;
@@ -40,6 +34,9 @@ import org.apache.sling.jcr.contentloader.ContentReader;
 import org.apache.sling.jcr.contentloader.ContentTypeUtil;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,14 +46,12 @@ import org.slf4j.LoggerFactory;
  * <li>Import content into the content repository.
  * </ul>
  */
-@Component
-@Service(ContentImporter.class)
-@Property(
-        name = Constants.SERVICE_DESCRIPTION,
-        value = "Apache Sling JCR Content Import Service"
-    )
-@Reference(name="contentReaderWhiteboard", cardinality=ReferenceCardinality.MANDATORY_UNARY,
-           policy=ReferencePolicy.DYNAMIC, referenceInterface=ContentReaderWhiteboard.class)
+@Component(service = ContentImporter.class,
+    property = {
+            Constants.SERVICE_DESCRIPTION + "=Apache Sling JCR Content Import Service",
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    })
+
 public class DefaultContentImporter extends BaseImportLoader implements ContentHelper, ContentImporter {
 
     /**
@@ -67,12 +62,23 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
 
     private final Logger logger = LoggerFactory.getLogger(DefaultContentImporter.class);
 
-    public DefaultContentImporter() {
+    @Reference(name="contentReaderWhiteboard",
+            cardinality=ReferenceCardinality.MANDATORY,
+             service=ContentReaderWhiteboard.class)
+    protected void bindContentReaderWhiteboard(final ContentReaderWhiteboard service) {
+        this.contentReaderWhiteboard = service;
+    }
+
+    protected void unbindContentReaderWhiteboard(final ContentReaderWhiteboard service) {
+        if ( this.contentReaderWhiteboard == service ) {
+            this.contentReaderWhiteboard = null;
+        }
     }
 
     /* (non-Javadoc)
      * @see org.apache.sling.jcr.contentloader.ContentImporter#importContent(javax.jcr.Node, java.lang.String, java.io.InputStream, org.apache.sling.jcr.contentloader.ImportOptions, org.apache.sling.jcr.contentloader.ContentImportListener)
      */
+    @Override
     public void importContent(Node parent, String filename, InputStream contentStream, ImportOptions importOptions, ContentImportListener importListener) throws RepositoryException, IOException {
 
         // special treatment for system view imports
@@ -91,6 +97,7 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
         importContent(contentCreator, contentReader, parent, name, contentStream, importOptions, importListener);
     }
 
+    @Override
     public void importContent(final Node parent, final String name, final String contentType, final InputStream contentStream, final ImportOptions importOptions, final ContentImportListener importListener) throws RepositoryException, IOException {
 
         // special treatment for system view imports
@@ -108,7 +115,7 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
     }
 
     private void importContent(final DefaultContentCreator contentCreator, final ContentReader contentReader, final Node parent, final String name, final InputStream contentStream, final ImportOptions importOptions, final ContentImportListener importListener) throws RepositoryException, IOException {
-        List<String> createdPaths = new ArrayList<String>();
+        List<String> createdPaths = new ArrayList<>();
         contentCreator.init(importOptions, getContentReaders(), createdPaths, importListener);
         contentCreator.prepareParsing(parent, name);
         contentReader.parse(contentStream, contentCreator);
@@ -142,6 +149,7 @@ public class DefaultContentImporter extends BaseImportLoader implements ContentH
     /* (non-Javadoc)
      * @see org.apache.sling.jcr.contentloader.internal.ContentHelper#getMimeType(java.lang.String)
      */
+    @Override
     public String getMimeType(String name) {
         // local copy to not get NPE despite check for null due to concurrent unbind
         MimeTypeService mts = mimeTypeService;

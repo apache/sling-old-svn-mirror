@@ -52,75 +52,75 @@ public class BundleContentLoaderTest {
         context.registerInjectActivateService(new JsonReader());
         context.registerInjectActivateService(new XmlReader());
         context.registerInjectActivateService(new ZipReader());
-        
+
         // whiteboard which holds readers
         context.registerInjectActivateService(new ContentReaderWhiteboard());
-        
+
         // TODO - SlingRepository should be registered out of the box, not after calling context.resourceResolver()
         // TODO - sling node types should _always_ be registered
         Session session = context.resourceResolver().adaptTo(Session.class);
         RepositoryUtil.registerSlingNodeTypes(session);
-        
+
         // register the content loader service
         BundleHelper bundleHelper = context.registerInjectActivateService(new ContentLoaderService());
-        
+
         ContentReaderWhiteboard whiteboard = context.getService(ContentReaderWhiteboard.class);
-        
-        contentLoader = new BundleContentLoader(bundleHelper, whiteboard);        
+
+        contentLoader = new BundleContentLoader(bundleHelper, whiteboard);
     }
-    
-    
+
+
     @Test
     public void loadContentWithSpecificPath() throws Exception {
 
         Bundle mockBundle = newBundleWithInitialContent("SLING-INF/libs/app;path:=/libs/app");
-        
+
         contentLoader.registerBundle(context.resourceResolver().adaptTo(Session.class), mockBundle, false);
-        
+
         Resource imported = context.resourceResolver().getResource("/libs/app");
-        
+
         assertThat("Resource was not imported", imported, notNullValue());
         assertThat("sling:resourceType was not properly set", imported.getResourceType(), equalTo("sling:Folder"));
     }
 
     @Test
     public void loadContentWithRootPath() throws Exception {
-        
+
         Bundle mockBundle = newBundleWithInitialContent("SLING-INF/");
-        
+
         contentLoader.registerBundle(context.resourceResolver().adaptTo(Session.class), mockBundle, false);
-        
+
         Resource imported = context.resourceResolver().getResource("/libs/app");
-        
+
         assertThat("Resource was not imported", imported, notNullValue());
         assertThat("sling:resourceType was not properly set", imported.getResourceType(), equalTo("sling:Folder"));
     }
-    
+
     @Test
     @Ignore("TODO - unregister or somehow ignore the XmlReader component for this test")
     public void loadXmlAsIs() throws Exception {
 
         dumpRepo("/", 2);
-        
+
         Bundle mockBundle = newBundleWithInitialContent("SLING-INF/libs/app;path:=/libs/app;ignoreImportProviders:=xml");
-        
+
         contentLoader.registerBundle(context.resourceResolver().adaptTo(Session.class), mockBundle, false);
-        
+
         Resource imported = context.resourceResolver().getResource("/libs/app");
-        
+
         assertThat("Resource was not imported", imported, notNullValue());
         assertThat("sling:resourceType was not properly set", imported.getResourceType(), equalTo("sling:Folder"));
-        
+
         Resource xmlFile = context.resourceResolver().getResource("/libs/app.xml");
-        
+
         dumpRepo("/", 2);
-        
+
         assertThat("XML file was was not imported", xmlFile, notNullValue());
 
     }
 
     private MockBundle newBundleWithInitialContent(String initialContentHeader) {
-        
+
         MockBundle mockBundle = new MockBundle(context.bundleContext());
         mockBundle.setHeaders(singletonMap("Sling-Initial-Content", initialContentHeader));
         return mockBundle;
@@ -128,7 +128,7 @@ public class BundleContentLoaderTest {
 
 
     private void dumpRepo(String startPath, int maxDepth) {
-        
+
         dumpRepo0(startPath, maxDepth, 0);
     }
 

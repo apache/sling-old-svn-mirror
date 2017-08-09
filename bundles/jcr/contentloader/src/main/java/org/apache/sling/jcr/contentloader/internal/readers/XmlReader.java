@@ -49,14 +49,12 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentReader;
 import org.kxml2.io.KXmlParser;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParser;
@@ -98,11 +96,12 @@ import org.xmlpull.v1.XmlPullParserException;
  * If you want to include a binary file in your loaded content, you may specify it using a
  * {@link org.apache.sling.jcr.contentloader.internal.readers.XmlReader.FileDescription} <code>&lt;nt:file&gt;</code> element.
  */
-@Component
-@Service
-@Properties({
-    @Property(name = ContentReader.PROPERTY_EXTENSIONS, value = "xml"),
-    @Property(name = ContentReader.PROPERTY_TYPES, value = {"application/xml", "text/xml"})
+@Component(service = ContentReader.class,
+property = {
+    Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+    ContentReader.PROPERTY_EXTENSIONS + "=xml",
+    ContentReader.PROPERTY_TYPES + "=application/xml",
+    ContentReader.PROPERTY_TYPES + "=text/xml"
 })
 public class XmlReader implements ContentReader {
 
@@ -159,6 +158,7 @@ public class XmlReader implements ContentReader {
     /**
      * @see org.apache.sling.jcr.contentloader.ContentReader#parse(URL, org.apache.sling.jcr.contentloader.ContentCreator)
      */
+    @Override
     public synchronized void parse(final URL url, final ContentCreator creator)
     throws IOException, RepositoryException {
         BufferedInputStream bufferedInput = null;
@@ -176,7 +176,8 @@ public class XmlReader implements ContentReader {
     /* (non-Javadoc)
 	 * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.ContentCreator)
 	 */
-	public void parse(InputStream ins, ContentCreator creator)
+	@Override
+    public void parse(InputStream ins, ContentCreator creator)
 			throws IOException, RepositoryException {
         BufferedInputStream bufferedInput = null;
         try {
@@ -366,6 +367,7 @@ public class XmlReader implements ContentReader {
 
             transformerThread = new Thread(
                     new Runnable() {
+                        @Override
                         public void run() {
                             try {
                                 Source xml = new StreamSource(inputXml);
@@ -422,7 +424,7 @@ public class XmlReader implements ContentReader {
 
         public void addMixinType(String v) {
             if ( this.mixinTypes == null ) {
-                this.mixinTypes = new ArrayList<String>();
+                this.mixinTypes = new ArrayList<>();
             }
             this.mixinTypes.add(v);
         }
@@ -471,7 +473,7 @@ public class XmlReader implements ContentReader {
 
         public void addValue(String v) {
             if ( this.values == null ) {
-                this.values = new ArrayList<String>();
+                this.values = new ArrayList<>();
             }
             this.values.add(v);
         }
@@ -500,7 +502,7 @@ public class XmlReader implements ContentReader {
      */
     private static class ProcessingInstruction {
 
-        private Map<String, String> attributes = new HashMap<String, String>();
+        private Map<String, String> attributes = new HashMap<>();
         private static final Pattern ATTRIBUTE_PATTERN = Pattern.compile("\\s(.[^=\\s]*)\\s?=\\s?\"(.[^\"]*)\"");
         private static final Pattern NAME_PATTERN = Pattern.compile("^(.[^\\s\\?>]*)");
         private String name;

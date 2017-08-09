@@ -18,14 +18,6 @@
  */
 package org.apache.sling.jcr.contentloader.internal.readers;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.jcr.contentloader.ContentCreator;
-import org.apache.sling.jcr.contentloader.ContentReader;
-
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
@@ -36,6 +28,11 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
+import org.apache.sling.jcr.contentloader.ContentCreator;
+import org.apache.sling.jcr.contentloader.ContentReader;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+
 /**
  * Specific <code>JsonReader</code>, <code>OrderedJsonReader</code> parse json document exactly the same,
  * but does specific look up for SLING:ordered : [{SLING:name: "first", ...},{SLING:name: "second", ...}]
@@ -43,11 +40,11 @@ import javax.json.JsonValue;
  * children, in that order.
  * Note that this is the reponsability of the json file to set appropriate node type / mixins.
  */
-@Component(inherit = false)
-@Service
-@Properties({
-        @Property(name = ContentReader.PROPERTY_EXTENSIONS, value = "ordered-json"),
-        @Property(name = ContentReader.PROPERTY_TYPES, value = "application/json")
+@Component(service = ContentReader.class,
+property = {
+    Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+    ContentReader.PROPERTY_EXTENSIONS + "=ordered-json",
+    ContentReader.PROPERTY_TYPES + "=application/json"
 })
 public class OrderedJsonReader extends JsonReader {
 
@@ -73,7 +70,7 @@ public class OrderedJsonReader extends JsonReader {
                                     if (oc instanceof JsonObject) {
                                         JsonObject child = (JsonObject) oc;
                                         String childName = child.getString(PN_ORDEREDCHILDNAME, null);
-                                        if (StringUtils.isNotBlank(childName)) {
+                                        if (childName != null && !childName.isEmpty() ) {
                                             JsonObjectBuilder builder = Json.createObjectBuilder();
                                             for (Map.Entry<String, JsonValue> e : child.entrySet())
                                             {
