@@ -16,11 +16,12 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.js.impl;
 
-import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import java.util.Collections;
 
-import org.apache.commons.lang.StringUtils;
+import javax.script.Bindings;
+import javax.script.SimpleBindings;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
