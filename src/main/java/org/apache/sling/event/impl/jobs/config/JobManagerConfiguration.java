@@ -18,16 +18,6 @@
  */
 package org.apache.sling.event.impl.jobs.config;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -58,6 +48,16 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * Configuration of the job handling
  *
@@ -87,6 +87,11 @@ public class JobManagerConfiguration {
               description="Specify amount in seconds that job manager waits on startup before starting with job handling. "
                         + "This can be used to allow enough time to restart a cluster before jobs are eventually reassigned.")
         long startup_delay() default 30;
+
+        @AttributeDefinition(name = "Clean-up removed jobs period",
+            description = "Specify the periodic interval in minutes (default is 48h - use 0 to disable) after which " +
+                    "removed jobs (ERROR or DROPPED) should be cleaned from the repository.")
+        int cleanup_period() default 2880;
     }
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger("org.apache.sling.event.impl.jobs");
@@ -149,6 +154,8 @@ public class JobManagerConfiguration {
     /** The resource path where scheduled jobs are stored - ending with a slash. */
     private String scheduledJobsPathWithSlash;
 
+    private volatile int historyCleanUpRemovedJobs;
+
     /** List of topology awares. */
     private final List<ConfigurationChangeListener> listeners = new ArrayList<>();
 
@@ -199,6 +206,8 @@ public class JobManagerConfiguration {
         this.scheduledJobsPath = PropertiesUtil.toString(props.get(PROPERTY_SCHEDULED_JOBS_PATH),
             DEFAULT_SCHEDULED_JOBS_PATH);
         this.scheduledJobsPathWithSlash = this.scheduledJobsPath + "/";
+
+        this.historyCleanUpRemovedJobs = config.cleanup_period();
 
         // create initial resources
         final ResourceResolver resolver = this.createResourceResolver();
@@ -254,6 +263,9 @@ public class JobManagerConfiguration {
         this.stopProcessing();
     }
 
+    public int getHistoryCleanUpRemovedJobs() {
+        return this.historyCleanUpRemovedJobs;
+    }
     /**
      * Is this component still active?
      * @return Active?
@@ -450,7 +462,6 @@ public class JobManagerConfiguration {
 
     /**
      * Stop processing
-     * @param deactivate Whether to deactivate the capabilities
      */
     private void stopProcessing() {
         logger.debug("Stopping job processing...");

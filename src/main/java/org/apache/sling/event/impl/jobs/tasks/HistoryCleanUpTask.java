@@ -18,12 +18,6 @@
  */
 package org.apache.sling.event.impl.jobs.tasks;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -40,6 +34,12 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Task to clean up the history,
@@ -117,7 +117,7 @@ public class HistoryCleanUpTask implements JobExecutor {
         return context.result().succeeded();
     }
 
-    private void cleanup(final Calendar removeDate,
+    static void cleanup(final Calendar removeDate,
             final ResourceResolver resolver,
             final JobExecutionContext context,
             final String basePath,
