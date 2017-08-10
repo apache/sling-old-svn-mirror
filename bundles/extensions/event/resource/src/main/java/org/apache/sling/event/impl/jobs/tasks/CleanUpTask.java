@@ -18,17 +18,22 @@
  */
 package org.apache.sling.event.impl.jobs.tasks;
 
-import java.util.Calendar;
-import java.util.Iterator;
-
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
+import org.apache.sling.event.impl.jobs.queues.ResultBuilderImpl;
 import org.apache.sling.event.impl.jobs.scheduling.JobSchedulerImpl;
+import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.consumer.JobExecutionContext;
+import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Iterator;
 
 /**
  * Maintenance task...
@@ -91,7 +96,70 @@ public class CleanUpTask {
             }
         }
 
+
+        if (this.configuration.getHistoryCleanUpRemovedJobs() > 0 &&
+                schedulerRuns % 60 == 1) {
+            Calendar removeDate = Calendar.getInstance();
+            removeDate.add(Calendar.MINUTE, - this.configuration.getHistoryCleanUpRemovedJobs());
+            this.historyCleanUpRemovedJobs(removeDate);
+        }
+
         logger.debug("Job manager maintenance: Finished #{}", this.schedulerRuns);
+    }
+
+    private void historyCleanUpRemovedJobs(Calendar since) {
+        ResourceResolver resolver = this.configuration.createResourceResolver();
+        try {
+            HistoryCleanUpTask.cleanup(
+                    since,
+                    resolver,
+                    new JobExecutionContext() {
+                        @Override
+                        public void asyncProcessingFinished(JobExecutionResult result) {
+
+                        }
+
+                        @Override
+                        public boolean isStopped() {
+                            return false;
+                        }
+
+                        @Override
+                        public void initProgress(int steps, long eta) {
+
+                        }
+
+                        @Override
+                        public void incrementProgressCount(int steps) {
+
+                        }
+
+                        @Override
+                        public void updateProgress(long eta) {
+
+                        }
+
+                        @Override
+                        public void log(String message, Object... args) {
+
+                        }
+
+                        @Override
+                        public ResultBuilder result() {
+                            return new ResultBuilderImpl();
+                        }
+                    },
+                    this.configuration.getStoredCancelledJobsPath(),
+                    null,
+                    Arrays.asList(
+                            Job.JobState.DROPPED.name(),
+                            Job.JobState.ERROR.name()
+                    ));
+        } catch (PersistenceException e) {
+            this.logger.warn("Exception during job resource tree cleanup.", e);
+        } finally {
+            resolver.close();
+        }
     }
 
     /**
