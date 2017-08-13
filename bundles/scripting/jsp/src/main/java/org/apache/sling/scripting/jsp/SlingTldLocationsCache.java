@@ -46,7 +46,7 @@ public class SlingTldLocationsCache
 
     private static final String TLD_SCHEME = "tld:";
 
-    private final Map<String, TldLocationEntry> tldLocations = new HashMap<String, TldLocationEntry>();
+    private final Map<String, TldLocationEntry> tldLocations = new HashMap<>();
 
     private ServiceRegistration serviceRegistration;
 
@@ -62,7 +62,7 @@ public class SlingTldLocationsCache
             }
         }
 
-        Dictionary<String, Object> tldConfigPrinterProperties = new Hashtable<String, Object>();
+        Dictionary<String, Object> tldConfigPrinterProperties = new Hashtable<>();
         tldConfigPrinterProperties.put("felix.webconsole.label", "jsptaglibs");
         tldConfigPrinterProperties.put("felix.webconsole.title", "JSP Taglibs");
         tldConfigPrinterProperties.put("felix.webconsole.configprinter.modes", "always");
@@ -81,6 +81,7 @@ public class SlingTldLocationsCache
 
     // ---------- Tld Location URL support -------------------------------------
 
+    @Override
     public void bundleChanged(final BundleEvent event) {
         if ( event.getType() == BundleEvent.RESOLVED ) {
             this.addBundle(event.getBundle());
@@ -89,7 +90,7 @@ public class SlingTldLocationsCache
         }
     }
 
-    URL getTldLocationURL(String tldLocation) {
+    public URL getTldLocationURL(String tldLocation) {
         if (tldLocation.startsWith(TLD_SCHEME)) {
             tldLocation = tldLocation.substring(TLD_SCHEME.length());
 
@@ -111,8 +112,9 @@ public class SlingTldLocationsCache
     @Override
     public String[] getLocation(final String uri) throws JasperException {
         synchronized (tldLocations) {
-            if (tldLocations.containsKey(uri)) {
-                return new String[] { TLD_SCHEME + uri, null };
+            final TldLocationEntry entry = tldLocations.get(uri);
+            if ( entry != null ) {
+                return new String[] { TLD_SCHEME + uri, entry.getTldURL().toString() };
             }
         }
 
@@ -187,7 +189,7 @@ public class SlingTldLocationsCache
 
     public void printConfiguration(final PrintWriter pw) {
         pw.println("Currently available JSP Taglibs:");
-        final SortedMap<String, String> taglibs = new TreeMap<String, String>();
+        final SortedMap<String, String> taglibs = new TreeMap<>();
 
         for (final Map.Entry<String, TldLocationEntry> entry : tldLocations.entrySet()) {
             final long bundleId = entry.getValue().getBundleId();
