@@ -287,6 +287,9 @@ public class JspCompilationContext {
         return this.tagFileJarUrl;
     }
 
+    public void setTagFileUrls(final JspCompilationContext ctxt) {
+        this.tagFileJarUrls.putAll(ctxt.tagFileJarUrls);
+    }
     /* ==================== Common implementation ==================== */
 
     /**
@@ -626,5 +629,6 @@ public class JspCompilationContext {
        }
        return result.toString();
     }
+
 }
 
