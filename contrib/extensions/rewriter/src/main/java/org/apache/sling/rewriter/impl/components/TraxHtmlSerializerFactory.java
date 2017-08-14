@@ -17,6 +17,7 @@
 package org.apache.sling.rewriter.impl.components;
 
 import org.apache.sling.rewriter.SerializerFactory;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 
 
@@ -25,6 +26,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(service = SerializerFactory.class,
     property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
             "pipeline.type=trax-html-serializer"
     })
 public class TraxHtmlSerializerFactory extends AbstractTraxSerializerFactory {
@@ -34,10 +36,12 @@ public class TraxHtmlSerializerFactory extends AbstractTraxSerializerFactory {
         return "html";
     }
 
+    @Override
     protected String getDoctypePublic() {
         return "-//W3C//DTD HTML 4.01 Transitional//EN";
     }
 
+    @Override
     protected String getDoctypeSystem() {
         return "http://www.w3.org/TR/html4/loose.dtd";
     }

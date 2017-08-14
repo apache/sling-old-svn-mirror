@@ -23,6 +23,7 @@ import org.apache.sling.rewriter.ProcessingComponentConfiguration;
 import org.apache.sling.rewriter.ProcessingContext;
 import org.apache.sling.rewriter.Serializer;
 import org.apache.sling.rewriter.SerializerFactory;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 
 /**
@@ -30,6 +31,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(service = SerializerFactory.class,
     property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
             "pipeline.type=xhtml-serializer"
     })
 public class XHtmlSerializerFactory implements SerializerFactory {
@@ -37,6 +39,7 @@ public class XHtmlSerializerFactory implements SerializerFactory {
     /**
      * @see org.apache.sling.rewriter.SerializerFactory#createSerializer()
      */
+    @Override
     public Serializer createSerializer() {
         return new XHTMLSerializer();
     }
@@ -72,6 +75,7 @@ public class XHtmlSerializerFactory implements SerializerFactory {
         /**
          * @see org.apache.sling.rewriter.Serializer#init(org.apache.sling.rewriter.ProcessingContext, org.apache.sling.rewriter.ProcessingComponentConfiguration)
          */
+        @Override
         public void init(ProcessingContext context,
                          ProcessingComponentConfiguration config)
         throws IOException {
@@ -92,6 +96,7 @@ public class XHtmlSerializerFactory implements SerializerFactory {
         /**
          * @see org.apache.sling.rewriter.Serializer#dispose()
          */
+        @Override
         public void dispose() {
             // nothing to do
         }

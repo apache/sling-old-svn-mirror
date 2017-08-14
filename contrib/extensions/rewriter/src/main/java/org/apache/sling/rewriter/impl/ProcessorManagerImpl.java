@@ -43,6 +43,7 @@ import org.apache.sling.rewriter.Processor;
 import org.apache.sling.rewriter.ProcessorConfiguration;
 import org.apache.sling.rewriter.ProcessorManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
@@ -56,7 +57,10 @@ import org.slf4j.LoggerFactory;
  * This manager keeps track of configured processors.
  *
  */
-@Component(service = ProcessorManager.class)
+@Component(service = ProcessorManager.class,
+  property = {
+          Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+  })
 public class ProcessorManagerImpl
     implements ProcessorManager, ResourceChangeListener, ExternalResourceChangeListener  {
 
@@ -75,10 +79,10 @@ public class ProcessorManagerImpl
     private ResourceResolverFactory resourceResolverFactory;
 
     /** loaded processor configurations */
-    private final Map<String, ConfigEntry[]> processors = new HashMap<String, ConfigEntry[]>();
+    private final Map<String, ConfigEntry[]> processors = new HashMap<>();
 
     /** Ordered processor configurations. */
-    private List<ProcessorConfiguration> orderedProcessors = new ArrayList<ProcessorConfiguration>();
+    private List<ProcessorConfiguration> orderedProcessors = new ArrayList<>();
 
     /** Event handler registration */
     private volatile ServiceRegistration<ResourceChangeListener> eventHandlerRegistration;
@@ -102,7 +106,7 @@ public class ProcessorManagerImpl
         // create array of search paths for actions and constraints
         this.searchPath = this.initProcessors();
     	// register event handler
-		final Dictionary<String, Object> props = new Hashtable<String, Object>();
+		final Dictionary<String, Object> props = new Hashtable<>();
 		props.put(ResourceChangeListener.CHANGES,
 				new String[] { ChangeType.ADDED.toString(), ChangeType.CHANGED.toString(),
 						ChangeType.REMOVED.toString(), ChangeType.PROVIDER_ADDED.toString(), ChangeType.PROVIDER_REMOVED.toString() });
