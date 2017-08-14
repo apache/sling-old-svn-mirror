@@ -39,7 +39,7 @@ import org.xml.sax.SAXException;
  */
 public class PipelineImpl implements Processor {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(PipelineImpl.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(PipelineImpl.class);
 
     /** Empty array of transformers. */
     private static final Transformer[] EMPTY_TRANSFORMERS = new Transformer[0];
@@ -69,6 +69,7 @@ public class PipelineImpl implements Processor {
     /**
      * @see org.apache.sling.rewriter.Processor#init(org.apache.sling.rewriter.ProcessingContext, org.apache.sling.rewriter.ProcessorConfiguration)
      */
+    @Override
     public void init(ProcessingContext processingContext,
                      ProcessorConfiguration c)
     throws IOException {
@@ -166,6 +167,7 @@ public class PipelineImpl implements Processor {
     /**
      * @see org.apache.sling.rewriter.Processor#getWriter()
      */
+    @Override
     public PrintWriter getWriter() {
         return this.generator.getWriter();
     }
@@ -173,6 +175,7 @@ public class PipelineImpl implements Processor {
     /**
      * @see org.apache.sling.rewriter.Processor#getContentHandler()
      */
+    @Override
     public ContentHandler getContentHandler() {
         return this.firstContentHandler;
     }
@@ -180,6 +183,7 @@ public class PipelineImpl implements Processor {
     /**
      * @see org.apache.sling.rewriter.Processor#finished(boolean)
      */
+    @Override
     public void finished(final boolean errorOccured) throws IOException {
         try {
             // if an error occurred, we only clean up
