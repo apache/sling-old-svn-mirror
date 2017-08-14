@@ -1210,8 +1210,6 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             if (exporter.getName().equals(name) && exporter.isSupported(targetClass)) {
                 T resultObject = exporter.export(model, targetClass, options);
                 return resultObject;
-            } else {
-                throw new MissingExporterException(name, targetClass);
             }
         }
         throw new MissingExporterException(name, targetClass);
@@ -1239,17 +1237,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         return handleAndExportResult(result, name, targetClass, options);
     }
 
-    private <T> T handleAndExportResult(Result<?> result, String name, Class<T> targetClass, Map<String, String> options) throws ExportException, MissingExporterException {
+    protected <T> T handleAndExportResult(Result<?> result, String name, Class<T> targetClass, Map<String, String> options) throws ExportException, MissingExporterException {
         if (result.wasSuccessful()) {
-            for (ModelExporter exporter : modelExporters) {
-                if (exporter.getName().equals(name) && exporter.isSupported(targetClass)) {
-                    T resultObject = exporter.export(result.getValue(), targetClass, options);
-                    return resultObject;
-                } else {
-                    throw new MissingExporterException(name, targetClass);
-                }
-            }
-            throw new MissingExporterException(name, targetClass);
+            return exportModel(result.getValue(), name, targetClass, options);
         } else {
             throw result.getThrowable();
         }
