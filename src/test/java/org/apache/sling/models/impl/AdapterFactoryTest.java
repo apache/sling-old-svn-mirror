@@ -16,8 +16,10 @@
  */
 package org.apache.sling.models.impl;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -28,8 +30,11 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.injectorspecific.Self;
+import org.apache.sling.models.export.spi.ModelExporter;
+import org.apache.sling.models.factory.ExportException;
 import org.apache.sling.models.factory.InvalidAdaptableException;
 import org.apache.sling.models.factory.MissingElementsException;
+import org.apache.sling.models.factory.MissingExporterException;
 import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
@@ -45,6 +50,9 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AdapterFactoryTest {
@@ -71,6 +79,9 @@ public class AdapterFactoryTest {
         factory.activate(componentCtx);
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(0, 0));
         factory.bindInjector(new SelfInjector(), new ServicePropertiesMap(1, 1));
+        factory.bindModelExporter(new FirstStringExporter(), new ServicePropertiesMap(2, 0));
+        factory.bindModelExporter(new SecondStringExporter(), new ServicePropertiesMap(3, 1));
+        factory.bindModelExporter(new FirstIntegerExporter(), new ServicePropertiesMap(4, 2));
         
         factory.adapterImplementations.addClassesAsAdapterAndImplementation(DefaultStringModel.class, ConstructorWithExceptionModel.class, NestedModel.class, NestedModelWithInvalidAdaptable.class, NestedModelWithInvalidAdaptable2.class, ResourceModelWithRequiredField.class) ;
     }
@@ -163,5 +174,103 @@ public class AdapterFactoryTest {
         when(resource.adaptTo(ValueMap.class)).thenReturn(vm);
 
         factory.createModel(resource, NestedModel.class);
+    }
+
+    @Test
+    public void testSelectExporterByName() throws Exception {
+        Result<Object> result = mock(Result.class);
+        when(result.wasSuccessful()).thenReturn(true);
+        when(result.getValue()).thenReturn(new Object());
+
+        String exported = factory.handleAndExportResult(result, "second", String.class, Collections.<String, String>emptyMap());
+        Assert.assertEquals("Export from second", exported);
+    }
+
+    @Test
+    public void testSelectExporterByType() throws Exception {
+        Result<Object> result = mock(Result.class);
+        when(result.wasSuccessful()).thenReturn(true);
+        when(result.getValue()).thenReturn(new Object());
+
+        Integer exported = factory.handleAndExportResult(result, "first", Integer.class, Collections.<String, String>emptyMap());
+        Assert.assertEquals(Integer.valueOf(42), exported);
+    }
+
+    @Test(expected = MissingExporterException.class)
+    public void testSelectExporterByNameAndWrongType() throws Exception {
+        Result<Object> result = mock(Result.class);
+        when(result.wasSuccessful()).thenReturn(true);
+        when(result.getValue()).thenReturn(new Object());
+
+        factory.handleAndExportResult(result, "second", Integer.class, Collections.<String, String>emptyMap());
+    }
+
+    private static class FirstStringExporter implements ModelExporter {
+        @Override
+        public boolean isSupported(@Nonnull Class<?> aClass) {
+            return aClass == String.class;
+        }
+
+        @CheckForNull
+        @Override
+        public <T> T export(@Nonnull Object o, @Nonnull Class<T> aClass, @Nonnull Map<String, String> map) throws ExportException {
+            if (aClass == String.class) {
+                return (T) "Export from first";
+            } else {
+                throw new ExportException(String.format("%s is not supported.", aClass));
+            }
+        }
+
+        @Nonnull
+        @Override
+        public String getName() {
+            return "first";
+        }
+    }
+
+    private static class SecondStringExporter implements ModelExporter {
+        @Override
+        public boolean isSupported(@Nonnull Class<?> aClass) {
+            return aClass == String.class;
+        }
+
+        @CheckForNull
+        @Override
+        public <T> T export(@Nonnull Object o, @Nonnull Class<T> aClass, @Nonnull Map<String, String> map) throws ExportException {
+            if (aClass == String.class) {
+                return (T) "Export from second";
+            } else {
+                throw new ExportException(String.format("%s is not supported.", aClass));
+            }
+        }
+
+        @Nonnull
+        @Override
+        public String getName() {
+            return "second";
+        }
+    }
+
+    private static class FirstIntegerExporter implements ModelExporter {
+        @Override
+        public boolean isSupported(@Nonnull Class<?> aClass) {
+            return aClass == Integer.class;
+        }
+
+        @CheckForNull
+        @Override
+        public <T> T export(@Nonnull Object o, @Nonnull Class<T> aClass, @Nonnull Map<String, String> map) throws ExportException {
+            if (aClass == Integer.class) {
+                return (T) Integer.valueOf(42);
+            } else {
+                throw new ExportException(String.format("%s is not supported.", aClass));
+            }
+        }
+
+        @Nonnull
+        @Override
+        public String getName() {
+            return "first";
+        }
     }
 }
