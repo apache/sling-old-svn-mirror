@@ -38,6 +38,7 @@ public class TraxErrorHandler implements ErrorListener {
         this.logger = logger;
     }
 
+    @Override
     public void warning(TransformerException exception)
     throws TransformerException {
         final String message = getMessage(exception);
@@ -51,6 +52,7 @@ public class TraxErrorHandler implements ErrorListener {
         warnings.append("\n");
     }
 
+    @Override
     public void error(TransformerException exception)
     throws TransformerException {
         final String message = getMessage(exception);
@@ -64,6 +66,7 @@ public class TraxErrorHandler implements ErrorListener {
         warnings.append("\n");
     }
 
+    @Override
     public void fatalError(TransformerException exception)
     throws TransformerException {
         final String message = getMessage(exception);
@@ -83,13 +86,13 @@ public class TraxErrorHandler implements ErrorListener {
         }
     }
 
-    private String getMessage(TransformerException exception) {
-        SourceLocator locator = exception.getLocator();
+    private String getMessage(final TransformerException exception) {
+        final SourceLocator locator = exception.getLocator();
         if (locator != null) {
-            String id = (!locator.getPublicId().equals(locator.getPublicId()))
+            final String id = locator.getPublicId() != null
                     ? locator.getPublicId()
                     : (null != locator.getSystemId())
-                    ? locator.getSystemId() : "SystemId Unknown";
+                       ? locator.getSystemId() : "SystemId Unknown";
             return "File " + id
                    + "; Line " + locator.getLineNumber()
                    + "; Column " + locator.getColumnNumber()
