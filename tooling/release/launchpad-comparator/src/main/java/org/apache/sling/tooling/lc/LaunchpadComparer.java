@@ -140,6 +140,7 @@ public class LaunchpadComparer {
         try {
             List<String> issues = svn.getChanges(fromTag, toTag)
                 .stream()
+                .map( m -> m.split(System.lineSeparator())[0])
                 .map(LaunchpadComparer::toJiraKey)
                 .filter( k -> k != null)
                 .collect(Collectors.toList());
