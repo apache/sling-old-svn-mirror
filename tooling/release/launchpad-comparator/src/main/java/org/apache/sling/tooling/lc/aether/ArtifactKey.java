@@ -18,7 +18,6 @@ package org.apache.sling.tooling.lc.aether;
 
 import java.util.Objects;
 
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.provisioning.model.Artifact;
 
 public class ArtifactKey implements Comparable<ArtifactKey> {
@@ -28,11 +27,6 @@ public class ArtifactKey implements Comparable<ArtifactKey> {
     private String classifier;
     private String type;
     
-    public ArtifactKey(Bundle bundle) {
-        
-        this(bundle.getGroupId(), bundle.getArtifactId(), bundle.getClassifier(), bundle.getType());
-    }
-
     public ArtifactKey(Artifact artifact) {
         
         this(artifact.getGroupId(), artifact.getArtifactId(), artifact.getClassifier(), artifact.getType());

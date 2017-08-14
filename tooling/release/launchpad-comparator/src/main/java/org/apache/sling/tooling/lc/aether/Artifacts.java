@@ -33,7 +33,6 @@ public class Artifacts {
         
         int versionNumber = Integer.parseInt(versionMatcher.group(1));
 
-        
         // versions 6 and 7 used an XML bundle list
         if ( versionNumber < 8 ) {
             return "org.apache.sling:org.apache.sling.launchpad:xml:bundlelist:" + version;

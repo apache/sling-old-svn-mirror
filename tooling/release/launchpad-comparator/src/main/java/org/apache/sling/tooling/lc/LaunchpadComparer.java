@@ -30,9 +30,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.apache.sling.maven.projectsupport.BundleListUtils;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.provisioning.model.Artifact;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelUtility;
@@ -71,23 +68,10 @@ public class LaunchpadComparer {
         File toFile = aether.download(Artifacts.launchpadCoordinates(secondVersion));
 
         // 2. parse artifact definitions
-        Model model;
-        try (BufferedReader reader = Files.newBufferedReader(toFile.toPath())) {
-            model = ModelUtility.getEffectiveModel(ModelReader.read(reader, null));
-        }
+        Map<ArtifactKey, Artifact> from = readArtifactsFromModel(fromFile);
+        Map<ArtifactKey, Artifact> to = readArtifactsFromModel(toFile);
         
-        Map<ArtifactKey, Artifact> to = model.getFeatures().stream()
-            .flatMap( f -> f.getRunModes().stream())
-            .flatMap( r -> r.getArtifactGroups().stream())
-            .flatMap( g -> StreamSupport.stream(g.spliterator(), false))
-            .collect(Collectors.toMap( a -> new ArtifactKey(a), Function.identity()));
         
-        BundleList readBundleList = BundleListUtils.readBundleList(fromFile);
-        
-        Map<ArtifactKey, Artifact> from = readBundleList.getStartLevels().stream()
-            .flatMap( sl -> sl.getBundles().stream() )
-            .collect(Collectors.toMap( b -> new ArtifactKey(b), LaunchpadComparer::newArtifact));
-
         // 3. generate added / removed / changed
         Set<Artifact> removed = Sets.difference(from.keySet(), to.keySet()).stream()
             .map( k -> from.get(k))
@@ -117,10 +101,19 @@ public class LaunchpadComparer {
             .forEach(LaunchpadComparer::outputFormatted);        
         
     }
-    
-    private static Artifact newArtifact(Bundle bundle) {
+
+    private Map<ArtifactKey, Artifact> readArtifactsFromModel(File toFile) throws IOException {
+        Model fromModel;
+        try (BufferedReader reader = Files.newBufferedReader(toFile.toPath())) {
+            fromModel = ModelUtility.getEffectiveModel(ModelReader.read(reader, null));
+        }
         
-        return new Artifact(bundle.getGroupId(), bundle.getArtifactId(), bundle.getVersion(), bundle.getClassifier(), bundle.getType());
+        Map<ArtifactKey, Artifact> to = fromModel.getFeatures().stream()
+            .flatMap( f -> f.getRunModes().stream())
+            .flatMap( r -> r.getArtifactGroups().stream())
+            .flatMap( g -> StreamSupport.stream(g.spliterator(), false))
+            .collect(Collectors.toMap( a -> new ArtifactKey(a), Function.identity()));
+        return to;
     }
     
     private static void outputFormatted(Artifact a) {
