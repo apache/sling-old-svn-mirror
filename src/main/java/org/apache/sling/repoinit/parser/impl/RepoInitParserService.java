@@ -25,10 +25,14 @@ import java.util.List;
 import org.apache.sling.repoinit.parser.RepoInitParser;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.repoinit.parser.operations.Operation;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 
 /** ACL definitions parser service */
-@Component(service=RepoInitParser.class)
+@Component(service=RepoInitParser.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
+    })
 public class RepoInitParserService implements RepoInitParser {
 
     @Override
