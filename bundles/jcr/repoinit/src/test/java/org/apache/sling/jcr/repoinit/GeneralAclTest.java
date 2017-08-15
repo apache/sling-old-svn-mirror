@@ -25,14 +25,7 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.security.AccessControlEntry;
 
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.sling.jcr.repoinit.impl.TestUtil;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
@@ -43,20 +36,18 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.Arrays;
-
 /** Various ACL-related tests */
 public class GeneralAclTest {
 
     @Rule
     public final SlingContext context = new SlingContext(ResourceResolverType.JCR_OAK);
-    
+
     private TestUtil U;
     private String userA;
     private String userB;
 
     private Session s;
-    
+
     @Before
     public void setup() throws RepositoryException, RepoInitParsingException {
         U = new TestUtil(context);
@@ -74,32 +65,32 @@ public class GeneralAclTest {
         U.cleanupUser();
         s.logout();
     }
-    
+
     @Test(expected=AccessDeniedException.class)
     public void getRootNodeIntiallyFails() throws Exception {
         s.getRootNode();
     }
-    
+
     @Test
     public void readOnlyThenWriteThenDeny() throws Exception {
         final Node tmp = U.adminSession.getRootNode().addNode("tmp_" + U.id);
         U.adminSession.save();
         final String path = tmp.getPath();
-        
+
         try {
             s.getNode(path);
             fail("Expected read access to be initially denied:" + path);
         } catch(PathNotFoundException ignore) {
         }
-        
-        final String allowRead =  
+
+        final String allowRead =
                 "set ACL for " + U.username + "\n"
                 + "allow jcr:read on " + path + "\n"
                 + "end"
                 ;
         U.parseAndExecute(allowRead);
         final Node n = s.getNode(path);
-        
+
         try {
             n.setProperty("U.id", U.id);
             s.save();
@@ -107,8 +98,8 @@ public class GeneralAclTest {
         } catch(AccessDeniedException ignore) {
         }
         s.refresh(false);
-        
-        final String allowWrite = 
+
+        final String allowWrite =
                 "set ACL for " + U.username + "\n"
                 + "allow jcr:write on " + path + "\n"
                 + "end"
@@ -116,8 +107,8 @@ public class GeneralAclTest {
         U.parseAndExecute(allowWrite);
         n.setProperty("U.id", U.id);
         s.save();
-        
-        final String deny = 
+
+        final String deny =
                 "set ACL for " + U.username + "\n"
                 + "deny jcr:all on " + path + "\n"
                 + "end"
@@ -129,18 +120,18 @@ public class GeneralAclTest {
         } catch(PathNotFoundException ignore) {
         }
     }
-    
+
     @Test
     public void addChildAtRoot() throws Exception {
         final String nodename = "test_" + U.id;
         final String path = "/" + nodename;
-        
-        final String aclSetup = 
+
+        final String aclSetup =
             "set ACL for " + U.username + "\n"
             + "allow jcr:all on /\n"
             + "end"
             ;
-        
+
         U.parseAndExecute(aclSetup);
         try {
             assertFalse(s.itemExists(path));
@@ -243,7 +234,7 @@ public class GeneralAclTest {
    @Test
    @Ignore("SLING-6423 - ACLOptions processing is not implemented yet")
    public void mergeMode_ReplaceExistingPrincipalTest() throws Exception {
-      final String initialAclSetup = 
+      final String initialAclSetup =
                      " set ACL for " + userA + "\n"
                      + "allow jcr:read,jcr:addChildNodes on / \n"
                      + "end"

@@ -27,7 +27,6 @@ import java.util.Set;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.security.AccessControlEntry;
@@ -39,11 +38,8 @@ import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
-
 import org.apache.jackrabbit.oak.spi.security.principal.EveryonePrincipal;
-
 import org.apache.sling.repoinit.parser.operations.RestrictionClause;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +67,8 @@ public class AclUtil {
      * @throws RepositoryException
      */
     private static LocalRestrictions createLocalRestrictions(List<RestrictionClause> list, JackrabbitAccessControlList jacl, Session s) throws RepositoryException {
-        Map<String,Value> restrictions = new HashMap<String,Value>();
-        Map<String,Value[]> mvrestrictions = new HashMap<String,Value[]>();
+        Map<String,Value> restrictions = new HashMap<>();
+        Map<String,Value[]> mvrestrictions = new HashMap<>();
 
         if(list != null && !list.isEmpty()){
             ValueFactory vf = s.getValueFactory();
@@ -146,7 +142,7 @@ public class AclUtil {
             if ( changed ) {
                 getJACM(session).setPolicy(path, acl);
             }
-            
+
         }
     }
 
@@ -200,7 +196,7 @@ public class AclUtil {
      * Helper class which allows easy comparison of a local (proposed) access control entry with an existing one
      */
     static class LocalAccessControlEntry {
-        
+
         private final Principal principal;
         private final Privilege[] privileges;
         private final boolean isAllow;
@@ -216,7 +212,7 @@ public class AclUtil {
             this.isAllow = isAllow;
             this.restrictions = restrictions != null ? restrictions : new LocalRestrictions();
         }
-        
+
         public boolean isContainedIn(JackrabbitAccessControlEntry other) throws RepositoryException {
             return other.getPrincipal().equals(principal) &&
                     contains(other.getPrivileges(), privileges) &&
@@ -270,12 +266,12 @@ public class AclUtil {
         private boolean contains(Privilege[] first, Privilege[] second) {
             // we need to ensure that the privilege order is not taken into account, so we use sets
             Set<Privilege> set1 = expandPrivileges(first);
-            
+
             Set<Privilege> set2 = expandPrivileges(second);
-            
+
             return set1.containsAll(set2);
         }
-        
+
         @Override
         public String toString() {
             return "[" + getClass().getSimpleName() + "# principal " + principal+ ", privileges: " + Arrays.toString(privileges) + ", isAllow : " + isAllow + "]";
