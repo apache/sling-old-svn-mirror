@@ -1,0 +1,3 @@
+DisableServiceUser svcA : This message explains why it's disabled.  Whitespace   is  preserved.
+DisableServiceUser svcB
+DisableServiceUser svcC 

@@ -64,6 +64,13 @@ public class ParsingErrorsTest {
             add(new Object[] { "create service user bob,alice,tom21 # comment not allowed here", ParseException.class });
             add(new Object[] { "CREATE service user bob, alice, tom21", ParseException.class });
             add(new Object[] { "create SERVICE user bob, alice, tom21", ParseException.class });
+            
+            // Quoted strings in disable service user
+            add(new Object[] { "disable service user foo missing colon and quotes", ParseException.class });
+            add(new Object[] { "disable service user foo : missing quotes", ParseException.class });
+            add(new Object[] { "disable service user foo \"missing colon\"", ParseException.class });
+            add(new Object[] { "disable service user foo : missing start quote\"", ParseException.class });
+            add(new Object[] { "disable service user foo : \"missing end quote", ParseException.class });
         }};
         return result;
     }

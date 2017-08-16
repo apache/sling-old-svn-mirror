@@ -1,6 +1,7 @@
 /* JavaCC grammar for the SLING-5449 content repository 
  * initialization language
  * See https://javacc.java.net/doc/docindex.html for the JavaCC docs
+ * and http://www.engr.mun.ca/~theo/JavaCC-FAQ/javacc-faq-moz.htm for the FAQ
  */
  
 options
@@ -62,6 +63,7 @@ TOKEN:
 |   < FOR: "for" >
 |   < CREATE: "create" >
 |   < DELETE: "delete" >
+|   < DISABLE: "disable" >
 |   < SERVICE: "service" >
 |   < PATH: "path" >
 |   < END: "end" >
@@ -77,6 +79,8 @@ TOKEN:
 |   < LCURLY: "{" >
 |   < RCURLY: "}" >
 |   < COMMA: "," >
+|   < DQUOTE: "\"" >
+|   < COLON: ":" >
 |   < STAR: "*" >
 |   < EQUALS: "=" >
 |   < RESTRICTION: "restriction" >
@@ -87,6 +91,19 @@ TOKEN:
 |   < PATH_STRING: "/" (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"]) * >
 |   < STRING: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"] | [":"] | ["*"]) * >
 |   < EOL: "\n" >
+}
+
+/* Found out about this syntax later - would make STRING etc. simpler */
+TOKEN: {
+<QUOTED: 
+    <DQUOTE>
+    (
+         "\\" ~[]     // escaped chars
+    |
+        ~["\\","\""]  //any char but not backslash nor quote
+    )* 
+    <DQUOTE>
+    > 
 }
 
 <TEXTBLOCK> SKIP : 
@@ -114,6 +131,7 @@ List<Operation> parse() :
         | registerNodetypesStatement(result)
         | createUserStatement(result)
         | deleteUserStatement(result)
+        | disableServiceUserStatement(result)
         | blankLine() 
     ) * 
     <EOF>
@@ -420,7 +438,7 @@ void textBlock(StringBuilder b) :
     ( t = <TEXT> { b.append(t.image); } )*
     <END_TEXTBLOCK>
 }
-     
+
 void registerNodetypesStatement(List<Operation> result) :
 {
     StringBuilder b = new StringBuilder();
@@ -463,5 +481,19 @@ void deleteUserStatement(List<Operation> result) :
 
     {
         result.add(new DeleteUser(user.image));
+    }
+}
+
+void disableServiceUserStatement(List<Operation> result) :
+{
+    Token user = null;
+    Token msg = null;
+}
+{
+    <DISABLE> <SERVICE> <USER> 
+    ( user = <STRING> )
+    ( <COLON> msg = <QUOTED>) ?
+    {
+        result.add(new DisableServiceUser(user.image, msg == null ? null : msg.image));
     }
 }
