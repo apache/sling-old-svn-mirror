@@ -17,15 +17,27 @@
 
 package org.apache.sling.repoinit.parser.operations;
 
-public interface OperationVisitor {
-    void visitCreateUser(CreateUser u);
-    void visitDeleteUser(DeleteUser u);
-    void visitCreateServiceUser(CreateServiceUser s);
-    void visitDeleteServiceUser(DeleteServiceUser s);
-    void visitSetAclPrincipal(SetAclPrincipals s);
-    void visitSetAclPaths(SetAclPaths s);
-    void visitCreatePath(CreatePath cp);
-    void visitRegisterNamespace(RegisterNamespace rn);
-    void visitRegisterNodetypes(RegisterNodetypes b);
-    void visitDisableServiceUser(DisableServiceUser dsu);
+public class DisableServiceUser extends ServiceUserOperation {
+    private final String message;
+    
+    public DisableServiceUser(String username, String message) {
+        super(username);
+        this.message = cleanupQuotedString(message);
+    }
+
+    @Override
+    protected String getParametersDescription() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(super.getParametersDescription());
+        if(message!=null) {
+            sb.append(" : ");
+            sb.append(message);
+        }
+        return sb.toString();
+    }
+    
+    @Override
+    public void accept(OperationVisitor v) {
+        v.visitDisableServiceUser(this);
+    }
 }

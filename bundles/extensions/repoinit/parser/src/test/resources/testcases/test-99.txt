@@ -52,3 +52,6 @@ register nodetypes
 create user userE with password {someEncoding} afdgwdsdf
 create user one_with-more-chars.ok:/123456 with password {encoding_with.ok-:/12345} pw-with.ok-:/13456
 create service user the-last-one
+
+disable service user svc1 : "This  is the message"
+disable service user svc212
