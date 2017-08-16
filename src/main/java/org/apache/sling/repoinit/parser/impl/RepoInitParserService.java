@@ -20,6 +20,8 @@ package org.apache.sling.repoinit.parser.impl;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.List;
 
 import org.apache.sling.repoinit.parser.RepoInitParser;
@@ -36,11 +38,21 @@ import org.osgi.service.component.annotations.Component;
 public class RepoInitParserService implements RepoInitParser {
 
     @Override
-    public List<Operation> parse(Reader r) throws RepoInitParsingException {
-        try {
-            return new RepoInitParserImpl(r).parse();
-        } catch (ParseException pe) {
-            throw new RepoInitParsingException(pe.getMessage(), pe);
+    public List<Operation> parse(final Reader r) throws RepoInitParsingException {
+        // in order to avoid parsing problems with trailing comments we add a line feed at the end
+        try ( final StringWriter sw = new StringWriter()) {
+            final char[] buf = new char[2048];
+            int l;
+            while ( (l = r.read(buf)) > 0 ) {
+                sw.write(buf, 0, l);
+            }
+            try (final StringReader sr = new StringReader(sw.toString().concat("\n")) ){
+                return new RepoInitParserImpl(sr).parse();
+            } catch (ParseException pe) {
+                throw new RepoInitParsingException(pe.getMessage(), pe);
+            }
+        } catch ( final IOException ioe ) {
+            throw new RepoInitParsingException(ioe.getMessage(), ioe);
         } finally {
             try {
                 r.close();
