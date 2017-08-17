@@ -17,7 +17,6 @@
 package org.apache.sling.commons.scheduler.impl;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -189,21 +188,6 @@ public class QuartzScheduler implements BundleListener {
         return this.defaultPoolName;
     }
 
-    private SchedulerProxy getScheduler(final String pName) throws SchedulerException {
-        final String poolName = getThreadPoolName(pName);
-        SchedulerProxy proxy = null;
-        synchronized ( this.schedulers ) {
-            if ( this.active ) {
-                proxy = this.schedulers.get(poolName);
-                if ( proxy == null ) {
-                    proxy = new SchedulerProxy(this.threadPoolManager, poolName);
-                    this.schedulers.put(poolName, proxy);
-                }
-            }
-        }
-        return proxy;
-    }
-
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
@@ -212,38 +196,32 @@ public class QuartzScheduler implements BundleListener {
         if ( event.getType() == BundleEvent.STOPPED ) {
             final Long bundleId = event.getBundle().getBundleId();
 
-            final Map<String, SchedulerProxy> proxies;
             synchronized ( this.schedulers ) {
                 if ( this.active ) {
-                    proxies = new HashMap<>(this.schedulers);
-                } else {
-                    proxies = Collections.emptyMap();
-                }
-            }
-            for(final SchedulerProxy proxy : proxies.values()) {
-                synchronized ( proxy ) {
-                    try {
-                        final List<String> groups = proxy.getScheduler().getJobGroupNames();
-                        for(final String group : groups) {
-                            final Set<JobKey> keys = proxy.getScheduler().getJobKeys(GroupMatcher.jobGroupEquals(group));
-                            for(final JobKey key : keys) {
-                                final JobDetail detail = proxy.getScheduler().getJobDetail(key);
-                                if ( detail != null ) {
-                                    final String jobName = (String) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME);
-                                    final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
+                    for(final SchedulerProxy proxy : this.schedulers.values()) {
+                        try {
+                            final List<String> groups = proxy.getScheduler().getJobGroupNames();
+                            for(final String group : groups) {
+                                final Set<JobKey> keys = proxy.getScheduler().getJobKeys(GroupMatcher.jobGroupEquals(group));
+                                for(final JobKey key : keys) {
+                                    final JobDetail detail = proxy.getScheduler().getJobDetail(key);
+                                    if ( detail != null ) {
+                                        final String jobName = (String) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME);
+                                        final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
 
-                                    if ( jobName != null && job != null ) {
-                                        final Long jobBundleId = (Long) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_BUNDLE_ID);
-                                        if ( jobBundleId != null && jobBundleId.equals(bundleId) ) {
-                                            proxy.getScheduler().deleteJob(key);
-                                            this.logger.debug("Unscheduling job with name {}", jobName);
+                                        if ( jobName != null && job != null ) {
+                                            final Long jobBundleId = (Long) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_BUNDLE_ID);
+                                            if ( jobBundleId != null && jobBundleId.equals(bundleId) ) {
+                                                proxy.getScheduler().deleteJob(key);
+                                                this.logger.debug("Unscheduling job with name {}", jobName);
+                                            }
                                         }
                                     }
                                 }
                             }
+                        } catch ( final SchedulerException ignore) {
+                            // we ignore this as there is nothing to do
                         }
-                    } catch ( final SchedulerException ignore) {
-                        // we ignore this as there is nothing to do
                     }
                 }
             }
@@ -438,26 +416,20 @@ public class QuartzScheduler implements BundleListener {
     public void removeJob(final Long bundleId, final String jobName) throws NoSuchElementException {
         // as this method might be called from unbind and during
         // unbind a deactivate could happen, we check the scheduler first
-        final Map<String, SchedulerProxy> proxies;
         synchronized ( this.schedulers ) {
             if ( this.active ) {
-                proxies = new HashMap<>(this.schedulers);
-            } else {
-                proxies = Collections.emptyMap();
-            }
-        }
-        for(final SchedulerProxy proxy : proxies.values()) {
-            synchronized ( proxy ) {
-                try {
-                    final JobKey key = JobKey.jobKey(jobName);
-                    final JobDetail jobdetail = proxy.getScheduler().getJobDetail(key);
-                    if (jobdetail != null) {
-                        proxy.getScheduler().deleteJob(key);
-                        this.logger.debug("Unscheduling job with name {}", jobName);
-                        return;
+                for(final SchedulerProxy proxy : this.schedulers.values()) {
+                    try {
+                        final JobKey key = JobKey.jobKey(jobName);
+                        final JobDetail jobdetail = proxy.getScheduler().getJobDetail(key);
+                        if (jobdetail != null) {
+                            proxy.getScheduler().deleteJob(key);
+                            this.logger.debug("Unscheduling job with name {}", jobName);
+                            return;
+                        }
+                    } catch (final SchedulerException ignored) {
+                        // ignore
                     }
-                } catch (final SchedulerException ignored) {
-                    // ignore
                 }
             }
         }
@@ -566,12 +538,8 @@ public class QuartzScheduler implements BundleListener {
      */
     public boolean unschedule(final Long bundleId, final String jobName) {
         if ( jobName != null ) {
-            final Map<String, SchedulerProxy> proxies;
             synchronized ( this.schedulers ) {
-                proxies = new HashMap<>(this.schedulers);
-            }
-            for(final SchedulerProxy proxy : proxies.values()) {
-                synchronized ( proxy ) {
+                for(final SchedulerProxy proxy : this.schedulers.values()) {
                     try {
                         final JobKey key = JobKey.jobKey(jobName);
                         final JobDetail jobdetail = proxy.getScheduler().getJobDetail(key);
@@ -607,14 +575,25 @@ public class QuartzScheduler implements BundleListener {
             throw opts.argumentException;
         }
 
-        // as this method might be called from unbind and during
-        // unbind a deactivate could happen, we check the scheduler first
-        final SchedulerProxy proxy = this.getScheduler(opts.threadPoolName);
-        if ( proxy == null ) {
-            throw new IllegalStateException("Scheduler is not available anymore.");
-        }
+        synchronized ( this.schedulers ) {
+            // as this method might be called from unbind and during
+            // unbind a deactivate could happen, we check the scheduler first
+            final String poolName = getThreadPoolName(opts.threadPoolName);
+            SchedulerProxy proxy = null;
+            synchronized ( this.schedulers ) {
+                if ( this.active ) {
+                    proxy = this.schedulers.get(poolName);
+                    if ( proxy == null ) {
+                        proxy = new SchedulerProxy(this.threadPoolManager, poolName);
+                        this.schedulers.put(poolName, proxy);
+                    }
+                }
+            }
+            if ( proxy == null ) {
+                throw new IllegalStateException("Scheduler is not available anymore.");
+            }
 
-        synchronized ( proxy ) {
+
             final String name;
             if ( opts.name != null ) {
                 // if there is already a job with the name, remove it first
