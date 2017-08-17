@@ -937,6 +937,9 @@ public class SlingServletResolver
         }
     }
 
+    // TODO
+    // This can be simplified once we can use DS from R7 with constructor injection
+    // as we can inject the bundle context through the constructor
     @Reference(
             name = REF_SERVLET,
             service = Servlet.class,
