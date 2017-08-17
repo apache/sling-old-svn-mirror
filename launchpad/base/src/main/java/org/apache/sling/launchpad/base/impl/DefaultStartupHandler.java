@@ -72,7 +72,7 @@ public class DefaultStartupHandler
     private final AtomicInteger startupShouldWait = new AtomicInteger(0);
 
     /** The queue for increasing the start level. */
-    private final BlockingQueue<Boolean> queue = new LinkedBlockingQueue<Boolean>();
+    private final BlockingQueue<Boolean> queue = new LinkedBlockingQueue<>();
 
     /** The start level service. */
     private final StartLevel startLevelService;
@@ -90,7 +90,7 @@ public class DefaultStartupHandler
     private final int expectedBundlesCount;
 
     /** Active bundle set. */
-    private final Set<String> activeBundles = new HashSet<String>();
+    private final Set<String> activeBundles = new HashSet<>();
 
     /** Bundle Context. */
     private final BundleContext bundleContext;
@@ -103,6 +103,9 @@ public class DefaultStartupHandler
 
     /** The started time. */
     private final long startedAt;
+
+    /** The startup manager. */
+    private final StartupManager startupManager;
 
     private volatile Object[] logService;
 
@@ -121,6 +124,7 @@ public class DefaultStartupHandler
         this.startedAt = startedAt;
         this.startupMode = manager.getMode();
         this.targetStartLevel = manager.getTargetStartLevel();
+        this.startupManager = manager;
 
         StartupListener listener = null;
         try {
@@ -129,7 +133,7 @@ public class DefaultStartupHandler
             // ignore
         }
         this.mbeanStartupListener = listener;
-        this.listenerTracker = new ServiceTracker<StartupListener, StartupListener>(context, StartupListener.class,
+        this.listenerTracker = new ServiceTracker<>(context, StartupListener.class,
                 new ServiceTrackerCustomizer<StartupListener, StartupListener>() {
 
                     @Override
@@ -381,7 +385,7 @@ public class DefaultStartupHandler
         this.bundleContext.removeFrameworkListener(this);
 
         // register startup service
-        final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
+        final Dictionary<String, Object> serviceProps = new Hashtable<>();
         serviceProps.put(StartupMode.class.getName(), this.startupMode.name());
         serviceProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Startup Service");
         serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
@@ -393,6 +397,9 @@ public class DefaultStartupHandler
             }
 
             }, serviceProps);
+
+        // update timestamp
+        this.startupManager.markInstalled();
     }
 
     /**
