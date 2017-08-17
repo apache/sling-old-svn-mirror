@@ -145,7 +145,7 @@
           <groupId>org.apache.sling</groupId>
           <artifactId>org.apache.sling.commons.johnzon</artifactId>
           <version>1.0.0</version>
-          <scope>copmile</scope>
+          <scope>compile</scope>
         </dependency>
 
         
