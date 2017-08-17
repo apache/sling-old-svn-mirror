@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.servlet.http.HttpServletResponse;
 
 import junit.framework.TestCase;
@@ -42,6 +45,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.util.JavascriptEngine;
+import org.osgi.framework.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -572,5 +576,33 @@ public class HttpTestBase extends TestCase {
     public final void setReadinessContentType(String extension, String contentTypePrefix) {
         readinessCheckExtension = extension;
         readinessCheckContentTypePrefix = contentTypePrefix;
+    }
+    
+    /**
+     * Returns true if the bundle version deployed on the Sling instance is present and at least of the specified version
+     * 
+     * @param bundleSymbolicName the bundle name to check
+     * @param version the minimal version of the bundle that should be deployed
+     * @return true if the bundle is deployed with the specified version, false if it is not deployed or the version it too old
+     * @throws IOException 
+     */
+    public boolean isBundleVersionAtLeast(String bundleSymbolicName, String version) throws IOException {
+
+        GetMethod method = new GetMethod(HTTP_BASE_URL + "/system/console/bundles/" + bundleSymbolicName + ".json");
+        int result = httpClient.executeMethod(method);
+        if ( result != HttpServletResponse.SC_OK) {
+            return false;
+        }
+        
+        try ( JsonReader jsonReader = Json.createReader(method.getResponseBodyAsStream()) ) {
+            JsonObject bundleInfo = jsonReader.readObject();
+            String bundleVersion = bundleInfo.getJsonArray("data").getJsonObject(0).getString("version");
+            Version bundleVer = new Version(bundleVersion);
+            if ( bundleVer.compareTo(new Version(version)) < 0 )  {
+                return false;
+            }
+        }
+        
+        return true;
     }
 }
