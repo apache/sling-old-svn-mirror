@@ -38,6 +38,7 @@
         <configuration>
           <excludes combine.children="append">
             <exclude>src/test/resources/bundles.json</exclude>
+            <exclude>src/test/resources/sourceReferences.json</exclude>
           </excludes>
         </configuration>
       </plugin>
