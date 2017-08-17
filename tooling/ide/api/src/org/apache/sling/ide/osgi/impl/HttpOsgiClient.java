@@ -215,24 +215,6 @@ public class HttpOsgiClient implements OsgiClient {
         }.installBundle();        
     }
     
-    private static final class SourceReferenceFromJson {
-        @SerializedName("__type__")
-        private String type; // should be "maven" 
-        private String groupId;
-        private String artifactId;
-        private String version;
-        
-        public boolean isMavenType() {
-            return "maven".equals(type);
-        }
-        
-        public MavenSourceReferenceImpl getMavenSourceReference() {
-            if (!isMavenType()) {
-                throw new IllegalStateException("The type is not a Maven source reference but a " + type);
-            }
-            return new MavenSourceReferenceImpl(groupId, artifactId, version);
-        }
-    }
     @Override
     public List<SourceReference> findSourceReferences() throws OsgiClientException {
         GetMethod method = new GetMethod(repositoryInfo.appendPath("system/sling/tooling/sourceReferences.json"));
@@ -243,28 +225,31 @@ public class HttpOsgiClient implements OsgiClient {
             if (result != HttpStatus.SC_OK) {
                 throw new HttpException("Got status code " + result + " for call to " + method.getURI());
             }
-            Gson gson = new Gson();
-            List<SourceReference> refs = new ArrayList<>();
-            try (JsonReader jsonReader = new JsonReader(
-                    new InputStreamReader(method.getResponseBodyAsStream(), StandardCharsets.US_ASCII))) {
-                jsonReader.beginArray();
-                while (jsonReader.hasNext()) {
-                    if (jsonReader.nextName().equals("sourceReference")){
-                        SourceReferenceFromJson sourceReference = gson.fromJson(jsonReader, SourceReference.class);
-                        if (sourceReference.isMavenType()) {
-                            refs.add(sourceReference.getMavenSourceReference());
-                        }
-                    } else {
-                        jsonReader.skipValue();
-                    }
-                }
-                jsonReader.endArray();
-                return refs;
-            }
+            return parseSourceReferences(method.getResponseBodyAsStream());
         } catch (IOException e) {
             throw new OsgiClientException(e);
         } finally {
             method.releaseConnection();
+        }
+    }
+
+    // visible for testing
+    static List<SourceReference> parseSourceReferences(InputStream response) throws IOException {
+
+        try (JsonReader jsonReader = new JsonReader(
+                new InputStreamReader(response, StandardCharsets.US_ASCII))) {
+            
+            SourceBundleData[] refs = new Gson().fromJson(jsonReader, SourceBundleData[].class);
+            List<SourceReference> res = new ArrayList<>(refs.length);
+            for ( SourceBundleData sourceData : refs ) {
+                for (  SourceReferenceFromJson ref : sourceData.sourceReferences ) {
+                    if ( ref.isMavenType() ) {
+                        res.add(ref.getMavenSourceReference());
+                    }
+                }
+            }
+            
+            return res;
         }
     }
 
@@ -290,6 +275,36 @@ public class HttpOsgiClient implements OsgiClient {
             return "OK".equalsIgnoreCase(status);
         }
     }
+    
+    private static final class SourceBundleData {
+        
+        @SerializedName("Bundle-SymbolicName")
+        private String bsn;
+        @SerializedName("Bundle-Version")
+        private String version;
+        
+        private List<SourceReferenceFromJson> sourceReferences;
+    }
+    
+    private static final class SourceReferenceFromJson {
+        @SerializedName("__type__")
+        private String type; // should be "maven" 
+        private String groupId;
+        private String artifactId;
+        private String version;
+        
+        public boolean isMavenType() {
+            return "maven".equals(type);
+        }
+        
+        public MavenSourceReferenceImpl getMavenSourceReference() {
+            if (!isMavenType()) {
+                throw new IllegalStateException("The type is not a Maven source reference but a " + type);
+            }
+            return new MavenSourceReferenceImpl(groupId, artifactId, version);
+        }
+    }
+    
     static abstract class LocalBundleInstaller {
 
         private final HttpClient httpClient;
