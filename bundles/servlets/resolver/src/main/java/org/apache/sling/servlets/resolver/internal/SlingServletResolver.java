@@ -960,7 +960,14 @@ public class SlingServletResolver
 
     protected void unbindServlet(final ServiceReference<Servlet> reference) {
         synchronized ( pendingServlets ) {
-            pendingServlets.remove(reference);
+            final Iterator<PendingServlet> iter = pendingServlets.iterator();
+            while ( iter.hasNext() ) {
+                final PendingServlet ps = iter.next();
+                if ( ps.reference.compareTo(reference) == 0 ) {
+                    iter.remove();
+                    break;
+                }
+            }
         }
         destroyServlet(reference);
     }
