@@ -44,14 +44,12 @@
     org.apache.sling/org.apache.sling.commons.scheduler/2.4.14
     org.apache.sling/org.apache.sling.commons.threads/3.2.4
     org.apache.sling/org.apache.sling.engine/2.4.6
-    org.apache.sling/org.apache.sling.event/4.0.0
     org.apache.sling/org.apache.sling.jcr.resource/2.7.4
     org.apache.sling/org.apache.sling.resourceresolver/1.4.12
     org.apache.sling/org.apache.sling.scripting.api/2.1.8
     org.apache.sling/org.apache.sling.scripting.core/2.0.36
     org.apache.sling/org.apache.sling.serviceusermapper/1.2.2
     org.apache.sling/org.apache.sling.servlets.get/2.1.14
-    org.apache.sling/org.apache.sling.servlets.post/2.3.12
     org.apache.sling/org.apache.sling.servlets.resolver/2.4.2
     javax.mail/mail/1.4.7
     org.apache.felix/org.apache.felix.http.whiteboard/3.0.0
@@ -82,8 +80,6 @@
     org.apache.jackrabbit/jackrabbit-webdav/${jackrabbit.version}
     org.apache.jackrabbit/jackrabbit-jcr-rmi/${jackrabbit.version}
     org.apache.jackrabbit/jackrabbit-data/${jackrabbit.version}
-    org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.4
-    org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.2
 
 [configurations]
   org.apache.sling.commons.log.LogManager
