@@ -20,7 +20,7 @@
 [feature name=oak]
 
 [variables]
-    oak.version=1.5.5
+    oak.version=1.6.1
 
 # The segment node store is used via a configuration
 [artifacts startLevel=10]
@@ -40,7 +40,7 @@
 # and started to avoid restarting that component ( see SLING-4556 )
 [artifacts startLevel=16]
     # TODO replace with 1.0.2 once that's released
-    org.apache.sling/org.apache.sling.jcr.oak.server/1.0.1-SNAPSHOT
+    org.apache.sling/org.apache.sling.jcr.oak.server/1.1.4
 
 [configurations]
   org.apache.felix.jaas.Configuration.factory-LoginModuleImpl
