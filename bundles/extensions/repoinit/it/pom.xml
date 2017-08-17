@@ -55,14 +55,9 @@
       <test.host>localhost</test.host>
 
       <!--
-          Set this to true to stop mvn once the integration test Jetty instance is
-          started. Useful to manually test the integration testing webapp.
-      -->
-      <integration.test.wait>false</integration.test.wait>
-
-      <!--
         If set to "true" this will start the launchpad with standard debug options,
         or set to a string to provide custom debug settings
+        See slingstart-maven-plugin for more options (keep launchpad running etc)
       -->
       <launchpad.debug/>
   </properties>
