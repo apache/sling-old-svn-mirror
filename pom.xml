@@ -108,6 +108,7 @@
         <module>bundles/commons/mime</module>
         <module>bundles/commons/contentdetection</module>
         <module>bundles/commons/osgi</module>
+        <module>bundles/commons/metrics-rrd4j</module>
         <module>bundles/commons/scheduler</module>
         <module>bundles/commons/testing</module>
         <module>bundles/commons/threaddump</module>
