@@ -67,6 +67,9 @@ def modules = [
         location: 'bundles/commons/metrics'
     ],
     [
+        location: 'bundles/commons/metrics-rrd4j'
+    ],
+    [
         location: 'bundles/commons/org.apache.sling.commons.messaging.mail'
     ],
     [
