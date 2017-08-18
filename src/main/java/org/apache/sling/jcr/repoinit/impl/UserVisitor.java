@@ -22,6 +22,7 @@ import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
 import org.apache.sling.repoinit.parser.operations.CreateUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
 import org.apache.sling.repoinit.parser.operations.DeleteUser;
+import org.apache.sling.repoinit.parser.operations.DisableServiceUser;
 
 /** OperationVisitor which processes only operations related to
  *  service users and ACLs. Having several such specialized visitors
@@ -97,6 +98,18 @@ class UserVisitor extends DoNothingVisitor {
             UserUtil.deleteUser(session, username);
         } catch(Exception e) {
             report(e, "Unable to delete user [" + username + "]:" + e);
+        }
+    }
+
+    @Override
+    public void visitDisableServiceUser(DisableServiceUser dsu) {
+        final String username = dsu.getUsername();
+        final String reason = dsu.getParametersDescription();
+        log.info("Disabling service user {} reason {}", new String[]{username, reason});
+        try {
+            UserUtil.disableUser(session, username, reason);
+        } catch(Exception e) {
+            report(e, "Unable to disable service user [" + username + "]:" + e);
         }
     }
 
