@@ -29,7 +29,7 @@ public class DisableServiceUser extends ServiceUserOperation {
     }
 
     @Override
-    protected String getParametersDescription() {
+    public String getParametersDescription() {
         final StringBuilder sb = new StringBuilder();
         sb.append(super.getParametersDescription());
         if(reason!=null) {

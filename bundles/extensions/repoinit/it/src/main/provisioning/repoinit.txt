@@ -45,6 +45,9 @@ set ACL for userFromProvisioningModel
   deny jcr:write on /repoinit/fromProvisioningModel
 end
 
+create service user thirdUserFromProvisioningModel
+disable service user thirdUserFromProvisioningModel : "Disabled for testing reason"
+
 register namespace (slingtest) http://sling.apache.org/ns/test/repoinit-it/v1.0
 
 register nodetypes
