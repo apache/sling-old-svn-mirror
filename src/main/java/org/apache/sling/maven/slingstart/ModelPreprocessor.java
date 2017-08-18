@@ -24,6 +24,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -47,6 +48,7 @@ import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.MergeUtility;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
+import org.apache.sling.provisioning.model.ModelResolveUtility;
 import org.apache.sling.provisioning.model.ModelUtility;
 import org.apache.sling.provisioning.model.ModelUtility.ResolverOptions;
 import org.apache.sling.provisioning.model.RunMode;
@@ -165,7 +167,7 @@ public class ModelPreprocessor {
         // we have to create an effective model to add the dependencies
         final Model effectiveModel = ModelUtility.getEffectiveModel(copyModel, resolverOptions);
 
-        final List<Model> dependencies = searchSlingstartDependencies(env, info, copyModel, effectiveModel);
+        final List<Model> dependencies = searchSlingstartDependencies(env, info, copyModel, effectiveModel, resolverOptions);
         info.model = new Model();
         for(final Model d : dependencies) {
             this.mergeModels(info.model, d);
@@ -267,7 +269,8 @@ public class ModelPreprocessor {
             final Environment env,
             final ProjectInfo info,
             final Model rawModel,
-            final Model effectiveModel)
+            final Model effectiveModel,
+            final ResolverOptions resolverOptions)
     throws MavenExecutionException {
         // slingstart or slingfeature
         final List<Model> dependencies = new ArrayList<>();
@@ -323,7 +326,7 @@ public class ModelPreprocessor {
                                     if ( errors != null ) {
                                         throw new MavenExecutionException("Unable to read model file from " + modelFile + " : " + errors, modelFile);
                                     }
-                                    final Model fullModel = processSlingstartDependencies(env, info, dep,  model);
+                                    final Model fullModel = processSlingstartDependencies(env, info, dep,  model, resolverOptions);
 
                                     dependencies.add(fullModel);
                                 } catch ( final IOException ioe) {
@@ -350,7 +353,7 @@ public class ModelPreprocessor {
                             if ( localRunMode != null ) {
                                 final ArtifactGroup localAG = localRunMode.getArtifactGroup(group.getStartLevel());
                                 if ( localAG != null ) {
-                                    localAG.remove(r);
+                                    removeArtifact(localModelFeature, localAG, r, resolverOptions);
                                 }
                             }
                         }
@@ -362,14 +365,32 @@ public class ModelPreprocessor {
         return dependencies;
     }
 
-    private Model processSlingstartDependencies(final Environment env, final ProjectInfo info, final Dependency dep, final Model rawModel)
+    private static void removeArtifact(Feature feature, ArtifactGroup group, org.apache.sling.provisioning.model.Artifact toRemove, ResolverOptions resolverOptions) {
+        Iterator<org.apache.sling.provisioning.model.Artifact> it = group.iterator();
+        while (it.hasNext()) {
+            org.apache.sling.provisioning.model.Artifact el = it.next();
+
+            String version = ModelResolveUtility.replace(feature, el.getVersion(), resolverOptions.getVariableResolver());
+            org.apache.sling.provisioning.model.Artifact resolved;
+            if (el.getVersion().equals(version)) {
+                resolved = el;
+            } else {
+                resolved = new org.apache.sling.provisioning.model.Artifact(el.getGroupId(), el.getArtifactId(), version, el.getClassifier(), el.getType());
+            }
+            if (resolved.equals(toRemove)) {
+                it.remove();
+            }
+        }
+    }
+
+    private Model processSlingstartDependencies(final Environment env, final ProjectInfo info, final Dependency dep, final Model rawModel, ResolverOptions resolverOptions)
     throws MavenExecutionException {
         env.logger.debug("Processing dependency " + dep);
 
         // we have to create an effective model to add the dependencies
         final Model effectiveModel = ModelUtility.getEffectiveModel(rawModel, new ResolverOptions());
 
-        final List<Model> dependencies = searchSlingstartDependencies(env, info, rawModel, effectiveModel);
+        final List<Model> dependencies = searchSlingstartDependencies(env, info, rawModel, effectiveModel, resolverOptions);
         Model mergingModel = new Model();
         for(final Model d : dependencies) {
             this.mergeModels(mergingModel, d);
