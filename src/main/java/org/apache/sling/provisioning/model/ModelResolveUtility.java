@@ -44,7 +44,7 @@ public class ModelResolveUtility {
      * @param feature The feature
      * @param v The variable name
      * @param resolver Optional resolver
-     * @result The value of the variable
+     * @return The value of the variable
      * @throws IllegalArgumentException If variable can't be found.
      */
     public static String replace(final Feature feature, final String v, final VariableResolver resolver) {
