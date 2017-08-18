@@ -492,7 +492,7 @@ void disableServiceUserStatement(List<Operation> result) :
 {
     <DISABLE> <SERVICE> <USER> 
     ( user = <STRING> )
-    ( <COLON> msg = <QUOTED>) ?
+    ( <COLON> msg = <QUOTED> )
     {
         result.add(new DisableServiceUser(user.image, msg == null ? null : msg.image));
     }

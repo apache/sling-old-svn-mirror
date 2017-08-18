@@ -32,4 +32,3 @@ CreateUser userE (with encoded password), password=afdgwdsdf, passwordEncoding=s
 CreateUser one_with-more-chars.ok:/123456 (with encoded password), password=pw-with.ok-:/13456, passwordEncoding=encoding_with.ok-:/12345
 CreateServiceUser the-last-one
 DisableServiceUser svc1 : This  is the message
-DisableServiceUser svc212
