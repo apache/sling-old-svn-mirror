@@ -18,20 +18,23 @@
 package org.apache.sling.repoinit.parser.operations;
 
 public class DisableServiceUser extends ServiceUserOperation {
-    private final String message;
+    private final String reason;
     
-    public DisableServiceUser(String username, String message) {
+    public DisableServiceUser(String username, String reason) {
         super(username);
-        this.message = cleanupQuotedString(message);
+        this.reason = cleanupQuotedString(reason);
+        if(this.reason == null || this.reason.length() == 0) {
+            throw new IllegalArgumentException("A non-empty reason is required");
+        }
     }
 
     @Override
     protected String getParametersDescription() {
         final StringBuilder sb = new StringBuilder();
         sb.append(super.getParametersDescription());
-        if(message!=null) {
+        if(reason!=null) {
             sb.append(" : ");
-            sb.append(message);
+            sb.append(reason);
         }
         return sb.toString();
     }
