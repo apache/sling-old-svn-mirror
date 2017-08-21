@@ -999,25 +999,26 @@ public class SlingServletResolver
         try {
             servlet.init(new SlingServletConfig(servletContext, reference, name));
             LOGGER.debug("bindServlet: Servlet {} initialized", name);
-        } catch (ServletException ce) {
+        } catch (final ServletException ce) {
             LOGGER.error("bindServlet: Servlet " + ServletResourceProviderFactory.getServiceReferenceInfo(reference) + " failed to initialize", ce);
             return false;
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             LOGGER.error("bindServlet: Unexpected problem initializing servlet " + ServletResourceProviderFactory.getServiceReferenceInfo(reference), t);
             return false;
         }
 
+        final BundleContext bundleContext = reference.getBundle().getBundleContext();
         final List<ServiceRegistration<ResourceProvider<Object>>> regs = new ArrayList<>();
         for(final String root : provider.getServletPaths()) {
             @SuppressWarnings("unchecked")
-            final ServiceRegistration<ResourceProvider<Object>> reg = (ServiceRegistration<ResourceProvider<Object>>) context.registerService(
+            final ServiceRegistration<ResourceProvider<Object>> reg = (ServiceRegistration<ResourceProvider<Object>>) bundleContext.registerService(
                 ResourceProvider.class.getName(),
                 provider,
                 createServiceProperties(reference, provider, root));
             regs.add(reg);
         }
         if ( LOGGER.isDebugEnabled() ) {
-            LOGGER.debug("Registered {}", provider.toString());
+            LOGGER.debug("Registered {}", provider);
         }
         synchronized (this.servletsByReference) {
             servletsByReference.put(reference, new ServletReg(servlet, regs));
