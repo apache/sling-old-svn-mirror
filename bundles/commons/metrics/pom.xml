@@ -58,10 +58,6 @@
                         <Bundle-DocURL>
                             https://sling.apache.org/documentation/bundles/metrics.html
                         </Bundle-DocURL>
-                        <Import-Package>
-                            com.codahale.metrics*;version="[3.1, 4)",
-                            *
-                        </Import-Package>
                         <DynamicImport-Package>
                             javax.servlet,
                             javax.servlet.http;version="[2.3,3)",
