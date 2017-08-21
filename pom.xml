@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>30</version>
+        <version>31</version>
         <relativePath />
     </parent>
 
@@ -64,6 +64,9 @@
                         <Embed-Dependency>
                             org.apache.sling.engine;inline="org/apache/sling/engine/impl/request/SlingRequestPathInfo*",
                         </Embed-Dependency>                
+                        <Provide-Capability>
+                            osgi.extender;osgi.extender="org.apache.sling.servlets.resolver";version:Version="1.0"
+                        </Provide-Capability>
                     </instructions>
                 </configuration>
             </plugin>
