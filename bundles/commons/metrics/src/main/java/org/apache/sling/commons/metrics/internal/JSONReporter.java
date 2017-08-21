@@ -155,7 +155,7 @@ class JSONReporter implements Reporter, Closeable {
 
     @Override
     public void close(){
-        pw.close();
+        pw.flush();
     }
 
     private void report(SortedMap<String, Gauge> gauges, SortedMap<String, Counter> counters,
