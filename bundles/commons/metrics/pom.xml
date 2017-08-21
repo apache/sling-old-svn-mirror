@@ -58,6 +58,10 @@
                         <Bundle-DocURL>
                             https://sling.apache.org/documentation/bundles/metrics.html
                         </Bundle-DocURL>
+                        <Import-Package>
+                            com.codahale.metrics*;version="[3.1, 4)",
+                            *
+                        </Import-Package>
                         <DynamicImport-Package>
                             javax.servlet,
                             javax.servlet.http;version="[2.3,3)",
@@ -127,7 +131,7 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
-            <version>3.1.0</version>
+            <version>3.2.3</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
