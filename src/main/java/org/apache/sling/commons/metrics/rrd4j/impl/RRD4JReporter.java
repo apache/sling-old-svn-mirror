@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,10 +48,13 @@ import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.join;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 class RRD4JReporter extends ScheduledReporter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RRD4JReporter.class);
+
+    private static final String PROPERTIES_SUFFIX = ".properties";
     static final int DEFAULT_STEP = 5;
 
     private final Map<String, Integer> dictionary = new HashMap<>();
@@ -151,7 +156,7 @@ class RRD4JReporter extends ScheduledReporter {
         super(registry, name, filter, rateUnit, durationUnit);
         this.dictionary.putAll(dictionary);
         this.rrdDB = createDB(rrdDef);
-        storeDictionary(rrdDef.getPath() + ".properties");
+        storeDictionary(rrdDef.getPath() + PROPERTIES_SUFFIX);
     }
 
     @Override
@@ -170,31 +175,37 @@ class RRD4JReporter extends ScheduledReporter {
                        SortedMap<String, Histogram> histograms,
                        SortedMap<String, Meter> meters,
                        SortedMap<String, Timer> timers) {
-
+        long time = System.nanoTime();
+        int total = gauges.size() + counters.size() + histograms.size() + meters.size() + timers.size();
+        int reported = 0;
         try {
             Sample sample = rrdDB.createSample(System.currentTimeMillis() / 1000);
             for (Map.Entry<String, Gauge> entry : gauges.entrySet()) {
-                update(sample, indexForName(entry.getKey()), entry.getValue());
+                reported += update(sample, indexForName(entry.getKey()), entry.getValue());
             }
 
             for (Map.Entry<String, Counter> entry : counters.entrySet()) {
-                update(sample, indexForName(entry.getKey()), entry.getValue());
+                reported += update(sample, indexForName(entry.getKey()), entry.getValue());
             }
 
             for (Map.Entry<String, Histogram> entry : histograms.entrySet()) {
-                update(sample, indexForName(entry.getKey()), entry.getValue());
+                reported += update(sample, indexForName(entry.getKey()), entry.getValue());
             }
 
             for (Map.Entry<String, Meter> entry : meters.entrySet()) {
-                update(sample, indexForName(entry.getKey()), entry.getValue());
+                reported += update(sample, indexForName(entry.getKey()), entry.getValue());
             }
 
             for (Map.Entry<String, Timer> entry : timers.entrySet()) {
-                update(sample, indexForName(entry.getKey()), entry.getValue());
+                reported += update(sample, indexForName(entry.getKey()), entry.getValue());
             }
             sample.update();
         } catch (IOException e) {
             LOGGER.warn("Unable to write sample to RRD", e);
+        } finally {
+            time = System.nanoTime() - time;
+            LOGGER.debug("{} out of {} metrics reported in {} \u03bcs",
+                    reported, total, TimeUnit.NANOSECONDS.toMicros(time));
         }
     }
 
@@ -207,44 +218,49 @@ class RRD4JReporter extends ScheduledReporter {
         return name.replaceAll(":", "_");
     }
 
-    private void update(Sample sample, int nameIdx, Gauge g) {
+    private int update(Sample sample, int nameIdx, Gauge g) {
         if (nameIdx < 0) {
-            return;
+            return 0;
         }
         Object value = g.getValue();
         if (value instanceof Number) {
             sample.setValue(nameIdx, ((Number) value).doubleValue());
+            return 1;
         }
+        return 0;
     }
 
-    private void update(Sample sample, int nameIdx, Counter c) {
+    private int update(Sample sample, int nameIdx, Counter c) {
         if (nameIdx < 0) {
-            return;
+            return 0;
         }
         sample.setValue(nameIdx, c.getCount());
+        return 1;
     }
 
-    private void update(Sample sample, int nameIdx, Histogram h) {
+    private int update(Sample sample, int nameIdx, Histogram h) {
         if (nameIdx < 0) {
-            return;
+            return 0;
         }
         sample.setValue(nameIdx, h.getCount());
+        return 1;
     }
 
-    private void update(Sample sample, int nameIdx, Timer t) {
+    private int update(Sample sample, int nameIdx, Timer t) {
         if (nameIdx < 0) {
-            return;
+            return 0;
         }
         sample.setValue(nameIdx, t.getCount());
+        return 1;
     }
 
 
-    private void update(Sample sample, int nameIdx, Meter m) {
+    private int update(Sample sample, int nameIdx, Meter m) {
         if (nameIdx < 0) {
-            return;
+            return 0;
         }
-        LOGGER.debug("Sample: {} = {}", nameIdx, m.getCount());
         sample.setValue(nameIdx, m.getCount());
+        return 1;
     }
 
     private void storeDictionary(String path) throws IOException {
@@ -274,10 +290,9 @@ class RRD4JReporter extends ScheduledReporter {
             if (!db.getRrdDef().equals(definition)) {
                 // definition changed -> re-create DB
                 db.close();
-                if (!dbFile.delete()) {
-                    throw new IOException("Unable to delete RRD file: " + dbFile.getPath());
-                }
-                LOGGER.warn("Configuration changed, recreating RRD file for metrics: " + dbFile.getPath());
+                File renamed = renameDB(dbFile);
+                LOGGER.info("Configuration changed, renamed existing RRD file to: {}",
+                        renamed.getPath());
                 db = null;
             }
         }
@@ -285,5 +300,33 @@ class RRD4JReporter extends ScheduledReporter {
             db = new RrdDb(definition);
         }
         return db;
+    }
+
+    private File renameDB(File dbFile) throws IOException {
+        // find a suitable suffix
+        int idx = 0;
+        while (new File(dbFile.getPath() + suffix(idx)).exists()) {
+            idx++;
+        }
+        // rename rrd file
+        rename(dbFile.toPath(), dbFile.getName() + suffix(idx));
+        // rename properties file
+        rename(dbFile.toPath().resolveSibling(dbFile.getName() + PROPERTIES_SUFFIX),
+                dbFile.getName() + suffix(idx) + PROPERTIES_SUFFIX);
+
+        return new File(dbFile.getParentFile(), dbFile.getName() + suffix(idx));
+    }
+
+    private static String suffix(int idx) {
+        return "." + idx;
+    }
+
+    private void rename(Path path, String newName) throws IOException {
+        if (!Files.exists(path)) {
+            // nothing to rename
+            return;
+        }
+        Path target = path.resolveSibling(newName);
+        Files.move(path, target, REPLACE_EXISTING);
     }
 }
