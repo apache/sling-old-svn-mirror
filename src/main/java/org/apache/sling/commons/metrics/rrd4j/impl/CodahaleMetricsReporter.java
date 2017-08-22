@@ -21,6 +21,9 @@ package org.apache.sling.commons.metrics.rrd4j.impl;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 
+import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.InventoryPrinter;
+import org.apache.felix.inventory.ZipAttachmentProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -36,21 +39,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.apache.sling.commons.metrics.rrd4j.impl.RRD4JReporter.DEFAULT_STEP;
 
 @Component(
         immediate = true,
-        configurationPolicy = ConfigurationPolicy.REQUIRE
+        configurationPolicy = ConfigurationPolicy.REQUIRE,
+        service = {InventoryPrinter.class, ZipAttachmentProvider.class},
+        property = {
+                InventoryPrinter.NAME + "=rrd4j-reporter",
+                InventoryPrinter.TITLE + "=Sling Metrics RRD4J reporter",
+                InventoryPrinter.FORMAT + "=TEXT"
+        }
 )
 @Designate(ocd = CodahaleMetricsReporter.Configuration.class)
-public class CodahaleMetricsReporter {
+public class CodahaleMetricsReporter implements InventoryPrinter, ZipAttachmentProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(CodahaleMetricsReporter.class);
 
+    private Configuration configuration;
+    private File rrd;
     private ScheduledReporter reporter;
 
     private Map<String, CopyMetricRegistryListener> listeners = new ConcurrentHashMap<>();
@@ -110,24 +127,25 @@ public class CodahaleMetricsReporter {
     @Activate
     void activate(BundleContext context, Configuration config) throws Exception {
         LOG.info("Starting RRD4J Metrics reporter");
-        File path = new File(config.path());
-        if (!path.isAbsolute()) {
+        configuration = config;
+        rrd = new File(config.path());
+        if (!rrd.isAbsolute()) {
             String home = context.getProperty("sling.home");
             if (home != null) {
-                path = new File(home, path.getPath());
+                rrd = new File(home, rrd.getPath());
             }
         }
 
         reporter = RRD4JReporter.forRegistry(metricRegistry)
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MICROSECONDS)
-                .withPath(path)
+                .withPath(rrd)
                 .withDatasources(config.datasources())
                 .withArchives(config.archives())
                 .withStep(config.step())
                 .build();
         reporter.start(config.step(), TimeUnit.SECONDS);
-        LOG.info("Started RRD4J Metrics reporter. Writing to " + path);
+        LOG.info("Started RRD4J Metrics reporter. Writing to " + rrd);
     }
 
     @Deactivate
@@ -135,6 +153,8 @@ public class CodahaleMetricsReporter {
         LOG.info("Stopping RRD4J Metrics reporter");
         reporter.stop();
         reporter = null;
+        configuration = null;
+        rrd = null;
         LOG.info("Stopped RRD4J Metrics reporter");
     }
 
@@ -166,5 +186,45 @@ public class CodahaleMetricsReporter {
             this.listeners.remove(name);
         }
         LOG.info("Unbound Metrics Registry {} ",name);
+    }
+
+    //------------------------< InventoryPrinter >------------------------------
+
+    @Override
+    public void print(PrintWriter pw, Format format, boolean isZip) {
+        if (format == Format.TEXT) {
+            pw.println("Sling Metrics RRD4J reporter");
+            pw.println("Path: " + rrd.getAbsolutePath());
+            pw.println("Step: " + configuration.step());
+            pw.println("Datasources: " + Arrays.asList(configuration.datasources()));
+            pw.println("Archives: " + Arrays.asList(configuration.archives()));
+        }
+    }
+
+    //----------------------< ZipAttachmentProvider >---------------------------
+
+    @Override
+    public void addAttachments(ZipOutputStream zos, String namePrefix)
+            throws IOException {
+        if (rrd.exists()) {
+            appendFile(zos, rrd, namePrefix + configuration.path());
+        }
+        File props = new File(rrd.getParentFile(), rrd.getName() + ".properties");
+        if (props.exists()) {
+            appendFile(zos, props, namePrefix + configuration.path() + ".properties");
+        }
+    }
+
+    private void appendFile(ZipOutputStream zos, File file, String name)
+            throws IOException {
+        ZipEntry entry = new ZipEntry(name);
+        entry.setSize(file.length());
+        zos.putNextEntry(entry);
+        try {
+            Files.copy(file.toPath(), zos);
+            zos.flush();
+        } finally {
+            zos.closeEntry();
+        }
     }
 }
