@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.ser.ResolvableSerializer;
 import org.apache.commons.collections.iterators.EnumerationIterator;
 
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Iterator;
 
