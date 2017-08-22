@@ -84,6 +84,12 @@
             <version>3.1</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.inventory</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- test dependencies -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
