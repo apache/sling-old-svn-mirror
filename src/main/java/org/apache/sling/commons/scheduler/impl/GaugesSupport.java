@@ -17,16 +17,13 @@
 package org.apache.sling.commons.scheduler.impl;
 
 import java.util.Date;
-import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
-import org.apache.sling.commons.metrics.Gauge;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -41,11 +38,13 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
+
 @Component(
         property = {
                 Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
-        },
-        immediate = true
+        }
     )
 /**
  * This service creates gauges for getting how long the oldest running job is
@@ -64,20 +63,20 @@ public class GaugesSupport {
 
     private final static String CLEANUP_JOB_NAME = "org.apache.sling.commons.scheduler.impl.GaugesSupport.CleanupJob";
 
+    @Reference
+    private MetricRegistry metricRegistry;
+
     @SuppressWarnings("rawtypes")
     private final class TemporaryGauge implements Gauge {
-        private final ServiceRegistration registration;
         private final JobExecutionContext jobExecutionContext;
         private final String gaugeName;
         private volatile boolean unregistered = false;
 
-        private TemporaryGauge(BundleContext ctx, JobExecutionContext jobExecutionContext, String gaugeName) {
+        private TemporaryGauge(final JobExecutionContext jobExecutionContext, final String gaugeName) {
             this.jobExecutionContext = jobExecutionContext;
             this.gaugeName = gaugeName;
 
-            Dictionary<String, String> p = new Hashtable<String, String>();
-            p.put(Gauge.NAME, gaugeName);
-            registration = ctx.registerService(Gauge.class.getName(), TemporaryGauge.this, p);
+            metricRegistry.register(gaugeName,  this);
         }
 
         private void unregister() {
@@ -97,7 +96,7 @@ public class GaugesSupport {
                     logger.debug("unregister: unregistering dangling temporary gauge for slow job : " + gaugeName);
                 }
             }
-            registration.unregister();
+            metricRegistry.remove(gaugeName);
         }
 
         @Override
@@ -128,8 +127,8 @@ public class GaugesSupport {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @SuppressWarnings("rawtypes")
-    private final Map<String, ServiceRegistration> gaugeRegistrations = new HashMap<String, ServiceRegistration>();
-    private final Map<String, TemporaryGauge> temporaryGauges = new HashMap<String, TemporaryGauge>();
+    private final Map<String, ServiceRegistration> gaugeRegistrations = new HashMap<>();
+    private final Map<String, TemporaryGauge> temporaryGauges = new HashMap<>();
 
     private volatile boolean active = true;
 
@@ -147,7 +146,7 @@ public class GaugesSupport {
         active = true;
 
         // register the gauges
-        registerGauges(ctx);
+        registerGauges();
 
         bundleId = ctx.getBundle().getBundleId();
         try {
@@ -178,7 +177,7 @@ public class GaugesSupport {
         final long start = System.currentTimeMillis();
         final Map<String, TemporaryGauge> localTemporaryGauges;
         synchronized (temporaryGauges) {
-            localTemporaryGauges = new HashMap<String, TemporaryGauge>(temporaryGauges);
+            localTemporaryGauges = new HashMap<>(temporaryGauges);
         }
         final Iterator<TemporaryGauge> it = localTemporaryGauges.values().iterator();
         while (it.hasNext()) {
@@ -195,47 +194,45 @@ public class GaugesSupport {
                 + ", at end : " + endCount + ", cleanup took : " + diff + "ms)");
     }
 
-    private void registerGauges(BundleContext ctx) {
-        createGauge(ctx, configHolder, null, null, QuartzScheduler.METRICS_NAME_OLDEST_RUNNING_JOB_MILLIS);
-        createGauge(ctx, configHolder, configHolder.poolName(), null,
+    private void registerGauges() {
+        createGauge(configHolder, null, null, QuartzScheduler.METRICS_NAME_OLDEST_RUNNING_JOB_MILLIS);
+        createGauge(configHolder, configHolder.poolName(), null,
                 QuartzScheduler.METRICS_NAME_OLDEST_RUNNING_JOB_MILLIS + ".tp." + configHolder.poolName());
         if (configHolder.allowedPoolNames() != null) {
             for (String tpName : configHolder.allowedPoolNames()) {
-                createGauge(ctx, configHolder, tpName, null,
+                createGauge(configHolder, tpName, null,
                         QuartzScheduler.METRICS_NAME_OLDEST_RUNNING_JOB_MILLIS + ".tp." + tpName);
             }
         }
         for (Map.Entry<String, String> entry : configHolder.getFilterSuffixes().entrySet()) {
             final String name = entry.getKey();
             final String filterName = entry.getValue();
-            createGauge(ctx, configHolder, null, filterName,
+            createGauge(configHolder, null, filterName,
                     QuartzScheduler.METRICS_NAME_OLDEST_RUNNING_JOB_MILLIS + ".filter." + name);
         }
     }
 
     @SuppressWarnings("rawtypes")
-    private void createGauge(final BundleContext ctx, final ConfigHolder configHolder, final String tpName,
-            final String filterName, final String gaugeName) {
-        Dictionary<String, String> p = new Hashtable<String, String>();
-        p.put(Gauge.NAME, gaugeName);
+    private void createGauge(final ConfigHolder configHolder,
+            final String tpName,
+            final String filterName,
+            final String gaugeName) {
         final Gauge gauge = new Gauge() {
             @Override
             public Long getValue() {
                 if (!active) {
                     return -1L; // disabled case
                 }
-                return getOldestRunningJobMillis(configHolder, ctx, tpName, filterName);
+                return getOldestRunningJobMillis(configHolder, tpName, filterName);
             }
         };
         logger.debug("createGauge: registering gauge : " + gaugeName);
-        ServiceRegistration reg = ctx.registerService(Gauge.class.getName(), gauge, p);
-        synchronized (this.gaugeRegistrations) {
-            gaugeRegistrations.put(gaugeName, reg);
-        }
+        this.metricRegistry.register(gaugeName, gauge);
     }
 
-    private Long getOldestRunningJobMillis(ConfigHolder configHolder, BundleContext ctx, String threadPoolNameOrNull,
-            String filterNameOrNull) {
+    private Long getOldestRunningJobMillis(final ConfigHolder configHolder,
+            final String threadPoolNameOrNull,
+            final String filterNameOrNull) {
         final QuartzScheduler localQuartzScheduler = quartzScheduler;
         if (localQuartzScheduler == null) {
             // could happen during deactivation
@@ -252,7 +249,7 @@ public class GaugesSupport {
             // if a threadPoolName is set and no filter then we go by
             // threadPoolName
             final SchedulerProxy schedulerProxy = schedulers.get(threadPoolNameOrNull);
-            oldestDate = getOldestRunningJobDate(configHolder, ctx, schedulerProxy, null);
+            oldestDate = getOldestRunningJobDate(configHolder, schedulerProxy, null);
         } else {
             // if nothing is set we iterate over everything
             // if both threadPoolName and filter is set, filter has precedence
@@ -260,7 +257,7 @@ public class GaugesSupport {
             for (Map.Entry<String, SchedulerProxy> entry : schedulers.entrySet()) {
                 SchedulerProxy schedulerProxy = entry.getValue();
                 oldestDate = olderOf(oldestDate,
-                        getOldestRunningJobDate(configHolder, ctx, schedulerProxy, filterNameOrNull));
+                        getOldestRunningJobDate(configHolder, schedulerProxy, filterNameOrNull));
             }
         }
         if (oldestDate == null) {
@@ -270,8 +267,9 @@ public class GaugesSupport {
         }
     }
 
-    private Date getOldestRunningJobDate(final ConfigHolder configHolder, final BundleContext ctx,
-            final SchedulerProxy schedulerProxy, final String filterNameOrNull) {
+    private Date getOldestRunningJobDate(final ConfigHolder configHolder,
+            final SchedulerProxy schedulerProxy,
+            final String filterNameOrNull) {
         if (schedulerProxy == null) {
             return null;
         }
@@ -315,7 +313,7 @@ public class GaugesSupport {
             if (slowThresholdMillis > 0 && elapsedMillis > slowThresholdMillis) {
                 // then create a gauge for this slow job in case there isn't one
                 // yet
-                createTemporaryGauge(ctx, jobExecutionContext);
+                createTemporaryGauge(jobExecutionContext);
             }
             oldestDate = olderOf(oldestDate, fireTime);
         }
@@ -334,7 +332,7 @@ public class GaugesSupport {
         }
     }
 
-    private void createTemporaryGauge(final BundleContext ctx, final JobExecutionContext jobExecutionContext) {
+    private void createTemporaryGauge(final JobExecutionContext jobExecutionContext) {
         final JobDataMap data = jobExecutionContext.getJobDetail().getJobDataMap();
         final String jobName = data.getString(QuartzScheduler.DATA_MAP_NAME);
         final String gaugeName = QuartzScheduler.METRICS_NAME_OLDEST_RUNNING_JOB_MILLIS + ".slow."
@@ -363,7 +361,7 @@ public class GaugesSupport {
         }
         logger.debug("createTemporaryGauge: creating temporary gauge for slow job : " + gaugeName);
         synchronized (this.temporaryGauges) {
-            temporaryGauges.put(gaugeName, new TemporaryGauge(ctx, jobExecutionContext, gaugeName));
+            temporaryGauges.put(gaugeName, new TemporaryGauge(jobExecutionContext, gaugeName));
         }
     }
 
@@ -371,12 +369,12 @@ public class GaugesSupport {
     private void unregisterGauges() {
         final Map<String, ServiceRegistration> localGaugeRegistrations;
         synchronized (gaugeRegistrations) {
-            localGaugeRegistrations = new HashMap<String, ServiceRegistration>(gaugeRegistrations);
+            localGaugeRegistrations = new HashMap<>(gaugeRegistrations);
             gaugeRegistrations.clear();
         }
         final Map<String, TemporaryGauge> localTemporaryGauges;
         synchronized (temporaryGauges) {
-            localTemporaryGauges = new HashMap<String, TemporaryGauge>(temporaryGauges);
+            localTemporaryGauges = new HashMap<>(temporaryGauges);
         }
 
         final Iterator<Entry<String, ServiceRegistration>> it = localGaugeRegistrations.entrySet().iterator();

@@ -25,7 +25,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -53,6 +52,8 @@ import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.codahale.metrics.MetricRegistry;
 
 /**
  * The quartz based implementation of the scheduler.
@@ -112,7 +113,7 @@ public class QuartzScheduler implements BundleListener {
     private ThreadPoolManager threadPoolManager;
 
     @Reference
-    MetricsService metricsService;
+    MetricRegistry metricsRegistry;
 
     ConfigHolder configHolder;
 
