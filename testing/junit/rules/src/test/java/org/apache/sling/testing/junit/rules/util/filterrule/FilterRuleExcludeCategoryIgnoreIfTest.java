@@ -94,7 +94,6 @@ public class FilterRuleExcludeCategoryIgnoreIfTest {
      */
     @Test
     @Category(Issue.class)
-    @Ignore("SLING-5803")
     public void testExcludedCategoryExists() {
         Assume.assumeTrue(System.getProperty(FilterRule.CATEGORY_PROPERTY).equals("Issue,SlowRunningTest"));
         Assert.fail("Test should be Ignored");
