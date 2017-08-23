@@ -82,7 +82,6 @@ public class SlingOptions {
             mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.inventory").version(versionResolver),
             mavenBundle().groupId("commons-fileupload").artifactId("commons-fileupload").version(versionResolver),
             mavenBundle().groupId("commons-io").artifactId("commons-io").version(versionResolver),
-            mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("json").version(versionResolver),
             http()
         );
     }
@@ -132,8 +131,7 @@ public class SlingOptions {
                 .asOption(),
             newConfiguration("org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProviderService")
                 .put("localIndexDir", localIndexDir)
-                .asOption(),
-            mavenBundle().groupId("org.slf4j").artifactId("log4j-over-slf4j").version(versionResolver) // OAK-5921
+                .asOption()
         );
     }
 
