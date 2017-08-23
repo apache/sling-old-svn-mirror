@@ -273,7 +273,8 @@
                         <sling.additional.bundle.13>jackson-annotations</sling.additional.bundle.13>
                         <sling.additional.bundle.14>jackson-core</sling.additional.bundle.14>
                         <sling.additional.bundle.15>jackson-databind</sling.additional.bundle.15>
-                        <sling.additional.bundle.16>${project.build.finalName}.jar</sling.additional.bundle.16>
+                        <sling.additional.bundle.16>commons-lang3</sling.additional.bundle.16>
+                        <sling.additional.bundle.17>${project.build.finalName}.jar</sling.additional.bundle.17>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -325,19 +326,19 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.api</artifactId>
-            <version>1.3.5-SNAPSHOT</version>
+            <version>1.3.7-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.impl</artifactId>
-            <version>1.4.3-SNAPSHOT</version>
+            <version>1.4.5-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.jacksonexporter</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
+            <version>1.0.9-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -356,6 +357,12 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
             <version>2.3.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.4</version>
             <scope>provided</scope>
         </dependency>
 
