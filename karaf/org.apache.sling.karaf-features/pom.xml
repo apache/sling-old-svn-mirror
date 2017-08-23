@@ -38,7 +38,7 @@
   <properties>
     <org.apache.karaf.version>4.1.1</org.apache.karaf.version>
     <org.apache.jackrabbit.version>2.14.2</org.apache.jackrabbit.version>
-    <org.apache.jackrabbit.oak.version>1.6.2</org.apache.jackrabbit.oak.version>
+    <org.apache.jackrabbit.oak.version>1.6.4</org.apache.jackrabbit.oak.version>
     <org.apache.tika.version>1.14</org.apache.tika.version>
     <org.apache.sling.karaf-repoinit.version>0.2.0</org.apache.sling.karaf-repoinit.version>
   </properties>
