@@ -94,8 +94,7 @@ public class FullTextIndexingTest {
         final int status = H.getTestClient().upload(HttpTest.WEBDAV_BASE_URL + uploadPath + "/" + fileName, resourceToUpload);
         assertEquals("Upload status code", 201, status);
 
-        // Increased the timeout to 45 seconds to avoid failures with Oak - indexes not ready??
-        new RetryLoop(c, 45, 50);
+        new RetryLoop(c, 15, 50);
     }
 
     @Before
