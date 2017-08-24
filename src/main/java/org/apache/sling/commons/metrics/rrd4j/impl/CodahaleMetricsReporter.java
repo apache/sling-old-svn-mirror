@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static org.apache.sling.commons.metrics.rrd4j.impl.RRD4JReporter.DEFAULT_PATH;
 import static org.apache.sling.commons.metrics.rrd4j.impl.RRD4JReporter.DEFAULT_STEP;
 
 @Component(
@@ -119,7 +120,7 @@ public class CodahaleMetricsReporter implements InventoryPrinter, ZipAttachmentP
                         "available, otherwise relative to the current working " +
                         "directory."
         )
-        String path() default "metrics/metrics.rrd";
+        String path() default DEFAULT_PATH;
     }
 
     private MetricRegistry metricRegistry = new MetricRegistry();
@@ -128,31 +129,44 @@ public class CodahaleMetricsReporter implements InventoryPrinter, ZipAttachmentP
     void activate(BundleContext context, Configuration config) throws Exception {
         LOG.info("Starting RRD4J Metrics reporter");
         configuration = config;
-        rrd = new File(config.path());
+        rrd = getSafePath(context, config);
+        reporter = RRD4JReporter.forRegistry(metricRegistry)
+                .withPath(rrd)
+                .withDatasources(config.datasources())
+                .withArchives(config.archives())
+                .withStep(config.step())
+                .build();
+        if (reporter != null) {
+            reporter.start(config.step(), TimeUnit.SECONDS);
+            LOG.info("Started RRD4J Metrics reporter: {}.", reporter);
+        } else {
+            LOG.warn("Illegal config will not start the RRD reporter. [path={}, datasources={}, archives={}, step={}].",
+                    rrd.getPath(), config.datasources(), config.archives(), config.step());
+        }
+    }
+
+    private static File getSafePath(BundleContext context, Configuration config) {
+        String path = config.path();
+        if (path == null || path.isEmpty()) {
+            path = DEFAULT_PATH;
+        }
+        File rrd = new File(path);
         if (!rrd.isAbsolute()) {
             String home = context.getProperty("sling.home");
             if (home != null) {
                 rrd = new File(home, rrd.getPath());
             }
         }
-
-        reporter = RRD4JReporter.forRegistry(metricRegistry)
-                .convertRatesTo(TimeUnit.SECONDS)
-                .convertDurationsTo(TimeUnit.MICROSECONDS)
-                .withPath(rrd)
-                .withDatasources(config.datasources())
-                .withArchives(config.archives())
-                .withStep(config.step())
-                .build();
-        reporter.start(config.step(), TimeUnit.SECONDS);
-        LOG.info("Started RRD4J Metrics reporter. Writing to " + rrd);
+        return rrd;
     }
 
     @Deactivate
     void deactivate() {
         LOG.info("Stopping RRD4J Metrics reporter");
-        reporter.stop();
-        reporter = null;
+        if (reporter != null) {
+            reporter.stop();
+            reporter = null;
+        }
         configuration = null;
         rrd = null;
         LOG.info("Stopped RRD4J Metrics reporter");
