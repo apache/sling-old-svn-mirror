@@ -60,7 +60,7 @@
                             sun.nio.ch;resolution:=optional,
                             *
                         </Import-Package>
-                        <Embed-Dependency>rrd4j</Embed-Dependency>
+                        <Embed-Dependency>rrd4j;inline=com/**|org/rrd4j/ConsolFun*|org/rrd4j/DsType*|org/rrd4j/core/**|org/rrd4j/data/**</Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
