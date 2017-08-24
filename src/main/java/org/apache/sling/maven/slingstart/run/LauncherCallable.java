@@ -29,6 +29,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.logging.Log;
@@ -294,20 +295,9 @@ public class LauncherCallable implements Callable<ProcessDescription> {
                 final Process process = cfg.getProcess();
 
                 if (!destroy) {
-                    // as shutdown might block forever, we use a timeout
-                    final long now = System.currentTimeMillis();
-                    final long end = now + twoMinutes;
-
                     LOG.debug("Waiting for process to stop...");
-
-                    while (isAlive(process) && (System.currentTimeMillis() < end)) {
-                        try {
-                            Thread.sleep(2500);
-                        } catch (InterruptedException e) {
-                            // ignore
-                        }
-                    }
-                    if (isAlive( process)) {
+                    process.waitFor(twoMinutes, TimeUnit.MILLISECONDS);
+                    if (process.isAlive()) {
                         LOG.debug("Process timeout out after 2 minutes");
                         destroy = true;
                     } else {
@@ -318,6 +308,7 @@ public class LauncherCallable implements Callable<ProcessDescription> {
                 if (destroy) {
                     LOG.debug("Destroying process...");
                     process.destroy();
+                    process.waitFor(twoMinutes, TimeUnit.MILLISECONDS);
                     LOG.debug("Process destroyed");
                 }
 
@@ -325,15 +316,6 @@ public class LauncherCallable implements Callable<ProcessDescription> {
             }
         } else {
             LOG.warn("Launchpad already stopped");
-        }
-    }
-
-    private static boolean isAlive(Process process) {
-        try {
-            process.exitValue();
-            return false;
-        } catch (IllegalThreadStateException e) {
-            return true;
         }
     }
 
