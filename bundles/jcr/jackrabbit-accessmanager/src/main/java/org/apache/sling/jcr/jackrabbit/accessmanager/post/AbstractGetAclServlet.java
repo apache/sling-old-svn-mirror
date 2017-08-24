@@ -31,8 +31,10 @@ import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Item;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
@@ -50,6 +52,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.apache.sling.jcr.jackrabbit.accessmanager.impl.PrivilegesHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,22 +122,7 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
 
 		// Calculate a map of privileges to all the aggregate privileges it is contained in.
 		// Use for fast lookup during the mergePrivilegeSets calls below.
-        AccessControlManager accessControlManager = AccessControlUtil.getAccessControlManager(jcrSession);
-		Map<Privilege, Set<Privilege>> privilegeToAncestorMap = new HashMap<Privilege, Set<Privilege>>();
-        Privilege[] supportedPrivileges = accessControlManager.getSupportedPrivileges(item.getPath());
-        for (Privilege privilege : supportedPrivileges) {
-			if (privilege.isAggregate()) {
-				Privilege[] ap = privilege.getAggregatePrivileges();
-				for (Privilege privilege2 : ap) {
-					Set<Privilege> set = privilegeToAncestorMap.get(privilege2);
-					if (set == null) {
-						set = new HashSet<Privilege>();
-						privilegeToAncestorMap.put(privilege2, set);
-					}
-					set.add(privilege);
-				}
-			}
-		}
+        Map<Privilege, Set<Privilege>> privilegeToAncestorMap = PrivilegesHelper.buildPrivilegeToAncestorMap(jcrSession, resourcePath);
 
         AccessControlEntry[] declaredAccessControlEntries = getAccessControlEntries(jcrSession, resourcePath);
         Map<String, Map<String, Object>> aclMap = new LinkedHashMap<String, Map<String,Object>>();
@@ -171,14 +159,14 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
             if (allow) {
                 Privilege[] privileges = ace.getPrivileges();
                 for (Privilege privilege : privileges) {
-                	mergePrivilegeSets(privilege,
+                	PrivilegesHelper.mergePrivilegeSets(privilege,
                 			privilegeToAncestorMap,
 							grantedSet, deniedSet);
                 }
             } else {
                 Privilege[] privileges = ace.getPrivileges();
                 for (Privilege privilege : privileges) {
-                	mergePrivilegeSets(privilege,
+                    PrivilegesHelper.mergePrivilegeSets(privilege,
                 			privilegeToAncestorMap,
 							deniedSet, grantedSet);
                 }
@@ -258,87 +246,6 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
         }
         return builder;
     }
-
-	/**
-	 * Update the granted and denied privilege sets by merging the result of adding
-	 * the supplied privilege.
-	 */
-	private void mergePrivilegeSets(Privilege privilege,
-			Map<Privilege, Set<Privilege>> privilegeToAncestorMap,
-			Set<Privilege> firstSet, Set<Privilege> secondSet) {
-		//1. remove duplicates and invalid privileges from the list
-		if (privilege.isAggregate()) {
-			Privilege[] aggregatePrivileges = privilege.getAggregatePrivileges();
-			//remove duplicates from the granted set
-			List<Privilege> asList = Arrays.asList(aggregatePrivileges);
-			firstSet.removeAll(asList);
-
-			//remove from the denied set
-			secondSet.removeAll(asList);
-		}
-		secondSet.remove(privilege);
-
-		//2. check if the privilege is already contained in another granted privilege
-		boolean isAlreadyGranted = false;
-		Set<Privilege> ancestorSet = privilegeToAncestorMap.get(privilege);
-		if (ancestorSet != null) {
-			for (Privilege privilege2 : ancestorSet) {
-				if (firstSet.contains(privilege2)) {
-					isAlreadyGranted = true;
-					break;
-				}
-			}
-		}
-
-		//3. add the privilege
-		if (!isAlreadyGranted) {
-		    firstSet.add(privilege);
-		}
-
-		//4. Deal with expanding existing aggregate privileges to remove the invalid
-		//  items and add the valid ones.
-		Set<Privilege> filterSet = privilegeToAncestorMap.get(privilege);
-		if (filterSet != null) {
-	    	//re-pack the denied set to compensate
-	    	for (Privilege privilege2 : filterSet) {
-	    		if (secondSet.contains(privilege2)) {
-	    			secondSet.remove(privilege2);
-	    			if (privilege2.isAggregate()) {
-		    			filterAndMergePrivilegesFromAggregate(privilege2,
-		    					firstSet, secondSet, filterSet, privilege);
-	    			}
-	    		}
-			}
-		}
-	}
-
-	/**
-	 * Add all the declared aggregate privileges from the supplied privilege to the secondSet
-	 * unless the privilege is already in the firstSet and not contained in the supplied filterSet.
-	 */
-	private void filterAndMergePrivilegesFromAggregate(Privilege privilege, Set<Privilege> firstSet,
-			Set<Privilege> secondSet, Set<Privilege> filterSet, Privilege ignorePrivilege) {
-		Privilege[] declaredAggregatePrivileges = privilege.getDeclaredAggregatePrivileges();
-		for (Privilege privilege3 : declaredAggregatePrivileges) {
-			if (ignorePrivilege.equals(privilege3)) {
-				continue; //skip it.
-			}
-			if (!firstSet.contains(privilege3) && !filterSet.contains(privilege3)) {
-				secondSet.add(privilege3);
-			}
-			if (privilege3.isAggregate()) {
-				Privilege[] declaredAggregatePrivileges2 = privilege3.getDeclaredAggregatePrivileges();
-				for (Privilege privilege2 : declaredAggregatePrivileges2) {
-					if (!ignorePrivilege.equals(privilege2)) {
-						if (privilege2.isAggregate()) {
-							filterAndMergePrivilegesFromAggregate(privilege2,
-									firstSet, secondSet, filterSet, ignorePrivilege);
-						}
-					}
-				}
-			}
-		}
-	}
 
     protected abstract AccessControlEntry[] getAccessControlEntries(Session session, String absPath) throws RepositoryException;
 
