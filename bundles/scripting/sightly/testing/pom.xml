@@ -68,7 +68,7 @@
         -->
         <debug.options/>
 
-        <jacoco.maven.plugin.version>0.7.6.201602180812</jacoco.maven.plugin.version>
+        <jacoco.maven.plugin.version>0.7.9</jacoco.maven.plugin.version>
         <!-- HTL modules under test versions -->
         <org.apache.sling.scripting.sightly.compiler.version>1.0.11-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.version>
         <org.apache.sling.scripting.sightly.compiler.java.version>1.0.11-SNAPSHOT</org.apache.sling.scripting.sightly.compiler.java.version>
@@ -148,7 +148,7 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.7.0</version>
+                <version>1.7.7-SNAPSHOT</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -203,6 +203,23 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>${project.build.directory}/generated-sources</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-dependency-plugin</artifactId>
                         <version>2.10</version>
@@ -214,17 +231,19 @@
                                 org.apache.sling.scripting.sightly.js.provider,
                                 org.apache.sling.scripting.sightly.models.provider
                             </includeArtifactIds>
-                            <failOnMissingClassifierArtifact>true</failOnMissingClassifierArtifact>
+                            <transitive>false</transitive>
                         </configuration>
                         <executions>
                             <execution>
-                                <id>copy-compiled-classes</id>
+                                <id>copy-sources</id>
                                 <phase>generate-resources</phase>
                                 <goals>
                                     <goal>unpack-dependencies</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                                    <classifier>sources</classifier>
+                                    <failOnMissingClassifierArtifact>true</failOnMissingClassifierArtifact>
+                                    <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
                                 </configuration>
                             </execution>
                         </executions>

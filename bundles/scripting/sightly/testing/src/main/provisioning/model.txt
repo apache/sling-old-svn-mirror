@@ -16,15 +16,11 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-[feature name=oak]
-
-[variables]
-    oak.version=1.5.15
 
 [feature name=sling]
 # Dependencies
 [artifacts]
-  org.apache.sling/org.apache.sling.launchpad/9-SNAPSHOT/slingstart
+  org.apache.sling/org.apache.sling.launchpad/9/slingstart
   org.apache.sling/org.apache.sling.scripting.sightly.compiler
   org.apache.sling/org.apache.sling.scripting.sightly.compiler.java
   org.apache.sling/org.apache.sling.scripting.sightly

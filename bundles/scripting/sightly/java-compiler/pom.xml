@@ -48,7 +48,7 @@
     </scm>
 
     <properties>
-        <jacoco.maven.plugin.version>0.7.6.201602180812</jacoco.maven.plugin.version>
+        <jacoco.maven.plugin.version>0.7.9</jacoco.maven.plugin.version>
     </properties>
 
     <!-- ======================================================================= -->
