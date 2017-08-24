@@ -216,61 +216,6 @@ public class GetAclTest {
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
 	@Test 
-	public void testEffectiveAclMergeForUser_FewerPrivilegesGrantedOnChild() throws IOException, JsonException {
-		testUserId = H.createTestUser();
-		
-		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
-		
-        String postUrl = testFolderUrl + ".modifyAce.html";
-
-        //1. create an initial set of privileges
-		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair("principalId", testUserId));
-		postParams.add(new NameValuePair("privilege@jcr:all", "granted"));
-		
-		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
-		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
-		postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair("principalId", testUserId));
-		postParams.add(new NameValuePair("privilege@jcr:write", "granted"));
-		
-        postUrl = testFolderUrl + "/child.modifyAce.html";
-		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-
-		
-		//fetch the JSON for the eacl to verify the settings.
-		String getUrl = testFolderUrl + "/child.eacl.json";
-
-		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json);
-		JsonObject jsonObject = JsonUtil.parseObject(json);
-		
-		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
-		assertNotNull(aceObject);
-
-		String principalString = aceObject.getString("principal");
-		assertEquals(testUserId, principalString);
-		
-		JsonArray grantedArray = aceObject.getJsonArray("granted");
-		assertNotNull(grantedArray);
-		assertEquals(1, grantedArray.size());
-		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.size(); i++) {
-			grantedPrivilegeNames.add(grantedArray.getString(i));
-		}
-		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:all");
-
-		Object deniedArray = aceObject.get("denied");
-		assertNull(deniedArray);
-	}
-
-	/**
-	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
-	 */
-	@Test 
 	public void testEffectiveAclMergeForUser_MorePrivilegesGrantedOnChild() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
@@ -326,7 +271,6 @@ public class GetAclTest {
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
 	@Test
-	@Ignore // TODO: fails on Oak
 	public void testEffectiveAclMergeForUser_SubsetOfPrivilegesDeniedOnChild() throws IOException, JsonException {
 		testUserId = H.createTestUser();
 		
@@ -340,8 +284,6 @@ public class GetAclTest {
 		postParams.add(new NameValuePair("privilege@jcr:all", "granted"));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
 		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		postParams = new ArrayList<NameValuePair>();
