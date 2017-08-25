@@ -18,16 +18,19 @@
  */
 package org.apache.sling.bundleresource.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.bundleresource.impl.url.ResourceURLStreamHandler;
 import org.apache.sling.bundleresource.impl.url.ResourceURLStreamHandlerFactory;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -53,6 +56,13 @@ public class BundleResourceProviderTest {
         when(bundle.getEntry(path)).thenReturn(url);
     }
 
+    void addContent(Bundle bundle, String path, String content) throws IOException {
+        final URL url = new URL("resource:" + path);
+
+        ResourceURLStreamHandler.addContents(path, content);
+        when(bundle.getEntry(path)).thenReturn(url);
+    }
+
     @Before
     public void setup() {
         ResourceURLStreamHandlerFactory.init();
@@ -61,7 +71,7 @@ public class BundleResourceProviderTest {
     @SuppressWarnings("unchecked")
     @Test public void testFileResource() throws IOException {
         final Bundle bundle = getBundle();
-        addContent(bundle, "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
+        addContent(bundle, "/libs/foo/test.json", "HELLOWORLD");
 
         final MappedPath path = new MappedPath("/libs/foo", null, null);
 
@@ -79,6 +89,33 @@ public class BundleResourceProviderTest {
 
         final BundleResourceProvider provider = new BundleResourceProvider(bundle, path);
         assertNull(provider.getResource(mock(ResolveContext.class), "/libs/foo/test.json", mock(ResourceContext.class), null));
-        assertNotNull(provider.getResource(mock(ResolveContext.class), "/libs/foo/test", mock(ResourceContext.class), null));
+        final Resource rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/test", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+        assertNull(rsrc.adaptTo(InputStream.class));
+        assertNull(rsrc.adaptTo(URL.class));
+        assertNotNull(rsrc.getValueMap());
+        assertEquals("foo", rsrc.getValueMap().get("test", String.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test public void testFileAndJSONResource() throws IOException {
+        final Bundle bundle = getBundle();
+        addContent(bundle, "/libs/foo/test", "HELLOWORLD");
+        addContent(bundle, "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
+
+        final MappedPath path = new MappedPath("/libs/foo", null, "json");
+
+        final BundleResourceProvider provider = new BundleResourceProvider(bundle, path);
+        assertNull(provider.getResource(mock(ResolveContext.class), "/libs/foo/test.json", mock(ResourceContext.class), null));
+        final Resource rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/test", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+        assertNotNull(rsrc.adaptTo(InputStream.class));
+        assertNotNull(rsrc.adaptTo(URL.class));
+        assertNotNull(rsrc.getValueMap());
+        assertEquals("foo", rsrc.getValueMap().get("test", String.class));
+        final InputStream is = rsrc.adaptTo(InputStream.class);
+        final byte[] buffer = new byte[20];
+        final int l = is.read(buffer);
+        assertEquals("HELLOWORLD", new String(buffer, 0, l, "UTF-8"));
     }
 }
