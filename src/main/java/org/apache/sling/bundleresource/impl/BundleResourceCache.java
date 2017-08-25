@@ -166,10 +166,9 @@ class BundleResourceCache {
         List<String> list = listCache.get(path);
         if (list == null) {
 
-            @SuppressWarnings("unchecked")
             Enumeration<String> entries = bundle.getEntryPaths(path);
             if (entries != null && entries.hasMoreElements()) {
-                list = new LinkedList<String>();
+                list = new LinkedList<>();
                 while (entries.hasMoreElements()) {
                     list.add(entries.nextElement());
                 }

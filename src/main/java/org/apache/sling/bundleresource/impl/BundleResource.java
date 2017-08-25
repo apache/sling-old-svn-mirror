@@ -21,14 +21,27 @@ import static org.apache.jackrabbit.JcrConstants.NT_FOLDER;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,103 +53,124 @@ public class BundleResource extends AbstractResource {
 
     private final ResourceResolver resourceResolver;
 
-    private final BundleResourceCache bundle;
+    private final BundleResourceCache cache;
 
     private final MappedPath mappedPath;
 
     private final String path;
 
-    private URL url;
-
-    private final String resourceType;
+    private URL resourceUrl;
 
     private final ResourceMetadata metadata;
 
-    public static BundleResource getResource(ResourceResolver resourceResolver,
-            BundleResourceCache bundle, MappedPath mappedPath,
-            String resourcePath) {
+    private final ValueMap valueMap;
 
-        String entryPath = mappedPath.getEntryPath(resourcePath);
-
-        // first try, whether the bundle has an entry with a trailing slash
-        // which would be a folder. In this case we check whether the
-        // repository contains an item with the same path. If so, we
-        // don't create a BundleResource but instead return null to be
-        // able to return an item-based resource
-        URL entry = bundle.getEntry(entryPath.concat("/"));
-        if (entry != null) {
-
-            // append the slash to path for next steps
-            resourcePath = resourcePath.concat("/");
-        }
-
-        // if there is no entry with a trailing slash, try plain name
-        // which would then of course be a file
-        if (entry == null) {
-            entry = bundle.getEntry(entryPath);
-        }
-
-        // here we either have a folder for which no same-named item exists
-        // or a bundle file
-        if (entry != null) {
-            return new BundleResource(resourceResolver, bundle, mappedPath,
-                    resourcePath);
-        }
-
-        // the bundle does not contain the path
-        return null;
-    }
-
-    public BundleResource(ResourceResolver resourceResolver,
-            BundleResourceCache bundle, MappedPath mappedPath,
-            String resourcePath) {
+    public BundleResource(final ResourceResolver resourceResolver,
+            final BundleResourceCache cache,
+            final MappedPath mappedPath,
+            final String resourcePath,
+            final String propsPath,
+            final boolean isFolder) {
 
         this.resourceResolver = resourceResolver;
-        this.bundle = bundle;
+        this.cache = cache;
         this.mappedPath = mappedPath;
 
         metadata = new ResourceMetadata();
         metadata.setResolutionPath(resourcePath);
-        metadata.setCreationTime(bundle.getBundle().getLastModified());
-        metadata.setModificationTime(bundle.getBundle().getLastModified());
+        metadata.setCreationTime(this.cache.getBundle().getLastModified());
+        metadata.setModificationTime(this.cache.getBundle().getLastModified());
 
-        if (resourcePath.endsWith("/")) {
+        this.path = resourcePath;
 
-            this.path = resourcePath.substring(0, resourcePath.length() - 1);
-            this.resourceType = NT_FOLDER;
-            metadata.put(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING, Boolean.TRUE);
+        final Map<String, Object> properties = new HashMap<>();
+        this.valueMap = new ValueMapDecorator(Collections.unmodifiableMap(properties));
+        if (isFolder) {
+
+            properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, NT_FOLDER);
 
         } else {
 
-            this.path = resourcePath;
-            this.resourceType = NT_FILE;
+            properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, NT_FILE);
 
             try {
-                URL url = bundle.getEntry(mappedPath.getEntryPath(resourcePath));
-                metadata.setContentLength(url.openConnection().getContentLength());
-            } catch (Exception e) {
+                final URL url = this.cache.getEntry(mappedPath.getEntryPath(resourcePath));
+                if ( url != null ) {
+                    metadata.setContentLength(url.openConnection().getContentLength());
+                }
+            } catch (final Exception e) {
                 // don't care, we just have no content length
             }
         }
+
+        if ( propsPath != null ) {
+            try {
+                final URL url = this.cache.getEntry(mappedPath.getEntryPath(propsPath));
+                if (url != null) {
+                    final JsonObject obj = Json.createReader(url.openStream()).readObject();
+                    for(final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
+                        final Object value = getValue(entry.getValue());
+                        if ( value != null ) {
+                            properties.put(entry.getKey(), value);
+                        }
+                    }
+                }
+            } catch (final IOException ioe) {
+                log.error(
+                        "getInputStream: Cannot get input stream for " + mappedPath.getEntryPath(propsPath), ioe);
+            }
+
+        }
     }
 
+    private static Object getValue(final JsonValue value) {
+        switch ( value.getValueType() ) {
+            // type NULL -> return null
+            case NULL : return null;
+            // type TRUE or FALSE -> return boolean
+            case FALSE : return false;
+            case TRUE : return true;
+            // type String -> return String
+            case STRING : return ((JsonString)value).getString();
+            // type Number -> return long or double
+            case NUMBER : final JsonNumber num = (JsonNumber)value;
+                          if (num.isIntegral()) {
+                               return num.longValue();
+                          }
+                          return num.doubleValue();
+            // type ARRAY -> return JSON string
+            case ARRAY : final StringWriter writer = new StringWriter();
+                         Json.createWriter(writer).writeArray((JsonArray)value);
+                         return writer.toString();
+             // type OBJECT -> return JSON string
+             case OBJECT : final StringWriter mapWriter = new StringWriter();
+                           Json.createWriter(mapWriter).writeObject((JsonObject)value);
+                           return mapWriter.toString();
+        }
+        return null;
+    }
+
+    @Override
     public String getPath() {
         return path;
     }
 
+    @Override
     public String getResourceType() {
-        return resourceType;
+        return this.valueMap.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, String.class);
     }
 
-    /** Returns <code>null</code>, bundle resources have no super type */
+    @Override
     public String getResourceSuperType() {
-        return null;
+        return this.valueMap.get("sling:resourceSuperType", String.class);
     }
 
+    @Override
     public ResourceMetadata getResourceMetadata() {
         return metadata;
     }
 
+    @Override
     public ResourceResolver getResourceResolver() {
         return resourceResolver;
     }
@@ -148,9 +182,11 @@ public class BundleResource extends AbstractResource {
             return (Type) getInputStream(); // unchecked cast
         } else if (type == URL.class) {
             return (Type) getURL(); // unchecked cast
+        } else if (type == ValueMap.class) {
+            return (Type) valueMap; // unchecked cast
         }
 
-        // fall back to nothing
+        // fall back to adapter factories
         return super.adaptTo(type);
     }
 
@@ -185,17 +221,20 @@ public class BundleResource extends AbstractResource {
     }
 
     private URL getURL() {
-        if (url == null) {
-            try {
-                url = new URL(BundleResourceURLStreamHandler.PROTOCOL, null,
-                        -1, path, new BundleResourceURLStreamHandler(
-                                bundle.getBundle(), mappedPath.getEntryPath(path)));
-            } catch (MalformedURLException mue) {
-                log.error("getURL: Cannot get URL for " + this, mue);
+        if (resourceUrl == null) {
+            final URL url = this.cache.getEntry(mappedPath.getEntryPath(this.path));
+            if ( url != null ) {
+                try {
+                    resourceUrl = new URL(BundleResourceURLStreamHandler.PROTOCOL, null,
+                            -1, path, new BundleResourceURLStreamHandler(
+                                    cache.getBundle(), mappedPath.getEntryPath(path)));
+                } catch (MalformedURLException mue) {
+                    log.error("getURL: Cannot get URL for " + this, mue);
+                }
             }
         }
 
-        return url;
+        return resourceUrl;
     }
 
     @Override
@@ -204,7 +243,7 @@ public class BundleResource extends AbstractResource {
     }
 
     BundleResourceCache getBundle() {
-        return bundle;
+        return cache;
     }
 
     MappedPath getMappedPath() {
