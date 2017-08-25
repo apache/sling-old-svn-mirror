@@ -59,6 +59,9 @@
                         <Bundle-Activator>
                             org.apache.sling.bundleresource.impl.Activator
                         </Bundle-Activator>
+                        <Provide-Capability>
+                            osgi.extender;osgi.extender="org.apache.sling.bundleresource";version:Version="1.0"
+                        </Provide-Capability>
                     </instructions>
                 </configuration>
             </plugin>
