@@ -18,7 +18,15 @@
  */
 package org.apache.sling.bundleresource.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.sling.commons.osgi.ManifestHeader;
+
 class MappedPath {
+
+    public static final String DIR_PATH = "path";
+    public static final String DIR_JSON = "propsJSON";
 
     private static final char prefixSeparatorChar = '!';
     private final String resourceRoot;
@@ -26,7 +34,28 @@ class MappedPath {
     private final String entryRoot;
     private final String entryRootPrefix;
 
-    static MappedPath create(String configPath) {
+    private final String jsonExpandExtension;
+
+    public static MappedPath[] getRoots(final String rootList) {
+        List<MappedPath> prefixList = new ArrayList<>();
+
+        final ManifestHeader header = ManifestHeader.parse(rootList);
+        for (final ManifestHeader.Entry entry : header.getEntries()) {
+            final String resourceRoot = entry.getValue();
+            final String pathDirective = entry.getDirectiveValue(DIR_PATH);
+            final String expandDirective = entry.getDirectiveValue(DIR_JSON);
+            if (pathDirective != null) {
+                prefixList.add(new MappedPath(resourceRoot, pathDirective, expandDirective));
+            } else {
+                prefixList.add(MappedPath.create(resourceRoot, expandDirective));
+            }
+        }
+        return prefixList.toArray(new MappedPath[prefixList.size()]);
+    }
+
+
+    static MappedPath create(final String configPath,
+            final String expandDirective) {
         String resourceRoot;
         String entryRoot;
         int prefixSep = configPath.indexOf(prefixSeparatorChar);
@@ -37,63 +66,94 @@ class MappedPath {
             resourceRoot = configPath;
             entryRoot = null;
         }
-        return new MappedPath(resourceRoot, entryRoot);
+        return new MappedPath(resourceRoot, entryRoot, expandDirective);
     }
-    
-    MappedPath(String resourceRoot, String entryRoot) {
-        this.resourceRoot = resourceRoot;
+
+    MappedPath(final String resourceRoot,
+            final String entryRoot,
+            final String expandDirective) {
+        this.resourceRoot = ensureNoTrailingSlash(resourceRoot);
         this.resourceRootPrefix = ensureTrailingSlash(resourceRoot);
-        this.entryRoot = entryRoot;
+        this.entryRoot = ensureNoTrailingSlash(entryRoot);
         this.entryRootPrefix = ensureTrailingSlash(entryRoot);
+        this.jsonExpandExtension = ensureLeadingDot(expandDirective);
     }
-    
-    boolean isChild(String resourcePath) {
+
+    String getJSONPropertiesExtension() {
+        return this.jsonExpandExtension;
+    }
+
+    boolean isChild(final String resourcePath) {
         return resourcePath.startsWith(resourceRootPrefix)
             || resourcePath.equals(resourceRoot);
     }
-    
-    String getEntryPath(String resourcePath) {
+
+    String getEntryPath(final String resourcePath) {
         if (entryRootPrefix == null) {
             return resourcePath;
         }
-        
+
         if (resourcePath.startsWith(resourceRootPrefix)) {
             return entryRootPrefix.concat(resourcePath.substring(resourceRootPrefix.length()));
         } else if (resourcePath.equals(resourceRoot)) {
             return entryRoot;
         }
-        
+
         return null;
     }
-    
+
     String getResourceRoot() {
         return resourceRoot;
     }
-    
+
     String getResourceRootPrefix() {
         return resourceRootPrefix;
     }
-    
+
     String getEntryRoot() {
         return entryRoot;
     }
-    
+
     String getEntryRootPrefix() {
         return entryRootPrefix;
     }
-    
-    private static String ensureTrailingSlash(String path) {
+
+    private static String ensureLeadingDot(final String path) {
         if (path == null || path.length() == 0) {
             return null;
         }
-        
+
+        if (!path.startsWith(".")) {
+            return ".".concat(path);
+        }
+
+        return path;
+    }
+
+    private static String ensureNoTrailingSlash(final String path) {
+        if (path == null || path.length() == 0) {
+            return null;
+        }
+
+        if (path.endsWith("/")) {
+            return ensureNoTrailingSlash(path.substring(0, path.length() - 1));
+        }
+
+        return path;
+    }
+
+    private static String ensureTrailingSlash(final String path) {
+        if (path == null || path.length() == 0) {
+            return null;
+        }
+
         if (!path.endsWith("/")) {
             return path.concat("/");
         }
-        
+
         return path;
     }
-    
+
     @Override
     public String toString() {
         return "MappedPath: " + getResourceRoot() + " -> " + getEntryRoot();

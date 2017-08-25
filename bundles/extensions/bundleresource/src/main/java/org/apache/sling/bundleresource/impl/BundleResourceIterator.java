@@ -56,7 +56,7 @@ class BundleResourceIterator implements Iterator<Resource> {
     /**
      * Creates an instance using the given parent bundle resource.
      */
-    BundleResourceIterator(BundleResource parent) {
+    BundleResourceIterator(final BundleResource parent) {
 
         if (parent.isFile()) {
 
@@ -75,9 +75,9 @@ class BundleResourceIterator implements Iterator<Resource> {
             this.resourceResolver = parent.getResourceResolver();
             this.bundle = parent.getBundle();
             this.mappedPath = parent.getMappedPath();
-            
+
             parentPath = mappedPath.getEntryPath(parentPath);
-            
+
             this.entries = parent.getBundle().getEntryPaths(parentPath);
             this.prefixLength = parentPath.length();
 
@@ -103,11 +103,13 @@ class BundleResourceIterator implements Iterator<Resource> {
     }
 
     /** Returns true if there is another Resource available */
+    @Override
     public boolean hasNext() {
         return nextResult != null;
     }
 
     /** Returns the next resource in the iterator */
+    @Override
     public Resource next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
@@ -122,6 +124,7 @@ class BundleResourceIterator implements Iterator<Resource> {
      * Throws <code>UnsupportedOperationException</code> as this method is not
      * supported by this implementation.
      */
+    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }
@@ -136,14 +139,22 @@ class BundleResourceIterator implements Iterator<Resource> {
 
             // require leading slash
             if (!entry.startsWith("/")) {
-                entry = "/" + entry;
+                entry = "/".concat(entry);
             }
 
             int slash = entry.indexOf('/', prefixLength);
-            if (slash < 0 || slash == entry.length() - 1) {
+            if ((slash < 0 || slash == entry.length() - 1)
+                && (mappedPath.getJSONPropertiesExtension() == null || !entry.endsWith(mappedPath.getJSONPropertiesExtension()))) {
                 log.debug("seek: Using entry {}", entry);
+                final boolean isFolder = entry.endsWith("/");
+                String propsPath = null;
+                if ( mappedPath.getJSONPropertiesExtension() != null ) {
+                    propsPath = entry.concat(mappedPath.getJSONPropertiesExtension());
+                }
                 return new BundleResource(resourceResolver, bundle, mappedPath,
-                    entry);
+                        isFolder ? entry.substring(0, entry.length()-1): entry,
+                        propsPath,
+                        isFolder);
             }
 
             log.debug("seek: Ignoring entry {}", entry);

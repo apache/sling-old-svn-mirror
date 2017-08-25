@@ -120,7 +120,7 @@ public class Activator implements BundleActivator, BundleListener {
                         new Object[] { prefixes, bundle.getSymbolicName(), bundle.getVersion(),
                             bundle.getBundleId() });
 
-                    final MappedPath[] roots = BundleResourceProvider.getRoots(bundle, prefixes);
+                    final MappedPath[] roots = MappedPath.getRoots(prefixes);
                     providers = new BundleResourceProvider[roots.length];
 
                     int index = 0;

@@ -18,15 +18,12 @@
  */
 package org.apache.sling.bundleresource.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.commons.osgi.ManifestHeader;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -38,8 +35,8 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
 
     public static final String PROP_BUNDLE = BundleResourceProvider.class.getName();
 
-    /** The bundle providing the resources */
-    private final BundleResourceCache bundle;
+    /** The cache with the bundle providing the resources */
+    private final BundleResourceCache cache;
 
     /** The root path */
     private final MappedPath root;
@@ -47,49 +44,35 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
     @SuppressWarnings("rawtypes")
     private volatile ServiceRegistration<ResourceProvider> serviceRegistration;
 
-    public static MappedPath[] getRoots(final Bundle bundle, final String rootList) {
-        List<MappedPath> prefixList = new ArrayList<>();
-
-        final ManifestHeader header = ManifestHeader.parse(rootList);
-        for (final ManifestHeader.Entry entry : header.getEntries()) {
-            final String resourceRoot = entry.getValue();
-            final String pathDirective = entry.getDirectiveValue("path");
-            if (pathDirective != null) {
-                prefixList.add(new MappedPath(resourceRoot, pathDirective));
-            } else {
-                prefixList.add(MappedPath.create(resourceRoot));
-            }
-        }
-       return prefixList.toArray(new MappedPath[prefixList.size()]);
-    }
-
     /**
      * Creates Bundle resource provider accessing entries in the given Bundle an
      * supporting resources below root paths given by the rootList which is a
      * comma (and whitespace) separated list of absolute paths.
      */
     public BundleResourceProvider(final Bundle bundle, final MappedPath root) {
-        this.bundle = new BundleResourceCache(bundle);
+        this.cache = new BundleResourceCache(bundle);
         this.root = root;
     }
 
     //---------- Service Registration
 
     long registerService() {
+        final Bundle bundle = this.cache.getBundle();
         final Dictionary<String, Object> props = new Hashtable<>();
         props.put(Constants.SERVICE_DESCRIPTION,
-            "Provider of bundle based resources");
+            "Provider of bundle based resources from bundle " + String.valueOf(bundle.getBundleId()));
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        props.put(ResourceProvider.PROPERTY_ROOT, getRoot());
-        props.put(PROP_BUNDLE, this.bundle.getBundle().getBundleId());
+        props.put(ResourceProvider.PROPERTY_ROOT, this.root.getResourceRoot());
+        props.put(PROP_BUNDLE,bundle.getBundleId());
 
-        serviceRegistration = this.bundle.getBundle().getBundleContext().registerService(ResourceProvider.class, this, props);
+        serviceRegistration = bundle.getBundleContext().registerService(ResourceProvider.class, this, props);
         return (Long) serviceRegistration.getReference().getProperty(Constants.SERVICE_ID);
     }
 
     void unregisterService() {
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
+            serviceRegistration = null;
         }
     }
 
@@ -106,39 +89,78 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
             final Resource parent) {
         final MappedPath mappedPath = getMappedPath(path);
         if (mappedPath != null) {
-            return BundleResource.getResource(ctx.getResourceResolver(), bundle,
-                mappedPath, path);
+            final String entryPath = mappedPath.getEntryPath(path);
+
+            // first try, whether the bundle has an entry with a trailing slash
+            // which would be a folder. In this case we check whether the
+            // repository contains an item with the same path. If so, we
+            // don't create a BundleResource but instead return null to be
+            // able to return an item-based resource
+            URL entry = cache.getEntry(entryPath.concat("/"));
+            final boolean isFolder = entry != null;
+
+            // if there is no entry with a trailing slash, try plain name
+            // which would then of course be a file
+            if (entry == null) {
+                entry = cache.getEntry(entryPath);
+                if ( entry == null && this.root.getJSONPropertiesExtension() != null ) {
+                    entry = cache.getEntry(entryPath + this.root.getJSONPropertiesExtension());
+                }
+            }
+
+            // here we either have a folder for which no same-named item exists
+            // or a bundle file
+            if (entry != null) {
+                // check if a JSON props file is directly requested
+                // if so, we deny the access
+                if ( this.root.getJSONPropertiesExtension() == null
+                     || !entryPath.endsWith(this.root.getJSONPropertiesExtension()) ) {
+
+                    String propsPath = null;
+                    if ( this.root.getJSONPropertiesExtension() != null ) {
+                        propsPath = entryPath.concat(this.root.getJSONPropertiesExtension());
+                    }
+                    return new BundleResource(ctx.getResourceResolver(),
+                            cache,
+                            mappedPath,
+                            path,
+                            propsPath,
+                            isFolder);
+                }
+            }
+
+            // the bundle does not contain the path
         }
 
         return null;
     }
 
     @Override
-    public Iterator<Resource> listChildren(ResolveContext<Object> ctx, Resource parent) {
-     	if (parent instanceof BundleResource && ((BundleResource)parent).getBundle() == this.bundle) {
+    public Iterator<Resource> listChildren(final ResolveContext<Object> ctx, final Resource parent) {
+     	if (parent instanceof BundleResource && ((BundleResource)parent).getBundle() == this.cache) {
             // bundle resources can handle this request directly when the parent
-    		//  resource is in the same bundle as this provider.
+    		    // resource is in the same bundle as this provider.
             return ((BundleResource) parent).listChildren();
-    	}
+      	}
 
         // ensure this provider may have children of the parent
         String parentPath = parent.getPath();
         MappedPath mappedPath = getMappedPath(parentPath);
         if (mappedPath != null) {
             return new BundleResourceIterator(parent.getResourceResolver(),
-                bundle, mappedPath, parentPath);
+                cache, mappedPath, parentPath);
         }
 
         // the parent resource cannot have children in this provider,
         // though this is basically not expected, we still have to
         // be prepared for such a situation
-        return Collections.<Resource> emptyList().iterator();
+        return null;
     }
 
     // ---------- Web Console plugin support
 
     BundleResourceCache getBundleResourceCache() {
-        return bundle;
+        return cache;
     }
 
     MappedPath getMappedPath() {
@@ -147,17 +169,11 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
 
     // ---------- internal
 
-    /** Returns the root path */
-    private String getRoot() {
-        return this.root.getResourceRoot();
-    }
-
-    private MappedPath getMappedPath(String resourcePath) {
+    private MappedPath getMappedPath(final String resourcePath) {
         if (this.root.isChild(resourcePath)) {
             return root;
         }
 
         return null;
     }
-
 }
