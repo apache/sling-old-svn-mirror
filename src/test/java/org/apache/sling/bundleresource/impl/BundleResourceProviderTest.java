@@ -21,16 +21,21 @@ package org.apache.sling.bundleresource.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.bundleresource.impl.url.ResourceURLStreamHandler;
 import org.apache.sling.bundleresource.impl.url.ResourceURLStreamHandlerFactory;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -56,11 +61,34 @@ public class BundleResourceProviderTest {
         when(bundle.getEntry(path)).thenReturn(url);
     }
 
+    void finishContent(Bundle bundle) {
+        for(final Map.Entry<String, List<String>> entry : ResourceURLStreamHandler.getParentChildRelationship().entrySet()) {
+            when(bundle.getEntryPaths(entry.getKey())).thenReturn(Collections.enumeration(entry.getValue()));
+        }
+    }
+
     void addContent(Bundle bundle, String path, String content) throws IOException {
         final URL url = new URL("resource:" + path);
 
         ResourceURLStreamHandler.addContents(path, content);
         when(bundle.getEntry(path)).thenReturn(url);
+    }
+
+    String getContent(final Resource rsrc) throws IOException {
+        final InputStream is = rsrc.adaptTo(InputStream.class);
+        if ( is == null ) {
+            return null;
+        }
+        final byte[] buffer = new byte[20];
+        final int l = is.read(buffer);
+        return new String(buffer, 0, l, "UTF-8");
+    }
+
+    @SuppressWarnings("unchecked")
+    void assertContent(final BundleResourceProvider provider, final String path, final String content) throws IOException {
+        final Resource rsrc = provider.getResource(mock(ResolveContext.class), path, mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+        assertEquals(content, getContent(rsrc));
     }
 
     @Before
@@ -113,9 +141,72 @@ public class BundleResourceProviderTest {
         assertNotNull(rsrc.adaptTo(URL.class));
         assertNotNull(rsrc.getValueMap());
         assertEquals("foo", rsrc.getValueMap().get("test", String.class));
-        final InputStream is = rsrc.adaptTo(InputStream.class);
-        final byte[] buffer = new byte[20];
-        final int l = is.read(buffer);
-        assertEquals("HELLOWORLD", new String(buffer, 0, l, "UTF-8"));
+        assertEquals("HELLOWORLD", getContent(rsrc));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test public void testTree() throws IOException {
+        final Bundle bundle = getBundle();
+        addContent(bundle, "/libs/foo/", "DIR");
+        addContent(bundle, "/libs/foo/a", "A");
+        addContent(bundle, "/libs/foo/b", "B");
+        addContent(bundle, "/libs/foo/test", "test");
+        addContent(bundle, "/libs/foo/test/x", "X");
+        addContent(bundle, "/libs/foo/test/y", "Y");
+        addContent(bundle, "/libs/foo/test/z.json", Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"rtz"));
+        addContent(bundle, "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
+
+        finishContent(bundle);
+
+        final MappedPath path = new MappedPath("/libs/foo", null, "json");
+
+        final BundleResourceProvider provider = new BundleResourceProvider(bundle, path);
+
+        assertContent(provider, "/libs/foo/a", "A");
+        assertContent(provider, "/libs/foo/b", "B");
+        assertContent(provider, "/libs/foo/test", "test");
+        assertContent(provider, "/libs/foo/test/x", "X");
+        assertContent(provider, "/libs/foo/test/y", "Y");
+        assertContent(provider, "/libs/foo/test/z", null);
+
+        Resource rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+
+        List<String> rsrcChildren = getChildren(rsrc.listChildren());
+        assertEquals(3, rsrcChildren.size());
+        assertTrue(rsrcChildren.contains("/libs/foo/a"));
+        assertTrue(rsrcChildren.contains("/libs/foo/b"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test"));
+
+        rsrcChildren = getChildren(provider.listChildren(mock(ResolveContext.class), rsrc));
+        assertEquals(3, rsrcChildren.size());
+        assertTrue(rsrcChildren.contains("/libs/foo/a"));
+        assertTrue(rsrcChildren.contains("/libs/foo/b"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test"));
+
+        rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/test", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+
+        rsrcChildren = getChildren(rsrc.listChildren());
+        assertEquals(3, rsrcChildren.size());
+        assertTrue(rsrcChildren.contains("/libs/foo/test/x"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test/y"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test/z"));
+
+        rsrcChildren = getChildren(provider.listChildren(mock(ResolveContext.class), rsrc));
+        assertEquals(3, rsrcChildren.size());
+        assertTrue(rsrcChildren.contains("/libs/foo/test/x"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test/y"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test/z"));
+    }
+
+    List<String> getChildren(final Iterator<Resource> i) {
+        final List<String> list = new ArrayList<>();
+        if ( i != null ) {
+            while ( i.hasNext() ) {
+                list.add(i.next().getPath());
+            }
+        }
+        return list;
     }
 }

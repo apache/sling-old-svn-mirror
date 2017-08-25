@@ -18,8 +18,11 @@
  */
 package org.apache.sling.bundleresource.impl;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -58,31 +61,17 @@ class BundleResourceIterator implements Iterator<Resource> {
      */
     BundleResourceIterator(final BundleResource parent) {
 
-        if (parent.isFile()) {
+        // trailing slash to enumerate children
+        String parentPath = parent.getPath().concat("/");
 
-            // if the parent is a file, the iterator is empty
-            this.resourceResolver = null;
-            this.bundle = null;
-            this.entries = null;
-            this.prefixLength = 0;
-            this.mappedPath = null;
-            this.nextResult = null;
+        this.resourceResolver = parent.getResourceResolver();
+        this.bundle = parent.getBundle();
+        this.mappedPath = parent.getMappedPath();
 
-        } else {
-            // trailing slash to enumerate children
-            String parentPath = parent.getPath().concat("/");
+        this.entries = getFilteredEntries(mappedPath.getEntryPath(parentPath));
+        this.prefixLength = parentPath.length();
 
-            this.resourceResolver = parent.getResourceResolver();
-            this.bundle = parent.getBundle();
-            this.mappedPath = parent.getMappedPath();
-
-            parentPath = mappedPath.getEntryPath(parentPath);
-
-            this.entries = parent.getBundle().getEntryPaths(parentPath);
-            this.prefixLength = parentPath.length();
-
-            this.nextResult = (entries != null) ? seek() : null;
-        }
+        this.nextResult = (entries != null) ? seek() : null;
     }
 
     BundleResourceIterator(ResourceResolver resourceResolver, BundleResourceCache bundle,
@@ -96,10 +85,27 @@ class BundleResourceIterator implements Iterator<Resource> {
         this.resourceResolver = resourceResolver;
         this.bundle = bundle;
         this.mappedPath = mappedPath;
-        this.entries = bundle.getEntryPaths(parentPath);
+        this.entries = getFilteredEntries(parentPath);
         this.prefixLength = parentPath.length();
 
         this.nextResult = (entries != null) ? seek() : null;
+    }
+
+    private Iterator<String> getFilteredEntries(final String parentPath) {
+        final Set<String> bundleEntries = new TreeSet<>(bundle.getEntryPaths(parentPath));
+        if ( this.mappedPath.getJSONPropertiesExtension() != null ) {
+            final Set<String> add = new HashSet<>();
+            final Iterator<String> iter = bundleEntries.iterator();
+            while ( iter.hasNext() ) {
+                final String path = iter.next();
+                if ( path.endsWith(this.mappedPath.getJSONPropertiesExtension()) ) {
+                    iter.remove();
+                    add.add(path.substring(0, path.length() - this.mappedPath.getJSONPropertiesExtension().length()));
+                }
+            }
+            bundleEntries.addAll(add);
+        }
+        return (bundleEntries.isEmpty() ? null : bundleEntries.iterator());
     }
 
     /** Returns true if there is another Resource available */
@@ -143,8 +149,7 @@ class BundleResourceIterator implements Iterator<Resource> {
             }
 
             int slash = entry.indexOf('/', prefixLength);
-            if ((slash < 0 || slash == entry.length() - 1)
-                && (mappedPath.getJSONPropertiesExtension() == null || !entry.endsWith(mappedPath.getJSONPropertiesExtension()))) {
+            if (slash < 0 || slash == entry.length() - 1) {
                 log.debug("seek: Using entry {}", entry);
                 final boolean isFolder = entry.endsWith("/");
                 String propsPath = null;
