@@ -35,7 +35,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.util.stream.EmitterVisit
 import org.apache.sling.scripting.sightly.impl.compiler.util.stream.Streams;
 import org.apache.sling.scripting.sightly.impl.compiler.visitor.StatefulRangeIgnore;
 import org.apache.sling.scripting.sightly.impl.compiler.visitor.TrackingVisitor;
-import org.apache.sling.scripting.sightly.impl.compiler.CompileTimeObjectModel;
+import org.apache.sling.scripting.sightly.compiler.util.ObjectModel;
 
 /**
  * Removes code under conditionals which are proven to fail. It is probably a good idea to run this optimization after running
@@ -70,16 +70,16 @@ public class DeadCodeRemoval extends TrackingVisitor<Boolean> implements Emitter
         Boolean truthValue = null;
         ExpressionNode node = variableBindingStart.getExpression();
         if (node instanceof StringConstant) {
-            truthValue = CompileTimeObjectModel.toBoolean(((StringConstant) node).getText());
+            truthValue = ObjectModel.toBoolean(((StringConstant) node).getText());
         }
         if (node instanceof BooleanConstant) {
             truthValue = ((BooleanConstant) node).getValue();
         }
         if (node instanceof NumericConstant) {
-            truthValue = CompileTimeObjectModel.toBoolean(((NumericConstant) node).getValue());
+            truthValue = ObjectModel.toBoolean(((NumericConstant) node).getValue());
         }
         if (node instanceof NullLiteral) {
-           truthValue = CompileTimeObjectModel.toBoolean(null);
+           truthValue = ObjectModel.toBoolean(null);
         }
         tracker.pushVariable(variableBindingStart.getVariableName(), truthValue);
         outStream.write(variableBindingStart);

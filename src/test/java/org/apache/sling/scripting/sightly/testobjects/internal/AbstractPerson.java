@@ -16,25 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.impl.utils;
+package org.apache.sling.scripting.sightly.testobjects.internal;
 
-import java.util.Collection;
+import org.apache.sling.scripting.sightly.testobjects.Person;
 
-import org.apache.sling.scripting.sightly.impl.compiler.CompileTimeObjectModel;
-import org.junit.Test;
+abstract class AbstractPerson implements Person {
 
-import static org.junit.Assert.*;
+    private String firstName;
+    private String lastName;
 
-public class CompileTimeObjectModelTest {
-
-    @Test
-    public void testGetCollectionWithOneElement() {
-        String stringObject = "test";
-        Integer numberObject = 1;
-        Collection stringCollection = CompileTimeObjectModel.toCollection(stringObject);
-        assertTrue(stringCollection.size() == 1 && stringCollection.contains(stringObject));
-        Collection numberCollection = CompileTimeObjectModel.toCollection(numberObject);
-        assertTrue(numberCollection.size() == 1 && numberCollection.contains(numberObject));
+    public AbstractPerson(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
+    @Override
+    public String getFirstName() {
+        return firstName;
+    }
+
+    @Override
+    public String getLastName() {
+        return lastName;
+    }
 }

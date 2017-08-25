@@ -40,7 +40,7 @@ import org.apache.sling.scripting.sightly.compiler.expression.nodes.StringConsta
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.TernaryOperator;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.UnaryOperation;
 import org.apache.sling.scripting.sightly.compiler.util.VariableTracker;
-import org.apache.sling.scripting.sightly.impl.compiler.CompileTimeObjectModel;
+import org.apache.sling.scripting.sightly.compiler.util.ObjectModel;
 
 /**
  * Try to evaluate constant parts in expressions
@@ -87,7 +87,7 @@ public class ExpressionReducer implements NodeVisitor<EvalResult> {
                     property.getNode()));
         }
 
-        return EvalResult.constant(CompileTimeObjectModel.resolveProperty(
+        return EvalResult.constant(ObjectModel.resolveProperty(
                 target.getValue(), property.getValue()));
     }
 
@@ -147,7 +147,7 @@ public class ExpressionReducer implements NodeVisitor<EvalResult> {
                     ternaryOperator.getThenBranch(),
                     ternaryOperator.getElseBranch()));
         }
-        return (CompileTimeObjectModel.toBoolean(condition.getValue()))
+        return (ObjectModel.toBoolean(condition.getValue()))
                 ? eval(ternaryOperator.getThenBranch())
                 : eval(ternaryOperator.getElseBranch());
     }
