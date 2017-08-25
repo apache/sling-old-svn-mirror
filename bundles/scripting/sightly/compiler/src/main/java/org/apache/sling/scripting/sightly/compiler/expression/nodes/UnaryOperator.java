@@ -19,7 +19,7 @@
 package org.apache.sling.scripting.sightly.compiler.expression.nodes;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.scripting.sightly.impl.compiler.CompileTimeObjectModel;
+import org.apache.sling.scripting.sightly.compiler.util.ObjectModel;
 
 /**
  * Unary operators used in expressions.
@@ -30,7 +30,7 @@ public enum UnaryOperator {
     NOT {
         @Override
         public Object eval(Object operand) {
-            return !CompileTimeObjectModel.toBoolean(operand);
+            return !ObjectModel.toBoolean(operand);
         }
     },
 
@@ -38,7 +38,7 @@ public enum UnaryOperator {
     IS_WHITESPACE  {
         @Override
         public Object eval(Object operand) {
-            return StringUtils.isWhitespace(CompileTimeObjectModel.toString(operand));
+            return StringUtils.isWhitespace(ObjectModel.toString(operand));
         }
     },
 
@@ -48,7 +48,7 @@ public enum UnaryOperator {
     LENGTH {
         @Override
         public Object eval(Object operand) {
-            return CompileTimeObjectModel.toCollection(operand).size();
+            return ObjectModel.toCollection(operand).size();
         }
     };
 

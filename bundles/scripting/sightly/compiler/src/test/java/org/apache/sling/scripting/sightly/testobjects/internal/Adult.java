@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,28 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.impl.engine.runtime;
+package org.apache.sling.scripting.sightly.testobjects.internal;
 
-import org.apache.sling.api.adapter.Adaptable;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.scripting.sightly.render.AbstractRuntimeObjectModel;
+class Adult extends AbstractPerson {
 
-public class SlingRuntimeObjectModel extends AbstractRuntimeObjectModel {
+    public static final long TODAY = System.currentTimeMillis();
 
-    @Override
-    protected Object getProperty(Object target, Object propertyObj) {
-        Object result = null;
-        if (target instanceof Adaptable) {
-            ValueMap valueMap = ((Adaptable) target).adaptTo(ValueMap.class);
-            if (valueMap != null) {
-                String property = toString(propertyObj);
-                result = valueMap.get(property);
-            }
-        }
-        if (result == null) {
-            result = super.getProperty(target, propertyObj);
-        }
-        return result;
+    Adult(String firstName, String lastName) {
+        super(firstName, lastName);
     }
 
+    public String getFullName() {
+        return getFirstName() + ", " + getLastName();
+    }
 }
