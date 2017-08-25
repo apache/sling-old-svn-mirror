@@ -23,6 +23,7 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,12 +33,27 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonStructure;
 
+import org.apache.sling.api.resource.ResourceUtil;
+
 public class ResourceURLStreamHandler extends URLStreamHandler {
 
     private static final Map<String, String> contents = new HashMap<>();
 
+    private static final Map<String, List<String>> parentChild = new HashMap<>();
+
     public static void addContents(final String path, final String c) {
         contents.put(path, c);
+        final String parent = ResourceUtil.getParent(path).concat("/");
+        List<String> children = parentChild.get(parent);
+        if ( children == null ) {
+            children = new ArrayList<>();
+            parentChild.put(parent, children);
+        }
+        children.add(path);
+    }
+
+    public static  Map<String, List<String>> getParentChildRelationship() {
+        return parentChild;
     }
 
     public static void addJSON(final String path, final Map<String, Object> props) {
