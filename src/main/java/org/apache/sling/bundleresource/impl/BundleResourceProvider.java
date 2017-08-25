@@ -31,7 +31,6 @@ import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
@@ -76,7 +75,7 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
 
     //---------- Service Registration
 
-    long registerService(final BundleContext context) {
+    long registerService() {
         final Dictionary<String, Object> props = new Hashtable<>();
         props.put(Constants.SERVICE_DESCRIPTION,
             "Provider of bundle based resources");
@@ -84,9 +83,8 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
         props.put(ResourceProvider.PROPERTY_ROOT, getRoot());
         props.put(PROP_BUNDLE, this.bundle.getBundle().getBundleId());
 
-        serviceRegistration = context.registerService(ResourceProvider.class, this, props);
-        return (Long) serviceRegistration.getReference().getProperty(
-            Constants.SERVICE_ID);
+        serviceRegistration = this.bundle.getBundle().getBundleContext().registerService(ResourceProvider.class, this, props);
+        return (Long) serviceRegistration.getReference().getProperty(Constants.SERVICE_ID);
     }
 
     void unregisterService() {
