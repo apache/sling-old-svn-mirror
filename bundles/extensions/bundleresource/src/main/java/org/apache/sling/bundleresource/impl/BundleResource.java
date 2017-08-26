@@ -21,12 +21,13 @@ import static org.apache.jackrabbit.JcrConstants.NT_FOLDER;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
@@ -65,11 +66,15 @@ public class BundleResource extends AbstractResource {
 
     private final ValueMap valueMap;
 
+    private final Map<String, Map<String, Object>> subResources;
+
+    @SuppressWarnings("unchecked")
     public BundleResource(final ResourceResolver resourceResolver,
             final BundleResourceCache cache,
             final MappedPath mappedPath,
             final String resourcePath,
             final String propsPath,
+            final Map<String, Object> readProps,
             final boolean isFolder) {
 
         this.resourceResolver = resourceResolver;
@@ -103,15 +108,35 @@ public class BundleResource extends AbstractResource {
             }
         }
 
+        Map<String, Map<String, Object>> children = null;
+        if ( readProps != null ) {
+            for(final Map.Entry<String, Object> entry : readProps.entrySet()) {
+                if ( entry.getValue() instanceof Map ) {
+                    if ( children == null ) {
+                        children = new HashMap<>();
+                    }
+                    children.put(entry.getKey(), (Map<String, Object>)entry.getValue());
+                } else {
+                    properties.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
         if ( propsPath != null ) {
             try {
                 final URL url = this.cache.getEntry(mappedPath.getEntryPath(propsPath));
                 if (url != null) {
                     final JsonObject obj = Json.createReader(url.openStream()).readObject();
                     for(final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
-                        final Object value = getValue(entry.getValue());
+                        final Object value = getValue(entry.getValue(), true);
                         if ( value != null ) {
-                            properties.put(entry.getKey(), value);
+                            if ( value instanceof Map ) {
+                                if ( children == null ) {
+                                    children = new HashMap<>();
+                                }
+                                children.put(entry.getKey(), (Map<String, Object>)value);
+                            } else {
+                                properties.put(entry.getKey(), value);
+                            }
                         }
                     }
                 }
@@ -121,9 +146,10 @@ public class BundleResource extends AbstractResource {
             }
 
         }
+        this.subResources = children;
     }
 
-    private static Object getValue(final JsonValue value) {
+    private static Object getValue(final JsonValue value, final boolean topLevel) {
         switch ( value.getValueType() ) {
             // type NULL -> return null
             case NULL : return null;
@@ -138,16 +164,25 @@ public class BundleResource extends AbstractResource {
                                return num.longValue();
                           }
                           return num.doubleValue();
-            // type ARRAY -> return JSON string
-            case ARRAY : final StringWriter writer = new StringWriter();
-                         Json.createWriter(writer).writeArray((JsonArray)value);
-                         return writer.toString();
-             // type OBJECT -> return JSON string
-             case OBJECT : final StringWriter mapWriter = new StringWriter();
-                           Json.createWriter(mapWriter).writeObject((JsonObject)value);
-                           return mapWriter.toString();
+            // type ARRAY -> return list and call this method for each value
+            case ARRAY : final List<Object> array = new ArrayList<>();
+                         for(final JsonValue x : ((JsonArray)value)) {
+                             array.add(getValue(x, false));
+                         }
+                         return array;
+            // type OBJECT -> return map
+            case OBJECT : final Map<String, Object> map = new HashMap<>();
+                          final JsonObject obj = (JsonObject)value;
+                          for(final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
+                              map.put(entry.getKey(), getValue(entry.getValue(), false));
+                          }
+                          return map;
         }
         return null;
+    }
+
+    Map<String, Map<String, Object>> getSubResources() {
+        return this.subResources;
     }
 
     @Override

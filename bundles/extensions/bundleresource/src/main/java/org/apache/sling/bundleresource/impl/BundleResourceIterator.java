@@ -20,12 +20,14 @@ package org.apache.sling.bundleresource.impl;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +45,7 @@ class BundleResourceIterator implements Iterator<Resource> {
     private final ResourceResolver resourceResolver;
 
     /** Bundle providing the entry resources */
-    private final BundleResourceCache bundle;
+    private final BundleResourceCache cache;
 
     private final MappedPath mappedPath;
 
@@ -56,6 +58,8 @@ class BundleResourceIterator implements Iterator<Resource> {
     /** The prefetched next iterator entry, null at the end of iterating */
     private Resource nextResult;
 
+    private final Map<String, Map<String, Object>> subResources;
+
     /**
      * Creates an instance using the given parent bundle resource.
      */
@@ -65,7 +69,8 @@ class BundleResourceIterator implements Iterator<Resource> {
         String parentPath = parent.getPath().concat("/");
 
         this.resourceResolver = parent.getResourceResolver();
-        this.bundle = parent.getBundle();
+        this.cache = parent.getBundle();
+        this.subResources = parent.getSubResources();
         this.mappedPath = parent.getMappedPath();
 
         this.entries = getFilteredEntries(mappedPath.getEntryPath(parentPath));
@@ -83,7 +88,8 @@ class BundleResourceIterator implements Iterator<Resource> {
         }
 
         this.resourceResolver = resourceResolver;
-        this.bundle = bundle;
+        this.cache = bundle;
+        this.subResources = null;
         this.mappedPath = mappedPath;
         this.entries = getFilteredEntries(parentPath);
         this.prefixLength = parentPath.length();
@@ -92,8 +98,13 @@ class BundleResourceIterator implements Iterator<Resource> {
     }
 
     private Iterator<String> getFilteredEntries(final String parentPath) {
-        final Set<String> bundleEntries = new TreeSet<>(bundle.getEntryPaths(parentPath));
+        final Set<String> bundleEntries = new TreeSet<>(cache.getEntryPaths(parentPath));
         if ( this.mappedPath.getJSONPropertiesExtension() != null ) {
+            if ( subResources != null ) {
+                for(final String name : subResources.keySet()) {
+                    bundleEntries.add(parentPath.concat(name));
+                }
+            }
             final Set<String> add = new HashSet<>();
             final Iterator<String> iter = bundleEntries.iterator();
             while ( iter.hasNext() ) {
@@ -156,9 +167,11 @@ class BundleResourceIterator implements Iterator<Resource> {
                 if ( mappedPath.getJSONPropertiesExtension() != null ) {
                     propsPath = entry.concat(mappedPath.getJSONPropertiesExtension());
                 }
-                return new BundleResource(resourceResolver, bundle, mappedPath,
-                        isFolder ? entry.substring(0, entry.length()-1): entry,
+                final String entryPath = isFolder ? entry.substring(0, entry.length()-1) : entry;
+                return new BundleResource(resourceResolver, cache, mappedPath,
+                        entryPath,
                         propsPath,
+                        this.subResources != null ? this.subResources.get(ResourceUtil.getName(entryPath)) : null,
                         isFolder);
             }
 

@@ -125,6 +125,7 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
                             mappedPath,
                             path,
                             propsPath,
+                            null,
                             isFolder);
                 }
             }
