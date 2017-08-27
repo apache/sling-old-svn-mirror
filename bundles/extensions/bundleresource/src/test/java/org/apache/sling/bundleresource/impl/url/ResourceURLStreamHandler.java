@@ -62,6 +62,12 @@ public class ResourceURLStreamHandler extends URLStreamHandler {
         addContents(path, writer.toString());
     }
 
+    public static void reset() {
+        contents.clear();
+        parentChild.clear();
+    }
+
+
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
         final ResourceURLConnection conn = new ResourceURLConnection(url, contents.get(url.getPath()));

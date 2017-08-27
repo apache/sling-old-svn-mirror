@@ -34,6 +34,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.bundleresource.impl.url.ResourceURLStreamHandler;
 import org.apache.sling.bundleresource.impl.url.ResourceURLStreamHandlerFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
@@ -53,6 +54,11 @@ public class BundleResourceTest {
     @Before
     public void setup() {
         ResourceURLStreamHandlerFactory.init();
+    }
+
+    @After
+    public void finish() {
+        ResourceURLStreamHandler.reset();
     }
 
     void addContent(BundleResourceCache cache, String path, Map<String, Object> content) throws IOException {
