@@ -149,6 +149,29 @@ public class BundleResource extends AbstractResource {
         this.subResources = children;
     }
 
+    Resource getChildResource(String path) {
+        Resource result = null;
+        Map<String, Map<String, Object>> resources = this.subResources;
+        for(String segment : path.split("/")) {
+            if ( resources != null ) {
+                path = path.concat("/").concat(segment);
+                final Map<String, Object> props = resources.get(segment);
+                if ( props != null ) {
+                    result = new BundleResource(this.resourceResolver, this.cache, this.mappedPath,
+                            path, path.concat(this.mappedPath.getJSONPropertiesExtension()), props, false);
+                    resources = ((BundleResource)result).subResources;
+                } else {
+                    result = null;
+                    break;
+                }
+            } else {
+                result = null;
+                break;
+            }
+        }
+        return result;
+    }
+
     private static Object getValue(final JsonValue value, final boolean topLevel) {
         switch ( value.getValueType() ) {
             // type NULL -> return null
