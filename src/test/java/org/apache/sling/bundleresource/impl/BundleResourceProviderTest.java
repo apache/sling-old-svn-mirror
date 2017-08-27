@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,12 +35,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.json.Json;
+import javax.json.stream.JsonGenerator;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.bundleresource.impl.url.ResourceURLStreamHandler;
 import org.apache.sling.bundleresource.impl.url.ResourceURLStreamHandlerFactory;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
@@ -84,6 +89,16 @@ public class BundleResourceProviderTest {
         return new String(buffer, 0, l, "UTF-8");
     }
 
+    List<String> getChildren(final Iterator<Resource> i) {
+        final List<String> list = new ArrayList<>();
+        if ( i != null ) {
+            while ( i.hasNext() ) {
+                list.add(i.next().getPath());
+            }
+        }
+        return list;
+    }
+
     @SuppressWarnings("unchecked")
     void assertContent(final BundleResourceProvider provider, final String path, final String content) throws IOException {
         final Resource rsrc = provider.getResource(mock(ResolveContext.class), path, mock(ResourceContext.class), null);
@@ -94,6 +109,11 @@ public class BundleResourceProviderTest {
     @Before
     public void setup() {
         ResourceURLStreamHandlerFactory.init();
+    }
+
+    @After
+    public void finish() {
+        ResourceURLStreamHandler.reset();
     }
 
     @SuppressWarnings("unchecked")
@@ -145,7 +165,7 @@ public class BundleResourceProviderTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test public void testTree() throws IOException {
+    @Test public void testTreeWithoutDeepJSON() throws IOException {
         final Bundle bundle = getBundle();
         addContent(bundle, "/libs/foo/", "DIR");
         addContent(bundle, "/libs/foo/a", "A");
@@ -200,13 +220,131 @@ public class BundleResourceProviderTest {
         assertTrue(rsrcChildren.contains("/libs/foo/test/z"));
     }
 
-    List<String> getChildren(final Iterator<Resource> i) {
-        final List<String> list = new ArrayList<>();
-        if ( i != null ) {
-            while ( i.hasNext() ) {
-                list.add(i.next().getPath());
-            }
-        }
-        return list;
+    @SuppressWarnings("unchecked")
+    @Test public void testTreeWithDeepJSON() throws IOException {
+        // build JSON
+        final StringWriter writer = new StringWriter();
+        final JsonGenerator g = Json.createGenerator(writer);
+        g.writeStartObject();
+        g.write("level", "1");
+        g.write("name", "d");
+        g.writeStartObject("g");
+        g.write("level", "2");
+        g.write("name", "g");
+        g.writeStartObject("g1");
+        g.write("level", "3");
+        g.write("name", "g1");
+        g.writeEnd(); // g1
+        g.writeStartObject("g2");
+        g.write("level", "3");
+        g.write("name", "g2");
+        g.writeEnd(); // g2
+        g.writeEnd(); // g
+        g.writeStartObject("h");
+        g.write("level", "2");
+        g.write("name", "h");
+        g.writeStartObject("h1");
+        g.write("level", "3");
+        g.write("name", "h1");
+        g.writeEnd(); // h1
+        g.writeStartObject("h2");
+        g.write("level", "3");
+        g.write("name", "h2");
+        g.writeStartObject("h21");
+        g.write("level", "4");
+        g.write("name", "h21");
+        g.writeEnd(); // h21
+        g.writeEnd(); // h2
+        g.writeEnd(); // h
+
+        g.writeEnd(); // root
+        g.close();
+
+        final Bundle bundle = getBundle();
+        addContent(bundle, "/libs/foo/", "DIR");
+        addContent(bundle, "/libs/foo/a", "A");
+        addContent(bundle, "/libs/foo/b", "B");
+        addContent(bundle, "/libs/foo/d.json", writer.toString());
+        addContent(bundle, "/libs/foo/test", "test");
+        addContent(bundle, "/libs/foo/test/x", "X");
+        addContent(bundle, "/libs/foo/test/y", "Y");
+        addContent(bundle, "/libs/foo/test/z.json", Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"rtz"));
+        addContent(bundle, "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
+
+        finishContent(bundle);
+
+        final MappedPath path = new MappedPath("/libs/foo", null, "json");
+
+        final BundleResourceProvider provider = new BundleResourceProvider(bundle, path);
+
+        assertContent(provider, "/libs/foo/a", "A");
+        assertContent(provider, "/libs/foo/b", "B");
+        assertContent(provider, "/libs/foo/test", "test");
+        assertContent(provider, "/libs/foo/test/x", "X");
+        assertContent(provider, "/libs/foo/test/y", "Y");
+        assertContent(provider, "/libs/foo/test/z", null);
+
+        Resource rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+
+        List<String> rsrcChildren = getChildren(rsrc.listChildren());
+        assertEquals(4, rsrcChildren.size());
+        assertTrue(rsrcChildren.contains("/libs/foo/a"));
+        assertTrue(rsrcChildren.contains("/libs/foo/b"));
+        assertTrue(rsrcChildren.contains("/libs/foo/d"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test"));
+
+        rsrcChildren = getChildren(provider.listChildren(mock(ResolveContext.class), rsrc));
+        assertEquals(4, rsrcChildren.size());
+        assertTrue(rsrcChildren.contains("/libs/foo/a"));
+        assertTrue(rsrcChildren.contains("/libs/foo/b"));
+        assertTrue(rsrcChildren.contains("/libs/foo/d"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test"));
+
+        rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/test", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+
+        rsrcChildren = getChildren(rsrc.listChildren());
+        assertEquals(3, rsrcChildren.size());
+        assertTrue(rsrcChildren.contains("/libs/foo/test/x"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test/y"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test/z"));
+
+        rsrcChildren = getChildren(provider.listChildren(mock(ResolveContext.class), rsrc));
+        assertEquals(3, rsrcChildren.size());
+        assertTrue(rsrcChildren.contains("/libs/foo/test/x"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test/y"));
+        assertTrue(rsrcChildren.contains("/libs/foo/test/z"));
+
+        // check children of d
+        rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/d", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+        rsrcChildren = getChildren(rsrc.listChildren());
+        assertEquals(2, rsrcChildren.size());
+        assertTrue(rsrcChildren.contains("/libs/foo/d/g"));
+        assertTrue(rsrcChildren.contains("/libs/foo/d/h"));
+
+        rsrcChildren = getChildren(provider.listChildren(mock(ResolveContext.class), rsrc));
+        assertEquals(2, rsrcChildren.size());
+        assertTrue(rsrcChildren.contains("/libs/foo/d/g"));
+        assertTrue(rsrcChildren.contains("/libs/foo/d/h"));
+
+        // try to get g and h directly
+        rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/d/g", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+        assertEquals("g", rsrc.getValueMap().get("name", String.class));
+
+        rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/d/h", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+        assertEquals("h", rsrc.getValueMap().get("name", String.class));
+
+        // try to get g1 and g2 directly
+        rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/d/g/g1", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+        assertEquals("g1", rsrc.getValueMap().get("name", String.class));
+
+        rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/d/g/g2", mock(ResourceContext.class), null);
+        assertNotNull(rsrc);
+        assertEquals("g2", rsrc.getValueMap().get("name", String.class));
     }
 }
