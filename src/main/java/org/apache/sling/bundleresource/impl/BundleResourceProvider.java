@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.spi.resource.provider.ResolveContext;
 import org.apache.sling.spi.resource.provider.ResourceContext;
 import org.apache.sling.spi.resource.provider.ResourceProvider;
@@ -131,6 +132,20 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
             }
 
             // the bundle does not contain the path
+            // if JSON is enabled check for any parent
+            if ( this.root.getJSONPropertiesExtension() != null ) {
+                String resourcePath = ResourceUtil.getParent(path);
+                while ( resourcePath != null ) {
+                    final Resource rsrc = getResource(ctx, resourcePath, resourceContext, null);
+                    if (rsrc != null ) {
+                        final Resource childResource = ((BundleResource)rsrc).getChildResource(path.substring(resourcePath.length() + 1));
+                        if ( childResource != null ) {
+                            return childResource;
+                        }
+                    }
+                    resourcePath = ResourceUtil.getParent(resourcePath);
+                }
+            }
         }
 
         return null;

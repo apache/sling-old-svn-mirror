@@ -18,6 +18,7 @@
  */
 package org.apache.sling.bundleresource.impl;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -70,7 +71,7 @@ class BundleResourceIterator implements Iterator<Resource> {
 
         this.resourceResolver = parent.getResourceResolver();
         this.cache = parent.getBundle();
-        this.subResources = parent.getSubResources();
+        this.subResources = parent.getSubResources() != null ? new HashMap<>(parent.getSubResources()) : null;
         this.mappedPath = parent.getMappedPath();
 
         this.entries = getFilteredEntries(mappedPath.getEntryPath(parentPath));
@@ -100,11 +101,6 @@ class BundleResourceIterator implements Iterator<Resource> {
     private Iterator<String> getFilteredEntries(final String parentPath) {
         final Set<String> bundleEntries = new TreeSet<>(cache.getEntryPaths(parentPath));
         if ( this.mappedPath.getJSONPropertiesExtension() != null ) {
-            if ( subResources != null ) {
-                for(final String name : subResources.keySet()) {
-                    bundleEntries.add(parentPath.concat(name));
-                }
-            }
             final Set<String> add = new HashSet<>();
             final Iterator<String> iter = bundleEntries.iterator();
             while ( iter.hasNext() ) {
@@ -115,6 +111,16 @@ class BundleResourceIterator implements Iterator<Resource> {
                 }
             }
             bundleEntries.addAll(add);
+            if ( subResources != null ) {
+                for(final String name : subResources.keySet()) {
+                    final String fullPath = parentPath.concat(name);
+                    if ( !bundleEntries.contains(fullPath) ) {
+                        bundleEntries.add(fullPath);
+                    } else {
+                        subResources.remove(name);
+                    }
+                }
+            }
         }
         return (bundleEntries.isEmpty() ? null : bundleEntries.iterator());
     }
