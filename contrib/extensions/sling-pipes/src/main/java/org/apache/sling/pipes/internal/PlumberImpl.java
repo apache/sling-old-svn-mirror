@@ -118,6 +118,7 @@ public class PlumberImpl implements Plumber, JobConsumer {
         registerPipe(PathPipe.RESOURCE_TYPE, PathPipe.class);
         registerPipe(FilterPipe.RESOURCE_TYPE, FilterPipe.class);
         registerPipe(NotPipe.RESOURCE_TYPE, NotPipe.class);
+        registerPipe(TraversePipe.RESOURCE_TYPE, TraversePipe.class);
     }
 
     @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)

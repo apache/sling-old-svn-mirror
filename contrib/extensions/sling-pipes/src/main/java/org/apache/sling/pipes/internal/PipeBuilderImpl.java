@@ -108,6 +108,11 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    public PipeBuilder traverse() {
+        return pipe(TraversePipe.RESOURCE_TYPE);
+    }
+
+    @Override
     public PipeBuilder json(String expr) throws IllegalAccessException {
         return pipe(JsonPipe.RESOURCE_TYPE).expr(expr);
     }
