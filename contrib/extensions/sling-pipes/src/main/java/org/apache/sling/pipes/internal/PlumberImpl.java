@@ -271,7 +271,7 @@ public class PlumberImpl implements Plumber, JobConsumer {
     }
 
     @Override
-    public PipeBuilder getBuilder(ResourceResolver resolver) {
+    public PipeBuilder newPipe(ResourceResolver resolver) {
         PipeBuilder builder = new PipeBuilderImpl(resolver, this);
         return builder;
     }

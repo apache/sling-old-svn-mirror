@@ -14,12 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.internal;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.Pipe;
+import org.apache.sling.pipes.ReferencePipe;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * testing references
@@ -49,6 +58,20 @@ public class ReferencePipeTest  extends AbstractPipeTest {
     @Test
     public void testValueBinding() throws Exception {
         testOneResource(PATH_PIPE + "/isAppleWormy", PATH_APPLE);
-        assertFalse("Banana should be filtered out", getOutput(PATH_PIPE + "/isBananaWormy").hasNext());
+    }
+
+    @Test
+    public void testBuilderWithAdditionalBinding() throws Exception {
+        String newFruit = "watermelon";
+        String newPath = PATH_FRUITS + "/" + newFruit;
+        ResourceUtil.getOrCreateResource(context.resourceResolver(), newPath, "nt:unstructured", "nt:unstructured", true);
+        Map bindings = new HashMap();
+        bindings.put("fruit", newFruit);
+        Pipe pipe = plumber.newPipe(context.resourceResolver()).echo(PATH_FRUITS + "/${fruit}").build();
+        Set<String> paths = plumber.newPipe(context.resourceResolver())
+                .pipe(ReferencePipe.RESOURCE_TYPE)
+                .expr(pipe.getResource().getPath())
+                .run(bindings);
+        assertTrue("paths should contain new path", paths.contains(newPath));
     }
 }

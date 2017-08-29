@@ -53,6 +53,11 @@ public class ReferencePipe extends BasePipe {
     }
 
     @Override
+    public PipeBindings getBindings() {
+        return reference.getBindings();
+    }
+
+    @Override
     public Iterator<Resource> getOutput() {
         return reference.getOutput();
     }

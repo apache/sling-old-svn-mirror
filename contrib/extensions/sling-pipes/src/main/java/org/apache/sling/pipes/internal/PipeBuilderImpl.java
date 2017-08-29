@@ -21,6 +21,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.event.jobs.Job;
 import org.apache.sling.pipes.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,9 +73,24 @@ public class PipeBuilderImpl implements PipeBuilder {
         return this;
     }
 
+    /**
+     * internal utility to glob pipe configuration &amp; expression configuration
+     * @param type pipe type
+     * @param expr expression
+     * @return updated instance of PipeBuilder
+     */
+    protected PipeBuilder pipeWithExpr(String type, String expr){
+        try {
+            pipe(type).expr(expr);
+        } catch (IllegalAccessException e){
+            logger.error("exception while configuring {}", type, e);
+        }
+        return this;
+    }
+
     @Override
     public PipeBuilder mv(String expr) {
-        return pipe(MovePipe.RESOURCE_TYPE);
+        return pipeWithExpr(MovePipe.RESOURCE_TYPE, expr);
     }
 
     @Override
@@ -83,7 +99,7 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public PipeBuilder filter(Object... conf) throws IllegalAccessException {
+    public PipeBuilder grep(Object... conf) throws IllegalAccessException {
         return pipe(FilterPipe.RESOURCE_TYPE).conf(conf);
     }
 
@@ -93,13 +109,13 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public PipeBuilder xpath(String expr) throws IllegalAccessException {
-        return pipe(XPathPipe.RESOURCE_TYPE).expr(expr);
+    public PipeBuilder xpath(String expr) {
+        return pipeWithExpr(XPathPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
-    public PipeBuilder $(String expr) throws IllegalAccessException {
-        return pipe(SlingQueryPipe.RESOURCE_TYPE).expr(expr);
+    public PipeBuilder $(String expr) {
+        return pipeWithExpr(SlingQueryPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
@@ -113,18 +129,23 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public PipeBuilder json(String expr) throws IllegalAccessException {
-        return pipe(JsonPipe.RESOURCE_TYPE).expr(expr);
+    public PipeBuilder json(String expr) {
+        return pipeWithExpr(JsonPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
-    public PipeBuilder mkdir(String expr) throws IllegalAccessException {
-        return pipe(PathPipe.RESOURCE_TYPE).expr(expr);
+    public PipeBuilder mkdir(String expr) {
+        return pipeWithExpr(PathPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
-    public PipeBuilder echo(String path) throws IllegalAccessException {
-        return pipe(BasePipe.RESOURCE_TYPE).path(path);
+    public PipeBuilder echo(String path) {
+        try {
+            pipe(BasePipe.RESOURCE_TYPE).path(path);
+        } catch(IllegalAccessException e){
+            logger.error("error when calling echo {}", path, e);
+        }
+        return this;
     }
 
     @Override
@@ -143,9 +164,37 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public PipeBuilder with(String param, Object value) throws IllegalAccessException {
+    public PipeBuilder with(Object... params) throws IllegalAccessException {
+        return writeToCurrentStep(null, params);
+    }
+
+    @Override
+    public PipeBuilder conf(Object... properties) throws IllegalAccessException {
+        return writeToCurrentStep(Pipe.NN_CONF, properties);
+    }
+
+    /**
+     * Add some configurations to current's Step node defined by name (if null, will be step's properties)
+     * @param name name of the configuration node, can be null in which case it's the subpipe itself
+     * @param params key/value pair list of configuration
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case configuration is wrong
+     */
+    protected PipeBuilder writeToCurrentStep(String name, Object... params) throws IllegalAccessException {
         checkCurrentStep();
-        currentStep.properties.put(param, value);
+        if (params.length % 2 > 0){
+            throw new IllegalArgumentException("there should be an even number of arguments");
+        }
+        Map props = name != null ? currentStep.confs.get(name) : currentStep.properties;
+        if (props == null){
+            props = new HashMap();
+            if (name != null){
+                currentStep.confs.put(name, props);
+            }
+        }
+        for (int i = 0; i < params.length; i += 2){
+            props.put(params[i], params[i + 1]);
+        }
         return this;
     }
 
@@ -166,18 +215,6 @@ public class PipeBuilderImpl implements PipeBuilder {
         return this;
     }
 
-    @Override
-    public PipeBuilder conf(Object... properties) throws IllegalAccessException {
-        checkCurrentStep();
-        if (properties.length % 2 > 0){
-            throw new IllegalArgumentException("there should be an even number of arguments");
-        }
-        for (int i = 0; i < properties.length; i += 2){
-            currentStep.conf.put(properties[i], properties[i + 1]);
-        }
-        return this;
-    }
-
     /**
      * build a time + random based path under /var/pipes
      * @return full path of future Pipe
@@ -186,6 +223,18 @@ public class PipeBuilderImpl implements PipeBuilder {
         final Calendar now = Calendar.getInstance();
         return PIPES_REPOSITORY_PATH + '/' + now.get(Calendar.YEAR) + '/' + now.get(Calendar.MONTH) + '/' + now.get(Calendar.DAY_OF_MONTH) + "/"
                 + UUID.randomUUID().toString();
+    }
+
+    /**
+     * Create a configuration resource
+     * @param resolver current resolver
+     * @param path path of the resource
+     * @param type type of the node to be created
+     * @param data map of properties to add
+     * @throws PersistenceException in case configuration resource couldn't be persisted
+     */
+    protected void createResource(ResourceResolver resolver, String path, String type, Map data) throws PersistenceException {
+        ResourceUtil.getOrCreateResource(resolver, path, data, type, false);
     }
 
     @Override
@@ -197,11 +246,11 @@ public class PipeBuilderImpl implements PipeBuilder {
             String name = StringUtils.isNotBlank(step.name) ? step.name : DEFAULT_NAMES.length > index ? DEFAULT_NAMES[index] : Integer.toString(index);
             index++;
             String subPipePath = rootPath + "/" + Pipe.NN_CONF + "/" + name;
-            ResourceUtil.getOrCreateResource(resolver, subPipePath, step.properties, NT_SLING_ORDERED_FOLDER, false);
+            createResource(resolver, subPipePath, NT_SLING_ORDERED_FOLDER, step.properties);
             logger.debug("built subpipe {}", subPipePath);
-            if (!step.conf.isEmpty()){
-                ResourceUtil.getOrCreateResource(resolver, subPipePath + "/" + Pipe.NN_CONF, step.conf, NT_SLING_FOLDER, false);
-                logger.debug("built subpipe {}'s conf node", subPipePath);
+            for (Map.Entry<String, Map> entry : step.confs.entrySet()){
+                createResource(resolver, subPipePath + "/" + entry.getKey(), NT_SLING_FOLDER, entry.getValue());
+                logger.debug("built subpipe {}'s {} node", subPipePath, entry.getKey());
             }
         }
         resolver.commit();
@@ -211,8 +260,19 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     @Override
     public Set<String> run() throws Exception {
+        return run(null);
+    }
+
+    @Override
+    public Set<String> run(Map bindings) throws Exception {
         Pipe pipe = this.build();
-        return plumber.execute(resolver, pipe, null, new NopWriter(), true);
+        return plumber.execute(resolver, pipe, bindings,  new NopWriter() , true);
+    }
+
+    @Override
+    public Job runAsync(Map bindings) throws PersistenceException {
+        Pipe pipe = this.build();
+        return plumber.executeAsync(resolver, pipe.getResource().getPath(), bindings);
     }
 
     /**
@@ -221,10 +281,9 @@ public class PipeBuilderImpl implements PipeBuilder {
     public class Step {
         String name;
         Map properties;
-        Map conf;
+        Map<String, Map> confs = new HashMap<>();
         Step(String type){
             properties = new HashMap();
-            conf = new HashMap();
             properties.put(SLING_RESOURCE_TYPE_PROPERTY, type);
         }
     }

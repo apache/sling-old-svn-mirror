@@ -98,7 +98,7 @@ public interface Plumber {
      * @param resolver resource resolver that will be used for building the pipe
      * @return instance of PipeBuilder
      */
-    PipeBuilder getBuilder(ResourceResolver resolver);
+    PipeBuilder newPipe(ResourceResolver resolver);
 
     /**
      * returns true if the pipe is considered to be running

@@ -17,7 +17,9 @@
 package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.event.jobs.Job;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -42,7 +44,7 @@ public interface PipeBuilder {
      * attach a write pipe to the current context
      * @param conf configuration parameters
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
+     * @throws IllegalAccessException in case it's called with bad configuration
      */
     PipeBuilder write(Object... conf) throws IllegalAccessException;
 
@@ -50,15 +52,15 @@ public interface PipeBuilder {
      * attach a filter pipe to the current context
      * @param conf configuration parameters
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
+     * @throws IllegalAccessException in case it's called with bad configuration
      */
-    PipeBuilder filter(Object... conf) throws IllegalAccessException;
+    PipeBuilder grep(Object... conf) throws IllegalAccessException;
 
     /**
      * attach an authorizable pipe to the current context
      * @param conf configuration key value pairs for authorizable (see pipe's doc)
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
+     * @throws IllegalAccessException in case it's called with bad configuration
      */
     PipeBuilder auth(Object... conf) throws IllegalAccessException;
 
@@ -66,17 +68,15 @@ public interface PipeBuilder {
      * attach a xpath pipe to the current context
      * @param expr xpath expression
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
      */
-    PipeBuilder xpath(String expr) throws IllegalAccessException;
+    PipeBuilder xpath(String expr);
 
     /**
      * attach a sling query pipe to the current context
      * @param expr sling query expression
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
      */
-    PipeBuilder $(String expr) throws IllegalAccessException;
+    PipeBuilder $(String expr);
 
     /**
      * attach a rm pipe to the current context
@@ -88,32 +88,28 @@ public interface PipeBuilder {
      * attach a json pipe to the current context
      * @param expr json expr or URL
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
      */
-    PipeBuilder json(String expr) throws IllegalAccessException;
+    PipeBuilder json(String expr);
 
     /**
      * Attach a path pipe to the current context
      * @param expr path to create
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
      */
-    PipeBuilder mkdir(String expr) throws IllegalAccessException;
+    PipeBuilder mkdir(String expr);
 
     /**
      * attach a base pipe to the current context
      * @param path pipe path
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
      */
-    PipeBuilder echo(String path) throws IllegalAccessException;
+    PipeBuilder echo(String path);
 
     /**
      * attach a traverse pipe to the current context
-     * @return
-     * @throws IllegalAccessException
+     * @return updated instance of PipeBuilder
      */
-    PipeBuilder traverse() throws IllegalAccessException;
+    PipeBuilder traverse();
 
     /**
      * attach a parent pipe to the current context
@@ -123,12 +119,11 @@ public interface PipeBuilder {
 
     /**
      * parameterized current pipe in the context
-     * @param param key (property name) of the property
-     * @param value value of te property
+     * @param params key value pair of parameters
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
+     * @throws IllegalAccessException in case it's called before a pipe is configured, or with wrong # of arguments
      */
-    PipeBuilder with(String param, Object value) throws IllegalAccessException;
+    PipeBuilder with(Object... params) throws IllegalAccessException;
 
     /**
      * set an expr configuration to the current pipe in the context
@@ -142,7 +137,7 @@ public interface PipeBuilder {
      * sets a pipe name, important in case you want to reuse it in another expression
      * @param name to overwrite default binding name (otherwise it will be "one", "two", ...)
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
+     * @throws IllegalAccessException in case it's called before a pipe is configured
      */
     PipeBuilder name(String name) throws IllegalAccessException;
 
@@ -150,7 +145,7 @@ public interface PipeBuilder {
      * set a path configuration to the current pipe in the context
      * @param value path value
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called in a bad time
+     * @throws IllegalAccessException in case it's called before a pipe is configured
      */
     PipeBuilder path(String value) throws IllegalAccessException;
 
@@ -175,4 +170,20 @@ public interface PipeBuilder {
      * @throws Exception exceptions thrown by the build or the pipe execution itself
      */
     Set<String> run() throws Exception;
+
+    /**
+     * allow execution of a pipe, with more parameter
+     * @param bindings additional bindings
+     * @return set of resource path, output of the pipe execution
+     * @throws Exception in case something goes wrong with pipe execution
+     */
+    Set<String> run(Map bindings) throws Exception;
+
+    /**
+     * run a pipe asynchronously
+     * @param bindings additional bindings for the execution (can be null)
+     * @return registered job for the pipe execution
+     * @throws PersistenceException in case something goes wrong in the job creation
+     */
+    Job runAsync(Map bindings) throws PersistenceException;
 }
