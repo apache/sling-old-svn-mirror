@@ -45,6 +45,7 @@ public class MockNodeTest {
     private Node rootNode;
     private Node node1;
     private Property prop1;
+    private Property prop2;
     private Node node11;
 
     @Before
@@ -72,6 +73,10 @@ public class MockNodeTest {
         assertEquals(1, nodes.getSize());
         assertEquals(this.node11, nodes.nextNode());
 
+        nodes = this.node1.getNodes(new String[]{"node*"});
+        assertEquals(1, nodes.getSize());
+        assertEquals(this.node11, nodes.nextNode());
+
         nodes = this.node1.getNodes("unknown?");
         assertEquals(0, nodes.getSize());
     }
@@ -87,6 +92,10 @@ public class MockNodeTest {
         assertTrue(this.node11.hasProperties());
 
         properties = this.node1.getProperties("^prop.*$");
+        assertEquals(1, properties.getSize());
+        assertEquals(this.prop1, properties.next());
+
+        properties = this.node1.getProperties(new String[]{"prop*"});
         assertEquals(1, properties.getSize());
         assertEquals(this.prop1, properties.next());
 
