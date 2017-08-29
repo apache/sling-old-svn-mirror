@@ -164,7 +164,7 @@ public class CodahaleMetricsReporter implements InventoryPrinter, ZipAttachmentP
     void deactivate() {
         LOG.info("Stopping RRD4J Metrics reporter");
         if (reporter != null) {
-            reporter.stop();
+            reporter.close();
             reporter = null;
         }
         configuration = null;
