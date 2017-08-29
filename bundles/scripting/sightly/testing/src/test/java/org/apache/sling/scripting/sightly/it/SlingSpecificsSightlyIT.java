@@ -88,6 +88,7 @@ public class SlingSpecificsSightlyIT {
         String pageContent = client.getStringContent(url, 200);
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#resadapt"));
         assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#reqadapt"));
+        assertEquals("SUCCESS", HTMLExtractor.innerHTML(url, pageContent, "#rradapt"));
     }
 
     @Test
