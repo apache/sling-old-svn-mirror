@@ -25,6 +25,7 @@ import javax.script.Bindings;
 import javax.servlet.ServletRequest;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
@@ -62,6 +63,7 @@ public class JavaUseProvider implements UseProvider {
 
     }
 
+    public static final String ADAPTABLE = "adaptable";
     private static final Logger LOG = LoggerFactory.getLogger(JavaUseProvider.class);
     private static final Pattern JAVA_PATTERN = Pattern.compile("([[\\p{L}&&[^\\p{Lu}]]_$][\\p{L}\\p{N}_$]*\\.)*[\\p{Lu}_$][\\p{L}\\p{N}_$]*");
 
@@ -100,6 +102,14 @@ public class JavaUseProvider implements UseProvider {
                 result = sling.getService(cls);
                 if (result != null) {
                     return ProviderOutcome.success(result);
+                }
+                Object adaptableCandidate = arguments.get(ADAPTABLE);
+                if (adaptableCandidate != null && adaptableCandidate instanceof Adaptable) {
+                    Adaptable adaptable = (Adaptable) adaptableCandidate;
+                    result = adaptable.adaptTo(cls);
+                    if (result != null) {
+                        return ProviderOutcome.success(result);
+                    }
                 }
                 result = request.adaptTo(cls);
                 if (result == null) {
