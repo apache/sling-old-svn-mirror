@@ -19,6 +19,8 @@ package org.apache.sling.pipes;
 import org.apache.sling.api.resource.ValueMap;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.*;
@@ -26,7 +28,7 @@ import static org.junit.Assert.*;
 public class PipeBuilderTest extends AbstractPipeTest {
     @Test
     public void simpleBuild() throws Exception {
-        PipeBuilder rmBuilder = plumber.getBuilder(context.resourceResolver());
+        PipeBuilder rmBuilder = plumber.newPipe(context.resourceResolver());
         Pipe rmPipe = rmBuilder.echo(PATH_APPLE).rm().build();
         assertNotNull(" a pipe should be built", rmPipe);
         //we rebuild pipe out of created pipe path, execute it, and test correct output (= correct pipe built)
@@ -36,7 +38,7 @@ public class PipeBuilderTest extends AbstractPipeTest {
     @Test
     public void run() throws Exception {
         String lemonPath = "/content/fruits/lemon";
-        PipeBuilder lemonBuilder = plumber.getBuilder(context.resourceResolver());
+        PipeBuilder lemonBuilder = plumber.newPipe(context.resourceResolver());
         Set<String> paths = lemonBuilder.mkdir(lemonPath).run();
         assertTrue("returned set should contain lemon path", paths.contains(lemonPath));
         assertNotNull("there should be a lemon created", context.resourceResolver().getResource(lemonPath));
@@ -44,7 +46,7 @@ public class PipeBuilderTest extends AbstractPipeTest {
 
     @Test
     public void confBuild() throws Exception {
-        PipeBuilder writeBuilder = plumber.getBuilder(context.resourceResolver());
+        PipeBuilder writeBuilder = plumber.newPipe(context.resourceResolver());
         writeBuilder.echo(PATH_APPLE).write("tested", true, "working", true).run();
         ValueMap properties = context.resourceResolver().getResource(PATH_APPLE).adaptTo(ValueMap.class);
         assertTrue("properties should have been written", properties.get("tested", false) && properties.get("working", false));
@@ -52,11 +54,11 @@ public class PipeBuilderTest extends AbstractPipeTest {
 
     @Test
     public void bindings() throws Exception {
-        PipeBuilder defaultNames = plumber.getBuilder(context.resourceResolver());
+        PipeBuilder defaultNames = plumber.newPipe(context.resourceResolver());
         Set<String> paths = defaultNames
                 .echo(PATH_FRUITS)
                 .$("nt:unstructured")
-                .filter("slingPipesFilter_test","${two.worm}")
+                .grep("slingPipesFilter_test","${two.worm}")
                 .$("nt:unstructured#isnota")
                 .$("nt:unstructured").name("thing")
                 .write("jcr:path", "${path.thing}").run();
@@ -71,4 +73,11 @@ public class PipeBuilderTest extends AbstractPipeTest {
         }
     }
 
+    @Test
+    public void additionalBindings() throws Exception {
+        Map bindings = new HashMap<>();
+        bindings.put("testedPath", PATH_FRUITS);
+        Set<String> paths = plumber.newPipe(context.resourceResolver()).echo("${testedPath}").run(bindings);
+        assertTrue("paths should contain implemented testedPath", paths.contains(PATH_FRUITS));
+    }
 }

@@ -34,7 +34,7 @@ public class PathPipeTest extends AbstractPipeTest {
 
     @Test
     public void modifiesContent() throws IllegalAccessException, PersistenceException {
-        Pipe pipe = plumber.getBuilder(context.resourceResolver())
+        Pipe pipe = plumber.newPipe(context.resourceResolver())
                 .mkdir(PATH_FRUITS + "/whatever")
                 .build();
         assertTrue("path pipe should be considered as modifying the content", pipe.modifiesContent());
@@ -43,7 +43,7 @@ public class PathPipeTest extends AbstractPipeTest {
     @Test
     public void getClassicOutput() throws Exception {
         ResourceResolver resolver = context.resourceResolver();
-        plumber.getBuilder(resolver).mkdir(WATERMELON_FULL_PATH).run();
+        plumber.newPipe(resolver).mkdir(WATERMELON_FULL_PATH).run();
         resolver.revert();
         assertNotNull("Resource should be here & saved", resolver.getResource(WATERMELON_FULL_PATH));
     }
@@ -51,7 +51,7 @@ public class PathPipeTest extends AbstractPipeTest {
     @Test
     public void getRelativePath() throws Exception {
         ResourceResolver resolver = context.resourceResolver();
-        plumber.getBuilder(resolver).echo(PATH_FRUITS).mkdir(WATERMELON).run();
+        plumber.newPipe(resolver).echo(PATH_FRUITS).mkdir(WATERMELON).run();
         assertNotNull("Resource should be    here & saved", resolver.getResource(WATERMELON_FULL_PATH));
     }
 }

@@ -21,6 +21,7 @@ package org.apache.sling.pipes.it;
 import javax.inject.Inject;
 
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.pipes.Plumber;
@@ -40,6 +41,8 @@ import static org.ops4j.pax.exam.CoreOptions.systemPackages;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 public abstract class PipesTestSupport extends TestSupport {
+
+    protected static final String NN_TEST = "test";
 
     @Inject
     @Filter(timeout = 3000000)
@@ -61,6 +64,10 @@ public abstract class PipesTestSupport extends TestSupport {
                 .asOption(),
             junitBundles()
         };
+    }
+
+    protected void mkdir(ResourceResolver resolver, String path) throws Exception {
+        plumber.newPipe(resolver).mkdir(path).run();
     }
 
     protected Option launchpad() {
