@@ -25,24 +25,42 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
+import java.util.Set;
+
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class PlumberTestIT extends PipesTestSupport {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlumberTestIT.class);
 
+    public static final String ROOT = "/content/my";
+    public static final String NN_TEST = "test";
+    public static final String TEST_PATH = ROOT + "/" + NN_TEST;
     @Test
     public void simpleTest() throws Exception {
         try (ResourceResolver resolver = resolver()) {
             plumber.getBuilder(resolver)
-                .mkdir("/content/my")
-                .write("test", true)
+                .mkdir(ROOT)
+                .write(NN_TEST, true)
                 .run();
-            Resource test = resolver.getResource("/content/my/test");
+            Resource test = resolver.getResource(TEST_PATH);
             assertNotNull("there should be a resource", test);
-            assertEquals("should be a boolean equals to true", true, test.adaptTo(Boolean.class));
+            assertTrue("should be a boolean equals to true", test.adaptTo(Boolean.class));
+        }
+    }
+
+    @Test
+    public void traverseTest() throws Exception {
+        try (ResourceResolver resolver = resolver()) {
+            plumber.getBuilder(resolver).mkdir(ROOT).run();
+            Set<String> results = plumber.getBuilder(resolver).echo(ROOT).traverse().run();
+            LOGGER.info("Following results are found {}", results);
+            assertTrue("should contain former test", results.contains(ROOT));
         }
     }
 

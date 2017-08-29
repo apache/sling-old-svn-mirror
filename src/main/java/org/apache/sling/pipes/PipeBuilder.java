@@ -109,6 +109,13 @@ public interface PipeBuilder {
     PipeBuilder echo(String path) throws IllegalAccessException;
 
     /**
+     * attach a traverse pipe to the current context
+     * @return
+     * @throws IllegalAccessException
+     */
+    PipeBuilder traverse() throws IllegalAccessException;
+
+    /**
      * attach a parent pipe to the current context
      * @return updated instance of PipeBuilder
      */
