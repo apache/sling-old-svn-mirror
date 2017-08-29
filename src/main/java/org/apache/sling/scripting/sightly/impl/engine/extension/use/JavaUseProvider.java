@@ -29,7 +29,6 @@ import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
-import org.apache.sling.scripting.sightly.impl.engine.ResourceBackedPojoChangeMonitor;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyJavaCompilerService;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.pojo.Use;
@@ -69,9 +68,6 @@ public class JavaUseProvider implements UseProvider {
 
     @Reference
     private SightlyJavaCompilerService sightlyJavaCompilerService = null;
-
-    @Reference
-    private ResourceBackedPojoChangeMonitor resourceBackedPojoChangeMonitor = null;
 
     @Reference
     private ClassLoaderWriter classLoaderWriter = null;
