@@ -79,23 +79,25 @@ public final class ObjectModel {
     }
 
     /**
-     * Given the {@code target} object, this method attempts to resolve and return the value of the passed {@code property}.
-     *
      * <p>
-     *     The property can be either an index or a name:
-     *     <ul>
-     *         <li>index: the property is considered an index if its value is an integer number and in this case the {@code target}
-     *         will be assumed to be either an array or it will be converted to a {@link Collection}; a fallback to {@link Map} will be
-     *         made in case the previous two attempts failed
-     *         </li>
-     *         <li>name: the {@code property} will be converted to a {@link String} (see {@link #toString(Object)}); the {@code target}
-     *         will be assumed to be either a {@link Map} or an object; if the {@link Map} attempt fails, the {@code property} will be
-     *         used to check if the {@code target} has a publicly accessible field with this name or a publicly accessible method with no
-     *         parameters with this name or a combination of the "get" or "is" prefixes plus the capitalised name (see
-     *         {@link #invokeBeanMethod(Object, String)})</li>
-     *     </ul>
+     *      Given the {@code target} object, this method attempts to resolve and return the value of the passed {@code property}.
      * </p>
-     * @param target the target object
+     * <p>
+     *      The property can be either an index or a name:
+     * </p>
+     * <ul>
+     *      <li>index: the property is considered an index if its value is an integer number and in this case the {@code target}
+     *      will be assumed to be either an array or it will be converted to a {@link Collection}; a fallback to {@link Map} will be
+     *      made in case the previous two attempts failed
+     *      </li>
+     *      <li>name: the {@code property} will be converted to a {@link String} (see {@link #toString(Object)}); the {@code target}
+     *      will be assumed to be either a {@link Map} or an object; if the {@link Map} attempt fails, the {@code property} will be
+     *      used to check if the {@code target} has a publicly accessible field with this name or a publicly accessible method with no
+     *      parameters with this name or a combination of the "get" or "is" prefixes plus the capitalised name (see
+     *      {@link #invokeBeanMethod(Object, String)})</li>
+     * </ul>
+     *
+     * @param target   the target object
      * @param property the property to be resolved
      * @return the value of the property or {@code null}
      */
