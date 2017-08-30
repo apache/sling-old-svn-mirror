@@ -63,18 +63,18 @@ public class InternalQueueConfiguration
 
         @AttributeDefinition(name = "Type",
               description="The queue type.",
-              options = {@Option(label="UNORDERED",value="Parallel"),
-                      @Option(label="ORDERED",value="Ordered"),
-                      @Option(label="TOPIC_ROUND_ROBIN",value="Topic Round Robin")})
+              options = {@Option(label="Parallel",value="UNORDERED"),
+                      @Option(label="Ordered",value="ORDERED"),
+                      @Option(label="Topic Round Robin",value="TOPIC_ROUND_ROBIN")})
         String queue_type() default "UNORDERED";
 
         @AttributeDefinition(
                  name="Priority",
                  description="The priority for the threads used by this queue. Default is norm.",
                  options = {
-                         @Option(label="NORM",value="Norm"),
-                         @Option(label="MIN",value="Min"),
-                         @Option(label="MAX",value="Max")
+                         @Option(label="Norm",value="NORM"),
+                         @Option(label="Min",value="MIN"),
+                         @Option(label="Max",value="MAX")
                  })
          String queue_priority() default ConfigurationConstants.DEFAULT_PRIORITY;
 
@@ -121,7 +121,7 @@ public class InternalQueueConfiguration
               description="Integer value defining the ranking of this queue configuration. "
                         + "If more than one queue matches a job topic, the one with the highest ranking is used.")
          int service_ranking() default 0;
-     
+
          // Internal Name hint for web console.
          String webconsole_configurationFactory_nameHint() default "Queue: {" + ConfigurationConstants.PROP_NAME + "}";
 
