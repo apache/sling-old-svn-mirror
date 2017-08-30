@@ -58,7 +58,7 @@ public class HttpTestBase extends TestCase {
     /** If this system property is set, the startup check is skipped. */
     public static final String PROPERTY_SKIP_STARTUP_CHECK = "launchpad.skip.startupcheck";
 
-    public static final String HTTP_URL = removeEndingSlash(System.getProperty("launchpad.http.server.url", "http://localhost:8888"));
+    public static final String HTTP_URL = removeEndingSlash(System.getProperty("launchpad.http.server.url", "http://localhost:8080"));
     public static final String HTTP_BASE_URL = removePath(HTTP_URL);
     public static final String WEBDAV_BASE_URL = removeEndingSlash(System.getProperty("launchpad.webdav.server.url", HTTP_BASE_URL));
     public static final String SERVLET_CONTEXT = removeEndingSlash(System.getProperty("launchpad.servlet.context", getPath(HTTP_URL)));
