@@ -137,8 +137,8 @@ public class JsonRenderingTest extends HttpTestBase {
       log.info("Url: {}", url);
       log.info("postUrl: {}", postUrl);
       // Get the resource url. (everything after the port)
-      // We skip http://localhost:8888/org.apache.sling.launchpad.testing-6-SNAPSHOT/
-      // or http://localhost:8888/
+      // We skip http://localhost:8080/org.apache.sling.launchpad.testing-6-SNAPSHOT/
+      // or http://localhost:8080/
       String resourceUrl = url;
       final int toSkip = resourceUrl.contains("/org.apache.sling.launchpad") ? 4 : 3;
       for (int i = toSkip;i>0;i--) {

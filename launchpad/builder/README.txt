@@ -11,11 +11,11 @@ How to run the Sling launchpad/builder module in Standalone mode
         directory. It is advisable to use a work directory outside of the
         project directory.
 
-1) Build Sling using 
+1) Build the Sling Launchpad using 
 
 	mvn clean install
 	
-in the top-level directory of the Sling source code.
+in the current directory.
 
 2) Start the generated jar with
 
@@ -30,21 +30,11 @@ Use the correct version number instead of 8, if needed.
 How to run the Sling launchpad/builder module in webapp mode
 ----------------------------------------
 
-1) Build Sling using 
+1) Build the Sling Launchpad using 
 
 	mvn clean install
 	
-in the top-level directory of the Sling source code.
+in the current directory.
 
-2) Start the generated war with
-
-	 mvn jetty:run-war
-
-3) Browse Sling in:
-
-        http://localhost:8888
-        
-  OR
-  
-   Deploy target/org.apache.sling.launchpad-8.war to your favorite application
-   server or servlet container.
+2) Deploy target/org.apache.sling.launchpad-8.war to your favorite application
+server or servlet container.
