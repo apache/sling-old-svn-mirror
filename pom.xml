@@ -69,7 +69,10 @@
                     <exportScr>true</exportScr>
                     <instructions>
                         <Sling-Bundle-Resources>/libs/sling/sightly/js;path:=/SLING-INF/libs/sling/sightly/js</Sling-Bundle-Resources>
-                        <Require-Capability>io.sightly; filter:="(&amp;(version&gt;=1.0)(!(version&gt;=2.0)))"</Require-Capability>
+                        <Require-Capability>
+                            io.sightly; filter:="(&amp;(version&gt;=1.0)(!(version&gt;=2.0)))",
+                            osgi.implementation;filter:="(&amp;(osgi.implementation=org.apache.sling.scripting.javascript.rhinoscriptengine)(version>=1.7.7.1)(!(version>=2.0.0)))"
+                        </Require-Capability>
                     </instructions>
                 </configuration>
             </plugin>
