@@ -33,7 +33,7 @@
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.scripting.sightly.js.provider</artifactId>
-    <version>1.0.23-SNAPSHOT</version>
+    <version>1.0.24</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting HTL JavaScript Use Provider</name>
@@ -43,9 +43,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/js-use-provider</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/js-use-provider</developerConnection>
-        <url>http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/js-use-provider</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.js.provider-1.0.24</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.js.provider-1.0.24</developerConnection>
+        <url>http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.sightly.js.provider-1.0.24</url>
     </scm>
 
     <!-- ======================================================================= -->
@@ -71,7 +71,7 @@
                         <Sling-Bundle-Resources>/libs/sling/sightly/js;path:=/SLING-INF/libs/sling/sightly/js</Sling-Bundle-Resources>
                         <Require-Capability>
                             io.sightly; filter:="(&amp;(version&gt;=1.0)(!(version&gt;=2.0)))",
-                            osgi.implementation;filter:="(&amp;(osgi.implementation=org.apache.sling.scripting.javascript.rhinoscriptengine)(version>=1.7.7.1)(!(version>=2.0.0)))"
+                            osgi.implementation;filter:="(&amp;(osgi.implementation=org.apache.sling.scripting.javascript.rhinoscriptengine)(version&gt;=1.7.7.1)(!(version&gt;=2.0.0)))"
                         </Require-Capability>
                     </instructions>
                 </configuration>
@@ -142,14 +142,14 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly</artifactId>
             <!-- reset to 1.0.34 after the release is public -->
-            <version>1.0.35-SNAPSHOT</version>
+            <version>1.0.34</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.sightly.compiler.java</artifactId>
             <!-- reset to 1.0.10 after the release is public -->
-            <version>1.0.11-SNAPSHOT</version>
+            <version>1.0.10</version>
             <scope>provided</scope>
         </dependency>
 
