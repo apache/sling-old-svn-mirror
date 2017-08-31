@@ -63,6 +63,7 @@
 
     <modules>
         <module>apache-sling-jar-resource-bundle</module>
+        <module>javaversion-maven-plugin</module>
         <module>maven-jcrocm-plugin</module>
         <module>maven-jspc-plugin</module>
         <module>maven-sling-plugin</module>
