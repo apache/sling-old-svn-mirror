@@ -93,7 +93,7 @@
 [artifacts startLevel=10]
     org.apache.felix/org.apache.felix.http.sslfilter/1.2.2
     org.apache.felix/org.apache.felix.scr/2.0.12
-    org.apache.felix/org.apache.felix.metatype/1.1.2
+    org.apache.felix/org.apache.felix.metatype/1.1.4
     org.apache.tika/tika-core/1.14
     org.apache.tika/tika-bundle/1.14
 
