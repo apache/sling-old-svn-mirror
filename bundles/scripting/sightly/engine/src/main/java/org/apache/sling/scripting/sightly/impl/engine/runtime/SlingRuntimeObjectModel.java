@@ -26,16 +26,13 @@ public class SlingRuntimeObjectModel extends AbstractRuntimeObjectModel {
 
     @Override
     protected Object getProperty(Object target, Object propertyObj) {
-        Object result = null;
-        if (target instanceof Adaptable) {
+        Object result = super.getProperty(target, propertyObj);
+        if (result == null && target instanceof Adaptable) {
             ValueMap valueMap = ((Adaptable) target).adaptTo(ValueMap.class);
             if (valueMap != null) {
                 String property = toString(propertyObj);
                 result = valueMap.get(property);
             }
-        }
-        if (result == null) {
-            result = super.getProperty(target, propertyObj);
         }
         return result;
     }
