@@ -31,14 +31,20 @@
     <artifactId>javaversion-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Java version Maven plugin</name>
+    <name>Apache Sling Java Version Maven Plugin</name>
+    <description>Helper Maven plugin that sets various project properties based on the configured Java version.</description>
     
     <properties>
         <maven.version>3.0.5</maven.version>
         <!-- should be set to the lowest version supported by the plugin -->
         <sling.java.version>6</sling.java.version>
     </properties>
-    
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/javaversion-maven-plugin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/javaversion-maven-plugin</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/javaversion-maven-plugin</url>
+    </scm>
     
     <dependencies>
         <dependency>

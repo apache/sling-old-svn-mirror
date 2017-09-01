@@ -31,8 +31,8 @@ import org.apache.maven.project.MavenProject;
  * 
  * <p>The following versions are set:
  * <ol>
- *   <li><tt>sling.bree</tt> - the value of the OSGi Bundle-RequiredExecutionEnvironment header.
- *   <li><tt>sling.animalSignatures.version</tt> - the value 
+ *   <li><tt>sling.bree</tt> - the value of the OSGi Bundle-RequiredExecutionEnvironment header, e.g. <tt>JavaSE-1.8</tt>
+ *   <li><tt>sling.animalSignatures.version</tt> - the value to be appended appended to the artifactId following <tt>java1</tt>, e.g. <tt>8</tt>
  * </ol>
  * </p>
  *
