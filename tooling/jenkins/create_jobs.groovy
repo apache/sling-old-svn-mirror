@@ -822,7 +822,7 @@ def defaultSlave = "ubuntu"
 def jdkMapping = [
     "1.7": "JDK 1.7 (latest)",
     "1.8": "JDK 1.8 (latest)",
-    "9": "JKD 9 b181"
+    "9"  : "JDK 9 b181"
 ]
 
 modules.each { module ->
