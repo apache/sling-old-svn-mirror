@@ -32,6 +32,10 @@
   <name>Apache Sling JUnit Tests Teleporter</name>
   <description>Client-side implementation of the Teleporter mechanism for server-side JUnit tests</description>
   
+  <properties>
+    <sling.java.version>8</sling.java.version>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
