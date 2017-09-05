@@ -127,4 +127,17 @@ public class TeleporterHttpClientTest {
         }
         client.verifyCorrectBundleState(bundleSymbolicName, 1);
     }
+    
+    @Test
+    public void testRequiredCredentials() throws IOException {
+        final TeleporterHttpClient client = new TeleporterHttpClient(baseUrl, "invalid");
+        final String protectedPath = "/protected";
+        final String user = UUID.randomUUID().toString();
+        final String pwd = UUID.randomUUID().toString();
+        final String credentials = user + ":" + pwd;
+        
+        http.givenThat(get(urlEqualTo(protectedPath)).withBasicAuth(user, pwd).willReturn(aResponse().withStatus(200)));
+        client.setCredentials(credentials);
+        assertEquals(200, client.getHttpGetStatus(baseUrl + protectedPath).getStatus());
+    }
 }
