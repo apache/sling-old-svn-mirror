@@ -41,6 +41,8 @@ public class TeleporterHttpClientTest {
     private static final int PORT = Integer.getInteger("http.port", 1234);
     private static final String baseUrl = "http://127.0.0.1:" + PORT;
     private static final String TEST_PATH = "/foo";
+    private static final String username = UUID.randomUUID().toString();
+    private static final String password = UUID.randomUUID().toString();
     
     @Rule
     public WireMockRule http = new WireMockRule(PORT);
@@ -128,16 +130,21 @@ public class TeleporterHttpClientTest {
         client.verifyCorrectBundleState(bundleSymbolicName, 1);
     }
     
+    private void testWithCredentials(String path, String credentials, int expectedStatus) throws IOException {
+        final TeleporterHttpClient client = new TeleporterHttpClient(baseUrl, "invalid");
+        http.givenThat(get(urlEqualTo(path)).willReturn(aResponse().withStatus(418)));
+        http.givenThat(get(urlEqualTo(path)).withBasicAuth(username, password).willReturn(aResponse().withStatus(302)));
+        client.setCredentials(credentials);
+        assertEquals(expectedStatus, client.getHttpGetStatus(baseUrl + path).getStatus());
+    }
+    
     @Test
     public void testRequiredCredentials() throws IOException {
-        final TeleporterHttpClient client = new TeleporterHttpClient(baseUrl, "invalid");
-        final String protectedPath = "/protected";
-        final String user = UUID.randomUUID().toString();
-        final String pwd = UUID.randomUUID().toString();
-        final String credentials = user + ":" + pwd;
-        
-        http.givenThat(get(urlEqualTo(protectedPath)).withBasicAuth(user, pwd).willReturn(aResponse().withStatus(200)));
-        client.setCredentials(credentials);
-        assertEquals(200, client.getHttpGetStatus(baseUrl + protectedPath).getStatus());
+        testWithCredentials("/protected", username + ":" + password, 302);
+    }
+    
+    @Test
+    public void testMissingCredentials() throws IOException {
+        testWithCredentials("/protected", null, 418);
     }
 }
