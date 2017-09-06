@@ -122,9 +122,6 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
                 if ( this.service.hasUnresolvedPackages(event.getBundle()) ) {
                     reload = true;
                     logger.debug("Dynamic Class Loader is reloaded because the new bundle '{}' provides previously unresolved packages", event.getBundle());
-                } else if ( this.service.isBundleUsed(event.getBundle().getBundleId()) ) {
-                    reload = true;
-                    logger.debug("Dynamic Class Loader is reloaded because the bundle '{}' has been updated", event.getBundle());
                 } else {
                     reload = false;
                 }

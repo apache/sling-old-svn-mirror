@@ -127,7 +127,7 @@ public class BundeChangesTest {
         assertFalse(registerCalled.get());
         assertFalse(unregisterCalled.get());
         listener.bundleChanged(new BundleEvent(BundleEvent.STARTED, bundle));
-        assertTrue(registerCalled.get());
-        assertTrue(unregisterCalled.get());
+        assertFalse(registerCalled.get());
+        assertFalse(unregisterCalled.get());
     }
 }
