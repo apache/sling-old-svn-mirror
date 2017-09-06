@@ -69,7 +69,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
     private IProblemFactory problemFactory = new DefaultProblemFactory(Locale.getDefault());
 
     /** the static policy. */
-    private final IErrorHandlingPolicy policy = DefaultErrorHandlingPolicies.proceedWithAllProblems();
+    private final IErrorHandlingPolicy policy = DefaultErrorHandlingPolicies.exitAfterAllProblems();
 
     /**
      * Get the classloader for the compilation.
@@ -286,14 +286,16 @@ public class EclipseJavaCompiler implements JavaCompiler {
                     }
                 }
             }
-            ClassFile[] classFiles = result.getClassFiles();
-            for (int i = 0; i < classFiles.length; i++) {
-                ClassFile classFile = classFiles[i];
-                String className = CharOperation.toString(classFile.getCompoundName());
-                try {
-                    this.write(className, classFile.getBytes());
-                } catch (IOException e) {
-                    this.errorHandler.onError("Unable to write class file: " + e.getMessage(), className, 0, 0);
+            if ( this.errorHandler.getErrors() == null ) {
+                ClassFile[] classFiles = result.getClassFiles();
+                for (int i = 0; i < classFiles.length; i++) {
+                    ClassFile classFile = classFiles[i];
+                    String className = CharOperation.toString(classFile.getCompoundName());
+                    try {
+                        this.write(className, classFile.getBytes());
+                    } catch (IOException e) {
+                        this.errorHandler.onError("Unable to write class file: " + e.getMessage(), className, 0, 0);
+                    }
                 }
             }
         }
