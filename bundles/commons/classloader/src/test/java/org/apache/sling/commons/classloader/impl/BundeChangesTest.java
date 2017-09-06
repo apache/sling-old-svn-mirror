@@ -79,14 +79,16 @@ public class BundeChangesTest {
 
         // at this point the bundle is not used, so nothing should happen on update:
 
-        // step one: stop bundle
+        // step one: stop bundle and unresolve
         listener.bundleChanged(new BundleEvent(BundleEvent.STOPPING, bundle));
         listener.bundleChanged(new BundleEvent(BundleEvent.STOPPED, bundle));
+        listener.bundleChanged(new BundleEvent(BundleEvent.UNRESOLVED, bundle));
         assertFalse(registerCalled.get());
         assertFalse(unregisterCalled.get());
 
-        // step two: update bundle
+        // step two: update bundle and resolved
         listener.bundleChanged(new BundleEvent(BundleEvent.UPDATED, bundle));
+        listener.bundleChanged(new BundleEvent(BundleEvent.RESOLVED, bundle));
         assertFalse(registerCalled.get());
         assertFalse(unregisterCalled.get());
 
@@ -104,13 +106,21 @@ public class BundeChangesTest {
         // and update
         listener.bundleChanged(new BundleEvent(BundleEvent.STOPPING, bundle));
         listener.bundleChanged(new BundleEvent(BundleEvent.STOPPED, bundle));
-        assertFalse(registerCalled.get());
-        assertFalse(unregisterCalled.get());
+        listener.bundleChanged(new BundleEvent(BundleEvent.UNRESOLVED, bundle));
+        assertTrue(registerCalled.get());
+        assertTrue(unregisterCalled.get());
+
+        registerCalled.set(false);
+        unregisterCalled.set(false);
 
         // step two: update bundle
         listener.bundleChanged(new BundleEvent(BundleEvent.UPDATED, bundle));
-        assertFalse(registerCalled.get());
-        assertFalse(unregisterCalled.get());
+        listener.bundleChanged(new BundleEvent(BundleEvent.RESOLVED, bundle));
+        assertTrue(registerCalled.get());
+        assertTrue(unregisterCalled.get());
+
+        registerCalled.set(false);
+        unregisterCalled.set(false);
 
         // step three: start bundle
         listener.bundleChanged(new BundleEvent(BundleEvent.STARTING, bundle));
