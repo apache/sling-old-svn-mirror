@@ -22,13 +22,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
-
-import junit.framework.TestCase;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.Options;
+
+import junit.framework.TestCase;
 
 /**
  * Test case for java 5 support
@@ -36,7 +38,13 @@ import org.apache.sling.commons.compiler.Options;
 public class CompilerJava5Test extends TestCase
         implements ClassLoaderWriter {
 
+    private final List<String> deletedPath = new ArrayList<>();
+
+    private final List<String> outputPath = new ArrayList<>();
+
     public void testJava5Support() throws Exception {
+        deletedPath.clear();
+        outputPath.clear();
         String sourceFile = "Java5Test";
 
         CompilationUnit unit = createCompileUnit(sourceFile);
@@ -48,6 +56,30 @@ public class CompilerJava5Test extends TestCase
         final CompilationResult result = new EclipseJavaCompiler().compile(new CompilationUnit[]{unit}, options);
         assertNotNull(result);
         assertNull(result.getErrors());
+        assertEquals(1, deletedPath.size());
+        assertEquals(1, outputPath.size());
+        assertEquals("/org/apache/sling/commons/compiler/test/Java5Test.class", deletedPath.get(0));
+        assertEquals("/org/apache/sling/commons/compiler/test/Java5Test.class", outputPath.get(0));
+    }
+
+    public void testFailedCompilation() throws Exception {
+        deletedPath.clear();
+        outputPath.clear();
+
+        String sourceFile = "JavaFailure";
+
+        CompilationUnit unit = createCompileUnit(sourceFile);
+        final Options options = new Options();
+        options.put(Options.KEY_SOURCE_VERSION, Options.VERSION_1_5);
+        options.put(Options.KEY_CLASS_LOADER_WRITER, this);
+        options.put(Options.KEY_CLASS_LOADER, this.getClass().getClassLoader());
+
+        final CompilationResult result = new EclipseJavaCompiler().compile(new CompilationUnit[]{unit}, options);
+        assertNotNull(result);
+        assertNotNull(result.getErrors());
+        assertEquals(1, deletedPath.size());
+        assertEquals("/org/apache/sling/commons/compiler/test/JavaFailure.class", deletedPath.get(0));
+        assertEquals(0, outputPath.size());
     }
 
     //--------------------------------------------------------< misc. helpers >
@@ -58,6 +90,7 @@ public class CompilerJava5Test extends TestCase
             /**
              * @see org.apache.sling.commons.compiler.CompilationUnit#getMainClassName()
              */
+            @Override
             public String getMainClassName() {
                 return "org.apache.sling.commons.compiler.test." + sourceFile;
             }
@@ -65,6 +98,7 @@ public class CompilerJava5Test extends TestCase
             /**
              * @see org.apache.sling.commons.compiler.CompilationUnit#getSource()
              */
+            @Override
             public Reader getSource() throws IOException {
                 InputStream in = getClass().getClassLoader().getResourceAsStream(sourceFile);
                 return new InputStreamReader(in, "UTF-8");
@@ -73,6 +107,7 @@ public class CompilerJava5Test extends TestCase
             /**
              * @see org.apache.sling.commons.compiler.CompilationUnit#getLastModified()
              */
+            @Override
             public long getLastModified() {
                 return 0;
             }
@@ -82,13 +117,16 @@ public class CompilerJava5Test extends TestCase
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#delete(java.lang.String)
      */
+    @Override
     public boolean delete(String path) {
+        deletedPath.add(path);
         return false;
     }
 
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getInputStream(java.lang.String)
      */
+    @Override
     public InputStream getInputStream(String path) throws IOException {
         return null;
     }
@@ -96,6 +134,7 @@ public class CompilerJava5Test extends TestCase
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getLastModified(java.lang.String)
      */
+    @Override
     public long getLastModified(String path) {
         return -1;
     }
@@ -103,13 +142,16 @@ public class CompilerJava5Test extends TestCase
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getOutputStream(java.lang.String)
      */
+    @Override
     public OutputStream getOutputStream(String path) {
+        outputPath.add(path);
         return new ByteArrayOutputStream();
     }
 
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#rename(java.lang.String, java.lang.String)
      */
+    @Override
     public boolean rename(String oldPath, String newPath) {
         return false;
     }
@@ -117,6 +159,7 @@ public class CompilerJava5Test extends TestCase
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getClassLoader()
      */
+    @Override
     public ClassLoader getClassLoader() {
         return null;
     }
