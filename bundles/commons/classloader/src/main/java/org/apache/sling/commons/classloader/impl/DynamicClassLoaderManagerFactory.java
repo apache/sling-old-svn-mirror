@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * This is the service factory for the dynamic class loader manager.
  */
 public class DynamicClassLoaderManagerFactory
-    implements ServiceFactory {
+    implements ServiceFactory<DynamicClassLoaderManager> {
 
     /** The logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -62,8 +63,9 @@ public class DynamicClassLoaderManagerFactory
     /**
      * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration)
      */
-    public Object getService(final Bundle bundle,
-                             final ServiceRegistration registration) {
+    @Override
+    public DynamicClassLoaderManager getService(final Bundle bundle,
+                             final ServiceRegistration<DynamicClassLoaderManager> registration) {
         final DynamicClassLoaderManagerImpl manager =  new DynamicClassLoaderManagerImpl(this.context,
                 this.pckAdmin, new BundleProxyClassLoader(bundle), this);
         return manager;
@@ -72,9 +74,10 @@ public class DynamicClassLoaderManagerFactory
     /**
      * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration, java.lang.Object)
      */
+    @Override
     public void ungetService(final Bundle bundle,
-                             final ServiceRegistration registration,
-                             final Object service) {
+                             final ServiceRegistration<DynamicClassLoaderManager> registration,
+                             final DynamicClassLoaderManager service) {
         if ( service != null ) {
             ((DynamicClassLoaderManagerImpl)service).deactivate();
         }

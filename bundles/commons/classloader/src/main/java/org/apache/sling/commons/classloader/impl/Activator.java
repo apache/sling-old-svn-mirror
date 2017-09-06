@@ -39,17 +39,14 @@ import org.slf4j.LoggerFactory;
  */
 public class Activator implements SynchronousBundleListener, BundleActivator {
 
-    /** Package admin service name */
-    private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
-    
     /** The logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** A service tracker for the package admin. */
-    private ServiceTracker packageAdminTracker;
+    private ServiceTracker<PackageAdmin, PackageAdmin> packageAdminTracker;
 
     /** The service registration for the dynamic class loader manager. */
-    private ServiceRegistration serviceReg;
+    private ServiceRegistration<DynamicClassLoaderManager> serviceReg;
 
     /** The dynamic class loader service factory. */
     private DynamicClassLoaderManagerFactory service;
@@ -60,10 +57,11 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
+    @Override
     public void start(BundleContext context) {
         this.bundleContext = context;
 
-        this.packageAdminTracker = new ServiceTracker(this.bundleContext, PACKAGE_ADMIN_NAME, null);
+        this.packageAdminTracker = new ServiceTracker(this.bundleContext, PackageAdmin.class, null);
         this.packageAdminTracker.open();
 
         // register service
@@ -75,12 +73,12 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
      * Register the dynamic class loader manager factory.
      */
     protected void registerManagerFactory() {
-        final Hashtable<String, String> props = new Hashtable<String, String>();
+        final Hashtable<String, String> props = new Hashtable<>();
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Dynamic Class Loader Service");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.service = new DynamicClassLoaderManagerFactory(this.bundleContext,
-                (PackageAdmin)this.packageAdminTracker.getService());
-        this.serviceReg = this.bundleContext.registerService(new String[] {DynamicClassLoaderManager.class.getName()}, service, props);
+                this.packageAdminTracker.getService());
+        this.serviceReg = this.bundleContext.registerService(DynamicClassLoaderManager.class, service, props);
     }
 
     /**
@@ -99,6 +97,7 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
+    @Override
     public void stop(final BundleContext context) {
         context.removeBundleListener(this);
         this.unregisterManagerFactory();
@@ -112,6 +111,7 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
+    @Override
     public void bundleChanged(final BundleEvent event) {
         synchronized ( this ) {
             final boolean lazyBundle = event.getBundle().getHeaders().get( Constants.BUNDLE_ACTIVATIONPOLICY ) != null;
@@ -119,9 +119,14 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
             final boolean reload;
             if ( ( event.getType() == BundleEvent.STARTED && !lazyBundle)
                  || (event.getType() == BundleEvent.STARTING && lazyBundle) ) {
-                reload = this.service.hasUnresolvedPackages(event.getBundle());
-                if (reload) {
+                if ( this.service.hasUnresolvedPackages(event.getBundle()) ) {
+                    reload = true;
                     logger.debug("Dynamic Class Loader is reloaded because the new bundle '{}' provides previously unresolved packages", event.getBundle());
+                } else if ( this.service.isBundleUsed(event.getBundle().getBundleId()) ) {
+                    reload = true;
+                    logger.debug("Dynamic Class Loader is reloaded because the bundle '{}' has been updated", event.getBundle());
+                } else {
+                    reload = false;
                 }
             } else if ( event.getType() == BundleEvent.UNRESOLVED || event.getType() == BundleEvent.RESOLVED ) {
                 reload = this.service.isBundleUsed(event.getBundle().getBundleId());
