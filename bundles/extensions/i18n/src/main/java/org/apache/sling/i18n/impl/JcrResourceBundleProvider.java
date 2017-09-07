@@ -612,11 +612,15 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
         // country is also available
         String country = parts[1];
         boolean isValidCountryCode = false;
-        String[] countries = Locale.getISOCountries();
-        for (int i = 0; i < countries.length; i++) {
-            if (countries[i].equalsIgnoreCase(country)) {
-                isValidCountryCode = true; // signal ok
-                break;
+        if (country.toLowerCase().matches("aa|q[m-z]|x[a-z]|zz")) {
+            isValidCountryCode = true;
+        } else {
+            String[] countries = Locale.getISOCountries();
+            for (int i = 0; i < countries.length; i++) {
+                if (countries[i].equalsIgnoreCase(country)) {
+                    isValidCountryCode = true; // signal ok
+                    break;
+                }
             }
         }
         if (!isValidCountryCode) {
