@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -164,6 +165,12 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
             final ValueMap vm = resource.adaptTo(ValueMap.class);
             final String actualResourcePath = vm.get(JcrConstants.JCR_CONTENT, String.class);
             resource = request.getResourceResolver().getResource(actualResourcePath);
+        }
+        // Is adaption to a offloaded URI supported by the underlying datastore ?
+        URI redirectURI = resource.adaptTo(URI.class);
+        if (redirectURI != null ) {
+            response.sendRedirect(redirectURI.toString());
+            return;
         }
         InputStream stream = resource.adaptTo(InputStream.class);
         if (stream != null) {
