@@ -121,7 +121,7 @@ public interface PipeBuilder {
      * parameterized current pipe in the context
      * @param params key value pair of parameters
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called before a pipe is configured, or with wrong # of arguments
+     * @throws IllegalAccessException in case it's called with wrong # of arguments
      */
     PipeBuilder with(Object... params) throws IllegalAccessException;
 
