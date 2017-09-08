@@ -169,14 +169,9 @@ class BundleResourceIterator implements Iterator<Resource> {
             if (slash < 0 || slash == entry.length() - 1) {
                 log.debug("seek: Using entry {}", entry);
                 final boolean isFolder = entry.endsWith("/");
-                String propsPath = null;
-                if ( mappedPath.getJSONPropertiesExtension() != null ) {
-                    propsPath = entry.concat(mappedPath.getJSONPropertiesExtension());
-                }
                 final String entryPath = isFolder ? entry.substring(0, entry.length()-1) : entry;
                 return new BundleResource(resourceResolver, cache, mappedPath,
                         entryPath,
-                        propsPath,
                         this.subResources != null ? this.subResources.get(ResourceUtil.getName(entryPath)) : null,
                         isFolder);
             }

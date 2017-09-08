@@ -73,7 +73,6 @@ public class BundleResource extends AbstractResource {
             final BundleResourceCache cache,
             final MappedPath mappedPath,
             final String resourcePath,
-            final String propsPath,
             final Map<String, Object> readProps,
             final boolean isFolder) {
 
@@ -121,30 +120,33 @@ public class BundleResource extends AbstractResource {
                 }
             }
         }
-        if ( propsPath != null ) {
-            try {
-                final URL url = this.cache.getEntry(mappedPath.getEntryPath(propsPath));
-                if (url != null) {
-                    final JsonObject obj = Json.createReader(url.openStream()).readObject();
-                    for(final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
-                        final Object value = getValue(entry.getValue(), true);
-                        if ( value != null ) {
-                            if ( value instanceof Map ) {
-                                if ( children == null ) {
-                                    children = new HashMap<>();
+        if ( this.mappedPath.getJSONPropertiesExtension() != null ) {
+            final String propsPath = mappedPath.getEntryPath(resourcePath.concat(this.mappedPath.getJSONPropertiesExtension()));
+            if ( propsPath != null ) {
+
+                try {
+                    final URL url = this.cache.getEntry(propsPath);
+                    if (url != null) {
+                        final JsonObject obj = Json.createReader(url.openStream()).readObject();
+                        for(final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
+                            final Object value = getValue(entry.getValue(), true);
+                            if ( value != null ) {
+                                if ( value instanceof Map ) {
+                                    if ( children == null ) {
+                                        children = new HashMap<>();
+                                    }
+                                    children.put(entry.getKey(), (Map<String, Object>)value);
+                                } else {
+                                    properties.put(entry.getKey(), value);
                                 }
-                                children.put(entry.getKey(), (Map<String, Object>)value);
-                            } else {
-                                properties.put(entry.getKey(), value);
                             }
                         }
                     }
+                } catch (final IOException ioe) {
+                    log.error(
+                            "getInputStream: Cannot get input stream for " + propsPath, ioe);
                 }
-            } catch (final IOException ioe) {
-                log.error(
-                        "getInputStream: Cannot get input stream for " + mappedPath.getEntryPath(propsPath), ioe);
             }
-
         }
         this.subResources = children;
     }
@@ -158,7 +160,7 @@ public class BundleResource extends AbstractResource {
                 final Map<String, Object> props = resources.get(segment);
                 if ( props != null ) {
                     result = new BundleResource(this.resourceResolver, this.cache, this.mappedPath,
-                            path, path.concat(this.mappedPath.getJSONPropertiesExtension()), props, false);
+                            path, props, false);
                     resources = ((BundleResource)result).subResources;
                 } else {
                     result = null;
