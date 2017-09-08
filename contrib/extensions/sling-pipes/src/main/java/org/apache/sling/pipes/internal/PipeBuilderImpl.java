@@ -156,6 +156,11 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    public PipeBuilder ref(String expr) throws IllegalAccessException {
+        return pipe(ReferencePipe.RESOURCE_TYPE).expr(expr);
+    }
+
+    @Override
     public PipeBuilder with(Object... params) throws IllegalAccessException {
         return writeToCurrentStep(null, params);
     }
