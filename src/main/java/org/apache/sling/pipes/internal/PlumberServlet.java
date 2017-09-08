@@ -123,7 +123,7 @@ public class PlumberServlet extends SlingAllMethodsServlet {
     protected Map getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed){
         Map bindings = new HashMap<>();
         String dryRun = request.getParameter(BasePipe.DRYRUN_KEY);
-        if (StringUtils.isNotBlank(dryRun) && dryRun.equals(Boolean.TRUE.toString())) {
+        if (StringUtils.isNotBlank(dryRun) && !dryRun.equals(Boolean.FALSE.toString())) {
             bindings.put(BasePipe.DRYRUN_KEY, true);
         }
         String paramBindings = request.getParameter(PARAM_BINDINGS);
