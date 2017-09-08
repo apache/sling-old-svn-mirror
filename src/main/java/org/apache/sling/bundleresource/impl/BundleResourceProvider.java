@@ -117,15 +117,10 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
                 if ( this.root.getJSONPropertiesExtension() == null
                      || !entryPath.endsWith(this.root.getJSONPropertiesExtension()) ) {
 
-                    String propsPath = null;
-                    if ( this.root.getJSONPropertiesExtension() != null ) {
-                        propsPath = entryPath.concat(this.root.getJSONPropertiesExtension());
-                    }
                     return new BundleResource(ctx.getResourceResolver(),
                             cache,
                             mappedPath,
                             path,
-                            propsPath,
                             null,
                             isFolder);
                 }
