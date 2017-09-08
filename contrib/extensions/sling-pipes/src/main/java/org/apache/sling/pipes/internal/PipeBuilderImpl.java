@@ -219,7 +219,7 @@ public class PipeBuilderImpl implements PipeBuilder {
      * build a time + random based path under /var/pipes
      * @return full path of future Pipe
      */
-    protected String buildPipePath() {
+    protected String buildRandomPipePath() {
         final Calendar now = Calendar.getInstance();
         return PIPES_REPOSITORY_PATH + '/' + now.get(Calendar.YEAR) + '/' + now.get(Calendar.MONTH) + '/' + now.get(Calendar.DAY_OF_MONTH) + "/"
                 + UUID.randomUUID().toString();
@@ -239,13 +239,17 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     @Override
     public Pipe build() throws PersistenceException {
-        String rootPath = buildPipePath();
-        Resource pipeResource = ResourceUtil.getOrCreateResource(resolver, rootPath, ContainerPipe.RESOURCE_TYPE, NT_SLING_FOLDER, true);
+        return build(buildRandomPipePath());
+    }
+
+    @Override
+    public Pipe build(String path) throws PersistenceException {
+        Resource pipeResource = ResourceUtil.getOrCreateResource(resolver, path, ContainerPipe.RESOURCE_TYPE, NT_SLING_FOLDER, true);
         int index = 0;
         for (Step step : steps){
             String name = StringUtils.isNotBlank(step.name) ? step.name : DEFAULT_NAMES.length > index ? DEFAULT_NAMES[index] : Integer.toString(index);
             index++;
-            String subPipePath = rootPath + "/" + Pipe.NN_CONF + "/" + name;
+            String subPipePath = path + "/" + Pipe.NN_CONF + "/" + name;
             createResource(resolver, subPipePath, NT_SLING_ORDERED_FOLDER, step.properties);
             logger.debug("built subpipe {}", subPipePath);
             for (Map.Entry<String, Map> entry : step.confs.entrySet()){
@@ -254,7 +258,7 @@ public class PipeBuilderImpl implements PipeBuilder {
             }
         }
         resolver.commit();
-        logger.debug("built pipe under {}", rootPath);
+        logger.debug("built pipe under {}", path);
         return plumber.getPipe(pipeResource);
     }
 

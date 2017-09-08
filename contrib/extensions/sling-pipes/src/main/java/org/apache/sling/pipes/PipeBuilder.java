@@ -158,11 +158,19 @@ public interface PipeBuilder {
     PipeBuilder conf(Object... properties) throws IllegalAccessException;
 
     /**
-     * builds a configured pipe
-     * @return Created (not executed) Pipe instance
+     * builds a configured pipe. The configuration will be placed in a balanced tree under <code>/var/pipes</code>
+     * @return Created (not executed) Pipe instance.
      * @throws PersistenceException error occuring when saving the pipe configuration
      */
     Pipe build() throws PersistenceException;
+
+    /**
+     * builds a configured pipe. The configuration will be placed under <code>path</code>
+     * @param path path under which the generated configuration should be stored
+     * @return Created (not executed) Pipe instance
+     * @throws PersistenceException error occuring when saving the pipe configuration
+     */
+    Pipe build(String path) throws PersistenceException;
 
     /**
      * builds and run configured pipe
