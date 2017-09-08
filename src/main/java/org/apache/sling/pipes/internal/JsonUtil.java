@@ -80,6 +80,7 @@ public class JsonUtil {
                 :
                 ((JsonObject) json).entrySet().stream()
                     .map(entry -> new AbstractMap.SimpleEntry<>(entry.getKey(),unbox(entry.getValue())))
+                    .filter(entry -> entry.getValue() != null)
                     .collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
     }
 
