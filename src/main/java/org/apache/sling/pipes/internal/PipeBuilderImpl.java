@@ -44,7 +44,9 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     List<Step> steps;
 
-    Step currentStep;
+    Step containerStep = new Step(ContainerPipe.RESOURCE_TYPE);
+
+    Step currentStep = containerStep;
 
     Plumber plumber;
 
@@ -153,16 +155,6 @@ public class PipeBuilderImpl implements PipeBuilder {
         return pipe(ParentPipe.RESOURCE_TYPE);
     }
 
-    /**
-     * check of presence of a current step, fails loudly if it's not the case
-     * @throws IllegalAccessException exception thrown if current step is not present
-     */
-    protected void checkCurrentStep() throws IllegalAccessException {
-        if (currentStep == null){
-            throw new IllegalAccessException("A pipe should have been configured first");
-        }
-    }
-
     @Override
     public PipeBuilder with(Object... params) throws IllegalAccessException {
         return writeToCurrentStep(null, params);
@@ -181,7 +173,6 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @throws IllegalAccessException in case configuration is wrong
      */
     protected PipeBuilder writeToCurrentStep(String name, Object... params) throws IllegalAccessException {
-        checkCurrentStep();
         if (params.length % 2 > 0){
             throw new IllegalArgumentException("there should be an even number of arguments");
         }
@@ -210,7 +201,6 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     @Override
     public PipeBuilder name(String name) throws IllegalAccessException {
-        checkCurrentStep();
         currentStep.name = name;
         return this;
     }
@@ -233,8 +223,8 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @param data map of properties to add
      * @throws PersistenceException in case configuration resource couldn't be persisted
      */
-    protected void createResource(ResourceResolver resolver, String path, String type, Map data) throws PersistenceException {
-        ResourceUtil.getOrCreateResource(resolver, path, data, type, false);
+    protected Resource createResource(ResourceResolver resolver, String path, String type, Map data) throws PersistenceException {
+        return ResourceUtil.getOrCreateResource(resolver, path, data, type, false);
     }
 
     @Override
@@ -242,20 +232,30 @@ public class PipeBuilderImpl implements PipeBuilder {
         return build(buildRandomPipePath());
     }
 
+    /**
+     * Persist a step at a given path
+     * @param path
+     * @param step
+     * @return created resource
+     * @throws PersistenceException
+     */
+    protected Resource persistStep(String path, String parentType, Step step) throws PersistenceException {
+        Resource resource = createResource(resolver, path, parentType, step.properties);
+        for (Map.Entry<String, Map> entry : step.confs.entrySet()){
+            createResource(resolver, path + "/" + entry.getKey(), NT_SLING_FOLDER, entry.getValue());
+            logger.debug("built pipe {}'s {} node", path, entry.getKey());
+        }
+        return resource;
+    }
+
     @Override
     public Pipe build(String path) throws PersistenceException {
-        Resource pipeResource = ResourceUtil.getOrCreateResource(resolver, path, ContainerPipe.RESOURCE_TYPE, NT_SLING_FOLDER, true);
+        Resource pipeResource = persistStep(path, NT_SLING_FOLDER, containerStep);
         int index = 0;
         for (Step step : steps){
             String name = StringUtils.isNotBlank(step.name) ? step.name : DEFAULT_NAMES.length > index ? DEFAULT_NAMES[index] : Integer.toString(index);
             index++;
-            String subPipePath = path + "/" + Pipe.NN_CONF + "/" + name;
-            createResource(resolver, subPipePath, NT_SLING_ORDERED_FOLDER, step.properties);
-            logger.debug("built subpipe {}", subPipePath);
-            for (Map.Entry<String, Map> entry : step.confs.entrySet()){
-                createResource(resolver, subPipePath + "/" + entry.getKey(), NT_SLING_FOLDER, entry.getValue());
-                logger.debug("built subpipe {}'s {} node", subPipePath, entry.getKey());
-            }
+            persistStep(path + "/" + Pipe.NN_CONF + "/" + name, NT_SLING_ORDERED_FOLDER, step);
         }
         resolver.commit();
         logger.debug("built pipe under {}", path);

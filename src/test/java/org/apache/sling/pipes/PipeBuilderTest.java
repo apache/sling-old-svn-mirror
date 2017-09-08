@@ -53,6 +53,16 @@ public class PipeBuilderTest extends AbstractPipeTest {
     }
 
     @Test
+    public void confContainerProperties() throws Exception {
+        PipeBuilder containerBuilder = plumber.newPipe(context.resourceResolver());
+        containerBuilder.with("test",true);
+        String specialPath = "/content/testedContainer";
+        containerBuilder.echo(PATH_APPLE).write("tested", true, "working", true).build(specialPath);
+        ValueMap properties = context.resourceResolver().getResource(specialPath).adaptTo(ValueMap.class);
+        assertTrue("property should have been written", properties.get("test", false));
+    }
+
+    @Test
     public void bindings() throws Exception {
         PipeBuilder defaultNames = plumber.newPipe(context.resourceResolver());
         Set<String> paths = defaultNames
