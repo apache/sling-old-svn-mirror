@@ -117,6 +117,14 @@ public interface PipeBuilder {
      */
     PipeBuilder parent();
 
+
+    /**
+     * attach a reference pipe to the current context
+     * @param expr reference
+     * @return updated instance of PipeBuilder
+     */
+    PipeBuilder ref(String expr) throws IllegalAccessException;
+
     /**
      * parameterized current pipe in the context
      * @param params key value pair of parameters
