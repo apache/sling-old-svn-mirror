@@ -98,15 +98,11 @@ public class PipeBuilderIT extends PipesTestSupport {
         try (ResourceResolver resolver = resolver()) {
             Pipe pipe = plumber.newPipe(resolver).mkdir(ROOT + "/test-${testedBinding}").write("jcr:title","${testedBinding}").build();
             for (int i = 0; i < 10; i ++) {
-                Map bindings = new HashMap();
-                bindings.put("testedBinding", i);
-                plumber.newPipe(resolver).pipe(ReferencePipe.RESOURCE_TYPE).expr(pipe.getResource().getPath()).run(bindings);
+                plumber.newPipe(resolver).ref(pipe.getResource().getPath()).runWith("testedBinding", i);
             }
             Set<String> results = plumber.newPipe(resolver).echo(ROOT).traverse().run();
             LOGGER.info("Following results are found {}", results);
             assertEquals("we should have root and implemented children", 11, results.size());
         }
     }
-
-
 }

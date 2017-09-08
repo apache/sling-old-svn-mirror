@@ -196,6 +196,14 @@ public interface PipeBuilder {
     Set<String> run(Map bindings) throws Exception;
 
     /**
+     * allow execution of a pipe, with more parameter
+     * @param bindings additional bindings, should be key/value format
+     * @return set of resource path, output of the pipe execution
+     * @throws Exception in case something goes wrong with pipe execution
+     */
+    Set<String> runWith(Object... bindings) throws Exception;
+
+    /**
      * run a pipe asynchronously
      * @param bindings additional bindings for the execution (can be null)
      * @return registered job for the pipe execution
