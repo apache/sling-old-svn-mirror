@@ -171,6 +171,28 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     /**
+     * Checks arguments and throws exception if there is an issue
+     * @param params
+     * @throws IllegalArgumentException
+     */
+    protected void checkArguments(Object... params) throws IllegalArgumentException {
+        if (params.length % 2 > 0){
+            throw new IllegalArgumentException("there should be an even number of arguments");
+        }
+    }
+
+    /**
+     * write key/value pairs into a map
+     * @param map
+     * @param params
+     */
+    protected void writeToMap(Map map, Object... params){
+        for (int i = 0; i < params.length; i += 2){
+            map.put(params[i], params[i + 1]);
+        }
+    }
+
+    /**
      * Add some configurations to current's Step node defined by name (if null, will be step's properties)
      * @param name name of the configuration node, can be null in which case it's the subpipe itself
      * @param params key/value pair list of configuration
@@ -178,9 +200,7 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @throws IllegalAccessException in case configuration is wrong
      */
     protected PipeBuilder writeToCurrentStep(String name, Object... params) throws IllegalAccessException {
-        if (params.length % 2 > 0){
-            throw new IllegalArgumentException("there should be an even number of arguments");
-        }
+        checkArguments(params);
         Map props = name != null ? currentStep.confs.get(name) : currentStep.properties;
         if (props == null){
             props = new HashMap();
@@ -188,9 +208,7 @@ public class PipeBuilderImpl implements PipeBuilder {
                 currentStep.confs.put(name, props);
             }
         }
-        for (int i = 0; i < params.length; i += 2){
-            props.put(params[i], params[i + 1]);
-        }
+        writeToMap(props, params);
         return this;
     }
 
@@ -270,6 +288,14 @@ public class PipeBuilderImpl implements PipeBuilder {
     @Override
     public Set<String> run() throws Exception {
         return run(null);
+    }
+
+    @Override
+    public Set<String> runWith(Object... bindings) throws Exception {
+        checkArguments(bindings);
+        Map bindingsMap = new HashMap();
+        writeToMap(bindingsMap, bindings);
+        return run(bindingsMap);
     }
 
     @Override

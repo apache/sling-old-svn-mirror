@@ -88,6 +88,8 @@ public class PipeBuilderTest extends AbstractPipeTest {
         Map bindings = new HashMap<>();
         bindings.put("testedPath", PATH_FRUITS);
         Set<String> paths = plumber.newPipe(context.resourceResolver()).echo("${testedPath}").run(bindings);
-        assertTrue("paths should contain implemented testedPath", paths.contains(PATH_FRUITS));
+        assertTrue("paths should contain implemented testedPath after run(bindings) is executed", paths.contains(PATH_FRUITS));
+        paths = plumber.newPipe(context.resourceResolver()).echo("${testedPath}").runWith("testedPath", PATH_FRUITS);
+        assertTrue("paths should contain implemented testedPath after runWith is executed", paths.contains(PATH_FRUITS));
     }
 }
