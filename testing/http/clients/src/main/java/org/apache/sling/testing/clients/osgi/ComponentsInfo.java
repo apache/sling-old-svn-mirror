@@ -83,13 +83,13 @@ public class ComponentsInfo {
         Iterator<JsonNode> nodes = root.get("data").getElements();
         while(nodes.hasNext()) {
             JsonNode node = nodes.next();
-            if(node.get(key) != null) {
-                if(node.get(key).isValueNode()) {
+            if ((null != node.get(key)) && (node.get(key).isValueNode())) {
+                final String valueNode = node.get(key).getTextValue();
+                if (valueNode.equals(value)) {
                     return node;
                 }
             }
         }
         return null;
     }
-
 }
