@@ -67,15 +67,15 @@ class BundleResourceIterator implements Iterator<Resource> {
     BundleResourceIterator(final BundleResource parent) {
 
         // trailing slash to enumerate children
-        String parentPath = parent.getPath().concat("/");
+        final String parentEntryPath = parent.getMappedPath().getEntryPath(parent.getPath().concat("/"));
+        this.prefixLength = parentEntryPath.length();
 
         this.resourceResolver = parent.getResourceResolver();
         this.cache = parent.getBundle();
         this.subResources = parent.getSubResources() != null ? new HashMap<>(parent.getSubResources()) : null;
         this.mappedPath = parent.getMappedPath();
 
-        this.entries = getFilteredEntries(mappedPath.getEntryPath(parentPath));
-        this.prefixLength = parentPath.length();
+        this.entries = getFilteredEntries(parentEntryPath);
 
         this.nextResult = (entries != null) ? seek() : null;
     }
@@ -87,19 +87,20 @@ class BundleResourceIterator implements Iterator<Resource> {
         if (!parentPath.endsWith("/")) {
             parentPath = parentPath.concat("/");
         }
+        final String parentEntryPath = mappedPath.getEntryPath(parentPath);
+        this.prefixLength = parentEntryPath.length();
 
         this.resourceResolver = resourceResolver;
         this.cache = bundle;
         this.subResources = null;
         this.mappedPath = mappedPath;
-        this.entries = getFilteredEntries(parentPath);
-        this.prefixLength = parentPath.length();
+        this.entries = getFilteredEntries(parentEntryPath);
 
         this.nextResult = (entries != null) ? seek() : null;
     }
 
-    private Iterator<String> getFilteredEntries(final String parentPath) {
-        final Set<String> bundleEntries = new TreeSet<>(cache.getEntryPaths(parentPath));
+    private Iterator<String> getFilteredEntries(final String parentEntryPath) {
+        final Set<String> bundleEntries = new TreeSet<>(cache.getEntryPaths(parentEntryPath));
         if ( this.mappedPath.getJSONPropertiesExtension() != null ) {
             final Set<String> add = new HashSet<>();
             final Iterator<String> iter = bundleEntries.iterator();
@@ -113,7 +114,7 @@ class BundleResourceIterator implements Iterator<Resource> {
             bundleEntries.addAll(add);
             if ( subResources != null ) {
                 for(final String name : subResources.keySet()) {
-                    final String fullPath = parentPath.concat(name);
+                    final String fullPath = parentEntryPath.concat(name);
                     if ( !bundleEntries.contains(fullPath) ) {
                         bundleEntries.add(fullPath);
                     } else {
@@ -138,7 +139,7 @@ class BundleResourceIterator implements Iterator<Resource> {
             throw new NoSuchElementException();
         }
 
-        Resource result = nextResult;
+        final Resource result = nextResult;
         nextResult = seek();
         return result;
     }
@@ -160,18 +161,19 @@ class BundleResourceIterator implements Iterator<Resource> {
         while (entries.hasNext()) {
             String entry = entries.next();
 
-            // require leading slash
+            // require leading slash (sanity check, should always be the case)
             if (!entry.startsWith("/")) {
                 entry = "/".concat(entry);
             }
 
+            // another sanity check if the prefix is correct
             int slash = entry.indexOf('/', prefixLength);
             if (slash < 0 || slash == entry.length() - 1) {
                 log.debug("seek: Using entry {}", entry);
                 final boolean isFolder = entry.endsWith("/");
                 final String entryPath = isFolder ? entry.substring(0, entry.length()-1) : entry;
                 return new BundleResource(resourceResolver, cache, mappedPath,
-                        entryPath,
+                        mappedPath.getResourcePath(entryPath),
                         this.subResources != null ? this.subResources.get(ResourceUtil.getName(entryPath)) : null,
                         isFolder);
             }

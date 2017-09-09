@@ -102,6 +102,18 @@ class MappedPath {
         return null;
     }
 
+    String getResourcePath(final String entryPath) {
+        if ( entryRootPrefix == null ) {
+            return entryPath;
+        }
+        if ( entryPath.startsWith(entryRootPrefix) ) {
+            return resourceRootPrefix.concat(entryPath.substring(entryRootPrefix.length()));
+        } else if ( entryPath.equals(entryRoot)) {
+            return resourceRoot;
+        }
+        return null;
+    }
+
     String getResourceRoot() {
         return resourceRoot;
     }
