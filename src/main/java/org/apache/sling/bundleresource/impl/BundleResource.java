@@ -56,7 +56,7 @@ public class BundleResource extends AbstractResource {
 
     private final BundleResourceCache cache;
 
-    private final MappedPath mappedPath;
+    private final PathMapping mappedPath;
 
     private final String path;
 
@@ -71,7 +71,7 @@ public class BundleResource extends AbstractResource {
     @SuppressWarnings("unchecked")
     public BundleResource(final ResourceResolver resourceResolver,
             final BundleResourceCache cache,
-            final MappedPath mappedPath,
+            final PathMapping mappedPath,
             final String resourcePath,
             final Map<String, Object> readProps,
             final boolean isFolder) {
@@ -306,7 +306,7 @@ public class BundleResource extends AbstractResource {
         return cache;
     }
 
-    MappedPath getMappedPath() {
+    PathMapping getMappedPath() {
         return mappedPath;
     }
 

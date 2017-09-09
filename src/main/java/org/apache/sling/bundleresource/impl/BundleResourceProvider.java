@@ -40,7 +40,7 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
     private final BundleResourceCache cache;
 
     /** The root path */
-    private final MappedPath root;
+    private final PathMapping root;
 
     @SuppressWarnings("rawtypes")
     private volatile ServiceRegistration<ResourceProvider> serviceRegistration;
@@ -50,8 +50,8 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
      * supporting resources below root paths given by the rootList which is a
      * comma (and whitespace) separated list of absolute paths.
      */
-    public BundleResourceProvider(final Bundle bundle, final MappedPath root) {
-        this.cache = new BundleResourceCache(bundle);
+    public BundleResourceProvider(final BundleResourceCache cache, final PathMapping root) {
+        this.cache = cache;
         this.root = root;
     }
 
@@ -72,7 +72,11 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
 
     void unregisterService() {
         if (serviceRegistration != null) {
-            serviceRegistration.unregister();
+            try {
+                serviceRegistration.unregister();
+            } catch ( final IllegalStateException ise ) {
+                // this might happen on shutdown, so ignore
+            }
             serviceRegistration = null;
         }
     }
@@ -88,7 +92,7 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
             final String resourcePath,
             final ResourceContext resourceContext,
             final Resource parent) {
-        final MappedPath mappedPath = getMappedPath(resourcePath);
+        final PathMapping mappedPath = getMappedPath(resourcePath);
         if (mappedPath != null) {
             final String entryPath = mappedPath.getEntryPath(resourcePath);
 
@@ -159,7 +163,7 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
 
         // ensure this provider may have children of the parent
         String parentPath = parent.getPath();
-        MappedPath mappedPath = getMappedPath(parentPath);
+        PathMapping mappedPath = getMappedPath(parentPath);
         if (mappedPath != null) {
             return new BundleResourceIterator(parent.getResourceResolver(),
                 cache, mappedPath, parentPath);
@@ -177,13 +181,13 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
         return cache;
     }
 
-    MappedPath getMappedPath() {
+    PathMapping getMappedPath() {
         return root;
     }
 
     // ---------- internal
 
-    private MappedPath getMappedPath(final String resourcePath) {
+    private PathMapping getMappedPath(final String resourcePath) {
         if (this.root.isChild(resourcePath)) {
             return root;
         }

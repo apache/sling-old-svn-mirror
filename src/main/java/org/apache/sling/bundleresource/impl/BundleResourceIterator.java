@@ -48,7 +48,7 @@ class BundleResourceIterator implements Iterator<Resource> {
     /** Bundle providing the entry resources */
     private final BundleResourceCache cache;
 
-    private final MappedPath mappedPath;
+    private final PathMapping mappedPath;
 
     /** Underlying bundle entry path enumeration */
     private final Iterator<String> entries;
@@ -81,7 +81,7 @@ class BundleResourceIterator implements Iterator<Resource> {
     }
 
     BundleResourceIterator(ResourceResolver resourceResolver, BundleResourceCache bundle,
-            MappedPath mappedPath, String parentPath) {
+            PathMapping mappedPath, String parentPath) {
 
         // trailing slash to enumerate children
         if (!parentPath.endsWith("/")) {

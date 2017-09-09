@@ -23,10 +23,10 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-public class MappedPathTest {
+public class PathMappingTest {
 
     @Test public void testSimpleRoot() {
-        final MappedPath[] paths = MappedPath.getRoots("/libs/foo");
+        final PathMapping[] paths = PathMapping.getRoots("/libs/foo");
         assertEquals(1, paths.length);
         assertNull(paths[0].getEntryRoot());
         assertNull(paths[0].getEntryRootPrefix());
@@ -36,7 +36,7 @@ public class MappedPathTest {
     }
 
     @Test public void testSimpleRootWithJSON() {
-        final MappedPath[] paths = MappedPath.getRoots("/libs/foo;" + MappedPath.DIR_JSON + ":=json");
+        final PathMapping[] paths = PathMapping.getRoots("/libs/foo;" + PathMapping.DIR_JSON + ":=json");
         assertEquals(1, paths.length);
         assertNull(paths[0].getEntryRoot());
         assertNull(paths[0].getEntryRootPrefix());
