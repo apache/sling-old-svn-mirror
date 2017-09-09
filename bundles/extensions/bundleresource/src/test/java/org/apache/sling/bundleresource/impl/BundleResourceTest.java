@@ -72,7 +72,7 @@ public class BundleResourceTest {
         final BundleResourceCache cache = getBundleResourceCache();
         when(cache.getEntry("/libs/foo/test.json")).thenReturn(new URL("file:/libs/foo/test.json"));
         final BundleResource rsrc = new BundleResource(null, cache,
-                new MappedPath("/libs/foo", null, null), "/libs/foo/test.json", null, false);
+                new PathMapping("/libs/foo", null, null), "/libs/foo/test.json", null, false);
         assertEquals(JcrConstants.NT_FILE, rsrc.getResourceType());
         assertNull(rsrc.getResourceSuperType());
         final ValueMap vm = rsrc.getValueMap();
@@ -83,7 +83,7 @@ public class BundleResourceTest {
         final BundleResourceCache cache = getBundleResourceCache();
         addContent(cache, "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
         final BundleResource rsrc = new BundleResource(null, cache,
-                new MappedPath("/libs/foo", null, "json"), "/libs/foo/test", null, false);
+                new PathMapping("/libs/foo", null, "json"), "/libs/foo/test", null, false);
         assertEquals(JcrConstants.NT_FILE, rsrc.getResourceType());
         assertNull(rsrc.getResourceSuperType());
         final ValueMap vm = rsrc.getValueMap();

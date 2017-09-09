@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.sling.commons.osgi.ManifestHeader;
 
-class MappedPath {
+class PathMapping {
 
     public static final String DIR_PATH = "path";
     public static final String DIR_JSON = "propsJSON";
@@ -36,8 +36,8 @@ class MappedPath {
 
     private final String jsonExpandExtension;
 
-    public static MappedPath[] getRoots(final String rootList) {
-        List<MappedPath> prefixList = new ArrayList<>();
+    public static PathMapping[] getRoots(final String rootList) {
+        List<PathMapping> prefixList = new ArrayList<>();
 
         final ManifestHeader header = ManifestHeader.parse(rootList);
         for (final ManifestHeader.Entry entry : header.getEntries()) {
@@ -45,16 +45,16 @@ class MappedPath {
             final String pathDirective = entry.getDirectiveValue(DIR_PATH);
             final String expandDirective = entry.getDirectiveValue(DIR_JSON);
             if (pathDirective != null) {
-                prefixList.add(new MappedPath(resourceRoot, pathDirective, expandDirective));
+                prefixList.add(new PathMapping(resourceRoot, pathDirective, expandDirective));
             } else {
-                prefixList.add(MappedPath.create(resourceRoot, expandDirective));
+                prefixList.add(PathMapping.create(resourceRoot, expandDirective));
             }
         }
-        return prefixList.toArray(new MappedPath[prefixList.size()]);
+        return prefixList.toArray(new PathMapping[prefixList.size()]);
     }
 
 
-    static MappedPath create(final String configPath,
+    static PathMapping create(final String configPath,
             final String expandDirective) {
         String resourceRoot;
         String entryRoot;
@@ -66,10 +66,10 @@ class MappedPath {
             resourceRoot = configPath;
             entryRoot = null;
         }
-        return new MappedPath(resourceRoot, entryRoot, expandDirective);
+        return new PathMapping(resourceRoot, entryRoot, expandDirective);
     }
 
-    MappedPath(final String resourceRoot,
+    PathMapping(final String resourceRoot,
             final String entryRoot,
             final String expandDirective) {
         this.resourceRoot = ensureNoTrailingSlash(resourceRoot);

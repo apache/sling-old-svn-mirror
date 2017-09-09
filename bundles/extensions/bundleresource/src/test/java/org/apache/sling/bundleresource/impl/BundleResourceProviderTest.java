@@ -121,9 +121,9 @@ public class BundleResourceProviderTest {
         final Bundle bundle = getBundle();
         addContent(bundle, "/libs/foo/test.json", "HELLOWORLD");
 
-        final MappedPath path = new MappedPath("/libs/foo", null, null);
+        final PathMapping path = new PathMapping("/libs/foo", null, null);
 
-        final BundleResourceProvider provider = new BundleResourceProvider(bundle, path);
+        final BundleResourceProvider provider = new BundleResourceProvider(new BundleResourceCache(bundle), path);
         assertNotNull(provider.getResource(mock(ResolveContext.class), "/libs/foo/test.json", mock(ResourceContext.class), null));
         assertNull(provider.getResource(mock(ResolveContext.class), "/libs/foo/test", mock(ResourceContext.class), null));
     }
@@ -133,9 +133,9 @@ public class BundleResourceProviderTest {
         final Bundle bundle = getBundle();
         addContent(bundle, "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
 
-        final MappedPath path = new MappedPath("/libs/foo", null, "json");
+        final PathMapping path = new PathMapping("/libs/foo", null, "json");
 
-        final BundleResourceProvider provider = new BundleResourceProvider(bundle, path);
+        final BundleResourceProvider provider = new BundleResourceProvider(new BundleResourceCache(bundle), path);
         assertNull(provider.getResource(mock(ResolveContext.class), "/libs/foo/test.json", mock(ResourceContext.class), null));
         final Resource rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/test", mock(ResourceContext.class), null);
         assertNotNull(rsrc);
@@ -151,9 +151,9 @@ public class BundleResourceProviderTest {
         addContent(bundle, "/libs/foo/test", "HELLOWORLD");
         addContent(bundle, "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
 
-        final MappedPath path = new MappedPath("/libs/foo", null, "json");
+        final PathMapping path = new PathMapping("/libs/foo", null, "json");
 
-        final BundleResourceProvider provider = new BundleResourceProvider(bundle, path);
+        final BundleResourceProvider provider = new BundleResourceProvider(new BundleResourceCache(bundle), path);
         assertNull(provider.getResource(mock(ResolveContext.class), "/libs/foo/test.json", mock(ResourceContext.class), null));
         final Resource rsrc = provider.getResource(mock(ResolveContext.class), "/libs/foo/test", mock(ResourceContext.class), null);
         assertNotNull(rsrc);
@@ -178,9 +178,9 @@ public class BundleResourceProviderTest {
 
         finishContent(bundle);
 
-        final MappedPath path = new MappedPath("/libs/foo", null, "json");
+        final PathMapping path = new PathMapping("/libs/foo", null, "json");
 
-        final BundleResourceProvider provider = new BundleResourceProvider(bundle, path);
+        final BundleResourceProvider provider = new BundleResourceProvider(new BundleResourceCache(bundle), path);
 
         assertContent(provider, "/libs/foo/a", "A");
         assertContent(provider, "/libs/foo/b", "B");
@@ -273,9 +273,9 @@ public class BundleResourceProviderTest {
 
         finishContent(bundle);
 
-        final MappedPath path = new MappedPath("/libs/foo", null, "json");
+        final PathMapping path = new PathMapping("/libs/foo", null, "json");
 
-        final BundleResourceProvider provider = new BundleResourceProvider(bundle, path);
+        final BundleResourceProvider provider = new BundleResourceProvider(new BundleResourceCache(bundle), path);
 
         assertContent(provider, "/libs/foo/a", "A");
         assertContent(provider, "/libs/foo/b", "B");

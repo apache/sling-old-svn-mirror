@@ -93,7 +93,7 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
         for (BundleResourceProvider bundleResourceProvider : brp) {
 
             BundleResourceCache cache = bundleResourceProvider.getBundleResourceCache();
-            MappedPath path = bundleResourceProvider.getMappedPath();
+            PathMapping path = bundleResourceProvider.getMappedPath();
 
             pw.println("<tr class='content'>");
 
