@@ -85,12 +85,12 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
      */
     @Override
     public Resource getResource(final ResolveContext<Object> ctx,
-            final String path,
+            final String resourcePath,
             final ResourceContext resourceContext,
             final Resource parent) {
-        final MappedPath mappedPath = getMappedPath(path);
+        final MappedPath mappedPath = getMappedPath(resourcePath);
         if (mappedPath != null) {
-            final String entryPath = mappedPath.getEntryPath(path);
+            final String entryPath = mappedPath.getEntryPath(resourcePath);
 
             // first try, whether the bundle has an entry with a trailing slash
             // which would be a folder. In this case we check whether the
@@ -120,7 +120,7 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
                     return new BundleResource(ctx.getResourceResolver(),
                             cache,
                             mappedPath,
-                            path,
+                            resourcePath,
                             null,
                             isFolder);
                 }
@@ -129,16 +129,19 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
             // the bundle does not contain the path
             // if JSON is enabled check for any parent
             if ( this.root.getJSONPropertiesExtension() != null ) {
-                String resourcePath = ResourceUtil.getParent(path);
-                while ( resourcePath != null ) {
-                    final Resource rsrc = getResource(ctx, resourcePath, resourceContext, null);
+                String parentPath = ResourceUtil.getParent(resourcePath);
+                while ( parentPath != null ) {
+                    final Resource rsrc = getResource(ctx, parentPath, resourceContext, null);
                     if (rsrc != null ) {
-                        final Resource childResource = ((BundleResource)rsrc).getChildResource(path.substring(resourcePath.length() + 1));
+                        final Resource childResource = ((BundleResource)rsrc).getChildResource(resourcePath.substring(parentPath.length() + 1));
                         if ( childResource != null ) {
                             return childResource;
                         }
                     }
-                    resourcePath = ResourceUtil.getParent(resourcePath);
+                    parentPath = ResourceUtil.getParent(parentPath);
+                    if ( parentPath != null && this.getMappedPath(parentPath) == null ) {
+                        parentPath = null;
+                    }
                 }
             }
         }
