@@ -19,10 +19,12 @@ package org.apache.sling.pipes;
 import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Pipe interface
  */
+@ConsumerType
 public interface Pipe {
     /**
      * Name of the pipe

@@ -18,6 +18,7 @@ package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.event.jobs.Job;
+import org.osgi.annotation.versioning.ProviderType;
 
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +26,7 @@ import java.util.Set;
 /**
  * Builder and Runner of a pipe, based on a fluent API, for script and java usage.
  */
+@ProviderType
 public interface PipeBuilder {
     /**
      * attach a new pipe to the current context
