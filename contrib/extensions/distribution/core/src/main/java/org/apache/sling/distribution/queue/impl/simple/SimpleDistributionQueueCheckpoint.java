@@ -20,14 +20,9 @@ package org.apache.sling.distribution.queue.impl.simple;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.Map;
-
-import javax.json.Json;
-import javax.json.stream.JsonGenerator;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
@@ -55,6 +50,7 @@ class SimpleDistributionQueueCheckpoint implements Runnable {
     public void run() {
         String fileName = queue.getName() + "-checkpoint";
         File checkpointFile = new File(checkpointDirectory, fileName + "-new");
+        QueueItemMapper mapper = new QueueItemMapper();
         log.debug("started checkpointing");
 
         try {
@@ -66,30 +62,11 @@ class SimpleDistributionQueueCheckpoint implements Runnable {
             FileOutputStream fileOutputStream = new FileOutputStream(checkpointFile);
             for (DistributionQueueEntry queueEntry : queue.getItems(0, -1)) {
                 DistributionQueueItem item = queueEntry.getItem();
-                String packageId = item.getPackageId();
-                StringWriter w = new StringWriter();
-                JsonGenerator jsonWriter = Json.createGenerator(w);
-                jsonWriter.writeStartObject();
-                for (Map.Entry<String, Object> entry : item.entrySet()) {
-                    
-                    Object value = entry.getValue();
-                    boolean isArray = value instanceof String[];
-                    if (isArray) {
-                        jsonWriter.writeStartArray(entry.getKey());
-                        for (String s : ((String[]) value)) {
-                            jsonWriter.write(s);
-                        }
-                        jsonWriter.writeEnd();
-                    } else {
-                        jsonWriter.write(entry.getKey(), (String) value);
-                    }
-                }
-                jsonWriter.writeEnd();
-                jsonWriter.close();
-                lines.add(packageId + " " + w.toString());
+                String line = mapper.writeQueueItem(item);
+                lines.add(line);
             }
             log.debug("parsed {} items", lines.size());
-            IOUtils.writeLines(lines, Charset.defaultCharset().name(), fileOutputStream, Charset.defaultCharset());
+            IOUtils.writeLines(lines, null, fileOutputStream, Charset.defaultCharset());
             fileOutputStream.flush();
             fileOutputStream.close();
             boolean success = checkpointFile.renameTo(new File(checkpointDirectory, fileName));
