@@ -102,6 +102,7 @@ public class SchedulerHealthCheck implements HealthCheck {
                 if (it.hasNext()) {
                     runningCount = it.next().getCount();
                 }
+                runningCount = Math.max(0, runningCount);
             }
             final SortedMap<String, Gauge> oldestGaugeSet = metricRegistry.getGauges(new MetricFilter() {
 
@@ -116,8 +117,7 @@ public class SchedulerHealthCheck implements HealthCheck {
             } else {
                 final long oldestRunningJobInMillis = (Long) oldestGaugeSet.values().iterator().next().getValue();
                 if (oldestRunningJobInMillis <= -1) {
-                    resultLog.info("Sling Scheduler has no Quartz-Job running at this moment "
-                            + "(number of currently runnning Quartz-Jobs: {}).", Math.max(0, runningCount));
+                    resultLog.info("Sling Scheduler has no long-running Quartz-Jobs at this moment.");
                 } else if (oldestRunningJobInMillis > maxQuartzJobDurationAcceptable) {
                     final String slowPrefix = QuartzScheduler.METRICS_NAME_OLDEST_RUNNING_JOB_MILLIS + ".slow.";
                     final MetricFilter filter = new MetricFilter() {
@@ -130,9 +130,8 @@ public class SchedulerHealthCheck implements HealthCheck {
                     final SortedMap<String, Gauge> allGaugeSet = metricRegistry.getGauges(filter);
                     if (allGaugeSet.isEmpty()) {
                         resultLog.critical(
-                                "Sling Scheduler has Quartz-Job(s) that is/are running for more than the acceptable {}ms: {}ms "
-                                        + "(number of currently runnning Quartz-Jobs: {}). Thread-dumps can help determine exact long-running Quartz-Job.",
-                                maxQuartzJobDurationAcceptable, oldestRunningJobInMillis, Math.max(0, runningCount));
+                                "Sling Scheduler has at least one long-running Quartz-Job with the oldest running for {}ms.",
+                                oldestRunningJobInMillis);
                     } else {
                         final StringBuffer slowNames = new StringBuffer();
                         final Iterator<Entry<String, Gauge>> it = allGaugeSet.entrySet().iterator();
@@ -151,20 +150,28 @@ public class SchedulerHealthCheck implements HealthCheck {
                             slowNames.append(e.getKey().substring(slowPrefix.length()));
                             slowNames.append("=").append(millis).append("ms");
                         }
-                        resultLog.critical(
-                                "Sling Scheduler has Quartz-Job(s) that is/are running for more than the acceptable {}ms: {}ms "
-                                        + "(number of currently runnning Quartz-Jobs: {}). "
-                                        + "Currently {} running slow Job(s): {}. "
-                                        + "Thread-dumps can help determine further details about long-running Quartz-Job.",
-                                maxQuartzJobDurationAcceptable, oldestRunningJobInMillis, Math.max(0, runningCount),
-                                numSlow, slowNames.toString());
+                        if (numSlow == 1) {
+                            resultLog.critical(
+                                    "Sling Scheduler has 1 long-running Quartz-Job which is already running for {}ms: {}.",
+                                    oldestRunningJobInMillis, slowNames);
+                        } else {
+                            resultLog.critical(
+                                    "Sling Scheduler has {} long-running Quartz-Jobs with the oldest running for {}ms: {}.",
+                                    numSlow, oldestRunningJobInMillis, slowNames);
+                        }
                     }
+                    resultLog.info("More details are exposed in metrics including gauges for slow Quartz-Jobs containing shortened job names.");
+                    resultLog.info("Furthermore, thread-dumps can also help narrow down slow Quartz-Jobs.");
                 } else {
                     resultLog.info(
-                            "Sling Scheduler has no long-running (more than acceptable {}ms) Quartz-Job, "
-                                    + "longest running Quartz-Job is {}ms at this moment (number of currently runnning Quartz-Jobs: {}).",
-                            maxQuartzJobDurationAcceptable, oldestRunningJobInMillis, Math.max(0, runningCount));
+                            "Sling Scheduler has no long-running Quartz-Jobs at this moment, the oldest current Quartz-Job is {}ms.",
+                            oldestRunningJobInMillis);
                 }
+                resultLog.info("The total number of currently runnning Quartz-Jobs is {}.", runningCount);
+                resultLog.info("The maximum acceptable duration a Quartz-Job should run for is configured to {}ms. "
+                        + "[This duration can be changed in the QuartzScheduler via the configuration manager]({})", 
+                        maxQuartzJobDurationAcceptable,
+                        "/system/console/configMgr/org.apache.sling.commons.scheduler.impl.QuartzScheduler");
             }
         } catch (final Exception e) {
             logger.warn("execute: metrics invocation failed with exception: {}", e);
