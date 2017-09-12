@@ -164,21 +164,31 @@ public class BundleResourceProviderTest {
         assertEquals("HELLOWORLD", getContent(rsrc));
     }
 
-    @SuppressWarnings("unchecked")
     @Test public void testTreeWithoutDeepJSON() throws IOException {
+        testTreeWithoutDeepJSON("");
+        testTreeWithoutDeepJSON("/SLING-INF");
+    }
+
+    @SuppressWarnings("unchecked")
+    private void testTreeWithoutDeepJSON(final String prefix) throws IOException {
         final Bundle bundle = getBundle();
-        addContent(bundle, "/libs/foo/", "DIR");
-        addContent(bundle, "/libs/foo/a", "A");
-        addContent(bundle, "/libs/foo/b", "B");
-        addContent(bundle, "/libs/foo/test", "test");
-        addContent(bundle, "/libs/foo/test/x", "X");
-        addContent(bundle, "/libs/foo/test/y", "Y");
-        addContent(bundle, "/libs/foo/test/z.json", Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"rtz"));
-        addContent(bundle, "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
+        addContent(bundle, prefix + "/libs/foo/", "DIR");
+        addContent(bundle, prefix + "/libs/foo/a", "A");
+        addContent(bundle, prefix + "/libs/foo/b", "B");
+        addContent(bundle, prefix + "/libs/foo/test", "test");
+        addContent(bundle, prefix + "/libs/foo/test/x", "X");
+        addContent(bundle, prefix + "/libs/foo/test/y", "Y");
+        addContent(bundle, prefix + "/libs/foo/test/z.json", Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"rtz"));
+        addContent(bundle, prefix + "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
 
         finishContent(bundle);
 
-        final PathMapping path = new PathMapping("/libs/foo", null, "json");
+        final PathMapping path;
+        if ( prefix.length() == 0 ) {
+            path = new PathMapping("/libs/foo", null, "json");
+        } else {
+            path = new PathMapping("/libs/foo", prefix + "/libs/foo", "json");
+        }
 
         final BundleResourceProvider provider = new BundleResourceProvider(new BundleResourceCache(bundle), path);
 
@@ -220,8 +230,13 @@ public class BundleResourceProviderTest {
         assertTrue(rsrcChildren.contains("/libs/foo/test/z"));
     }
 
-    @SuppressWarnings("unchecked")
     @Test public void testTreeWithDeepJSON() throws IOException {
+        testTreeWithDeepJSON("");
+        testTreeWithDeepJSON("/SLING-INF");
+    }
+
+    @SuppressWarnings("unchecked")
+    private void testTreeWithDeepJSON(final String prefix) throws IOException {
         // build JSON
         final StringWriter writer = new StringWriter();
         final JsonGenerator g = Json.createGenerator(writer);
@@ -261,19 +276,24 @@ public class BundleResourceProviderTest {
         g.close();
 
         final Bundle bundle = getBundle();
-        addContent(bundle, "/libs/foo/", "DIR");
-        addContent(bundle, "/libs/foo/a", "A");
-        addContent(bundle, "/libs/foo/b", "B");
-        addContent(bundle, "/libs/foo/d.json", writer.toString());
-        addContent(bundle, "/libs/foo/test", "test");
-        addContent(bundle, "/libs/foo/test/x", "X");
-        addContent(bundle, "/libs/foo/test/y", "Y");
-        addContent(bundle, "/libs/foo/test/z.json", Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"rtz"));
-        addContent(bundle, "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
+        addContent(bundle, prefix + "/libs/foo/", "DIR");
+        addContent(bundle, prefix + "/libs/foo/a", "A");
+        addContent(bundle, prefix + "/libs/foo/b", "B");
+        addContent(bundle, prefix + "/libs/foo/d.json", writer.toString());
+        addContent(bundle, prefix + "/libs/foo/test", "test");
+        addContent(bundle, prefix + "/libs/foo/test/x", "X");
+        addContent(bundle, prefix + "/libs/foo/test/y", "Y");
+        addContent(bundle, prefix + "/libs/foo/test/z.json", Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"rtz"));
+        addContent(bundle, prefix + "/libs/foo/test.json", Collections.singletonMap("test", (Object)"foo"));
 
         finishContent(bundle);
 
-        final PathMapping path = new PathMapping("/libs/foo", null, "json");
+        final PathMapping path;
+        if ( prefix.length() == 0 ) {
+            path = new PathMapping("/libs/foo", null, "json");
+        } else {
+            path = new PathMapping("/libs/foo", prefix + "/libs/foo", "json");
+        }
 
         final BundleResourceProvider provider = new BundleResourceProvider(new BundleResourceCache(bundle), path);
 
