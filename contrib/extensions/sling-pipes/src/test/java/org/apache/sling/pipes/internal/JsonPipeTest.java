@@ -22,9 +22,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.Pipe;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,8 +34,11 @@ import org.junit.Test;
  * testing json pipe with anonymous yahoo meteo API
  */
 public class JsonPipeTest extends AbstractPipeTest {
-    public static final String CONF = "/content/json/conf/weather";
-    public static final String ARRAY = "/content/json/conf/array";
+    public static final String CONTENT_JSON = "/content/json";
+    public static final String CONF = CONTENT_JSON + "/conf/weather";
+    public static final String ARRAY = CONTENT_JSON + "/conf/array";
+    public static final String JSON_DUMP = CONTENT_JSON + "/jsonDump";
+    public static final String CONTENT_ARRAY = CONTENT_JSON + "/array";
 
     @Before
     public void setup() {
@@ -52,9 +57,7 @@ public class JsonPipeTest extends AbstractPipeTest {
         assertTrue("There should be a Bucharest property", properties.containsKey("Bucharest"));
     }
 
-    @Test
-    public void testPipedArray() throws Exception {
-        Iterator<Resource> outputs = getOutput(ARRAY);
+    protected void testArray(Iterator<Resource> outputs){
         Resource first = outputs.next();
         Resource second = outputs.next();
         Resource third = outputs.next();
@@ -62,5 +65,10 @@ public class JsonPipeTest extends AbstractPipeTest {
         assertEquals("first resource should be one", "/content/json/array/one", first.getPath());
         assertEquals("second resource should be two", "/content/json/array/two", second.getPath());
         assertEquals("third resource should be three", "/content/json/array/three", third.getPath());
+    }
+
+    @Test
+    public void testPipedArray() throws Exception {
+        testArray(getOutput(ARRAY));
     }
 }

@@ -48,11 +48,9 @@
         },
         "user": {
           "sling:resourceType": "slingPipes/base",
-          "path":"/content/json/array/${json.get('path')}"
+          "path":"/content/json/array/${json.path}"
         }
       }
-
-
     }
   },
   "windSpeed":{
@@ -60,14 +58,8 @@
   },
   "array": {
     "jcr:primaryType": "nt:unstructured",
-    "one": {
-      "jcr:primaryType": "nt:unstructured"
-    },
-    "two": {
-      "jcr:primaryType": "nt:unstructured"
-    },
-    "three": {
-      "jcr:primaryType": "nt:unstructured"
-    }
+    "one": { "jcr:primaryType": "nt:unstructured"},
+    "two": { "jcr:primaryType": "nt:unstructured"},
+    "three": { "jcr:primaryType": "nt:unstructured"}
   }
 }
