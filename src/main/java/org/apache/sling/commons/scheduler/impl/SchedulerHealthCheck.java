@@ -168,8 +168,8 @@ public class SchedulerHealthCheck implements HealthCheck {
                             oldestRunningJobInMillis);
                 }
                 resultLog.info("The total number of currently runnning Quartz-Jobs is {}.", runningCount);
-                resultLog.info("The maximum acceptable duration a Quartz-Job should run for is configured to {}ms. "
-                        + "[This duration can be changed in the QuartzScheduler via the configuration manager]({})", 
+                resultLog.info("[The maximum acceptable duration a Quartz-Job should run for is configured to {}ms. "
+                        + "This duration can be changed in the QuartzScheduler via the configuration manager]({})", 
                         maxQuartzJobDurationAcceptable,
                         "/system/console/configMgr/org.apache.sling.commons.scheduler.impl.QuartzScheduler");
             }
