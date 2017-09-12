@@ -30,8 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -40,13 +38,14 @@ import java.util.regex.Pattern;
 
 /**
  * Input Stream based pipe, coming from web, from request, resource tree, web
+ * binding is updated by the returned iterator
  */
 public abstract class AbstractInputStreamPipe extends BasePipe {
     private static Logger LOGGER = LoggerFactory.getLogger(AbstractInputStreamPipe.class);
 
     public final String REMOTE_START = "http";
 
-    protected final Pattern VALID_PATH = Pattern.compile("/([\\w\\d]+/)+[\\w\\d]+");
+    protected final Pattern VALID_PATH = Pattern.compile("/([\\w\\d\\.-_]+/)+[\\w\\d\\.-_]+");
 
     public static final Object BINDING_IS = "org.apache.sling.pipes.RequestInputStream";
 
@@ -92,14 +91,13 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
             }
         } else if (VALID_PATH.matcher(expr).find()
                 && resolver.getResource(expr) != null
-                && resolver.getResource(expr).adaptTo(File.class) != null) {
-            return new FileInputStream(resolver.getResource(expr).adaptTo(File.class));
+                && resolver.getResource(expr).adaptTo(InputStream.class) != null) {
+            return resolver.getResource(expr).adaptTo(InputStream.class);
         } else if (getBindings().getBindings().get(BINDING_IS) != null){
             return (InputStream)getBindings().getBindings().get(BINDING_IS);
         }
         return new ByteArrayInputStream(expr.getBytes(StandardCharsets.UTF_8));
     }
-
 
     @Override
     public Object getOutputBinding() {
