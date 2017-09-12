@@ -198,11 +198,11 @@ public class EclipseJavaCompiler implements JavaCompiler {
             props.put(CompilerOptions.OPTION_SourceFileAttribute, "generate");
         }
         if (options.getSourceVersion() != null) {
-            props.put(CompilerOptions.OPTION_Source, options.getSourceVersion());
-            props.put(CompilerOptions.OPTION_Compliance, options.getSourceVersion());
+            props.put(CompilerOptions.OPTION_Source, adjustJavaVersion(options.getSourceVersion()));
+            props.put(CompilerOptions.OPTION_Compliance, adjustJavaVersion(options.getSourceVersion()));
         }
         if (options.getTargetVersion() != null) {
-            props.put(CompilerOptions.OPTION_TargetPlatform, options.getTargetVersion());
+            props.put(CompilerOptions.OPTION_TargetPlatform, adjustJavaVersion(options.getTargetVersion()));
         }
         props.put(CompilerOptions.OPTION_Encoding, "UTF8");
 
@@ -230,6 +230,12 @@ public class EclipseJavaCompiler implements JavaCompiler {
         compiler.compile(context.getSourceUnits());
 
         return result;
+    }
+
+    private String adjustJavaVersion(String javaVersion) {
+
+        // ECJ 4.6.1 expects Java version 1.9, not 9
+        return "9".equals(javaVersion) ? "1.9" : javaVersion;
     }
 
     //--------------------------------------------------------< inner classes >
