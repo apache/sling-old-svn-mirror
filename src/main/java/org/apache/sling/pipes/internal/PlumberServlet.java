@@ -32,6 +32,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.pipes.AbstractInputStreamPipe;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ContainerPipe;
 import org.apache.sling.pipes.OutputWriter;
@@ -64,6 +65,8 @@ public class PlumberServlet extends SlingAllMethodsServlet {
     protected static final String PARAM_BINDINGS = "bindings";
 
     protected static final String PARAM_ASYNC = "async";
+
+    protected static final String PARAM_FILE = "pipes_inputFile";
 
     @Reference
     Plumber plumber;
@@ -119,8 +122,9 @@ public class PlumberServlet extends SlingAllMethodsServlet {
      * @param request from where to extract bindings
      * @param writeAllowed should we consider this execution is about to modify content
      * @return map of bindings
+     * @throws IOException in case something turns wrong with an input stream
      */
-    protected Map getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed){
+    protected Map getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException{
         Map bindings = new HashMap<>();
         String dryRun = request.getParameter(BasePipe.DRYRUN_KEY);
         if (StringUtils.isNotBlank(dryRun) && !dryRun.equals(Boolean.FALSE.toString())) {
@@ -134,6 +138,11 @@ public class PlumberServlet extends SlingAllMethodsServlet {
                 log.error("Unable to retrieve bindings information", e);
             }
         }
+
+        if (request.getParameterMap().containsValue(PARAM_FILE)){
+            bindings.put(AbstractInputStreamPipe.BINDING_IS, request.getRequestParameter(PARAM_FILE).getInputStream());
+        }
+
         bindings.put(BasePipe.READ_ONLY, !writeAllowed);
         return bindings;
     }
