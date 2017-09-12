@@ -87,8 +87,15 @@ public interface PipeBuilder {
     PipeBuilder rm();
 
     /**
+     * attach a csv pipe to the current context
+     * @param expr csv expr or URL or path in the resource tree
+     * @return updated instance of PipeBuilder
+     */
+    PipeBuilder csv(String expr);
+
+    /**
      * attach a json pipe to the current context
-     * @param expr json expr or URL
+     * @param expr json expr or URL or path in the resource tree
      * @return updated instance of PipeBuilder
      */
     PipeBuilder json(String expr);
@@ -124,8 +131,9 @@ public interface PipeBuilder {
      * attach a reference pipe to the current context
      * @param expr reference
      * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called with wrong # of arguments
      */
-    PipeBuilder ref(String expr) throws IllegalAccessException;
+    PipeBuilder ref(String expr)throws IllegalAccessException;
 
     /**
      * parameterized current pipe in the context

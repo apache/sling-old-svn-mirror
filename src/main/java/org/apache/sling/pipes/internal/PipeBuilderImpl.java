@@ -130,6 +130,12 @@ public class PipeBuilderImpl implements PipeBuilder {
         return pipe(TraversePipe.RESOURCE_TYPE);
     }
 
+
+    @Override
+    public PipeBuilder csv(String expr) {
+        return pipeWithExpr(CsvPipe.RESOURCE_TYPE, expr);
+    }
+
     @Override
     public PipeBuilder json(String expr) {
         return pipeWithExpr(JsonPipe.RESOURCE_TYPE, expr);
@@ -172,8 +178,8 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     /**
      * Checks arguments and throws exception if there is an issue
-     * @param params
-     * @throws IllegalArgumentException
+     * @param params arguments to check
+     * @throws IllegalArgumentException exception thrown in case arguments are wrong
      */
     protected void checkArguments(Object... params) throws IllegalArgumentException {
         if (params.length % 2 > 0){
@@ -183,8 +189,8 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     /**
      * write key/value pairs into a map
-     * @param map
-     * @param params
+     * @param map target map
+     * @param params key/value pairs to write into the map
      */
     protected void writeToMap(Map map, Object... params){
         for (int i = 0; i < params.length; i += 2){
@@ -245,6 +251,7 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @param type type of the node to be created
      * @param data map of properties to add
      * @throws PersistenceException in case configuration resource couldn't be persisted
+     * @return resource created
      */
     protected Resource createResource(ResourceResolver resolver, String path, String type, Map data) throws PersistenceException {
         return ResourceUtil.getOrCreateResource(resolver, path, data, type, false);
@@ -257,10 +264,11 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     /**
      * Persist a step at a given path
-     * @param path
-     * @param step
+     * @param path path into which step should be persisted
+     * @param parentType type of the parent resource
+     * @param step step to persist
      * @return created resource
-     * @throws PersistenceException
+     * @throws PersistenceException in case persistence fails
      */
     protected Resource persistStep(String path, String parentType, Step step) throws PersistenceException {
         Resource resource = createResource(resolver, path, parentType, step.properties);

@@ -139,7 +139,7 @@ public class PlumberServlet extends SlingAllMethodsServlet {
             }
         }
 
-        if (request.getParameterMap().containsValue(PARAM_FILE)){
+        if (request.getRequestParameterMap() != null && request.getRequestParameterMap().containsKey(PARAM_FILE)){
             bindings.put(AbstractInputStreamPipe.BINDING_IS, request.getRequestParameter(PARAM_FILE).getInputStream());
         }
 

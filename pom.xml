@@ -96,6 +96,16 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <!-- test csv files can't have licenses embedded -->
+            <exclude>src/test/resources/**/*.csv</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
