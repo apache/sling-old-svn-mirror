@@ -19,7 +19,6 @@
 package org.apache.sling.scripting.sightly.util;
 
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -130,6 +129,7 @@ public class ObjectModelTest {
 
     @Test
     public void testResolveProperty() {
+        assertEquals(0, ObjectModel.resolveProperty(Collections.EMPTY_LIST, "size"));
         assertNull(ObjectModel.resolveProperty(null, null));
         Integer[] testArray = new Integer[] {1, 2, 3};
         assertEquals(2, ObjectModel.resolveProperty(testArray, 1));
