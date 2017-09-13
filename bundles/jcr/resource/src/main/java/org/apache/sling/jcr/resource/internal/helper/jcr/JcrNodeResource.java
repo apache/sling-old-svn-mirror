@@ -22,6 +22,7 @@ import static org.apache.jackrabbit.JcrConstants.NT_FILE;
 import static org.apache.jackrabbit.JcrConstants.NT_LINKEDFILE;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.security.AccessControlException;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,6 +35,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
+import org.apache.sling.jcr.resource.api.ExternalizableInputStream;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -49,7 +51,8 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("deprecation")
 @Adaptable(adaptableClass=Resource.class, adapters={
         @Adapter({Node.class, Map.class, Item.class, ValueMap.class}),
-        @Adapter(value=InputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node.")
+        @Adapter(value=InputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node."),
+        @Adapter(value=ExternalizableInputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node, and can be read using a secure URL.")
 })
 class JcrNodeResource extends JcrItemResource<Node> { // this should be package private, see SLING-1414
 
@@ -204,7 +207,11 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
                         data = null;
                     }
                 }
-
+                URIConverter uriConverter = getResourceResolver().adaptTo(URIConverter.class);
+                URI uri =  uriConverter.convertToURI(data.getValue());
+                if ( uri != null ) {
+                    return new JcrExternalisableInputStream(data, uri);
+                }
                 if (data != null) {
                     return data.getBinary().getStream();
                 }
@@ -218,6 +225,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         // fallback to non-streamable resource
         return null;
     }
+
 
     // ---------- Descendable interface ----------------------------------------
 

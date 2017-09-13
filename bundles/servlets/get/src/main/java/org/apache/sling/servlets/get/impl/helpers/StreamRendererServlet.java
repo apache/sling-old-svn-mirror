@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -51,6 +50,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.jcr.resource.api.ExternalizableInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,14 +166,12 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
             final String actualResourcePath = vm.get(JcrConstants.JCR_CONTENT, String.class);
             resource = request.getResourceResolver().getResource(actualResourcePath);
         }
-        // Is adaption to a offloaded URI supported by the underlying datastore ?
-        URI redirectURI = resource.adaptTo(URI.class);
-        if (redirectURI != null ) {
-            response.sendRedirect(redirectURI.toString());
-            return;
-        }
         InputStream stream = resource.adaptTo(InputStream.class);
         if (stream != null) {
+            if ( stream instanceof ExternalizableInputStream) {
+                response.sendRedirect(((ExternalizableInputStream)stream).getURI().toString());
+                return;
+            }
             if (isHeadRequest(request)) {
                 setContentLength(response, resource.getResourceMetadata().getContentLength());
                 setHeaders(resource, response);

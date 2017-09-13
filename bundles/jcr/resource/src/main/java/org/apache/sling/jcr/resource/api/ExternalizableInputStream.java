@@ -17,7 +17,14 @@
  * under the License.
  */
 
-@org.osgi.annotation.versioning.Version("1.1")
 package org.apache.sling.jcr.resource.api;
 
+import java.net.URI;
 
+/**
+ *
+ */
+public interface ExternalizableInputStream {
+
+    URI getURI();
+}

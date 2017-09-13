@@ -15,19 +15,17 @@
  * limitations under the License.
  */
 
-package org.apache.sling.offloaddatastore;
+package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import org.apache.jackrabbit.oak.api.conversion.URIProvider;
 import org.apache.sling.api.adapter.AdapterFactory;
-import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
-import javax.jcr.Node;
-import javax.jcr.Property;
 import javax.jcr.Value;
 import java.net.URI;
 import java.util.Map;
@@ -37,53 +35,35 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  */
 @Component(immediate = true, service = AdapterFactory.class,
-                property={
-                        AdapterFactory.ADAPTER_CLASSES + "=java.net.URI",
-                        AdapterFactory.ADAPTABLE_CLASSES + "=org.apache.sling.api.resource.Resource",
-                        AdapterFactory.ADAPTABLE_CLASSES + "=javax.jcr.Value"
+        property={
+                AdapterFactory.ADAPTER_CLASSES + "=java.net.URI",
+                AdapterFactory.ADAPTABLE_CLASSES + "=org.apache.sling.api.resource.Resource",
+                AdapterFactory.ADAPTABLE_CLASSES + "=javax.jcr.Value"
         },
         reference = {
-        @Reference(
-                name="providers",
-                service = URIProvider.class,
-                cardinality = ReferenceCardinality.MULTIPLE,
-                policy = ReferencePolicy.DYNAMIC,
-                policyOption = ReferencePolicyOption.GREEDY,
-                bind = "bindProvider",
-                unbind = "unbindProvider")
-})
-public class URIAdapaterFactory implements AdapterFactory {
+                @Reference(
+                        name="providers",
+                        service = URIProvider.class,
+                        cardinality = ReferenceCardinality.MULTIPLE,
+                        policy = ReferencePolicy.DYNAMIC,
+                        policyOption = ReferencePolicyOption.GREEDY,
+                        bind = "bindProvider",
+                        unbind = "unbindProvider")
+        })
+public class URIConverter implements AdapterFactory {
 
     private Map<URIProvider, URIProvider> providers = new ConcurrentHashMap<URIProvider, URIProvider>();
 
 
     @Override
     public <AdapterType> AdapterType getAdapter(Object o, Class<AdapterType> aClass) {
-        if (URI.class.equals(aClass)) {
-            try {
-                if (o instanceof Resource) {
-                    Node n = ((Resource) o).adaptTo(Node.class);
-                    if (n.hasProperty(Property.JCR_DATA)) {
-                        return (AdapterType) adapt((Value) n.getProperty(Property.JCR_DATA).getValue());
-                    }
-                    if (n.hasNode(Node.JCR_CONTENT)) {
-                        Node content = n.getNode(Node.JCR_CONTENT);
-                        if (content.hasProperty(Property.JCR_DATA)) {
-                            return (AdapterType) adapt((Value) content.getProperty(Property.JCR_DATA).getValue());
-                        }
-                    }
-                } else if (o instanceof Value) {
-                    return (AdapterType) adapt((Value) o);
-                }
-            } catch (Exception e) {
-
-            }
-
+        if (o instanceof ResourceResolver && URIConverter.class.equals(aClass)) {
+            return (AdapterType) this;
         }
         return null;
     }
 
-    private URI adapt(Value o) {
+    URI convertToURI(Value o) {
         for (Map.Entry<URIProvider, URIProvider> uriProviderEntry : providers.entrySet()) {
             URI u = uriProviderEntry.getValue().toURI(o);
             if ( u != null) {
