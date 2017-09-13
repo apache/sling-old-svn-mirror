@@ -417,7 +417,7 @@ public final class ObjectModel {
         return declaringClass != Object.class || TO_STRING_METHOD.equals(method.getName());
     }
 
-    private static Method extractMethodInheritanceChain(Class type, Method method) throws NoSuchMethodException {
+    private static Method extractMethodInheritanceChain(Class type, Method method) {
         if (method == null || Modifier.isPublic(type.getModifiers())) {
             return method;
         }
@@ -432,11 +432,15 @@ public final class ObjectModel {
         return getClassMethod(type.getSuperclass(), method);
     }
 
-    private static Method getClassMethod(Class<?> type, Method method) throws NoSuchMethodException {
-        Method parentMethod = type.getMethod(method.getName(), method.getParameterTypes());
-        parentMethod = extractMethodInheritanceChain(parentMethod.getDeclaringClass(), parentMethod);
-        if (parentMethod != null) {
-            return parentMethod;
+    private static Method getClassMethod(Class<?> type, Method method) {
+        try {
+            Method parentMethod = type.getMethod(method.getName(), method.getParameterTypes());
+            parentMethod = extractMethodInheritanceChain(parentMethod.getDeclaringClass(), parentMethod);
+            if (parentMethod != null) {
+                return parentMethod;
+            }
+        } catch (NoSuchMethodException e) {
+            // ignore - maybe we don't have access to that method or the method does not belong to the current type
         }
         return null;
     }
