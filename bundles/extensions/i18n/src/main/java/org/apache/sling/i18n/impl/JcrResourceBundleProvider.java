@@ -38,6 +38,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
+import java.util.regex.Pattern;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
@@ -78,6 +79,12 @@ import org.slf4j.LoggerFactory;
     })
 @Designate(ocd = JcrResourceBundleProvider.Config.class)
 public class JcrResourceBundleProvider implements ResourceBundleProvider, ResourceChangeListener, ExternalResourceChangeListener {
+
+    /**
+     * A regular expression pattern matching all custom country codes.
+     * @see <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#User-assigned_code_elements">User-assigned code elements</a>
+     */
+    private static final Pattern USER_ASSIGNED_COUNTRY_CODES_PATTERN = Pattern.compile("aa|q[m-z]|x[a-z]|zz");
 
     @ObjectClassDefinition(name ="Apache Sling I18N ResourceBundle Provider",
             description ="ResourceBundleProvider service which loads the messages "+
@@ -612,11 +619,16 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider, Resour
         // country is also available
         String country = parts[1];
         boolean isValidCountryCode = false;
-        String[] countries = Locale.getISOCountries();
-        for (int i = 0; i < countries.length; i++) {
-            if (countries[i].equalsIgnoreCase(country)) {
-                isValidCountryCode = true; // signal ok
-                break;
+        // allow user-assigned codes (https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#User-assigned_code_elements)
+        if (USER_ASSIGNED_COUNTRY_CODES_PATTERN.matcher(country.toLowerCase()).matches()) {
+            isValidCountryCode = true;
+        } else {
+            String[] countries = Locale.getISOCountries();
+            for (int i = 0; i < countries.length; i++) {
+                if (countries[i].equalsIgnoreCase(country)) {
+                    isValidCountryCode = true; // signal ok
+                    break;
+                }
             }
         }
         if (!isValidCountryCode) {
