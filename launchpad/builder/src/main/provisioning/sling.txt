@@ -94,8 +94,11 @@
     org.apache.felix/org.apache.felix.http.sslfilter/1.2.2
     org.apache.felix/org.apache.felix.scr/2.0.12
     org.apache.felix/org.apache.felix.metatype/1.1.4
+    org.apache.pdfbox/pdfbox/2.0.7
+    org.apache.pdfbox/fontbox/2.0.7
+    org.apache.pdfbox/jempbox/1.8.13
     org.apache.tika/tika-core/1.14
-    org.apache.tika/tika-bundle/1.14
+    org.apache.tika/tika-parsers/1.14
 
 [artifacts startLevel=15]
     org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0

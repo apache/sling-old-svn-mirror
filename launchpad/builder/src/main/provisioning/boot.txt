@@ -30,7 +30,7 @@
     localIndexDir=${sling.home}/repository/index
 
 [variables]
-    slf4j.version=1.7.21
+    slf4j.version=1.7.25
 
 [artifacts]
     org.slf4j/slf4j-api/${slf4j.version}
