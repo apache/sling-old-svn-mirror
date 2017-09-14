@@ -30,18 +30,18 @@ public class JcrResourceBundleProviderTest {
     public void testToLocale() {
         // empty string must return default locale
         Assert.assertEquals(Locale.getDefault(), JcrResourceBundleProvider.toLocale(""));
-        
+
         // only language part being set
         Assert.assertEquals(Locale.ENGLISH, JcrResourceBundleProvider.toLocale("en"));
         Assert.assertEquals(Locale.GERMAN, JcrResourceBundleProvider.toLocale("de"));
         // for invalid languages assume default language
         Assert.assertEquals(new Locale(Locale.getDefault().getLanguage()), JcrResourceBundleProvider.toLocale("invalid"));
-        
+
         // both language and country being set (no matter whether lower or upper case)
         Assert.assertEquals(Locale.GERMANY, JcrResourceBundleProvider.toLocale("de_DE"));
         Assert.assertEquals(Locale.GERMANY, JcrResourceBundleProvider.toLocale("de_de"));
         Assert.assertEquals(Locale.GERMANY, JcrResourceBundleProvider.toLocale("DE_de"));
-        
+
         Assert.assertEquals(Locale.UK, JcrResourceBundleProvider.toLocale("en_GB"));
         Assert.assertEquals(Locale.UK, JcrResourceBundleProvider.toLocale("en_gb"));
         Assert.assertEquals(Locale.UK, JcrResourceBundleProvider.toLocale("EN_gb"));
@@ -49,10 +49,10 @@ public class JcrResourceBundleProviderTest {
         Assert.assertEquals(new Locale(Locale.getDefault().getLanguage(), "GB"), JcrResourceBundleProvider.toLocale("invalid_GB"));
         // for invalid countries assume default country
         Assert.assertEquals(new Locale("en", Locale.getDefault().getCountry()), JcrResourceBundleProvider.toLocale("en_invalid"));
-    
+
         // language, country and variant being set
         Assert.assertEquals(new Locale(Locale.UK.getLanguage(), Locale.UK.getCountry(), "variant1"), JcrResourceBundleProvider.toLocale("en_GB_variant1"));
-        
+
         // parts after the variant are just ignored
         Assert.assertEquals(new Locale(Locale.UK.getLanguage(), Locale.UK.getCountry(), "variant1"), JcrResourceBundleProvider.toLocale("en_GB_variant1_something"));
     }
@@ -61,7 +61,7 @@ public class JcrResourceBundleProviderTest {
     public void testToLocaleWithBcp47CompliantStrings() {
         // both language and country being set
         Assert.assertEquals(Locale.GERMANY, JcrResourceBundleProvider.toLocale("de-DE"));
-        
+
         Assert.assertEquals(Locale.UK, JcrResourceBundleProvider.toLocale("en-GB"));
         // for invalid languages assume default language
         Assert.assertEquals(new Locale(Locale.getDefault().getLanguage(), "GB"), JcrResourceBundleProvider.toLocale("invalid-GB"));
@@ -69,8 +69,30 @@ public class JcrResourceBundleProviderTest {
         Assert.assertEquals(new Locale("en", Locale.getDefault().getCountry()), JcrResourceBundleProvider.toLocale("en-invalid"));
         // language, country and variant being set
         Assert.assertEquals(new Locale(Locale.UK.getLanguage(), Locale.UK.getCountry(), "variant1"), JcrResourceBundleProvider.toLocale("en-GB-variant1"));
-        
+
         // parts after the variant are just ignored
         Assert.assertEquals(new Locale(Locale.UK.getLanguage(), Locale.UK.getCountry(), "variant1"), JcrResourceBundleProvider.toLocale("en-GB-variant1-something-else"));
     }
+
+    @Test
+    public void testToLocaleWithPrivateUseCountryCode() {
+        // Private use Country 'XZ'
+        Assert.assertEquals(new Locale(Locale.GERMAN.getLanguage(), "XZ"), JcrResourceBundleProvider.toLocale("de_XZ"));
+
+        // Private use Country 'AA'
+        Assert.assertEquals(new Locale(Locale.GERMAN.getLanguage(), "AA"), JcrResourceBundleProvider.toLocale("de_AA"));
+
+        // Private use Country 'QX'
+        Assert.assertEquals(new Locale(Locale.GERMAN.getLanguage(), "QX"), JcrResourceBundleProvider.toLocale("de_QX"));
+
+        // Private use Country 'ZZ'
+        Assert.assertEquals(new Locale(Locale.GERMAN.getLanguage(), "ZZ"), JcrResourceBundleProvider.toLocale("de_ZZ"));
+
+        // for invalid countries assume default country
+        Assert.assertEquals(new Locale("en", Locale.getDefault().getCountry()), JcrResourceBundleProvider.toLocale("en-QB"));
+
+        // Lowercase Private use Country 'xa'
+        Assert.assertEquals(new Locale(Locale.GERMAN.getLanguage(), "XA"), JcrResourceBundleProvider.toLocale("de_xa"));
+    }
+
 }
