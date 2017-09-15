@@ -135,6 +135,15 @@ public interface PipeBuilder {
      */
     PipeBuilder ref(String expr)throws IllegalAccessException;
 
+
+    /**
+     * attach a not pipe to the current context
+     * @param expr reference
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called with wrong # of arguments
+     */
+    PipeBuilder not(String expr)throws IllegalAccessException;
+
     /**
      * parameterized current pipe in the context
      * @param params key value pair of parameters
