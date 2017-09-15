@@ -2,3 +2,8 @@ CreatePath [var(sling:Folder), discovery(nt:unstructured), somefolder(sling:Fold
 CreatePath [one, two, three]
 CreatePath [three, four(nt:folk), five(nt:jazz), six]
 CreatePath [seven(nt:x), eight(nt:x), nine(nt:x)]
+CreatePath [one(mixin [nt:art]), step(mixin [nt:dance]), two, steps]
+CreatePath [one(nt:foxtrot), step(nt:foxtrot mixin [nt:dance]), two(nt:foxtrot), steps(nt:foxtrot)]
+CreatePath [one, step(mixin [nt:dance, nt:art]), two, steps]
+CreatePath [one, step(nt:foxtrot mixin [nt:dance]), two, steps]
+CreatePath [one, step(nt:foxtrot mixin [nt:dance, nt:art]), two, steps]
