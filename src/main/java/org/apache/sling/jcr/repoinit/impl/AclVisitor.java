@@ -91,9 +91,16 @@ class AclVisitor extends DoNothingVisitor {
                     if(session.itemExists(fullPath)) {
                         log.info("Path already exists, nothing to do (and not checking its primary type for now): {}", fullPath);
                     } else {
-                        final Node n = parentPath.equals("") ? session.getRootNode() : session.getNode(parentPath);
+                        final Node parent = parentPath.equals("") ? session.getRootNode() : session.getNode(parentPath);
                         log.info("Creating node {} with primary type {}", fullPath, psd.getPrimaryType());
-                        n.addNode(psd.getSegment(), psd.getPrimaryType());
+                        Node node = parent.addNode(psd.getSegment(), psd.getPrimaryType());
+                        List<String> mixins = psd.getMixins();
+                        if (mixins != null) {
+                            log.info("Adding mixins {} to node {}", mixins, fullPath);
+                            for (String mixin : mixins) {
+                                node.addMixin(mixin);
+                            }
+                        }
                     }
                 } catch(Exception e) {
                     throw new RuntimeException("CreatePath execution failed at " + psd + ": " + e, e);

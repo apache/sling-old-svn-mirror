@@ -31,6 +31,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.nodetype.NodeType;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -86,10 +87,18 @@ public class TestUtil {
     }
 
     public void assertNodeExists(String path) throws RepositoryException {
-        assertNodeExists(path, null);
+        assertNodeExists(path, null, null);
     }
 
     public void assertNodeExists(String path, String primaryType) throws RepositoryException {
+        assertNodeExists(path, primaryType, null);
+    }
+
+    public void assertNodeExists(String path, List<String> mixins) throws RepositoryException {
+        assertNodeExists(path, null, mixins);
+    }
+
+    public void assertNodeExists(String path, String primaryType, List<String> mixins) throws RepositoryException {
         if(!adminSession.nodeExists(path)) {
             fail("Node does not exist:" + path);
         }
@@ -101,6 +110,18 @@ public class TestUtil {
             final String actual = n.getProperty(JCR_PRIMARY_TYPE).getString();
             if(!primaryType.equals(actual)) {
                 fail("Primary type mismatch for " + path + ", expected " + primaryType + " but got " + actual);
+            }
+        }
+        if (mixins != null) {
+            final Node n = adminSession.getNode(path);
+            NodeType[] mixinNodeTypes = n.getMixinNodeTypes();
+            if (mixinNodeTypes.length != mixins.size()) {
+                fail("Number of mixin node types does not match, expected " + mixins.size() + " but got " + mixinNodeTypes.length);
+            }
+            for (NodeType mixinNodeType : mixinNodeTypes) {
+                if (! mixins.contains(mixinNodeType.getName())) {
+                    fail("Node contains the unexpected mixin node type " + mixinNodeType.getName());
+                }
             }
         }
     }
