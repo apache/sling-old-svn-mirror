@@ -3,3 +3,8 @@ create path (sling:Folder) /var/discovery(nt:unstructured)/somefolder
 create path /one/two/three
 create path /three/four(nt:folk)/five(nt:jazz)/six
 create path (nt:x) /seven/eight/nine
+create path /one(mixin nt:art)/step(mixin nt:dance)/two/steps
+create path (nt:foxtrot) /one/step(mixin nt:dance)/two/steps
+create path /one/step(mixin nt:dance,nt:art)/two/steps
+create path /one/step(nt:foxtrot mixin nt:dance)/two/steps
+create path /one/step(nt:foxtrot mixin nt:dance,nt:art)/two/steps

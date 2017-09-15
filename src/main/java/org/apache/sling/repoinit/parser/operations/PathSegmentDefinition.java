@@ -17,23 +17,44 @@
 
 package org.apache.sling.repoinit.parser.operations;
 
-/** Defines a segment of a path to be created, 
- *  with its name and an optional primary type
+import java.util.List;
+
+/** Defines a segment of a path to be created,
+ *  with its name and an optional primary type and optional mixins
  */
 public class PathSegmentDefinition {
     private final String segment;
     private final String primaryType;
+    private final List<String> mixins;
     
     public PathSegmentDefinition(String segment, String primaryType) {
+        this(segment, primaryType, null);
+    }
+
+    public PathSegmentDefinition(String segment, String primaryType, List<String> mixins) {
         this.segment = segment;
         this.primaryType = primaryType;
+        this.mixins = mixins;
     }
 
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append(segment);
-        if(primaryType != null) {
-            sb.append("(").append(primaryType).append(")");
+        boolean hasPrimaryType = primaryType != null;
+        boolean hasMixin = mixins != null && ! mixins.isEmpty();
+        if (hasPrimaryType || hasMixin) {
+            sb.append("(");
+            if (hasPrimaryType) {
+                sb.append(primaryType);
+            }
+            if (hasPrimaryType && hasMixin) {
+                sb.append(" ");
+            }
+            if (hasMixin) {
+                sb.append("mixin ");
+                sb.append(mixins.toString());
+            }
+            sb.append(")");
         }
         return sb.toString();
     }
@@ -44,5 +65,9 @@ public class PathSegmentDefinition {
 
     public String getPrimaryType() {
         return primaryType;
+    }
+
+    public List<String> getMixins() {
+        return mixins;
     }
 }
