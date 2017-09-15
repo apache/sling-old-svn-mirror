@@ -26,6 +26,7 @@ import java.io.LineNumberReader;
 import java.lang.ProcessBuilder.Redirect;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -141,7 +142,10 @@ public class LauncherCallable implements Callable<ProcessDescription> {
         final ProcessBuilder builder = new ProcessBuilder();
         final List<String> args = new ArrayList<String>();
 
-        args.add("java");
+        String javaHome = System.getenv("JAVA_HOME");
+        String javaCmd = javaHome != null ? Paths.get(javaHome, "bin", "java").toString() : "java";
+
+        args.add(javaCmd);
         add(args, this.configuration.getVmOpts());
         add(args, this.configuration.getVmDebugOpts(this.environment.getDebug()));
 
