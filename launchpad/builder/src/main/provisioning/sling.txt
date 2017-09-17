@@ -40,7 +40,7 @@
     org.apache.sling/org.apache.sling.auth.form/1.0.8
     org.apache.sling/org.apache.sling.bundleresource.impl/2.2.0
     org.apache.sling/org.apache.sling.commons.classloader/1.4.0
-    org.apache.sling/org.apache.sling.commons.compiler/2.3.0
+    org.apache.sling/org.apache.sling.commons.compiler/2.3.4
     org.apache.sling/org.apache.sling.commons.fsclassloader/1.0.6
     org.apache.sling/org.apache.sling.commons.mime/2.1.10
     org.apache.sling/org.apache.sling.commons.osgi/2.4.0
