@@ -930,9 +930,6 @@ for more details</p>''')
                 // TODO - can we remove the glob and rely on the defaults?
                 archiveJunit('**/target/surefire-reports/*.xml,**/target/failsafe-reports/*.xml') {
                     allowEmptyResults()
-                    testDataPublishers {
-                        publishTestStabilityData()
-                    }
                 }
                 // send emails for each broken build, notify individuals as well
                 mailer('commits@sling.apache.org', false, true)
