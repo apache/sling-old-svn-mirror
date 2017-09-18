@@ -53,6 +53,20 @@ public class HtlTest extends HttpTestBase {
         
         String content = getContent(HTTP_BASE_URL + "/content/htl/java-use-bean.html", CONTENT_TYPE_DONTCARE, null, 200);
         
-        assertTrue("Expected content to contain 'from-js-use-script'", content.contains("from-java-use-bean"));
+        assertTrue("Expected content to contain 'from-java-use-script'", content.contains("from-java-use-bean"));
+    }
+    
+    public void testScriptWithModelUseBean() throws IOException {
+        
+        testClient.mkdirs(HTTP_BASE_URL, "/apps/sling/test/htl/model");
+        testClient.mkdirs(HTTP_BASE_URL, "/content/htl");
+        
+        testClient.upload(HTTP_BASE_URL + "/apps/sling/test/htl/model/model.html", getClass().getResourceAsStream("/integration-test/htl/model.html"));
+        
+        testClient.createNode(HTTP_BASE_URL + "/content/htl/model-use-bean", Collections.singletonMap("sling:resourceType", "sling/test/htl/model"));
+        
+        String content = getContent(HTTP_BASE_URL + "/content/htl/model-use-bean.html", CONTENT_TYPE_DONTCARE, null, 200);
+        
+        assertTrue("Expected content to contain 'from-sling-model'", content.contains("from-sling-model"));
     }
 }
