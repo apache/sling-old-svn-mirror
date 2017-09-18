@@ -27,12 +27,9 @@ import java.security.AccessControlException;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
+import javax.jcr.*;
 
+import org.apache.jackrabbit.oak.api.conversion.URIProvider;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.resource.ExternalizableInputStream;
@@ -207,8 +204,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
                         data = null;
                     }
                 }
-                URIConverter uriConverter = getResourceResolver().adaptTo(URIConverter.class);
-                URI uri =  uriConverter.convertToURI(data.getValue());
+                URI uri =  convertToURI(data.getValue());
                 if ( uri != null ) {
                     return new JcrExternalizableInputStream(data, uri);
                 }
@@ -223,6 +219,16 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         }
 
         // fallback to non-streamable resource
+        return null;
+    }
+
+    private URI convertToURI(Value o) {
+        for (URIProvider up : helper.getURIProviders()) {
+            URI u = up.toURI(o);
+            if ( u != null) {
+                return u;
+            }
+        }
         return null;
     }
 

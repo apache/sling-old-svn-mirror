@@ -69,7 +69,6 @@ public class JcrExternalizableInputStream extends InputStream implements Externa
 
     @Override
     public URI getPrivateURI() {
-        // Private URIs are not provided by this implementation.
         return null;
     }
 }

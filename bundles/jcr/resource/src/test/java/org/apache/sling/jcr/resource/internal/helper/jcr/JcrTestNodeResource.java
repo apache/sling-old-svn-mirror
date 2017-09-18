@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.oak.api.conversion.URIProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.resource.internal.HelperData;
@@ -31,7 +32,7 @@ public class JcrTestNodeResource extends JcrNodeResource {
 
     public JcrTestNodeResource(ResourceResolver resourceResolver, Node node,
             ClassLoader dynamicClassLoader) throws RepositoryException {
-        super(resourceResolver, node.getPath(), null, node, new HelperData(new AtomicReference<DynamicClassLoaderManager>()));
+        super(resourceResolver, node.getPath(), null, node, new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new AtomicReference<URIProvider[]>()));
     }
 
 }

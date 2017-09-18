@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.oak.api.conversion.URIProvider;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 
 /**
@@ -32,11 +33,13 @@ import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 public class HelperData {
 
     private final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference;
+    private final AtomicReference<URIProvider[]> uriProviderReference;
 
     private volatile String[] namespacePrefixes;
 
-    public HelperData(final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference) {
+    public HelperData(final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference, AtomicReference<URIProvider[]> uriProviderReference) {
         this.dynamicClassLoaderManagerReference = dynamicClassLoaderManagerReference;
+        this.uriProviderReference = uriProviderReference;
     }
 
     public String[] getNamespacePrefixes(final Session session)
@@ -53,5 +56,9 @@ public class HelperData {
             return null;
         }
         return dclm.getDynamicClassLoader();
+    }
+
+    public URIProvider[] getURIProviders() {
+        return this.uriProviderReference.get();
     }
 }
