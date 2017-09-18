@@ -32,15 +32,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A Component that converts from a Resource or Value to a URI using the Oak provided URIProvider implementations.
- * The URIProvider implementation from Oak are normally provided by the DataSource implementation and will convert
- * a JCRValue containing a Binary into a URI.
+ * A Component that converts from a ResourceResolver into a URIConverter (this class).
  */
 @Component(service = AdapterFactory.class,
         property={
-                AdapterFactory.ADAPTER_CLASSES + "=java.net.URI",
-                AdapterFactory.ADAPTABLE_CLASSES + "=org.apache.sling.api.resource.Resource",
-                AdapterFactory.ADAPTABLE_CLASSES + "=javax.jcr.Value"
+                AdapterFactory.ADAPTER_CLASSES + "=org.apache.sling.jcr.resource.internal.helper.jcr.URIConverter",
+                AdapterFactory.ADAPTABLE_CLASSES + "=org.apache.sling.api.resource.ResourceResolver"
         },
         reference = {
                 @Reference(
