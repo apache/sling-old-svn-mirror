@@ -111,18 +111,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>javaversion-maven-plugin</artifactId>
-                <version>1.0.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>set-java-version</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <!-- Require Java 7 or higher for building (as bnd since version 3.0 is built with Java 7) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -351,7 +339,6 @@
                             </Bundle-DocURL>
                             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Bundle-RequiredExecutionEnvironment>${sling.bree}</Bundle-RequiredExecutionEnvironment>
                         </instructions>
                     </configuration>
                     <executions>
@@ -415,7 +402,7 @@
                     <configuration>
                         <signature>
                             <groupId>org.codehaus.mojo.signature</groupId>
-                            <artifactId>java1${sling.animalSignatures.version}</artifactId>
+                            <artifactId>java1${sling.java.version}</artifactId>
                             <version>1.0</version>
                         </signature>
                     </configuration>
