@@ -64,12 +64,7 @@ import org.apache.sling.spi.resource.provider.ResourceProvider;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,6 +111,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     private volatile JcrProviderStateFactory stateFactory;
 
     private final AtomicReference<DynamicClassLoaderManager> classLoaderManagerReference = new AtomicReference<DynamicClassLoaderManager>();
+
     private AtomicReference<URIProvider[]> uriProviderReference = new AtomicReference<URIProvider[]>();
 
     @Activate
@@ -152,12 +148,20 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.classLoaderManagerReference.compareAndSet(dynamicClassLoaderManager, null);
     }
 
-    private void bindProvider(URIProvider uriProvider) {
+    @Reference(
+            name = "uriprovider",
+            service = URIProvider.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            bind = "bindUriProvider",
+            unbind = "unbindUriProvider"
+    )
+    private void bindUriProvider(URIProvider uriProvider) {
 
         providers.put(uriProvider, uriProvider);
         updateURIProviders();
     }
-    private void unbindProvider(URIProvider uriProvider) {
+    private void unbindUriProvider(URIProvider uriProvider) {
         providers.remove(uriProvider);
         updateURIProviders();
     }
