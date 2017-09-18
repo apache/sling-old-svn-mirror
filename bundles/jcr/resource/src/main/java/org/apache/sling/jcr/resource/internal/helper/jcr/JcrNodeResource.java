@@ -35,7 +35,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
-import org.apache.sling.jcr.resource.api.ExternalizableInputStream;
+import org.apache.sling.api.resource.ExternalizableInputStream;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -210,7 +210,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
                 URIConverter uriConverter = getResourceResolver().adaptTo(URIConverter.class);
                 URI uri =  uriConverter.convertToURI(data.getValue());
                 if ( uri != null ) {
-                    return new JcrExternalisableInputStream(data, uri);
+                    return new JcrExternalizableInputStream(data, uri);
                 }
                 if (data != null) {
                     return data.getBinary().getStream();

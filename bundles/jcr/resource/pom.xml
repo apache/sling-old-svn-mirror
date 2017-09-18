@@ -155,7 +155,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-api</artifactId>
-            <version>1.8-SNAPSHOT</version>
+            <version>1.8-SNAPSHOT</version> <!-- Need to wait till this new API is available in Oak 1.5.x before committing this patch -->
         </dependency>
 
     <!-- Sling -->
@@ -258,6 +258,11 @@
             <artifactId>junit-addons</artifactId>
             <version>1.4</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.16.3-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>

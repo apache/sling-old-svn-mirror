@@ -17,6 +17,9 @@
 
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+
+import org.apache.sling.api.resource.ExternalizableInputStream;
+
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
@@ -24,14 +27,16 @@ import java.io.InputStream;
 import java.net.URI;
 
 /**
- *
+ * A lazy initialised input stream wrapping a JCR Property that also has a URI representation. The
+ * InputStream will be initialised when the first byte is read from the input stream so that the URI
+ * can be used without consuming any local IO resources.
  */
-public class JcrExternalisableInputStream extends InputStream {
+public class JcrExternalizableInputStream extends InputStream implements ExternalizableInputStream {
     private final Property data;
     private final URI uri;
     private InputStream inputStream;
 
-    public JcrExternalisableInputStream(Property data, URI uri) {
+    JcrExternalizableInputStream(Property data, URI uri) {
         this.data = data;
         this.uri = uri;
     }
@@ -41,14 +46,30 @@ public class JcrExternalisableInputStream extends InputStream {
         return getInputStream().read();
     }
 
-    public InputStream getInputStream() throws IOException {
+    private InputStream getInputStream() throws IOException {
         if ( inputStream == null) {
             try {
+                // perform lazy initialisation so that a consumer of
+                // this object can use the getURI method without triggering
+                // local IO operations. A DataSource implementation that
+                // converts the JCR Property to an InputStream might make a local
+                // copy. This avoids that IO operation.
                 inputStream = data.getBinary().getStream();
             } catch (RepositoryException e) {
                 throw new IOException(e.getMessage(), e);
             }
         }
         return inputStream;
+    }
+
+    @Override
+    public URI getURI() {
+        return uri;
+    }
+
+    @Override
+    public URI getPrivateURI() {
+        // Private URIs are not provided by this implementation.
+        return null;
     }
 }
