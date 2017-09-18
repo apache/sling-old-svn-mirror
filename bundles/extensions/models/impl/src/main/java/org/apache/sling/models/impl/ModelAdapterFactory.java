@@ -610,7 +610,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         final Map<ValuePreparer, Object> preparedValues = new HashMap<>(VALUE_PREPARERS_COUNT);
 
-        final ModelType object;
+        ModelType object;
         if (constructorToUse.getConstructor().getParameterTypes().length == 0) {
             // no parameters for constructor injection? instantiate it right away
             object = constructorToUse.getConstructor().newInstance();
@@ -656,7 +656,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             return new Result<>(missingElements);
         }
         try {
-            invokePostConstruct(object);
+            object = invokePostConstruct(object);
         } catch (InvocationTargetException e) {
             return new Result<>(new PostConstructException("Post-construct method has thrown an exception for model " + modelClass.getType(), e.getCause()));
         } catch (IllegalAccessException e) {
@@ -830,7 +830,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         return true;
     }
 
-    private void invokePostConstruct(Object object) throws InvocationTargetException, IllegalAccessException {
+    private <ModelType> ModelType invokePostConstruct(ModelType object) throws InvocationTargetException, IllegalAccessException {
         Class<?> clazz = object.getClass();
         List<Method> postConstructMethods = new ArrayList<>();
         while (clazz != null) {
@@ -849,13 +849,18 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                 if (!accessible) {
                     method.setAccessible(true);
                 }
-                method.invoke(object);
+                Object result = method.invoke(object);
+                if (result instanceof Boolean && !((Boolean) result).booleanValue()) {
+                    log.debug("PostConstruct method {}.{} returned false. Returning null model.", method.getDeclaringClass().getName(), method.getName());
+                    return null;
+                }
             } finally {
                 if (!accessible) {
                     method.setAccessible(false);
                 }
             }
         }
+        return object;
     }
 
     private RuntimeException setField(InjectableField injectableField, Object createdObject, Object value) {
