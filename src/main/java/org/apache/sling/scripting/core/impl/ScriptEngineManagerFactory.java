@@ -55,14 +55,7 @@ import org.slf4j.LoggerFactory;
  * Component which exposes a ScriptEngineManager service.
  *
  */
-@Component(service = {},
-    reference = @Reference(
-        name = "ScriptEngineFactory",
-        service = ScriptEngineFactory.class,
-        policy = ReferencePolicy.DYNAMIC,
-        cardinality = ReferenceCardinality.MULTIPLE
-    )
-)
+@Component(service = {})
 public class ScriptEngineManagerFactory implements BundleListener {
 
     private final Logger log = LoggerFactory.getLogger(ScriptEngineManagerFactory.class);
@@ -227,6 +220,9 @@ public class ScriptEngineManagerFactory implements BundleListener {
         this.bundleContext = null;
     }
 
+    @Reference(service = ScriptEngineFactory.class,
+            policy = ReferencePolicy.DYNAMIC,
+            cardinality = ReferenceCardinality.MULTIPLE)
     protected void bindScriptEngineFactory(final ScriptEngineFactory scriptEngineFactory, final Map<Object, Object> props) {
         if (scriptEngineFactory != null) {
             synchronized ( this.engineSpiServices) {
