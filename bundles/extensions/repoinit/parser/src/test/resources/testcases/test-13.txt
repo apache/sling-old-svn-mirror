@@ -1,0 +1,6 @@
+# Test for repository-level ACL (SLING-7061)
+set repository ACL for user1,user2
+    remove *
+    allow jcr:read,jcr:lockManagement
+    deny jcr:write
+end

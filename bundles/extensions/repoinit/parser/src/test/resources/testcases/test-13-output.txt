@@ -1,0 +1,4 @@
+SetAclPrincipals for user1 user2 
+  AclLine REMOVE_ALL {}
+  AclLine ALLOW {privileges=[jcr:read, jcr:lockManagement]}
+  AclLine DENY {privileges=[jcr:write]}
