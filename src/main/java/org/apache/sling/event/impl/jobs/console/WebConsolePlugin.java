@@ -64,7 +64,7 @@ property = {
     Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
     "felix.webconsole.label=slingevent",
     "felix.webconsole.title=Jobs",
-    "felix.webconsole.category=SLING",
+    "felix.webconsole.category=Sling",
     JobConsumer.PROPERTY_TOPICS + "=sling/webconsole/test"
 })
 public class WebConsolePlugin extends HttpServlet implements JobConsumer {
