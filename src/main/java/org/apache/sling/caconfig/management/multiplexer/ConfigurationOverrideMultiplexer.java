@@ -24,6 +24,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -56,7 +57,20 @@ public interface ConfigurationOverrideMultiplexer {
      * @param configName Configuration name
      * @param configResource Resolved configuration resource
      * @return Resource with overwritten configuration properties - or original configuration resource if no override took place
+     * @deprecated Please use {@link #overrideProperties(String, String, Resource, ResourceResolver)} instead.
      */
+    @Deprecated
     @CheckForNull Resource overrideProperties(@Nonnull String contextPath, @Nonnull String configName, @CheckForNull Resource configResource);
+
+    /**
+     * Override properties in given configuration resource (if any overrides are defined).
+     * @param contextPath Context path
+     * @param configName Configuration name
+     * @param configResource Resolved configuration resource
+     * @param resourceResolver Resource resolver
+     * @return Resource with overwritten configuration properties - or original configuration resource if no override took place
+     */
+    @CheckForNull Resource overrideProperties(@Nonnull String contextPath, @Nonnull String configName, @CheckForNull Resource configResource,
+            @Nonnull ResourceResolver resourceResolver);
 
 }

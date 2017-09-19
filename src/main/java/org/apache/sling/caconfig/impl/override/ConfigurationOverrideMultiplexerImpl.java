@@ -27,6 +27,9 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.caconfig.impl.ConfigurationResourceWrapper;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationOverrideMultiplexer;
@@ -69,12 +72,7 @@ public class ConfigurationOverrideMultiplexerImpl implements ConfigurationOverri
         items.unbind(item, props);
     }
     
-    /**
-     * Checks if the whole configuration for the given context path and name is overridden.
-     * @param contextPath Context path
-     * @param configName Config name
-     * @return true if the whole configuration is overridden.
-     */
+    @Override
     public boolean isAllOverridden(String contextPath, String configName) {
         for (OverrideItem override : allOverrides) {
             if (StringUtils.equals(configName, override.getConfigName()) && override.matchesPath(contextPath)) {
@@ -86,13 +84,7 @@ public class ConfigurationOverrideMultiplexerImpl implements ConfigurationOverri
         return false;
     }
 
-    /**
-     * Override properties for given context path and configuration name.
-     * @param contextPath Path of context resource for which configuration was resolved
-     * @param configName Configuration name
-     * @param properties Resolved configuration properties
-     * @return Overwritten or replaced properties - or null if no override took place
-     */
+    @Override
     public Map<String,Object> overrideProperties(String contextPath, String configName, Map<String,Object> properties) {
         if (allOverrides.size() == 0) {
             return null;
@@ -118,27 +110,31 @@ public class ConfigurationOverrideMultiplexerImpl implements ConfigurationOverri
         }
     }
     
-    /**
-     * Override properties in given configuration resource (if any overrides are defined).
-     * @param contextPath Context path
-     * @param configName Configuration name
-     * @param configResource Resolved configuration resource
-     * @return Resource with overwritten configuration properties - or original configuration resource if no override took place
-     */
+    @Override
     public Resource overrideProperties(String contextPath, String configName, Resource configResource) {
         if (configResource == null) {
             return null;
         }
-        Map<String,Object> overrideProperties = overrideProperties(contextPath, configName, configResource.getValueMap());
+        return overrideProperties(contextPath, configName, configResource, null);
+    }
+    
+    @Override
+    public Resource overrideProperties(String contextPath, String configName, Resource configResource, ResourceResolver resourceResolver) {
+        Map<String,Object> overrideProperties = overrideProperties(contextPath, configName, configResource != null ?  configResource.getValueMap() : ValueMap.EMPTY);
         if (overrideProperties == null) {
             return configResource;
         }
+        Resource configResourceToUse = configResource;
+        if (configResourceToUse == null) {
+            // build synthetic resource if override properties exist
+            configResourceToUse = new SyntheticResource(resourceResolver, (String)null, (String)null);
+        }
         if (log.isTraceEnabled()) {
             log.trace("! Override properties for context path " + contextPath + ", name '" + configName + "', "
-                    + "config path " + configResource.getPath() + ": "
+                    + (configResource.getPath() != null ? "config path " + configResource.getPath() : "no config path") + ": "
                     + MapUtil.traceOutput(configResource.getValueMap()) + " -> " + MapUtil.traceOutput(overrideProperties));
         }
-        return new ConfigurationResourceWrapper(configResource, new ValueMapDecorator(overrideProperties));
+        return new ConfigurationResourceWrapper(configResourceToUse, new ValueMapDecorator(overrideProperties));
     }
 
     /**

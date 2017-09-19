@@ -30,7 +30,9 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.caconfig.impl.ConfigurationTestUtils;
 import org.apache.sling.caconfig.impl.def.ConfigurationDefNameConstants;
@@ -305,6 +307,35 @@ public class ConfigurationManagerImplTest {
 
         assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), configData.getPropertyNames());
         assertEquals("value1", configData.getValues().get("prop1", String.class));
+        assertEquals("override1", configData.getEffectiveValues().get("prop1", String.class));
+        assertEquals((Integer)5, configData.getEffectiveValues().get("prop3", 0));
+
+        assertFalse(configData.getValueInfo("prop1").isInherited());
+        assertTrue(configData.getValueInfo("prop1").isOverridden());
+        assertFalse(configData.getValueInfo("prop3").isInherited());
+        assertTrue(configData.getValueInfo("prop3").isOverridden());
+    }
+
+    /**
+     * Test override for context path on which no configuration exists below /conf - not even on the inheritance lookup paths (SLING-7016)
+     */
+    @Test
+    public void testGetConfiguration_WithOverride_NoExistingConfig() throws PersistenceException {
+        context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
+                "[/content]" + CONFIG_NAME + "={\"prop1\":\"override1\"}"));
+        
+        // delete all existing config
+        ResourceResolver resolver = context.resourceResolver();
+        Resource existingConf = resolver.getResource("/conf/test");
+        resolver.delete(existingConf);
+        
+        ConfigurationData configData = underTest.getConfiguration(contextResource, CONFIG_NAME);
+        assertNotNull(configData);
+        assertFalse(configData.isInherited());
+        assertTrue(configData.isOverridden());
+
+        assertEquals(ImmutableSet.of("prop1", "prop2", "prop3"), configData.getPropertyNames());
+        assertNull(configData.getValues().get("prop1", String.class));
         assertEquals("override1", configData.getEffectiveValues().get("prop1", String.class));
         assertEquals((Integer)5, configData.getEffectiveValues().get("prop3", 0));
 
