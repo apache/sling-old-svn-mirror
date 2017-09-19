@@ -7,3 +7,6 @@ CreatePath [one(nt:foxtrot), step(nt:foxtrot mixin [nt:dance]), two(nt:foxtrot),
 CreatePath [one, step(mixin [nt:dance, nt:art]), two, steps]
 CreatePath [one, step(nt:foxtrot mixin [nt:dance]), two, steps]
 CreatePath [one, step(nt:foxtrot mixin [nt:dance, nt:art]), two, steps]
+CreatePath [one:and, step, two:and, steps]
+CreatePath [one@home, step, two@home, steps]
+CreatePath [one+tap, step, two+tap, steps]

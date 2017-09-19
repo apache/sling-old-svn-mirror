@@ -1,0 +1,5 @@
+# Test allowed path characters, see SLING-6774
+set ACL on /one:name,/two+name,/three@name
+    remove * for user1
+    allow jcr:read for user1
+end
