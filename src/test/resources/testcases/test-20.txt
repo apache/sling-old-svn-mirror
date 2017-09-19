@@ -8,3 +8,6 @@ create path (nt:foxtrot) /one/step(mixin nt:dance)/two/steps
 create path /one/step(mixin nt:dance,nt:art)/two/steps
 create path /one/step(nt:foxtrot mixin nt:dance)/two/steps
 create path /one/step(nt:foxtrot mixin nt:dance,nt:art)/two/steps
+create path /one:and/step/two:and/steps
+create path /one@home/step/two@home/steps
+create path /one+tap/step/two+tap/steps

@@ -1,0 +1,3 @@
+SetAclPaths on /one:name /two+name /three@name 
+  AclLine REMOVE_ALL {principals=[user1]}
+  AclLine ALLOW {principals=[user1], privileges=[jcr:read]}
