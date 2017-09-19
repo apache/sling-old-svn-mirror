@@ -50,6 +50,27 @@ public class CreatePathsTest {
         U.parseAndExecute("create path " + path);
         U.assertNodeExists(path);
     }
+
+    @Test
+    public void createSimplePathWithNamespace() throws Exception {
+        final String path = "/rep:policy/one";
+        U.parseAndExecute("create path " + path);
+        U.assertNodeExists(path);
+    }
+
+    @Test
+    public void createSimplePathWithAtSymbol() throws Exception {
+        final String path = "/one/@two/three";
+        U.parseAndExecute("create path " + path);
+        U.assertNodeExists(path);
+    }
+
+    @Test
+    public void createSimplePathWithPlusSymbol() throws Exception {
+        final String path = "/one/+two/three";
+        U.parseAndExecute("create path " + path);
+        U.assertNodeExists(path);
+    }
     
     @Test
     public void createPathWithTypes() throws Exception {
