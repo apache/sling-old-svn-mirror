@@ -21,6 +21,7 @@ import java.net.URL;
 
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,8 +40,9 @@ import org.osgi.service.component.annotations.Reference;
         Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
         WebConsoleConstants.PLUGIN_LABEL + "=" + ScriptingVariablesConsolePlugin.LABEL,
         WebConsoleConstants.PLUGIN_TITLE + "=" + ScriptingVariablesConsolePlugin.TITLE,
-        "felix.webconsole.category=sling"
-    }
+        "felix.webconsole.category=Sling"
+    },
+    service = { Servlet.class }
 )
 public class ScriptingVariablesConsolePlugin extends AbstractWebConsolePlugin {
 
