@@ -112,7 +112,7 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
     }
 
     private void printResolutionTestTool(HttpServletRequest request, PrintWriter pw) {
-        final String path = this.getParameter(request, "path", null);
+        final String path = this.getParameter(request, "path", "/content");
         String configNameOther = this.getParameter(request, "configNameOther", null);
         String configName = this.getParameter(request, "configName", null);
         if (configName == null) {
@@ -127,7 +127,7 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
         try {
             Resource contentResource = null;
             if (path != null) {
-                resolver = getResolver();
+                resolver = getResolver(request);
                 if (resolver != null) {
                     contentResource = resolver.getResource(path);
                 }
@@ -166,7 +166,7 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
 
             pw.println("<br/>");
 
-            if (contentResource != null) {
+            if (contentResource != null && configName != null) {
                 
                 // context paths
                 Iterator<ContextResource> contextResources = contextPathStrategyMultiplexer.findContextResources(contentResource);
@@ -375,14 +375,22 @@ public class ConfigurationWebConsolePlugin extends AbstractWebConsolePlugin {
         pw.print("</td>");
     }
 
-    private ResourceResolver getResolver() {
+    private ResourceResolver getResolver(HttpServletRequest request) {
+        ResourceResolver resolver = null;
         try {
-            return resolverFactory.getServiceResourceResolver(null);
+            resolver = resolverFactory.getServiceResourceResolver(null);
         }
         catch (final LoginException ex) {
-            log.warn("Unable to get resource resolver - please ensure a system user is configured: {}", ex.getMessage());
-            return null;
+            // fallback if no service user is registered - try to get current web console resource resolver
+            resolver = (ResourceResolver)request.getAttribute("org.apache.sling.auth.core.ResourceResolver");
+            if (resolver == null) {
+                log.warn("Unable to get resource resolver - please ensure a system user is configured: {}", ex.getMessage());
+            }
+            else {
+                log.debug("No system user configured, use resource resolver from web console.");
+            }
         }
+        return resolver;
     }
 
 }
