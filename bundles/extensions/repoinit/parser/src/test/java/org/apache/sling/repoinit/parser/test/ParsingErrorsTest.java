@@ -74,6 +74,10 @@ public class ParsingErrorsTest {
             add(new Object[] { "disable service user foo \"missing colon\"", ParseException.class });
             add(new Object[] { "disable service user foo : missing start quote\"", ParseException.class });
             add(new Object[] { "disable service user foo : \"missing end quote", ParseException.class });
+
+            // SLING-7066 default mixin is not supported
+            add(new Object[] { "create path (sling:Folder mixin mix:A) /var/foo", ParseException.class });
+            add(new Object[] { "create path (mixin mix:A) /var/foo", ParseException.class });
         }};
         return result;
     }
