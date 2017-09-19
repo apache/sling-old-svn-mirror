@@ -185,7 +185,7 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             // apply resource inheritance
             configResource = configurationInheritanceStrategy.getResource(transformedResources);
             // apply overrides
-            configResource = configurationOverrideMultiplexer.overrideProperties(contentResource.getPath(), name, configResource);
+            configResource = configurationOverrideMultiplexer.overrideProperties(contentResource.getPath(), name, configResource, configResource.getResourceResolver());
             // build name
             if (configResource != null && isCollection) {
                 conversionName = conversionName + "/" + configResource.getName();
@@ -195,6 +195,12 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             log.trace("+ Found config resource for context path " + contentResource.getPath() + ": " + configResource.getPath() + " "
                     + MapUtil.traceOutput(configResource.getValueMap()));
         }
+        
+        // if no config resource found still check for overrides
+        if (configResource == null && contentResource != null) {
+            configResource = configurationOverrideMultiplexer.overrideProperties(contentResource.getPath(), name, (Resource)null, contentResource.getResourceResolver());
+        }
+        
         return converter.convert(configResource, clazz, conversionName, isCollection);
     }
     

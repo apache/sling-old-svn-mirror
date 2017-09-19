@@ -35,6 +35,7 @@ import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.ListIteratorWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.caconfig.impl.ConfigurationResourceResolverConfig;
 import org.apache.sling.caconfig.management.ConfigurationCollectionData;
 import org.apache.sling.caconfig.management.ConfigurationData;
@@ -92,7 +93,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         
         if (configResourceInheritanceChain != null) {
             ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
-            configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain, false);
+            configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain, false, resource.getResourceResolver());
             if (configResource != null) {
                 // get writeback resource for "reverse inheritance detection"
                 Resource writebackConfigResource = null;
@@ -122,6 +123,14 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
             }
         }
         if (configMetadata != null) {
+            // if no config resource found still check for overrides
+            configResource = configurationOverrideMultiplexer.overrideProperties(resource.getPath(), configName, (Resource)null, resource.getResourceResolver());
+            if (configResource != null) {
+                return new ConfigurationDataImpl(configMetadata, configResource, null, null,
+                        resource, configName, this, configurationManagementSettings,
+                        configurationOverrideMultiplexer, configurationPersistenceStrategy, false, null);
+            }
+
             // if no config resource found but config metadata exist return empty config data with default values
             return new ConfigurationDataImpl(configMetadata,
                     resource, configName, this, configurationManagementSettings,
@@ -157,7 +166,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         if (configResourceInheritanceChains != null) {
             for (Iterator<Resource> configResourceInheritanceChain : configResourceInheritanceChains) {
                 ResettableIterator resettableConfigResourceInheritanceChain = new ListIteratorWrapper(configResourceInheritanceChain);
-                Resource configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain, true);
+                Resource configResource = applyPersistenceAndInheritance(resource.getPath(), configName, resettableConfigResourceInheritanceChain, true, resource.getResourceResolver());
                 resettableConfigResourceInheritanceChain.reset();
                 Resource untransformedConfigResource = (Resource)resettableConfigResourceInheritanceChain.next();
                 if (configResource != null) {
@@ -240,7 +249,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
     }
 
     private Resource applyPersistenceAndInheritance(String contextPath, String configName, Iterator<Resource> configResourceInheritanceChain,
-            boolean isCollection) {
+            boolean isCollection, ResourceResolver resourceResolver) {
         if (configResourceInheritanceChain == null) {
             return null;
         }
@@ -252,7 +261,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager {
         Resource configResource = configurationInheritanceStrategy.getResource(transformedConfigResources);
         
         // apply overrides
-        return configurationOverrideMultiplexer.overrideProperties(contextPath, configName, configResource);
+        return configurationOverrideMultiplexer.overrideProperties(contextPath, configName, configResource, resourceResolver);
     }
 
     @Override

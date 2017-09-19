@@ -19,5 +19,5 @@
 /**
  * Multiplexer services provide aggregated access to all implementations of the related SPI interface.
  */
-@org.osgi.annotation.versioning.Version("1.0.0")
+@org.osgi.annotation.versioning.Version("1.1.0")
 package org.apache.sling.caconfig.management.multiplexer;
