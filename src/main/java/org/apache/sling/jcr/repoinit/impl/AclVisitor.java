@@ -64,12 +64,28 @@ class AclVisitor extends DoNothingVisitor {
         }
     }
 
+    private void setRepositoryAcl(AclLine line, Session s, List<String> principals, List<String> privileges, boolean isAllow) {
+        try {
+            log.info("Adding repository level ACL '{}' entry '{}' for {}", isAllow ? "allow" : "deny", privileges, principals);
+            List<RestrictionClause> restrictions = line.getRestrictions();
+            AclUtil.setRepositoryAcl(s, principals, privileges, isAllow, restrictions);
+        } catch(Exception e) {
+            throw new RuntimeException("Failed to set repository level ACL (" + e.toString() + ") " + line, e);
+        }
+    }
+
     @Override
     public void visitSetAclPrincipal(SetAclPrincipals s) {
         final List<String> principals = s.getPrincipals();
         for(AclLine line : s.getLines()) {
             final boolean isAllow = line.getAction().equals(AclLine.Action.ALLOW);
-            setAcl(line, session, principals, require(line, PROP_PATHS), require(line, PROP_PRIVILEGES), isAllow);
+            final List<String> paths = line.getProperty(PROP_PATHS);
+            if (paths != null && ! paths.isEmpty()) {
+                setAcl(line, session, principals, paths, require(line, PROP_PRIVILEGES), isAllow);
+            } else {
+                setRepositoryAcl(line, session, principals, require(line, PROP_PRIVILEGES), isAllow);
+            }
+
         }
      }
 

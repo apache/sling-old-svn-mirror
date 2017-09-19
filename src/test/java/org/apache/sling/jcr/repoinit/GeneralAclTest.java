@@ -25,6 +25,8 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeTypeTemplate;
 
 import org.apache.sling.jcr.repoinit.impl.TestUtil;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
@@ -146,6 +148,100 @@ public class GeneralAclTest {
         }
     }
 
+    @Test
+    public void addRepositoryAcl() throws Exception {
+        final String aclSetup =
+                "set repository ACL for " + userA + "," + userB + "\n"
+                + "allow jcr:namespaceManagement\n"
+                + "allow jcr:nodeTypeDefinitionManagement\n"
+                + "end"
+                ;
+
+        U.parseAndExecute(aclSetup);
+        verifyRegisterNamespace(userA, "a", "http://a", true);
+        verifyRegisterNamespace(userB, "b", "http://b", true);
+        verifyRegisterNamespace(U.username, "c", "http://c", false);
+        verifyRegisterNodeType(userA, "typeA", true);
+        verifyRegisterNodeType(userB, "typeB", true);
+        verifyRegisterNodeType(U.username, "typeC", false);
+    }
+
+    @Test
+    public void addRepositoryAclInMultipleBlocks() throws Exception {
+        final String aclSetup =
+                  "set repository ACL for " + userA + "\n"
+                +    "allow jcr:namespaceManagement,jcr:nodeTypeDefinitionManagement\n"
+                + "end\n"
+                + "set repository ACL for " + userB + "\n"
+                +    "allow jcr:namespaceManagement\n"
+                + "end"
+                ;
+
+        U.parseAndExecute(aclSetup);
+        verifyRegisterNamespace(userA, "a", "http://a", true);
+        verifyRegisterNamespace(userB, "b", "http://b", true);
+        verifyRegisterNodeType(userA, "typeA", true);
+        verifyRegisterNodeType(userB, "typeB", false);
+    }
+
+    @Test
+    public void addRepositoryAclInSequence() throws Exception {
+        final String aclSetup =
+                  "set repository ACL for " + U.username + "\n"
+                +    "deny jcr:namespaceManagement,jcr:nodeTypeDefinitionManagement\n"
+                +    "allow jcr:namespaceManagement,jcr:nodeTypeDefinitionManagement\n"
+                + "end\n"
+                + "set repository ACL for " + U.username + "\n"
+                +    "deny jcr:namespaceManagement\n"
+                + "end"
+                ;
+
+        U.parseAndExecute(aclSetup);
+        verifyRegisterNodeType(U.username, "typeC", true);
+        verifyRegisterNamespace(U.username, "c", "http://c", false);
+    }
+
+    /**
+     * Verify the success/failure when registering a node type.
+     * Registering a node type requires to be granted the jcr:nodeTypeDefinitionManagement privilege.
+     */
+    private void verifyRegisterNodeType(String username, String typeName, boolean successExpected) {
+        Session userSession = null;
+        try {
+            userSession = U.loginService(username);
+            NodeTypeManager nodeTypeManager = userSession.getWorkspace().getNodeTypeManager();
+            NodeTypeTemplate type = nodeTypeManager.createNodeTypeTemplate();
+            type.setName(typeName);
+            nodeTypeManager.registerNodeType(type, true);
+            assertTrue("Register node type succeeded " + typeName, successExpected);
+        } catch (RepositoryException e) {
+            assertTrue("Error registering node type " + typeName + " " + e.getMessage(), !successExpected);
+        } finally {
+            if (userSession != null) {
+                userSession.logout();
+            }
+        }
+    }
+
+
+    /**
+     * Verify the success/failure when registering a namespace.
+     * Registering a namespace successfully requires to be granted the jcr:namespaceManagement privilege.
+     */
+    private void verifyRegisterNamespace(String username, String prefix, String uri, boolean successExpected) {
+        Session userSession = null;
+        try {
+            userSession = U.loginService(username);
+            userSession.getWorkspace().getNamespaceRegistry().registerNamespace(prefix, uri);
+            assertTrue("Register namespace succeeded " + prefix + uri, successExpected);
+        } catch (RepositoryException e) {
+            assertTrue("Error registering namespace " + prefix + uri + " " + e.getMessage(), !successExpected);
+        } finally {
+            if (userSession != null) {
+                userSession.logout();
+            }
+        }
+    }
 
     /**
      * Verifies success/failure of adding a child
