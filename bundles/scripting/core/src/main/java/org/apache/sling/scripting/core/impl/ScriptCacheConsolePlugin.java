@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,8 +43,10 @@ import org.osgi.service.component.annotations.Reference;
         Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
         WebConsoleConstants.PLUGIN_LABEL + "=" + ScriptCacheConsolePlugin.CONSOLE_LABEL,
         WebConsoleConstants.PLUGIN_TITLE + "=" + ScriptCacheConsolePlugin.CONSOLE_TITLE,
-        "felix.webconsole.category=sling"
-    })
+        "felix.webconsole.category=Sling"
+    },
+    service = { Servlet.class }
+)
 public class ScriptCacheConsolePlugin extends AbstractWebConsolePlugin {
 
     public static final String CONSOLE_LABEL = "scriptcache";
