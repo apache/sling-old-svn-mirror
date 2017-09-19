@@ -68,6 +68,7 @@ TOKEN:
 |   < MIXIN: "mixin" >
 |   < PATH: "path" >
 |   < END: "end" >
+|   < REPOSITORY: "repository" >
 |   < USER: "user" >
 |   < NODETYPES: "nodetypes" >
 |   < REGISTER: "register" >
@@ -127,6 +128,7 @@ List<Operation> parse() :
         serviceUserStatement(result) 
         | setAclPaths(result) 
         | setAclPrincipals(result)
+        | setAclRepository(result)
         | createPathStatement(result)
         | registerNamespaceStatement(result)
         | registerNodetypesStatement(result)
@@ -397,6 +399,38 @@ List<String> aclOptions() :
 
     {
        return aclOptionList;
+    }
+}
+
+void setAclRepository(List<Operation> result) :
+{
+    List<AclLine> lines = new ArrayList<AclLine>();
+    List<String> principals;
+    List<String> privileges;
+    List<String> aclOptions;
+    AclLine line = null;
+
+}
+{
+    <SET> <REPOSITORY> <ACL> <FOR> principals = principalsList() aclOptions=aclOptions() <EOL>
+    (
+        ( <REMOVE> <STAR> )
+            {
+                line = new AclLine(AclLine.Action.REMOVE_ALL);
+                lines.add(line);
+            }
+        | ( line = privilegesLineOperation() privileges = namespacedItemsList() )
+            {
+                line.setProperty(AclLine.PROP_PRIVILEGES, privileges);
+                lines.add(line);
+            }
+        | ( blankLine() )
+    )+
+    <END>
+    ( <EOL> | <EOF> )
+
+    {
+        result.add(new SetAclPrincipals(principals, lines, aclOptions));
     }
 }
 
