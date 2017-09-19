@@ -78,6 +78,10 @@ public class ParsingErrorsTest {
             // SLING-7066 default mixin is not supported
             add(new Object[] { "create path (sling:Folder mixin mix:A) /var/foo", ParseException.class });
             add(new Object[] { "create path (mixin mix:A) /var/foo", ParseException.class });
+
+            // SLING-7061
+            add(new Object[] { "set repository ACL for principal1\nallow jcr:somePermission on /\nend", ParseException.class });
+
         }};
         return result;
     }
