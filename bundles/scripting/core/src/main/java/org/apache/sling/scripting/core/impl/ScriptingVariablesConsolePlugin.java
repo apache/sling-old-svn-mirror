@@ -108,8 +108,8 @@ public class ScriptingVariablesConsolePlugin extends AbstractWebConsolePlugin {
             for (String extension : factory.getExtensions()) {
                 pw.append("<option value='" + extension + "'>"+extension + " (" + factory.getEngineName() +")</option>");
             }
-            pw.append("<option value=''>all (unfiltered)</option>");
         }
+        pw.append("<option value=''>all (unfiltered)</option>");
         pw.append("</select> ");
         pw.append("<button type='button' id='submitButton'> Retrieve Variables </button></td></tr></table>");
         pw.append("<div id='response'></div>");
