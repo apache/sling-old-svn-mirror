@@ -14,16 +14,26 @@
 # limitations under the License.
 
 # This script is used to migrate modules from SVN to Git
-#!/bin/sh
+#!/bin/sh -e
+
+# prefixes to strip from module paths. trailing slash is mandatory
+prefixes='bundles/extensions/ bundles/ contrib/bundles contrib/extensions/ contrib/ karaf/ tooling/maven/'
+git_repo_location='../sling-modules'
+git_src_location='../sling-modules-src'
 
 if [ ! -f check_staged_release.sh ]; then
     echo "Please run this script from the root of the Sling SVN repository"
     exit 1
 fi
 
-# prefixes to strip from module paths. trailing slash is mandatory
-prefixes='bundles/extensions/ bundles/ contrib/bundles contrib/extensions/ contrib/ karaf/ tooling/maven/'
-git_repo_location='../sling-modules'
+if [ ! -d ${git_src_location} ]; then
+    # generate a git-svn checkout
+    echo "Creating source git-svn checkout ..."
+    git clone https://github.com/apache/sling.git ${git_src_location}
+    #  ensure we don't accidentally overwrite the source repository
+    chmod ugo-w ${git_src_location}
+    echo "Done!"
+fi
 
 for module in $(./tooling/scm/scripts/gen-repo-candidates.sh); do
 
@@ -52,8 +62,35 @@ for module in $(./tooling/scm/scripts/gen-repo-candidates.sh); do
     
     if [ ! -d ${git_repo_location}/${repo_name}/.git ]; then
         echo "Converting from SVN to Git..."
-        # TODO - migrate the repository from SVN to git
-        exit 2 # unimplemented
+
+        # create the initial repo
+        git clone --no-hardlinks ${git_src_location} ${git_repo_location}/${repo_name}
+        pushd ${git_repo_location}/${repo_name}
+
+        # make sure we don't push to the incorrect repo and also remove make sure
+        # we don't keep references to the remote repo
+        git remote rm origin
+
+        # rename trunk to master
+        git branch -m trunk master
+
+        # Remove everything except the path belonging to the module
+        git filter-branch --subdirectory-filter ${module_orig}
+
+        # remove unrelated tags
+        for tag in $(git tag); do
+            if [[ $tag != ${artifactId}* ]]; then
+                git tag -d ${tag}
+            fi
+        done
+
+        # cleanup and compaction
+        git for-each-ref --format="%(refname)" refs/original/ | xargs -n1 git update-ref -d
+        git reflog expire --expire=now --all
+        git repack -Ad
+        git gc --aggressive --prune=now
+        popd
+        echo "Complete!"
     else
         echo "Already converted"
     fi
@@ -61,7 +98,7 @@ for module in $(./tooling/scm/scripts/gen-repo-candidates.sh); do
     
     # TODO - create the repository using the ASF self-service tool
     echo "Creating GIT repository ..."
-    exit 2 # unimplemented
+    exit 254 # unimplemented
 
     cd ${git_repo_location}/${repo_name}
     git remote add origin https://git-wip-us.apache.org/repos/asf/${repo_name}.git
