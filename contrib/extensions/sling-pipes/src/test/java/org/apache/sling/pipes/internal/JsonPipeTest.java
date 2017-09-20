@@ -22,13 +22,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
-import org.apache.sling.pipes.Pipe;
+import org.apache.sling.pipes.PipeBuilder;
 import org.junit.Before;
 import org.junit.Test;
+
+import javax.json.JsonObject;
 
 /**
  * testing json pipe with anonymous yahoo meteo API
@@ -70,5 +71,24 @@ public class JsonPipeTest extends AbstractPipeTest {
     @Test
     public void testPipedArray() throws Exception {
         testArray(getOutput(ARRAY));
+    }
+
+    @Test
+    public void testSimpleJsonPath() throws Exception {
+        testJsonPath("{'size':2, 'items':[{'test':'one'}, {'test':'two'}]}", "$.items");
+        testJsonPath("[['foo','bar'],[{'test':'one'}, {'test':'two'}]]", "$[1]");
+    }
+    @Test
+    public void testNestedJsonPath()  throws Exception {
+        testJsonPath("{'arrays':[['foo','bar'],[{'test':'one'}, {'test':'two'}]]}", "$.arrays[1]");
+        testJsonPath("{'objects':{'items':[{'test':'one'}, {'test':'two'}]}}", "$.objects.items");
+    }
+
+    protected void testJsonPath(String json, String valuePath) throws Exception {
+        assertEquals("there should be 2 results for valuePath " + valuePath, 2, plumber.newPipe(context.resourceResolver())
+                .echo("/content/fruits")
+                .json(json).with("valuePath", valuePath).name("json")
+                .echo("/content/json/array/${json.test}")
+                .run().size());
     }
 }
