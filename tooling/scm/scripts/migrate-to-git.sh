@@ -33,8 +33,9 @@ for module in $(./tooling/scm/scripts/gen-repo-candidates.sh); do
         module=${module#${prefix}}
     done
 
-    repo_name=${module//\//-} # slashes to dashes
-    repo_name="sling-${repo_name}" # add TLP prefix
+    artifactId=$(xmllint --xpath "/*[local-name()='project']/*[local-name()='artifactId']/text()" ${module_orig}/pom.xml)
+
+    repo_name="sling-${artifactId}" # add TLP prefix
     
     echo "---- Preparing to migrate $module_orig to $repo_name ---"
 
