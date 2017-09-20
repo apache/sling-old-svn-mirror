@@ -97,7 +97,7 @@ while read -r module; do
             # remove unrelated tags
             for tag in $(git tag); do
                 if [[ $tag != ${artifactId}* ]]; then
-                    git tag -d ${tag}
+                    git tag -d ${tag} > /dev/null
                 fi
             done
 
