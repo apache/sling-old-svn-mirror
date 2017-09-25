@@ -671,7 +671,8 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	}
 
 	/**
-	 * Set new search strategy, which will be used in {@link Q#find()} and {@link Q#has(String)} functions.
+	 * Set new search strategy, which will be used in {@link AbstractQuery#find()} and
+	 * {@link AbstractQuery#has(String)} functions.
 	 * 
 	 * @param strategy Search strategy type
 	 * @return new SlingQuery object transformed by this operation
