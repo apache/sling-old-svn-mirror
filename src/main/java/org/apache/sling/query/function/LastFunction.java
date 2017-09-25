@@ -29,7 +29,7 @@ public class LastFunction<T> implements IteratorToIteratorFunction<T> {
 
 	@Override
 	public Iterator<Option<T>> apply(Iterator<Option<T>> input) {
-		return new LastIterator<T>(input);
+		return new LastIterator<>(input);
 	}
 
 }

@@ -35,7 +35,7 @@ public class NotFunction<T> implements IteratorToIteratorFunction<T> {
 
 	@Override
 	public Iterator<Option<T>> apply(Iterator<Option<T>> input) {
-		return new ReverseIterator<T>(function, input);
+		return new ReverseIterator<>(function, input);
 	}
 
 }

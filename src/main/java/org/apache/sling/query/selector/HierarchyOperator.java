@@ -19,7 +19,6 @@
 
 package org.apache.sling.query.selector;
 
-import org.apache.sling.query.api.Function;
 import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.function.ChildrenFunction;
@@ -28,6 +27,8 @@ import org.apache.sling.query.function.IdentityFunction;
 import org.apache.sling.query.function.NextFunction;
 import org.apache.sling.query.predicate.RejectingPredicate;
 import org.apache.sling.query.selector.parser.SelectorSegment;
+
+import java.util.function.Function;
 
 public enum HierarchyOperator {
 //@formatter:off
@@ -70,7 +71,7 @@ public enum HierarchyOperator {
 	}
 
 	public abstract <T> Function<?, ?> getFunction(SelectorSegment segment, SearchStrategy strategy,
-			TreeProvider<T> provider);
+												   TreeProvider<T> provider);
 
 	public static HierarchyOperator findByCharacter(char c) {
 		for (HierarchyOperator operator : values()) {

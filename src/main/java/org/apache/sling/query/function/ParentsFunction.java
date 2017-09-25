@@ -20,8 +20,8 @@
 package org.apache.sling.query.function;
 
 import java.util.Iterator;
+import java.util.function.Predicate;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.internal.ElementToIteratorFunction;
 import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.iterator.ParentsIterator;
@@ -39,7 +39,7 @@ public class ParentsFunction<T> implements ElementToIteratorFunction<T> {
 
 	@Override
 	public Iterator<T> apply(T resource) {
-		return new ParentsIterator<T>(until, resource, provider);
+		return new ParentsIterator<>(until, resource, provider);
 	}
 
 }

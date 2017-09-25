@@ -22,9 +22,9 @@ package org.apache.sling.query.selector;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
-import org.apache.sling.query.api.Function;
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
 import org.apache.sling.query.api.internal.Option;
@@ -53,7 +53,7 @@ public class SelectorFunction<T> implements IteratorToIteratorFunction<T>, Predi
 		this.provider = provider;
 		this.strategy = strategy;
 		List<Selector> selectors = SelectorParser.parse(selector);
-		selectorFunctions = new ArrayList<IteratorToIteratorFunction<T>>();
+		selectorFunctions = new ArrayList<>();
 		for (Selector s : selectors) {
 			selectorFunctions.add(createSelectorFunction(s.getSegments()));
 		}
@@ -62,7 +62,7 @@ public class SelectorFunction<T> implements IteratorToIteratorFunction<T>, Predi
 	@Override
 	public Iterator<Option<T>> apply(Iterator<Option<T>> input) {
 		LazyList<Option<T>> list = new LazyList<Option<T>>(input);
-		List<Iterator<Option<T>>> iterators = new ArrayList<Iterator<Option<T>>>();
+		List<Iterator<Option<T>>> iterators = new ArrayList<>();
 		for (IteratorToIteratorFunction<T> function : selectorFunctions) {
 			iterators.add(new SuppIterator<T>(list, function));
 		}
@@ -70,13 +70,13 @@ public class SelectorFunction<T> implements IteratorToIteratorFunction<T>, Predi
 	}
 
 	@Override
-	public boolean accepts(T resource) {
+	public boolean test(T resource) {
 		Iterator<Option<T>> result = apply(IteratorUtils.singleElementIterator(Option.of(resource, 0)));
 		return new EmptyElementFilter<T>(result).hasNext();
 	}
 
 	private IteratorToIteratorFunction<T> createSelectorFunction(List<SelectorSegment> segments) {
-		List<Function<?, ?>> segmentFunctions = new ArrayList<Function<?, ?>>();
+		List<Function<?, ?>> segmentFunctions = new ArrayList<>();
 		for (SelectorSegment segment : segments) {
 			segmentFunctions.addAll(createSegmentFunction(segment));
 		}
@@ -84,7 +84,7 @@ public class SelectorFunction<T> implements IteratorToIteratorFunction<T>, Predi
 	}
 
 	private List<Function<?, ?>> createSegmentFunction(SelectorSegment segment) {
-		List<Function<?, ?>> functions = new ArrayList<Function<?, ?>>();
+		List<Function<?, ?>> functions = new ArrayList<>();
 		HierarchyOperator operator = HierarchyOperator.findByCharacter(segment.getHierarchyOperator());
 		functions.add(operator.getFunction(segment, strategy, provider));
 		Predicate<T> predicate = provider.getPredicate(segment.getType(), segment.getName(),

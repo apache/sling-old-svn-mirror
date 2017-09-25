@@ -24,9 +24,10 @@ import static org.apache.sling.query.TestUtils.assertEmptyIterator;
 import static org.apache.sling.query.TestUtils.assertResourceSetEquals;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.SearchStrategy;
 import org.junit.Test;
+
+import java.util.function.Predicate;
 
 public class FilterTest {
 
@@ -35,23 +36,13 @@ public class FilterTest {
 	@Test
 	public void testFilter() {
 		SlingQuery query = $(tree).searchStrategy(SearchStrategy.DFS).find()
-				.filter(new Predicate<Resource>() {
-					@Override
-					public boolean accepts(Resource resource) {
-						return "configParsys".equals(resource.getName());
-					}
-				});
+				.filter(resource -> "configParsys".equals(resource.getName()));
 		assertResourceSetEquals(query.iterator(), "configParsys");
 	}
 
 	@Test
 	public void testFilterOnEmptyCollection() {
-		SlingQuery query = $(tree).children("cq:Undefined").filter(new Predicate<Resource>() {
-			@Override
-			public boolean accepts(Resource resource) {
-				return true;
-			}
-		});
+		SlingQuery query = $(tree).children("cq:Undefined").filter(resource -> true);
 		assertEmptyIterator(query.iterator());
 	}
 }

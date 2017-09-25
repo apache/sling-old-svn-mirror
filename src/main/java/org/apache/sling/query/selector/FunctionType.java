@@ -19,7 +19,6 @@
 
 package org.apache.sling.query.selector;
 
-import org.apache.sling.query.api.Function;
 import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.function.EvenFunction;
@@ -31,11 +30,13 @@ import org.apache.sling.query.function.SliceFunction;
 import org.apache.sling.query.predicate.ParentPredicate;
 import org.apache.sling.query.predicate.RejectingPredicate;
 
+import java.util.function.Function;
+
 public enum FunctionType {
 	EQ {
 		@Override
 		public <T> Function<?, ?> getFunction(String argument, SearchStrategy strategy,
-				TreeProvider<T> providerw) {
+				TreeProvider<T> provider) {
 			int index = Integer.parseInt(argument);
 			return new SliceFunction<T>(index, index);
 		}
@@ -71,7 +72,7 @@ public enum FunctionType {
 	HAS {
 		@Override
 		public <T> Function<?, ?> getFunction(String selector, SearchStrategy strategy,
-				TreeProvider<T> provider) {
+											  TreeProvider<T> provider) {
 			return new HasFunction<T>(selector, strategy, provider);
 		}
 	},

@@ -20,8 +20,8 @@
 package org.apache.sling.query.iterator;
 
 import java.util.Iterator;
+import java.util.function.Predicate;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.internal.Option;
 
 public class FilteringIterator<T> extends AbstractIterator<Option<T>> {
@@ -39,7 +39,7 @@ public class FilteringIterator<T> extends AbstractIterator<Option<T>> {
 	protected Option<T> getElement() {
 		while (iterator.hasNext()) {
 			Option<T> element = iterator.next();
-			if (element.isEmpty() || predicate.accepts(element.getElement())) {
+			if (element.isEmpty() || predicate.test(element.getElement())) {
 				return element;
 			} else {
 				return Option.empty(element.getArgumentId());

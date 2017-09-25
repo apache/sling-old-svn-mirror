@@ -39,8 +39,8 @@ public class SelectorSegment {
 	public SelectorSegment(ParserContext context, boolean firstSegment) {
 		this.type = context.getType();
 		this.name = context.getName();
-		this.attributes = new ArrayList<Attribute>(context.getAttributes());
-		this.modifiers = new ArrayList<Modifier>(context.getModifiers());
+		this.attributes = new ArrayList<>(context.getAttributes());
+		this.modifiers = new ArrayList<>(context.getModifiers());
 		if (firstSegment) {
 			hierarchyOperator = 0;
 		} else {

@@ -21,12 +21,11 @@ package org.apache.sling.query.api.internal;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.selector.parser.Attribute;
 import org.apache.sling.query.selector.parser.SelectorSegment;
-
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 @ConsumerType
 public interface TreeProvider<T> {

@@ -65,7 +65,7 @@ public enum SelectorOperator {
 
 	private final String operator;
 
-	private SelectorOperator(String operator) {
+	SelectorOperator(String operator) {
 		this.operator = operator;
 	}
 

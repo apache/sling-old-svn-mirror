@@ -33,11 +33,11 @@ public class Option<T> {
 	}
 
 	public static <T> Option<T> of(T element, int argumentId) {
-		return new Option<T>(element, argumentId);
+		return new Option<>(element, argumentId);
 	}
 
 	public static <T> Option<T> empty(int argumentId) {
-		return new Option<T>(null, argumentId);
+		return new Option<>(null, argumentId);
 	}
 
 	public int getArgumentId() {

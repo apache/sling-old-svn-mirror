@@ -20,8 +20,8 @@
 package org.apache.sling.query.function;
 
 import java.util.Iterator;
+import java.util.function.Function;
 
-import org.apache.sling.query.api.Function;
 import org.apache.sling.query.api.internal.ElementToIteratorFunction;
 import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
 import org.apache.sling.query.api.internal.Option;
@@ -49,6 +49,6 @@ public class IteratorToIteratorFunctionWrapper<T> implements IteratorToIteratorF
 
 	private static <T> Iterator<Option<T>> getOptionIterator(ElementToIteratorFunction<T> function,
 			Iterator<Option<T>> parentIterator) {
-		return new ExpandingIterator<T>((ElementToIteratorFunction<T>) function, parentIterator);
+		return new ExpandingIterator<>(function, parentIterator);
 	}
 }

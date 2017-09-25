@@ -20,8 +20,8 @@
 package org.apache.sling.query.function;
 
 import java.util.Iterator;
+import java.util.function.Predicate;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
 import org.apache.sling.query.api.internal.Option;
 import org.apache.sling.query.iterator.FilteringIterator;
@@ -36,7 +36,7 @@ public class EvenFunction<T> implements IteratorToIteratorFunction<T> {
 
 	@Override
 	public Iterator<Option<T>> apply(Iterator<Option<T>> resources) {
-		return new FilteringIterator<T>(resources, new EvenPredicate<T>(even));
+		return new FilteringIterator<>(resources, new EvenPredicate<>(even));
 	}
 
 	private static class EvenPredicate<T> implements Predicate<T> {
@@ -47,7 +47,7 @@ public class EvenFunction<T> implements IteratorToIteratorFunction<T> {
 		}
 
 		@Override
-		public boolean accepts(T element) {
+		public boolean test(T element) {
 			boolean oldAccept = accept;
 			accept = !accept;
 			return oldAccept;

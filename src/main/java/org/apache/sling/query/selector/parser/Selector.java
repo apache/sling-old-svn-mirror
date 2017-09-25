@@ -31,7 +31,7 @@ public class Selector {
 	}
 
 	public Selector(List<SelectorSegment> segments) {
-		this.segments = new ArrayList<SelectorSegment>(segments);
+		this.segments = new ArrayList<>(segments);
 	}
 
 	public List<SelectorSegment> getSegments() {

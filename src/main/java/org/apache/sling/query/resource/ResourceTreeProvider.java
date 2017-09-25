@@ -21,10 +21,10 @@ package org.apache.sling.query.resource;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.resource.jcr.JcrQueryIterator;
 import org.apache.sling.query.resource.jcr.JcrTypeResolver;

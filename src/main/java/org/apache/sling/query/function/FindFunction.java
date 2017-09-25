@@ -67,9 +67,9 @@ public class FindFunction<T> implements ElementToIteratorFunction<T> {
 				break;
 			case DFS:
 			default:
-				iterator = new DfsTreeIterator<T>(input, provider);
+				iterator = new DfsTreeIterator<>(input, provider);
 				break;
 		}
-		return new WarningIterator<T>(iterator);
+		return new WarningIterator<>(iterator);
 	}
 }
