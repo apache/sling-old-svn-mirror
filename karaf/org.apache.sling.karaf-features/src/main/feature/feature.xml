@@ -510,15 +510,16 @@
   </feature>
   <feature name="sling-scripting-sightly" version="${project.version}">
     <configfile finalname="/etc/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_sightly.config">mvn:org.apache.sling/org.apache.sling.karaf-configs/${project.version}/config/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_sightly</configfile>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.36</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler/1.0.10</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler.java/1.0.10</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.22</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.7-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly/1.0.42</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler/1.0.14</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.compiler.java/1.0.14</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.js.provider/1.0.24</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.sightly.models.provider/1.0.6</bundle>
     <!-- dependencies -->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-jcr</feature>
     <feature version="${project.version}">sling-scripting</feature>
+    <feature version="${project.version}">sling-scripting-javascript</feature>
     <feature version="${project.version}">sling-extension-i18n</feature>
     <feature version="${project.version}">sling-extension-models</feature>
     <feature version="${project.version}">sling-extension-xss</feature>
