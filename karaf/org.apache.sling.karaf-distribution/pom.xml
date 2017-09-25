@@ -44,7 +44,7 @@
   <!-- https://github.com/apache/karaf/blob/master/assemblies/apache-karaf/pom.xml -->
 
   <properties>
-    <org.apache.karaf.version>4.1.1</org.apache.karaf.version>
+    <org.apache.karaf.version>4.1.2</org.apache.karaf.version>
     <jna.version>4.3.0</jna.version>
     <servicemix.specs.version>2.8.0</servicemix.specs.version>
     <xerces.version>2.11.0_1</xerces.version>
