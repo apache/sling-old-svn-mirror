@@ -61,6 +61,7 @@ public class SlingQuery extends AbstractQuery<Resource, SlingQuery> {
 	 * class (eg. {@code adaptTo()} returns {@code null}), it will be skipped.
 	 * 
 	 * @param clazz Class used to adapt the Resources
+	 * @param <E> type of the clazz
 	 * @return new iterable containing succesfully adapted Resources
 	 */
 	public <E> Iterable<E> map(final Class<? extends E> clazz) {
