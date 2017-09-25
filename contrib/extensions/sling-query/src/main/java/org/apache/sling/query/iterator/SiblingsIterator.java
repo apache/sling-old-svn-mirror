@@ -21,8 +21,8 @@ package org.apache.sling.query.iterator;
 
 import java.util.Iterator;
 import java.util.ListIterator;
+import java.util.function.Predicate;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.util.IteratorUtils;
 import org.apache.sling.query.util.LazyList;
@@ -54,7 +54,7 @@ public class SiblingsIterator<T> extends AbstractIterator<T> {
 		}
 		while (type.canAdvance(siblings)) {
 			T resource = type.advance(siblings);
-			if (until != null && until.accepts(resource)) {
+			if (until != null && until.test(resource)) {
 				finished = true;
 				return null;
 			}

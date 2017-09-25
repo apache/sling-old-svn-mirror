@@ -19,9 +19,10 @@
 
 package org.apache.sling.query.predicate;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.util.LazyList;
+
+import java.util.function.Predicate;
 
 public class IterableContainsPredicate<T> implements Predicate<T> {
 
@@ -35,7 +36,7 @@ public class IterableContainsPredicate<T> implements Predicate<T> {
 	}
 
 	@Override
-	public boolean accepts(T element) {
+	public boolean test(T element) {
 		for (T t : iterable) {
 			if (provider.sameElement(t, element)) {
 				return true;

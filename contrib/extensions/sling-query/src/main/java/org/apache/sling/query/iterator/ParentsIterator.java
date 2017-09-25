@@ -19,8 +19,9 @@
 
 package org.apache.sling.query.iterator;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.internal.TreeProvider;
+
+import java.util.function.Predicate;
 
 public class ParentsIterator<T> extends AbstractIterator<T> {
 
@@ -47,7 +48,7 @@ public class ParentsIterator<T> extends AbstractIterator<T> {
 			return null;
 		}
 
-		if (until != null && until.accepts(currentResource)) {
+		if (until != null && until.test(currentResource)) {
 			return null;
 		}
 

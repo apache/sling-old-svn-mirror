@@ -36,7 +36,7 @@ public class UniqueFunction<T> implements IteratorToIteratorFunction<T> {
 
 	@Override
 	public Iterator<Option<T>> apply(Iterator<Option<T>> input) {
-		return new UniqueIterator<T>(input, treeProvider);
+		return new UniqueIterator<>(input, treeProvider);
 	}
 
 }

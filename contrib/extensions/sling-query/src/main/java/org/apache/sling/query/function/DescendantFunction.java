@@ -39,7 +39,7 @@ public class DescendantFunction<T> implements IteratorToIteratorFunction<T> {
 
 	@Override
 	public Iterator<Option<T>> apply(Iterator<Option<T>> input) {
-		return new DescendantsIterator<T>(input, descendants.iterator(), provider);
+		return new DescendantsIterator<>(input, descendants.iterator(), provider);
 	}
 
 }

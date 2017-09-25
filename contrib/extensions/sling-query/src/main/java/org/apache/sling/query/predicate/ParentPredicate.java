@@ -19,8 +19,9 @@
 
 package org.apache.sling.query.predicate;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.internal.TreeProvider;
+
+import java.util.function.Predicate;
 
 public class ParentPredicate<T> implements Predicate<T> {
 
@@ -31,7 +32,7 @@ public class ParentPredicate<T> implements Predicate<T> {
 	}
 
 	@Override
-	public boolean accepts(T resource) {
+	public boolean test(T resource) {
 		return provider.listChildren(resource).hasNext();
 	}
 

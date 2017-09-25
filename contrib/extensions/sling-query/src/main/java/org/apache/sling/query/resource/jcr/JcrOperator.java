@@ -59,7 +59,7 @@ public enum JcrOperator {
 
 	private final String operator;
 
-	private JcrOperator(String operator) {
+	JcrOperator(String operator) {
 		this.operator = operator;
 	}
 

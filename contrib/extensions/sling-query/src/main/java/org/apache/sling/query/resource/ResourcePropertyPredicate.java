@@ -20,9 +20,10 @@
 package org.apache.sling.query.resource;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.predicate.SelectorOperator;
 import org.apache.sling.query.selector.parser.Attribute;
+
+import java.util.function.Predicate;
 
 public class ResourcePropertyPredicate implements Predicate<Resource> {
 	private final String key;
@@ -38,7 +39,7 @@ public class ResourcePropertyPredicate implements Predicate<Resource> {
 	}
 
 	@Override
-	public boolean accepts(Resource resource) {
+	public boolean test(Resource resource) {
 		Resource property = resource.getChild(key);
 		if (property == null) {
 			return false;

@@ -20,8 +20,8 @@
 package org.apache.sling.query.function;
 
 import java.util.Iterator;
+import java.util.function.Predicate;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.internal.ElementToIteratorFunction;
 import org.apache.sling.query.api.internal.TreeProvider;
 import org.apache.sling.query.util.IteratorUtils;
@@ -41,7 +41,7 @@ public class ClosestFunction<T> implements ElementToIteratorFunction<T> {
 	public Iterator<T> apply(T resource) {
 		T current = resource;
 		while (current != null) {
-			if (predicate.accepts(current)) {
+			if (predicate.test(current)) {
 				return IteratorUtils.singleElementIterator(current);
 			}
 			current = provider.getParent(current);

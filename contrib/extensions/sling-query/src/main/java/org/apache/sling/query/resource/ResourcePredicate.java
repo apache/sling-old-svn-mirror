@@ -21,13 +21,13 @@ package org.apache.sling.query.resource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.resource.jcr.JcrTypeResolver;
 import org.apache.sling.query.selector.parser.Attribute;
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ public class ResourcePredicate implements Predicate<Resource> {
 			JcrTypeResolver typeResolver) {
 		this.resourceType = resourceType;
 		this.resourceName = resourceName;
-		this.subPredicates = new ArrayList<Predicate<Resource>>();
+		this.subPredicates = new ArrayList<>();
 		for (Attribute a : attributes) {
 			subPredicates.add(new ResourcePropertyPredicate(a));
 		}
@@ -57,7 +57,7 @@ public class ResourcePredicate implements Predicate<Resource> {
 	}
 
 	@Override
-	public boolean accepts(Resource resource) {
+	public boolean test(Resource resource) {
 		if (StringUtils.isNotBlank(resourceName) && !resource.getName().equals(resourceName)) {
 			return false;
 		}
@@ -65,7 +65,7 @@ public class ResourcePredicate implements Predicate<Resource> {
 			return false;
 		}
 		for (Predicate<Resource> predicate : subPredicates) {
-			if (!predicate.accepts(resource)) {
+			if (!predicate.test(resource)) {
 				return false;
 			}
 		}

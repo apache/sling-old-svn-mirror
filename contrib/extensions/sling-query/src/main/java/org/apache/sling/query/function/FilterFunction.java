@@ -20,8 +20,8 @@
 package org.apache.sling.query.function;
 
 import java.util.Iterator;
+import java.util.function.Predicate;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
 import org.apache.sling.query.api.internal.Option;
 import org.apache.sling.query.iterator.FilteringIterator;
@@ -36,7 +36,7 @@ public class FilterFunction<T> implements IteratorToIteratorFunction<T> {
 
 	@Override
 	public Iterator<Option<T>> apply(Iterator<Option<T>> input) {
-		return new FilteringIterator<T>(input, predicate);
+		return new FilteringIterator<>(input, predicate);
 	}
 
 }

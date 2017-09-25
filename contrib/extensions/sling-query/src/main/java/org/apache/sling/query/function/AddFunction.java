@@ -37,7 +37,7 @@ public class AddFunction<T> implements IteratorToIteratorFunction<T> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Iterator<Option<T>> apply(Iterator<Option<T>> input) {
-		return new MergingIterator<Option<T>>(input, new OptionDecoratingIterator<T>(iterable.iterator()));
+		return new MergingIterator<>(input, new OptionDecoratingIterator<>(iterable.iterator()));
 	}
 
 }

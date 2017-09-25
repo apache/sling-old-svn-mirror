@@ -19,19 +19,14 @@
 
 package org.apache.sling.query.predicate;
 
-import org.apache.sling.query.api.Predicate;
+import java.util.function.Predicate;
 
 public class RejectingPredicate<T> implements Predicate<T> {
 
 	private final Predicate<T> predicate;
 
 	public RejectingPredicate() {
-		this(new Predicate<T>() {
-			@Override
-			public boolean accepts(T resource) {
-				return true;
-			}
-		});
+		this(resource -> true);
 	}
 
 	public RejectingPredicate(Predicate<T> predicate) {
@@ -39,7 +34,7 @@ public class RejectingPredicate<T> implements Predicate<T> {
 	}
 
 	@Override
-	public boolean accepts(T value) {
-		return !predicate.accepts(value);
+	public boolean test(T value) {
+		return !predicate.test(value);
 	}
 }
