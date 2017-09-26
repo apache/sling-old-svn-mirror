@@ -18,6 +18,7 @@
 package org.apache.sling.hc.core.impl;
 
 import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +36,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.Result.Status;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 import org.apache.sling.hc.api.execution.HealthCheckSelector;
@@ -76,11 +78,19 @@ public class CompositeHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private static final boolean DEFAULT_COMBINE_TAGS_WITH_OR = false;
+
     @Property(unbounded=PropertyUnbounded.ARRAY,
               label="Filter Tags",
               description="Tags used to select which health checks the composite health check executes.")
     static final String PROP_FILTER_TAGS = "filter.tags";
     private String [] filterTags;
+
+    @Property(boolValue = DEFAULT_COMBINE_TAGS_WITH_OR,
+            label="Combine Tags With Or",
+            description="Tags used to select which health checks the composite health check executes.")
+    static final String PROP_COMBINE_TAGS_WITH_OR = "filter.combineTagsWithOr";
+    private boolean combineTagsWithOr;
 
 
     @Reference
@@ -97,8 +107,10 @@ public class CompositeHealthCheck implements HealthCheck {
         componentContext = ctx;
         healthCheckFilter = new HealthCheckFilter(bundleContext);
 
-        filterTags = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_FILTER_TAGS), new String[] {});
-        log.debug("Activated, will select HealthCheck having tags {}", Arrays.asList(filterTags));
+        final Dictionary properties = ctx.getProperties();
+        filterTags = PropertiesUtil.toStringArray(properties.get(PROP_FILTER_TAGS), new String[] {});
+        combineTagsWithOr = PropertiesUtil.toBoolean(properties.get(PROP_COMBINE_TAGS_WITH_OR), DEFAULT_COMBINE_TAGS_WITH_OR);
+        log.debug("Activated, will select HealthCheck having tags {} {}", Arrays.asList(filterTags), combineTagsWithOr ? "using OR" : "using AND");
     }
 
     @Deactivate
@@ -119,7 +131,9 @@ public class CompositeHealthCheck implements HealthCheck {
         }
 
         FormattingResultLog resultLog = new FormattingResultLog();
-        List<HealthCheckExecutionResult> executionResults = healthCheckExecutor.execute(HealthCheckSelector.tags(filterTags));
+        HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
+        options.setCombineTagsWithOr(combineTagsWithOr);
+        List<HealthCheckExecutionResult> executionResults = healthCheckExecutor.execute(HealthCheckSelector.tags(filterTags), options);
         resultLog.debug("Executing {} HealthChecks selected by tags {}", executionResults.size(), Arrays.asList(filterTags));
         result = new CompositeResult(resultLog, executionResults);
 
@@ -156,7 +170,7 @@ public class CompositeHealthCheck implements HealthCheck {
         }
 
         // check each sub composite check
-        ServiceReference[] hcRefsOfCompositeCheck = healthCheckFilter.getHealthCheckServiceReferences(HealthCheckSelector.tags(tagsForIncludedChecksArr));
+        ServiceReference[] hcRefsOfCompositeCheck = healthCheckFilter.getHealthCheckServiceReferences(HealthCheckSelector.tags(tagsForIncludedChecksArr), combineTagsWithOr);
         for (ServiceReference hcRefOfCompositeCheck : hcRefsOfCompositeCheck) {
             if (CompositeHealthCheck.class.getName().equals(hcRefOfCompositeCheck.getProperty(ComponentConstants.COMPONENT_NAME))) {
                 log.debug("Checking sub composite HC {}, {}", hcRefOfCompositeCheck, hcRefOfCompositeCheck.getProperty(ComponentConstants.COMPONENT_NAME));
@@ -180,6 +194,10 @@ public class CompositeHealthCheck implements HealthCheck {
 
     void setFilterTags(String[] filterTags) {
         this.filterTags = filterTags;
+    }
+
+    void setCombineTagsWithOr(boolean combineTagsWithOr) {
+        this.combineTagsWithOr = combineTagsWithOr;
     }
 
     void setHealthCheckExecutor(HealthCheckExecutor healthCheckExecutor) {

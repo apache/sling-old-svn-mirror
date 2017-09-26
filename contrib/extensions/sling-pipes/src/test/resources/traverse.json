@@ -1,0 +1,88 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "tree":{
+    "jcr:primaryType":"nt:unstructured",
+    "jcr:description":"this tree contains fruits and vegetables",
+    "jcr:title":"test content for traverse",
+    "fruits":{
+      "jcr:primaryType":"nt:unstructured",
+      "apple":{
+        "jcr:primaryType":"nt:unstructured",
+        "color":"green"
+      },
+      "banana":{
+        "jcr:primaryType":"nt:unstructured",
+        "color":"yellow"
+      }
+    },
+    "vegetables":{
+      "jcr:primaryType":"nt:unstructured",
+      "leek":{
+        "jcr:primaryType":"nt:unstructured",
+        "color":"green"
+      },
+      "carrot":{
+        "jcr:primaryType":"nt:unstructured",
+        "color":"orange"
+      }
+    }
+  },
+  "slim":{
+    "jcr:primaryType":"nt:unstructured",
+    "tree":{
+      "jcr:primaryType":"nt:unstructured",
+      "test":{
+        "jcr:primaryType":"nt:unstructured"
+      }
+    }
+  },
+  "pipes":{
+    "jcr:primaryType":"nt:unstructured",
+    "default" : {
+      "jcr:primaryType":"nt:unstructured",
+      "jcr:description":"should be depth first, node visit",
+      "sling:resourceType":"slingPipes/traverse",
+      "path":"/content/traverse/tree"
+    },
+    "breadth" : {
+      "jcr:primaryType":"nt:unstructured",
+      "jcr:description":"should be breadth first, node visit",
+      "sling:resourceType":"slingPipes/traverse",
+      "path":"/content/traverse/tree",
+      "breadthFirst": true
+    },
+    "properties" : {
+      "jcr:primaryType":"nt:unstructured",
+      "jcr:description":"should be visiting tree's white listed properties",
+      "sling:resourceType":"slingPipes/traverse",
+      "path":"/content/traverse/tree",
+      "properties": true
+    },
+    "whiteListProperties" : {
+      "jcr:primaryType":"nt:unstructured",
+      "jcr:description":"should be visiting tree's white listed properties",
+      "sling:resourceType":"slingPipes/traverse",
+      "path":"/content/traverse/tree",
+      "properties": true,
+      "nameGlobs":"[color]"
+    },
+    "depthLimit" : {
+      "jcr:primaryType":"nt:unstructured",
+      "jcr:description":"should stop to configured level",
+      "sling:resourceType":"slingPipes/traverse",
+      "path":"/content/traverse/tree",
+      "depth": 1
+    },
+    "singleton" : {
+      "jcr:primaryType":"nt:unstructured",
+      "jcr:description":"should contain one and only one element",
+      "sling:resourceType":"slingPipes/traverse",
+      "path":"/content/traverse/tree/fruits/apple"
+    },
+    "slim": {
+      "jcr:primaryType":"nt:unstructured",
+      "sling:resourceType":"slingPipes/traverse",
+      "path":"/content/traverse/slim"
+    }
+  }
+}

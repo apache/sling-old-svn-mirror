@@ -36,7 +36,7 @@ import java.util.Set;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -52,13 +52,7 @@ import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
-import org.apache.sling.pipes.BasePipe;
-import org.apache.sling.pipes.ContainerPipe;
-import org.apache.sling.pipes.OutputWriter;
-import org.apache.sling.pipes.Pipe;
-import org.apache.sling.pipes.PipeBindings;
-import org.apache.sling.pipes.Plumber;
-import org.apache.sling.pipes.ReferencePipe;
+import org.apache.sling.pipes.*;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -124,7 +118,8 @@ public class PlumberImpl implements Plumber, JobConsumer {
         registerPipe(PathPipe.RESOURCE_TYPE, PathPipe.class);
         registerPipe(FilterPipe.RESOURCE_TYPE, FilterPipe.class);
         registerPipe(NotPipe.RESOURCE_TYPE, NotPipe.class);
-
+        registerPipe(TraversePipe.RESOURCE_TYPE, TraversePipe.class);
+        registerPipe(CsvPipe.RESOURCE_TYPE, CsvPipe.class);
     }
 
     @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
@@ -216,11 +211,11 @@ public class PlumberImpl implements Plumber, JobConsumer {
 
     /**
      * Persists pipe change if big enough, or ended, and eventually distribute changes
-     * @param resolver
-     * @param pipe
-     * @param paths
+     * @param resolver resolver to use
+     * @param pipe pipe at the origin of the changes,
+     * @param paths paths that have been changed,
      * @param currentResource if running, null if ended
-     * @throws PersistenceException
+     * @throws PersistenceException in case save fails
      */
     protected void persist(ResourceResolver resolver, Pipe pipe, Set<String> paths, Resource currentResource) throws Exception {
         if  (pipe.modifiesContent() && resolver.hasChanges() && !pipe.isDryRun()){
@@ -243,10 +238,16 @@ public class PlumberImpl implements Plumber, JobConsumer {
         registry.put(type, pipeClass);
     }
 
+    @Override
+    public boolean isTypeRegistered(String type) {
+        return registry.containsKey(type);
+    }
+
     /**
-     * writes the status of the pipe
-     * @param pipe
-     * @param status
+     * writes the status of the pipe, also update <code>PN_STATUS_MODIFIED</code> date
+     * @param pipe target pipe
+     * @param status status to write
+     * @throws RepositoryException in case write goes wrong
      */
     protected void writeStatus(Pipe pipe, String status) throws RepositoryException {
         if (StringUtils.isNotBlank(status)){
@@ -268,6 +269,12 @@ public class PlumberImpl implements Plumber, JobConsumer {
             }
         }
         return STATUS_FINISHED;
+    }
+
+    @Override
+    public PipeBuilder newPipe(ResourceResolver resolver) {
+        PipeBuilder builder = new PipeBuilderImpl(resolver, this);
+        return builder;
     }
 
     @Override

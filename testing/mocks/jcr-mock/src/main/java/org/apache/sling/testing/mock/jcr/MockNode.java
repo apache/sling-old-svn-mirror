@@ -42,6 +42,7 @@ import javax.jcr.version.VersionHistory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.commons.ItemNameMatcher;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
 
@@ -106,6 +107,18 @@ class MockNode extends AbstractItem implements Node {
     }
 
     @Override
+    public NodeIterator getNodes(final String[] nameGlobs) throws RepositoryException {
+        RangeIterator items = getMockedSession().listChildren(getPath(), new ItemFilter() {
+            @Override
+            public boolean accept(final ItemData item) throws RepositoryException {
+                return item.isNode() && ItemNameMatcher.matches(item.getName(), nameGlobs);
+            }
+        });
+        return new NodeIteratorAdapter(items, items.getSize());
+    }
+
+
+    @Override
     public PropertyIterator getProperties() throws RepositoryException {
         RangeIterator items = getMockedSession().listChildren(getPath(), new ItemFilter() {
             @Override
@@ -123,6 +136,17 @@ class MockNode extends AbstractItem implements Node {
             @Override
             public boolean accept(final ItemData item) throws RepositoryException {
                 return item.isProperty() && pattern.matcher(item.getName()).matches();
+            }
+        });
+        return new PropertyIteratorAdapter(items, items.getSize());
+    }
+
+    @Override
+    public PropertyIterator getProperties(final String[] nameGlobs) throws RepositoryException {
+        RangeIterator items = getMockedSession().listChildren(getPath(), new ItemFilter() {
+            @Override
+            public boolean accept(final ItemData item) throws RepositoryException {
+            return item.isProperty() && ItemNameMatcher.matches(item.getName(), nameGlobs);
             }
         });
         return new PropertyIteratorAdapter(items, items.getSize());
@@ -491,16 +515,6 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public String[] getAllowedLifecycleTransistions() throws RepositoryException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public NodeIterator getNodes(final String[] nameGlobs) throws RepositoryException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public PropertyIterator getProperties(final String[] nameGlobs) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

@@ -42,7 +42,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -56,6 +56,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.osgi.RankedServices;
@@ -123,7 +124,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     private static class DisposalCallbackRegistryImpl implements DisposalCallbackRegistry {
 
-        private List<DisposalCallback> callbacks = new ArrayList<DisposalCallback>();
+        private List<DisposalCallback> callbacks = new ArrayList<>();
 
         @Override
         public void addDisposalCallback(@Nonnull DisposalCallback callback) {
@@ -173,36 +174,39 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     @Property(label = "Cleanup Job Period", description = "Period at which OSGi service references from ThreadLocals will be cleaned up.", longValue = DEFAULT_CLEANUP_JOB_PERIOD)
     private static final String PROP_CLEANUP_JOB_PERIOD = "cleanup.job.period";
 
-    private final @Nonnull ConcurrentMap<String, RankedServices<Injector>> injectors = new ConcurrentHashMap<String, RankedServices<Injector>>();
-    private final @Nonnull RankedServices<Injector> sortedInjectors = new RankedServices<Injector>();
-    private final @Nonnull ConcurrentMap<Class<? extends ViaProviderType>, ViaProvider> viaProviders = new ConcurrentHashMap<Class<? extends ViaProviderType>, ViaProvider>();
+    private final @Nonnull ConcurrentMap<String, RankedServices<Injector>> injectors = new ConcurrentHashMap<>();
+    private final @Nonnull RankedServices<Injector> sortedInjectors = new RankedServices<>();
+    private final @Nonnull ConcurrentMap<Class<? extends ViaProviderType>, ViaProvider> viaProviders = new ConcurrentHashMap<>();
 
     @Reference(name = "injectAnnotationProcessorFactory", referenceInterface = InjectAnnotationProcessorFactory.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull RankedServices<InjectAnnotationProcessorFactory> injectAnnotationProcessorFactories = new RankedServices<InjectAnnotationProcessorFactory>();
+    private final @Nonnull RankedServices<InjectAnnotationProcessorFactory> injectAnnotationProcessorFactories = new RankedServices<>();
 
     @Reference(name = "injectAnnotationProcessorFactory2", referenceInterface = InjectAnnotationProcessorFactory2.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull RankedServices<InjectAnnotationProcessorFactory2> injectAnnotationProcessorFactories2 = new RankedServices<InjectAnnotationProcessorFactory2>();
+    private final @Nonnull RankedServices<InjectAnnotationProcessorFactory2> injectAnnotationProcessorFactories2 = new RankedServices<>();
 
     @Reference(name = "staticInjectAnnotationProcessorFactory", referenceInterface = StaticInjectAnnotationProcessorFactory.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull RankedServices<StaticInjectAnnotationProcessorFactory> staticInjectAnnotationProcessorFactories = new RankedServices<StaticInjectAnnotationProcessorFactory>();
+    private final @Nonnull RankedServices<StaticInjectAnnotationProcessorFactory> staticInjectAnnotationProcessorFactories = new RankedServices<>();
 
     @Reference(name = "implementationPicker", referenceInterface = ImplementationPicker.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final @Nonnull RankedServices<ImplementationPicker> implementationPickers = new RankedServices<ImplementationPicker>();
-    
+    private final @Nonnull RankedServices<ImplementationPicker> implementationPickers = new RankedServices<>();
+
     // bind the service with the highest priority (if a new one comes in this service gets restarted)
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policyOption=ReferencePolicyOption.GREEDY)
     private ModelValidation modelValidation = null;
 
     @Reference(name = "modelExporter", cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC,
             referenceInterface = ModelExporter.class)
-    private final @Nonnull RankedServices<ModelExporter> modelExporters = new RankedServices<ModelExporter>();
+    private final @Nonnull RankedServices<ModelExporter> modelExporters = new RankedServices<>();
 
     @Reference
     private BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
+
+    @Reference
+    private AdapterManager adapterManager;
 
     ModelPackageBundleListener listener;
 
@@ -217,11 +221,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     private Map<Object, Map<Class, Object>> adapterCache;
 
+    private SlingModelsScriptEngineFactory scriptEngineFactory;
+
     // use a smaller initial capacity than the default as we expect a relatively small number of
     // adapters per adaptable
     private final int INNER_CACHE_INITIAL_CAPACITY = 4;
 
 
+    @Override
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
         Result<AdapterType> result = internalCreateModel(adaptable, type);
         if (!result.wasSuccessful()) {
@@ -281,7 +288,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     /**
-     * 
+     *
      * @param requestedType the adapter type
      * @param adaptable the adaptable
      * @return the implementation type to use for the desired model type or null if there is none registered
@@ -309,7 +316,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         if (threadInvocationCounter.isMaximumReached()) {
             String msg = String.format("Adapting %s to %s failed, too much recursive invocations (>=%s).",
                     adaptable, requestedType, threadInvocationCounter.maxRecursionDepth);
-            return new Result<ModelType>(new ModelClassException(msg));
+            return new Result<>(new ModelClassException(msg));
         }
         threadInvocationCounter.increase();
         try {
@@ -318,7 +325,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
             if (!modelClass.hasModelAnnotation()) {
                 String msg = String.format("Provided Adapter class does not have a Model annotation: %s", modelClass.getType());
-                return new Result<ModelType>(new ModelClassException(msg));
+                return new Result<>(new ModelClassException(msg));
             }
             boolean isAdaptable = false;
 
@@ -329,7 +336,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                 if (adaptableCache != null) {
                     ModelType cachedObject = (ModelType) adaptableCache.get(requestedType);
                     if (cachedObject != null) {
-                        return new Result<ModelType>(cachedObject);
+                        return new Result<>(cachedObject);
                     }
                 }
             }
@@ -342,11 +349,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             }
             if (!isAdaptable) {
                 String msg = String.format("Adaptables (%s) are not acceptable for the model class: %s", StringUtils.join(declaredAdaptable), modelClass.getType());
-                return new Result<ModelType>(new InvalidAdaptableException(msg)); 
+                return new Result<>(new InvalidAdaptableException(msg));
             } else {
                 RuntimeException t = validateModel(adaptable, modelClass.getType(), modelAnnotation);
                 if (t != null) {
-                    return new Result<ModelType>(t);
+                    return new Result<>(t);
                 }
                 if (modelClass.getType().isInterface()) {
                     Result<InvocationHandler> handlerResult = createInvocationHandler(adaptable, modelClass);
@@ -356,15 +363,15 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                         if (modelAnnotation.cache()) {
                             Map<Class, Object> adaptableCache = adapterCache.get(adaptable);
                             if (adaptableCache == null) {
-                                adaptableCache = new ConcurrentHashMap<Class, Object>(INNER_CACHE_INITIAL_CAPACITY);
+                                adaptableCache = new ConcurrentHashMap<>(INNER_CACHE_INITIAL_CAPACITY);
                                 adapterCache.put(adaptable, adaptableCache);
                             }
                             adaptableCache.put(requestedType, model);
                         }
 
-                        result = new Result<ModelType>(model);
+                        result = new Result<>(model);
                     } else {
-                        return new Result<ModelType>(handlerResult.getThrowable());
+                        return new Result<>(handlerResult.getThrowable());
                     }
                 } else {
                     try {
@@ -373,14 +380,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                         if (result.wasSuccessful() && modelAnnotation.cache()) {
                             Map<Class, Object> adaptableCache = adapterCache.get(adaptable);
                             if (adaptableCache == null) {
-                                adaptableCache = new ConcurrentHashMap<Class, Object>(INNER_CACHE_INITIAL_CAPACITY);
+                                adaptableCache = new ConcurrentHashMap<>(INNER_CACHE_INITIAL_CAPACITY);
                                 adapterCache.put(adaptable, adaptableCache);
                             }
                             adaptableCache.put(requestedType, result.getValue());
                         }
                     } catch (Exception e) {
                         String msg = String.format("Unable to create model %s", modelClass.getType());
-                        return new Result<ModelType>(new ModelClassException(msg, e));
+                        return new Result<>(new ModelClassException(msg, e));
                     }
                 }
             }
@@ -389,7 +396,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             threadInvocationCounter.decrease();
         }
     }
-    
+
     private <ModelType> RuntimeException validateModel(Object adaptable, Class<ModelType> modelType, Model modelAnnotation) {
         if (modelAnnotation.validation() != ValidationStrategy.DISABLED) {
             if (modelValidation == null) {
@@ -483,7 +490,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         RuntimeException lastInjectionException = null;
         if (injectionAdaptable != null) {
-            
+
             // prepare the set of injectors to process. if a source is given only use injectors with this name.
             final RankedServices<Injector> injectorsToProcess;
             if (StringUtils.isEmpty(source)) {
@@ -495,7 +502,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                     throw new IllegalArgumentException("No Sling Models Injector registered for source '" + source + "'.");
                 }
             }
-            
+
             // find the right injector
             for (Injector injector : injectorsToProcess) {
                 if (name != null || injector instanceof AcceptsNullName) {
@@ -564,14 +571,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     private <ModelType> Result<InvocationHandler> createInvocationHandler(final Object adaptable, final ModelClass<ModelType> modelClass) {
         InjectableMethod[] injectableMethods = modelClass.getInjectableMethods();
-        final Map<Method, Object> methods = new HashMap<Method, Object>();
+        final Map<Method, Object> methods = new HashMap<>();
         SetMethodsCallback callback = new SetMethodsCallback(methods);
         MapBackedInvocationHandler handler = new MapBackedInvocationHandler(methods);
 
         DisposalCallbackRegistryImpl registry = new DisposalCallbackRegistryImpl();
         registerCallbackRegistry(handler, registry);
 
-        final Map<ValuePreparer, Object> preparedValues = new HashMap<ValuePreparer, Object>(VALUE_PREPARERS_COUNT);
+        final Map<ValuePreparer, Object> preparedValues = new HashMap<>(VALUE_PREPARERS_COUNT);
 
         MissingElementsException missingElements = new MissingElementsException("Could not create all mandatory methods for interface of model " + modelClass);
         for (InjectableMethod method : injectableMethods) {
@@ -582,13 +589,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
         registry.seal();
         if (!missingElements.isEmpty()) {
-            return new Result<InvocationHandler>(missingElements);
+            return new Result<>(missingElements);
         }
         return new Result<InvocationHandler>(handler);
     }
 
     private void registerCallbackRegistry(Object object, DisposalCallbackRegistryImpl registry) {
-        PhantomReference<Object> reference = new PhantomReference<Object>(object, queue);
+        PhantomReference<Object> reference = new PhantomReference<>(object, queue);
         disposalCallbacks.put(reference, registry);
     }
 
@@ -598,12 +605,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         ModelClassConstructor<ModelType> constructorToUse = getBestMatchingConstructor(adaptable, modelClass);
         if (constructorToUse == null) {
-            return new Result<ModelType>(new ModelClassException("Unable to find a useable constructor for model " + modelClass.getType()));
+            return new Result<>(new ModelClassException("Unable to find a useable constructor for model " + modelClass.getType()));
         }
 
-        final Map<ValuePreparer, Object> preparedValues = new HashMap<ValuePreparer, Object>(VALUE_PREPARERS_COUNT);
+        final Map<ValuePreparer, Object> preparedValues = new HashMap<>(VALUE_PREPARERS_COUNT);
 
-        final ModelType object;
+        ModelType object;
         if (constructorToUse.getConstructor().getParameterTypes().length == 0) {
             // no parameters for constructor injection? instantiate it right away
             object = constructorToUse.getConstructor().newInstance();
@@ -646,16 +653,16 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         registry.seal();
         if (!missingElements.isEmpty()) {
-            return new Result<ModelType>(missingElements);
+            return new Result<>(missingElements);
         }
         try {
-            invokePostConstruct(object);
+            object = invokePostConstruct(object);
         } catch (InvocationTargetException e) {
-            return new Result<ModelType>(new PostConstructException("Post-construct method has thrown an exception for model " + modelClass.getType(), e.getCause()));
+            return new Result<>(new PostConstructException("Post-construct method has thrown an exception for model " + modelClass.getType(), e.getCause()));
         } catch (IllegalAccessException e) {
             new Result<ModelType>(new ModelClassException("Could not call post-construct method for model " + modelClass.getType(), e));
         }
-        return new Result<ModelType>(object);
+        return new Result<>(object);
     }
 
     /**
@@ -695,7 +702,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             throws InstantiationException, InvocationTargetException, IllegalAccessException {
         ConstructorParameter[] parameters = constructor.getConstructorParameters();
 
-        List<Object> paramValues = new ArrayList<Object>(Arrays.asList(new Object[parameters.length]));
+        List<Object> paramValues = new ArrayList<>(Arrays.asList(new Object[parameters.length]));
         InjectCallback callback = new SetConstructorParameterCallback(paramValues);
 
         MissingElementsException missingElements = new MissingElementsException("Required constructor parameters were not able to be injected on model " + modelClass.getType());
@@ -706,9 +713,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             }
         }
         if (!missingElements.isEmpty()) {
-            return new Result<ModelType>(missingElements);
+            return new Result<>(missingElements);
         }
-        return new Result<ModelType>(constructor.getConstructor().newInstance(paramValues.toArray(new Object[paramValues.size()])));
+        return new Result<>(constructor.getConstructor().newInstance(paramValues.toArray(new Object[paramValues.size()])));
     }
 
     private Result<Boolean> injectDefaultValue(InjectableElement point, InjectAnnotationProcessor processor,
@@ -717,9 +724,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             if (processor.hasDefault()) {
                 RuntimeException t = callback.inject(point, processor.getDefault());
                 if (t == null) {
-                    return new Result<Boolean>(Boolean.TRUE);
+                    return new Result<>(Boolean.TRUE);
                 } else {
-                    return new Result<Boolean>(t);
+                    return new Result<>(t);
                 }
             }
         }
@@ -728,20 +735,20 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         if (value != null) {
             RuntimeException t = callback.inject(point, value);
             if (t == null) {
-                return new Result<Boolean>(Boolean.TRUE);
+                return new Result<>(Boolean.TRUE);
             } else {
-                return new Result<Boolean>(t);
+                return new Result<>(t);
             }
         }
         else {
-            return new Result<Boolean>(Boolean.FALSE);
+            return new Result<>(Boolean.FALSE);
         }
     }
 
     /**
      * Injects the default initial value for the given primitive class which
      * cannot be null (e.g. int = 0, boolean = false).
-     * 
+     *
      * @param point Annotated element
      * @param callback Inject callback
      */
@@ -771,7 +778,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             return new ModelClassException(String.format("Unknown primitive type %s", primitiveType.toString()));
         }
     }
-    
+
     private Object getAdaptable(Object adaptable, InjectableElement point, InjectAnnotationProcessor processor) {
         String viaValue = null;
         Class<? extends ViaProviderType> viaProviderType = null;
@@ -823,9 +830,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         return true;
     }
 
-    private void invokePostConstruct(Object object) throws InvocationTargetException, IllegalAccessException {
+    private <ModelType> ModelType invokePostConstruct(ModelType object) throws InvocationTargetException, IllegalAccessException {
         Class<?> clazz = object.getClass();
-        List<Method> postConstructMethods = new ArrayList<Method>();
+        List<Method> postConstructMethods = new ArrayList<>();
         while (clazz != null) {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method method : methods) {
@@ -842,13 +849,18 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                 if (!accessible) {
                     method.setAccessible(true);
                 }
-                method.invoke(object);
+                Object result = method.invoke(object);
+                if (result instanceof Boolean && !((Boolean) result).booleanValue()) {
+                    log.debug("PostConstruct method {}.{} returned false. Returning null model.", method.getDeclaringClass().getName(), method.getName());
+                    return null;
+                }
             } finally {
                 if (!accessible) {
                     method.setAccessible(false);
                 }
             }
         }
+        return object;
     }
 
     private RuntimeException setField(InjectableField injectableField, Object createdObject, Object value) {
@@ -893,8 +905,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                 if (value instanceof Collection &&
                         (type.equals(Collection.class) || type.equals(List.class)) &&
                         parameterizedType.getActualTypeArguments().length == 1) {
-                    
-                    List<Object> result = new ArrayList<Object>();
+
+                    List<Object> result = new ArrayList<>();
                     for (Object valueObject : (Collection<?>) value) {
                         Result<Object> singleValueResult = adapt(valueObject, (Class<?>) parameterizedType.getActualTypeArguments()[0], true);
                         if (singleValueResult.wasSuccessful()) {
@@ -905,15 +917,15 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                     }
                     adaptedValue = result;
                 } else {
-                    return new Result<Object>(new ModelClassException(String.format("%s is neither a parameterized Collection or List",
+                    return new Result<>(new ModelClassException(String.format("%s is neither a parameterized Collection or List",
                         type)));
                 }
             } else {
                 return adapt(value, type, false);
             }
-            return new Result<Object>(adaptedValue);
+            return new Result<>(adaptedValue);
         } else {
-            return new Result<Object>(value);
+            return new Result<>(value);
         }
     }
 
@@ -932,20 +944,20 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             if (result.wasSuccessful()) {
                 adaptedValue = result.getValue();
             } else {
-                return new Result<Object>(new ModelClassException(
+                return new Result<>(new ModelClassException(
                     String.format("Could not create model from %s: %s%s", value.getClass(), result.getThrowable().getMessage(), messageSuffix),
                     result.getThrowable()));
             }
         } else if (value instanceof Adaptable) {
             adaptedValue = ((Adaptable) value).adaptTo(type);
             if (adaptedValue == null) {
-                return new Result<Object>(new ModelClassException(String.format("Could not adapt from %s to %s%s", value.getClass(), type, messageSuffix)));
+                return new Result<>(new ModelClassException(String.format("Could not adapt from %s to %s%s", value.getClass(), type, messageSuffix)));
             }
         }
         if (adaptedValue != null) {
-            return new Result<Object>(adaptedValue);
+            return new Result<>(adaptedValue);
         } else {
-            return new Result<Object>(new ModelClassException(
+            return new Result<>(new ModelClassException(
                     String.format("Could not adapt from %s to %s%s, because this class is not adaptable!", value.getClass(), type, messageSuffix)));
         }
     }
@@ -1011,9 +1023,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         this.adapterCache = Collections.synchronizedMap(new WeakHashMap<Object, Map<Class, Object>>());
 
         BundleContext bundleContext = ctx.getBundleContext();
-        this.queue = new ReferenceQueue<Object>();
-        this.disposalCallbacks = new ConcurrentHashMap<java.lang.ref.Reference<Object>, DisposalCallbackRegistryImpl>();
-        Hashtable<Object, Object> properties = new Hashtable<Object, Object>();
+        this.queue = new ReferenceQueue<>();
+        this.disposalCallbacks = new ConcurrentHashMap<>();
+        Hashtable<Object, Object> properties = new Hashtable<>();
         properties.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
         properties.put(Constants.SERVICE_DESCRIPTION, "Sling Models OSGi Service Disposal Job");
         properties.put("scheduler.name", "Sling Models OSGi Service Disposal Job");
@@ -1022,9 +1034,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         this.jobRegistration = bundleContext.registerService(Runnable.class.getName(), this, properties);
 
-        this.listener = new ModelPackageBundleListener(ctx.getBundleContext(), this, this.adapterImplementations, bindingsValuesProvidersByContext);
+        this.scriptEngineFactory = new SlingModelsScriptEngineFactory(bundleContext.getBundle());
+        this.listener = new ModelPackageBundleListener(ctx.getBundleContext(), this, this.adapterImplementations, bindingsValuesProvidersByContext, scriptEngineFactory);
 
-        Hashtable<Object, Object> printerProps = new Hashtable<Object, Object>();
+        Hashtable<Object, Object> printerProps = new Hashtable<>();
         printerProps.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
         printerProps.put(Constants.SERVICE_DESCRIPTION, "Sling Models Configuration Printer");
         printerProps.put("felix.webconsole.label", "slingmodels");
@@ -1052,7 +1065,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     protected void bindInjector(final Injector injector, final Map<String, Object> props) {
-        RankedServices<Injector> newRankedServices = new RankedServices<Injector>();
+        RankedServices<Injector> newRankedServices = new RankedServices<>();
         RankedServices<Injector> injectorsPerInjectorName = injectors.putIfAbsent(injector.getName(), newRankedServices);
         if (injectorsPerInjectorName == null) {
             injectorsPerInjectorName = newRankedServices;
@@ -1202,8 +1215,6 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             if (exporter.getName().equals(name) && exporter.isSupported(targetClass)) {
                 T resultObject = exporter.export(model, targetClass, options);
                 return resultObject;
-            } else {
-                throw new MissingExporterException(name, targetClass);
             }
         }
         throw new MissingExporterException(name, targetClass);
@@ -1231,20 +1242,18 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         return handleAndExportResult(result, name, targetClass, options);
     }
 
-    private <T> T handleAndExportResult(Result<?> result, String name, Class<T> targetClass, Map<String, String> options) throws ExportException, MissingExporterException {
+    protected <T> T handleAndExportResult(Result<?> result, String name, Class<T> targetClass, Map<String, String> options) throws ExportException, MissingExporterException {
         if (result.wasSuccessful()) {
-            for (ModelExporter exporter : modelExporters) {
-                if (exporter.getName().equals(name) && exporter.isSupported(targetClass)) {
-                    T resultObject = exporter.export(result.getValue(), targetClass, options);
-                    return resultObject;
-                } else {
-                    throw new MissingExporterException(name, targetClass);
-                }
-            }
-            throw new MissingExporterException(name, targetClass);
+            return exportModel(result.getValue(), name, targetClass, options);
         } else {
             throw result.getThrowable();
         }
+    }
+
+    @Override
+    public <T> T getModelFromWrappedRequest(@Nonnull SlingHttpServletRequest request, @Nonnull Resource resource, @Nonnull Class<T> targetClass) {
+        return new ResourceOverridingRequestWrapper(request, resource, adapterManager,
+                scriptEngineFactory, bindingsValuesProvidersByContext).adaptTo(targetClass);
     }
 
 }

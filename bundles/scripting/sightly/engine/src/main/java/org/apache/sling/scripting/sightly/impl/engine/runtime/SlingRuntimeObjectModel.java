@@ -18,37 +18,19 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.runtime;
 
-import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.scripting.sightly.Record;
 import org.apache.sling.scripting.sightly.render.AbstractRuntimeObjectModel;
 
 public class SlingRuntimeObjectModel extends AbstractRuntimeObjectModel {
 
+    @Override
     protected Object getProperty(Object target, Object propertyObj) {
-        String property = toString(propertyObj);
-        if (StringUtils.isEmpty(property)) {
-            throw new IllegalArgumentException("Invalid property name");
-        }
-        if (target == null) {
-            return null;
-        }
-        Object result = null;
-        if (target instanceof Map) {
-            result = getMapProperty((Map) target, property);
-        }
-        if (result == null && target instanceof Record) {
-            result = ((Record) target).getProperty(property);
-        }
-        if (result == null) {
-            result = getObjectProperty(target, property);
-        }
+        Object result = super.getProperty(target, propertyObj);
         if (result == null && target instanceof Adaptable) {
             ValueMap valueMap = ((Adaptable) target).adaptTo(ValueMap.class);
             if (valueMap != null) {
+                String property = toString(propertyObj);
                 result = valueMap.get(property);
             }
         }

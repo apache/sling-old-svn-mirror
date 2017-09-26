@@ -118,7 +118,7 @@ public final class FileResourceMapper implements FsResourceMapper {
             @Override
             public Object transform(Object input) {
                 File file = (File)input;
-                String path = parentPath + "/" + file.getName();
+                String path = parentPath + "/" + Escape.fileToResourceName(file.getName());
                 return new FileResource(resolver, path, file, contentFileExtensions, contentFileCache);
             }
         });
@@ -137,7 +137,7 @@ public final class FileResourceMapper implements FsResourceMapper {
             return providerFile;
         }
         if (path.startsWith(providerRootPrefix)) {
-            String relPath = path.substring(providerRootPrefix.length());
+            String relPath = Escape.resourceToFileName(path.substring(providerRootPrefix.length()));
             File file = new File(providerFile, relPath);
             if (file.exists() && !contentFileExtensions.matchesSuffix(file)) {
                 return file;

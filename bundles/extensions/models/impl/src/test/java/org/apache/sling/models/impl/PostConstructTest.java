@@ -18,6 +18,7 @@ package org.apache.sling.models.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -26,8 +27,10 @@ import java.util.Hashtable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.factory.PostConstructException;
 import org.apache.sling.models.testmodels.classes.FailingPostConstuctModel;
+import org.apache.sling.models.testmodels.classes.FalsePostConstuctModel;
 import org.apache.sling.models.testmodels.classes.SubClass;
 import org.apache.sling.models.testmodels.classes.SubClassOverriddenPostConstruct;
+import org.apache.sling.models.testmodels.classes.TruePostConstuctModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,7 +59,7 @@ public class PostConstructTest {
         when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
         factory.activate(componentCtx);
         // no injectors are necessary
-        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SubClass.class, SubClassOverriddenPostConstruct.class, FailingPostConstuctModel.class);
+        factory.adapterImplementations.addClassesAsAdapterAndImplementation(SubClass.class, SubClassOverriddenPostConstruct.class, FailingPostConstuctModel.class, FalsePostConstuctModel.class, TruePostConstuctModel.class);
     }
 
     @Test
@@ -77,6 +80,29 @@ public class PostConstructTest {
     public void testPostConstructMethodWhichThrowsException() {
         FailingPostConstuctModel model = factory.getAdapter(resource, FailingPostConstuctModel.class);
         assertNull(model);
+    }
+
+    @Test
+    public void testPostConstructMethodWhichReturnsFalse() {
+        FalsePostConstuctModel model = factory.getAdapter(resource, FalsePostConstuctModel.class);
+        assertNull(model);
+    }
+
+    @Test
+    public void testPostConstructMethodWhichReturnsTrue() {
+        TruePostConstuctModel model = factory.getAdapter(resource, TruePostConstuctModel.class);
+        assertNotNull(model);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testPostConstructMethodWhichReturnsFalseCreateModel() {
+        FalsePostConstuctModel model = factory.createModel(resource, FalsePostConstuctModel.class);
+    }
+
+    @Test
+    public void testPostConstructMethodWhichReturnsTrueCreateModel() {
+        TruePostConstuctModel model = factory.createModel(resource, TruePostConstuctModel.class);
+        assertNotNull(model);
     }
 
     @Test

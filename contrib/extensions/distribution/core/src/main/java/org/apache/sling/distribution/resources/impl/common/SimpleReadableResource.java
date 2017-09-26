@@ -110,7 +110,7 @@ class SimpleReadableResource extends AbstractResource {
         return super.adaptTo(type);
     }
 
-
+    @SuppressWarnings( "unchecked" )
     private <ArrayType> ArrayType convertArray(Class<ArrayType> arrayType, Object[] array) {
         Object[] result = (Object[]) Array.newInstance(arrayType.getComponentType(), array.length);
         for (int i = 0; i < array.length; i++) {
@@ -119,7 +119,7 @@ class SimpleReadableResource extends AbstractResource {
             }
             result[i] = array[i];
         }
-        // TODO is this correct? result = ArrayType[], not ArrayType
+        // when invoking convertArray() method, ArrayType is checked that is an array type
         return (ArrayType) result;
     }
 }

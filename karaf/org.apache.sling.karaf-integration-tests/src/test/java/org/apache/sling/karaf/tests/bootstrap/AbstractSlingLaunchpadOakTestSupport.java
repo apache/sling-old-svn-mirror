@@ -21,16 +21,16 @@ package org.apache.sling.karaf.tests.bootstrap;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Inject;
 import javax.jcr.Credentials;
-import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -43,18 +43,16 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.commons.cnd.CndImporter;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.observation.ResourceChange;
+import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.karaf.testing.KarafTestSupport;
 import org.junit.After;
 import org.junit.Test;
 import org.ops4j.pax.exam.util.Filter;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +90,6 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
 
     // see org.apache.sling.jcr.repository.it.CommonTests
 
-    private final List<String> toDelete = new LinkedList<String>();
     private final AtomicInteger uniqueNameCounter = new AtomicInteger();
     protected static final Integer TEST_SCALE = Integer.getInteger("test.scale", 1);
 
@@ -167,11 +164,6 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
         protected abstract void exec() throws Exception;
     }
 
-    private <ItemType extends Item> ItemType deleteAfterTests(ItemType it) throws RepositoryException {
-        toDelete.add(it.getPath());
-        return it;
-    }
-
     /** Verify that admin can create and retrieve a node of the specified type.
      * @return the path of the test node that was created.
      */
@@ -199,27 +191,6 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
 
     protected String uniqueName(String hint) {
         return hint + "_" + uniqueNameCounter.incrementAndGet() + "_" + System.currentTimeMillis();
-    }
-
-    @After
-    public void deleteTestItems() throws RepositoryException {
-        if(toDelete.isEmpty()) {
-            return;
-
-        }
-
-        final Session s = slingRepository.loginAdministrative(null);
-        try {
-            for(String path : toDelete) {
-                if(s.itemExists(path)) {
-                    s.getItem(path).remove();
-                }
-            }
-            s.save();
-            toDelete.clear();
-        } finally {
-            s.logout();
-        }
     }
 
     @Test
@@ -320,7 +291,7 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
         try {
             final String path = "XPATH_QUERY_" + System.currentTimeMillis();
             final String absPath = "/" + path;
-            final Node n = deleteAfterTests(s.getRootNode().addNode(path));
+            final Node n = s.getRootNode().addNode(path);
             n.addMixin("mix:title");
             s.save();
 
@@ -342,18 +313,12 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
         }
     }
 
-    // TODO: see SLING-4841 why the template method pattern was removed
-    //@Test
-    //public final void checkRepositoryDescriptors() {
-    //    doCheckRepositoryDescriptors();
-    //}
-
     @Test
     public void testSingleValueInputStream() throws RepositoryException {
         Session s = slingRepository.loginAdministrative(null);
         try {
             final String path = getClass().getSimpleName() + System.currentTimeMillis();
-            final Node child = deleteAfterTests(s.getRootNode().addNode(path));
+            final Node child = s.getRootNode().addNode(path);
             final Property p = child.setProperty("foo", "bar");
             s.save();
             assertNotNull(p.getBinary().getStream());
@@ -368,7 +333,7 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
         final Session s = slingRepository.loginAdministrative(null);
         try {
             final String path = getClass().getSimpleName() + System.currentTimeMillis();
-            final Node child = deleteAfterTests(s.getRootNode().addNode(path));
+            final Node child = s.getRootNode().addNode(path);
             final Property p = child.setProperty("foo", new String[] { "bar", "wii " });
             s.save();
             try {
@@ -382,16 +347,19 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
     }
 
     @Test
-    public void testOsgiResourceEvents() throws RepositoryException {
-        final ResourceEventListener listener = new ResourceEventListener();
-        final ServiceRegistration reg = listener.register(bundleContext, SlingConstants.TOPIC_RESOURCE_ADDED);
+    public void testResourceEvents() throws RepositoryException {
+        final AddedResourceChangeListener listener = new AddedResourceChangeListener();
+        final Dictionary<String, Object> properties = new Hashtable<>();
+        properties.put(ResourceChangeListener.PATHS, "/");
+        properties.put(ResourceChangeListener.CHANGES, "ADDED"); // ChangeType.ADDED
+        final ServiceRegistration reg = bundleContext.registerService(ResourceChangeListener.class, listener, properties);
         final Session s = slingRepository.loginAdministrative(null);
         final int nPaths = 2500 * TEST_SCALE;
         final int timeoutMsec = 2 * nPaths;
-        final String prefix = uniqueName("testOsgiResourceEvents");
+        final String prefix = uniqueName("testResourceObservationEvents");
 
         // Create N nodes with a unique name under /
-        // and verify that ResourceEventListener gets an event
+        // and verify that ResourceChangeListener gets notified
         // for each of them
         try {
             for(int i=0; i  < nPaths; i++) {
@@ -399,7 +367,7 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
             }
             s.save();
 
-            logger.info("Added {} nodes, checking what ResourceEventListener got...", nPaths);
+            logger.info("Added {} nodes, checking what ResourceChangeListener got...", nPaths);
             final long timeout = System.currentTimeMillis() + timeoutMsec;
             final Set<String> missing = new HashSet<String>();
             while(System.currentTimeMillis() < timeout) {
@@ -419,7 +387,7 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
 
             if(!missing.isEmpty()) {
                 final String missingStr = missing.size() > 10 ? missing.size() + " paths missing" : missing.toString();
-                fail("OSGi add resource events are missing for "
+                fail("resource added events are missing for "
                     + missing.size() + "/" + nPaths + " paths after "
                     + timeoutMsec + " msec: " + missingStr);
             }
@@ -428,7 +396,7 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
             s.logout();
         }
 
-        logger.info("Successfuly detected OSGi observation events for " + nPaths + " paths");
+        logger.info("Successfully detected resource observation events for " + nPaths + " paths");
     }
 
     @Test
@@ -444,7 +412,6 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
             counter = new JcrEventsCounter();
 
             final Node n = s.getRootNode().addNode(path.substring(1), "sling:MessageEntry");
-            toDelete.add(n.getPath());
             n.setProperty("sling:key", "foo");
             n.setProperty("sling:message", "bar");
             s.save();
@@ -490,43 +457,37 @@ public abstract class AbstractSlingLaunchpadOakTestSupport extends KarafTestSupp
 
     }
 
-    /** Keep track of OSGi events received on a given topic */
-    public class ResourceEventListener implements EventHandler {
+    public class AddedResourceChangeListener implements ResourceChangeListener {
 
-        private final Logger log = LoggerFactory.getLogger(getClass());
-        private final Set<String> paths = new HashSet<String>();
+        private Set<String> paths =  new LinkedHashSet<>();
 
-        ServiceRegistration register(BundleContext ctx, String osgiEventTopic) {
-            final Hashtable<String, Object> props = new Hashtable<String, Object>();
-            props.put(EventConstants.EVENT_TOPIC, osgiEventTopic);
-            return ctx.registerService(EventHandler.class.getName(), this, props);
-        }
+        private final Object lock = new Object();
 
-        @Override
-        public void handleEvent(Event event) {
-            final String path = (String) event.getProperty("path");
-            if(path != null) {
-                final int n = paths.size();
-                synchronized (paths) {
-                    if(n % 1000 == 0) {
-                        log.info("Got events for {} paths so far, last path={}", n, path);
-                    }
-                    paths.add(path);
-                }
-            }
-        }
+        private final Logger logger = LoggerFactory.getLogger(AddedResourceChangeListener.class);
 
-        void clear() {
-            synchronized (paths) {
-                paths.clear();
-            }
+        AddedResourceChangeListener() {
         }
 
         Set<String> getPaths() {
-            synchronized (paths) {
+            synchronized (lock) {
                 return Collections.unmodifiableSet(paths);
             }
         }
+
+        @Override
+        public void onChange(final List<ResourceChange> list) {
+            synchronized (lock) {
+                logger.info("{} resources added already", paths.size());
+                logger.info("{} new resource changes", list.size());
+                for (final ResourceChange resourceChange : list) {
+                    if (resourceChange.getType() == ChangeType.ADDED) {
+                        paths.add(resourceChange.getPath());
+                    }
+                }
+                logger.info("{} resources added in total", paths.size());
+            }
+        }
+
     }
 
 }

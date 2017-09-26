@@ -27,4 +27,5 @@ public interface OperationVisitor {
     void visitCreatePath(CreatePath cp);
     void visitRegisterNamespace(RegisterNamespace rn);
     void visitRegisterNodetypes(RegisterNodetypes b);
+    void visitDisableServiceUser(DisableServiceUser dsu);
 }

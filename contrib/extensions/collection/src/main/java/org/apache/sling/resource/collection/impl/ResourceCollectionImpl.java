@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -34,10 +34,9 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.resource.collection.ResourceCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.sling.resource.collection.ResourceCollection;
 
 /**
  * Implements <code>ResourceCollection</code>
@@ -67,7 +66,7 @@ public class ResourceCollectionImpl implements
 
     /**
      * Creates a new collection from the given resource
-     * 
+     *
      * @param resource the resource
      */
     public ResourceCollectionImpl(Resource resource) {
@@ -75,10 +74,11 @@ public class ResourceCollectionImpl implements
         resolver = resource.getResourceResolver();
         membersResource = resource.getChild(ResourceCollectionConstants.MEMBERS_NODE_NAME);
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getName() {
         return resource.getName();
     }
@@ -86,6 +86,7 @@ public class ResourceCollectionImpl implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getPath() {
         return resource.getPath();
     }
@@ -93,16 +94,17 @@ public class ResourceCollectionImpl implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean add(Resource res, Map<String, Object> properties) throws PersistenceException {
         if (res != null && !contains(res)) {
         	ModifiableValueMap vm = membersResource.adaptTo(ModifiableValueMap.class);
         	String[] order = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
-        	
-        	order = (String[]) ArrayUtils.add(order, res.getPath());
+
+        	order = ArrayUtils.add(order, res.getPath());
         	vm.put(ResourceCollectionConstants.REFERENCES_PROP, order);
-        	
+
         	if (properties == null) {
-        		properties = new HashMap<String, Object>();
+        		properties = new HashMap<>();
         	}
             properties.put(ResourceCollectionConstants.REF_PROPERTY, res.getPath());
             resolver.create(
@@ -116,19 +118,20 @@ public class ResourceCollectionImpl implements
 
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean add(Resource res) throws PersistenceException {
         if (res != null && !contains(res)) {
         	ModifiableValueMap vm = membersResource.adaptTo(ModifiableValueMap.class);
         	String[] order = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
-        	
-        	order = (String[]) ArrayUtils.add(order, res.getPath());
+
+        	order = ArrayUtils.add(order, res.getPath());
         	vm.put(ResourceCollectionConstants.REFERENCES_PROP, order);
-        	
-        	Map<String, Object> properties = new HashMap<String, Object>();
+
+        	Map<String, Object> properties = new HashMap<>();
         	properties.put(ResourceCollectionConstants.REF_PROPERTY, res.getPath());
             resolver.create(
                 membersResource,
@@ -142,30 +145,31 @@ public class ResourceCollectionImpl implements
         return false;
     }
 
-    
+
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public Iterator<Resource> getResources() {
-    	
+
     	ValueMap vm = membersResource.adaptTo(ValueMap.class);
     	String[] references = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
-    	List<Resource> resources = new ArrayList<Resource>();
-    	
+    	List<Resource> resources = new ArrayList<>();
+
         for (String path:references) {
         	Resource resource = resolver.getResource(path);
         	if (resource != null){
         		resources.add(resource);
         	}
         }
-        
+
 		return resources.iterator();
     }
 
     /**
      * Returns the sling resource type on content node of collection
-     * 
+     *
      * @param
      * @return <code>sling:resourceType</code> for the collection resource
      */
@@ -176,22 +180,24 @@ public class ResourceCollectionImpl implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean contains(Resource res) {
     	if (res != null) {
     		ValueMap vm = membersResource.adaptTo(ValueMap.class);
         	String[] order = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
-        	
+
         	int index = ArrayUtils.indexOf(order, res.getPath(), 0);
-        	
+
         	return index >= 0 ? true: false;
     	}
-    	
+
     	return false;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean remove(Resource res) throws PersistenceException {
     	//remove the resource
         Resource tobeRemovedRes = findRes(res);
@@ -202,18 +208,18 @@ public class ResourceCollectionImpl implements
         //remove from order array
         ModifiableValueMap vm = membersResource.adaptTo(ModifiableValueMap.class);
     	String[] order = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
-    	
+
     	int index = ArrayUtils.indexOf(order, res.getPath(), 0);
-    	
-    	order = (String[]) ArrayUtils.remove(order, index);
+
+    	order = ArrayUtils.remove(order, index);
     	vm.put(ResourceCollectionConstants.REFERENCES_PROP, order);
-    	
+
     	return true;
     }
 
     /**
      * Sets the sling resource type on content node of collection
-     * 
+     *
      * @param type <code>sling:resourceType</code> to be set on the content node
      * @return
      */
@@ -240,7 +246,8 @@ public class ResourceCollectionImpl implements
         return null;
     }
 
-   	public void orderBefore(Resource srcResource, Resource destResource) {
+   	@Override
+    public void orderBefore(Resource srcResource, Resource destResource) {
 		if (srcResource == null) {
 			throw new IllegalArgumentException("Source Resource can not be null");
 		}
@@ -249,54 +256,55 @@ public class ResourceCollectionImpl implements
     	String srcPath = srcResource.getPath();
 		int srcIndex = ArrayUtils.indexOf(order, srcPath);
     	if (srcIndex < 0) {
-    		log.warn("Collection ordering failed, as there is no resource {} in collection {} for destResource", 
+    		log.warn("Collection ordering failed, as there is no resource {} in collection {} for destResource",
     				srcPath, getPath());
-    		return ; 
+    		return ;
     	}
 		if (destResource == null) {
 			//add it to the end.
-			order = (String[]) ArrayUtils.remove(order, srcIndex);
-			order = (String[]) ArrayUtils.add(order, srcPath);
+			order = ArrayUtils.remove(order, srcIndex);
+			order = ArrayUtils.add(order, srcPath);
 		} else {
 			String destPath = destResource.getPath();
-			
+
 			if (destPath.equals(srcPath)) {
-				String message = MessageFormat.format("Collection ordering failed, as source {0} and destination {1} can not be same", 
+				String message = MessageFormat.format("Collection ordering failed, as source {0} and destination {1} can not be same",
 	    				srcPath, destPath);
 				log.error(message);
 				throw new IllegalArgumentException(message);
 			}
-			
+
 			int destIndex = ArrayUtils.indexOf(order, destPath);
-			
+
 			if (destIndex < 0) {
-				log.warn("Collection ordering failed, as there is no resource {} in collection {} for destResource", 
+				log.warn("Collection ordering failed, as there is no resource {} in collection {} for destResource",
 						destPath, getPath());
 				return;
 			}
-			
-			order = (String[]) ArrayUtils.remove(order, srcIndex);
+
+			order = ArrayUtils.remove(order, srcIndex);
 			if (srcIndex < destIndex) { //recalculate dest index
 				destIndex = ArrayUtils.indexOf(order, destPath);
 			}
-			order = (String[]) ArrayUtils.add(order, destIndex, srcPath);
+			order = ArrayUtils.add(order, destIndex, srcPath);
 		}
-		
+
 		vm.put(ResourceCollectionConstants.REFERENCES_PROP, order);
 	}
 
-	public ModifiableValueMap getProperties(Resource resource) {
+	@Override
+    public ModifiableValueMap getProperties(Resource resource) {
 		Iterator<Resource> entries = membersResource.listChildren();
         while (entries.hasNext()) {
         	Resource entry = entries.next();
         	String path = ResourceUtil.getValueMap(entry).get(
         			ResourceCollectionConstants.REF_PROPERTY, "");
-            
+
             if (resource.getPath().equals(path)) {
             	return entry.adaptTo(ModifiableValueMap.class);
             }
         }
-        
+
         return null;
 	}
 }

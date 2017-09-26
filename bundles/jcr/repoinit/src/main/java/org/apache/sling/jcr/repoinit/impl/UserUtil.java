@@ -62,6 +62,20 @@ public class UserUtil {
         authorizable.remove();
     }
 
+    public static void disableUser(Session session, String id, String reason) throws RepositoryException {
+        if (reason == null) {
+            throw new IllegalArgumentException("reason can't be null");
+        }
+        Authorizable authorizable = getUserManager(session).getAuthorizable(id);
+        if (authorizable == null) {
+            throw new IllegalStateException("Authorizable not found: " + id);
+        }
+        if (authorizable.isGroup()) {
+            throw new IllegalStateException("Can't disable a group: " + id);
+        }
+        ((User)authorizable).disable(reason);
+    }
+
     /** Create a user - fails if it already exists */
     public static void createUser(Session session, String username, String password) throws RepositoryException {
         getUserManager(session).createUser(username, password);

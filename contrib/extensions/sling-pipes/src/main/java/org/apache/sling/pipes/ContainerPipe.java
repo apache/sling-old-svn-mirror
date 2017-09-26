@@ -77,6 +77,14 @@ public class ContainerPipe extends BasePipe {
     }
 
     @Override
+    public void setBindings(PipeBindings bindings) {
+        this.bindings = bindings;
+        for (Pipe pipe : pipeList){
+            pipe.setBindings(bindings);
+        }
+    }
+
+    @Override
     public Iterator<Resource> getOutput()  {
         return new ContainerResourceIterator(this);
     }

@@ -18,11 +18,17 @@
  */
 package org.apache.sling.bundleresource.impl;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +46,9 @@ class BundleResourceIterator implements Iterator<Resource> {
     private final ResourceResolver resourceResolver;
 
     /** Bundle providing the entry resources */
-    private final BundleResourceCache bundle;
+    private final BundleResourceCache cache;
 
-    private final MappedPath mappedPath;
+    private final PathMapping mappedPath;
 
     /** Underlying bundle entry path enumeration */
     private final Iterator<String> entries;
@@ -53,67 +59,87 @@ class BundleResourceIterator implements Iterator<Resource> {
     /** The prefetched next iterator entry, null at the end of iterating */
     private Resource nextResult;
 
+    private final Map<String, Map<String, Object>> subResources;
+
     /**
      * Creates an instance using the given parent bundle resource.
      */
-    BundleResourceIterator(BundleResource parent) {
+    BundleResourceIterator(final BundleResource parent) {
 
-        if (parent.isFile()) {
+        // trailing slash to enumerate children
+        final String parentEntryPath = parent.getMappedPath().getEntryPath(parent.getPath().concat("/"));
+        this.prefixLength = parentEntryPath.length();
 
-            // if the parent is a file, the iterator is empty
-            this.resourceResolver = null;
-            this.bundle = null;
-            this.entries = null;
-            this.prefixLength = 0;
-            this.mappedPath = null;
-            this.nextResult = null;
+        this.resourceResolver = parent.getResourceResolver();
+        this.cache = parent.getBundle();
+        this.subResources = parent.getSubResources() != null ? new HashMap<>(parent.getSubResources()) : null;
+        this.mappedPath = parent.getMappedPath();
 
-        } else {
-            // trailing slash to enumerate children
-            String parentPath = parent.getPath().concat("/");
+        this.entries = getFilteredEntries(parentEntryPath);
 
-            this.resourceResolver = parent.getResourceResolver();
-            this.bundle = parent.getBundle();
-            this.mappedPath = parent.getMappedPath();
-            
-            parentPath = mappedPath.getEntryPath(parentPath);
-            
-            this.entries = parent.getBundle().getEntryPaths(parentPath);
-            this.prefixLength = parentPath.length();
-
-            this.nextResult = (entries != null) ? seek() : null;
-        }
+        this.nextResult = (entries != null) ? seek() : null;
     }
 
     BundleResourceIterator(ResourceResolver resourceResolver, BundleResourceCache bundle,
-            MappedPath mappedPath, String parentPath) {
+            PathMapping mappedPath, String parentPath) {
 
         // trailing slash to enumerate children
         if (!parentPath.endsWith("/")) {
             parentPath = parentPath.concat("/");
         }
+        final String parentEntryPath = mappedPath.getEntryPath(parentPath);
+        this.prefixLength = parentEntryPath.length();
 
         this.resourceResolver = resourceResolver;
-        this.bundle = bundle;
+        this.cache = bundle;
+        this.subResources = null;
         this.mappedPath = mappedPath;
-        this.entries = bundle.getEntryPaths(parentPath);
-        this.prefixLength = parentPath.length();
+        this.entries = getFilteredEntries(parentEntryPath);
 
         this.nextResult = (entries != null) ? seek() : null;
     }
 
+    private Iterator<String> getFilteredEntries(final String parentEntryPath) {
+        final Set<String> bundleEntries = new TreeSet<>(cache.getEntryPaths(parentEntryPath));
+        if ( this.mappedPath.getJSONPropertiesExtension() != null ) {
+            final Set<String> add = new HashSet<>();
+            final Iterator<String> iter = bundleEntries.iterator();
+            while ( iter.hasNext() ) {
+                final String path = iter.next();
+                if ( path.endsWith(this.mappedPath.getJSONPropertiesExtension()) ) {
+                    iter.remove();
+                    add.add(path.substring(0, path.length() - this.mappedPath.getJSONPropertiesExtension().length()));
+                }
+            }
+            bundleEntries.addAll(add);
+            if ( subResources != null ) {
+                for(final String name : subResources.keySet()) {
+                    final String fullPath = parentEntryPath.concat(name);
+                    if ( !bundleEntries.contains(fullPath) ) {
+                        bundleEntries.add(fullPath);
+                    } else {
+                        subResources.remove(name);
+                    }
+                }
+            }
+        }
+        return (bundleEntries.isEmpty() ? null : bundleEntries.iterator());
+    }
+
     /** Returns true if there is another Resource available */
+    @Override
     public boolean hasNext() {
         return nextResult != null;
     }
 
     /** Returns the next resource in the iterator */
+    @Override
     public Resource next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
 
-        Resource result = nextResult;
+        final Resource result = nextResult;
         nextResult = seek();
         return result;
     }
@@ -122,6 +148,7 @@ class BundleResourceIterator implements Iterator<Resource> {
      * Throws <code>UnsupportedOperationException</code> as this method is not
      * supported by this implementation.
      */
+    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }
@@ -134,16 +161,21 @@ class BundleResourceIterator implements Iterator<Resource> {
         while (entries.hasNext()) {
             String entry = entries.next();
 
-            // require leading slash
+            // require leading slash (sanity check, should always be the case)
             if (!entry.startsWith("/")) {
-                entry = "/" + entry;
+                entry = "/".concat(entry);
             }
 
+            // another sanity check if the prefix is correct
             int slash = entry.indexOf('/', prefixLength);
             if (slash < 0 || slash == entry.length() - 1) {
                 log.debug("seek: Using entry {}", entry);
-                return new BundleResource(resourceResolver, bundle, mappedPath,
-                    entry);
+                final boolean isFolder = entry.endsWith("/");
+                final String entryPath = isFolder ? entry.substring(0, entry.length()-1) : entry;
+                return new BundleResource(resourceResolver, cache, mappedPath,
+                        mappedPath.getResourcePath(entryPath),
+                        this.subResources != null ? this.subResources.get(ResourceUtil.getName(entryPath)) : null,
+                        isFolder);
             }
 
             log.debug("seek: Ignoring entry {}", entry);

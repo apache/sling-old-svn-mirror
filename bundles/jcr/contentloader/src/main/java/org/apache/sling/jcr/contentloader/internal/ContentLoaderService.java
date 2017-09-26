@@ -32,17 +32,18 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
 import org.osgi.framework.SynchronousBundleListener;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,11 +55,11 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  */
-@Component
-@Property(
-    name = Constants.SERVICE_DESCRIPTION,
-    value = "Apache Sling Content Loader Implementation"
-)
+@Component(service = {},
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            Constants.SERVICE_DESCRIPTION + "=Apache Sling Content Loader Implementation"
+    })
 public class ContentLoaderService implements SynchronousBundleListener, BundleHelper {
 
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
@@ -106,7 +107,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     /**
      * List of currently updated bundles.
      */
-    private final Set<String> updatedBundles = new HashSet<String>();
+    private final Set<String> updatedBundles = new HashSet<>();
 
     /** Sling settings service. */
     @Reference
@@ -122,6 +123,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
+    @Override
     public synchronized void bundleChanged(BundleEvent event) {
 
         //
@@ -178,6 +180,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     // ---------- Implementation helpers --------------------------------------
 
     /** Returns the MIME type from the MimeTypeService for the given name */
+    @Override
     public String getMimeType(String name) {
         // local copy to not get NPE despite check for null due to concurrent
         // unbind
@@ -185,6 +188,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
         return (mts != null) ? mts.getMimeType(name) : null;
     }
 
+    @Override
     public void createRepositoryPath(final Session writerSession, final String repositoryPath)
     throws RepositoryException {
         if ( !writerSession.itemExists(repositoryPath) ) {
@@ -213,11 +217,12 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
-    protected synchronized void activate(ComponentContext componentContext) {
+    @Activate
+    protected synchronized void activate(BundleContext bundleContext) {
         this.slingId = this.settingsService.getSlingId();
         this.bundleContentLoader = new BundleContentLoader(this, contentReaderWhiteboard);
 
-        componentContext.getBundleContext().addBundleListener(this);
+        bundleContext.addBundleListener(this);
 
         Session session = null;
         try {
@@ -228,7 +233,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
                     + "bundles which are neither INSTALLED nor UNINSTALLED");
 
             int ignored = 0;
-            Bundle[] bundles = componentContext.getBundleContext().getBundles();
+            Bundle[] bundles = bundleContext.getBundles();
             for (Bundle bundle : bundles) {
                 if ((bundle.getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
 
@@ -266,8 +271,9 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     }
 
     /** Deactivates this component, called by SCR to take out of service */
-    protected synchronized void deactivate(ComponentContext componentContext) {
-        componentContext.getBundleContext().removeBundleListener(this);
+    @Deactivate
+    protected synchronized void deactivate(BundleContext bundleContext) {
+        bundleContext.removeBundleListener(this);
 
         if ( this.bundleContentLoader != null ) {
             this.bundleContentLoader.dispose();
@@ -285,6 +291,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     /**
      * Returns an administrative session to the default workspace.
      */
+    @Override
     public Session getSession()
     throws RepositoryException {
         return getRepository().loginAdministrative(null);
@@ -293,6 +300,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
     /**
      * Returns an administrative session for the named workspace.
      */
+    @Override
     public Session getSession(final String workspace) throws RepositoryException {
         return getRepository().loginAdministrative(workspace);
     }
@@ -317,6 +325,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
      * @return The map of bundle content info or null.
      * @throws RepositoryException
      */
+    @Override
     public Map<String, Object> getBundleContentInfo(final Session session, final Bundle bundle, boolean create)
     throws RepositoryException {
         final String nodeName = bundle.getSymbolicName();
@@ -344,7 +353,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
         } catch (LockException le) {
             return null;
         }
-        final Map<String, Object> info = new HashMap<String, Object>();
+        final Map<String, Object> info = new HashMap<>();
         if ( bcNode.hasProperty(PROPERTY_CONTENT_LOADED_AT)) {
             info.put(PROPERTY_CONTENT_LOADED_AT, bcNode.getProperty(PROPERTY_CONTENT_LOADED_AT).getDate());
         }
@@ -365,6 +374,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
         return info;
     }
 
+    @Override
     public void unlockBundleContentInfo(final Session session,
                                         final Bundle  bundle,
                                         final boolean contentLoaded,
@@ -387,6 +397,7 @@ public class ContentLoaderService implements SynchronousBundleListener, BundleHe
         bcNode.unlock();
     }
 
+    @Override
     public void contentIsUninstalled(final Session session,
                                      final Bundle  bundle) {
         final String nodeName = bundle.getSymbolicName();

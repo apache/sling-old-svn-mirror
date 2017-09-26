@@ -108,7 +108,7 @@ public class JspCompilationContext {
         }
 
         this.rctxt = rctxt;
-        this.tagFileJarUrls = new HashMap<String, URL>();
+        this.tagFileJarUrls = new HashMap<>();
         this.basePackageName = Constants.JSP_PACKAGE_NAME;
         this.defaultIsSession = defaultIsSession;
     }
@@ -269,6 +269,14 @@ public class JspCompilationContext {
         this.tagFileJarUrls.put(tagFile, tagFileURL);
     }
 
+    public URL getTagFileUrl(String tagFile) {
+        return this.tagFileJarUrls.get("tagfile:" + tagFile);
+    }
+
+    public void setTagFileUrl(String tagFile, URL tagFileURL) {
+        this.tagFileJarUrls.put("tagfile:" + tagFile, tagFileURL);
+    }
+
     /**
      * Returns the JAR file in which the tag file for which this
      * JspCompilationContext was created is packaged, or null if this
@@ -279,6 +287,9 @@ public class JspCompilationContext {
         return this.tagFileJarUrl;
     }
 
+    public void setTagFileUrls(final JspCompilationContext ctxt) {
+        this.tagFileJarUrls.putAll(ctxt.tagFileJarUrls);
+    }
     /* ==================== Common implementation ==================== */
 
     /**
@@ -562,7 +573,7 @@ public class JspCompilationContext {
 
     private static final String canonicalURI(String s) {
        if (s == null) return null;
-       StringBuffer result = new StringBuffer();
+       StringBuilder result = new StringBuilder();
        final int len = s.length();
        int pos = 0;
        while (pos < len) {
@@ -618,5 +629,6 @@ public class JspCompilationContext {
        }
        return result.toString();
     }
+
 }
 

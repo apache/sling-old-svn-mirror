@@ -37,6 +37,7 @@ public class ProvisioningModelIT {
     private static final String TEST_PATH = "/repoinit/fromProvisioningModel";
     private static final String TEST_USER = "userFromProvisioningModel";
     private static final String SECOND_TEST_USER = "secondUserFromProvisioningModel";
+    private static final String THIRD_TEST_USER = "thirdUserFromProvisioningModel";
     private final String uniqueID = UUID.randomUUID().toString();
     
     @Rule
@@ -58,6 +59,13 @@ public class ProvisioningModelIT {
     public void usersCreated() throws Exception {
         assertTrue("Expecting user " + TEST_USER, U.userExists(session, TEST_USER));
         assertTrue("Expecting user " + SECOND_TEST_USER, U.userExists(session, SECOND_TEST_USER));
+        assertTrue("Expecting user " + THIRD_TEST_USER, U.userExists(session, THIRD_TEST_USER));
+    }
+
+    @Test
+    public void userDisabled() throws Exception {
+        assertTrue(String.format("Expecting user %s to be disabled", THIRD_TEST_USER), U.userIsDisabled(session, THIRD_TEST_USER));
+        assertFalse(String.format("Expecting user %s to be enabled", TEST_USER), U.userIsDisabled(session,TEST_USER));
     }
     
     @Test

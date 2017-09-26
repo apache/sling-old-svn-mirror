@@ -117,17 +117,17 @@ public class ResourceChangeListenerInfo implements Comparable<ResourceChangeList
         if (ref.getProperty(CHANGES) != null ) {
             final Set<ChangeType> rts = new HashSet<ChangeType>();
             final Set<ChangeType> pts = new HashSet<ChangeType>();
-            for (final String changeName : toStringArray(ref.getProperty(CHANGES))) {
-                try {
+            try {
+                for (final String changeName : toStringArray(ref.getProperty(CHANGES))) {
                     final ChangeType ct = ChangeType.valueOf(changeName);
-                    if ( ct.ordinal() < ChangeType.PROVIDER_ADDED.ordinal()) {
+                    if (ct.ordinal() < ChangeType.PROVIDER_ADDED.ordinal()) {
                         rts.add(ct);
                     } else {
                         pts.add(ct);
                     }
-                } catch ( final IllegalArgumentException iae) {
-                    configValid = false;
                 }
+            } catch (final Exception e) {
+                configValid = false;
             }
             if ( rts.isEmpty() ) {
                 this.resourceChangeTypes = Collections.emptySet();

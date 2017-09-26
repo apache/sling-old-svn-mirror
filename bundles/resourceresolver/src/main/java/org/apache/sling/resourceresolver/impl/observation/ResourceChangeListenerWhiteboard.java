@@ -88,7 +88,7 @@ public class ResourceChangeListenerWhiteboard implements ResourceProviderTracker
                         updateProviderTracker();
                     }
                 } else {
-                    logger.warn("Ignoring invalid resource change listenr {}", reference);
+                    logger.warn("Ignoring invalid resource change listener {}", reference);
                 }
                 return reference;
             }

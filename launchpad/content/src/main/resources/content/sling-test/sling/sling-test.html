@@ -1,4 +1,4 @@
-<html>
+	<html>
 
 <!--
 	   Licensed to the Apache Software Foundation (ASF) under one or more
@@ -108,8 +108,9 @@ should show the JSON data of the nodes created by the test cases.</p>
 	    assertNotNull("testGetSessionInfo: Sling.getSessionInfo()", session);
 	    assertEquals("testGetSessionInfo: session.userID is a string","string",typeof(session.userID));
         assertEquals("testGetSessionInfo: session.userID == 'admin'","admin",session.userID);
-	    assertEquals("testGetSessionInfo: session.workspace is a string","string",typeof(session.workspace));
-	    assert("testGetSessionInfo: session.workspace contains 'default'",session.workspace.indexOf('default') >= 0);
+		
+		// since using Oak this is undefined
+	    assertEquals("testGetSessionInfo: session.workspace is undefined","undefined",typeof(session.workspace));
 	  }
 	  
 	  function testRemoveContent() {

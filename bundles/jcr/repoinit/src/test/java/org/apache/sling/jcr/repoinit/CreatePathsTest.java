@@ -17,6 +17,8 @@
 package org.apache.sling.jcr.repoinit;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 
 import javax.jcr.RepositoryException;
 
@@ -48,6 +50,27 @@ public class CreatePathsTest {
         U.parseAndExecute("create path " + path);
         U.assertNodeExists(path);
     }
+
+    @Test
+    public void createSimplePathWithNamespace() throws Exception {
+        final String path = "/rep:policy/one";
+        U.parseAndExecute("create path " + path);
+        U.assertNodeExists(path);
+    }
+
+    @Test
+    public void createSimplePathWithAtSymbol() throws Exception {
+        final String path = "/one/@two/three";
+        U.parseAndExecute("create path " + path);
+        U.assertNodeExists(path);
+    }
+
+    @Test
+    public void createSimplePathWithPlusSymbol() throws Exception {
+        final String path = "/one/+two/three";
+        U.parseAndExecute("create path " + path);
+        U.assertNodeExists(path);
+    }
     
     @Test
     public void createPathWithTypes() throws Exception {
@@ -74,5 +97,31 @@ public class CreatePathsTest {
         U.assertNodeExists("/ten", "nt:unstructured");
         U.assertNodeExists("/ten/eleven", "sling:Folder");
         U.assertNodeExists("/ten/eleven/twelve", "sling:Folder");
+    }
+
+    @Test
+    public void createPathWithMixins() throws Exception {
+        final String path = "/eleven(mixin mix:lockable)/twelve(mixin mix:referenceable,mix:shareable)/thirteen";
+        U.parseAndExecute("create path " + path);
+        U.assertNodeExists("/eleven", Collections.singletonList("mix:lockable"));
+        U.assertNodeExists("/eleven/twelve", Arrays.asList("mix:shareable", "mix:referenceable"));
+    }
+
+    @Test
+    public void createPathWithJcrDefaultTypeAndMixins() throws Exception {
+        final String path = "/twelve/thirteen(mixin mix:lockable)/fourteen";
+        U.parseAndExecute("create path (nt:unstructured)" + path);
+        U.assertNodeExists("/twelve", "nt:unstructured", Collections.<String>emptyList());
+        U.assertNodeExists("/twelve/thirteen", "nt:unstructured", Collections.singletonList("mix:lockable"));
+        U.assertNodeExists("/twelve/thirteen/fourteen", "nt:unstructured", Collections.<String>emptyList());
+    }
+
+    @Test
+    public void createPathWithJcrTypeAndMixins() throws Exception {
+        final String path = "/thirteen(nt:unstructured)/fourteen(nt:unstructured mixin mix:lockable)/fifteen(mixin mix:lockable)";
+        U.parseAndExecute("create path " + path);
+        U.assertNodeExists("/thirteen", "nt:unstructured", Collections.<String>emptyList());
+        U.assertNodeExists("/thirteen/fourteen", "nt:unstructured", Collections.singletonList("mix:lockable"));
+        U.assertNodeExists("/thirteen/fourteen/fifteen", "nt:unstructured", Collections.singletonList("mix:lockable"));
     }
 }

@@ -39,7 +39,6 @@ import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.launchpad.webapp.integrationtest.util.JsonUtil;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -320,83 +319,6 @@ public class GetAclTest {
 
 		Object deniedArray = aceObject.get("denied");
 		assertNull(deniedArray);
-	}
-
-	/**
-	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
-	 */
-	@Test
-	@Ignore // TODO: fails on Oak
-	public void testEffectiveAclMergeForUser_SubsetOfPrivilegesDeniedOnChild() throws IOException, JsonException {
-		testUserId = H.createTestUser();
-		
-		String testFolderUrl = H.createTestFolder("{ \"jcr:primaryType\": \"nt:unstructured\", \"propOne\" : \"propOneValue\", \"child\" : { \"childPropOne\" : true } }");
-		
-        String postUrl = testFolderUrl + ".modifyAce.html";
-
-        //1. create an initial set of privileges
-		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair("principalId", testUserId));
-		postParams.add(new NameValuePair("privilege@jcr:all", "granted"));
-		
-		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
-		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-		
-		postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair("principalId", testUserId));
-		postParams.add(new NameValuePair("privilege@jcr:write", "denied"));
-		
-        postUrl = testFolderUrl + "/child.modifyAce.html";
-		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
-
-		
-		//fetch the JSON for the eacl to verify the settings.
-		String getUrl = testFolderUrl + "/child.eacl.json";
-
-		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json);
-		JsonObject jsonObject = JsonUtil.parseObject(json);
-		
-		JsonObject aceObject = jsonObject.getJsonObject(testUserId);
-		assertNotNull(aceObject);
-
-		String principalString = aceObject.getString("principal");
-		assertEquals(testUserId, principalString);
-		
-		JsonArray grantedArray = aceObject.getJsonArray("granted");
-		assertNotNull(grantedArray);
-		assertTrue(grantedArray.size() >= 8);
-		Set<String> grantedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < grantedArray.size(); i++) {
-			grantedPrivilegeNames.add(grantedArray.getString(i));
-		}
-		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:all");
-		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:write");
-		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:read");
-		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:readAccessControl");
-		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:modifyAccessControl");
-		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:lockManagement");
-		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:versionManagement");
-		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:nodeTypeManagement");
-		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:retentionManagement");
-		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:lifecycleManagement");
-		//jcr:write aggregate privileges should be denied
-		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:modifyProperties");
-		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:addChildNodes");
-		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:removeNode");
-		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:removeChildNodes");
-		
-		
-		JsonArray deniedArray = aceObject.getJsonArray("denied");
-		assertNotNull(deniedArray);
-		assertEquals(1, deniedArray.size());
-		Set<String> deniedPrivilegeNames = new HashSet<String>();
-		for (int i=0; i < deniedArray.size(); i++) {
-			deniedPrivilegeNames.add(deniedArray.getString(i));
-		}
-		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:write");
 	}
 
 	/**

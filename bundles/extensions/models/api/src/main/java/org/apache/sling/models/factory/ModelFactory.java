@@ -186,4 +186,16 @@ public interface ModelFactory {
             InvalidAdaptableException, ModelClassException, PostConstructException, ValidationException, InvalidModelException,
             ExportException, MissingExporterException;
 
+
+    /**
+     * Create a wrapped request object with the specified resource and (try to) adapt the request object into the specified class. The wrapped request
+     * object will have a fresh set of script bindings so that any injected bindings references have the correct context.
+     *
+     * @param request the current request
+     * @param resource the resource to set as the wrapped request's resource
+     * @param targetClass the target adapter class
+     * @param <T> the target adapter class
+     * @return an instance of the target class or null if the adaptation could not be done
+     */
+    public <T> T getModelFromWrappedRequest(@Nonnull SlingHttpServletRequest request, @Nonnull Resource resource, @Nonnull Class<T> targetClass);
 }

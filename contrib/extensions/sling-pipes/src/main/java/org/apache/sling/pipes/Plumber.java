@@ -21,11 +21,14 @@ import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.event.jobs.Job;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Plumber is an osgi service aiming to make pipes available to the sling system, in order to
  */
+@ProviderType
 public interface Plumber {
 
     String RESOURCE_TYPE = "slingPipes/plumber";
@@ -39,9 +42,9 @@ public interface Plumber {
 
     /**
      * executes in a background thread
-     * @param resolver
-     * @param path
-     * @param bindings
+     * @param resolver resolver used for registering the execution (id will be checked against the configuration)
+     * @param path path of the pipe to execute
+     * @param bindings additional bindings to use when executing
      * @return Job if registered, null otherwise
      */
     Job executeAsync(ResourceResolver resolver, String path, Map bindings);
@@ -77,17 +80,32 @@ public interface Plumber {
      */
     void registerPipe(String type, Class<? extends BasePipe> pipeClass);
 
+
+    /**
+     * returns wether or not a pipe type is registered
+     * @param type resource type tested
+     * @return true if the type is registered, false if not
+     */
+    boolean isTypeRegistered(String type);
+
     /**
      * status of the pipe
      * @param pipeResource resource corresponding to the pipe
-     * @return
+     * @return status of the pipe, can be blank, 'started' or 'finished'
      */
     String getStatus(Resource pipeResource);
 
     /**
+     * Provides a builder helping quickly build and execute a pipe
+     * @param resolver resource resolver that will be used for building the pipe
+     * @return instance of PipeBuilder
+     */
+    PipeBuilder newPipe(ResourceResolver resolver);
+
+    /**
      * returns true if the pipe is considered to be running
      * @param pipeResource resource corresponding to the pipe
-     * @return
+     * @return true if still running
      */
     boolean isRunning(Resource pipeResource);
 }

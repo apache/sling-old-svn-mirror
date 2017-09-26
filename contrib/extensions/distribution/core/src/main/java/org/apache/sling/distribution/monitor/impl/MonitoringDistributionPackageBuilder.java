@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import javax.annotation.Nonnull;

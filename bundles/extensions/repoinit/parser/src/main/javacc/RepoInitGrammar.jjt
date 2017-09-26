@@ -1,6 +1,7 @@
 /* JavaCC grammar for the SLING-5449 content repository 
  * initialization language
  * See https://javacc.java.net/doc/docindex.html for the JavaCC docs
+ * and http://www.engr.mun.ca/~theo/JavaCC-FAQ/javacc-faq-moz.htm for the FAQ
  */
  
 options
@@ -62,9 +63,12 @@ TOKEN:
 |   < FOR: "for" >
 |   < CREATE: "create" >
 |   < DELETE: "delete" >
+|   < DISABLE: "disable" >
 |   < SERVICE: "service" >
+|   < MIXIN: "mixin" >
 |   < PATH: "path" >
 |   < END: "end" >
+|   < REPOSITORY: "repository" >
 |   < USER: "user" >
 |   < NODETYPES: "nodetypes" >
 |   < REGISTER: "register" >
@@ -77,6 +81,8 @@ TOKEN:
 |   < LCURLY: "{" >
 |   < RCURLY: "}" >
 |   < COMMA: "," >
+|   < DQUOTE: "\"" >
+|   < COLON: ":" >
 |   < STAR: "*" >
 |   < EQUALS: "=" >
 |   < RESTRICTION: "restriction" >
@@ -84,9 +90,22 @@ TOKEN:
 
 /* The order of these fuzzy statements is important (first match wins?) */ 
 |   < NAMESPACED_ITEM: (["a"-"z"] | ["A"-"Z"])+ ":" (["a"-"z"] | ["A"-"Z"])+ >
-|   < PATH_STRING: "/" (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"]) * >
+|   < PATH_STRING: "/" (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["@"] | [":"] | ["+"] | ["/"]) * >
 |   < STRING: (["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | ["-"] | ["_"] | ["."] | ["/"] | [":"] | ["*"]) * >
 |   < EOL: "\n" >
+}
+
+/* Found out about this syntax later - would make STRING etc. simpler */
+TOKEN: {
+<QUOTED: 
+    <DQUOTE>
+    (
+         "\\" ~[]     // escaped chars
+    |
+        ~["\\","\""]  //any char but not backslash nor quote
+    )* 
+    <DQUOTE>
+    > 
 }
 
 <TEXTBLOCK> SKIP : 
@@ -109,11 +128,13 @@ List<Operation> parse() :
         serviceUserStatement(result) 
         | setAclPaths(result) 
         | setAclPrincipals(result)
+        | setAclRepository(result)
         | createPathStatement(result)
         | registerNamespaceStatement(result)
         | registerNodetypesStatement(result)
         | createUserStatement(result)
         | deleteUserStatement(result)
+        | disableServiceUserStatement(result)
         | blankLine() 
     ) * 
     <EOF>
@@ -189,18 +210,22 @@ void createPathStatement(List<Operation> result) :
     String defaultPrimaryType = null;
     Token t1 = null;
     Token t2 = null;
+    List<String> t3 = null;
 }
 {
     <CREATE> <PATH> 
     ( <LPAREN> t1 = <NAMESPACED_ITEM> <RPAREN> { defaultPrimaryType = t1.image; } ) ?
     
     ( t1 = <PATH_STRING> ( <LPAREN> t2 = <NAMESPACED_ITEM> <RPAREN> ) ?
+                         ( <LPAREN> <MIXIN> t3 = namespacedItemsList() <RPAREN>) ?
+                         ( <LPAREN> t2 = <NAMESPACED_ITEM> <MIXIN> t3 = namespacedItemsList() <RPAREN>) ?
         {
             if(cp == null) {
                 cp = new CreatePath(defaultPrimaryType);
             } 
-            cp.addSegment(t1.image, t2 == null ? null : t2.image); 
-            t2 = null; 
+            cp.addSegment(t1.image, t2 == null ? null : t2.image, t3);
+            t2 = null;
+            t3 = null;
         }
     ) +
     
@@ -377,6 +402,38 @@ List<String> aclOptions() :
     }
 }
 
+void setAclRepository(List<Operation> result) :
+{
+    List<AclLine> lines = new ArrayList<AclLine>();
+    List<String> principals;
+    List<String> privileges;
+    List<String> aclOptions;
+    AclLine line = null;
+
+}
+{
+    <SET> <REPOSITORY> <ACL> <FOR> principals = principalsList() aclOptions=aclOptions() <EOL>
+    (
+        ( <REMOVE> <STAR> )
+            {
+                line = new AclLine(AclLine.Action.REMOVE_ALL);
+                lines.add(line);
+            }
+        | ( line = privilegesLineOperation() privileges = namespacedItemsList() )
+            {
+                line.setProperty(AclLine.PROP_PRIVILEGES, privileges);
+                lines.add(line);
+            }
+        | ( blankLine() )
+    )+
+    <END>
+    ( <EOL> | <EOF> )
+
+    {
+        result.add(new SetAclPrincipals(principals, lines, aclOptions));
+    }
+}
+
 void setAclPrincipals(List<Operation> result) :
 {
     List <String> principals;
@@ -420,7 +477,7 @@ void textBlock(StringBuilder b) :
     ( t = <TEXT> { b.append(t.image); } )*
     <END_TEXTBLOCK>
 }
-     
+
 void registerNodetypesStatement(List<Operation> result) :
 {
     StringBuilder b = new StringBuilder();
@@ -463,5 +520,19 @@ void deleteUserStatement(List<Operation> result) :
 
     {
         result.add(new DeleteUser(user.image));
+    }
+}
+
+void disableServiceUserStatement(List<Operation> result) :
+{
+    Token user = null;
+    Token msg = null;
+}
+{
+    <DISABLE> <SERVICE> <USER> 
+    ( user = <STRING> )
+    ( <COLON> msg = <QUOTED> )
+    {
+        result.add(new DisableServiceUser(user.image, msg == null ? null : msg.image));
     }
 }

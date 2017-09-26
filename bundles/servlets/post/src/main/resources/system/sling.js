@@ -194,15 +194,7 @@ var Sling = null;
     
     /** eval str, accepting various object delimiters */
     Sling.evalString = function(str) {
-        var obj = null;
-        if(str.indexOf('[')==0) {
-            eval("obj="+str);
-        } else if(str.indexOf('{')==0) {
-            eval("obj="+str);
-        } else {
-            eval("obj={"+str+"}");
-        }
-        return obj;
+    	return JSON.parse(str);
     }
      
     /** Get "session info" from repository. Mainly answers the question: "Who am I"

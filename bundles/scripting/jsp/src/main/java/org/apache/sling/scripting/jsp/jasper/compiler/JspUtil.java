@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.util.Vector;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -612,6 +613,7 @@ public class JspUtil {
      * (not thread-safe)
      * @deprecated
      */
+    @Deprecated
     public static void resetTemporaryVariableName() {
         tempSequenceNumber = 0;
     }
@@ -621,6 +623,7 @@ public class JspUtil {
      * (not thread-safe)
      * @deprecated
      */
+    @Deprecated
     public static String nextTemporaryVariableName() {
         return Constants.TEMP_VARIABLE_NAME_PREFIX + (tempSequenceNumber++);
     }
@@ -834,22 +837,31 @@ public class JspUtil {
 
         InputStream in = null;
 
-    if (jarFile != null) {
-        String jarEntryName = fname.substring(1, fname.length());
-        ZipEntry jarEntry = jarFile.getEntry(jarEntryName);
-        if (jarEntry == null) {
-        err.jspError("jsp.error.file.not.found", fname);
+        if (jarFile != null) {
+            String jarEntryName = fname.substring(1, fname.length());
+            ZipEntry jarEntry = jarFile.getEntry(jarEntryName);
+            if (jarEntry == null) {
+                err.jspError("jsp.error.file.not.found", fname);
+            }
+            in = jarFile.getInputStream(jarEntry);
+        } else {
+            if  ( fname.startsWith(META_INF_TAGS) ) {
+                final URL url = ctxt.getTagFileUrl(fname);
+                if ( url != null ) {
+                    return url.openConnection().getInputStream();
+                }
+            }
+            in = ctxt.getResourceAsStream(fname);
+            if ( in == null ) {
+                in = ctxt.getInputStream(fname);
+            }
         }
-        in = jarFile.getInputStream(jarEntry);
-    } else {
-        in = ctxt.getResourceAsStream(fname);
-    }
 
-    if (in == null) {
-        err.jspError("jsp.error.file.not.found", fname);
-    }
+        if (in == null) {
+             err.jspError("jsp.error.file.not.found", fname);
+        }
 
-    return in;
+        return in;
     }
 
     /**

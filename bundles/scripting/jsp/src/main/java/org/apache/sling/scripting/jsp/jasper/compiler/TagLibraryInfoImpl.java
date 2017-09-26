@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.JarURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -82,6 +83,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         }
     }
 
+    @Override
     public String toString() {
         StringWriter sw = new StringWriter();
         PrintWriter out = new PrintWriter(sw);
@@ -200,6 +202,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
 
     }
 
+    @Override
     public TagLibraryInfo[] getTagLibraryInfos() {
         Collection coll = pi.getTaglibs();
         return (TagLibraryInfo[]) coll.toArray(new TagLibraryInfo[0]);
@@ -477,7 +480,24 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
 
         if (path.startsWith("/META-INF/tags")) {
             // Tag file packaged in JAR
-            ctxt.setTagFileJarUrl(path, jarFileUrl);
+            if ( jarFileUrl != null ) {
+                ctxt.setTagFileJarUrl(path, jarFileUrl);
+            } else {
+                final URL baseUrl = ctxt.getOptions().getTldLocationsCache().getTldLocationURL(uri);
+                if ( baseUrl != null ) {
+                    final String baseUrlStr = baseUrl.toString();
+                    final int index = baseUrlStr.indexOf("/META-INF/");
+                    if ( index != -1 ) {
+                        URL finalUrl;
+                        try {
+                            finalUrl = new URL(baseUrlStr.substring(0, index) + path);
+                            ctxt.setTagFileUrl(path, finalUrl);
+                        } catch (MalformedURLException e) {
+                            // we ignore this
+                        }
+                    }
+                }
+            }
         } else if (!path.startsWith("/WEB-INF/tags")) {
             err.jspError("jsp.error.tagfile.illegalPath", path);
         }
@@ -492,7 +512,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         String type = null;
         String expectedType = null;
         String methodSignature = null;
-        boolean required = false, rtexprvalue = false, reqTime = false, isFragment = false, deferredValue = false, deferredMethod = false;
+        boolean required = false, rtexprvalue = false, isFragment = false, deferredValue = false, deferredMethod = false;
 
         Iterator list = elem.findChildren();
         while (list.hasNext()) {

@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -86,7 +87,8 @@ public class SlyBindingsValuesProvider {
         @AttributeDefinition(
                 name = "Script Factories",
                 description = "Script factories to load in the bindings map. The entries should be in the form " +
-                        "'namespace:/path/from/repository'."
+                        "'namespace:/path/from/repository'. If the factories depend on each other, add them in the correct order of their" +
+                        " dependency chain."
 
         )
         String[] org_apache_sling_scripting_sightly_js_bindings() default "sightly:" + SlyBindingsValuesProvider.SLING_NS_PATH;
@@ -157,7 +159,7 @@ public class SlyBindingsValuesProvider {
                 configuration.org_apache_sling_scripting_sightly_js_bindings(),
                 new String[]{SLING_NS_PATH}
         );
-        scriptPaths = new HashMap<>(factories.length);
+        scriptPaths = new LinkedHashMap<>(factories.length);
         for (String f : factories) {
             String[] parts = f.split(":");
             if (parts.length == 2) {

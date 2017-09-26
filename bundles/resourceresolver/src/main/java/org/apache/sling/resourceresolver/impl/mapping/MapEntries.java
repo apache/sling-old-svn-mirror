@@ -267,7 +267,7 @@ public class MapEntries implements
 
         try {
             this.refreshResolverIfNecessary(resolverRefreshed);
-            final Resource resource = resolver.getResource(path);
+            final Resource resource = this.resolver != null ? resolver.getResource(path) : null;
             if (resource != null) {
                 boolean changed = doAddVanity(resource);
                 if (this.factory.isOptimizeAliasResolutionEnabled() && resource.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS)) {
@@ -289,7 +289,7 @@ public class MapEntries implements
 
             try {
                 this.refreshResolverIfNecessary(resolverRefreshed);
-                final Resource resource = resolver.getResource(path);
+                final Resource resource = this.resolver != null ? resolver.getResource(path) : null;
                 if (resource != null) {
                     boolean changed = false;
                     if ( isValidVanityPath ) {
@@ -331,7 +331,7 @@ public class MapEntries implements
         if (this.factory.isOptimizeAliasResolutionEnabled()) {
             for (final String contentPath : this.aliasMap.keySet()) {
                 if (path.startsWith(contentPath + "/") || path.equals(contentPath)) {
-                    changed |= removeAlias(contentPath, null, resolverRefreshed);
+                    changed |= removeAlias(contentPath, path, resolverRefreshed);
                 } else if ( contentPath.startsWith(actualContentPathPrefix) ) {
                     changed |= removeAlias(contentPath, path, resolverRefreshed);
                 }
@@ -352,22 +352,26 @@ public class MapEntries implements
         // a direct child of vanity path but not jcr:content, or a jcr:content child of a direct child
         // otherwise we can discard the event
         boolean handle = true;
-        String addParentPath = null;
-        if ( path != null ) {
+        String resourcePath = null;
+        if ( path != null  && path.length() > contentPath.length()) {
             final String subPath = path.substring(contentPath.length() + 1);
             final int firstSlash = subPath.indexOf('/');
             if ( firstSlash == -1 ) {
                 if ( subPath.equals(JCR_CONTENT) ) {
                     handle = false;
                 }
+                resourcePath = path;
             } else if ( subPath.lastIndexOf('/') == firstSlash) {
                 if ( subPath.startsWith(JCR_CONTENT_PREFIX) || !subPath.endsWith(JCR_CONTENT_SUFFIX) ) {
                     handle = false;
                 }
-                addParentPath = ResourceUtil.getParent(path);
+                resourcePath = ResourceUtil.getParent(path);
             } else {
                 handle = false;
             }
+        }
+        else {
+            resourcePath = contentPath;
         }
         if ( !handle ) {
             return false;
@@ -375,14 +379,32 @@ public class MapEntries implements
 
         this.initializing.lock();
         try {
-            final Map<String, String> aliasMapEntry = aliasMap.remove(contentPath);
-            if (aliasMapEntry != null && addParentPath != null ) {
+            final Map<String, String> aliasMapEntry = aliasMap.get(contentPath);
+            if (aliasMapEntry != null) {
                 this.refreshResolverIfNecessary(resolverRefreshed);
-                // we need to re-add
-                // from a potential parent
-                final Resource parent = this.resolver.getResource(addParentPath);
-                if ( parent != null && parent.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS)) {
-                    doAddAlias(parent);
+
+                for (Iterator<Map.Entry<String, String>> iterator = aliasMapEntry.entrySet().iterator(); iterator.hasNext(); ) {
+                    final Map.Entry<String, String> entry = iterator.next();
+                    String prefix = contentPath.endsWith("/") ? contentPath : contentPath + "/";
+                    if ((prefix + entry.getValue()).startsWith(resourcePath)){
+                        iterator.remove();
+                    }
+                }
+
+                if (aliasMapEntry.isEmpty()) {
+                    this.aliasMap.remove(contentPath);
+                }
+
+                Resource containingResource = this.resolver != null ? this.resolver.getResource(resourcePath) : null;
+
+                if (containingResource != null) {
+                    if (containingResource.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS)) {
+                        doAddAlias(containingResource);
+                    }
+                    final Resource child = containingResource.getChild(JCR_CONTENT);
+                    if (child != null && child.getValueMap().containsKey(ResourceResolverImpl.PROP_ALIAS)) {
+                        doAddAlias(child);
+                    }
                 }
             }
             return aliasMapEntry != null;
@@ -662,8 +684,10 @@ public class MapEntries implements
                 this.initializing.lock();
 
                 try {
-                    refreshResolverIfNecessary(resolverRefreshed);
-                    doUpdateConfiguration();
+                    if (this.resolver != null) {
+                        refreshResolverIfNecessary(resolverRefreshed);
+                        doUpdateConfiguration();
+                    }
                 } finally {
                     this.initializing.unlock();
                 }

@@ -21,6 +21,7 @@ package org.apache.sling.commons.metrics.internal;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,7 @@ import com.gargoylesoftware.htmlunit.html.HTMLParser;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlTable;
 import org.apache.felix.inventory.Format;
+import org.apache.felix.utils.json.JSONParser;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.Rule;
@@ -49,6 +51,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class MetricWebConsolePluginTest {
@@ -111,11 +116,30 @@ public class MetricWebConsolePluginTest {
         activatePlugin();
 
         StringWriter sw = new StringWriter();
-        plugin.print(new PrintWriter(sw), Format.TEXT, false);
+        PrintWriter pw = spy(new PrintWriter(sw));
+        plugin.print(pw, Format.TEXT, false);
 
         String out = sw.toString();
         assertThat(out, containsString("foo:test1"));
         assertThat(out, containsString("Meters"));
+        verify(pw, never()).close();
+    }
+
+    @Test
+    public void inventory_json() throws Exception{
+        MetricRegistry reg1 = new MetricRegistry();
+        reg1.meter("test1").mark(5);
+        context.registerService(MetricRegistry.class, reg1, regProps("foo"));
+
+        activatePlugin();
+
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = spy(new PrintWriter(sw));
+        plugin.print(pw, Format.JSON, false);
+
+        Map<String, Object> json = new JSONParser(sw.toString()).getParsed();
+        assertTrue(json.containsKey("meters"));
+        verify(pw, never()).close();
     }
 
     @Test
@@ -159,5 +183,18 @@ public class MetricWebConsolePluginTest {
 
     private void activatePlugin() {
         MockOsgi.activate(plugin, context.bundleContext(), Collections.<String, Object>emptyMap());
+    }
+
+    private static class CloseRecordingWriter extends PrintWriter {
+
+
+        public CloseRecordingWriter(Writer out) {
+            super(out);
+        }
+
+        @Override
+        public void close() {
+            super.close();
+        }
     }
 }

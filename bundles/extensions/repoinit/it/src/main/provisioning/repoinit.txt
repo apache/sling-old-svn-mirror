@@ -19,12 +19,12 @@
 [feature name=repoinit-tests]
 
 [artifacts startLevel=2]
-  org.apache.sling/org.apache.sling.jcr.repoinit/1.1.1-SNAPSHOT
+  org.apache.sling/org.apache.sling.jcr.repoinit/1.1.5-SNAPSHOT
   org.apache.sling/org.apache.sling.repoinit.parser/1.1.1-SNAPSHOT
-  org.apache.sling/org.apache.sling.provisioning.model/1.4.2
+  org.apache.sling/org.apache.sling.provisioning.model/1.8.2
 
 [artifacts]
-  org.apache.sling/org.apache.sling.junit.core/1.0.17-SNAPSHOT
+  org.apache.sling/org.apache.sling.junit.core/1.0.18
   org.apache.sling/org.apache.sling.testing.tools/1.0.10
     
 [settings]
@@ -44,6 +44,9 @@ set ACL for userFromProvisioningModel
   allow jcr:read on /repoinit/fromProvisioningModel
   deny jcr:write on /repoinit/fromProvisioningModel
 end
+
+create service user thirdUserFromProvisioningModel
+disable service user thirdUserFromProvisioningModel : "Disabled for testing reason"
 
 register namespace (slingtest) http://sling.apache.org/ns/test/repoinit-it/v1.0
 

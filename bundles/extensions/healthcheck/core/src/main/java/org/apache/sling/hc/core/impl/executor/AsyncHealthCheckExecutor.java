@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -188,12 +188,12 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
                 checksIt.remove();
             }
         }
-        
+
         LOG.debug("Caching {} results from async results", asyncResults.size());
         for(ExecutionResult result : asyncResults) {
             cache.updateWith(result);
         }
-        
+
         LOG.debug("Adding {} results from async results", asyncResults.size());
         results.addAll(asyncResults);
 

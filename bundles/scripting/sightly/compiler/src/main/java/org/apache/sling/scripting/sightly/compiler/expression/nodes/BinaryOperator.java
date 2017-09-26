@@ -19,7 +19,7 @@
 package org.apache.sling.scripting.sightly.compiler.expression.nodes;
 
 import org.apache.sling.scripting.sightly.compiler.SightlyCompilerException;
-import org.apache.sling.scripting.sightly.impl.compiler.CompileTimeObjectModel;
+import org.apache.sling.scripting.sightly.compiler.util.ObjectModel;
 
 /**
  * Binary operators used in expressions.
@@ -31,7 +31,7 @@ public enum BinaryOperator {
     AND {
         @Override
         public Object eval(Object left, Object right) {
-            return (CompileTimeObjectModel.toBoolean(left)) ? right : left;
+            return (ObjectModel.toBoolean(left)) ? right : left;
         }
     },
     /**
@@ -40,7 +40,7 @@ public enum BinaryOperator {
     OR {
         @Override
         public Object eval(Object left, Object right) {
-            return (CompileTimeObjectModel.toBoolean(left)) ? left : right;
+            return (ObjectModel.toBoolean(left)) ? left : right;
         }
     },
     /**
@@ -49,7 +49,7 @@ public enum BinaryOperator {
     CONCATENATE {
         @Override
         public Object eval(Object left, Object right) {
-            return CompileTimeObjectModel.toString(left).concat(CompileTimeObjectModel.toString(right));
+            return ObjectModel.toString(left).concat(ObjectModel.toString(right));
         }
     },
     /**
@@ -131,7 +131,7 @@ public enum BinaryOperator {
     ADD {
         @Override
         public Object eval(Object left, Object right) {
-            return adjust(CompileTimeObjectModel.toNumber(left).doubleValue() + CompileTimeObjectModel.toNumber(right).doubleValue());
+            return adjust(ObjectModel.toNumber(left).doubleValue() + ObjectModel.toNumber(right).doubleValue());
         }
     },
 
@@ -141,7 +141,7 @@ public enum BinaryOperator {
     SUB {
         @Override
         public Object eval(Object left, Object right) {
-            return adjust(CompileTimeObjectModel.toNumber(left).doubleValue() - CompileTimeObjectModel.toNumber(right).doubleValue());
+            return adjust(ObjectModel.toNumber(left).doubleValue() - ObjectModel.toNumber(right).doubleValue());
         }
     },
     /**
@@ -150,7 +150,7 @@ public enum BinaryOperator {
     MUL {
         @Override
         public Object eval(Object left, Object right) {
-            return adjust(CompileTimeObjectModel.toNumber(left).doubleValue() * CompileTimeObjectModel.toNumber(right).doubleValue());
+            return adjust(ObjectModel.toNumber(left).doubleValue() * ObjectModel.toNumber(right).doubleValue());
         }
     },
     /**
@@ -159,7 +159,7 @@ public enum BinaryOperator {
     DIV {
         @Override
         public Object eval(Object left, Object right) {
-            return adjust(CompileTimeObjectModel.toNumber(left).doubleValue() / CompileTimeObjectModel.toNumber(right).doubleValue());
+            return adjust(ObjectModel.toNumber(left).doubleValue() / ObjectModel.toNumber(right).doubleValue());
         }
     },
     /**
@@ -168,7 +168,7 @@ public enum BinaryOperator {
     I_DIV {
         @Override
         public Object eval(Object left, Object right) {
-            return CompileTimeObjectModel.toNumber(left).intValue() / CompileTimeObjectModel.toNumber(right).intValue();
+            return ObjectModel.toNumber(left).intValue() / ObjectModel.toNumber(right).intValue();
         }
     },
 
@@ -178,8 +178,8 @@ public enum BinaryOperator {
     REM {
         @Override
         public Object eval(Object left, Object right) {
-            return adjust(CompileTimeObjectModel.toNumber(left).intValue()
-                    % CompileTimeObjectModel.toNumber(right).intValue());
+            return adjust(ObjectModel.toNumber(left).intValue()
+                    % ObjectModel.toNumber(right).intValue());
         }
 
     };

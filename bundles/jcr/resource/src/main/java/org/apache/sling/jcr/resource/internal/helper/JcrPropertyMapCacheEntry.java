@@ -39,7 +39,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -254,7 +254,7 @@ public class JcrPropertyMapCacheEntry {
             final Node node,
             final ClassLoader dynamicClassLoader)
     throws RepositoryException {
-        List<T> values = new ArrayList<T>();
+        List<T> values = new ArrayList<>();
         for (int i = 0; i < sourceArray.length; i++) {
             T value = convertToType(i, sourceArray[i], type, node, dynamicClassLoader);
             if (value != null) {

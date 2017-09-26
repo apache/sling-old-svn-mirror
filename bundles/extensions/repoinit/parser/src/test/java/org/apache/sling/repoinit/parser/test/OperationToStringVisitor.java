@@ -27,6 +27,7 @@ import org.apache.sling.repoinit.parser.operations.CreateServiceUser;
 import org.apache.sling.repoinit.parser.operations.CreateUser;
 import org.apache.sling.repoinit.parser.operations.DeleteServiceUser;
 import org.apache.sling.repoinit.parser.operations.DeleteUser;
+import org.apache.sling.repoinit.parser.operations.DisableServiceUser;
 import org.apache.sling.repoinit.parser.operations.RegisterNodetypes;
 import org.apache.sling.repoinit.parser.operations.OperationVisitor;
 import org.apache.sling.repoinit.parser.operations.RegisterNamespace;
@@ -115,6 +116,11 @@ class OperationToStringVisitor implements OperationVisitor {
     @Override
     public void visitRegisterNodetypes(RegisterNodetypes nt) {
         out.println(nt.toString());
+    }
+
+    @Override
+    public void visitDisableServiceUser(DisableServiceUser dsu) {
+        out.println(dsu.toString());
     }
 
     private void dumpAclLines(Collection<AclLine> c) {

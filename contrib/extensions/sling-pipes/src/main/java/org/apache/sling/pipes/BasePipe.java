@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
@@ -35,7 +35,8 @@ public class BasePipe implements Pipe {
 
     private final Logger logger = LoggerFactory.getLogger(BasePipe.class);
 
-    public static final String RESOURCE_TYPE = "slingPipes/base";
+    public static final String RT_PREFIX = "slingPipes/";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "base";
     public static final String DRYRUN_KEY = "dryRun";
     public static final String READ_ONLY = "readOnly";
     public static final String PN_STATUS = "status";

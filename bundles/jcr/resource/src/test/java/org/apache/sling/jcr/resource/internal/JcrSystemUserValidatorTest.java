@@ -17,6 +17,7 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 
 import javax.jcr.RepositoryException;
 import javax.naming.NamingException;
@@ -47,11 +48,25 @@ public class JcrSystemUserValidatorTest extends RepositoryTestBase {
         allowOnlySystemUsersField.set(jcrSystemUserValidator, true);
         
         //testing null user
-        assertFalse(jcrSystemUserValidator.isValid(null, null, null));
+        assertFalse(jcrSystemUserValidator.isValid((String) null, null, null));
         //testing not existing user     
         assertFalse(jcrSystemUserValidator.isValid("notExisting", null, null));
         //administrators group is not a valid user  (also not a system user)
         assertFalse(jcrSystemUserValidator.isValid(GROUP_ADMINISTRATORS, null, null));
+    }
+
+    @Test
+    public void testIsValidPrincipalNamesWithEnforcementOfSystemUsersEnabled() throws Exception {
+        Field allowOnlySystemUsersField = jcrSystemUserValidator.getClass().getDeclaredField("allowOnlySystemUsers");
+        allowOnlySystemUsersField.setAccessible(true);
+        allowOnlySystemUsersField.set(jcrSystemUserValidator, true);
+
+        //testing null principal names
+        assertFalse(jcrSystemUserValidator.isValid((Iterable<String>) null, null, null));
+        //testing not existing user
+        assertFalse(jcrSystemUserValidator.isValid(Collections.singleton("notExisting"), null, null));
+        //administrators group is not a valid user  (also not a system user)
+        assertFalse(jcrSystemUserValidator.isValid(Collections.singleton(GROUP_ADMINISTRATORS), null, null));
     }
     
     @Test
@@ -61,10 +76,24 @@ public class JcrSystemUserValidatorTest extends RepositoryTestBase {
         allowOnlySystemUsersField.set(jcrSystemUserValidator, false);
         
         //testing null user
-        assertFalse(jcrSystemUserValidator.isValid(null, null, null));
+        assertFalse(jcrSystemUserValidator.isValid((String) null, null, null));
         //testing not existing user (is considered valid here)
         assertTrue(jcrSystemUserValidator.isValid("notExisting", null, null));
         // administrators group is not a user at all (but considered valid)
         assertTrue(jcrSystemUserValidator.isValid(GROUP_ADMINISTRATORS, null, null));
+    }
+
+    @Test
+    public void testIsValidPrincipalNamesWithEnforcementOfSystemUsersDisabled() throws Exception {
+        Field allowOnlySystemUsersField = jcrSystemUserValidator.getClass().getDeclaredField("allowOnlySystemUsers");
+        allowOnlySystemUsersField.setAccessible(true);
+        allowOnlySystemUsersField.set(jcrSystemUserValidator, false);
+
+        //testing null principal names
+        assertFalse(jcrSystemUserValidator.isValid((Iterable<String>) null, null, null));
+        //testing not existing user (is considered valid here)
+        assertTrue(jcrSystemUserValidator.isValid(Collections.singleton("notExisting"), null, null));
+        // administrators group is not a user at all (but considered valid)
+        assertTrue(jcrSystemUserValidator.isValid(Collections.singleton(GROUP_ADMINISTRATORS), null, null));
     }
 }

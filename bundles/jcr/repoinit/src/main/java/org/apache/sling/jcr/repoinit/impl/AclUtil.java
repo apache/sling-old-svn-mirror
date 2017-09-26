@@ -27,7 +27,6 @@ import java.util.Set;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.security.AccessControlEntry;
@@ -39,11 +38,8 @@ import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
-
 import org.apache.jackrabbit.oak.spi.security.principal.EveryonePrincipal;
-
 import org.apache.sling.repoinit.parser.operations.RestrictionClause;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +67,8 @@ public class AclUtil {
      * @throws RepositoryException
      */
     private static LocalRestrictions createLocalRestrictions(List<RestrictionClause> list, JackrabbitAccessControlList jacl, Session s) throws RepositoryException {
-        Map<String,Value> restrictions = new HashMap<String,Value>();
-        Map<String,Value[]> mvrestrictions = new HashMap<String,Value[]>();
+        Map<String,Value> restrictions = new HashMap<>();
+        Map<String,Value[]> mvrestrictions = new HashMap<>();
 
         if(list != null && !list.isEmpty()){
             ValueFactory vf = s.getValueFactory();
@@ -104,50 +100,58 @@ public class AclUtil {
 
     public static void setAcl(Session session, List<String> principals, List<String> paths, List<String> privileges, boolean isAllow, List<RestrictionClause> restrictionClauses)
             throws RepositoryException {
+        for (String path : paths) {
+            if(!session.nodeExists(path)) {
+                throw new PathNotFoundException("Cannot set ACL on non-existent path " + path);
+            }
+            setAcl(session, principals, path, privileges, isAllow, restrictionClauses);
+        }
+    }
+
+    private static void setAcl(Session session, List<String> principals, String path, List<String> privileges, boolean isAllow, List<RestrictionClause> restrictionClauses)
+            throws RepositoryException {
 
         final String [] privArray = privileges.toArray(new String[privileges.size()]);
         final Privilege[] jcrPriv = AccessControlUtils.privilegesFromNames(session, privArray);
 
-        for(String path : paths) {
-            if(!session.nodeExists(path)) {
-                throw new PathNotFoundException("Cannot set ACL on non-existent path " + path);
-            }
+        JackrabbitAccessControlList acl = AccessControlUtils.getAccessControlList(session, path);
 
-            JackrabbitAccessControlList acl = AccessControlUtils.getAccessControlList(session, path);
+        LocalRestrictions localRestrictions = createLocalRestrictions(restrictionClauses, acl, session);
 
-            LocalRestrictions localRestrictions = createLocalRestrictions(restrictionClauses, acl, session);
+        AccessControlEntry[] existingAces = acl.getAccessControlEntries();
 
-            AccessControlEntry[] existingAces = acl.getAccessControlEntries();
-
-            boolean changed = false;
-            for (String name : principals) {
-                final Principal principal;
-                if (EveryonePrincipal.NAME.equals(name)) {
-                    principal = AccessControlUtils.getPrincipal(session, name);
-                } else {
-                    final Authorizable authorizable = UserUtil.getAuthorizable(session, name);
-                    if (authorizable == null) {
-                        throw new IllegalStateException("Authorizable not found:" + name);
-                    }
-                    principal = authorizable.getPrincipal();
+        boolean changed = false;
+        for (String name : principals) {
+            final Principal principal;
+            if (EveryonePrincipal.NAME.equals(name)) {
+                principal = AccessControlUtils.getPrincipal(session, name);
+            } else {
+                final Authorizable authorizable = UserUtil.getAuthorizable(session, name);
+                if (authorizable == null) {
+                    throw new IllegalStateException("Authorizable not found:" + name);
                 }
-                if (principal == null) {
-                    throw new IllegalStateException("Principal not found: " + name);
-                }
-                LocalAccessControlEntry newAce = new LocalAccessControlEntry(principal, jcrPriv, isAllow, localRestrictions);
-                if (contains(existingAces, newAce)) {
-                    LOG.info("Not adding {} to path {} since an equivalent access control entry already exists", newAce, path);
-                    continue;
-                }
-                acl.addEntry(newAce.principal, newAce.privileges, newAce.isAllow,
-                        newAce.restrictions.getRestrictions(), newAce.restrictions.getMVRestrictions());
-                changed = true;
+                principal = authorizable.getPrincipal();
             }
-            if ( changed ) {
-                getJACM(session).setPolicy(path, acl);
+            if (principal == null) {
+                throw new IllegalStateException("Principal not found: " + name);
             }
-            
+            LocalAccessControlEntry newAce = new LocalAccessControlEntry(principal, jcrPriv, isAllow, localRestrictions);
+            if (contains(existingAces, newAce)) {
+                LOG.info("Not adding {} to path {} since an equivalent access control entry already exists", newAce, path);
+                continue;
+            }
+            acl.addEntry(newAce.principal, newAce.privileges, newAce.isAllow,
+                    newAce.restrictions.getRestrictions(), newAce.restrictions.getMVRestrictions());
+            changed = true;
         }
+        if ( changed ) {
+            getJACM(session).setPolicy(path, acl);
+        }
+    }
+
+    public static void setRepositoryAcl(Session session, List<String> principals, List<String> privileges, boolean isAllow, List<RestrictionClause> restrictionClauses)
+           throws RepositoryException {
+        setAcl(session, principals, (String)null, privileges, isAllow, restrictionClauses);
     }
 
     // visible for testing
@@ -200,7 +204,7 @@ public class AclUtil {
      * Helper class which allows easy comparison of a local (proposed) access control entry with an existing one
      */
     static class LocalAccessControlEntry {
-        
+
         private final Principal principal;
         private final Privilege[] privileges;
         private final boolean isAllow;
@@ -216,7 +220,7 @@ public class AclUtil {
             this.isAllow = isAllow;
             this.restrictions = restrictions != null ? restrictions : new LocalRestrictions();
         }
-        
+
         public boolean isContainedIn(JackrabbitAccessControlEntry other) throws RepositoryException {
             return other.getPrincipal().equals(principal) &&
                     contains(other.getPrivileges(), privileges) &&
@@ -270,12 +274,12 @@ public class AclUtil {
         private boolean contains(Privilege[] first, Privilege[] second) {
             // we need to ensure that the privilege order is not taken into account, so we use sets
             Set<Privilege> set1 = expandPrivileges(first);
-            
+
             Set<Privilege> set2 = expandPrivileges(second);
-            
+
             return set1.containsAll(set2);
         }
-        
+
         @Override
         public String toString() {
             return "[" + getClass().getSimpleName() + "# principal " + principal+ ", privileges: " + Arrays.toString(privileges) + ", isAllow : " + isAllow + "]";

@@ -35,7 +35,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -111,7 +111,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
     @Reference
     private AsyncHealthCheckExecutor asyncHealthCheckExecutor;
-    
+
     @Reference
     private ThreadPoolManager threadPoolManager;
     private ThreadPool hcThreadPool;
@@ -229,7 +229,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         final List<HealthCheckExecutionResult> results = new ArrayList<HealthCheckExecutionResult>();
         final List<HealthCheckMetadata> healthCheckDescriptors = getHealthCheckMetadata(healthCheckReferences);
 
-        
+
         createResultsForDescriptors(healthCheckDescriptors, results, options);
 
         stopWatch.stop();
@@ -258,7 +258,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         if (!options.isForceInstantExecution()) {
             asyncHealthCheckExecutor.collectAsyncResults(healthCheckDescriptors, results, healthCheckResultCache);
         }
-        
+
         // reuse cached results where possible
         if (!options.isForceInstantExecution()) {
             healthCheckResultCache.useValidCacheResults(healthCheckDescriptors, results, resultCacheTtlInMs);
@@ -370,7 +370,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
                 }
             });
             this.stillRunningFutures.put(metadata, future);
-            
+
             final HealthCheckFuture newFuture = future;
             this.hcThreadPool.execute(new Runnable() {
                 @Override
@@ -378,11 +378,11 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
                     newFuture.run();
                     synchronized ( stillRunningFutures ) {
                         // notify executor threads that newFuture is finished. Wrapping it in another runnable
-                        // ensures that newFuture.isDone() will return true (if e.g. done in callback above, there are 
+                        // ensures that newFuture.isDone() will return true (if e.g. done in callback above, there are
                         // still a few lines of code until the future is really done and hence then the executor thread
-                        // is sometime notified a bit too early, still receives the result isDone()=false and then waits 
+                        // is sometime notified a bit too early, still receives the result isDone()=false and then waits
                         // for another 50ms, even though the future was about to be done one ms later)
-                        stillRunningFutures.notifyAll(); 
+                        stillRunningFutures.notifyAll();
                     }
                 }
             });
@@ -403,7 +403,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         if (options != null && options.getOverrideGlobalTimeout() > 0) {
             effectiveTimeout = options.getOverrideGlobalTimeout();
         }
-        
+
         if(futuresForResultOfThisCall.isEmpty()) {
             return; // nothing to wait for (usually because of cached results)
         }
@@ -469,7 +469,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
         } else {
             logger.debug("Health Check timed out: {}", hcMetadata);
-            // Futures must not be cancelled as interrupting a health check might leave the system in invalid state 
+            // Futures must not be cancelled as interrupting a health check might leave the system in invalid state
             // (worst case could be a corrupted repository index if using write operations)
 
             // normally we turn the check into WARN (normal timeout), but if the threshold time for CRITICAL is reached for a certain

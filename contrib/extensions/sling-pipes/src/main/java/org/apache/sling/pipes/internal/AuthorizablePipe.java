@@ -23,7 +23,7 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AuthorizablePipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(AuthorizablePipe.class);
-    public static final String RESOURCE_TYPE = "slingPipes/authorizable";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "authorizable";
     public static final String PN_AUTOCREATEGROUP = "createGroup";
     public static final String PN_ADDTOGROUP = "addToGroup";
     public static final String PN_ADDMEMBERS = "addMembers";

@@ -1,0 +1,6 @@
+# trailing comments test
+create service user comments_test_passed
+# something
+
+
+

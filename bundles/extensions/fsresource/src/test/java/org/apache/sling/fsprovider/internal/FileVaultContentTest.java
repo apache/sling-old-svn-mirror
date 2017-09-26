@@ -107,7 +107,7 @@ public class FileVaultContentTest {
     public void testListChildren() {
         Resource en = sampleContent.getChild("en");
         List<Resource> children = ImmutableList.copyOf(en.listChildren());
-        assertEquals(2, children.size());
+        assertEquals(3, children.size());
         
         Resource child1 = children.get(0);
         assertEquals("jcr:content", child1.getName());
@@ -117,7 +117,10 @@ public class FileVaultContentTest {
         assertEquals("tools", child2.getName());
         assertEquals("app:Page", child2.getResourceType());
         
-        // child3 (conference) is hidden because of filter
+        Resource child3 = children.get(2);
+        assertEquals("extra", child3.getName());
+        
+        // another child (conference) is hidden because of filter
     }
 
     @Test
@@ -143,7 +146,22 @@ public class FileVaultContentTest {
 
         // list children with mixed content
         Resource enResource = sampleContent.getChild("en");
-        assertThat(enResource, ResourceMatchers.containsChildren("jcr:content", "tools", "conference"));
+        assertThat(enResource, ResourceMatchers.containsChildren("jcr:content", "tools", "extra", "conference"));
     }
 
+    @Test
+    public void testExtraContent() throws RepositoryException {
+        Resource extraContent = sampleContent.getChild("en/extra/extracontent");
+        assertNotNull(extraContent);
+        assertEquals("apps/app1/components/comp1", extraContent.getResourceType());
+        
+        Resource layout = extraContent.getChild("layout");
+        assertNotNull(layout);
+        assertEquals("apps/app1/components/comp2", layout.getResourceType());
+
+        Resource binaryFile = sampleContent.getChild("en/extra/binaryfile.xml");
+        assertNotNull(binaryFile);
+        assertEquals("nt:file", binaryFile.getResourceType());
+    }
+    
 }

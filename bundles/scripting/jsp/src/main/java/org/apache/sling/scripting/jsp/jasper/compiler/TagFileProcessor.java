@@ -533,7 +533,6 @@ class TagFileProcessor {
      */
     private void loadTagFile(Compiler compiler, String tagFilePath,
             Node.CustomTag n, PageInfo parentPageInfo) throws JasperException {
-
         JspCompilationContext ctxt = compiler.getCompilationContext();
         JspRuntimeContext rctxt = ctxt.getRuntimeContext();
 
@@ -547,6 +546,7 @@ class TagFileProcessor {
                       .getOptions(), tagFilePath, n.getTagInfo(), ctxt
                       .getRuntimeContext(), compiler.getDefaultIsSession(),
                       ctxt.getTagFileJarUrl(tagFilePath));
+                wrapper.getJspEngineContext().setTagFileUrls(ctxt);
                 wrapper = rctxt.addWrapper(tagFilePath, wrapper);
 
                 // Use same classloader and classpath for compiling tag files
@@ -592,6 +592,7 @@ class TagFileProcessor {
                           ctxt.getRuntimeContext(),
                           compiler.getDefaultIsSession(),
                           ctxt.getTagFileJarUrl(tempTagFilePath));
+                    tempWrapper.getJspEngineContext().setTagFileUrls(ctxt);
                     tagClazz = tempWrapper.loadTagFilePrototype();
                     tempVector.add(tempWrapper.getJspEngineContext().getCompiler());
                     String name = JspUtil.getCanonicalName(tagClazz);
@@ -671,7 +672,7 @@ class TagFileProcessor {
     public void loadTagFiles(Compiler compiler, Node.Nodes page)
             throws JasperException {
 
-        tempVector = new Vector<Compiler>();
+        tempVector = new Vector<>();
         page.visit(new TagFileLoaderVisitor(compiler));
     }
 

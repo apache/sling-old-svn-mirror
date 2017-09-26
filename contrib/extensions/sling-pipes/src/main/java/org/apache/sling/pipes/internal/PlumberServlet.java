@@ -26,12 +26,13 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.pipes.AbstractInputStreamPipe;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ContainerPipe;
 import org.apache.sling.pipes.OutputWriter;
@@ -65,6 +66,8 @@ public class PlumberServlet extends SlingAllMethodsServlet {
 
     protected static final String PARAM_ASYNC = "async";
 
+    protected static final String PARAM_FILE = "pipes_inputFile";
+
     @Reference
     Plumber plumber;
 
@@ -82,6 +85,13 @@ public class PlumberServlet extends SlingAllMethodsServlet {
         execute(request, response, true);
     }
 
+    /**
+     * Execution of a pipe corresponding to a request
+     * @param request original request
+     * @param response given response
+     * @param writeAllowed should we consider this execution is about to modify content
+     * @throws ServletException in case something is wrong...
+     */
     protected void execute(SlingHttpServletRequest request, SlingHttpServletResponse response, boolean writeAllowed) throws ServletException {
         String path = request.getResource().getResourceType().equals(Plumber.RESOURCE_TYPE) ? request.getParameter(PARAM_PATH) : request.getResource().getPath();
         try {
@@ -109,13 +119,15 @@ public class PlumberServlet extends SlingAllMethodsServlet {
 
     /**
      * Converts request into pipe bindings
-     * @param request
-     * @return
+     * @param request from where to extract bindings
+     * @param writeAllowed should we consider this execution is about to modify content
+     * @return map of bindings
+     * @throws IOException in case something turns wrong with an input stream
      */
-    protected Map getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed){
+    protected Map getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException{
         Map bindings = new HashMap<>();
         String dryRun = request.getParameter(BasePipe.DRYRUN_KEY);
-        if (StringUtils.isNotBlank(dryRun) && dryRun.equals(Boolean.TRUE.toString())) {
+        if (StringUtils.isNotBlank(dryRun) && !dryRun.equals(Boolean.FALSE.toString())) {
             bindings.put(BasePipe.DRYRUN_KEY, true);
         }
         String paramBindings = request.getParameter(PARAM_BINDINGS);
@@ -126,10 +138,23 @@ public class PlumberServlet extends SlingAllMethodsServlet {
                 log.error("Unable to retrieve bindings information", e);
             }
         }
+
+        if (request.getRequestParameterMap() != null && request.getRequestParameterMap().containsKey(PARAM_FILE)){
+            bindings.put(AbstractInputStreamPipe.BINDING_IS, request.getRequestParameter(PARAM_FILE).getInputStream());
+        }
+
         bindings.put(BasePipe.READ_ONLY, !writeAllowed);
         return bindings;
     }
 
+    /**
+     * Retrieve an output writer depending on the request
+     * @param request original request against which writers will be tested
+     * @param response response writers will point to
+     * @return instance of the created writer
+     * @throws IOException bad handling of I/O streams,
+     * @throws JsonException bad handling of json output
+     */
     OutputWriter getWriter(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException {
         OutputWriter[] candidates = new OutputWriter[]{new CustomJsonWriter(), new CustomWriter(), new DefaultOutputWriter()};
         for (OutputWriter candidate : candidates) {

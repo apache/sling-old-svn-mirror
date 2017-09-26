@@ -20,17 +20,13 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         
-        // 0. read CLI arguments
-        String firstVersion = "7";
-        String secondVersion = "8";
+        String firstVersion = "8";
+        String secondVersion = "9";
         if ( args.length == 2) {
             firstVersion = args[0];
             secondVersion = args[1];
         }
         
-        LaunchpadComparer comparer = new LaunchpadComparer(firstVersion, secondVersion);
-        comparer.run();
-        
-
+        new LaunchpadComparer(firstVersion, secondVersion).run();
     }
 }

@@ -314,6 +314,7 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         List<String> contentFileSuffixes = new ArrayList<>();
         if (fsMode == FsMode.FILEVAULT_XML) {
             contentFileSuffixes.add("/" + DOT_CONTENT_XML);
+            contentFileSuffixes.add(ContentFileTypes.XML_SUFFIX);
             if (StringUtils.isNotBlank(config.provider_filevault_filterxml_path())) {
                 filterXmlFile = new File(config.provider_filevault_filterxml_path());
             }

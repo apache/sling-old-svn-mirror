@@ -90,7 +90,7 @@ public class JcrQueryBuilder {
 	}
 
 	private static Formula prepareAlternativeConditions(List<SelectorSegment> segments) {
-		List<Term> list = new ArrayList<Term>();
+		List<Term> list = new ArrayList<>();
 		for (SelectorSegment segment : segments) {
 			Formula conditions = prepareSegmentConditions(segment.getType(), segment.getName(),
 					segment.getAttributes());
@@ -107,7 +107,7 @@ public class JcrQueryBuilder {
 
 	private static Formula prepareSegmentConditions(String resourceType, String resourceName,
 			List<Attribute> attributes) {
-		List<Term> conditions = new ArrayList<Term>();
+		List<Term> conditions = new ArrayList<>();
 		if (StringUtils.isNotBlank(resourceType) && !StringUtils.contains(resourceType, ':')) {
 			conditions.add(new Atomic(String.format("s.[sling:resourceType] = '%s'", resourceType)));
 		}

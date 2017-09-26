@@ -41,8 +41,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolverConstants;
-import org.apache.sling.commons.testing.osgi.MockBundle;
-import org.apache.sling.commons.testing.osgi.MockBundleContext;
 import org.apache.sling.commons.testing.osgi.MockServiceReference;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
@@ -50,20 +48,15 @@ import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.servlets.resolver.internal.resource.MockServletResource;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProvider;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 
-@RunWith(JMock.class)
 public class SlingServletResolverTest {
-
-    protected final Mockery context = new JUnit4Mockery();
 
     private Servlet servlet;
 
@@ -141,18 +134,12 @@ public class SlingServletResolverTest {
         resolverField.setAccessible(true);
         resolverField.set(servletResolver, factory);
 
-        MockBundle bundle = new MockBundle(1L);
-        MockBundleContext bundleContext = new MockBundleContext(bundle) {
-            @Override
-            public ServiceRegistration registerService(String s, Object o, Dictionary dictionary) {
-                return null;
-            }
+        final Bundle bundle = Mockito.mock(Bundle.class);
+        Mockito.when(bundle.getBundleId()).thenReturn(1L);
 
-            @Override
-            public ServiceRegistration registerService(String[] strings, Object o, Dictionary dictionary) {
-                return null;
-            }
-        };
+        final BundleContext bundleContext = Mockito.mock(BundleContext.class);
+        Mockito.when(bundle.getBundleContext()).thenReturn(bundleContext);
+
         MockServiceReference serviceReference = new MockServiceReference(bundle);
         serviceReference.setProperty(Constants.SERVICE_ID, 1L);
         serviceReference.setProperty(ServletResolverConstants.SLING_SERVLET_NAME,

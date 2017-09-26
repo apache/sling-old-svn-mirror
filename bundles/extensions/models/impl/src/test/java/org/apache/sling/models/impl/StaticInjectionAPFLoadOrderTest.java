@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
@@ -54,6 +55,9 @@ public class StaticInjectionAPFLoadOrderTest {
 
     @Mock
     private BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
+
+    @Mock
+    private AdapterManager adapterManager;
     
     private ModelAdapterFactory factory;
     
@@ -118,6 +122,7 @@ public class StaticInjectionAPFLoadOrderTest {
     
     private void registerServices() {
         context.registerService(BindingsValuesProvidersByContext.class, bindingsValuesProvidersByContext);
+        context.registerService(AdapterManager.class, adapterManager);
         factory = context.registerInjectActivateService(new ModelAdapterFactory());
     }
 

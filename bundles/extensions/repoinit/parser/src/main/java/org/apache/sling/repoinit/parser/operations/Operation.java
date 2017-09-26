@@ -19,6 +19,7 @@ package org.apache.sling.repoinit.parser.operations;
 
 public abstract class Operation {
     public abstract void accept(OperationVisitor v);
+    public static final String DQUOTE = "\"";
     
     protected abstract String getParametersDescription();
     
@@ -26,5 +27,21 @@ public abstract class Operation {
     public String toString() {
         return getClass().getSimpleName() + " " + getParametersDescription();
     }
-
+    
+    public static String cleanupQuotedString(String s) {
+        if(s == null) {
+            return null;
+        }
+        if(s.startsWith(DQUOTE)) {
+            s = s.substring(1);
+        }
+        if(s.endsWith(DQUOTE)) {
+            s = s.substring(0, s.length() - 1);
+        }
+        s = s.trim();
+        if(s.length() == 0) {
+            return null;
+        }
+        return s;
+    }
 }

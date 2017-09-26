@@ -50,7 +50,7 @@ class PackageAdminClassLoader extends ClassLoader {
     private final DynamicClassLoaderManagerFactory factory;
 
     /** A cache for resolved classes. */
-    private Map<String, Class<?>> classCache = new ConcurrentHashMap<String, Class<?>>();
+    private Map<String, Class<?>> classCache = new ConcurrentHashMap<>();
 
     /** Negative class cache. */
     private Set<String> negativeClassCache = Collections.synchronizedSet(new HashSet<String>());
@@ -58,7 +58,7 @@ class PackageAdminClassLoader extends ClassLoader {
     private Map<String, Bundle> packageProviders = new ConcurrentHashMap<>();
 
     /** A cache for resolved urls. */
-    private Map<String, URL> urlCache = new ConcurrentHashMap<String, URL>();
+    private Map<String, URL> urlCache = new ConcurrentHashMap<>();
 
     public PackageAdminClassLoader(final PackageAdmin pckAdmin,
             final ClassLoader parent,
@@ -157,6 +157,7 @@ class PackageAdminClassLoader extends ClassLoader {
                     e = bundle.getResources(name);
                     if (e != null) {
                         packageProviders.put(packageName, bundle);
+                        this.factory.addUsedBundle(bundle);
                         LOGGER.debug("Marking bundle {}:{} as the provider for API package {}.", bundle.getSymbolicName(), bundle
                                 .getVersion().toString(), packageName);
                         return e;
@@ -192,6 +193,7 @@ class PackageAdminClassLoader extends ClassLoader {
                     url = bundle.getResource(name);
                     if (url != null) {
                         urlCache.put(name, url);
+                        this.factory.addUsedBundle(bundle);
                         packageProviders.put(packageName, bundle);
                         LOGGER.debug("Marking bundle {}:{} as the provider for API package {}.", bundle.getSymbolicName(), bundle
                                 .getVersion().toString(), packageName);

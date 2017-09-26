@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.jcr.contentparser</artifactId>
     <packaging>bundle</packaging>
-    <version>1.2.3-SNAPSHOT</version>
+    <version>1.2.5-SNAPSHOT</version>
 
     <name>Apache Sling JCR Content Parser</name>
     <description>
@@ -69,12 +69,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.3.2</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

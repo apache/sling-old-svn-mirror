@@ -161,6 +161,21 @@ public class ConfigurationResolverValueMapTest {
         assertEquals(false, props.get("boolParam", false));
     }
 
+    /**
+     * Test override for context path on which no configuration exists below /conf - not even on the inheritance lookup paths (SLING-7016)
+     */
+    @Test
+    public void testConfigWithOverride_NoExistingConfig() {
+        context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(
+                "[/content]sampleName={\"stringParam\":\"override1\",\"intParam\":222}"));
+
+        ValueMap props = underTest.get(site1Page1).name("sampleName").asValueMap();
+
+        assertEquals("override1", props.get("stringParam", String.class));
+        assertEquals(222, (int)props.get("intParam", 0));
+        assertEquals(false, props.get("boolParam", false));
+    }
+
     @Test
     public void testConfigCollectionWithOverride() {
         context.registerService(ConfigurationOverrideProvider.class, new DummyConfigurationOverrideProvider(

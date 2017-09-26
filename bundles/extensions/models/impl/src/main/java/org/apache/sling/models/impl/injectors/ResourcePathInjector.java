@@ -25,8 +25,8 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
@@ -108,7 +108,7 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
     }
 
     private List<Resource> getResources(ResourceResolver resolver, String[] paths, String fieldName) {
-        List<Resource> resources = new ArrayList<Resource>();
+        List<Resource> resources = new ArrayList<>();
         for (String path : paths) {
             Resource resource = resolver.getResource(path);
             if (resource != null) {

@@ -24,7 +24,9 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.osgi.annotation.versioning.ProviderType;
 
+@ProviderType
 public interface HApiUtil {
 
     String DEFAULT_RESOURCE_TYPE = "sling/hapi/components/type";

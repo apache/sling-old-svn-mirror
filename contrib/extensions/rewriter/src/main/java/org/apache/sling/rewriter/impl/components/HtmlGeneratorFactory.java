@@ -26,6 +26,7 @@ import org.apache.sling.rewriter.Generator;
 import org.apache.sling.rewriter.GeneratorFactory;
 import org.apache.sling.rewriter.ProcessingComponentConfiguration;
 import org.apache.sling.rewriter.ProcessingContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.xml.sax.ContentHandler;
@@ -38,6 +39,7 @@ import org.xml.sax.SAXException;
  */
 @Component(service = GeneratorFactory.class,
     property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
             "pipeline.type=html-generator"
     })
 public class HtmlGeneratorFactory implements GeneratorFactory {
@@ -48,6 +50,7 @@ public class HtmlGeneratorFactory implements GeneratorFactory {
     /**
      * @see org.apache.sling.rewriter.GeneratorFactory#createGenerator()
      */
+    @Override
     public Generator createGenerator() {
         return new HtmlGenerator(htmlParser);
     }
@@ -68,6 +71,7 @@ public class HtmlGeneratorFactory implements GeneratorFactory {
         /**
          * @see org.apache.sling.rewriter.Generator#finished()
          */
+        @Override
         public void finished() throws IOException, SAXException {
             this.htmlParser.parse(new ByteArrayInputStream(this.writer.toString().getBytes("UTF-8")), "UTF-8", this.contentHandler);
         }
@@ -75,10 +79,12 @@ public class HtmlGeneratorFactory implements GeneratorFactory {
         /**
          * @see org.apache.sling.rewriter.Generator#getWriter()
          */
+        @Override
         public PrintWriter getWriter() {
             return new PrintWriter(writer);
         }
 
+        @Override
         public void init(ProcessingContext context,
                          ProcessingComponentConfiguration config)
         throws IOException {
@@ -88,6 +94,7 @@ public class HtmlGeneratorFactory implements GeneratorFactory {
         /**
          * @see org.apache.sling.rewriter.Generator#setContentHandler(org.xml.sax.ContentHandler)
          */
+        @Override
         public void setContentHandler(ContentHandler handler) {
             this.contentHandler = handler;
         }
@@ -95,6 +102,7 @@ public class HtmlGeneratorFactory implements GeneratorFactory {
         /**
          * @see org.apache.sling.rewriter.Generator#dispose()
          */
+        @Override
         public void dispose() {
             // nothing to do
         }

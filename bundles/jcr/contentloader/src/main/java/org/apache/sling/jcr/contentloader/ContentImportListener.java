@@ -18,7 +18,7 @@
  */
 package org.apache.sling.jcr.contentloader;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Listener interface to provide callbacks for all imported updates
@@ -39,7 +39,7 @@ public interface ContentImportListener {
      * deleted Item.
      */
 	void onDelete(String srcPath);
-	
+
     /**
      * An Item has been moved to a new location. The source provides the
      * original path of the Item, the destination provides the new path of the
@@ -63,19 +63,19 @@ public interface ContentImportListener {
     /**
      * A child Node has been reordered. The orderedPath provides the path of the
      * node, which has been reordered. ThebeforeSibbling provides the name of
-     * the sibling node before which the source Node has been ordered. 
+     * the sibling node before which the source Node has been ordered.
      */
 	void onReorder(String orderedPath, String beforeSibbling);
-	
+
     /**
-     * A versionable Node has been checked in. The source path provides the path of the 
+     * A versionable Node has been checked in. The source path provides the path of the
      * newly checked in Node.
      * @since 2.1.4
      */
 	void onCheckin(String srcPath);
 
 	/**
-     * A versionable Node has been checked out. The source path provides the path of the 
+     * A versionable Node has been checked out. The source path provides the path of the
      * newly checked out Node.
      * @since 2.1.4
      */

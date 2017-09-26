@@ -44,8 +44,12 @@ public class CreatePath extends Operation {
     public void accept(OperationVisitor v) {
         v.visitCreatePath(this);
     }
-    
+
     public void addSegment(String path, String primaryType) {
+        addSegment(path, primaryType, null);
+    }
+
+    public void addSegment(String path, String primaryType, List<String> mixins) {
         // We might get a path like /var/discovery, in which case
         // the specified primary type applies to the last
         // segment only
@@ -55,10 +59,16 @@ public class CreatePath extends Operation {
                 continue;
             }
             String pt = defaultPrimaryType;
-            if(i == segments.length -1 && primaryType != null) {
-                pt = primaryType;
+            List<String> ms = null;
+            if(i == segments.length -1) {
+                if (primaryType != null) {
+                    pt = primaryType;
+                }
+                if (mixins != null && ! mixins.isEmpty()) {
+                    ms = mixins;
+                }
             }
-            pathDef.add(new PathSegmentDefinition(segments[i], pt));
+            pathDef.add(new PathSegmentDefinition(segments[i], pt, ms));
         }
     }
     

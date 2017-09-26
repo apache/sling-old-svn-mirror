@@ -26,8 +26,10 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import javax.servlet.Servlet;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
@@ -47,9 +49,6 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.ScriptEngineFactory;
-import javax.servlet.Servlet;
-
 public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
     static final String PACKAGE_HEADER = "Sling-Model-Packages";
@@ -57,7 +56,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
     static final String PROP_EXPORTER_SERVLET_CLASS = "sling.models.exporter.servlet.class";
     static final String PROP_EXPORTER_SERVLET_NAME = "sling.models.exporter.servlet.name";
-    
+
     /**
      * Service registration property for the adapter condition.
      */
@@ -80,29 +79,30 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
     private final BundleTracker bundleTracker;
 
     private final ModelAdapterFactory factory;
-    
+
     private final AdapterImplementations adapterImplementations;
 
     private final BindingsValuesProvidersByContext bindingsValuesProvidersByContext;
 
-    private final ScriptEngineFactory scriptEngineFactory;
-    
+    private final SlingModelsScriptEngineFactory scriptEngineFactory;
+
     public ModelPackageBundleListener(BundleContext bundleContext,
                                       ModelAdapterFactory factory,
                                       AdapterImplementations adapterImplementations,
-                                      BindingsValuesProvidersByContext bindingsValuesProvidersByContext) {
+                                      BindingsValuesProvidersByContext bindingsValuesProvidersByContext,
+                                      SlingModelsScriptEngineFactory scriptEngineFactory) {
         this.bundleContext = bundleContext;
         this.factory = factory;
         this.adapterImplementations = adapterImplementations;
         this.bindingsValuesProvidersByContext = bindingsValuesProvidersByContext;
-        this.scriptEngineFactory = new ExporterScriptEngineFactory(bundleContext.getBundle());
+        this.scriptEngineFactory = scriptEngineFactory;
         this.bundleTracker = new BundleTracker(bundleContext, Bundle.ACTIVE, this);
         this.bundleTracker.open();
     }
-    
+
     @Override
     public Object addingBundle(Bundle bundle, BundleEvent event) {
-        List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
+        List<ServiceRegistration> regs = new ArrayList<>();
 
         Dictionary<?, ?> headers = bundle.getHeaders();
         String packageList = PropertiesUtil.toString(headers.get(PACKAGE_HEADER), null);
@@ -150,7 +150,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                 if (adapterTypes.length == 0) {
                     adapterTypes = new Class<?>[] { implType };
                 } else if (!ArrayUtils.contains(adapterTypes, implType)) {
-                    adapterTypes = (Class<?>[]) ArrayUtils.add(adapterTypes, implType);
+                    adapterTypes = ArrayUtils.add(adapterTypes, implType);
                 }
                 // register adapter only if given adapters are valid
                 if (validateAdapterClasses(implType, adapterTypes)) {
@@ -233,7 +233,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
         }
         return arr;
     }
-    
+
     /**
      * Validate list of adapter classes. Make sure all given are either the annotated class itself,
      * or an interface or superclass of it.
@@ -252,7 +252,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
         }
         return true;
     }
-    
+
     /**
      * Registers an adapter factory for a annotated sling models class.
      * @param adapterTypes Adapter (either the class itself, or interface or superclass of it)
@@ -262,7 +262,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
      * @return Service registration
      */
     private ServiceRegistration registerAdapterFactory(Class<?>[] adapterTypes, Class<?>[] adaptableTypes, Class<?> implType, String condition) {
-        Dictionary<String, Object> registrationProps = new Hashtable<String, Object>();
+        Dictionary<String, Object> registrationProps = new Hashtable<>();
         registrationProps.put(AdapterFactory.ADAPTER_CLASSES, toStringArray(adapterTypes));
         registrationProps.put(AdapterFactory.ADAPTABLE_CLASSES, toStringArray(adaptableTypes));
         registrationProps.put(PROP_IMPLEMENTATION_CLASS, implType.getName());
@@ -281,7 +281,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
             Map<String, String> baseOptions = getOptions(exporterAnnotation);
             ExportServlet servlet = new ExportServlet(bundle.getBundleContext(), factory, bindingsValuesProvidersByContext,
                     scriptEngineFactory, annotatedClass, exporterAnnotation.selector(), exporterAnnotation.name(), accessor, baseOptions);
-            Dictionary<String, Object> registrationProps = new Hashtable<String, Object>();
+            Dictionary<String, Object> registrationProps = new Hashtable<>();
             registrationProps.put("sling.servlet.resourceTypes", resourceType);
             registrationProps.put("sling.servlet.selectors", exporterAnnotation.selector());
             registrationProps.put("sling.servlet.extensions", exporterAnnotation.extensions());
@@ -300,7 +300,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
         if (options.length == 0) {
             return Collections.emptyMap();
         } else {
-            Map<String, String> map = new HashMap<String, String>(options.length);
+            Map<String, String> map = new HashMap<>(options.length);
             for (ExporterOption option : options) {
                 map.put(option.name(), option.value());
             }

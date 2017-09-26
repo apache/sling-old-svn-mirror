@@ -19,21 +19,13 @@
 package org.apache.sling.distribution.queue.impl.simple;
 
 import javax.annotation.Nonnull;
-import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonException;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonString;
-import javax.json.JsonValue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FilenameFilter;
-import java.io.StringReader;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -117,6 +109,7 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
 
         if (checkpoint) {
             // recover from checkpoints
+            QueueItemMapper mapper = new QueueItemMapper();
             log.debug("recovering from checkpoints if needed");
             for (final String queueName : queueNames) {
                 log.debug("recovering for queue {}", queueName);
@@ -132,32 +125,9 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
                     try {
                         LineIterator lineIterator = IOUtils.lineIterator(new FileReader(qf));
                         while (lineIterator.hasNext()) {
-                            String s = lineIterator.nextLine();
-                            String[] split = s.split(" ");
-                            String id = split[0];
-                            String infoString = split[1];
-                            Map<String, Object> info = new HashMap<String, Object>();
-                            JsonReader reader = Json.createReader(new StringReader(infoString));
-                            JsonObject jsonObject = reader.readObject();
-                            for (Map.Entry<String, JsonValue> entry : jsonObject.entrySet()) {
-                                if (entry.getValue().getValueType().equals(JsonValue.ValueType.ARRAY))
-                                {
-                                    JsonArray value = jsonObject.getJsonArray(entry.getKey());
-                                    String[] a = new String[value.size()];
-                                    for (int i = 0; i < a.length; i++) {
-                                        a[i] = value.getString(i);
-                                    }
-                                    info.put(entry.getKey(), a);
-                                }
-                                else if (JsonValue.NULL.equals(entry.getValue())) {
-                                    info.put(entry.getKey(), null);
-                                }
-                                else
-                                {
-                                    info.put(entry.getKey(), ((JsonString) entry.getValue()).getString());
-                                }
-                            }
-                            queue.add(new DistributionQueueItem(id, info));
+                            String line  = lineIterator.nextLine();
+                            DistributionQueueItem item = mapper.readQueueItem(line);
+                            queue.add(item);
                         }
                         log.info("recovered {} items from queue {}", queue.getStatus().getItemsCount(), queueName);
                     } catch (FileNotFoundException e) {

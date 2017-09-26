@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.resourceresolver</artifactId>
-    <version>1.5.25-SNAPSHOT</version>
+    <version>1.5.31-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Resource Resolver</name>
@@ -114,7 +114,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.serviceusermapper</artifactId>
-            <version>1.0.0</version>
+            <version>1.3.4</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

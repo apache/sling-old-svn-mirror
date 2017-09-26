@@ -314,7 +314,6 @@ public class MetricWebConsolePlugin extends HttpServlet implements
         pw.println("<th class='header'>98%</th>");
         pw.println("<th class='header'>99%</th>");
         pw.println("<th class='header'>999%</th>");
-        pw.println("<th>Duration Unit</th>");
         pw.println("</tr>");
         pw.println("</thead>");
         pw.println("<tbody>");
@@ -325,25 +324,22 @@ public class MetricWebConsolePlugin extends HttpServlet implements
             Snapshot s = h.getSnapshot();
             String name = e.getKey();
 
-            double durationFactor = 1.0 / timeUnit.durationFor(name).toNanos(1);
-            String durationUnit = timeUnit.durationFor(name).toString().toLowerCase(Locale.US);
             pw.printf("<tr class='%s ui-state-default'>%n", rowClass);
 
             pw.printf("<td>%s</td>", name);
             pw.printf("<td>%d</td>", h.getCount());
-            pw.printf("<td>%f</td>", s.getMedian() * durationFactor);
-            pw.printf("<td>%f</td>", s.getMin() * durationFactor);
-            pw.printf("<td>%f</td>", s.getMax() * durationFactor);
-            pw.printf("<td>%f</td>", s.getMean() * durationFactor);
-            pw.printf("<td>%f</td>", s.getStdDev() * durationFactor);
+            pw.printf("<td>%f</td>", s.getMedian());
+            pw.printf("<td>%d</td>", s.getMin());
+            pw.printf("<td>%d</td>", s.getMax());
+            pw.printf("<td>%f</td>", s.getMean());
+            pw.printf("<td>%f</td>", s.getStdDev());
 
-            pw.printf("<td>%f</td>", s.get75thPercentile() * durationFactor);
-            pw.printf("<td>%f</td>", s.get95thPercentile() * durationFactor);
-            pw.printf("<td>%f</td>", s.get98thPercentile() * durationFactor);
-            pw.printf("<td>%f</td>", s.get99thPercentile() * durationFactor);
-            pw.printf("<td>%f</td>", s.get999thPercentile() * durationFactor);
+            pw.printf("<td>%f</td>", s.get75thPercentile());
+            pw.printf("<td>%f</td>", s.get95thPercentile());
+            pw.printf("<td>%f</td>", s.get98thPercentile());
+            pw.printf("<td>%f</td>", s.get99thPercentile());
+            pw.printf("<td>%f</td>", s.get999thPercentile());
 
-            pw.printf("<td>%s</td>", durationUnit);
 
             pw.println("</tr>");
             rowClass = "odd".equals(rowClass) ? "even" : "odd";

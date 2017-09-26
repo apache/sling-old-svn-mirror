@@ -21,11 +21,12 @@ package org.apache.sling.scripting.sightly.impl.engine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;

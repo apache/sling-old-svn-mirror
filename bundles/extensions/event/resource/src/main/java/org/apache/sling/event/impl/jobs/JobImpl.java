@@ -278,7 +278,7 @@ public class JobImpl implements Job, Comparable<JobImpl> {
             final Calendar now = Calendar.getInstance();
             final long elapsed = now.getTimeInMillis() - this.getProcessingStarted().getTimeInMillis();
 
-            final long eta = elapsed * steps / step;
+            final long eta = System.currentTimeMillis() + (elapsed / current) * (steps - current);
             now.setTimeInMillis(eta);
             this.setProperty(Job.PROPERTY_JOB_PROGRESS_ETA, now);
             return new String[] {Job.PROPERTY_JOB_PROGRESS_STEP, Job.PROPERTY_JOB_PROGRESS_ETA};
@@ -291,7 +291,7 @@ public class JobImpl implements Job, Comparable<JobImpl> {
             final Date finishDate = new Date(System.currentTimeMillis() + eta * 1000);
             final Calendar finishCal = Calendar.getInstance();
             finishCal.setTime(finishDate);
-            this.setProperty(Job.PROPERTY_JOB_PROGRESS_ETA, eta);
+            this.setProperty(Job.PROPERTY_JOB_PROGRESS_ETA, finishCal);
         } else {
             this.properties.remove(Job.PROPERTY_JOB_PROGRESS_ETA);
         }

@@ -1,0 +1,2 @@
+# Test "disable service user" statements
+disable service user svcA : "This message explains why it's disabled.  Whitespace   is  preserved."

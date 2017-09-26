@@ -27,8 +27,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.iterator.AdaptToIterator;
 import org.apache.sling.query.resource.ResourceTreeProvider;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * SlingQuery is a Sling resource tree traversal tool inspired by the jQuery.
@@ -62,15 +61,11 @@ public class SlingQuery extends AbstractQuery<Resource, SlingQuery> {
 	 * class (eg. {@code adaptTo()} returns {@code null}), it will be skipped.
 	 * 
 	 * @param clazz Class used to adapt the Resources
+	 * @param <E> type of the clazz
 	 * @return new iterable containing succesfully adapted Resources
 	 */
 	public <E> Iterable<E> map(final Class<? extends E> clazz) {
-		return new Iterable<E>() {
-			@Override
-			public Iterator<E> iterator() {
-				return new AdaptToIterator<Resource, E>(SlingQuery.this.iterator(), clazz);
-			}
-		};
+		return () -> new AdaptToIterator<>(SlingQuery.this.iterator(), clazz);
 	}
 
 	@Override

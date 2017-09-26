@@ -22,8 +22,8 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.WordUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -82,7 +82,7 @@ public class ResultTxtVerboseSerializer {
     public String serialize(final Result overallResult, final List<HealthCheckExecutionResult> executionResults, boolean includeDebug) {
 
         LOG.debug("Sending verbose txt response... ");
-        
+
         StringBuilder resultStr = new StringBuilder();
 
         resultStr.append(StringUtils.repeat("-", totalWidth) + NEWLINE);
@@ -134,7 +134,7 @@ public class ResultTxtVerboseSerializer {
             resultStr.append(messageToPrint);
             resultStr.append(NEWLINE);
         }
-        
+
         if (isFirst) {
             // no log entry exists, ensure newline
             resultStr.append(NEWLINE);

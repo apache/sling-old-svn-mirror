@@ -33,6 +33,7 @@ import java.util.Set;
 
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 import org.apache.sling.hc.api.execution.HealthCheckSelector;
@@ -44,6 +45,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -84,11 +86,11 @@ public class CompositeHealthCheckTest {
         executionResults.add(createExecutionResult("Check 1", testTags, new Result(Result.Status.INFO, "Good")));
         executionResults.add(createExecutionResult("Check 2", testTags, new Result(Result.Status.CRITICAL, "Bad")));
 
-        when(healthCheckExecutor.execute(any(HealthCheckSelector.class))).thenReturn(executionResults);
+        when(healthCheckExecutor.execute(any(HealthCheckSelector.class), any(HealthCheckExecutionOptions.class))).thenReturn(executionResults);
 
         Result result = compositeHealthCheck.execute();
 
-        verify(healthCheckExecutor, times(1)).execute(argThat(selectorWithTags(testTags)));
+        verify(healthCheckExecutor, times(1)).execute(argThat(selectorWithTags(testTags)), argThat(andOptions));
 
         assertEquals(Result.Status.CRITICAL, result.getStatus());
 
@@ -163,7 +165,7 @@ public class CompositeHealthCheckTest {
         compositeHealthCheck.setHealthCheckFilter(new HealthCheckFilter(null) {
 
             @Override
-            public ServiceReference[] getHealthCheckServiceReferences(HealthCheckSelector selector) {
+            public ServiceReference[] getHealthCheckServiceReferences(HealthCheckSelector selector, boolean combineTagsWithOr) {
                 String[] tags = selector.tags();
                 ServiceReference[] result = new ServiceReference[] {};
                 if (tags.length > 0) {
@@ -187,6 +189,42 @@ public class CompositeHealthCheckTest {
         assertEquals(Result.Status.HEALTH_CHECK_ERROR, result.getStatus());
     }
 
+    @Test
+    public void testCombineWithOr() {
+
+        // composite check referencing itself
+        final String[] filterTags = new String[] { "check1" };
+        compositeHealthCheck.setFilterTags(filterTags);
+        compositeHealthCheck.setCombineTagsWithOr(true);
+
+        compositeHealthCheck.execute();
+
+        verify(healthCheckExecutor, times(1)).execute(argThat(selectorWithTags(filterTags)), argThat(orOptions));
+    }
+
+    private Matcher<HealthCheckExecutionOptions> orOptions = new TypeSafeMatcher<HealthCheckExecutionOptions>() {
+        @Override
+        protected boolean matchesSafely(HealthCheckExecutionOptions options) {
+            return options.isCombineTagsWithOr();
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("options combining tags with or.");
+        }
+    };
+
+    private Matcher<HealthCheckExecutionOptions> andOptions = new TypeSafeMatcher<HealthCheckExecutionOptions>() {
+        @Override
+        protected boolean matchesSafely(HealthCheckExecutionOptions options) {
+            return !options.isCombineTagsWithOr();
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("options combining tags with and.");
+        }
+    };
 
     private static class DummyHcServiceReference implements ServiceReference {
 

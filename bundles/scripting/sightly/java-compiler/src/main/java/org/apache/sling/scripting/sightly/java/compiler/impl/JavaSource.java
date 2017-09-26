@@ -16,7 +16,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.java.compiler.impl;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
  * Builder object for a Java class printing method.

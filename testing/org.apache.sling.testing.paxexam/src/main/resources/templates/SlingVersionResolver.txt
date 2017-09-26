@@ -34,11 +34,11 @@ public class SlingVersionResolver implements VersionResolver {
     public static final String SLING_GROUP_ID = "org.apache.sling";
 
     public SlingVersionResolver() {
-        versions.put("org.apache.sling:org.apache.sling.scripting.jsp-api", "1.0.1-SNAPSHOT");
-        versions.put("org.apache.sling:org.apache.sling.scripting.el-api", "1.0.1-SNAPSHOT");
-        versions.put("org.apache.felix:org.apache.felix.configadmin", "1.8.14");
+        versions.put("org.apache.sling:org.apache.sling.scripting.jsp-api", "1.0.0");
+        versions.put("org.apache.sling:org.apache.sling.scripting.el-api", "1.0.0");
+        versions.put("org.apache.felix:org.apache.felix.configadmin", "1.8.16");
         versions.put("org.apache.felix:org.apache.felix.eventadmin", "1.4.8");
-        versions.put("org.apache.felix:org.apache.felix.http.jetty", "3.4.2");
+        versions.put("org.apache.felix:org.apache.felix.http.jetty", "3.4.4");
         versions.put("org.apache.felix:org.apache.felix.http.servlet-api", "1.1.2");
         versions.put("org.apache.felix:org.apache.felix.http.whiteboard", "3.0.0");
         versions.put("org.apache.felix:org.apache.felix.webconsole.plugins.ds", "2.0.6");
@@ -48,14 +48,14 @@ public class SlingVersionResolver implements VersionResolver {
         versions.put("org.apache.aries.jmx:org.apache.aries.jmx.whiteboard", "1.1.5");
         versions.put("org.apache.felix:org.apache.felix.inventory", "1.0.4");
         versions.put("org.apache.felix:org.apache.felix.metatype", "1.1.2");
-        versions.put("org.apache.felix:org.apache.felix.scr", "2.0.8");
-        versions.put("org.apache.felix:org.apache.felix.webconsole", "4.3.0");
+        versions.put("org.apache.felix:org.apache.felix.scr", "2.0.12");
+        versions.put("org.apache.felix:org.apache.felix.webconsole", "4.3.4");
         versions.put("org.ops4j.base:ops4j-base-lang", "1.5.0");
         versions.put("org.ops4j.base:ops4j-base-util-property", "1.5.0");
-        versions.put("org.ops4j.pax.swissbox:pax-swissbox-property", "1.8.2");
+        versions.put("org.ops4j.pax.swissbox:pax-swissbox-property", "1.8.3");
         versions.put("org.ops4j.pax.url:pax-url-classpath", "2.5.2");
         versions.put("org.ops4j.pax.url:pax-url-commons", "2.5.2");
-        versions.put("org.slf4j:log4j-over-slf4j", "1.7.24");[# th:each="bundle : ${bundles}"]
+        versions.put("org.slf4j:log4j-over-slf4j", "1.7.25");[# th:each="bundle : ${bundles}"]
         versions.put("[(${bundle.groupId})]:[(${bundle.artifactId})]", "[(${bundle.version})]");
 [/]    }
 

@@ -53,9 +53,9 @@ public class MainQueueConfiguration {
                 name="Priority",
                 description="The priority for the threads used by this queue. Default is norm.",
                 options = {
-                        @Option(label="NORM",value="Norm"),
-                        @Option(label="MIN",value="Min"),
-                        @Option(label="MAX",value="Max")
+                        @Option(label="Norm",value="NORM"),
+                        @Option(label="Min",value="MIN"),
+                        @Option(label="Max",value="MAX")
                 })
         String queue_priority() default ConfigurationConstants.DEFAULT_PRIORITY;
 

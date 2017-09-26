@@ -34,7 +34,7 @@ public abstract class BaseImportLoader extends JcrXmlImporter {
 
     public static final String EXT_JCR_XML = ".jcr.xml";
 
-    private ContentReaderWhiteboard contentReaderWhiteboard;
+    protected ContentReaderWhiteboard contentReaderWhiteboard;
 
     // This constructor is meant to be used by the OSGi
     public BaseImportLoader() {
@@ -45,18 +45,8 @@ public abstract class BaseImportLoader extends JcrXmlImporter {
         this.contentReaderWhiteboard = contentReaderWhiteboard;
     }
 
-    protected void bindContentReaderWhiteboard(final ContentReaderWhiteboard service) {
-        this.contentReaderWhiteboard = service;
-    }
-
-    protected void unbindContentReaderWhiteboard(final ContentReaderWhiteboard service) {
-        if ( this.contentReaderWhiteboard == service ) {
-            this.contentReaderWhiteboard = null;
-        }
-    }
-
     public Map<String, ContentReader> getContentReaders() {
-        Map<String, ContentReader> readers = new LinkedHashMap<String, ContentReader>();
+        Map<String, ContentReader> readers = new LinkedHashMap<>();
         readers.put(EXT_JCR_XML, null);
         for (Entry<String, ContentReader> e : contentReaderWhiteboard.getReadersByExtension().entrySet()) {
             readers.put('.' + e.getKey(), e.getValue());

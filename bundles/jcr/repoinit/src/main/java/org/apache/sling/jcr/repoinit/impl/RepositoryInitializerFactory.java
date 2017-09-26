@@ -39,8 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * SlingRepositoryInitializer Factory that executes repoinit statements read
- * from a configurable URL.
+ * SlingRepositoryInitializer Factory that executes repoinit statements configured
+ * through OSGi configurations. A configuration can contain URLs from which the
+ * statements are read or inlined statements.
  */
 @Designate(ocd = RepositoryInitializerFactory.Config.class, factory=true)
 @Component(service = SlingRepositoryInitializer.class,

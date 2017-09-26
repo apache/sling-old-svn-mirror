@@ -33,7 +33,10 @@ import org.apache.sling.provisioning.model.ModelUtility.VariableResolver;
 /**
  * Helper methods for resolving variables and artifact versions in models.
  */
-class ModelResolveUtility {
+public class ModelResolveUtility {
+
+    private ModelResolveUtility() {
+    }
 
     /**
      * Replace properties in the string.
@@ -41,10 +44,10 @@ class ModelResolveUtility {
      * @param feature The feature
      * @param v The variable name
      * @param resolver Optional resolver
-     * @result The value of the variable
+     * @return The value of the variable
      * @throws IllegalArgumentException If variable can't be found.
      */
-    static String replace(final Feature feature, final String v, final VariableResolver resolver) {
+    public static String replace(final Feature feature, final String v, final VariableResolver resolver) {
         if ( v == null ) {
             return null;
         }

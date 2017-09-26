@@ -19,8 +19,11 @@
 
 package org.apache.sling.hapi;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 import java.util.Collection;
 
+@ProviderType
 public interface HApiTypesCollection extends Collection<HApiType> {
     /**
      * The name of this type collection

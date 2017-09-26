@@ -20,8 +20,8 @@
 package org.apache.sling.query.function;
 
 import java.util.Iterator;
+import java.util.function.Predicate;
 
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.api.internal.ElementToIteratorFunction;
 import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
@@ -48,12 +48,12 @@ public class HasFunction<T> implements ElementToIteratorFunction<T> {
 	}
 
 	public HasFunction(Predicate<T> predicate, SearchStrategy searchStrategy, TreeProvider<T> provider) {
-		this(new FindFunction<T>(searchStrategy, provider, ""), new FilterFunction<T>(predicate));
+		this(new FindFunction<>(searchStrategy, provider, ""), new FilterFunction<T>(predicate));
 	}
 
 	public HasFunction(Iterable<T> iterable, TreeProvider<T> provider) {
-		this.findFunction = new DescendantFunction<T>(iterable, provider);
-		this.filter = new IdentityFunction<T>();
+		this.findFunction = new DescendantFunction<>(iterable, provider);
+		this.filter = new IdentityFunction<>();
 	}
 
 	@Override
@@ -61,7 +61,7 @@ public class HasFunction<T> implements ElementToIteratorFunction<T> {
 		Iterator<Option<T>> iterator = IteratorUtils.singleElementIterator(Option.of(input, 0));
 		iterator = findFunction.apply(iterator);
 		iterator = filter.apply(iterator);
-		if (new EmptyElementFilter<T>(iterator).hasNext()) {
+		if (new EmptyElementFilter<>(iterator).hasNext()) {
 			return IteratorUtils.singleElementIterator(input);
 		} else {
 			return IteratorUtils.emptyIterator();

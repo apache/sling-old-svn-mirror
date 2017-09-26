@@ -42,30 +42,19 @@ public class Activator implements BundleActivator, BundleListener {
 
     private final Map<Long, BundleResourceProvider[]> bundleResourceProviderMap = new HashMap<>();
 
-    private volatile BundleContext bundleContext;
-
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     @Override
     public void start(final BundleContext context) throws Exception {
-
-        this.bundleContext = context;
-
         context.addBundleListener(this);
 
-        try {
-            final Bundle[] bundles = context.getBundles();
-            for (final Bundle bundle : bundles) {
-                if (bundle.getState() == Bundle.ACTIVE) {
-                    // add bundle resource provider for active bundles
-                    addBundleResourceProvider(bundle);
-                }
+        final Bundle[] bundles = context.getBundles();
+        for (final Bundle bundle : bundles) {
+            if (bundle.getState() == Bundle.ACTIVE) {
+                // add bundle resource provider for active bundles
+                addBundleResourceProvider(bundle);
             }
-        } catch (Throwable t) {
-            log.error(
-                "activate: Problem while registering bundle resources for existing bundles",
-                t);
         }
 
         BundleResourceWebConsolePlugin.initPlugin(context);
@@ -79,7 +68,16 @@ public class Activator implements BundleActivator, BundleListener {
         BundleResourceWebConsolePlugin.destroyPlugin();
 
         context.removeBundleListener(this);
-        this.bundleContext = null;
+        for(final BundleResourceProvider[] providers : this.bundleResourceProviderMap.values()) {
+            for(final BundleResourceProvider p : providers) {
+                try {
+                    p.unregisterService();
+                } catch ( final IllegalStateException ise) {
+                    // might happen on shutdown
+                }
+            }
+        }
+        this.bundleResourceProviderMap.clear();
     }
 
     /**
@@ -108,38 +106,63 @@ public class Activator implements BundleActivator, BundleListener {
     // ---------- Bundle provided resources -----------------------------------
 
     private void addBundleResourceProvider(final Bundle bundle) {
-        final String prefixes = bundle.getHeaders().get(
-            BUNDLE_RESOURCE_ROOTS);
-        if (prefixes != null) {
-            log.debug(
-                "addBundleResourceProvider: Registering resources '{}' for bundle {}/{} as service ",
-                new Object[] { prefixes, bundle.getSymbolicName(),
-                    bundle.getBundleId() });
+        BundleResourceProvider[] providers = null;
+        try {
+            synchronized ( this ) {
+                // on startup we might get here twice for a bundle (listener and activator)
+                if ( bundleResourceProviderMap.get(bundle.getBundleId()) != null ) {
+                    return;
+                }
+                final String prefixes = bundle.getHeaders().get(BUNDLE_RESOURCE_ROOTS);
+                if (prefixes != null) {
+                    log.debug(
+                        "addBundleResourceProvider: Registering resources '{}' for bundle {}:{} ({}) as service ",
+                        new Object[] { prefixes, bundle.getSymbolicName(), bundle.getVersion(),
+                            bundle.getBundleId() });
 
-            final MappedPath[] roots = BundleResourceProvider.getRoots(bundle, prefixes);
-            final BundleResourceProvider[] providers = new BundleResourceProvider[roots.length];
+                    final PathMapping[] roots = PathMapping.getRoots(prefixes);
+                    providers = new BundleResourceProvider[roots.length];
 
-            int index = 0;
-            for(final MappedPath path : roots) {
-                final BundleResourceProvider brp = new BundleResourceProvider(bundle, path);
-                final long id = brp.registerService(bundleContext);
-                providers[index] = brp;
-                bundleResourceProviderMap.put(bundle.getBundleId(), providers);
+                    int index = 0;
+                    final BundleResourceCache cache = new BundleResourceCache(bundle);
+                    for(final PathMapping path : roots) {
+                        final BundleResourceProvider brp = new BundleResourceProvider(cache, path);
+                        providers[index] = brp;
 
-                log.debug("addBundleResourceProvider: Service ID = {}", id);
-                index++;
+                        index++;
+                    }
+                    bundleResourceProviderMap.put(bundle.getBundleId(), providers);
+                }
             }
+            if ( providers != null ) {
+                for(final BundleResourceProvider provider : providers) {
+                    final long id = provider.registerService();
+                    log.debug("addBundleResourceProvider: Service ID = {}", id);
+                }
+            }
+        } catch (final Throwable t) {
+            log.error(
+                "activate: Problem while registering bundle resources for bundle "
+                     + bundle.getSymbolicName() + ":" + bundle.getVersion() + " (" + bundle.getBundleId() + ")",
+                t);
         }
     }
 
     private void removeBundleResourceProvider(final Bundle bundle) {
-        final BundleResourceProvider[] brp = bundleResourceProviderMap.remove(bundle.getBundleId());
+        final BundleResourceProvider[] brp;
+        synchronized ( this ) {
+            brp = bundleResourceProviderMap.remove(bundle.getBundleId());
+        }
         if (brp != null) {
             log.debug(
-                "removeBundleResourceProvider: Unregistering resources for bundle {}/{}",
-                new Object[] { bundle.getSymbolicName(), bundle.getBundleId() });
+                "removeBundleResourceProvider: Unregistering resources for bundle {}:{} ({})",
+                new Object[] { bundle.getSymbolicName(), bundle.getVersion(), bundle.getBundleId() });
             for(final BundleResourceProvider provider : brp) {
-                provider.unregisterService();
+                try {
+                    provider.unregisterService();
+                } catch ( final IllegalStateException ise) {
+                    // might happen on shutdown
+                }
             }
         }
     }

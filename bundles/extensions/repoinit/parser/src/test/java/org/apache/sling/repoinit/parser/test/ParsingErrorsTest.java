@@ -64,6 +64,24 @@ public class ParsingErrorsTest {
             add(new Object[] { "create service user bob,alice,tom21 # comment not allowed here", ParseException.class });
             add(new Object[] { "CREATE service user bob, alice, tom21", ParseException.class });
             add(new Object[] { "create SERVICE user bob, alice, tom21", ParseException.class });
+            
+            // Disable service user with missing reason
+            add(new Object[] { "disable service user foo", ParseException.class });
+            
+            // Quoted strings in disable service user
+            add(new Object[] { "disable service user foo missing colon and quotes", ParseException.class });
+            add(new Object[] { "disable service user foo : missing quotes", ParseException.class });
+            add(new Object[] { "disable service user foo \"missing colon\"", ParseException.class });
+            add(new Object[] { "disable service user foo : missing start quote\"", ParseException.class });
+            add(new Object[] { "disable service user foo : \"missing end quote", ParseException.class });
+
+            // SLING-7066 default mixin is not supported
+            add(new Object[] { "create path (sling:Folder mixin mix:A) /var/foo", ParseException.class });
+            add(new Object[] { "create path (mixin mix:A) /var/foo", ParseException.class });
+
+            // SLING-7061
+            add(new Object[] { "set repository ACL for principal1\nallow jcr:somePermission on /\nend", ParseException.class });
+
         }};
         return result;
     }

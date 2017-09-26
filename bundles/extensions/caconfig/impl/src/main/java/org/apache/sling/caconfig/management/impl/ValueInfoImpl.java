@@ -112,7 +112,7 @@ final class ValueInfoImpl<T> implements ValueInfo<T> {
         if (isDefault() || effectiveValue == null) {
             return false;
         }
-        else if (resolvedConfigurationResource == null) {
+        else if (resolvedConfigurationResource == null || resolvedConfigurationResource.getPath() == null) {
             return false;
         }
         else if (writebackConfigurationResource == null) {

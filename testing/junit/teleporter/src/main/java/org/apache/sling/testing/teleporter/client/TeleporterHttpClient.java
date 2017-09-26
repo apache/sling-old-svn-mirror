@@ -29,6 +29,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,7 +42,6 @@ import javax.json.JsonReader;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
-import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.runner.Result;
@@ -89,7 +89,7 @@ class TeleporterHttpClient {
     
     public void setConnectionCredentials(URLConnection c) {
         if(credentials != null && !credentials.isEmpty()) {
-            final String basicAuth = "Basic " + new String(DatatypeConverter.printBase64Binary(credentials.getBytes()));
+            final String basicAuth = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes());
             c.setRequestProperty ("Authorization", basicAuth);
         }
     }

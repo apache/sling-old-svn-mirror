@@ -434,8 +434,8 @@ public class TopologyRequestValidator {
             BadPaddingException, UnsupportedEncodingException, InvalidKeyException,
             NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeySpecException {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, getCiperKey(Base64.decodeBase64(jsonArray.getString(0).getBytes("UTF-8"))), new IvParameterSpec(Base64.decodeBase64(jsonArray.getString(1).getBytes("UTF-8"))));
-        return new String(cipher.doFinal(Base64.decodeBase64(jsonArray.getString(2).getBytes("UTF-8"))));
+        cipher.init(Cipher.DECRYPT_MODE, getCiperKey(Base64.decodeBase64(jsonArray.get(0).toString().getBytes("UTF-8"))), new IvParameterSpec(Base64.decodeBase64(jsonArray.get(1).toString().getBytes("UTF-8"))));
+        return new String(cipher.doFinal(Base64.decodeBase64(jsonArray.get(2).toString().getBytes("UTF-8"))));
     }
 
     /**

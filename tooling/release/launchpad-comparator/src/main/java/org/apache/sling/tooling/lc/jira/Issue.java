@@ -16,10 +16,10 @@
  */
 package org.apache.sling.tooling.lc.jira;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.inject.internal.util.Objects;
 
 public class Issue implements Comparable<Issue> {
     
@@ -67,7 +67,8 @@ public class Issue implements Comparable<Issue> {
         String ourProject = ourMatcher.group(1);
         String theirProject = theirMatcher.group(1);
         
-        if ( !Objects.equal(ourProject, theirProject)) {
+        
+        if ( !Objects.equals(ourProject, theirProject)) {
             return ourProject.compareTo(theirProject);
         }
         

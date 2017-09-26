@@ -26,12 +26,10 @@ import java.util.zip.ZipInputStream;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.contentloader.ContentCreator;
 import org.apache.sling.jcr.contentloader.ContentReader;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
 
 
 /**
@@ -39,11 +37,13 @@ import org.apache.sling.jcr.contentloader.ContentReader;
  *
  * @since 2.0.4
  */
-@Component
-@Service
-@Properties({
-    @Property(name = ContentReader.PROPERTY_EXTENSIONS, value = {"zip", "jar"}),
-    @Property(name = ContentReader.PROPERTY_TYPES, value = {"application/zip", "application/java-archive"})
+@Component(service = ContentReader.class,
+    property = {
+        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+        ContentReader.PROPERTY_EXTENSIONS + "=zip",
+        ContentReader.PROPERTY_EXTENSIONS + "=jar",
+        ContentReader.PROPERTY_TYPES + "=application/zip",
+        ContentReader.PROPERTY_TYPES + "=application/java-archive"
 })
 public class ZipReader implements ContentReader {
 
@@ -52,6 +52,7 @@ public class ZipReader implements ContentReader {
     /**
      * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.ContentCreator)
      */
+    @Override
     public void parse(java.net.URL url, ContentCreator creator)
     		throws IOException, RepositoryException {
     	parse(url.openStream(), creator);
@@ -60,7 +61,8 @@ public class ZipReader implements ContentReader {
 	/**
 	 * @see org.apache.sling.jcr.contentloader.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.ContentCreator)
 	 */
-	public void parse(InputStream ins, ContentCreator creator)
+	@Override
+    public void parse(InputStream ins, ContentCreator creator)
 			throws IOException, RepositoryException {
         try {
             creator.createNode(null, NT_FOLDER, null);

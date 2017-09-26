@@ -17,6 +17,8 @@
 
 package org.apache.sling.scripting.jsp.jasper.compiler;
 
+import java.net.URL;
+
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 
 
@@ -63,6 +65,8 @@ public abstract class TldLocationsCache {
     public static final int NOROOT_REL_URI = 2;
 
     public abstract String[] getLocation(String uri) throws JasperException;
+
+    public abstract URL getTldLocationURL(String tldLocation);
 
     /**
      * Returns the type of a URI:

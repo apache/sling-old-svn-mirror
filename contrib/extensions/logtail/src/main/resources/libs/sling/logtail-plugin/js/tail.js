@@ -20,6 +20,8 @@
     var logarea;
     var follow = true;
     var searchCriteria = [];
+    searchCriteria.push({"string":"*ERROR*", "bold":false, "italic":false, "forecolor":"#ffffff", "backcolor":"#ff0000"});
+    searchCriteria.push({"string":"*WARN*", "bold":false, "italic":false, "forecolor":"#ff0000", "backcolor":"#ffff80"});
     var logfontsize = 9;
     var refreshInterval = 3000;
     var _load = false;
@@ -134,7 +136,7 @@
 			$(document.body).append(insertModal);
 			var criteria = "";
             for(var i=0; i < searchCriteria.length; i++) {
-                criteria = criteria + "<li class='criteria-item'><div class='box'>" + searchCriteria[i]["string"] + "</div></li>";
+                criteria = criteria + "<li class='criteria-item' data-index='" + i + "'><span class='box' style='color:"+searchCriteria[i].forecolor+";background-color:"+searchCriteria[i].backcolor+";font:" + (searchCriteria[i].bold?" bold ":"") + (searchCriteria[i].italic?" italic ":"") + ";'>" + searchCriteria[i].string + "</span>" + searchCriteria[i].string + "</li>";
         	}
 
             var content = "<div id='criteria' class='highlight-content-inner-div'><ul class='criteria-list'>" + criteria + "</ul></div>" +

@@ -22,7 +22,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -162,14 +161,13 @@ class BundleResourceCache {
      *         entries considered direct children of the <code>parentPath</code>
      *         or <code>null</code> if the parent entry does not exist.
      */
-    Iterator<String> getEntryPaths(String path) {
+    List<String> getEntryPaths(String path) {
         List<String> list = listCache.get(path);
         if (list == null) {
 
-            @SuppressWarnings("unchecked")
             Enumeration<String> entries = bundle.getEntryPaths(path);
             if (entries != null && entries.hasMoreElements()) {
-                list = new LinkedList<String>();
+                list = new LinkedList<>();
                 while (entries.hasMoreElements()) {
                     list.add(entries.nextElement());
                 }
@@ -182,7 +180,7 @@ class BundleResourceCache {
             listCache.put(path, list);
         }
 
-        return (list == NOT_FOUND_CHILDREN) ? null : list.iterator();
+        return list;
     }
 
     // ---------- Management API

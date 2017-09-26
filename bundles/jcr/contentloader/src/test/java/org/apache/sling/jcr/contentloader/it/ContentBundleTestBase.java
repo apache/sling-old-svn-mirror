@@ -56,52 +56,52 @@ import org.slf4j.LoggerFactory;
 /** Base class for testing bundles that provide initial content */
 @RunWith(PaxExam.class)
 public abstract class ContentBundleTestBase {
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Rule
     public final RetryRule retry = new RetryRule(RETRY_TIMEOUT, RETRY_INTERVAL);
-    
+
     @Inject
     protected BundleContext bundleContext;
 
     @Inject
     protected SlingRepository repository;
-    
+
     protected static Session session;
     protected static String bundleSymbolicName;
     protected static String contentRootPath;
-    private static final List<Bundle> bundlesToRemove = new ArrayList<Bundle>();
-    
+    private static final List<Bundle> bundlesToRemove = new ArrayList<>();
+
     protected static final int RETRY_TIMEOUT = 5000;
     protected static final int RETRY_INTERVAL = 100;
     protected static final String SLING_INITIAL_CONTENT_HEADER = "Sling-Initial-Content";
     protected static final String DEFAULT_PATH_IN_BUNDLE = "test-initial-content";
-    
+
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
         return PaxExamUtilities.paxConfig();
     }
-    
+
     @BeforeClass
     public static void setupClass() {
         bundleSymbolicName = "TEST-" + UUID.randomUUID();
         contentRootPath = "/test-content/" + bundleSymbolicName;
     }
-    
+
     @Before
     public void setup() throws Exception {
         registerStartupHandler();
 
         session = repository.loginAdministrative(null);
-        
+
         // The RetryRule executes this method on every retry, make
         // sure to install our test bundle only once
         if(!bundlesToRemove.isEmpty()) {
             return;
         }
         assertFalse("Expecting no content before test", session.itemExists(contentRootPath));
-        
+
         // Create, install and start a bundle that has initial content
         final InputStream is = getTestBundleStream();
         try {
@@ -111,10 +111,10 @@ public abstract class ContentBundleTestBase {
         } finally {
             is.close();
         }
-        
+
         maybeDumpTestBundle();
     }
-    
+
     /** Optionally dump our test bundle, for troubleshooting it */
     private void maybeDumpTestBundle() throws Exception {
         final boolean doDump = Boolean.valueOf(System.getProperty("dump.test.bundles", "false"));
@@ -129,15 +129,15 @@ public abstract class ContentBundleTestBase {
             }
         }
     }
-    
+
     private InputStream getTestBundleStream() throws Exception {
         return setupTestBundle(TinyBundles.bundle()
             .set(Constants.BUNDLE_SYMBOLICNAME, bundleSymbolicName)
             ).build(TinyBundles.withBnd());
     }
-    
+
     abstract protected TinyBundle setupTestBundle(TinyBundle b) throws Exception;
-    
+
     /** Add content to our test bundle */
     protected void addContent(TinyBundle b, String pathInBundle, String resourcePath) throws IOException {
         pathInBundle += "/" + resourcePath;
@@ -153,14 +153,14 @@ public abstract class ContentBundleTestBase {
             }
         }
     }
-    
+
     @AfterClass
     public static void cleanupClass() throws BundleException {
         for(Bundle b : bundlesToRemove) {
             b.uninstall();
         }
         bundlesToRemove.clear();
-        
+
         session.logout();
         session = null;
     }
@@ -174,13 +174,16 @@ public abstract class ContentBundleTestBase {
         // TODO should be provided by a utility/bootstrap bundle
         final StartupHandler h = new StartupHandler() {
 
+            @Override
             public void waitWithStartup(boolean b) {
             }
 
+            @Override
             public boolean isFinished() {
                 return true;
             }
 
+            @Override
             public StartupMode getMode() {
                 return StartupMode.INSTALL;
             }
@@ -189,5 +192,4 @@ public abstract class ContentBundleTestBase {
 
         bundleContext.registerService(StartupHandler.class.getName(), h, null);
     }
-
 }

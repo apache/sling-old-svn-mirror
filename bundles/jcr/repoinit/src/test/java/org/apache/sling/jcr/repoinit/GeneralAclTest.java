@@ -25,14 +25,9 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.security.AccessControlEntry;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeTypeTemplate;
 
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
-import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.sling.jcr.repoinit.impl.TestUtil;
 import org.apache.sling.repoinit.parser.RepoInitParsingException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
@@ -43,20 +38,18 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.Arrays;
-
 /** Various ACL-related tests */
 public class GeneralAclTest {
 
     @Rule
     public final SlingContext context = new SlingContext(ResourceResolverType.JCR_OAK);
-    
+
     private TestUtil U;
     private String userA;
     private String userB;
 
     private Session s;
-    
+
     @Before
     public void setup() throws RepositoryException, RepoInitParsingException {
         U = new TestUtil(context);
@@ -74,32 +67,32 @@ public class GeneralAclTest {
         U.cleanupUser();
         s.logout();
     }
-    
+
     @Test(expected=AccessDeniedException.class)
     public void getRootNodeIntiallyFails() throws Exception {
         s.getRootNode();
     }
-    
+
     @Test
     public void readOnlyThenWriteThenDeny() throws Exception {
         final Node tmp = U.adminSession.getRootNode().addNode("tmp_" + U.id);
         U.adminSession.save();
         final String path = tmp.getPath();
-        
+
         try {
             s.getNode(path);
             fail("Expected read access to be initially denied:" + path);
         } catch(PathNotFoundException ignore) {
         }
-        
-        final String allowRead =  
+
+        final String allowRead =
                 "set ACL for " + U.username + "\n"
                 + "allow jcr:read on " + path + "\n"
                 + "end"
                 ;
         U.parseAndExecute(allowRead);
         final Node n = s.getNode(path);
-        
+
         try {
             n.setProperty("U.id", U.id);
             s.save();
@@ -107,8 +100,8 @@ public class GeneralAclTest {
         } catch(AccessDeniedException ignore) {
         }
         s.refresh(false);
-        
-        final String allowWrite = 
+
+        final String allowWrite =
                 "set ACL for " + U.username + "\n"
                 + "allow jcr:write on " + path + "\n"
                 + "end"
@@ -116,8 +109,8 @@ public class GeneralAclTest {
         U.parseAndExecute(allowWrite);
         n.setProperty("U.id", U.id);
         s.save();
-        
-        final String deny = 
+
+        final String deny =
                 "set ACL for " + U.username + "\n"
                 + "deny jcr:all on " + path + "\n"
                 + "end"
@@ -129,18 +122,18 @@ public class GeneralAclTest {
         } catch(PathNotFoundException ignore) {
         }
     }
-    
+
     @Test
     public void addChildAtRoot() throws Exception {
         final String nodename = "test_" + U.id;
         final String path = "/" + nodename;
-        
-        final String aclSetup = 
+
+        final String aclSetup =
             "set ACL for " + U.username + "\n"
             + "allow jcr:all on /\n"
             + "end"
             ;
-        
+
         U.parseAndExecute(aclSetup);
         try {
             assertFalse(s.itemExists(path));
@@ -155,6 +148,100 @@ public class GeneralAclTest {
         }
     }
 
+    @Test
+    public void addRepositoryAcl() throws Exception {
+        final String aclSetup =
+                "set repository ACL for " + userA + "," + userB + "\n"
+                + "allow jcr:namespaceManagement\n"
+                + "allow jcr:nodeTypeDefinitionManagement\n"
+                + "end"
+                ;
+
+        U.parseAndExecute(aclSetup);
+        verifyRegisterNamespace(userA, "a", "http://a", true);
+        verifyRegisterNamespace(userB, "b", "http://b", true);
+        verifyRegisterNamespace(U.username, "c", "http://c", false);
+        verifyRegisterNodeType(userA, "typeA", true);
+        verifyRegisterNodeType(userB, "typeB", true);
+        verifyRegisterNodeType(U.username, "typeC", false);
+    }
+
+    @Test
+    public void addRepositoryAclInMultipleBlocks() throws Exception {
+        final String aclSetup =
+                  "set repository ACL for " + userA + "\n"
+                +    "allow jcr:namespaceManagement,jcr:nodeTypeDefinitionManagement\n"
+                + "end\n"
+                + "set repository ACL for " + userB + "\n"
+                +    "allow jcr:namespaceManagement\n"
+                + "end"
+                ;
+
+        U.parseAndExecute(aclSetup);
+        verifyRegisterNamespace(userA, "a", "http://a", true);
+        verifyRegisterNamespace(userB, "b", "http://b", true);
+        verifyRegisterNodeType(userA, "typeA", true);
+        verifyRegisterNodeType(userB, "typeB", false);
+    }
+
+    @Test
+    public void addRepositoryAclInSequence() throws Exception {
+        final String aclSetup =
+                  "set repository ACL for " + U.username + "\n"
+                +    "deny jcr:namespaceManagement,jcr:nodeTypeDefinitionManagement\n"
+                +    "allow jcr:namespaceManagement,jcr:nodeTypeDefinitionManagement\n"
+                + "end\n"
+                + "set repository ACL for " + U.username + "\n"
+                +    "deny jcr:namespaceManagement\n"
+                + "end"
+                ;
+
+        U.parseAndExecute(aclSetup);
+        verifyRegisterNodeType(U.username, "typeC", true);
+        verifyRegisterNamespace(U.username, "c", "http://c", false);
+    }
+
+    /**
+     * Verify the success/failure when registering a node type.
+     * Registering a node type requires to be granted the jcr:nodeTypeDefinitionManagement privilege.
+     */
+    private void verifyRegisterNodeType(String username, String typeName, boolean successExpected) {
+        Session userSession = null;
+        try {
+            userSession = U.loginService(username);
+            NodeTypeManager nodeTypeManager = userSession.getWorkspace().getNodeTypeManager();
+            NodeTypeTemplate type = nodeTypeManager.createNodeTypeTemplate();
+            type.setName(typeName);
+            nodeTypeManager.registerNodeType(type, true);
+            assertTrue("Register node type succeeded " + typeName, successExpected);
+        } catch (RepositoryException e) {
+            assertTrue("Error registering node type " + typeName + " " + e.getMessage(), !successExpected);
+        } finally {
+            if (userSession != null) {
+                userSession.logout();
+            }
+        }
+    }
+
+
+    /**
+     * Verify the success/failure when registering a namespace.
+     * Registering a namespace successfully requires to be granted the jcr:namespaceManagement privilege.
+     */
+    private void verifyRegisterNamespace(String username, String prefix, String uri, boolean successExpected) {
+        Session userSession = null;
+        try {
+            userSession = U.loginService(username);
+            userSession.getWorkspace().getNamespaceRegistry().registerNamespace(prefix, uri);
+            assertTrue("Register namespace succeeded " + prefix + uri, successExpected);
+        } catch (RepositoryException e) {
+            assertTrue("Error registering namespace " + prefix + uri + " " + e.getMessage(), !successExpected);
+        } finally {
+            if (userSession != null) {
+                userSession.logout();
+            }
+        }
+    }
 
     /**
      * Verifies success/failure of adding a child
@@ -243,7 +330,7 @@ public class GeneralAclTest {
    @Test
    @Ignore("SLING-6423 - ACLOptions processing is not implemented yet")
    public void mergeMode_ReplaceExistingPrincipalTest() throws Exception {
-      final String initialAclSetup = 
+      final String initialAclSetup =
                      " set ACL for " + userA + "\n"
                      + "allow jcr:read,jcr:addChildNodes on / \n"
                      + "end"

@@ -18,30 +18,31 @@
  */
 package org.apache.sling.distribution.serialization.impl.vlt;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
+import org.apache.jackrabbit.vault.fs.config.MetaInf;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
+import org.apache.jackrabbit.vault.fs.io.Archive;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
+import org.apache.jackrabbit.vault.fs.io.Importer;
+import org.apache.jackrabbit.vault.fs.io.ZipStreamArchive;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
-import org.apache.jackrabbit.vault.packaging.PackageManager;
+import org.apache.jackrabbit.vault.packaging.PackageException;
 import org.apache.jackrabbit.vault.packaging.Packaging;
-import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.common.DistributionException;
-import org.apache.sling.distribution.packaging.impl.FileDistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionContentSerializer;
 import org.apache.sling.distribution.serialization.DistributionExportOptions;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
@@ -59,6 +60,15 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
     private static final String VERSION = "0.0.1";
     private static final String PACKAGE_GROUP = "sling/distribution";
 
+    /**
+     * The custom <code>Path-Mapping</code> property.
+     */
+    private static final String PATH_MAPPING_PROPERTY = "Path-Mapping";
+
+    private static final String MAPPING_SEPARATOR = "=";
+
+    private static final String MAPPING_DELIMITER = ";";
+
     private final Packaging packaging;
     private final ImportMode importMode;
     private final AccessControlHandling aclHandling;
@@ -68,9 +78,11 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
     private final TreeMap<String, List<String>> propertyFilters;
     private final boolean useBinaryReferences;
     private final String name;
+    private final Map<String, String> exportPathMapping;
 
     public FileVaultContentSerializer(String name, Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling, String[] packageRoots,
-                                      String[] nodeFilters, String[] propertyFilters, boolean useBinaryReferences, int autosaveThreshold) {
+                                      String[] nodeFilters, String[] propertyFilters, boolean useBinaryReferences, int autosaveThreshold,
+                                      Map<String, String> exportPathMapping) {
         this.name = name;
         this.packaging = packaging;
         this.importMode = importMode;
@@ -80,6 +92,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
         this.nodeFilters = VltUtils.parseFilters(nodeFilters);
         this.propertyFilters = VltUtils.parseFilters(propertyFilters);
         this.useBinaryReferences = useBinaryReferences;
+        this.exportPathMapping = exportPathMapping;
     }
 
     @Override
@@ -91,7 +104,7 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
             String packageName = TYPE + "_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
 
             WorkspaceFilter filter = VltUtils.createFilter(exportOptions.getRequest(), nodeFilters, propertyFilters);
-            ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION, useBinaryReferences);
+            ExportOptions opts = VltUtils.getExportOptions(filter, packageRoots, packageGroup, packageName, VERSION, useBinaryReferences, exportPathMapping);
 
             log.debug("assembling package {} user {}", packageGroup + '/' + packageName + "-" + VERSION, resourceResolver.getUserID());
 
@@ -106,42 +119,51 @@ public class FileVaultContentSerializer implements DistributionContentSerializer
 
     @Override
     public void importFromStream(ResourceResolver resourceResolver, InputStream inputStream) throws DistributionException {
-
         Session session = null;
-        OutputStream outputStream = null;
-        File file = null;
-        boolean isTmp = true;
+        Archive archive = null;
         try {
             session = getSession(resourceResolver);
             ImportOptions importOptions = VltUtils.getImportOptions(aclHandling, importMode, autosaveThreshold);
+            Importer importer = new Importer(importOptions);
+            archive = new ZipStreamArchive(inputStream);
+            archive.open(false);
 
-            if (inputStream instanceof FileDistributionPackage.PackageInputStream) {
-                file = ((FileDistributionPackage.PackageInputStream) inputStream).getFile();
-                isTmp = false;
-            } else {
-                file = File.createTempFile("distrpck-tmp-" + System.nanoTime(), "." + TYPE);
+            // retrieve the mapping
+            MetaInf metaInf = archive.getMetaInf();
+            if (metaInf != null) {
+                Properties metaInfProperties = metaInf.getProperties();
+                if (metaInfProperties != null) {
+                    String pathsMappingProperty = metaInfProperties.getProperty(PATH_MAPPING_PROPERTY);
+
+                    if (pathsMappingProperty != null && !pathsMappingProperty.isEmpty()) {
+                        RegexpPathMapping pathMapping = new RegexpPathMapping();
+
+                        StringTokenizer pathsMappingTokenizer = new StringTokenizer(pathsMappingProperty, MAPPING_DELIMITER);
+                        while (pathsMappingTokenizer.hasMoreTokens()) {
+                            String[] pathMappingHeader = pathsMappingTokenizer.nextToken().split(MAPPING_SEPARATOR);
+                            pathMapping.addMapping(pathMappingHeader[0], pathMappingHeader[1]);
+                        }
+
+                        importOptions.setPathMapping(pathMapping);
+                    }
+                }
             }
 
-            outputStream = new BufferedOutputStream(new FileOutputStream(file));
-
-            IOUtils.copy(inputStream, outputStream);
-            IOUtils.closeQuietly(outputStream);
-
-            PackageManager packageManager = packaging.getPackageManager();
-            VaultPackage vaultPackage = packageManager.open(file);
-
-            vaultPackage.extract(session, importOptions);
-
-            vaultPackage.close();
+            // now import the content
+            importer.run(archive, session.getRootNode());
+            if (importer.hasErrors() && importOptions.isStrict()) {
+                throw new PackageException("Errors during import.");
+            }
+            if (session.hasPendingChanges()) {
+                session.save();
+            }
         } catch (Exception e) {
             throw new DistributionException(e);
         } finally {
-            IOUtils.closeQuietly(outputStream);
-            if (isTmp) {
-                FileUtils.deleteQuietly(file);
-            }
-
             ungetSession(session);
+            if (archive != null) {
+                archive.close();
+            }
         }
 
     }

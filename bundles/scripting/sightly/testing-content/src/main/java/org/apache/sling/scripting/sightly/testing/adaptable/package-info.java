@@ -15,7 +15,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-@Version("1.0.4")
+@Version("1.1.0")
 package org.apache.sling.scripting.sightly.testing.adaptable;
 
 import org.osgi.annotation.versioning.Version;

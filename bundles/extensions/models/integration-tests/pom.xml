@@ -131,7 +131,17 @@
                             org.apache.sling.models.it.exporter.DoubledSecondComponent
                         </Sling-Model-Classes>
                         <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
-                        <Export-Package>org.apache.sling.models.it</Export-Package>
+                        <Export-Package>
+                            org.apache.sling.models.it.delegate.request,
+                            org.apache.sling.models.it.delegate.resource,
+                            org.apache.sling.models.it.exporter,
+                            org.apache.sling.models.it.implpicker,
+                            org.apache.sling.models.it.models,
+                            org.apache.sling.models.it.models.implextend,
+                            org.apache.sling.models.it.rtbound,
+                            org.apache.sling.models.it.rtboundpicker,
+                            org.apache.sling.models.it.services
+                        </Export-Package>
                         <Import-Package>
                             org.apache.commons.beanutils;resolution:=optional,
                             *
@@ -183,7 +193,7 @@
                         </goals>
                             <phase>process-resources</phase>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/sling/additional-bundles</outputDirectory>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>
@@ -256,15 +266,16 @@
                             All bundles must be listed as dependencies in this pom, or they won't be installed. 
                         -->
                         <sling.additional.bundle.1>org.apache.sling.junit.core</sling.additional.bundle.1>
-                        <sling.additional.bundle.2>geronimo-atinject_1.0_spec</sling.additional.bundle.2>
                         <sling.additional.bundle.3>org.apache.sling.commons.johnzon</sling.additional.bundle.3>
+                        <sling.additional.bundle.4>commons-lang3</sling.additional.bundle.4>
                         <sling.additional.bundle.10>org.apache.sling.models.api</sling.additional.bundle.10>
                         <sling.additional.bundle.11>org.apache.sling.models.impl</sling.additional.bundle.11>
                         <sling.additional.bundle.12>org.apache.sling.models.jacksonexporter</sling.additional.bundle.12>
                         <sling.additional.bundle.13>jackson-annotations</sling.additional.bundle.13>
                         <sling.additional.bundle.14>jackson-core</sling.additional.bundle.14>
                         <sling.additional.bundle.15>jackson-databind</sling.additional.bundle.15>
-                        <sling.additional.bundle.16>${project.build.finalName}.jar</sling.additional.bundle.16>
+                        <sling.additional.bundle.16>commons-lang3</sling.additional.bundle.16>
+                        <sling.additional.bundle.17>${project.build.finalName}.jar</sling.additional.bundle.17>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -291,21 +302,21 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.junit.remote</artifactId>
-            <version>1.0.11-SNAPSHOT</version>
-            <scope>provided</scope>
+            <artifactId>org.apache.sling.testing.rules</artifactId>
+            <version>1.0.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.junit.teleporter</artifactId>
+            <version>1.0.12</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
           <groupId>org.apache.sling</groupId>
           <artifactId>org.apache.sling.commons.johnzon</artifactId>
           <version>1.0.0</version>
           <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.17-SNAPSHOT</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -316,19 +327,19 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.api</artifactId>
-            <version>1.3.5-SNAPSHOT</version>
+            <version>1.3.6</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.impl</artifactId>
-            <version>1.4.3-SNAPSHOT</version>
+            <version>1.4.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.jacksonexporter</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
+            <version>1.0.8</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -349,26 +360,18 @@
             <version>2.3.2</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.4</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- not part of launchpad 7 (see SLING-4710) -->
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-atinject_1.0_spec</artifactId>
             <version>1.0</version>
-            <scope>compile</scope>
-        </dependency>
-        
-        <!-- sling testing tools bundles requires httpclient -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient-osgi</artifactId>
-            <version>4.1.2</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore-osgi</artifactId>
-            <version>4.1.2</version>
             <scope>provided</scope>
         </dependency>
         
@@ -397,27 +400,24 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
-            <classifier>standalone</classifier>
-            <version>7</version>
+            <version>8</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>1.4</version>
+            <version>1.6.6</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
+            <version>1.6.6</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>compile</scope>
+            <version>4.12</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <profiles>

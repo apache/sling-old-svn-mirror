@@ -16,8 +16,15 @@
  */
 package org.apache.sling.models.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -26,7 +33,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
@@ -75,7 +82,7 @@ public class ResourceModelClassesTest {
         ValueMapInjector valueMapInjector = new ValueMapInjector();
         factory.bindInjector(valueMapInjector, new ServicePropertiesMap(2, 2));
         factory.bindInjector(new ChildResourceInjector(), new ServicePropertiesMap(1, 1));
-        
+
         factory.bindInjectAnnotationProcessorFactory(valueMapInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
         factory.adapterImplementations.addClassesAsAdapterAndImplementation(SimplePropertyModel.class, ArrayWrappersModel.class, ResourceModelWithRequiredField.class, ChildValueMapModel.class, ArrayPrimitivesModel.class, ChildResourceModel.class, ResourceModelWithRequiredFieldOptionalStrategy.class, ParentModel.class, ChildModel.class, ListModel.class);
@@ -83,7 +90,7 @@ public class ResourceModelClassesTest {
 
     @Test
     public void testSimplePropertyModel() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("first", "first-value");
         map.put("third", "third-value");
         map.put("intProperty", new Integer(3));
@@ -111,7 +118,7 @@ public class ResourceModelClassesTest {
 
     @Test
     public void testArrayPrimitivesModel() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("intArray", new int[] { 1, 2, 9, 8 });
         map.put("secondIntArray", new Integer[] {1, 2, 9, 8});
 
@@ -133,7 +140,7 @@ public class ResourceModelClassesTest {
 
     @Test
     public void testArrayWrappersModel() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("intArray", new Integer[] {1, 2, 9, 8});
         map.put("secondIntArray", new int[] {1, 2, 9, 8});
 
@@ -155,7 +162,7 @@ public class ResourceModelClassesTest {
 
     @Test
     public void testListModel() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("intList", new Integer[] {1, 2, 9, 8});
         map.put("stringList", new String[] {"hello", "world"});
 
@@ -175,7 +182,7 @@ public class ResourceModelClassesTest {
 
     @Test
     public void testRequiredPropertyModel() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("first", "first-value");
         map.put("third", "third-value");
         ValueMap vm = spy(new ValueMapDecorator(map));
@@ -191,7 +198,7 @@ public class ResourceModelClassesTest {
 
     @Test
     public void testRequiredPropertyModelWithException() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("first", "first-value");
         map.put("third", "third-value");
         ValueMap vm = spy(new ValueMapDecorator(map));
@@ -213,7 +220,7 @@ public class ResourceModelClassesTest {
 
     @Test
     public void testRequiredPropertyMissingModelOptionalStrategy() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("first", "first-value");
         ValueMap vm = spy(new ValueMapDecorator(map));
 
@@ -229,7 +236,7 @@ public class ResourceModelClassesTest {
 
     @Test
     public void testRequiredPropertyModelOptionalStrategy() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("required1", "required value");
         map.put("required2", "required value");
         map.put("required3", "required value");
@@ -242,7 +249,7 @@ public class ResourceModelClassesTest {
         assertNotNull(model);
         assertEquals("required value", model.getRequired1());
         assertEquals("required value", model.getRequired2());
-        
+
         verify(vm).get("optional1", String.class);
         verify(vm).get("required1", String.class);
     }

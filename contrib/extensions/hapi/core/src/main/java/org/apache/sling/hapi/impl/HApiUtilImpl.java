@@ -34,44 +34,72 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hapi.*;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.AttributeType;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@Component(label = "Apache Sling Hypermedia API tools", metatype = true)
-@Service(value = HApiUtil.class)
+@Component(
+        name = "Apache Sling Hypermedia API tools",
+        service = HApiUtil.class,
+        configurationPid = "org.apache.sling.hapi.impl.HApiUtilImpl"
+)
+@Designate(
+        ocd = HApiUtilImpl.Configuration.class
+)
 public class HApiUtilImpl implements HApiUtil {
 
     private final Logger LOG = LoggerFactory.getLogger(HApiUtil.class);
 
-    @Property(label = "HApi Resource Type", cardinality = 0, value = DEFAULT_RESOURCE_TYPE,
-            description = RESOURCE_TYPE_DESC)
-    public static final String HAPI_RESOURCE_TYPE = RESOURCE_TYPE;
+    @ObjectClassDefinition(
+            name = "Apache Sling Hypermedia API tools"
+    )
+    @interface Configuration {
 
-    @Property(label = "HApi Collection Resource Type", cardinality = 0, value = DEFAULT_COLLECTION_RESOURCE_TYPE,
-            description = COLLECTION_RESOURCE_TYPE_DESC)
-    private static final String HAPI_COLLECTION_RESOURCE_TYPE = COLLECTION_RESOURCE_TYPE;
+        @AttributeDefinition(
+                name = "HApi Resource Type",
+                description = RESOURCE_TYPE_DESC
 
-    @Property(label = "HApi Types Search Paths", cardinality=50, value = {DEFAULT_SEARCH_PATH},
-            description = SEARCH_PATHS_DESC)
-    public static final String HAPI_PATHS = SEARCH_PATHS;
+        )
+        String org_apache_sling_hapi_tools_resourcetype() default DEFAULT_RESOURCE_TYPE;
 
-    @Property(label = "External server URL", cardinality = 0, value = DEFAULT_SERVER_URL,
-            description = EXTERNAL_URL_DESC)
-    public static final String HAPI_EXTERNAL_URL = EXTERNAL_URL;
+        @AttributeDefinition(
+                name = "HApi Collection Resource Type",
+                description = COLLECTION_RESOURCE_TYPE_DESC
 
-    @Property(label = "Enabled", boolValue = DEFAULT_ENABLED,
-            description = ENABLED_DESC)
-    public static final String HAPI_ENABLED = ENABLED;
+        )
+        String org_apache_sling_hapi_tools_collectionresourcetype() default DEFAULT_COLLECTION_RESOURCE_TYPE;
+
+        @AttributeDefinition(
+                name = "HApi Types Search Paths",
+                description = SEARCH_PATHS_DESC
+        )
+        String[] org_apache_sling_hapi_tools_searchpaths() default {DEFAULT_SEARCH_PATH};
+
+        @AttributeDefinition(
+                name = "External server URL",
+                description = EXTERNAL_URL_DESC
+
+        )
+        String org_apache_sling_hapi_tools_externalurl() default DEFAULT_SERVER_URL;
+
+        @AttributeDefinition(
+                name = "Enabled",
+                description = ENABLED_DESC,
+                type = AttributeType.BOOLEAN
+        )
+        boolean org_apache_sling_hapi_tools_enabled() default DEFAULT_ENABLED;
+
+    }
 
 
     private static String resourceType;
@@ -82,15 +110,14 @@ public class HApiUtilImpl implements HApiUtil {
 
 
     @Activate
-    private void activate(Map<String, Object> configuration) {
-        enabled = PropertiesUtil.toBoolean(configuration.get(HAPI_ENABLED), false);
+    private void activate(HApiUtilImpl.Configuration configuration) {
+        enabled = configuration.org_apache_sling_hapi_tools_enabled();
         if (!enabled) return;
 
-        resourceType = PropertiesUtil.toString(configuration.get(HAPI_RESOURCE_TYPE), DEFAULT_RESOURCE_TYPE);
-        collectionResourceType = PropertiesUtil.toString(configuration.get(HAPI_COLLECTION_RESOURCE_TYPE),
-                DEFAULT_COLLECTION_RESOURCE_TYPE);
-        hApiPaths = PropertiesUtil.toStringArray(configuration.get(HAPI_PATHS));
-        serverContextPath = PropertiesUtil.toString(configuration.get(HAPI_EXTERNAL_URL), DEFAULT_SERVER_URL);
+        resourceType = configuration.org_apache_sling_hapi_tools_resourcetype();
+        collectionResourceType = configuration.org_apache_sling_hapi_tools_collectionresourcetype();
+        hApiPaths = configuration.org_apache_sling_hapi_tools_searchpaths();
+        serverContextPath = configuration.org_apache_sling_hapi_tools_externalurl();
     }
 
     /**
@@ -221,50 +248,35 @@ public class HApiUtilImpl implements HApiUtil {
         for (Value p : Arrays.asList(parameterValues)) {
             parameters.add(p.getString());
         }
-        HApiTypeImpl newType = new HApiTypeImpl(name, description, serverContextPath, path, fqdn, parameters, null, null, false);
+
+        // Parent weak reference
+        String parentPath = resProps.get("extends", (String) null);
+        HApiType parentWeak = new HApiTypeLazyWrapper(this, resolver, this.serverContextPath, parentPath);
+
+        // Properties weak reference
+        Map<String, HApiProperty> properties = new HashMap<String, HApiProperty>();
+        for (Resource res : typeResource.getChildren()) {
+            ValueMap resValueMap = res.adaptTo(ValueMap.class);
+
+            String propName = res.getName();
+            String propDescription = resValueMap.get("description", "");
+            String typeFqdnOrPath = resValueMap.get("type", (String) null);
+            Resource propTypeResource = getTypeResource(resolver, typeFqdnOrPath);
+            HApiType propTypeWeak = (null != propTypeResource)
+                    ? new HApiTypeLazyWrapper(this, resolver, this.serverContextPath, propTypeResource)
+                    : new AbstractHapiTypeImpl(typeFqdnOrPath);
+            Boolean propMultiple = resValueMap.get("multiple", false);
+
+            HApiProperty prop = new HApiPropertyImpl(propName, propDescription, propTypeWeak, propMultiple);
+            properties.put(prop.getName(), prop);
+        }
+
+        //
+        // Create type and add to cache
+        //
+        HApiTypeImpl newType = new HApiTypeImpl(name, description, serverContextPath, path, fqdn, parameters, properties, parentWeak, false);
         TypesCache.getInstance(this).addType(newType);
         LOG.debug("Inserted type {} to cache: {}", newType, TypesCache.getInstance(this));
-
-
-        try {
-            // Get parent if it exists
-            HApiType parent = null;
-            String parentPath = resProps.get("extends", (String) null);
-            if (null != parentPath) {
-                parent = TypesCache.getInstance(this).getType(resolver, getTypeResource(resolver, parentPath));
-            }
-
-            // Get properties
-            Map<String, HApiProperty> properties = new HashMap<String, HApiProperty>();
-            for (Resource res : typeResource.getChildren()) {
-                ValueMap resValueMap = res.adaptTo(ValueMap.class);
-
-                String propName = res.getName();
-                String propDescription = resValueMap.get("description", "");
-                String typeFqdnOrPath = resValueMap.get("type", (String) null);
-                Resource propTypeResource = getTypeResource(resolver, typeFqdnOrPath);
-                HApiType propType = (null != propTypeResource)
-                        ? TypesCache.getInstance(this).getType(resolver, propTypeResource)
-                        : new AbstractHapiTypeImpl(typeFqdnOrPath);
-                LOG.debug("Fetched type {} from cache", propType);
-                Boolean propMultiple = resValueMap.get("multiple", false);
-
-                HApiProperty prop = new HApiPropertyImpl(propName, propDescription, propType, propMultiple);
-                properties.put(prop.getName(), prop);
-            }
-            // Set parent and properties
-            newType.setParent(parent);
-            newType.setProperties(properties);
-
-        } catch (RuntimeException t) {
-            // Remove type from cache if it wasn't created successfully
-            TypesCache.getInstance(this).removeType(newType.getPath());
-            throw t;
-        } catch (RepositoryException e) {
-            // Remove type from cache if it wasn't created successfully
-            TypesCache.getInstance(this).removeType(newType.getPath());
-            throw e;
-        }
 
         LOG.debug("Created type {}", newType);
         return newType;

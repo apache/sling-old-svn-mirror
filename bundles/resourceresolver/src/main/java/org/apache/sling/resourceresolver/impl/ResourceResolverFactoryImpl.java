@@ -74,19 +74,23 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
             subServiceName = null;
         }
 
-        // Ensure a mapped user name: If no user is defined for a bundle
-        // acting as a service, the user may be null. We can decide whether
+        // Ensure a mapped user or principal name(s): If no user/principal names is/are
+        // defined for a bundle acting as a service, the user may be null. We can decide whether
         // this should yield guest access or no access at all. For now
         // no access is granted if there is no service user defined for
         // the bundle.
-        final String userName = this.serviceUserMapper.getServiceUserID(this.usingBundle, subServiceName);
-        if (userName == null) {
-            throw new LoginException("Cannot derive user name for bundle "
-                + this.usingBundle + " and sub service " + subServiceName);
+        final Iterable<String> principalNames = this.serviceUserMapper.getServicePrincipalNames(this.usingBundle, subServiceName);
+        if (principalNames == null) {
+            final String userName = this.serviceUserMapper.getServiceUserID(this.usingBundle, subServiceName);
+            if (userName == null) {
+                throw new LoginException("Cannot derive user name for bundle "
+                        + this.usingBundle + " and sub service " + subServiceName);
+            } else {
+                // ensure proper user name
+                authenticationInfo.put(ResourceResolverFactory.USER, userName);
+            }
         }
-
-        // ensure proper user name and service bundle
-        authenticationInfo.put(ResourceResolverFactory.USER, userName);
+        // ensure proper service bundle
         authenticationInfo.put(ResourceProvider.AUTH_SERVICE_BUNDLE, this.usingBundle);
 
         return commonFactory.getResourceResolverInternal(authenticationInfo, false);

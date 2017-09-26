@@ -937,6 +937,9 @@ public class SlingServletResolver
         }
     }
 
+    // TODO
+    // This can be simplified once we can use DS from R7 with constructor injection
+    // as we can inject the bundle context through the constructor
     @Reference(
             name = REF_SERVLET,
             service = Servlet.class,
@@ -960,7 +963,14 @@ public class SlingServletResolver
 
     protected void unbindServlet(final ServiceReference<Servlet> reference) {
         synchronized ( pendingServlets ) {
-            pendingServlets.remove(reference);
+            final Iterator<PendingServlet> iter = pendingServlets.iterator();
+            while ( iter.hasNext() ) {
+                final PendingServlet ps = iter.next();
+                if ( ps.reference.compareTo(reference) == 0 ) {
+                    iter.remove();
+                    break;
+                }
+            }
         }
         destroyServlet(reference);
     }
@@ -989,25 +999,26 @@ public class SlingServletResolver
         try {
             servlet.init(new SlingServletConfig(servletContext, reference, name));
             LOGGER.debug("bindServlet: Servlet {} initialized", name);
-        } catch (ServletException ce) {
+        } catch (final ServletException ce) {
             LOGGER.error("bindServlet: Servlet " + ServletResourceProviderFactory.getServiceReferenceInfo(reference) + " failed to initialize", ce);
             return false;
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             LOGGER.error("bindServlet: Unexpected problem initializing servlet " + ServletResourceProviderFactory.getServiceReferenceInfo(reference), t);
             return false;
         }
 
+        final BundleContext bundleContext = reference.getBundle().getBundleContext();
         final List<ServiceRegistration<ResourceProvider<Object>>> regs = new ArrayList<>();
         for(final String root : provider.getServletPaths()) {
             @SuppressWarnings("unchecked")
-            final ServiceRegistration<ResourceProvider<Object>> reg = (ServiceRegistration<ResourceProvider<Object>>) context.registerService(
+            final ServiceRegistration<ResourceProvider<Object>> reg = (ServiceRegistration<ResourceProvider<Object>>) bundleContext.registerService(
                 ResourceProvider.class.getName(),
                 provider,
                 createServiceProperties(reference, provider, root));
             regs.add(reg);
         }
         if ( LOGGER.isDebugEnabled() ) {
-            LOGGER.debug("Registered {}", provider.toString());
+            LOGGER.debug("Registered {}", provider);
         }
         synchronized (this.servletsByReference) {
             servletsByReference.put(reference, new ServletReg(servlet, regs));

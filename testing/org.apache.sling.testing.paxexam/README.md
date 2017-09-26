@@ -17,16 +17,27 @@ Getting Started
 
 Add required dependencies:
 
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
+    <!-- Sling Testing PaxExam -->
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.testing.paxexam</artifactId>
       <version>${org.apache.sling.testing.paxexam.version}</version>
       <scope>provided</scope>
+    </dependency>
+
+    <!-- an OSGi framework -->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>5.6.6</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JUnit and Pax Exam -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
@@ -74,6 +85,7 @@ Configure the build artifact (*bundle*) to use in integration testing in `pom.xm
           </execution>
         </executions>
         <configuration>
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <systemProperties>
             <property>
               <name>bundle.filename</name>

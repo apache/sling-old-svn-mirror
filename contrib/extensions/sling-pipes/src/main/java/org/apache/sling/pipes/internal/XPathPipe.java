@@ -20,7 +20,7 @@ import java.util.Iterator;
 
 import javax.jcr.query.Query;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class XPathPipe extends BasePipe {
 
     private static final Logger logger = LoggerFactory.getLogger(XPathPipe.class);
-    public static final String RESOURCE_TYPE = "slingPipes/xpath";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "xpath";
 
     public XPathPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);

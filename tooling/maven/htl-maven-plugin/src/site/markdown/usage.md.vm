@@ -1,0 +1,60 @@
+#set($h1 = '#')
+#set($h2 = '##')
+#set($h3 = '###')
+#set($h4 = '####')
+
+
+$h2 Usage
+
+$h3 Validating your HTL Scripts
+
+To validate your HTL Scripts you can run the following command:
+
+```
+mvn org.apache.sling:htl-maven-plugin:validate
+```
+
+This assumes you've configured the `\${project.build.sourceDirectory}` setting.
+
+The command can be simplified to
+
+```
+mvn htl:validate
+```
+
+if your Maven user settings file provides the following configuration
+
+```
+<pluginGroups>
+    <pluginGroup>org.apache.sling</pluginGroup>
+</pluginGroups>
+```
+
+$h3 Configuring Your HTL Maven Plugin
+
+```
+<project>
+    ...
+    <build>
+        <pluginManagement>
+            <plugin>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>htl-maven-plugin</artifactId>
+                <version>${project.version}/version>
+                <configuration>
+                    <!-- put your configurations here -->
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>validate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </pluginManagement>
+    </build>
+    ...
+</project>
+```
+

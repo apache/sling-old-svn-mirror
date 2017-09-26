@@ -101,12 +101,14 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
                         QueueConfiguration.class.getName(), null);
                 Dictionary<String, Object> props = new Hashtable<String, Object>();
                 props.put(ConfigurationConstants.PROP_NAME, queueName);
-                props.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.UNORDERED.name());
+                props.put(ConfigurationConstants.PROP_TYPE, DistributionQueueType.PARALLEL.equals(type) ?
+                        QueueConfiguration.Type.UNORDERED.name() : QueueConfiguration.Type.ORDERED.name());
                 props.put(ConfigurationConstants.PROP_TOPICS, new String[]{topic});
                 props.put(ConfigurationConstants.PROP_RETRIES, -1);
                 props.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
                 props.put(ConfigurationConstants.PROP_KEEP_JOBS, true);
                 props.put(ConfigurationConstants.PROP_PRIORITY, "MAX");
+                props.put(ConfigurationConstants.PROP_MAX_PARALLEL, ConfigurationConstants.DEFAULT_MAX_PARALLEL);
                 config.update(props);
             }
         } catch (IOException e) {

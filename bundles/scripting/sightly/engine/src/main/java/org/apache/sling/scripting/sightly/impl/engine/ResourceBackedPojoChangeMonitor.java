@@ -28,7 +28,6 @@ import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,9 +44,6 @@ public class ResourceBackedPojoChangeMonitor implements ResourceChangeListener, 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceBackedPojoChangeMonitor.class);
 
     private Map<String, Long> slyJavaUseMap = new ConcurrentHashMap<>();
-
-    @Reference
-    private SightlyEngineConfiguration sightlyEngineConfiguration = null;
 
     /**
      * Records the usage of the Use-object available at the provided {@code path}.

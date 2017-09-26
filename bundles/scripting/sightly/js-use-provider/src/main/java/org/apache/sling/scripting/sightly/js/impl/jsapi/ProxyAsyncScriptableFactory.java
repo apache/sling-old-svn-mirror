@@ -18,11 +18,12 @@ package org.apache.sling.scripting.sightly.js.impl.jsapi;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.SimpleBindings;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.scripting.sightly.js.impl.rhino.HybridObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;

@@ -18,9 +18,12 @@
  */
 package org.apache.sling.serviceusermapping.impl;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * The <code>Mapping</code> class defines the mapping of a service's name and
- * optional service information to a user name.
+ * optional service information to a user name and optionally to a set of principal names.
  */
 class Mapping implements Comparable<Mapping> {
 
@@ -36,11 +39,14 @@ class Mapping implements Comparable<Mapping> {
 
     private final String userName;
 
+    private final Set<String> principalNames;
+
     /**
      * Creates a mapping entry for the entry specification of the form:
      *
      * <pre>
-     * spec = serviceName [ ":" subServiceName ] "=" userName .
+     * spec = serviceName [ ":" subServiceName ] "=" userName | "[" principalNames "]"
+     * principalNames = principalName ["," principalNames]
      * </pre>
      *
      * @param spec The mapping specification.
@@ -56,7 +62,7 @@ class Mapping implements Comparable<Mapping> {
         if (colon == 0 || equals <= 0) {
             throw new IllegalArgumentException("serviceName is required");
         } else if (equals == spec.length() - 1) {
-            throw new IllegalArgumentException("userName is required");
+            throw new IllegalArgumentException("userName or principalNames is required");
         } else if (colon + 1 == equals) {
             throw new IllegalArgumentException("serviceInfo must not be empty");
         }
@@ -69,22 +75,64 @@ class Mapping implements Comparable<Mapping> {
             this.subServiceName = spec.substring(colon + 1, equals);
         }
 
-        this.userName = spec.substring(equals + 1);
+        String s = spec.substring(equals + 1);
+        if (s.charAt(0) == '[' && s.charAt(s.length()-1) == ']') {
+            this.userName = null;
+            this.principalNames = extractPrincipalNames(s);
+        } else {
+            this.userName = s;
+            this.principalNames = null;
+        }
+    }
+
+    static Set<String> extractPrincipalNames(String s) {
+        String[] sArr = s.substring(1, s.length() - 1).split(",");
+        Set<String> set = new HashSet<>();
+        for (String name : sArr) {
+            String n = name.trim();
+            if (!n.isEmpty()) {
+                set.add(n);
+            }
+        }
+        return set;
     }
 
     /**
      * Returns the user name if the {@code serviceName} and the
-     * {@code serviceInfo} match. Otherwise {@code null} is returned.
+     * {@code serviceInfo} match and a single user name is configured (in contrast
+     * to a set of principal names). Otherwise {@code null} is returned.
      *
      * @param serviceName The name of the service to match. If this is
      *            {@code null} this mapping will not match.
      * @param subServiceName The Subservice Name to match. This may be
      *            {@code null}.
-     * @return The user name if this mapping matches or {@code null} otherwise.
+     * @return The user name if this mapping matches and the configuration doesn't specify a set of principal names; {@code null} otherwise.
      */
     String map(final String serviceName, final String subServiceName) {
         if (this.serviceName.equals(serviceName) && equals(this.subServiceName, subServiceName)) {
             return userName;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the principal names if the {@code serviceName} and the
+     * {@code serviceInfo} match and principal names have been configured.
+     * Otherwise {@code null} is returned. If no principal names are configured
+     * {@link #map(String, String)} needs to be used instead.
+     *
+     * @param serviceName The name of the service to match. If this is
+     *            {@code null} this mapping will not match.
+     * @param subServiceName The Subservice Name to match. This may be
+     *            {@code null}.
+     * @return An iterable of principals names this mapping matches and the configuration
+     * does specify a set of principal names (intstead of a single user name); {@code null}
+     * otherwise.
+     */
+    Iterable<String> mapPrincipals(final String serviceName, final String subServiceName) {
+        if (this.serviceName.equals(serviceName) && equals(this.subServiceName, subServiceName)) {
+            return principalNames;
         }
 
         return null;
@@ -96,8 +144,9 @@ class Mapping implements Comparable<Mapping> {
 
     @Override
     public String toString() {
+        String name = (userName != null) ? "userName=" + userName : "principleNames" + principalNames.toString();
         return "Mapping [serviceName=" + serviceName + ", subServiceName="
-                + subServiceName + ", userName=" + userName + "]";
+                + subServiceName + ", " + name;
     }
 
     public String getServiceName() {

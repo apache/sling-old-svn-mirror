@@ -53,11 +53,10 @@ public class SlingContextTest {
         .afterSetUp(contextAfterSetup)
         .beforeTearDown(contextBeforeTeardown)
         .afterTearDown(contextAfterTeardown)
-        .resourceResolverFactoryActivatorProps(ImmutableMap.<String, Object>of("resource.resolver.searchpath", new String[] {
-            "/apps",
-            "/libs",
-            "/testpath",
-        }))
+        .resourceResolverFactoryActivatorProps(ImmutableMap.<String, Object>of(
+                "resource.resolver.searchpath", new String[] {"/apps","/libs","/testpath"},
+                "resource.resolver.mapping", new String[] {"/:/", "/content/test/</"}
+                ))
         .build();
 
     @Before
@@ -149,6 +148,11 @@ public class SlingContextTest {
         assertEquals("value1", test1.getValueMap().get("prop1", String.class));
         assertNotNull(test1.getChild("a"));
         assertNotNull(test1.getChild("b"));
+    }
+    
+    @Test
+    public void testUrlMapping() {
+        assertEquals("/foo", context.resourceResolver().map("/content/test/foo"));
     }
     
     

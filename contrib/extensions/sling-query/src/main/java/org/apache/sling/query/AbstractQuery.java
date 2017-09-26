@@ -23,9 +23,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import org.apache.sling.query.api.Function;
-import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
 import org.apache.sling.query.api.internal.Option;
@@ -55,13 +57,12 @@ import org.apache.sling.query.predicate.IterableContainsPredicate;
 import org.apache.sling.query.predicate.RejectingPredicate;
 import org.apache.sling.query.selector.SelectorFunction;
 import org.apache.sling.query.util.LazyList;
-
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 @ProviderType
 public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements Iterable<T> {
 
-	protected final List<Function<?, ?>> functions = new ArrayList<Function<?, ?>>();
+	protected final List<Function<?, ?>> functions = new ArrayList<>();
 
 	private final List<T> initialCollection;
 
@@ -71,13 +72,13 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 
 	AbstractQuery(TreeProvider<T> provider, T[] initialCollection, SearchStrategy strategy) {
 		this.provider = provider;
-		this.initialCollection = new ArrayList<T>(Arrays.asList(initialCollection));
+		this.initialCollection = new ArrayList<>(Arrays.asList(initialCollection));
 		this.searchStrategy = strategy;
 	}
 
 	protected AbstractQuery(AbstractQuery<T, Q> original, SearchStrategy searchStrategy) {
 		this.functions.addAll(original.functions);
-		this.initialCollection = new ArrayList<T>(original.initialCollection);
+		this.initialCollection = new ArrayList<>(original.initialCollection);
 		this.searchStrategy = searchStrategy;
 		this.provider = original.provider;
 	}
@@ -87,20 +88,24 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 */
 	@Override
 	public Iterator<T> iterator() {
-		IteratorToIteratorFunction<T> f = new CompositeFunction<T>(functions);
-		Iterator<Option<T>> iterator = f.apply(new OptionDecoratingIterator<T>(initialCollection.iterator()));
-		iterator = new EmptyElementFilter<T>(iterator);
-		return new OptionStrippingIterator<T>(iterator);
+		IteratorToIteratorFunction<T> f = new CompositeFunction<>(functions);
+		Iterator<Option<T>> iterator = f.apply(new OptionDecoratingIterator<>(initialCollection.iterator()));
+		iterator = new EmptyElementFilter<>(iterator);
+		return new OptionStrippingIterator<>(iterator);
+	}
+
+	public Stream<T> stream() {
+		return StreamSupport.stream(this.spliterator(), false);
 	}
 
 	/**
 	 * Include resources to the collection.
 	 * 
-	 * @param iterable Resources to include
+	 * @param resources Resources to include
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q add(T... resources) {
-		return function(new AddFunction<T>(Arrays.asList(resources)));
+		return function(new AddFunction<>(Arrays.asList(resources)));
 	}
 
 	/**
@@ -110,7 +115,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q add(Iterable<T> iterable) {
-		return function(new AddFunction<T>(iterable));
+		return function(new AddFunction<>(iterable));
 	}
 
 	/**
@@ -119,7 +124,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return List containing all elements from the collection.
 	 */
 	public List<T> asList() {
-		return new LazyList<T>(iterator());
+		return new LazyList<>(iterator());
 	}
 
 	/**
@@ -128,7 +133,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q children() {
-		return function(new ChildrenFunction<T>(provider));
+		return function(new ChildrenFunction<>(provider));
 	}
 
 	/**
@@ -138,7 +143,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q children(String filter) {
-		return function(new ChildrenFunction<T>(provider), filter);
+		return function(new ChildrenFunction<>(provider), filter);
 	}
 
 	/**
@@ -148,7 +153,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q children(Predicate<T> filter) {
-		return function(new ChildrenFunction<T>(provider), filter);
+		return function(new ChildrenFunction<>(provider), filter);
 	}
 
 	/**
@@ -158,7 +163,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q children(Iterable<T> filter) {
-		return function(new ChildrenFunction<T>(provider), filter);
+		return function(new ChildrenFunction<>(provider), filter);
 	}
 
 	/**
@@ -180,18 +185,18 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q closest(Iterable<T> iterable) {
-		return closest(new IterableContainsPredicate<T>(iterable, provider));
+		return closest(new IterableContainsPredicate<>(iterable, provider));
 	}
 
 	/**
 	 * For each Resource in the collection, return the first element matching the selector testing the
 	 * Resource itself and traversing up its ancestors.
 	 * 
-	 * @param selector Ancestor filter
+	 * @param predicate Ancestor filter
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q closest(Predicate<T> predicate) {
-		return function(new ClosestFunction<T>(predicate, provider));
+		return function(new ClosestFunction<>(predicate, provider));
 	}
 
 	/**
@@ -221,7 +226,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q filter(Predicate<T> predicate) {
-		return function(new FilterFunction<T>(predicate));
+		return function(new FilterFunction<>(predicate));
 	}
 
 	/**
@@ -231,7 +236,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q filter(Iterable<T> iterable) {
-		return function(new FilterFunction<T>(new IterableContainsPredicate<T>(iterable, provider)));
+		return function(new FilterFunction<>(new IterableContainsPredicate<>(iterable, provider)));
 	}
 
 	/**
@@ -242,7 +247,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q find() {
-		return function(new FindFunction<T>(searchStrategy, provider, ""));
+		return function(new FindFunction<>(searchStrategy, provider, ""));
 	}
 
 	/**
@@ -254,7 +259,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q find(String selector) {
-		return function(new FindFunction<T>(searchStrategy, provider, selector), selector);
+		return function(new FindFunction<>(searchStrategy, provider, selector), selector);
 	}
 
 	/**
@@ -266,7 +271,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q find(Predicate<T> predicate) {
-		return function(new FindFunction<T>(searchStrategy, provider, ""), predicate);
+		return function(new FindFunction<>(searchStrategy, provider, ""), predicate);
 	}
 
 	/**
@@ -278,7 +283,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q find(Iterable<T> iterable) {
-		return function(new DescendantFunction<T>(new LazyList<T>(iterable.iterator()), provider));
+		return function(new DescendantFunction<>(new LazyList<>(iterable.iterator()), provider));
 	}
 
 	/**
@@ -297,7 +302,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q has(String selector) {
-		return function(new HasFunction<T>(selector, searchStrategy, provider));
+		return function(new HasFunction<>(selector, searchStrategy, provider));
 	}
 
 	/**
@@ -307,7 +312,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q has(Predicate<T> predicate) {
-		return function(new HasFunction<T>(predicate, searchStrategy, provider));
+		return function(new HasFunction<>(predicate, searchStrategy, provider));
 	}
 
 	/**
@@ -317,7 +322,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q has(Iterable<T> iterable) {
-		return function(new HasFunction<T>(iterable, provider));
+		return function(new HasFunction<>(iterable, provider));
 	}
 
 	/**
@@ -335,7 +340,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q next() {
-		return function(new NextFunction<T>(provider));
+		return function(new NextFunction<>(provider));
 	}
 
 	/**
@@ -346,7 +351,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q next(String selector) {
-		return function(new NextFunction<T>(provider), selector);
+		return function(new NextFunction<>(provider), selector);
 	}
 
 	/**
@@ -357,7 +362,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q next(Predicate<T> predicate) {
-		return function(new NextFunction<T>(provider), predicate);
+		return function(new NextFunction<>(provider), predicate);
 	}
 
 	/**
@@ -368,7 +373,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q next(Iterable<T> iterable) {
-		return function(new NextFunction<T>(provider), iterable);
+		return function(new NextFunction<>(provider), iterable);
 	}
 
 	/**
@@ -377,7 +382,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q nextAll() {
-		return function(new NextFunction<T>(new RejectingPredicate<T>(), provider));
+		return function(new NextFunction<>(new RejectingPredicate<>(), provider));
 	}
 
 	/**
@@ -387,7 +392,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q nextAll(String selector) {
-		return function(new NextFunction<T>(new RejectingPredicate<T>(), provider), selector);
+		return function(new NextFunction<>(new RejectingPredicate<>(), provider), selector);
 	}
 
 	/**
@@ -397,7 +402,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q nextAll(Predicate<T> predicate) {
-		return function(new NextFunction<T>(new RejectingPredicate<T>(), provider), predicate);
+		return function(new NextFunction<>(new RejectingPredicate<>(), provider), predicate);
 	}
 
 	/**
@@ -407,7 +412,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q nextAll(Iterable<T> iterable) {
-		return function(new NextFunction<T>(new RejectingPredicate<T>(), provider), iterable);
+		return function(new NextFunction<>(new RejectingPredicate<>(), provider), iterable);
 	}
 
 	/**
@@ -418,7 +423,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q nextUntil(String until) {
-		return function(new NextFunction<T>(parse(until), provider));
+		return function(new NextFunction<>(parse(until), provider));
 	}
 
 	/**
@@ -429,7 +434,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q nextUntil(Predicate<T> predicate) {
-		return function(new NextFunction<T>(predicate, provider));
+		return function(new NextFunction<>(predicate, provider));
 	}
 
 	/**
@@ -440,7 +445,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q nextUntil(Iterable<T> iterable) {
-		return nextUntil(new IterableContainsPredicate<T>(iterable, provider));
+		return nextUntil(new IterableContainsPredicate<>(iterable, provider));
 	}
 
 	/**
@@ -450,7 +455,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q not(String selector) {
-		return function(new NotFunction<T>(parse(selector)));
+		return function(new NotFunction<>(parse(selector)));
 	}
 
 	/**
@@ -460,7 +465,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q not(Predicate<T> predicate) {
-		return function(new FilterFunction<T>(new RejectingPredicate<T>(predicate)));
+		return function(new FilterFunction<>(new RejectingPredicate<>(predicate)));
 	}
 
 	/**
@@ -470,7 +475,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q not(Iterable<T> iterable) {
-		return not(new IterableContainsPredicate<T>(iterable, provider));
+		return not(new IterableContainsPredicate<>(iterable, provider));
 	}
 
 	/**
@@ -479,7 +484,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q parent() {
-		return function(new ParentFunction<T>(provider));
+		return function(new ParentFunction<>(provider));
 	}
 
 	/**
@@ -488,7 +493,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q parents() {
-		return function(new ParentsFunction<T>(new RejectingPredicate<T>(), provider));
+		return function(new ParentsFunction<>(new RejectingPredicate<>(), provider));
 	}
 
 	/**
@@ -498,7 +503,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q parents(String selector) {
-		return function(new ParentsFunction<T>(new RejectingPredicate<T>(), provider), selector);
+		return function(new ParentsFunction<>(new RejectingPredicate<>(), provider), selector);
 	}
 
 	/**
@@ -508,17 +513,17 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q parents(Predicate<T> predicate) {
-		return function(new ParentsFunction<T>(new RejectingPredicate<T>(), provider), predicate);
+		return function(new ParentsFunction<>(new RejectingPredicate<>(), provider), predicate);
 	}
 
 	/**
 	 * For each element in the collection find its all ancestor, filtered by a selector.
 	 * 
-	 * @param predicate Parents filter
+	 * @param iterable Parents filter
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q parents(Iterable<T> iterable) {
-		return function(new ParentsFunction<T>(new RejectingPredicate<T>(), provider), iterable);
+		return function(new ParentsFunction<>(new RejectingPredicate<>(), provider), iterable);
 	}
 
 	/**
@@ -528,7 +533,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q parentsUntil(String until) {
-		return function(new ParentsFunction<T>(parse(until), provider));
+		return function(new ParentsFunction<>(parse(until), provider));
 	}
 
 	/**
@@ -538,7 +543,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q parentsUntil(Predicate<T> predicate) {
-		return function(new ParentsFunction<T>(predicate, provider));
+		return function(new ParentsFunction<>(predicate, provider));
 	}
 
 	/**
@@ -548,7 +553,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q parentsUntil(Iterable<T> iterable) {
-		return parentsUntil(new IterableContainsPredicate<T>(iterable, provider));
+		return parentsUntil(new IterableContainsPredicate<>(iterable, provider));
 	}
 
 	/**
@@ -557,7 +562,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prev() {
-		return function(new PrevFunction<T>(provider));
+		return function(new PrevFunction<>(provider));
 	}
 
 	/**
@@ -568,7 +573,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prev(String selector) {
-		return function(new PrevFunction<T>(null, provider), selector);
+		return function(new PrevFunction<>(null, provider), selector);
 	}
 
 	/**
@@ -579,7 +584,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prev(Predicate<T> predicate) {
-		return function(new PrevFunction<T>(null, provider), predicate);
+		return function(new PrevFunction<>(null, provider), predicate);
 	}
 
 	/**
@@ -590,7 +595,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prev(Iterable<T> iterable) {
-		return function(new PrevFunction<T>(null, provider), iterable);
+		return function(new PrevFunction<>(null, provider), iterable);
 	}
 
 	/**
@@ -599,7 +604,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prevAll() {
-		return function(new PrevFunction<T>(new RejectingPredicate<T>(), provider));
+		return function(new PrevFunction<>(new RejectingPredicate<>(), provider));
 	}
 
 	/**
@@ -609,7 +614,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prevAll(String selector) {
-		return function(new PrevFunction<T>(new RejectingPredicate<T>(), provider), selector);
+		return function(new PrevFunction<>(new RejectingPredicate<>(), provider), selector);
 	}
 
 	/**
@@ -619,7 +624,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prevAll(Predicate<T> predicate) {
-		return function(new PrevFunction<T>(new RejectingPredicate<T>(), provider), predicate);
+		return function(new PrevFunction<>(new RejectingPredicate<>(), provider), predicate);
 	}
 
 	/**
@@ -629,7 +634,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prevAll(Iterable<T> iterable) {
-		return function(new PrevFunction<T>(new RejectingPredicate<T>(), provider), iterable);
+		return function(new PrevFunction<>(new RejectingPredicate<>(), provider), iterable);
 	}
 
 	/**
@@ -640,7 +645,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prevUntil(String until) {
-		return function(new PrevFunction<T>(parse(until), provider));
+		return function(new PrevFunction<>(parse(until), provider));
 	}
 
 	/**
@@ -651,7 +656,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prevUntil(Predicate<T> predicate) {
-		return function(new PrevFunction<T>(predicate, provider));
+		return function(new PrevFunction<>(predicate, provider));
 	}
 
 	/**
@@ -662,11 +667,12 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q prevUntil(Iterable<T> iterable) {
-		return prevUntil(new IterableContainsPredicate<T>(iterable, provider));
+		return prevUntil(new IterableContainsPredicate<>(iterable, provider));
 	}
 
 	/**
-	 * Set new search strategy, which will be used in {@link Q#find()} and {@link Q#has(String)} functions.
+	 * Set new search strategy, which will be used in {@link AbstractQuery#find()} and
+	 * {@link AbstractQuery#has(String)} functions.
 	 * 
 	 * @param strategy Search strategy type
 	 * @return new SlingQuery object transformed by this operation
@@ -691,7 +697,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q siblings(String selector) {
-		return function(new SiblingsFunction<T>(provider), selector);
+		return function(new SiblingsFunction<>(provider), selector);
 	}
 
 	/**
@@ -701,7 +707,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q siblings(Predicate<T> predicate) {
-		return function(new SiblingsFunction<T>(provider), predicate);
+		return function(new SiblingsFunction<>(provider), predicate);
 	}
 
 	/**
@@ -711,7 +717,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q siblings(Iterable<T> iterable) {
-		return function(new SiblingsFunction<T>(provider), iterable);
+		return function(new SiblingsFunction<>(provider), iterable);
 	}
 
 	/**
@@ -751,27 +757,27 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	 * @return new SlingQuery object transformed by this operation
 	 */
 	public Q unique() {
-		return function(new UniqueFunction<T>(provider));
+		return function(new UniqueFunction<>(provider));
 	}
 
 	private Q function(Function<?, ?> function, Iterable<T> iterable) {
 		Q newQuery = clone(this, this.searchStrategy);
 		newQuery.functions.add(function);
-		newQuery.functions.add(new FilterFunction<T>(new IterableContainsPredicate<T>(iterable, provider)));
+		newQuery.functions.add(new FilterFunction<>(new IterableContainsPredicate<>(iterable, provider)));
 		return newQuery;
 	}
 
 	private Q function(Function<?, ?> function, Predicate<T> predicate) {
 		Q newQuery = clone(this, this.searchStrategy);
 		newQuery.functions.add(function);
-		newQuery.functions.add(new FilterFunction<T>(predicate));
+		newQuery.functions.add(new FilterFunction<>(predicate));
 		return newQuery;
 	}
 
 	private Q function(Function<?, ?> function, String selector) {
 		Q newQuery = clone(this, this.searchStrategy);
 		newQuery.functions.add(function);
-		newQuery.functions.add(new SelectorFunction<T>(selector, provider, searchStrategy));
+		newQuery.functions.add(new SelectorFunction<>(selector, provider, searchStrategy));
 		return newQuery;
 	}
 
@@ -782,7 +788,7 @@ public abstract class AbstractQuery<T, Q extends AbstractQuery<T, Q>> implements
 	}
 
 	private SelectorFunction<T> parse(String selector) {
-		return new SelectorFunction<T>(selector, provider, searchStrategy);
+		return new SelectorFunction<>(selector, provider, searchStrategy);
 	}
 
 	protected abstract Q clone(AbstractQuery<T, Q> original, SearchStrategy strategy);

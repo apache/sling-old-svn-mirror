@@ -1,0 +1,2404 @@
+[
+
+    {
+        "Bundle-SymbolicName": "org.apache.felix.framework",
+        "Bundle-Version": "5.6.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.framework",
+                "version": "5.6.6"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.fragment.ws",
+                "version": "1.0.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.fragment.xml",
+                "version": "1.0.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.fragment.transaction",
+                "version": "1.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.geronimo.specs.geronimo-atinject_1.0_spec",
+        "Bundle-Version": "1.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.geronimo.specs",
+                "artifactId": "geronimo-atinject_1.0_spec",
+                "version": "1.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.installer.core",
+        "Bundle-Version": "3.8.10",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.installer.core",
+                "version": "3.8.10"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.javax.activation",
+        "Bundle-Version": "0.1.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.javax.activation",
+                "version": "0.1.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.settings",
+        "Bundle-Version": "1.3.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.settings",
+                "version": "1.3.8"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "log4j.over.slf4j",
+        "Bundle-Version": "1.7.21",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.slf4j",
+                "artifactId": "log4j-over-slf4j",
+                "version": "1.7.21"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.installer.provider.file",
+        "Bundle-Version": "1.1.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.installer.provider.file",
+                "version": "1.1.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.eventadmin",
+        "Bundle-Version": "1.4.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.eventadmin",
+                "version": "1.4.8"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.installer.factory.configuration",
+        "Bundle-Version": "1.1.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.installer.factory.configuration",
+                "version": "1.1.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.log",
+        "Bundle-Version": "5.0.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.log",
+                "version": "5.0.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "ch.qos.logback",
+                "artifactId": "logback-core",
+                "version": "1.1.7"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "ch.qos.logback",
+                "artifactId": "logback-classic",
+                "version": "1.1.7"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "slf4j.api",
+        "Bundle-Version": "1.7.21",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.slf4j",
+                "artifactId": "slf4j-api",
+                "version": "1.7.21"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "jcl.over.slf4j",
+        "Bundle-Version": "1.7.21",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.slf4j",
+                "artifactId": "jcl-over-slf4j",
+                "version": "1.7.21"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.aries.util",
+        "Bundle-Version": "1.1.3",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.aries",
+                "artifactId": "org.apache.aries.util",
+                "version": "1.1.3"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.logservice",
+        "Bundle-Version": "1.0.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.logservice",
+                "version": "1.0.6"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.launchpad.installer",
+        "Bundle-Version": "1.2.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.launchpad.installer",
+                "version": "1.2.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.configadmin",
+        "Bundle-Version": "1.8.10",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.configadmin",
+                "version": "1.8.10"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.commons.fileupload",
+        "Bundle-Version": "1.3.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "commons-fileupload",
+                "artifactId": "commons-fileupload",
+                "version": "1.3.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.commons.io",
+        "Bundle-Version": "2.5.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "commons-io",
+                "artifactId": "commons-io",
+                "version": "2.5"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.aries.jmx.api",
+        "Bundle-Version": "1.1.5",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.aries.jmx",
+                "artifactId": "org.apache.aries.jmx.api",
+                "version": "1.1.5"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.aries.jmx.core",
+        "Bundle-Version": "1.1.7",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.aries.jmx",
+                "artifactId": "org.apache.aries.jmx.core",
+                "version": "1.1.7"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.aries.jmx.whiteboard",
+        "Bundle-Version": "1.1.5",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.aries.jmx",
+                "artifactId": "org.apache.aries.jmx.whiteboard",
+                "version": "1.1.5"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.bundlerepository",
+        "Bundle-Version": "1.6.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.bundlerepository",
+                "version": "1.6.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.http.jetty",
+        "Bundle-Version": "3.4.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.http.jetty",
+                "version": "3.4.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.eclipse.jetty",
+                "artifactId": "jetty-servlet",
+                "version": "9.3.15.v20161220"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.eclipse.jetty",
+                "artifactId": "jetty-server",
+                "version": "9.3.15.v20161220"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.eclipse.jetty",
+                "artifactId": "jetty-util",
+                "version": "9.3.15.v20161220"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.eclipse.jetty",
+                "artifactId": "jetty-jmx",
+                "version": "9.3.15.v20161220"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.eclipse.jetty",
+                "artifactId": "jetty-security",
+                "version": "9.3.15.v20161220"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.eclipse.jetty",
+                "artifactId": "jetty-webapp",
+                "version": "9.3.15.v20161220"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.eclipse.jetty.websocket",
+                "artifactId": "websocket-servlet",
+                "version": "9.3.15.v20161220"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.eclipse.jetty.websocket",
+                "artifactId": "websocket-server",
+                "version": "9.3.15.v20161220"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.http.api",
+                "version": "3.0.0"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.http.base",
+                "version": "3.0.18"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.http.servlet-api",
+        "Bundle-Version": "1.1.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.http.servlet-api",
+                "version": "1.1.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.inventory",
+        "Bundle-Version": "1.0.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.inventory",
+                "version": "1.0.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.prefs",
+        "Bundle-Version": "1.1.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.prefs",
+                "version": "1.1.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.webconsole",
+        "Bundle-Version": "4.3.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.webconsole",
+                "version": "4.3.4"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.extensions.webconsolebranding",
+                "version": "1.0.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.webconsole.plugins.ds",
+        "Bundle-Version": "2.0.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.webconsole.plugins.ds",
+                "version": "2.0.6"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.webconsole.plugins.event",
+        "Bundle-Version": "1.1.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.webconsole.plugins.event",
+                "version": "1.1.6"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.webconsole.plugins.memoryusage",
+        "Bundle-Version": "1.0.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.webconsole.plugins.memoryusage",
+                "version": "1.0.6"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.webconsole.plugins.obr",
+        "Bundle-Version": "1.0.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.webconsole.plugins.obr",
+                "version": "1.0.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.webconsole.plugins.packageadmin",
+        "Bundle-Version": "1.0.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.webconsole.plugins.packageadmin",
+                "version": "1.0.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.johnzon",
+        "Bundle-Version": "1.1.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.johnzon",
+                "version": "1.1.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.log.webconsole",
+        "Bundle-Version": "1.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.log.webconsole",
+                "version": "1.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.extensions.threaddump",
+        "Bundle-Version": "0.2.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.extensions.threaddump",
+                "version": "0.2.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.extensions.webconsolesecurityprovider",
+        "Bundle-Version": "1.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.extensions.webconsolesecurityprovider",
+                "version": "1.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.launchpad.test-services",
+        "Bundle-Version": "2.0.13.SNAPSHOT",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.launchpad.test-services",
+                "version": "2.0.13-SNAPSHOT"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.launchpad.test-fragment",
+                "version": "2.0.13-SNAPSHOT"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.launchpad.test-services-war",
+        "Bundle-Version": "2.0.13.SNAPSHOT",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.launchpad.test-services-war",
+                "version": "2.0.13-SNAPSHOT"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.http.sslfilter",
+        "Bundle-Version": "1.2.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.http.sslfilter",
+                "version": "1.2.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.jaas",
+        "Bundle-Version": "1.0.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.jaas",
+                "version": "1.0.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.metatype",
+        "Bundle-Version": "1.1.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.metatype",
+                "version": "1.1.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.scr",
+        "Bundle-Version": "2.0.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.scr",
+                "version": "2.0.8"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.tika.bundle",
+        "Bundle-Version": "1.14.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.tika",
+                "artifactId": "tika-bundle",
+                "version": "1.14"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.tika",
+                "artifactId": "tika-parsers",
+                "version": "1.14"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.commons",
+                "artifactId": "commons-compress",
+                "version": "1.12"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "commons-codec",
+                "artifactId": "commons-codec",
+                "version": "1.10"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.commons",
+                "artifactId": "commons-csv",
+                "version": "1.0"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "commons-io",
+                "artifactId": "commons-io",
+                "version": "2.5"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.commons",
+                "artifactId": "commons-exec",
+                "version": "1.3"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.commons",
+                "artifactId": "commons-collections4",
+                "version": "4.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.github.junrar",
+                "artifactId": "junrar",
+                "version": "0.7"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.pdfbox",
+                "artifactId": "pdfbox",
+                "version": "2.0.3"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.pdfbox",
+                "artifactId": "pdfbox-tools",
+                "version": "2.0.3"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.pdfbox",
+                "artifactId": "pdfbox-debugger",
+                "version": "2.0.3"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.pdfbox",
+                "artifactId": "fontbox",
+                "version": "2.0.3"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.pdfbox",
+                "artifactId": "jempbox",
+                "version": "1.8.12"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.github.virtuald",
+                "artifactId": "curvesapi",
+                "version": "1.04"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.healthmarketscience.jackcess",
+                "artifactId": "jackcess",
+                "version": "2.1.4"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "commons-lang",
+                "artifactId": "commons-lang",
+                "version": "2.6"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.googlecode.juniversalchardet",
+                "artifactId": "juniversalchardet",
+                "version": "1.0.3"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.gagravarr",
+                "artifactId": "vorbis-java-core",
+                "version": "0.8"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.gagravarr",
+                "artifactId": "vorbis-java-tika",
+                "version": "0.8"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.googlecode.mp4parser",
+                "artifactId": "isoparser",
+                "version": "1.1.18"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.drewnoakes",
+                "artifactId": "metadata-extractor",
+                "version": "2.9.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.googlecode.json-simple",
+                "artifactId": "json-simple",
+                "version": "1.1.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.rometools",
+                "artifactId": "rome",
+                "version": "1.5.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.rometools",
+                "artifactId": "rome-utils",
+                "version": "1.5.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.opennlp",
+                "artifactId": "opennlp-tools",
+                "version": "1.5.3"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.opennlp",
+                "artifactId": "opennlp-maxent",
+                "version": "3.0.3"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.opengis",
+                "artifactId": "geoapi",
+                "version": "3.0.0"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.james",
+                "artifactId": "apache-mime4j-core",
+                "version": "0.7.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.james",
+                "artifactId": "apache-mime4j-dom",
+                "version": "0.7.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "javax.measure",
+                "artifactId": "jsr-275",
+                "version": "0.9.3"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.codelibs",
+                "artifactId": "jhighlight",
+                "version": "1.0.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.pff",
+                "artifactId": "java-libpst",
+                "version": "0.8.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "edu.ucar",
+                "artifactId": "netcdf4",
+                "version": "4.5.5"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "edu.ucar",
+                "artifactId": "grib",
+                "version": "4.5.5"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "edu.ucar",
+                "artifactId": "cdm",
+                "version": "4.5.5"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "edu.ucar",
+                "artifactId": "httpservices",
+                "version": "4.5.5"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.tallison",
+                "artifactId": "jmatio",
+                "version": "1.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "com.google.guava",
+                "artifactId": "guava",
+                "version": "17.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.tika.core",
+        "Bundle-Version": "1.14.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.tika",
+                "artifactId": "tika-core",
+                "version": "1.14"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.oak-segment-tar",
+        "Bundle-Version": "1.6.1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "oak-segment-tar",
+                "version": "1.6.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "io.netty",
+                "artifactId": "netty-common",
+                "version": "4.0.41.Final"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.jctools",
+                "artifactId": "jctools-core",
+                "version": "1.2.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "io.netty",
+                "artifactId": "netty-buffer",
+                "version": "4.0.41.Final"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "io.netty",
+                "artifactId": "netty-transport",
+                "version": "4.0.41.Final"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "io.netty",
+                "artifactId": "netty-codec",
+                "version": "4.0.41.Final"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "io.netty",
+                "artifactId": "netty-handler",
+                "version": "4.0.41.Final"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "com.google.guava",
+        "Bundle-Version": "15.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "com.google.guava",
+                "artifactId": "guava",
+                "version": "15.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.jackrabbit-api",
+        "Bundle-Version": "2.14.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "jackrabbit-api",
+                "version": "2.14.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.jackrabbit-data",
+        "Bundle-Version": "2.14.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "jackrabbit-data",
+                "version": "2.14.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.jackrabbit-jcr-commons",
+        "Bundle-Version": "2.14.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "jackrabbit-jcr-commons",
+                "version": "2.14.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.jackrabbit-jcr-rmi",
+        "Bundle-Version": "2.14.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "jackrabbit-jcr-rmi",
+                "version": "2.14.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.jackrabbit-spi",
+        "Bundle-Version": "2.14.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "jackrabbit-spi",
+                "version": "2.14.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.jackrabbit-spi-commons",
+        "Bundle-Version": "2.14.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "jackrabbit-spi-commons",
+                "version": "2.14.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.jackrabbit-webdav",
+        "Bundle-Version": "2.14.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "jackrabbit-webdav",
+                "version": "2.14.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "io.dropwizard.metrics.core",
+        "Bundle-Version": "3.1.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "io.dropwizard.metrics",
+                "artifactId": "metrics-core",
+                "version": "3.1.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.oak-blob",
+        "Bundle-Version": "1.6.1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "oak-blob",
+                "version": "1.6.1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.oak-commons",
+        "Bundle-Version": "1.6.1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "oak-commons",
+                "version": "1.6.1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.oak-core",
+        "Bundle-Version": "1.6.1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "oak-core",
+                "version": "1.6.1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.oak-jcr",
+        "Bundle-Version": "1.6.1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "oak-jcr",
+                "version": "1.6.1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.oak-lucene",
+        "Bundle-Version": "1.6.1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "oak-lucene",
+                "version": "1.6.1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.metrics",
+        "Bundle-Version": "1.2.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.metrics",
+                "version": "1.2.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.api",
+        "Bundle-Version": "2.4.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.api",
+                "version": "2.4.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.base",
+        "Bundle-Version": "3.0.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.base",
+                "version": "3.0.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.davex",
+        "Bundle-Version": "1.3.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.davex",
+                "version": "1.3.8"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.jackrabbit.accessmanager",
+        "Bundle-Version": "3.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.jackrabbit.accessmanager",
+                "version": "3.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.jackrabbit.usermanager",
+        "Bundle-Version": "2.2.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.jackrabbit.usermanager",
+                "version": "2.2.6"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.jcr-wrapper",
+        "Bundle-Version": "2.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.jcr-wrapper",
+                "version": "2.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.registration",
+        "Bundle-Version": "1.0.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.registration",
+                "version": "1.0.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.webconsole",
+        "Bundle-Version": "1.0.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.webconsole",
+                "version": "1.0.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.webdav",
+        "Bundle-Version": "2.3.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "jackrabbit-jcr-server",
+                "version": "2.14.0"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.webdav",
+                "version": "2.3.8"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.oak.server",
+        "Bundle-Version": "1.1.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.oak.server",
+                "version": "1.1.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "com.composum.core.commons",
+        "Bundle-Version": "1.8.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "com.composum.sling.core",
+                "artifactId": "composum-sling-core-commons",
+                "version": "1.8.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "com.composum.core.config",
+        "Bundle-Version": "1.8.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "com.composum.sling.core",
+                "artifactId": "composum-sling-core-config",
+                "version": "1.8.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "com.composum.core.console",
+        "Bundle-Version": "1.8.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "com.composum.sling.core",
+                "artifactId": "composum-sling-core-console",
+                "version": "1.8.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "com.composum.core.jslibs",
+        "Bundle-Version": "1.8.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "com.composum.sling.core",
+                "artifactId": "composum-sling-core-jslibs",
+                "version": "1.8.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "com.composum.core.pckgmgr",
+        "Bundle-Version": "1.8.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "com.composum.sling.core",
+                "artifactId": "composum-sling-package-manager",
+                "version": "1.8.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "com.composum.core.usermgnt",
+        "Bundle-Version": "1.8.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "com.composum.sling.core",
+                "artifactId": "composum-sling-user-management",
+                "version": "1.8.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.jackrabbit.vault",
+        "Bundle-Version": "3.1.30",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit.vault",
+                "artifactId": "org.apache.jackrabbit.vault",
+                "version": "3.1.30"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "jackrabbit-spi-commons",
+                "version": "2.11.3"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.jackrabbit",
+                "artifactId": "jackrabbit-spi",
+                "version": "2.11.3"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.commons.codec",
+        "Bundle-Version": "1.9.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "commons-codec",
+                "artifactId": "commons-codec",
+                "version": "1.9"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.commons.collections",
+        "Bundle-Version": "3.2.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "commons-collections",
+                "artifactId": "commons-collections",
+                "version": "3.2.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.commons.collections4",
+        "Bundle-Version": "4.1.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.commons",
+                "artifactId": "commons-collections4",
+                "version": "4.1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.geronimo.bundles.commons-httpclient",
+        "Bundle-Version": "3.1.0.1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.geronimo.bundles",
+                "artifactId": "commons-httpclient",
+                "version": "3.1_1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.commons.lang",
+        "Bundle-Version": "2.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "commons-lang",
+                "artifactId": "commons-lang",
+                "version": "2.6"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.commons.lang3",
+        "Bundle-Version": "3.5.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.commons",
+                "artifactId": "commons-lang3",
+                "version": "3.5"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.commons.math",
+        "Bundle-Version": "2.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.commons",
+                "artifactId": "commons-math",
+                "version": "2.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.httpcomponents.httpclient",
+        "Bundle-Version": "4.4.1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "commons-codec",
+                "artifactId": "commons-codec",
+                "version": "1.9"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.httpcomponents",
+                "artifactId": "fluent-hc",
+                "version": "4.4.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.httpcomponents",
+                "artifactId": "httpclient-cache",
+                "version": "4.4.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.httpcomponents",
+                "artifactId": "httpclient-osgi",
+                "version": "4.4.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.httpcomponents",
+                "artifactId": "httpclient",
+                "version": "4.4.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.httpcomponents",
+                "artifactId": "httpmime",
+                "version": "4.4.1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.httpcomponents.httpcore",
+        "Bundle-Version": "4.4.1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.httpcomponents",
+                "artifactId": "httpcore-nio",
+                "version": "4.4.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.httpcomponents",
+                "artifactId": "httpcore-osgi",
+                "version": "4.4.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.httpcomponents",
+                "artifactId": "httpcore",
+                "version": "4.4.1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "com.fasterxml.jackson.core.jackson-annotations",
+        "Bundle-Version": "2.8.7",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "com.fasterxml.jackson.core",
+                "artifactId": "jackson-annotations",
+                "version": "2.8.7"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "com.fasterxml.jackson.core.jackson-core",
+        "Bundle-Version": "2.8.7",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "com.fasterxml.jackson.core",
+                "artifactId": "jackson-core",
+                "version": "2.8.7"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "com.fasterxml.jackson.core.jackson-databind",
+        "Bundle-Version": "2.8.7",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "com.fasterxml.jackson.core",
+                "artifactId": "jackson-databind",
+                "version": "2.8.7"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.geronimo.bundles.jstl",
+        "Bundle-Version": "1.2.0.1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.geronimo.bundles",
+                "artifactId": "jstl",
+                "version": "1.2_1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "javax.mail",
+        "Bundle-Version": "1.4.7",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "javax.mail",
+                "artifactId": "mail",
+                "version": "1.4.7"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.felix.http.whiteboard",
+        "Bundle-Version": "3.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.felix",
+                "artifactId": "org.apache.felix.http.whiteboard",
+                "version": "3.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.servicemix.bundles.rhino",
+        "Bundle-Version": "1.7.7.1_1",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.servicemix.bundles",
+                "artifactId": "org.apache.servicemix.bundles.rhino",
+                "version": "1.7.7.1_1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.adapter",
+        "Bundle-Version": "2.1.10",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.adapter",
+                "version": "2.1.10"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.api",
+        "Bundle-Version": "2.16.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.api",
+                "version": "2.16.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.auth.core",
+        "Bundle-Version": "1.4.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.auth.core",
+                "version": "1.4.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.auth.form",
+        "Bundle-Version": "1.0.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.auth.form",
+                "version": "1.0.8"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.bundleresource.impl",
+        "Bundle-Version": "2.2.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.bundleresource.impl",
+                "version": "2.2.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.caconfig.api",
+        "Bundle-Version": "1.1.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.caconfig.api",
+                "version": "1.1.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.caconfig.impl",
+        "Bundle-Version": "1.4.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.caconfig.impl",
+                "version": "1.4.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.caconfig.spi",
+        "Bundle-Version": "1.3.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.caconfig.spi",
+                "version": "1.3.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.classloader",
+        "Bundle-Version": "1.4.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.classloader",
+                "version": "1.4.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.compiler",
+        "Bundle-Version": "2.3.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.compiler",
+                "version": "2.3.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.fsclassloader",
+        "Bundle-Version": "1.0.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.fsclassloader",
+                "version": "1.0.6"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.mime",
+        "Bundle-Version": "2.1.10",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.mime",
+                "version": "2.1.10"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.osgi",
+        "Bundle-Version": "2.4.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.osgi",
+                "version": "2.4.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.scheduler",
+        "Bundle-Version": "2.6.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.scheduler",
+                "version": "2.6.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.quartz-scheduler",
+                "artifactId": "quartz",
+                "version": "2.2.3"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.commons.threads",
+        "Bundle-Version": "3.2.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.commons.threads",
+                "version": "3.2.6"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.discovery.api",
+        "Bundle-Version": "1.0.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.discovery.api",
+                "version": "1.0.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.discovery.base",
+        "Bundle-Version": "2.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.discovery.base",
+                "version": "2.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.discovery.commons",
+        "Bundle-Version": "1.0.20",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.discovery.commons",
+                "version": "1.0.20"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.discovery.oak",
+        "Bundle-Version": "1.2.18",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.discovery.oak",
+                "version": "1.2.18"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.discovery.support",
+        "Bundle-Version": "1.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.discovery.support",
+                "version": "1.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.engine",
+        "Bundle-Version": "2.6.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.engine",
+                "version": "2.6.8"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.event",
+        "Bundle-Version": "4.2.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.event",
+                "version": "4.2.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.event.dea",
+        "Bundle-Version": "1.1.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.event.dea",
+                "version": "1.1.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.fsresource",
+        "Bundle-Version": "2.1.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.fsresource",
+                "version": "2.1.8"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.johnzon",
+                "artifactId": "johnzon-core",
+                "version": "1.0.0"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.geronimo.specs",
+                "artifactId": "geronimo-json_1.0_spec",
+                "version": "1.0-alpha-1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.contentparser",
+                "version": "1.2.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.hc.api",
+        "Bundle-Version": "1.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.hc.api",
+                "version": "1.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.hc.core",
+        "Bundle-Version": "1.2.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.hc.core",
+                "version": "1.2.8"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.hc.webconsole",
+        "Bundle-Version": "1.1.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.hc.webconsole",
+                "version": "1.1.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.i18n",
+        "Bundle-Version": "2.5.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.i18n",
+                "version": "2.5.8"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.installer.console",
+        "Bundle-Version": "1.0.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.installer.console",
+                "version": "1.0.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.installer.provider.jcr",
+        "Bundle-Version": "3.1.26",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.installer.provider.jcr",
+                "version": "3.1.26"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.contentloader",
+        "Bundle-Version": "2.2.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.contentloader",
+                "version": "2.2.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.repoinit",
+        "Bundle-Version": "1.1.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.repoinit",
+                "version": "1.1.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.jcr.resource",
+        "Bundle-Version": "3.0.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.jcr.resource",
+                "version": "3.0.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.junit.core",
+        "Bundle-Version": "1.0.26",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.junit.core",
+                "version": "1.0.26"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.junit.remote",
+        "Bundle-Version": "1.0.12",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.junit.remote",
+                "version": "1.0.12"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.junit.scriptable",
+        "Bundle-Version": "1.0.12",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.junit.scriptable",
+                "version": "1.0.12"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.launchpad.content",
+        "Bundle-Version": "2.0.12",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.launchpad.content",
+                "version": "2.0.12"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.models.api",
+        "Bundle-Version": "1.3.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.models.api",
+                "version": "1.3.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.models.impl",
+        "Bundle-Version": "1.4.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.models.impl",
+                "version": "1.4.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "commons-beanutils",
+                "artifactId": "commons-beanutils",
+                "version": "1.8.3"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.models.jacksonexporter",
+        "Bundle-Version": "1.0.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.models.jacksonexporter",
+                "version": "1.0.6"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.provisioning.model",
+        "Bundle-Version": "1.8.2",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.provisioning.model",
+                "version": "1.8.2"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.repoinit.parser",
+        "Bundle-Version": "1.1.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.repoinit.parser",
+                "version": "1.1.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.resourceresolver",
+        "Bundle-Version": "1.5.30",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.resourceresolver",
+                "version": "1.5.30"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.sample.slingshot",
+        "Bundle-Version": "0.8.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.sample.slingshot",
+                "version": "0.8.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.api",
+        "Bundle-Version": "2.2.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.api",
+                "version": "2.2.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.core",
+        "Bundle-Version": "2.0.46",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.core",
+                "version": "2.0.46"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.el-api",
+        "Bundle-Version": "1.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.el-api",
+                "version": "1.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.javascript",
+        "Bundle-Version": "3.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.javascript",
+                "version": "3.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.jsp",
+        "Bundle-Version": "2.3.1.SNAPSHOT",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.jsp",
+                "version": "2.3.1-SNAPSHOT"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.jsp-api",
+        "Bundle-Version": "1.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.jsp-api",
+                "version": "1.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.jsp.taglib",
+        "Bundle-Version": "2.2.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.jsp.taglib",
+                "version": "2.2.6"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.owasp.esapi",
+                "artifactId": "esapi",
+                "version": "2.1.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.sightly",
+        "Bundle-Version": "1.0.34",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.sightly",
+                "version": "1.0.34"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.sightly.compiler",
+        "Bundle-Version": "1.0.8",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.sightly.compiler",
+                "version": "1.0.8"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.antlr",
+                "artifactId": "antlr4-runtime",
+                "version": "4.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.abego.treelayout",
+                "artifactId": "org.abego.treelayout.core",
+                "version": "1.0.1"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.sightly.compiler.java",
+        "Bundle-Version": "1.0.10",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.sightly.compiler.java",
+                "version": "1.0.10"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.sightly.js.provider",
+        "Bundle-Version": "1.0.22",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.sightly.js.provider",
+                "version": "1.0.22"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.sightly.models.provider",
+        "Bundle-Version": "1.0.6",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.sightly.models.provider",
+                "version": "1.0.6"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.scripting.sightly.repl",
+        "Bundle-Version": "1.0.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.scripting.sightly.repl",
+                "version": "1.0.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.serviceusermapper",
+        "Bundle-Version": "1.3.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.serviceusermapper",
+                "version": "1.3.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.servlets.get",
+        "Bundle-Version": "2.1.26",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.servlets.get",
+                "version": "2.1.26"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.servlets.post",
+        "Bundle-Version": "2.3.22",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.servlets.post",
+                "version": "2.3.22"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.servlets.resolver",
+        "Bundle-Version": "2.4.12",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.servlets.resolver",
+                "version": "2.4.12"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.validation.api",
+        "Bundle-Version": "1.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.validation.api",
+                "version": "1.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.validation.core",
+        "Bundle-Version": "1.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.validation.core",
+                "version": "1.0.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.xss",
+        "Bundle-Version": "2.0.0",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.xss",
+                "version": "2.0.0"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.owasp.antisamy",
+                "artifactId": "antisamy",
+                "version": "1.5.2"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.owasp.encoder",
+                "artifactId": "encoder",
+                "version": "1.1.1"
+            },
+            {
+                "__type__": "maven",
+                "groupId": "org.owasp.esapi",
+                "artifactId": "esapi",
+                "version": "2.1.0"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.tooling.support.source",
+        "Bundle-Version": "1.0.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.tooling.support.source",
+                "version": "1.0.4"
+            }
+        ]
+    },
+    {
+        "Bundle-SymbolicName": "org.apache.sling.tooling.support.install",
+        "Bundle-Version": "1.0.4",
+        "sourceReferences": [
+            {
+                "__type__": "maven",
+                "groupId": "org.apache.sling",
+                "artifactId": "org.apache.sling.tooling.support.install",
+                "version": "1.0.4"
+            }
+        ]
+    }
+
+]

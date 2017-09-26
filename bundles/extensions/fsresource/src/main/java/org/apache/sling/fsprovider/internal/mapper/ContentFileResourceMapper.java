@@ -131,7 +131,7 @@ public final class ContentFileResourceMapper implements FsResourceMapper {
         if (!StringUtils.startsWith(path, providerRootPrefix)) {
             return null;
         }
-        String relPath = path.substring(providerRootPrefix.length());
+        String relPath = Escape.resourceToFileName(path.substring(providerRootPrefix.length()));
         for (String filenameSuffix : contentFileExtensions.getSuffixes()) {
             File file = new File(providerFile, relPath + filenameSuffix);
             if (file.exists()) {

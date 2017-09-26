@@ -18,9 +18,12 @@
  ******************************************************************************/
 package org.apache.sling.hapi;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * A Hypermedia API exception
  */
+@ProviderType
 public class HApiException extends RuntimeException {
 
     private static final long serialVersionUID = 2626376214501558054L;

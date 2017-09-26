@@ -24,7 +24,7 @@ import java.net.URL;
 
 import javax.jcr.RepositoryException;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * The <code>ContentReader</code>

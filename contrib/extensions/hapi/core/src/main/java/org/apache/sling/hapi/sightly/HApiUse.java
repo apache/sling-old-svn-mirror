@@ -30,6 +30,7 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.hapi.HApiUtil;
 import org.apache.sling.hapi.MicrodataAttributeHelper;
 import org.apache.sling.scripting.sightly.pojo.Use;
+import org.osgi.annotation.versioning.ProviderType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
  * {@link HApiUtil#getTypeNode(org.apache.sling.api.resource.ResourceResolver, String)}</p>
  * <p>The convenience get methods are meant to be used in the 'data-sly-attribute' in the sightly script.</p>
  */
+@ProviderType
 public class HApiUse implements Use {
     private static final Logger LOG = LoggerFactory.getLogger(HApiUse.class);
 

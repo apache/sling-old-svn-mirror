@@ -18,15 +18,12 @@ package org.apache.sling.testing.teleporter.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.givenThat;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.util.Timer;
@@ -44,14 +41,17 @@ public class TeleporterHttpClientTest {
     private static final int PORT = Integer.getInteger("http.port", 1234);
     private static final String baseUrl = "http://127.0.0.1:" + PORT;
     private static final String TEST_PATH = "/foo";
+    private static final String username = UUID.randomUUID().toString();
+    private static final String password = UUID.randomUUID().toString();
     
     @Rule
     public WireMockRule http = new WireMockRule(PORT);
     
-    private void activateLater(final String path, long delayMsec) {
+    private void changeStatusLater(final String path, long delayMsec, final int newStatus) {
         TimerTask t = new TimerTask() {
             public void run() {
-                givenThat(get(urlEqualTo(path)).willReturn(aResponse().withStatus(200)));
+                http.resetAll();
+                http.givenThat(get(urlEqualTo(path)).willReturn(aResponse().withStatus(newStatus)));
             }
         };
         
@@ -63,8 +63,10 @@ public class TeleporterHttpClientTest {
         final TeleporterHttpClient client = new TeleporterHttpClient(baseUrl, TEST_PATH);
         final String testUrl = baseUrl + TEST_PATH;
         
-        assertEquals(404, client.getHttpGetStatus(baseUrl + TEST_PATH).getStatus());
-        activateLater(TEST_PATH, 1000);
+        http.givenThat(get(urlEqualTo(TEST_PATH)).willReturn(aResponse().withStatus(418)));
+        assertEquals(418, client.getHttpGetStatus(baseUrl + TEST_PATH).getStatus());
+        
+        changeStatusLater(TEST_PATH, 1000, 200);
         client.waitForStatus(testUrl, 200, TimeoutsProvider.getInstance().getTimeout(2000));
         assertEquals(200, client.getHttpGetStatus(baseUrl + TEST_PATH).getStatus());
     }
@@ -75,7 +77,7 @@ public class TeleporterHttpClientTest {
         final String testUrl = baseUrl + TEST_PATH;
         
         assertEquals(404, client.getHttpGetStatus(baseUrl + TEST_PATH).getStatus());
-        activateLater(TEST_PATH, 1000);
+        changeStatusLater(TEST_PATH, 1000, 200);
         
         try {
             client.waitForStatus(testUrl, 200, 100);
@@ -87,7 +89,7 @@ public class TeleporterHttpClientTest {
     @Test
     public void repeatedGetStatus() {
         final String path = TEST_PATH + "/" + UUID.randomUUID();
-        givenThat(get(urlEqualTo(path)).willReturn(aResponse().withStatus(200)));
+        http.givenThat(get(urlEqualTo(path)).willReturn(aResponse().withStatus(200)));
         
         final TeleporterHttpClient client = new TeleporterHttpClient(baseUrl, path);
         final String testUrl = baseUrl + path;
@@ -111,7 +113,7 @@ public class TeleporterHttpClientTest {
         // open resource
         try (InputStream inputStream = this.getClass().getResourceAsStream("/bundle-not-active.json")) {
             String body = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-            givenThat(get(urlEqualTo("/system/console/bundles/" + bundleSymbolicName + ".json")).willReturn(aResponse().withStatus(200).withBody(body)));
+            http.givenThat(get(urlEqualTo("/system/console/bundles/" + bundleSymbolicName + ".json")).willReturn(aResponse().withStatus(200).withBody(body)));
         }
         client.verifyCorrectBundleState(bundleSymbolicName, 1);
     }
@@ -123,8 +125,26 @@ public class TeleporterHttpClientTest {
         // open resource
         try (InputStream inputStream = this.getClass().getResourceAsStream("/bundle-active.json")) {
             String body = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-            givenThat(get(urlEqualTo("/system/console/bundles/" + bundleSymbolicName + ".json")).willReturn(aResponse().withStatus(200).withBody(body)));
+            http.givenThat(get(urlEqualTo("/system/console/bundles/" + bundleSymbolicName + ".json")).willReturn(aResponse().withStatus(200).withBody(body)));
         }
         client.verifyCorrectBundleState(bundleSymbolicName, 1);
+    }
+    
+    private void testWithCredentials(String path, String credentials, int expectedStatus) throws IOException {
+        final TeleporterHttpClient client = new TeleporterHttpClient(baseUrl, "invalid");
+        http.givenThat(get(urlEqualTo(path)).willReturn(aResponse().withStatus(418)));
+        http.givenThat(get(urlEqualTo(path)).withBasicAuth(username, password).willReturn(aResponse().withStatus(302)));
+        client.setCredentials(credentials);
+        assertEquals(expectedStatus, client.getHttpGetStatus(baseUrl + path).getStatus());
+    }
+    
+    @Test
+    public void testRequiredCredentials() throws IOException {
+        testWithCredentials("/protected", username + ":" + password, 302);
+    }
+    
+    @Test
+    public void testMissingCredentials() throws IOException {
+        testWithCredentials("/protected", null, 418);
     }
 }

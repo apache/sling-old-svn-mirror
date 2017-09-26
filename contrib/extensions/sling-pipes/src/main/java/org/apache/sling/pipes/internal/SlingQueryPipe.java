@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 public class SlingQueryPipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(SlingQueryPipe.class);
 
-    public final static String RESOURCE_TYPE = "slingPipes/slingQuery";
+    public final static String RESOURCE_TYPE = RT_PREFIX + "slingQuery";
 
     public SlingQueryPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);

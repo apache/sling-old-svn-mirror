@@ -23,7 +23,8 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
+
 
 /**
  * The <code>ContentCreator</code> is used by the {@link org.apache.sling.jcr.contentloader.ContentReader} to create the actual content.

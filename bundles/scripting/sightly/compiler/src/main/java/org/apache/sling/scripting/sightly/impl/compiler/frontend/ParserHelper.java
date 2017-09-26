@@ -18,7 +18,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.compiler.frontend;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.StringConstant;
 
 /**

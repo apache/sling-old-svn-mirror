@@ -44,7 +44,7 @@ import org.codehaus.plexus.util.StringUtils;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
- * This goal validates Sightly scripts syntax.
+ * Validates HTL scripts.
  */
 @Mojo(
         name = "validate",
@@ -65,14 +65,15 @@ public class ValidateMojo extends AbstractMojo {
     /**
      * Defines the root folder where this Mojo expects to find Sightly scripts to validate.
      */
-    @Parameter(property = "sourceDirectory", defaultValue = "${project.build.sourceDirectory}")
+    @Parameter(property = "htl.sourceDirectory",
+               defaultValue = "${project.build.sourceDirectory}")
     private File sourceDirectory;
 
     /**
      * List of files to include. Specified as fileset patterns which are relative to the input directory whose contents will be scanned
      * (see the sourceDirectory configuration option).
      */
-    @Parameter
+    @Parameter(defaultValue = DEFAULT_INCLUDES)
     private String[] includes;
 
     /**
@@ -85,7 +86,8 @@ public class ValidateMojo extends AbstractMojo {
     /**
      * If set to "true" it will fail the build on compiler warnings.
      */
-    @Parameter(property = "failOnWarnings", defaultValue = "false")
+    @Parameter(property = "htl.failOnWarnings",
+               defaultValue = "false")
     private boolean failOnWarnings;
 
     /**
@@ -215,8 +217,9 @@ public class ValidateMojo extends AbstractMojo {
     }
 
     private String processIncludes() {
+        // since default = "" leads to null deal with that as well here
         if (includes == null) {
-            return DEFAULT_INCLUDES;
+            return "";
         }
         return join(includes, ',');
     }

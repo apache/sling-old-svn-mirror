@@ -28,6 +28,7 @@ import javax.jcr.SimpleCredentials;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.User;
 
 /** Test utilities */
 public class U {
@@ -35,7 +36,18 @@ public class U {
         final Authorizable a = ((JackrabbitSession)session).getUserManager().getAuthorizable(id);
         return a != null;
     }
-    
+
+    public static boolean userIsDisabled(Session session, String id) throws RepositoryException {
+        final Authorizable a = ((JackrabbitSession)session).getUserManager().getAuthorizable(id);
+        if (a == null) {
+            throw new IllegalStateException("Authorizable not found:" + id);
+        }
+        if (a.isGroup()) {
+            throw new IllegalStateException("Authorizable is a group:" + id);
+        }
+        return ((User)a).isDisabled();
+    }
+
     public static Session getServiceSession(Session session, String serviceId) throws LoginException, RepositoryException {
         return session.impersonate(new SimpleCredentials(serviceId, new char[0]));
     }

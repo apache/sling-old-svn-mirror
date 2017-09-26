@@ -121,7 +121,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
 
         List<Job> result = new ArrayList<Job>();
         try {
-            Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, actualLimit);
+            Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, actualLimit, (Map<String, Object>[]) null);
 
             int i = 0;
             for (Job job : jobs) {
