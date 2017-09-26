@@ -27,7 +27,12 @@ import java.security.AccessControlException;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.jcr.*;
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 
 import org.apache.jackrabbit.oak.api.conversion.URIProvider;
 import org.apache.sling.adapter.annotations.Adaptable;

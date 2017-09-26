@@ -42,15 +42,10 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceNotFoundException;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.resource.*;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.jcr.resource.api.ExternalizableInputStream;
+import org.apache.sling.api.resource.ExternalizableInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

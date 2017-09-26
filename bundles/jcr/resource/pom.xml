@@ -50,7 +50,7 @@
     <properties>
         <site.jira.version.id>12314286</site.jira.version.id>
         <site.javadoc.exclude>**.internal.**</site.javadoc.exclude>
-        <oak.version>1.5.15</oak.version>
+        <oak.version>1.6.5-SNAPSHOT</oak.version>
         <jackrabbit.version>2.13.4</jackrabbit.version>
     </properties>
 
@@ -144,18 +144,13 @@
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-core</artifactId>
             <version>${oak.version}</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
             <version>${jackrabbit.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>oak-api</artifactId>
-            <version>1.8-SNAPSHOT</version> <!-- Need to wait till this new API is available in Oak 1.5.x before committing this patch -->
         </dependency>
 
     <!-- Sling -->

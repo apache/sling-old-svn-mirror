@@ -32,6 +32,8 @@ import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
  */
 public class HelperData {
 
+    private static final URIProvider[] EMPTY_URLPROVIDERS = new URIProvider[0];
+
     private final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference;
     private final AtomicReference<URIProvider[]> uriProviderReference;
 
@@ -59,6 +61,10 @@ public class HelperData {
     }
 
     public URIProvider[] getURIProviders() {
-        return this.uriProviderReference.get();
+        URIProvider[] ups = this.uriProviderReference.get();
+        if ( ups == null) {
+            ups = EMPTY_URLPROVIDERS;
+        }
+        return ups;
     }
 }
