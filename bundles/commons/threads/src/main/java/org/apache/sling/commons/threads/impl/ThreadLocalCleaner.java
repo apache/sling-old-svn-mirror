@@ -83,7 +83,7 @@ public class ThreadLocalCleaner {
 
     /** Notifies the {@link ThreadLocalChangeListener} about changes on thread local variables for the current thread.
      * 
-     * @param field
+     * @param field is a field containing a ThreadLocalMap
      * @param backup */
     private void diff(Field field, Reference<?>[] backup) {
         try {
@@ -136,9 +136,12 @@ public class ThreadLocalCleaner {
     private void changed(Thread thread, Reference<?> reference,
             ThreadLocalChangeListener.Mode mode)
             throws IllegalAccessException {
-        listener.changed(mode,
-                thread, (ThreadLocal<?>) reference.get(),
-                threadLocalEntryValueField.get(reference));
+        // just skip null reference entries (may happen if array has been resized)
+        if (reference != null) {
+            listener.changed(mode,
+                    thread, (ThreadLocal<?>) reference.get(),
+                    threadLocalEntryValueField.get(reference));
+        }
     }
 
     /** @param c the class containing the field
