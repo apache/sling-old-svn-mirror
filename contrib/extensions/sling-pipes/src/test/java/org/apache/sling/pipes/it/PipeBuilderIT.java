@@ -18,12 +18,10 @@
  */
 package org.apache.sling.pipes.it;
 
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.sling.api.resource.Resource;
+import java.util.Set;
+
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.pipes.Pipe;
-import org.apache.sling.pipes.ReferencePipe;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -31,12 +29,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.query.Query;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -75,20 +67,17 @@ public class PipeBuilderIT extends PipesTestSupport {
     }
 
     @Test
-    @Ignore //for some reason xpath doesn't seem to run
     public void xpathTest() throws Exception {
         final String ROOT = "/content/xpath";
         final int NB_ITEMS = 10;
-        try (ResourceResolver resolver = resolver()) {
-            for (int i = 0; i < NB_ITEMS; i ++){
-                plumber.newPipe(resolver).mkdir(ROOT + "/" + i + "/" + NN_TEST).write("xpathTestStatus","testing").run();
+        try (final ResourceResolver resolver = resolver()) {
+            for (int i = 0; i < NB_ITEMS; i++) {
+                final String path = String.format("%s/%s/%s", ROOT, i, NN_TEST);
+                plumber.newPipe(resolver).mkdir(path).write("xpathTestStatus", "testing").run();
             }
-            String query = "/jcr:root" + ROOT +"//element(*,nt:unstructured)[@xpathTestStatus]";
-            Set<String> results = plumber.newPipe(resolver).xpath(query).run();
-            Iterator<Resource> resources = resolver.findResources(query, Query.XPATH);
-            LOGGER.info("found through normal request {}", IteratorUtils.toList(resources));
-            LOGGER.info("Following results are found through pipe {}", results);
-            assertEquals("xpath should return as many items as the ones we wrote", NB_ITEMS, results.size());
+            final String query = String.format("/jcr:root%s//element(*,nt:base)[@xpathTestStatus]", ROOT);
+            final Set<String> results = plumber.newPipe(resolver).xpath(query).run();
+            assertEquals("xpath query should return as many items as we wrote", NB_ITEMS, results.size());
         }
     }
 
