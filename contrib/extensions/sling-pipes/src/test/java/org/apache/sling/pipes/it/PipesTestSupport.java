@@ -21,14 +21,12 @@ package org.apache.sling.pipes.it;
 import javax.inject.Inject;
 
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.testing.paxexam.TestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.util.Filter;
 
 import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionDistribution;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionEvent;
@@ -45,7 +43,6 @@ public abstract class PipesTestSupport extends TestSupport {
     protected static final String NN_TEST = "test";
 
     @Inject
-    @Filter(timeout = 3000000)
     protected Plumber plumber;
 
     @Inject
