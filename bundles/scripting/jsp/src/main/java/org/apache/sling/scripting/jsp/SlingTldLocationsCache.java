@@ -133,8 +133,7 @@ public class SlingTldLocationsCache
 
                 synchronized (tldLocations) {
                     if (uri != null && !tldLocations.containsKey(uri)) {
-                        tldLocations.put(uri, new TldLocationEntry(bundle,
-                            taglib.getPath()));
+                        tldLocations.put(uri, new TldLocationEntry(bundle, taglib));
                     }
                 }
             }
@@ -213,9 +212,9 @@ public class SlingTldLocationsCache
 
         private final URL tldURL;
 
-        private TldLocationEntry(final Bundle bundle, final String tldPath) {
+        private TldLocationEntry(final Bundle bundle, final URL tldURL) {
             this.bundleId = bundle.getBundleId();
-            this.tldURL = bundle.getEntry(tldPath);
+            this.tldURL = tldURL;
         }
 
         long getBundleId() {
