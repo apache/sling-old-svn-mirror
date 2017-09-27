@@ -76,7 +76,7 @@ public abstract class PipesTestSupport extends TestSupport {
             slingExtensionDistribution(),
             slingExtensionQuery(),
             // TODO remove johnzon bundle (should be part of sling in upcoming release of org.apache.sling.testing.paxexam)
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.johnzon").version("1.1.0"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.johnzon").versionAsInProject(),
             // TODO required by Jackrabbit Vault (Sling Distribution)
             systemPackages(
                 "org.w3c.dom.css",
