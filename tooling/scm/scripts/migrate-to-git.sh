@@ -130,22 +130,29 @@ while read -r module; do
         fi
 
     elif [ $1 == "-r" ]; then
-        status=$(curl -s -o /dev/null -I  -w "%{http_code}" https://git-wip-us.apache.org/repos/asf?p=${repo_name})
+        # TODO - switch to ASF for the final run
+        status=$(curl -s -o /dev/null -I  -w "%{http_code}" https://github.com/not-sling/${repo_name})
 
         if [ $status = "404" ]; then
             echo "Repository not found, will create";
         elif [ $status = "200" ] ;then
             echo "Repository exists, skipping";
+            continue
         else
             echo "Unhandled HTTP status code ${status}, aborting"
             exit 1
         fi
-     
-        
-        # TODO - create the repository using the ASF self-service tool
-        # curl --netrc 'https://reporeq.apache.org/ss.lua'
+
+        if [ -z "$GITHUB_AUTH" ]; then
+            echo "Please export GITHUB_AUTH='your-github-username your-github-token'"
+            exit 2
+        fi
+
         echo "Creating GIT repository ..."
-        exit 254 # unimplemented
+     
+        # TODO - create the repository using the ASF self-service tool
+        ./tooling/scm/scripts/create-gh-repo.sh ${GITHUB_AUTH} ${repo_name}
+
     else # -p
         pushd ${git_repo_location}/${repo_name}
         git remote add origin https://git-wip-us.apache.org/repos/asf/${repo_name}.git
