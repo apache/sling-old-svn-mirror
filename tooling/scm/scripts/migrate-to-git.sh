@@ -69,13 +69,25 @@ while read -r module; do
         module=${module#${prefix}}
     done
 
-    artifactId=$(xmllint --xpath "/*[local-name()='project']/*[local-name()='artifactId']/text()" ${module_orig}/pom.xml)
+    if [ -e ${module_orig}/pom.xml ]; then
 
-    # add TLP prefix _if needed_
-    if [[ $artifactId == "sling-" ]]; then
-        repo_name=${artifactId}
+        artifactId=$(xmllint --xpath "/*[local-name()='project']/*[local-name()='artifactId']/text()" ${module_orig}/pom.xml)
+
+        # some overrides where it does not make sense to switch the artifact id
+        case $artifactId in
+            "sling-samples-builder") artifactId="sling-samples";;
+            "org.apache.sling.performance.reactor" ) artifactId="org.apache.sling.performance";;
+            "sling") artifactId="parent";;
+        esac
+
+        # add TLP prefix _if needed_
+        if [[ $artifactId == sling-* ]]; then
+            repo_name=${artifactId}
+        else
+            repo_name="sling-${artifactId}"
+        fi
     else
-        repo_name="sling-${artifactId}"
+        repo_name="sling-$(echo ${module} | tr '/' '-')"
     fi
     
     echo "---- Preparing to process $module_orig as $repo_name ---"
