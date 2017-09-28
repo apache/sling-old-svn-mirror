@@ -24,6 +24,8 @@ fi
 
 for pom in $(find . -name pom.xml  \
     | grep -v './tooling/ide' \
+    | grep -v './performance' \
+    | grep -v './samples' \
     | grep -v '/target/' \
     | grep -v '/archetype-resources/' \
     | grep -v '/src/test/resources/' \
@@ -41,4 +43,7 @@ for pom in $(find . -name pom.xml  \
     echo $pom
 done
 
-echo "tooling/ide" # by exception, this will be a standalone module
+# by exception, these will be standalone modules
+echo "tooling/ide"
+echo "samples"
+echo "performance"
