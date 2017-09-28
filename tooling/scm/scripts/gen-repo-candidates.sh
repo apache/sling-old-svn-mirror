@@ -47,3 +47,6 @@ done
 echo "tooling/ide"
 echo "samples"
 echo "performance"
+# folders with utilities
+echo "tooling/scm"
+echo "tooling/jenkins"
