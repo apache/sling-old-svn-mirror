@@ -71,7 +71,12 @@ while read -r module; do
 
     artifactId=$(xmllint --xpath "/*[local-name()='project']/*[local-name()='artifactId']/text()" ${module_orig}/pom.xml)
 
-    repo_name="sling-${artifactId}" # add TLP prefix
+    # add TLP prefix _if needed_
+    if [[ $artifactId == "sling-" ]]; then
+        repo_name=${artifactId}
+    else
+        repo_name="sling-${artifactId}"
+    fi
     
     echo "---- Preparing to process $module_orig as $repo_name ---"
 
