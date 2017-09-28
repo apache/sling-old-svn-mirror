@@ -29,10 +29,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ThreadPoolExecutorCleaningThreadLocalsTest {
@@ -57,9 +57,9 @@ public class ThreadPoolExecutorCleaningThreadLocalsTest {
         assertTaskDoesNotSeeOldThreadLocals("test");
         assertTaskDoesNotSeeOldThreadLocals("test2");
         // verify mock interactions (at least the additions from the first task should be visible to the listener now)
-        Mockito.verify(listener).changed(Matchers.eq(Mode.ADDED), Matchers.any(Thread.class), Matchers.eq(ThreadLocalTask.threadLocalVariable), Matchers.eq("test"));
+        Mockito.verify(listener).changed(ArgumentMatchers.eq(Mode.ADDED), ArgumentMatchers.any(Thread.class), ArgumentMatchers.eq(ThreadLocalTask.threadLocalVariable), ArgumentMatchers.eq("test"));
         // no thread locals should have been removed
-        Mockito.verify(listener, Mockito.times(0)).changed(Matchers.eq(Mode.REMOVED), Matchers.any(Thread.class), Matchers.eq(ThreadLocalTask.threadLocalVariable), Matchers.anyString());
+        Mockito.verify(listener, Mockito.times(0)).changed(ArgumentMatchers.eq(Mode.REMOVED), ArgumentMatchers.any(Thread.class), ArgumentMatchers.eq(ThreadLocalTask.threadLocalVariable), ArgumentMatchers.anyString());
     }
 
     private void assertTaskDoesNotSeeOldThreadLocals(String value) throws InterruptedException, ExecutionException {
