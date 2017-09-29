@@ -156,8 +156,12 @@ while read -r module; do
     else # -p
         pushd ${git_repo_location}/${repo_name}
         # TODO - use the ASF remotes for the final run
-        git remote add origin https://github.com/not-sling/${repo_name}.git
-        git push -u origin master
+        if [ $(git remote show | grep origin | wc -l) -eq 0 ]; then
+            git remote add origin https://github.com/not-sling/${repo_name}.git
+            git push -u origin master
+        else
+            echo "Remote origin already exists, skipping"
+        fi
         popd
     fi
 done
