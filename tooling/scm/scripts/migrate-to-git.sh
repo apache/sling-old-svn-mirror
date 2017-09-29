@@ -155,6 +155,7 @@ while read -r module; do
 
     else # -p
         pushd ${git_repo_location}/${repo_name}
+        # TODO - use the ASF remotes for the final run
         git remote add origin https://github.com/not-sling/${repo_name}.git
         git push -u origin master
         popd
