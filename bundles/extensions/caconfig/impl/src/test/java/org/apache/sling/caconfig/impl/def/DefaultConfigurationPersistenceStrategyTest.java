@@ -32,6 +32,7 @@ import org.apache.sling.caconfig.spi.ConfigurationCollectionPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistData;
 import org.apache.sling.caconfig.spi.ConfigurationPersistenceStrategy2;
 import org.apache.sling.hamcrest.ResourceMatchers;
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,7 +44,7 @@ import com.google.common.collect.ImmutableMap;
 public class DefaultConfigurationPersistenceStrategyTest {
 
     @Rule
-    public SlingContext context = new SlingContext();
+    public SlingContext context = new SlingContext(ResourceResolverType.JCR_MOCK);
     
     @Before
     public void setUp() {
@@ -113,22 +114,97 @@ public class DefaultConfigurationPersistenceStrategyTest {
         // store new config collection items
         assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test",
                 new ConfigurationCollectionPersistData(ImmutableList.of(
-                new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value1")).collectionItemName("0"),
-                new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop2", 5)).collectionItemName("1"))
+                new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value1")).collectionItemName("item1"),
+                new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop2", 5)).collectionItemName("item2"))
                 ).properties(ImmutableMap.<String, Object>of("prop1", "abc", "sling:resourceType", "/a/b/c"))
         ));
         context.resourceResolver().commit();
         
         Resource resource = context.resourceResolver().getResource("/conf/test");
-        assertEquals(2, ImmutableList.copyOf(resource.getChildren()).size());
-        ValueMap props0 = context.resourceResolver().getResource("/conf/test/0").getValueMap();
-        assertEquals("value1", props0.get("prop1", String.class));
-        ValueMap props1 = context.resourceResolver().getResource("/conf/test/1").getValueMap();
-        assertEquals((Integer)5, props1.get("prop2", Integer.class));
+        assertThat(resource, ResourceMatchers.props("prop1", "abc", "sling:resourceType", "/a/b/c"));
+        assertThat(resource, ResourceMatchers.containsChildren("item1", "item2"));
+
+        assertThat(resource.getChild("item1"), ResourceMatchers.props("prop1", "value1"));
+        assertThat(resource.getChild("item2"), ResourceMatchers.props("prop2", 5L));        
+
+        // remove config collection items
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test",
+                new ConfigurationCollectionPersistData(ImmutableList.<ConfigurationPersistData>of())));
+        context.resourceResolver().commit();
+
+        resource = context.resourceResolver().getResource("/conf/test");
+        assertEquals(0, ImmutableList.copyOf(resource.getChildren()).size());
+
+        underTest.deleteConfiguration(context.resourceResolver(), "/conf/test");
+        assertNull(context.resourceResolver().getResource("/conf/test"));
+    }
+
+    @Test
+    public void testPersistConfigurationCollection_Nested() throws Exception {
+        ConfigurationPersistenceStrategy2 underTest = context.registerInjectActivateService(new DefaultConfigurationPersistenceStrategy());
         
-        assertThat(resource, ResourceMatchers.props(
-                "prop1", "abc",
-                "sling:resourceType", "/a/b/c"));
+        // store new config collection items
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test",
+                new ConfigurationCollectionPersistData(ImmutableList.of(
+                        new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value1")).collectionItemName("item1"),
+                        new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value2")).collectionItemName("item2")
+                ))
+        ));
+
+        // store nested items
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test/item1",
+                new ConfigurationCollectionPersistData(ImmutableList.of(
+                        new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value11")).collectionItemName("sub1"),
+                        new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value12")).collectionItemName("sub2")
+                ))
+        ));
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test/item2",
+                new ConfigurationCollectionPersistData(ImmutableList.of(
+                        new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value21")).collectionItemName("sub1")
+                ))
+        ));
+        
+        context.resourceResolver().commit();
+
+        
+        Resource resource = context.resourceResolver().getResource("/conf/test");
+        assertThat(resource, ResourceMatchers.containsChildren("item1", "item2"));
+
+        assertThat(resource.getChild("item1"), ResourceMatchers.props("prop1", "value1"));
+        assertThat(resource.getChild("item1"), ResourceMatchers.containsChildren("sub1", "sub2"));
+        assertThat(resource.getChild("item1/sub1"), ResourceMatchers.props("prop1", "value11"));
+        assertThat(resource.getChild("item1/sub2"), ResourceMatchers.props("prop1", "value12"));
+        
+        assertThat(resource.getChild("item2"), ResourceMatchers.props("prop1", "value2"));
+        assertThat(resource.getChild("item2"), ResourceMatchers.containsChildren("sub1"));
+        assertThat(resource.getChild("item2/sub1"), ResourceMatchers.props("prop1", "value21"));
+
+
+        // update config collection items
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test",
+                new ConfigurationCollectionPersistData(ImmutableList.of(
+                        new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value2-new")).collectionItemName("item2"),
+                        new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value1-new")).collectionItemName("item1"),
+                        new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value3-new")).collectionItemName("item3")
+                ))
+        ));
+        context.resourceResolver().commit();
+        
+        resource = context.resourceResolver().getResource("/conf/test");
+        assertThat(resource, ResourceMatchers.containsChildren("item1", "item2", "item3"));
+
+        assertThat(resource.getChild("item1"), ResourceMatchers.props("prop1", "value1-new"));
+        assertThat(resource.getChild("item1"), ResourceMatchers.containsChildren("sub1", "sub2"));
+        assertThat(resource.getChild("item1/sub1"), ResourceMatchers.props("prop1", "value11"));
+        assertThat(resource.getChild("item1/sub2"), ResourceMatchers.props("prop1", "value12"));
+        
+        assertThat(resource.getChild("item2"), ResourceMatchers.props("prop1", "value2-new"));
+        assertThat(resource.getChild("item2"), ResourceMatchers.containsChildren("sub1"));
+        assertThat(resource.getChild("item2/sub1"), ResourceMatchers.props("prop1", "value21"));
+
+        assertThat(resource.getChild("item3"), ResourceMatchers.props("prop1", "value3-new"));
+        assertFalse(resource.getChild("item3").listChildren().hasNext());
+
 
         // remove config collection items
         assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test",
