@@ -370,7 +370,7 @@
                 <plugin>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>slingstart-maven-plugin</artifactId>
-                    <version>1.7.2</version>
+                    <version>1.7.10</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.cargo</groupId>
