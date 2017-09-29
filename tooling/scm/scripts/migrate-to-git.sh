@@ -155,7 +155,7 @@ while read -r module; do
 
     else # -p
         pushd ${git_repo_location}/${repo_name}
-        git remote add origin https://git-wip-us.apache.org/repos/asf/${repo_name}.git
+        git remote add origin https://github.com/not-sling/${repo_name}.git
         git push -u origin master
         popd
     fi
