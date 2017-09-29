@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>8</version>
+        <version>18</version>
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -39,7 +39,7 @@
     <inceptionYear>2007</inceptionYear>
 
     <prerequisites>
-        <maven>3.0.2</maven>
+        <maven>3.3.9</maven>
     </prerequisites>
 
 
@@ -62,19 +62,19 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
+          <module>accessmanager-ui</module>
+          <module>custom-login-form</module>
           <module>espblog</module>
+          <module>framework-fragment</module>
+          <module>installing-dependencies</module>
           <module>javashell</module>
+          <module>mail-archive</module>
           <module>path-based-rtp</module>
           <module>post-servlet-extensions</module>
+          <module>slingbucks</module>
           <module>slingshot</module>
+          <module>usermanager-ui</module>
           <module>webloader/service</module>
           <module>webloader/ui</module>
-          <module>custom-login-form</module>
-          <module>slingbucks</module>
-          <module>installing-dependencies</module>
-          <module>framework-fragment</module>
-          <module>usermanager-ui</module>
-          <module>accessmanager-ui</module>
-          <module>mail-archive</module>
   </modules>
 </project>
