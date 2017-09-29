@@ -169,7 +169,7 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         Resource configResourceParent = getOrCreateResource(resourceResolver, configResourceCollectionParentPath, data.getProperties()); 
         
         // delete existing children and create new ones
-        deleteChildren(configResourceParent);
+        deleteChildrenNotInCollection(configResourceParent, data);
         for (ConfigurationPersistData item : data.getItems()) {
             String path = configResourceParent.getPath() + "/" + item.getCollectionItemName();
             getOrCreateResource(resourceResolver, path, item.getProperties());
@@ -211,12 +211,25 @@ public class DefaultConfigurationPersistenceStrategy implements ConfigurationPer
         }
     }
 
-    private void deleteChildren(Resource resource) {
+    /**
+     * Delete children that are no longer contained in list of collection items. 
+     * @param resource Parent resource
+     * @param data List of collection items
+     */
+    private void deleteChildrenNotInCollection(Resource resource, ConfigurationCollectionPersistData data) {
         ResourceResolver resourceResolver = resource.getResourceResolver();
+
+        Set<String> collectionItemNames = new HashSet<>();
+        for (ConfigurationPersistData item : data.getItems()) {
+            collectionItemNames.add(item.getCollectionItemName());
+        }
+        
         try {
             for (Resource child : resource.getChildren()) {
-                log.trace("! Delete resource {}", child.getPath());
-                resourceResolver.delete(child);
+                if (!collectionItemNames.contains(child.getName())) {
+                    log.trace("! Delete resource {}", child.getPath());
+                    resourceResolver.delete(child);
+                }
             }
         }
         catch (PersistenceException ex) {
