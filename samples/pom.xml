@@ -65,7 +65,6 @@
           <module>accessmanager-ui</module>
           <module>custom-login-form</module>
           <module>espblog</module>
-          <module>installing-dependencies</module>
           <module>javashell</module>
           <module>mail-archive</module>
           <module>path-based-rtp</module>
