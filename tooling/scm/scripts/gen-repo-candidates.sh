@@ -25,7 +25,7 @@ fi
 for pom in $(find . -name pom.xml  \
     | grep -v './tooling/ide' \
     | grep -v './performance' \
-    | grep -v './samples' \
+    | grep -v '^./samples' \
     | grep -v '/target/' \
     | grep -v '/archetype-resources/' \
     | grep -v '/src/test/resources/' \
