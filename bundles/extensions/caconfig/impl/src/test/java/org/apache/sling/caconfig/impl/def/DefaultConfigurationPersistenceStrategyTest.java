@@ -152,13 +152,13 @@ public class DefaultConfigurationPersistenceStrategyTest {
         ));
 
         // store nested items
-        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test/item1",
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test/item1/subList",
                 new ConfigurationCollectionPersistData(ImmutableList.of(
                         new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value11")).collectionItemName("sub1"),
                         new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value12")).collectionItemName("sub2")
                 ))
         ));
-        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test/item2",
+        assertTrue(underTest.persistConfigurationCollection(context.resourceResolver(), "/conf/test/item2/subList",
                 new ConfigurationCollectionPersistData(ImmutableList.of(
                         new ConfigurationPersistData(ImmutableMap.<String,Object>of("prop1", "value21")).collectionItemName("sub1")
                 ))
@@ -171,13 +171,13 @@ public class DefaultConfigurationPersistenceStrategyTest {
         assertThat(resource, ResourceMatchers.containsChildren("item1", "item2"));
 
         assertThat(resource.getChild("item1"), ResourceMatchers.props("prop1", "value1"));
-        assertThat(resource.getChild("item1"), ResourceMatchers.containsChildren("sub1", "sub2"));
-        assertThat(resource.getChild("item1/sub1"), ResourceMatchers.props("prop1", "value11"));
-        assertThat(resource.getChild("item1/sub2"), ResourceMatchers.props("prop1", "value12"));
+        assertThat(resource.getChild("item1/subList"), ResourceMatchers.containsChildren("sub1", "sub2"));
+        assertThat(resource.getChild("item1/subList/sub1"), ResourceMatchers.props("prop1", "value11"));
+        assertThat(resource.getChild("item1/subList/sub2"), ResourceMatchers.props("prop1", "value12"));
         
         assertThat(resource.getChild("item2"), ResourceMatchers.props("prop1", "value2"));
-        assertThat(resource.getChild("item2"), ResourceMatchers.containsChildren("sub1"));
-        assertThat(resource.getChild("item2/sub1"), ResourceMatchers.props("prop1", "value21"));
+        assertThat(resource.getChild("item2/subList"), ResourceMatchers.containsChildren("sub1"));
+        assertThat(resource.getChild("item2/subList/sub1"), ResourceMatchers.props("prop1", "value21"));
 
 
         // update config collection items
@@ -194,13 +194,13 @@ public class DefaultConfigurationPersistenceStrategyTest {
         assertThat(resource, ResourceMatchers.containsChildren("item1", "item2", "item3"));
 
         assertThat(resource.getChild("item1"), ResourceMatchers.props("prop1", "value1-new"));
-        assertThat(resource.getChild("item1"), ResourceMatchers.containsChildren("sub1", "sub2"));
-        assertThat(resource.getChild("item1/sub1"), ResourceMatchers.props("prop1", "value11"));
-        assertThat(resource.getChild("item1/sub2"), ResourceMatchers.props("prop1", "value12"));
+        assertThat(resource.getChild("item1/subList"), ResourceMatchers.containsChildren("sub1", "sub2"));
+        assertThat(resource.getChild("item1/subList/sub1"), ResourceMatchers.props("prop1", "value11"));
+        assertThat(resource.getChild("item1/subList/sub2"), ResourceMatchers.props("prop1", "value12"));
         
         assertThat(resource.getChild("item2"), ResourceMatchers.props("prop1", "value2-new"));
-        assertThat(resource.getChild("item2"), ResourceMatchers.containsChildren("sub1"));
-        assertThat(resource.getChild("item2/sub1"), ResourceMatchers.props("prop1", "value21"));
+        assertThat(resource.getChild("item2/subList"), ResourceMatchers.containsChildren("sub1"));
+        assertThat(resource.getChild("item2/subList/sub1"), ResourceMatchers.props("prop1", "value21"));
 
         assertThat(resource.getChild("item3"), ResourceMatchers.props("prop1", "value3-new"));
         assertFalse(resource.getChild("item3").listChildren().hasNext());
