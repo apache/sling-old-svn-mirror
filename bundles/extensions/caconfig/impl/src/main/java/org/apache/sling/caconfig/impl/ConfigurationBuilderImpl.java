@@ -27,7 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.ResettableListIterator;
 import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.iterators.ListIteratorWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -144,8 +146,8 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
                        .getResourceCollectionInheritanceChain(this.contentResource, configBucketNames, collectionParentConfigName);
                if (result != null) {
                    resourceInheritanceChains.addAll(result);
+                   }
                }
-           }
 
            final Collection<T> result = new ArrayList<>();
            if (resourceInheritanceChains != null) {
@@ -169,8 +171,9 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
         Resource configResource = null;
         String conversionName = name;
         if (resourceInhertianceChain != null) {
+            ResettableListIterator resettableResourceInhertianceChain = new ListIteratorWrapper(resourceInhertianceChain);
             // apply persistence transformation
-            Iterator<Resource> transformedResources = IteratorUtils.transformedIterator(resourceInhertianceChain,
+            Iterator<Resource> transformedResources = IteratorUtils.transformedIterator(resettableResourceInhertianceChain,
                     new Transformer() {
                         @Override
                         public Object transform(Object input) {
@@ -187,8 +190,14 @@ class ConfigurationBuilderImpl implements ConfigurationBuilder {
             // apply overrides
             configResource = configurationOverrideMultiplexer.overrideProperties(contentResource.getPath(), name, configResource, configResource.getResourceResolver());
             // build name
-            if (configResource != null && isCollection) {
-                conversionName = conversionName + "/" + configResource.getName();
+            if (isCollection) {
+                // get untransformed resource for getting collection item name
+                resettableResourceInhertianceChain.reset();
+                Resource untransformedConfigResource = configurationInheritanceStrategy.getResource(resettableResourceInhertianceChain);
+                if (untransformedConfigResource != null && configResource != null) {
+                    conversionName = configurationPersistenceStrategy.getCollectionParentConfigName(conversionName, configResource.getPath())
+                            + "/" + untransformedConfigResource.getName();
+                }
             }
         }
         if (log.isTraceEnabled() && configResource != null) {

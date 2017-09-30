@@ -27,11 +27,14 @@ import static org.junit.Assert.assertTrue;
 import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.ConfigurationResolveException;
 import org.apache.sling.caconfig.ConfigurationResolver;
 import org.apache.sling.caconfig.example.ListConfig;
+import org.apache.sling.caconfig.example.ListDoubleNestedConfig;
+import org.apache.sling.caconfig.example.ListNestedConfig;
 import org.apache.sling.caconfig.example.NestedConfig;
 import org.apache.sling.caconfig.example.SimpleConfig;
 import org.apache.sling.caconfig.management.impl.CustomConfigurationPersistenceStrategy;
@@ -41,6 +44,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.osgi.framework.Constants;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Test {@link ConfigurationResolver} with annotation classes for reading the config.
@@ -126,17 +131,100 @@ public class ConfigurationResolverCustomPersistenceTest {
     public void testConfig_List() {
         context.build().resource("/conf/content/site1/settings/org.apache.sling.caconfig.example.ListConfig")
             .siblingsMode()
-            .resource("1/jcr:content", "stringParam", "configValue1.1")
-            .resource("2/jcr:content", "stringParam", "configValue1.2")
-            .resource("3/jcr:content", "stringParam", "configValue1.3");
+            .resource("1/jcr:content", "stringParam", "value1")
+            .resource("2/jcr:content", "stringParam", "value2")
+            .resource("3/jcr:content", "stringParam", "value3");
 
         Collection<ListConfig> cfgList = underTest.get(site1Page1).asCollection(ListConfig.class);
 
         assertEquals(3, cfgList.size());
         Iterator<ListConfig> cfgIterator = cfgList.iterator();
-        assertEquals("configValue1.1", cfgIterator.next().stringParam());
-        assertEquals("configValue1.2", cfgIterator.next().stringParam());
-        assertEquals("configValue1.3", cfgIterator.next().stringParam());
+        assertEquals("value1", cfgIterator.next().stringParam());
+        assertEquals("value2", cfgIterator.next().stringParam());
+        assertEquals("value3", cfgIterator.next().stringParam());
+    }
+
+    @Test
+    public void testConfig_List_Nested() {
+        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListNestedConfig")
+            .siblingsMode()
+            .resource("1/jcr:content", "stringParam", "value1")
+            .resource("2/jcr:content", "stringParam", "value2")
+            .resource("3/jcr:content", "stringParam", "value3");
+        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListNestedConfig/1/jcr:content/subListConfig")
+            .siblingsMode()
+            .resource("1/jcr:content", "stringParam", "value11")
+            .resource("2/jcr:content", "stringParam", "value12");
+        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListNestedConfig/2/jcr:content/subListConfig")
+            .siblingsMode()
+            .resource("1/jcr:content", "stringParam", "value21");
+
+        List<ListNestedConfig> cfgList = ImmutableList.copyOf(underTest.get(site1Page1).asCollection(ListNestedConfig.class));
+
+        assertEquals(3, cfgList.size());
+        
+        ListNestedConfig config1 = cfgList.get(0);
+        assertEquals("value1", config1.stringParam());
+        assertEquals(2, config1.subListConfig().length);
+        assertEquals("value11", config1.subListConfig()[0].stringParam());
+        assertEquals("value12", config1.subListConfig()[1].stringParam());
+        
+        ListNestedConfig config2 = cfgList.get(1);
+        assertEquals("value2", config2.stringParam());
+        assertEquals(1, config2.subListConfig().length);
+        assertEquals("value21", config2.subListConfig()[0].stringParam());
+
+        ListNestedConfig config3 = cfgList.get(2);
+        assertEquals("value3", config3.stringParam());
+        assertEquals(0, config3.subListConfig().length);
+    }
+
+    @Test
+    public void testConfig_List_DoubleNested() {
+        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListDoubleNestedConfig")
+            .siblingsMode()
+            .resource("1/jcr:content", "stringParam", "value1")
+            .resource("2/jcr:content", "stringParam", "value2")
+            .resource("3/jcr:content", "stringParam", "value3");
+        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListDoubleNestedConfig/1/jcr:content/subListNestedConfig")
+            .siblingsMode()
+            .resource("1/jcr:content", "stringParam", "value11")
+            .resource("2/jcr:content", "stringParam", "value12");
+        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListDoubleNestedConfig/1/jcr:content/subListNestedConfig/1/jcr:content/subListConfig")
+            .siblingsMode()
+            .resource("1/jcr:content", "stringParam", "value111")
+            .resource("2/jcr:content", "stringParam", "value112");
+        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListDoubleNestedConfig/1/jcr:content/subListNestedConfig/2/jcr:content/subListConfig")
+            .siblingsMode()
+            .resource("1/jcr:content", "stringParam", "value121");
+        context.build().resource("/conf/content/site1/sling:configs/org.apache.sling.caconfig.example.ListDoubleNestedConfig/2/jcr:content/subListNestedConfig")
+            .siblingsMode()
+            .resource("1/jcr:content", "stringParam", "value21");
+
+        List<ListDoubleNestedConfig> cfgList = ImmutableList.copyOf(underTest.get(site1Page1).asCollection(ListDoubleNestedConfig.class));
+
+        assertEquals(3, cfgList.size());
+        
+        ListDoubleNestedConfig config1 = cfgList.get(0);
+        assertEquals("value1", config1.stringParam());
+        assertEquals(2, config1.subListNestedConfig().length);
+        assertEquals("value11", config1.subListNestedConfig()[0].stringParam());
+        assertEquals(2, config1.subListNestedConfig()[0].subListConfig().length);
+        assertEquals("value111", config1.subListNestedConfig()[0].subListConfig()[0].stringParam());
+        assertEquals("value112", config1.subListNestedConfig()[0].subListConfig()[1].stringParam());
+        assertEquals("value12", config1.subListNestedConfig()[1].stringParam());
+        assertEquals(1, config1.subListNestedConfig()[1].subListConfig().length);
+        assertEquals("value121", config1.subListNestedConfig()[1].subListConfig()[0].stringParam());
+        
+        ListDoubleNestedConfig config2 = cfgList.get(1);
+        assertEquals("value2", config2.stringParam());
+        assertEquals(1, config2.subListNestedConfig().length);
+        assertEquals("value21", config2.subListNestedConfig()[0].stringParam());
+        assertEquals(0, config2.subListNestedConfig()[0].subListConfig().length);
+
+        ListDoubleNestedConfig config3 = cfgList.get(2);
+        assertEquals("value3", config3.stringParam());
+        assertEquals(0, config3.subListNestedConfig().length);
     }
 
     @Test
