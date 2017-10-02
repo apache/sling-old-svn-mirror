@@ -354,7 +354,7 @@ public class MockSlingHttpServletRequestTest {
         request.getInputStream();
         try {
             request.getReader();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalStateException e) {
             thrown = true;
         }
         assertTrue(thrown);
@@ -366,7 +366,7 @@ public class MockSlingHttpServletRequestTest {
         request.getReader();
         try {
             request.getInputStream();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalStateException e) {
             thrown = true;
         }
         assertTrue(thrown);
