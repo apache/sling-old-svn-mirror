@@ -96,9 +96,14 @@
                 <extensions>true</extensions>
                 <executions>
                     <execution>
-                         <id>start-container</id>
+                        <id>start-container</id>
                         <goals>
                             <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop-container</id>
+                        <goals>
                             <goal>stop</goal>
                         </goals>
                     </execution>
