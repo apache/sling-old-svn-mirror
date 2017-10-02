@@ -29,8 +29,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.BufferedReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -326,7 +328,8 @@ public class MockSlingHttpServletRequestTest {
     @Test
     public void testContent() throws Exception {
         assertEquals(0, request.getContentLength());
-        assertNull(request.getInputStream());
+        assertNotNull(request.getInputStream());
+        assertArrayEquals(new byte[0], IOUtils.toByteArray(request.getInputStream()));
         
         byte[] data = new byte[] { 0x01,0x02,0x03 };
         request.setContent(data);
@@ -334,6 +337,41 @@ public class MockSlingHttpServletRequestTest {
         assertEquals(data.length, request.getContentLength());
         assertArrayEquals(data, IOUtils.toByteArray(request.getInputStream()));
     }
+
+    @Test
+    public void testContentFromReader() throws Exception {
+        Charset utf8 = Charset.forName("UTF-8");
+        request.setContent("hello".getBytes(utf8));
+        assertEquals(5, request.getContentLength());
+        BufferedReader reader = request.getReader();
+        String content = IOUtils.toString(reader);
+        assertEquals("hello", content);
+    }
+
+    @Test
+    public void testGetReaderAfterGetInputStream() {
+        boolean thrown = false;
+        request.getInputStream();
+        try {
+            request.getReader();
+        } catch (IllegalArgumentException e) {
+            thrown = true;
+        }
+        assertTrue(thrown);
+    }
+
+    @Test
+    public void testGetInputStreamAfterGetReader() {
+        boolean thrown = false;
+        request.getReader();
+        try {
+            request.getInputStream();
+        } catch (IllegalArgumentException e) {
+            thrown = true;
+        }
+        assertTrue(thrown);
+    }
+
 
     @Test
     public void testGetRequestDispatcher() {
