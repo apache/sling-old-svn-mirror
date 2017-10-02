@@ -4,29 +4,6 @@ The IDE Tooling project produces a p2 update site which is installable into
 a Eclipse runtime. The update site is located in the p2update/target/repository
 directory.
 
-Getting Started
-===============
-
-This component uses a Maven 3 (http://maven.apache.org/) build environment. 
-It requires a Java 7 JDK (or higher) and Maven (http://maven.apache.org/)
-3.0.4 or later. We recommend to use the latest Maven version.
-
-You can can compile and package the p2 update site using the following command:
-
-    mvn package
-
-See the Maven 3 documentation for other build features.
-
-The latest source code for this component is available in the
-Subversion (http://subversion.tigris.org/) source repository of
-the Apache Software Foundation. If you have Subversion installed,
-you can checkout the latest source using the following command:
-
-    svn checkout http://svn.apache.org/repos/asf/sling/trunk/tooling/ide
-
-See the Subversion documentation for other source control features.
-
-
 How to run the Sling IDE tools in a test Eclipse instance
 ---------------------------------------------------------
 
