@@ -24,9 +24,11 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,6 +103,8 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private String remoteHost;
     private int remotePort;
     private Locale locale = Locale.US;
+    private boolean getInputStreamCalled;
+    private boolean getReaderCalled;
 
     private MockRequestDispatcherFactory requestDispatcherFactory;
     
@@ -540,11 +544,12 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public ServletInputStream getInputStream() {
-        if (content == null) {
-            return null;
+        if (getReaderCalled) {
+            throw new IllegalArgumentException();
         }
+        getInputStreamCalled = true;
         return new ServletInputStream() {
-            private final InputStream is = new ByteArrayInputStream(content);
+            private final InputStream is = content == null ? new ByteArrayInputStream(new byte[0]) : new ByteArrayInputStream(content);
             @Override
             public int read() throws IOException {
                 return is.read();
@@ -823,7 +828,26 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public BufferedReader getReader() {
-        throw new UnsupportedOperationException();
+        if (getInputStreamCalled) {
+            throw new IllegalArgumentException();
+        }
+        getReaderCalled = true;
+        if (this.content == null) {
+            return new BufferedReader(new StringReader(""));
+        } else {
+            String content;
+            try {
+                if (characterEncoding == null) {
+                    content = new String(this.content, Charset.defaultCharset());
+                } else {
+                    content = new String(this.content, characterEncoding);
+                }
+            } catch (UnsupportedEncodingException e) {
+                content = new String(this.content, Charset.defaultCharset());
+            }
+            return new BufferedReader(new StringReader(content));
+        }
+
     }
 
     @Override
