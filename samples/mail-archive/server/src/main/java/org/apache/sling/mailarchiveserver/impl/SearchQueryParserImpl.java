@@ -21,6 +21,8 @@ package org.apache.sling.mailarchiveserver.impl;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -96,7 +98,7 @@ public class SearchQueryParserImpl implements SearchQueryParser {
 	}
 
 	public static final Set<String> SEARCH_PARAMETERES = new HashSet<String>();
-	public static final Set<String> MESSAGE_FIELDS = new HashSet<String>();
+	public static final Set<String> MESSAGE_FIELDS = new LinkedHashSet<String>();
 	public static final Map<String, String> SEARCH_PARAMETER_TO_MESSAGE_FIELD_MAP = new HashMap<String, String>();
 
 	static {
