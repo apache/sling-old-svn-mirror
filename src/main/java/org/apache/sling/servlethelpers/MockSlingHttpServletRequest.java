@@ -545,7 +545,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     @Override
     public ServletInputStream getInputStream() {
         if (getReaderCalled) {
-            throw new IllegalArgumentException();
+            throw new IllegalStateException();
         }
         getInputStreamCalled = true;
         return new ServletInputStream() {
@@ -829,7 +829,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     @Override
     public BufferedReader getReader() {
         if (getInputStreamCalled) {
-            throw new IllegalArgumentException();
+            throw new IllegalStateException();
         }
         getReaderCalled = true;
         if (this.content == null) {
