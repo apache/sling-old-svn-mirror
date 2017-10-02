@@ -18,7 +18,9 @@
  */
 package org.apache.sling.models.impl;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -121,7 +123,11 @@ class ExportServlet extends SlingSafeMethodsServlet {
         bindings.put(SlingModelsScriptEngineFactory.RESOLVER, request.getResource().getResourceResolver());
         bindings.put(REQUEST, request);
         bindings.put(RESPONSE, response);
-        bindings.put(READER, request.getReader());
+        try {
+            bindings.put(READER, request.getReader());
+        } catch (Exception e) {
+            bindings.put(READER, new BufferedReader(new StringReader("")));
+        }
         bindings.put(OUT, response.getWriter());
         bindings.put(LOG, logger);
 
