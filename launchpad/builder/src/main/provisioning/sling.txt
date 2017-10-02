@@ -93,7 +93,7 @@
 [artifacts startLevel=10]
     org.apache.felix/org.apache.felix.http.sslfilter/1.2.2
     org.apache.felix/org.apache.felix.scr/2.0.12
-    org.apache.felix/org.apache.felix.metatype/1.1.4
+    org.apache.felix/org.apache.felix.metatype/1.1.6
     org.apache.pdfbox/pdfbox/2.0.7
     org.apache.pdfbox/fontbox/2.0.7
     org.apache.pdfbox/jempbox/1.8.13
