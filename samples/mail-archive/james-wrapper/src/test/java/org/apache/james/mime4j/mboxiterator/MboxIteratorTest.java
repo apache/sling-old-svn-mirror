@@ -19,9 +19,7 @@
 package org.apache.james.mime4j.mboxiterator;
 
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 
 import java.io.*;
 
@@ -30,8 +28,6 @@ import java.io.*;
  */
 public class MboxIteratorTest {
 
-    @Rule
-    public final TestName name = new TestName();
     public static final String MBOX_PATH = "src/test/resources/test-1/mbox.rlug";
     private final int DEFAULT_MESSAGE_SIZE = 10 * 1024;
     // number of chars oin our largest test message
@@ -43,7 +39,6 @@ public class MboxIteratorTest {
      */
     @Test
     public void testIterator() throws FileNotFoundException, IOException {
-        System.out.println("Executing " + name.getMethodName());
         iterateWithMaxMessage(DEFAULT_MESSAGE_SIZE);
     }
 
@@ -52,9 +47,7 @@ public class MboxIteratorTest {
      */
     @Test
     public void testIteratorLoop() throws FileNotFoundException, IOException {
-        System.out.println("Executing " + name.getMethodName());
         for (int i = CHARS_IN_MAX_MSG; i < MORE_THAN_FILE_SIZE; i++) {
-            System.out.println("Runinng iteration " + (i - CHARS_IN_MAX_MSG) + "  with message size " + i);
             iterateWithMaxMessage(i);
         }
     }
