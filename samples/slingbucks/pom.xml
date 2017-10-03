@@ -30,7 +30,8 @@
     <artifactId>org.apache.sling.samples.slingbucks</artifactId>
     <version>0.9.9-SNAPSHOT</version>
     <packaging>bundle</packaging>
-    <name>Apache Sling Slingbucks - sample coffee store management application</name>
+    <name>Apache Sling Samples Slingbucks</name>
+    <description>sample coffee store management application</description>
     
     <build>
         <plugins>

@@ -1,8 +1,9 @@
-Sling Slingbucks sample
------------------------
+# Apache Sling Samples Slingbucks
 
-WHY THIS SAMPLE?
-----------------
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
+## WHY THIS SAMPLE?
+
 This simple coffee-ordering app demonstrates how Sling promotes RESTful 
 application design, and how much you can do with little code.
 
@@ -13,8 +14,8 @@ It is inspired by the excellent "How to GET a Cup of Coffee" article by
 Jim Webber, Savas Parastatidis & Ian Robinson at InfoQ: 
 http://www.infoq.com/articles/webber-rest-workflow
 
-HOW TO INSTALL
---------------
+## HOW TO INSTALL
+
 Build this bundle and install it in Sling. See
 http://sling.apache.org/documentation/development/getting-and-building-sling.html
 for how to do that.
@@ -29,8 +30,8 @@ install it:
 The OSGi console at http://localhost:8080/system/console/bundles must then
 list the "org.apache.sling.samples.slingbucks" bundle as active. 
 
-HOW TO TEST
------------
+## HOW TO TEST
+
 On a default Sling trunk instance you usually need to first disable the 
 "Allow Anonymous Access" option at 
 
