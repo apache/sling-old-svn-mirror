@@ -26,7 +26,7 @@
     </parent>
     <artifactId>org.apache.sling.ide.artifacts</artifactId>
     <packaging>eclipse-plugin</packaging>
-    <name>Sling IDE Tools: Embedded Artifacts</name>
+    <name>Apache Sling IDE Tools Embedded Artifacts</name>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/artifacts</connection>
