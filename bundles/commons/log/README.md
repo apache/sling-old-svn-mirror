@@ -1,5 +1,6 @@
-Apache Sling Commons Log
-========================
+# Apache Sling Commons Log
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 The "log" project packages the [Logback][2] library to manage logging
 in OSGi environment. It provide some useful extension to the default
