@@ -31,7 +31,7 @@
     <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>HApi - Sling Hypermedia API client-side tools</name>
+    <name>Apache Sling Hypermedia API client-side tools</name>
     <description>Sling client-side tools for HApi</description>
 
     <scm>
