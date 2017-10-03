@@ -1,30 +1,34 @@
-# About
+# Apache Sling HTL Blog Sample
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
+## About
 This sample is designed as an introduction to Sling and HTL.
 
-# Features
+## Features
 * Create, update, delete posts with featured images.
 * List posts, read posts.
 
-# Requirements
+## Requirements
 * [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 * [Sling 8](http://sling.apache.org/downloads.cgi)
 * [Maven 3+](http://maven.apache.org/download.cgi)
 
-# Installation
-## 1. Run Sling
+## Installation
+### 1. Run Sling
 
     java -jar org.apache.sling.launchpad-8.jar
 
-## 2. Install HTLBlog
+### 2. Install HTLBlog
 
     mvn clean install -PautoInstallBundle
 
-## 3. Explore
+### 3. Explore
 
     http://localhost:8080/content/htlblog.html
 
-# Parts of the Application
-## Java
+## Parts of the Application
+### Java
 HTL Blog uses Sling Models extensively. You can read about them [here](https://sling.apache.org/documentation/bundles/models.html).
 
 * `Author.java` - This model detects if our user is logged in or not.
@@ -32,7 +36,7 @@ HTL Blog uses Sling Models extensively. You can read about them [here](https://s
 * `List.java` - This is used to iterate through our posts, reverse their order, and adapt them to our post model.
 * `Post.java` - This model injects our post properties, finds the featured image, and lists any children (comments).
 
-## Apps (HTL)
+### Apps (HTL)
 
 * Admin
   * Page - The base admin page.
@@ -45,7 +49,7 @@ HTL Blog uses Sling Models extensively. You can read about them [here](https://s
 * Clientlibs
   * Mostly Bootstrap and some basic custom styles.
 
-## Content
+### Content
 The content is built using a single JSON file called `htlblog.json`. It maps to the following nodes:
 
 * `/content/htlblog` - Our homepage. Currently lists our posts.
@@ -55,7 +59,7 @@ The content is built using a single JSON file called `htlblog.json`. It maps to 
 * `/content/htlblog/posts/hello-world` - Used to scaffold a placeholder post.
 * `/content/htlblog/posts/hola-mundo` - Used to scaffold a 2nd placeholder post.
 
-# Additional Reading
+## Additional Reading
 
 * The [SlingPostServet](https://sling.apache.org/documentation/bundles/manipulating-content-the-slingpostservlet-servlets-post.html) and [Sling CRUD](https://sling.apache.org/documentation/the-sling-engine/sling-api-crud-support.html) docs. Everything in this sample uses these concepts extensively.
 * The [HTL Specification](https://github.com/Adobe-Marketing-Cloud/htl-spec/blob/master/SPECIFICATION.md). If you have a question about HTL, it will likely be answered here. Note: The spec and the current release in Sling can be out of sync.
