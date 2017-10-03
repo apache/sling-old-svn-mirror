@@ -1,4 +1,6 @@
-# Sling Http Clients
+# Apache Sling Testing Clients
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 `SlingClient` is a specialized
 [`HttpClient`](https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/client/HttpClient.html)
