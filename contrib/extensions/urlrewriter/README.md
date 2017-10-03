@@ -1,5 +1,6 @@
-Apache Sling URL Rewriter
-=========================
+# Apache Sling URL Rewriter
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 multi-purpose service for altering HTTP requests/responses based on Tuckey's UrlRewriteFilter
 
