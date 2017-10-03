@@ -1,5 +1,6 @@
-Apache Sling OSGi LogService Implementation
+# Apache Sling OSGi LogService Implementation
 
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 =================================================
 Welcome to Sling - OSGi LogService Implementation
