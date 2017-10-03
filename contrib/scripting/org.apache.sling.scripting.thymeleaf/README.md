@@ -1,10 +1,10 @@
-Apache Sling Scripting Thymeleaf
-================================
+# Apache Sling Scripting Thymeleaf
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 scripting engine for [_Thymeleaf_](http://www.thymeleaf.org) templates
 
-Features
---------
+## Features
 
 * Supporting all of Thymeleaf's extension points: [_TemplateResolver_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/templateresolver/ITemplateResolver.html)﻿s, [_MessageResolver_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/messageresolver/IMessageResolver.html)﻿s, [_Dialect_﻿](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/dialect/IDialect.html)s, [_LinkBuilder_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/linkbuilder/ILinkBuilder.html)﻿s, [_DecoupledTemplateLogicResolver_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/templateparser/markup/decoupled/IDecoupledTemplateLogicResolver.html), [_CacheManager_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/cache/ICacheManager.html) and [_EngineContextFactory_](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/context/IEngineContext.html)
 * `SlingResourceTemplateResolver` customizable through `TemplateModeProvider`﻿
@@ -13,8 +13,7 @@ Features
 * `SlingDialect`
 * Thymeleaf's [`TemplateEngine`](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/ITemplateEngine.html) registered as OSGi Service ([`ITemplateEngine`](http://www.thymeleaf.org/apidocs/thymeleaf/3.0.0.RELEASE/org/thymeleaf/ITemplateEngine.html)) for direct use
 
-Installation
-------------
+## Installation
 
 For running Sling Scripting Thymeleaf with Sling's Launchpad some dependencies need to be resolved. This can be achieved by installing the following bundles:
 
@@ -29,8 +28,7 @@ There is a feature for [Karaf](https://github.com/apache/sling/tree/trunk/contri
 
 **Note:** Sling Scripting Thymeleaf requires an implementation of OSGi Declarative Services 1.3 (e.g. [Apache Felix Service Component Runtime](http://felix.apache.org/documentation/subprojects/apache-felix-service-component-runtime.html) 2.0.0 or greater)
 
-relevant Thymeleaf issues
--------------------------
+## Relevant Thymeleaf issues
 
 * [Create OSGi bundle](https://github.com/thymeleaf/thymeleaf/issues/32)
 * [keep (custom) IContext accessible](https://github.com/thymeleaf/thymeleaf/issues/388)
