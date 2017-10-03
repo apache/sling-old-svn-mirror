@@ -1,8 +1,9 @@
-Apache Sling Webloader Sample Service UI
+# Apache Sling Samples Webloader User Interface
 
----------------------------------------
-Sling Webloader sample - user interface
----------------------------------------
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
+## Sling Webloader sample - user interface
+
 This bundle provides a sample web user interface for the Webloader Service,
 which id provided by the sibling "webloader.service" bundle.
 

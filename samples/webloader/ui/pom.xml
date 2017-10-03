@@ -32,7 +32,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-SNAPSHOT</version>
 
-    <name>Apache Sling Webloader User Interface</name>
+    <name>Apache Sling Samples Webloader User Interface</name>
     <description>
         Simple user interface for the Sling Webloader service.
     </description>
