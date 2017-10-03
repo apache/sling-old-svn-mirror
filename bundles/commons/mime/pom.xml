@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.1.11-SNAPSHOT</version>
 
-    <name>Apache Sling MIME type mapping support</name>
+    <name>Apache Sling Commons MIME type mapping support</name>
     <description>
 	Support for configurable MIME type mapping and querying
     </description>
