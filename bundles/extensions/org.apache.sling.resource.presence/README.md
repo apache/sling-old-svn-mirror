@@ -1,5 +1,6 @@
-Apache Sling Resource Presence
-==============================
+# Apache Sling Resource Presence
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This module creates proxy OSGi services that are registered only if specific resources are present.
 
