@@ -1,4 +1,6 @@
-Apache Sling Resource Editor 
+# Apache Sling Resource Editor
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 The Apache Sling Resource Editor allows to edit Apache Sling content based on the Sling API. 
 
