@@ -1,5 +1,6 @@
-Apache Sling Classloader Leak Detector
-======================================
+# Apache Sling ClassLoader Leak Detector
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This bundle provides support for tracing classloader leaks which occur due to
 improper cleanup in bundles. Refer to [SLING-3359][1] for background details.
