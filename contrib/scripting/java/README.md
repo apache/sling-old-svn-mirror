@@ -1,5 +1,6 @@
-Sling scripting.java module
----------------------------
+# Apache Sling Scripting Java Support
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This module implements a script engine for java servlets, that are compiled
 on the fly by Sling.
