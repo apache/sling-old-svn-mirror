@@ -1,4 +1,6 @@
-Apache Sling Testing OSGi Mock
+# Apache Sling Testing OSGi Mock
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Mock implementation of selected OSGi APIs.
 
