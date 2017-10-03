@@ -30,7 +30,7 @@
     <version>1.0.5-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
 
-    <name>Sling Bundle Archetype</name>
+    <name>Apache Sling Bundle Archetype</name>
     <description>Maven archetype for a generic OSGi bundle.</description>
 
     <scm>
