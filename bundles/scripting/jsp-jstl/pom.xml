@@ -31,7 +31,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling JSP Standard Tag Library</name>
+    <name>Apache Sling Scripting JSP Standard Tag Library</name>
     <description>
         JavaServer Pages Standard Tag Library based on Jakarta Taglibs (XML support excluded)
     </description>
