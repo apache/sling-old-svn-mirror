@@ -1,5 +1,7 @@
 # Apache Sling RRD4J metrics reporter
 
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
 This is a bundle that stores metrics on the local filesystem using
 [RRD4J](https://github.com/rrd4j/rrd4j).
 
