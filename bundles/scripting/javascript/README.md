@@ -1,3 +1,5 @@
-Apache Sling JavaScript (Rhino) Scripting Support
+# Apache Sling Scripting JavaScript Support
 
-Support for JavaScript scripting.
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
+Support for JavaScript (Rhino) scripting.
