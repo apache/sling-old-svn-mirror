@@ -1,5 +1,6 @@
-Apache Sling NoSQL MongoDB Resource Provider
-============================================
+# Apache Sling NoSQL MongoDB Resource Provider
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Sling ResourceProvider implementation that uses [MongoDB](https://www.mongodb.org/) NoSQL database as persistence.
 
