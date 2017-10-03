@@ -22,7 +22,7 @@
     <artifactId>sling-launchpad-standalone-archetype</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
-    <name>Sling Launchpad Standalone Archetype</name>
+    <name>Apache Sling Launchpad Standalone Archetype</name>
     <description>Maven archetype for Sling Launchpad Standalone applications</description>
 
     <scm>
