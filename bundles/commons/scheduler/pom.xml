@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.7.3-SNAPSHOT</version>
 
-    <name>Apache Sling Scheduler Support</name>
+    <name>Apache Sling Commons Scheduler Support</name>
     <description>
         Support for scheduling.
     </description>
