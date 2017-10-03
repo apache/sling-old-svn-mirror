@@ -1,5 +1,7 @@
-Cassandra Resource Provider for Apache Sling
-============================================
+# Apache Sling Cassandra Resource Provider
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
 Initially contributed by Dishara Wijewardana as part of GSoC 2013.
 
 This doc will guide on how to setup Cassandra resource provider with 
