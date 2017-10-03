@@ -1,8 +1,9 @@
-Sling ESP blog sample
----------------------
+# Apache Sling ESP blog sample
 
-WHY THIS SAMPLE?
-----------------
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
+## WHY THIS SAMPLE?
+
 This demonstrates the use of ESP server-side javascript to implement a simple
 blog, with file attachments.
 
@@ -10,8 +11,8 @@ A java service uses JCR observation to detect incoming files (either uploaded
 via the blog forms, or copied via WebDAV), and creates thumbnails of files image
 files, to demonstrate observation and OSGi SCR services.
 
-PRECONDITIONS
--------------
+## PRECONDITIONS
+
 As a first step, launch Sling.
 
 The Sling Container can be launched by running the following command in the 
@@ -27,8 +28,8 @@ this demo:
   samples/path-based-rtp$ mvn clean install -P autoInstallBundle
 
 
-INSTALL ESPBLOG
----------------
+## INSTALL ESPBLOG
+
 Install the espblog demo with the following command:
   mvn clean install -P autoInstallBundle
     
@@ -48,8 +49,8 @@ To verify that the bundle is correctly installed:
          (org.apache.sling.samples.path-based.rtp)
 
 
-HOW TO TEST
------------
+## HOW TO TEST
+
 The http://localhost:8080/content/espblog/*.html should display the "Sling ESP
 blog sample" page, with the Home/Admin/New Post/... menu.
 
