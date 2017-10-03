@@ -22,7 +22,7 @@
     <version>1.1.1-SNAPSHOT</version>
   </parent>
   <artifactId>org.apache.sling.ide.impl-vlt-test</artifactId>
-  <name>Sling IDE Tools: FileVault Implementation Tests</name>
+  <name>Apache Sling IDE Tools FileVault Implementation Tests</name>
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/impl-vlt-test</connection>
