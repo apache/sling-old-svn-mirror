@@ -22,7 +22,7 @@
     <artifactId>sling-launchpad-webapp-archetype</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
-    <name>Sling Launchpad Webapp Archetype</name>
+    <name>Apache Sling Launchpad Webapp Archetype</name>
     <description>Maven archetype for Sling Launchpad Webapp applications</description>
 
     <scm>
