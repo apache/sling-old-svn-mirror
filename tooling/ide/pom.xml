@@ -27,7 +27,7 @@
     <artifactId>sling-ide-tooling</artifactId>
     <version>1.1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Sling IDE Tools: Reactor</name>
+    <name>Apache Sling IDE Tools Reactor</name>
     <url>http://sling.apache.org</url>
 
     <scm>
@@ -124,6 +124,7 @@
                         <exclude>eclipse-test/**</exclude>
                         <!-- exclude target file from the source-bundle project since it is not a module -->
                         <exclude>source-bundle/target/**</exclude>
+                        <exclude>source-bundle/README.md</exclude>
 
                         <!-- Jenkins Xvfb plugin -->
                         <exclude>.Xauthority-*</exclude>
