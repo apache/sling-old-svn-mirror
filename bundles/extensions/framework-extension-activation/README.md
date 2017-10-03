@@ -1,4 +1,6 @@
-Apache Sling System Bundle Extension: Activation API
+# Apache Sling System Bundle Extension: Activation API
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Adds the Activation API package to the system bundle exports. The list of packages
 is derived from the packages available in the Java 6 platform. To use more
