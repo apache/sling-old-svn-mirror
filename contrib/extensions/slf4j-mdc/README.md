@@ -1,5 +1,6 @@
-Apache Sling MDC Inserting Filter
-================================
+# Apache Sling SLF4J MDC Filter
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This filter exposes various request details as part of [MDC][1]. 
 
