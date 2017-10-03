@@ -1,4 +1,6 @@
-Apache Sling API
+# Apache Sling API
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 The Sling API defines an extension to the Servlet API 3.0 to
 provide access to content and unified access to request
