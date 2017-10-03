@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.5.9-SNAPSHOT</version>
 
-    <name>Apache Sling Internationalization Support</name>
+    <name>Apache Sling I18N Support</name>
     <description>
         Support for creating Java I18N ResourceBundles from repository
         resources.
