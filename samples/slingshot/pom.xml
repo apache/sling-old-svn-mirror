@@ -31,7 +31,7 @@
     <version>0.8.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling - Slingshot Demo</name>
+    <name>Apache Sling Sample Slingshot</name>
 
     <!-- Properties -->
     <properties>
