@@ -1,4 +1,6 @@
-Commons Cache.
+# Apache Sling Commons Cache API
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This is an Cache API, the implementation of which will allow applications written in Sling to cache data locally, 
 cache locally with cluster wide invalidation, and cache and replicate data. The exact nature of the cache behaviour

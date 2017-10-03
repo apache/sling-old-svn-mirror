@@ -30,7 +30,7 @@
     <version>0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Cache API</name>
+    <name>Apache Sling Commons Cache API</name>
     <description>
         This bundle porvides a Cache API for Sling applications to use.
     </description>
