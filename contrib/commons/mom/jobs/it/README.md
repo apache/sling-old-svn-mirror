@@ -1,4 +1,6 @@
-# Job IT tests launcher.
+# Apache Sling Jobs Integration Tests
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This project runs a test launcher that creates an OSGi instance with only what is required to run Server Side tests.
 Unfurtunately, since OSGi is a multi classloader environment its not possible to perform tests in this bundle, except
