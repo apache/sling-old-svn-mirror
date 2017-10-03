@@ -21,7 +21,7 @@
     <packaging>bundle</packaging>
     <version>1.3.9-SNAPSHOT</version>
 
-    <name>Apache Sling DavEx Access to repositories</name>
+    <name>Apache Sling JCR DavEx</name>
     <description>
         Bundle to access JCR repositories over DavEx
     </description>
