@@ -1,10 +1,11 @@
-Apache Sling Launchpad Content
+# Apache Sling Launchpad Content
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 The Launchpad Content bundle provides some initial and sample content
 as well as links to the Online resources at http://sling.apache.org
 
-Working with the Front-end
-==========================
+## Working with the Front-end
 
 This package uses SCSS / SASS to build the styles for the content. It is not necessary
 to build the SCSS for every build unless you wish to edit the styles. To do so, you
