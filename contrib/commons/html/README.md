@@ -1,4 +1,8 @@
-# current settings and their default values
+# Apache Sling Commons HTML Utilities
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
+current settings and their default values
 
 * http://xml.org/sax/features/namespaces=true
 * http://xml.org/sax/features/namespace-prefixes=false
