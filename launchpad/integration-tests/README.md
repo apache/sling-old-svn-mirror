@@ -1,5 +1,7 @@
-Apache Sling integration-tests module
--------------------------------------
+# Apache Sling Launchpad Integration Tests
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
 This module contains test classes used by the launchpad/testing module,
 separated in their own jar to be reusable.
 

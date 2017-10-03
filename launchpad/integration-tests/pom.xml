@@ -28,7 +28,7 @@
   <packaging>jar</packaging>
   <version>1.0.5-SNAPSHOT</version>
 
-  <name>Apache Sling Integration Tests</name>
+  <name>Apache Sling Launchpad Integration Tests</name>
   <description>
         Sling Integration Tests, contains integration tests that
         are used by the testing project and other upstream testing projects.
