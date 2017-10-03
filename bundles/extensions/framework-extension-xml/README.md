@@ -1,4 +1,6 @@
-Apache Sling System Bundle Extension: XML APIs
+# Apache Sling System Bundle Extension: XML APIs
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Adds the XML API packages to the system bundle exports.
 The list of packages is derived from the packages available
