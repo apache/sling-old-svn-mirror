@@ -29,7 +29,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>adapter-annotations</artifactId>
     <version>1.0.1-SNAPSHOT</version>
-    <name>Sling Adapter Annotations</name>
+    <name>Apache Sling Adapter Annotations</name>
     <description>Annotations used to generate Sling Adapter metadata</description>
 
     <scm>
