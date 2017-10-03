@@ -1,4 +1,6 @@
-# Message Oriented Middleware API implementation using Active MQ.
+# Apache Sling MoM Implementation using JMS with AMQ
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This bundle implements the MoM API using Active MQ. It supports both Pub/Sub and Queue patterns and will run out of the
 box, embedded or connected to a dedicated cluster.
