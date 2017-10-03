@@ -1,4 +1,6 @@
-Apache Sling System Bundle Extension: WS APIs
+# Apache Sling System Bundle Extension: WS APIs
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Adds the WS API packages to the system bundle exports.
 The list of packages is derived from the packages available
