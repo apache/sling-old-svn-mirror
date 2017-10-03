@@ -1,4 +1,6 @@
-Support Jar for implementations of CacheManagerService.
+# Apache Sling Cache API Implementation support library
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This is support jar for implementing Cache services. It contains an abstract implementation of all the in
 memory versions of cache that the cache service has to supply leaving instance, cluster invalidated and cluster
