@@ -31,7 +31,7 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>HApi - Sample Content</name>
+    <name>Apache Sling Hypermedia Api Sample Content</name>
     <description>Sling Hypermedia Api demo content</description>
 
     <properties>
