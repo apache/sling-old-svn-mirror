@@ -29,7 +29,7 @@
     <packaging>maven-archetype</packaging>
     <version>1.0.0-SNAPSHOT</version>
 
-    <name>Sling Taglib Archetype</name>
+    <name>Apache Sling Taglib Archetype</name>
     <description>Maven archetype for JSP Taglib</description>
 
     <scm>
