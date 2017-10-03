@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.4.1-SNAPSHOT</version>
 
-    <name>Apache Sling Repository API Bundle</name>
+    <name>Apache Sling JCR API</name>
     <description>
         This OSGi bundle provides the JCR packages as
         well as a helper service interface to be implemented and
