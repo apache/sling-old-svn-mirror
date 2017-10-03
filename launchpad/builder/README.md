@@ -1,4 +1,6 @@
-Apache Sling Launchpad Builder
+# Apache Sling Launchpad Builder
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 The Launchpad Builder project produces both a Standalone Java Application which
 contains everything needed to run the Launchpad in a single JAR file and a Web

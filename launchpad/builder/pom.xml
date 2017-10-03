@@ -24,7 +24,7 @@
     <packaging>slingstart</packaging>
     <version>10-SNAPSHOT</version>
 
-    <name>Apache Sling Launchpad Application Builder</name>
+    <name>Apache Sling Launchpad Builder</name>
     <description>
         The Launchpad. Available in both JAR and WAR flavors.
     </description>
