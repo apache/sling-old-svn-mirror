@@ -31,7 +31,7 @@
     <version>1.0.5-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
 
-    <name>Sling Servlet Archetype</name>
+    <name>Apache Sling Servlet Archetype</name>
     <description>Maven archetype for Sling Servlets</description>
 
     <scm>
