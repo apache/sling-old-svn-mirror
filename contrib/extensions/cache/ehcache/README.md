@@ -1,4 +1,6 @@
-EhCache Implementation of the CacheManagerService.
+# Apache Sling Cache API EhCache implementation
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This bundle contains an implementation of the CacheManagerService based on EhCache.
 
