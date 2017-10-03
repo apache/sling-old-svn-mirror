@@ -30,7 +30,7 @@
     <version>1.0.5-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
 
-    <name>Sling Initial Content Archetype</name>
+    <name>Apache Sling Initial Content Archetype</name>
     <description>Maven archetype for initial content</description>
 
     <scm>
