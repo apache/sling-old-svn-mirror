@@ -23,7 +23,7 @@
 	<version>2.2.7-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 
-	<name>Apache Sling JSP Tag Library</name>
+	<name>Apache Sling Scripting JSP Tag Library</name>
 	<description>
         Core Tag Library for Apache Sling JSP support
     </description>
