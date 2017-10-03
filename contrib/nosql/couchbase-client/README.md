@@ -1,5 +1,6 @@
-Apache Sling NoSQL Couchbase Client
-===================================
+# Apache Sling NoSQL Couchbase Client
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Provides preconfigured clients for accessing a [Couchbase](http://www.couchbase.com/) NoSQL database.
 
