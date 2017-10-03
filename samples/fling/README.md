@@ -1,5 +1,6 @@
-Sling Fling Sample
-==================
+# Apache Sling Fling Sample
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This is a sample using _Sling Models_, _Sling Query_, _Sling Scripting Thymeleaf_, _Sling Validation_, _Sling Commons Messaging_ (latest snapshot) and _Sling Commons Messaging Mail_ (latest snapshot).
 
