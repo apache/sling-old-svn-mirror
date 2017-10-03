@@ -1,5 +1,6 @@
-Logback Groovy Fragment
-=======================
+# Apache Sling Logback Groovy Fragment
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This fragment is required to make use of Groovy based event evaluation support 
 provided by Logback. This enables programatic filtering of the log messages and
