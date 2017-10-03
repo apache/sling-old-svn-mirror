@@ -31,9 +31,7 @@
 	<version>2.0.5-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
-	<name>
-		Apache Sling Maven Plugin to create Jackrabbit OCM descriptors
-	</name>
+	<name>Apache Sling Maven JCROCM Plugin</name>
 	<description>
 		The Maven JcrOCM Plugin supports extracting and generation of
 		Jackrabbit OCM descriptors from JavaDoc tags embedded in the
