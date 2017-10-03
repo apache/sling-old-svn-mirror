@@ -1,5 +1,6 @@
-Apache Sling NoSQL Couchbase Resource Provider
-==============================================
+# Apache Sling NoSQL Couchbase Resource Provider
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Sling ResourceProvider implementation that uses [Couchbase](http://www.couchbase.com/) NoSQL database as persistence.
 
