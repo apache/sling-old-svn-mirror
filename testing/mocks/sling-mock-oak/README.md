@@ -1,4 +1,6 @@
-Apache Sling Testing Sling Mock Jackrabbit Oak-based Resource Resolver
+# Apache Sling Testing Sling Mock Jackrabbit Oak-based Resource Resolver
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Implements a resource resolver type for Jackrabbit Oak that can be used in unit tests based on Sling Mocks.
 

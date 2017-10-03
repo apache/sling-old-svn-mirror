@@ -31,7 +31,7 @@
     <version>2.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
   
-    <name>Apache Sling Testing Sling Mock Oak-based Resource Resolver</name>
+    <name>Apache Sling Testing Sling Mock Jackrabbit Oak-based Resource Resolver</name>
     <description>Implements a resource resolver type for Jackrabbit Oak that can be used in unit tests based on Sling Mocks.</description>
   
     <properties>
