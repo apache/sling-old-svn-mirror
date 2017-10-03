@@ -1,5 +1,6 @@
-Apache Sling NoSQL Sample Launchpad
-===================================
+# Apache Sling NoSQL Launchpad
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Variant of the Sling Launchpad to run NoSQL Resource Providers in standalone mode.
 
