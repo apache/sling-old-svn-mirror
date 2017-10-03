@@ -1,4 +1,7 @@
-# sling-pipes
+# Apache Sling Pipes
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
 tool for doing extract - transform - load operations through a resource tree configuration
 
 often one-shot data transformations need sample code to be written & executed. This tiny tool set intends to provide ability to do such transformations with proven & reusable blocks called pipes, streaming resources from one to the other.
