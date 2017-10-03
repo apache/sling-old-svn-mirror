@@ -1,17 +1,19 @@
-Apache Sling Launchpad Testing module
-=====================================
+# Apache Sling Launchpad Testing
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
 This module builds a Sling instance using bundles from the trunk, and
 runs integration tests against it via HTTP.
 
-Default build with integration tests
-------------------------------------
+## Default build with integration tests
+
 The integration tests are provided by the sibling integration-tests 
 module. By default the Sling instance to test is started, including a
 few test-specific bundles, the integration tests are executed and 
 the instance is stopped.
 
-Executing individual tests
---------------------------
+## Executing individual tests
+
 To run individual tests against this instance, with the exact same setup used
 in the full build, use
 
