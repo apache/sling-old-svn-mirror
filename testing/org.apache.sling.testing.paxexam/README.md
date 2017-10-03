@@ -1,5 +1,6 @@
-Apache Sling Testing Pax Exam
-=============================
+# Apache Sling Testing PaxExam
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 **Test support for use with Pax Exam.**
 
@@ -12,8 +13,7 @@ Apache Sling Testing Pax Exam
 * use different versions in build (e.g. *minimal*) and tests (e.g. *latest*)
 * overriding of versions
 
-Getting Started
----------------
+## Getting Started
 
 Add required dependencies:
 
