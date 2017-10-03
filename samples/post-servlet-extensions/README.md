@@ -1,4 +1,6 @@
-Apache Sling Sample Post Servlet Extensions
+# Apache Sling Sample Post Servlet Extensions
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This bundle provides sample OSGI services which extend the sling post 
 servlet behaviour.
