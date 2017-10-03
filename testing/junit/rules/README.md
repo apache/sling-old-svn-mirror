@@ -1,4 +1,7 @@
-# Sling Http Testing Rules
+# Apache Sling Testing Rules
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
 The Sling Http Testing Rules allow writing integration tests easily. They are primarily meant to be used for tests that use http against 
 a Sling instance and make use of the `org.apache.sling.testing.clients` which offer a simple, immutable and extendable way of working 
 with specialized http clients.
