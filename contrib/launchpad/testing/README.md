@@ -1,4 +1,6 @@
-Apache Sling Launchpad Testing module
+# Apache Sling Launchpad Contrib Testing
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This module builds a Sling webapp using bundles from the trunk, and
 runs integration tests (that were previously in the launchpad/webapp
