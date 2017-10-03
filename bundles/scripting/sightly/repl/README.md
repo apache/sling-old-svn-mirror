@@ -1,5 +1,7 @@
-Apache Sling Scripting HTL Read-Eval-Print Loop Environment
-====
+# Apache Sling Scripting HTL Read-Eval-Print Loop Environment
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
 
 To install:
 ```
