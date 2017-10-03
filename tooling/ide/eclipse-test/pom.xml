@@ -26,7 +26,7 @@
     </parent>
     <artifactId>org.apache.sling.ide.eclipse-test</artifactId>
     <packaging>eclipse-test-plugin</packaging>
-    <name>Sling IDE Tools: Eclipse Tests</name>
+    <name>Apache Sling IDE Tools Eclipse Tests</name>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/eclipse-test</connection>
