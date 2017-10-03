@@ -1,5 +1,6 @@
-Apache Sling mail archive server stats
-======================================
+# Apache Sling Mail Archive Server Stats
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This is a work in progress stats module for the Sling mail archive
 server.
