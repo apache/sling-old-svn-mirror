@@ -34,7 +34,7 @@
     <packaging>bundle</packaging>
     <version>2.0.1-SNAPSHOT</version>
 
-    <name>Apache Sling XSS Protection Bundle</name>
+    <name>Apache Sling XSS Protection</name>
     <description>
         Apache Sling XSS Protection Bundle providing XSS protection based on the OWASP AntiSamy and OWASP Java Encoder libraries.
     </description>
