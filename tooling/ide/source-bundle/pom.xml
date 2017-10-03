@@ -20,7 +20,7 @@
     </parent>
     
     <artifactId>org.apache.sling.ide.source-bundle</artifactId>
-    <name>Sling IDE Tools: Source Bundle</name>
+    <name>Apache Sling IDE Tools Source Bundle</name>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/p2update</connection>
