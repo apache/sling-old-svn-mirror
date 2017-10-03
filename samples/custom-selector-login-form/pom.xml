@@ -32,7 +32,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Sample Custom Selector Login Form</name>
+    <name>Apache Sling Samples Custom Selector Login Form</name>
     <description>
         This bundle is a fragment attached to the Sling Selector Auth bundle and provides
         a simple customized login form.
