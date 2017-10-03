@@ -26,7 +26,7 @@
 
   <artifactId>org.apache.sling.ide.target-definition</artifactId>
   <packaging>eclipse-target-definition</packaging>
-  <name>Sling IDE Tools: Target definition</name>
+  <name>Apache Sling IDE Tools Target definition</name>
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/target-definition</connection>
