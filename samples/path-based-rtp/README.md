@@ -1,4 +1,6 @@
-Apache Sling Samples Path Based RTP
+# Apache Sling Samples Path Based Resource Type Provider
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Provides a configurable path-based sample resource type provider
 for resources which do not have an explicit one.
