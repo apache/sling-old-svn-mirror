@@ -1,4 +1,8 @@
-# Message Oriented Middleware API ( or message passing API).
+# Apache Sling Message oriented Middleware API
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
+## Message Oriented Middleware API ( or message passing API).
 
 This bundle contains an API to support 2 types of message passing. Pub/Sub and Queue.
 Pub/Sub message passing supports the publication of messages to multiple subscribers. Queue 
@@ -7,7 +11,7 @@ organised by a Topic name. Queues are named. There are no implementation details
 bundle and no bindings to any one MoM implementation, although it is expected that this 
 API could be implemented over either JMS or a AMQP client.
 
-# Publish Subscribe
+## Publish Subscribe
 
 Messages that are sent to a topic by publishing are received by all subscribers that were active at the time the message is published.
 
@@ -30,7 +34,7 @@ To subscribe to a topic the caller must also use the [TopicManager API](src/main
           
 The API does not impose any stcuture on topic names, but the underlying implementation might.
 
-# Queue
+## Queue
 
 A Queue implementation guarantees that messages will be delivered to one and only once QueueReader
 in the order in which the messages were added to the Queue. The QueueReader implementation may
