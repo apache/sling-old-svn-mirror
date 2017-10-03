@@ -30,7 +30,7 @@
     <version>1.0.5-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
 
-    <name>Sling JCRInstall Bundle Archetype</name>
+    <name>Apache Sling JCRInstall Bundle Archetype</name>
     <description>Maven archetype for a generic OSGi bundle installed via JCR Install.</description>
 
     <scm>
