@@ -22,7 +22,7 @@
     <version>1.1.1-SNAPSHOT</version>
   </parent>
   <artifactId>org.apache.sling.ide.api-test</artifactId>
-  <name>Sling IDE Tools: API Tests</name>
+  <name>Apache Sling IDE Tools API Tests</name>
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/api-test</connection>
