@@ -1,7 +1,8 @@
-Sling Superimposing Resource Provider
-===================
+# Apache Sling Superimposing Resource Provider
 
-### About
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
+## About
 
 The Superimposing Resource Provider is an extension for the [Apache Sling](http://sling.apache.org/) framework. It implements the [ResourceProvider](http://sling.apache.org/apidocs/sling6/org/apache/sling/api/resource/ResourceProvider.html) interface.
 
@@ -21,7 +22,7 @@ There is a presentation from [adaptTo() 2013](http://adaptto.org) with more back
 The implementation of this provider is based on the great work of Julian Sedding from [SLING-1778](https://issues.apache.org/jira/browse/SLING-1778).
 
 
-### How to use
+## How to use
 
 Preparations:
 
@@ -37,7 +38,7 @@ To create a superimposed resource create a node in JCR with:
 * (Optional) Property **sling:superimposeOverlayable**: If set to true, the content is not only mirrored, but can be overlayed by nodes in the target tree below the superimposing root node. _Please note that this feature is still experimental._
 
 
-### Configuration
+## Configuration
 
 In the Felix console you can configure the creation of Superimposing Resource Providers via the service "Apache Sling Superimposing Resource Manager":
 
@@ -46,14 +47,14 @@ In the Felix console you can configure the creation of Superimposing Resource Pr
 * **obervationPaths**: Paths on which the new, updated or removed superimposing nodes are automatically detected on runtime.
 
 
-### Remarks
+## Remarks
 
 * The superimposing resource provider depends on an underlying JCR repository. It currently does only work with JCR and supports mirroring or overlaying JCR nodes.
 * The Superimposing Resource Provider provides an API in the package org.apache.sling.superimposing. For the basic superimposing content features you do not need this API. It is a read-only API which allows to query which superimposing resource providers are currently active with which configuration. The API is useful if you want to react on JCR events on the source tree and actions on the mirrored trees as well (e.g. for sending invalidation events to clean an external cache).
 * If you want to use the superimposing resource provider within a CMS application that allows to modifiy resource content via it's GUI make sure that this CMS application supports this resource provider in it's authoring environment (and does make direct JCR access, because this bypassed the mirroring and affects the original JCR node - risk of data loss!). If you canne be sure of this please activate the provider only on the sling instances that render the content for the public (publishing instances), and not in the authoring instance.
 
 
-### Comparison with Sling Resource Merger
+## Comparison with Sling Resource Merger
 
 In Sling Contrib a ["Apache Sling Resource Merger"](https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/resourcemerger) bundle is provided. Although both Sling Resource Merger and the Superimposing Resource Provider take care of mirroring and merging resources they solve quite different problems and have different usecases:
 
