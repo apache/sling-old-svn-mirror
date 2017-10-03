@@ -1,5 +1,6 @@
-Apache Sling JUnit Health Checks
-===============================
+# Apache Sling JUnit Health Checks
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This bundle provides Sling Health Check services that run JUnit tests.
 
