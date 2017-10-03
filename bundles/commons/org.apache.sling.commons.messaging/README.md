@@ -1,5 +1,6 @@
-Apache Sling Commons Messaging
-==============================
+# Apache Sling Commons Messaging
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Simple API for sending *message*​s to *recipient*​s.
 
