@@ -1,17 +1,18 @@
-Sling user manager UI sample
----------------------
+# Apache Sling User Manager UI sample
 
-WHY THIS SAMPLE?
-----------------
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
+## WHY THIS SAMPLE?
+
 This demonstrates some sample UI for user/group discovery, creation and update.
 
-PRE-REQUISITES
---------------
+## PRE-REQUISITES
+
 This sample uses the i18n support provided by the org.apache.sling.i18n bundle,
 so that bundle must be installed into your sling instance first. 
 
-HOW TO INSTALL
---------------
+## HOW TO INSTALL
+
 Build this bundle and install it in Sling.
 
 For example, if Sling is running on port 8080 (which happens if you start 
@@ -29,8 +30,8 @@ To verify that the bundle is correctly installed:
 2) The console at http://localhost:8080/system/console/bundles must 
     list the bundle named "Apache Sling User Manager UI sample" as active.    
 
-HOW TO TEST
------------
+## HOW TO TEST
+
 Login to sling as the admin user.
 
 Open http://localhost:8080/system/userManager.html
@@ -38,7 +39,7 @@ Open http://localhost:8080/system/userManager.html
 Use the links in the left sidebar to get to the pages that enable you to 
 find, update or create users/groups.
 
-SEE ALSO
---------
+## SEE ALSO
+
 This demo can also be used in combination with the accessmanager-ui demo. For more 
 information see there.
