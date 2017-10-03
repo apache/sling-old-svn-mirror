@@ -1,5 +1,6 @@
-Apache Sling Commons Messaging Mail
-===================================
+# Apache Sling Commons Messaging Mail
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Provide an OSGi Configuration for `SimpleMailBuilder` or a custom `MailBuilder` to send messages using [Apache Commons Email](https://commons.apache.org/proper/commons-email/).
 
