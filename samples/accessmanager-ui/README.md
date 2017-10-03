@@ -1,13 +1,14 @@
-Sling access manager UI sample
----------------------
+# Apache Sling Access Manager UI sample
 
-WHY THIS SAMPLE?
-----------------
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
+## WHY THIS SAMPLE?
+
 This demonstrates some sample UI for viewing/updating the access control
 lists of JCR nodes.
 
-PRE-REQUISITES
---------------
+## PRE-REQUISITES
+
 This sample uses the i18n support provided by the org.apache.sling.i18n bundle,
 so that bundle must be installed into your sling instance first. 
 
@@ -18,8 +19,8 @@ those scripts.
     /apps/sling/servlet/default/acl.html.esp
 
 
-LAUNCH SLING
-------------
+## LAUNCH SLING
+
 The Sling Container can be launched by running the following command in the 
 launchpad/builder/target directory:
   java -jar org.apache.sling.launchpad-<version>-standalone.jar
@@ -27,8 +28,8 @@ so if the current version is 7, the command should be:
   java -jar org.apache.sling.launchpad-7-standalone.jar
 
 
-PREPARE SLING
--------------
+## PREPARE SLING
+
 Install i18n support by installing the org.apache.sling.i18n bundle:
   contrib/extensions/i18n $ mvn install -P autoInstallBundle
 
@@ -45,8 +46,8 @@ to delete the node.
 Also delete the /apps/sling/servlet/default/acl.html.esp in the same way.
 
 
-HOW TO INSTALL
---------------
+## HOW TO INSTALL
+
 Build this bundle and install it in Sling:
 
   mvn install -P autoInstallBundle
@@ -59,8 +60,8 @@ This sample is best tested together with the usermanager-ui demo. Install this a
   samples/usermanager-ui $ mvn install -P autoInstallBundle
    
 
-HOW TO TEST
------------
+## HOW TO TEST
+
 Login as the admin user.
 
 To test this functionality, install another sample applications, which is used as a
@@ -97,4 +98,3 @@ To see that the page is now inaccessible to this user.
 
 Use the links on the page to add/update/remove access control entries to the list
 to provision privileges for users or groups.
-
