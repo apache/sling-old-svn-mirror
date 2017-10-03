@@ -1,3 +1,7 @@
+# Apache Sling Validation Framework Examples
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
+
 ## How To Run the Examples
 1. Start a Sling launchpad
 2. Install the `org.apache.sling.validation.api` and `org.apache.sling.validation.core` bundles:
