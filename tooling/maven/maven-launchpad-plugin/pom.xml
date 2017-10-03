@@ -25,7 +25,7 @@
     <version>2.3.5-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
-    <name>Apache Sling Launchpad Maven Plugin</name>
+    <name>Apache Sling Maven Launchpad Plugin</name>
     <description>
         Maven Plugin supporting Sling Launchpad
     </description>
