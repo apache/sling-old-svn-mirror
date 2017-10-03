@@ -1,5 +1,6 @@
-Apache Sling debian/ubuntu packaging
-====================================
+# Apache Sling Launchpad Debian Package Builder
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This is a work in progress .deb packaging for Sling.
 It provides basic init.d start/stop logrotate & sample sling config. The goal is to provide a generic yet configurable sling package to eliminate the need to build sling for in-house deployments.
