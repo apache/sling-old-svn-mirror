@@ -21,7 +21,7 @@
     <artifactId>org.apache.sling.models.jacksonexporter</artifactId>
     <version>1.0.9-SNAPSHOT</version>
     <packaging>bundle</packaging>
-    <name>Apache Sling Models Model Exporter - Jackson</name>
+    <name>Apache Sling Models Jackson Exporter</name>
     <description>Apache Sling Models Client Model Exporter - Jackson</description>
 
     <scm>
