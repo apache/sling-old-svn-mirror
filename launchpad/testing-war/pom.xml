@@ -31,7 +31,7 @@
     <packaging>slingstart</packaging>
     <version>10-SNAPSHOT</version>
 
-    <name>Apache Sling Launchpad Testing WAR version</name>
+    <name>Apache Sling Launchpad Testing WAR</name>
     <description>
         Sling Launchpad Testing module, contains integration tests that
         were previously in the launchpad webapp module.
