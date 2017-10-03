@@ -1,19 +1,21 @@
-# Sling Event (Jobs) bundle.
+# Apache Sling Event Support
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 For user documentation see https://sling.apache.org/documentation/bundles/apache-sling-eventing-and-job-handling.html. 
 This README contains information on the bundle, APIs and implementation details.
 
-# Bundle
+## Bundle
 
 Sling Event contains support for Jobs. It provides an Api for Job, JobManager and Queue, as well as consumer Apis for a 
 JobConsumer. There are ancillary APIs to support the work of these core interfaces. The core APIs are exported from 
 org.apache.sling.event.jobs with the consumers exported from org.apache.sling.event.jobs.consumer.
 
 
-# Design and implementation
+## Design and implementation
 
 
-## Processing model
+### Processing model
 
 Jobs are created using the JobManager API. When a Job is created the JobManager writes an entry into the resource tree
 (usually backed up by JCR) via the ResourceResolver. 
@@ -35,7 +37,7 @@ periodic maintenance classes or triggered by calls to the QueueManager or trigge
 The queue is maintained by the JobManagerImpl, but each Queue is managed by a JobQueueImpl that receives calls from the
 QueueManager to process jobs. Any thread may update the persisted job state, by resolving the Job name and performing the operation.
 
-## Storage
+### Storage
 
 The JobManager uses the resource tree and therefore by default the JCR repository provided by Oak for persisting Jobs. The 
 content tree structure was developed in conjunction with advice from the Oak team to avoid write concurrency issues and the 
@@ -57,7 +59,7 @@ the write operation and the target sling instance wont know about the job until 
 the target sling instance is dead, the cluster leader performs the write and the new target sling instnance wont see the job 
 until after Oak commits.
 
-## Topology changes
+### Topology changes
 
 When a Sling instance in a cluster is shutdown, it will stop processing all the jobs allocated to it. When it shuts down
 a Topology change event propagates and the cluster leader scans all instances under /var/eventing/jobs/assigned/ to see
@@ -65,7 +67,7 @@ if there are any instances that don't exist any more. If there are, the topology
 node by deleting the Oak node and writing a new node into the new targetId assigned location. Any jobs that cant be re-assigned
 are written to the unassigned location.
 
-## Known issues with current implementation and design
+### Known issues with current implementation and design
 
 These issues may have been addressed since this document was written, if they have please remove the known issues.
 
@@ -74,7 +76,7 @@ especially when the queues are large, as jobs complexity and resource requiremen
 2. When the topology changes, with many jobs the cost of reallocating jobs may be prohibitive.
 
 
-# Scheduled Jobs.
+## Scheduled Jobs.
 
 In addition to one off jobs the bundle has support for scheduled jobs. The schedule is stored in /var/eventing/scheduled-jobs, 
 and the cluster leader uses the Sling commons Scheduler service to run a schedules which add jobs to the appropriate queues
