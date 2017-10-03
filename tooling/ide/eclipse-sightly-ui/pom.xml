@@ -25,7 +25,7 @@
   </parent>
   <artifactId>org.apache.sling.ide.eclipse-sightly-ui</artifactId>
   <packaging>eclipse-plugin</packaging>
-  <name>Sling IDE Tools: Eclipse Sightly UI</name>
+  <name>Apache Sling IDE Tools Eclipse Sightly UI</name>
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/eclipse-sightly-ui</connection>
