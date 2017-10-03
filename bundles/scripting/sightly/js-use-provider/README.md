@@ -1,5 +1,6 @@
-Apache Sling Scripting HTL JavaScript Use Provider
-==================================================
+# Apache Sling Scripting HTL JavaScript Use Provider
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 This bundle allows HTL's Use API to access JS scripts. It also wraps Sling's JS engine in a simulated event loop.
 
