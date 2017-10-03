@@ -1,5 +1,6 @@
-Apache Sling NoSQL Generic Resource Provider
-============================================
+# Apache Sling NoSQL Generic Resource Provider
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Generic implementation of a Sling ResourceProvider that helps writing ResourceProviders using NoSQL databases as persistence.
 
