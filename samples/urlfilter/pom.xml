@@ -30,8 +30,8 @@
     <artifactId>org.apache.sling.samples.urlfilter</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.1-SNAPSHOT</version>
-    <name>org.apache.sling.samples.urlfilter</name>
-    <description>org.apache.sling.samples - org.apache.sling.samples.urlfilter</description>
+    <name>Apache Sling Samples URL Filter</name>
+
     <build>
         <plugins>
             <plugin>
