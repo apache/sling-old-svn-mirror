@@ -1,4 +1,6 @@
-Apache Sling Context-Aware Configuration Mock Plugin
+# Apache Sling Context-Aware Configuration Mock Plugin
+
+This module is part of the [Apache Sling](https://sling.apache.org) project.
 
 Mock Context Plugin for Apache Sling Context-Aware Configuration
 
