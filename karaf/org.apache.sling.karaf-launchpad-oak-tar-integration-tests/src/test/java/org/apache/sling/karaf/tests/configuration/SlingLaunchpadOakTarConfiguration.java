@@ -59,9 +59,6 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
                 "sling-installer-provider-jcr",
                 "sling-jcr-jackrabbit-security"
             ),
-            // legacy
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.json").versionAsInProject(),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").versionAsInProject(),
             // test support
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.core").versionAsInProject(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.remote").versionAsInProject(),
