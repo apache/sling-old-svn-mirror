@@ -37,30 +37,30 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.packageadmin.PackageAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Prototype for installing/updating a bundle from a directory
  */
-@Component
-@Service(value = Servlet.class)
-@Property(name="alias", value="/system/sling/tooling/install")
+@Component(service = Servlet.class,
+    property = {
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            "alias=/system/sling/tooling/install"
+    })
 public class InstallServlet extends HttpServlet {
 
     private static final long serialVersionUID = -8820366266126231409L;
