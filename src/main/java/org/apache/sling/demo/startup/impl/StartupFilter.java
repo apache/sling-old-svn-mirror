@@ -44,7 +44,9 @@ public class StartupFilter implements Filter {
         ((HttpServletResponse)response).setHeader("Cache-Control", "no-store");
         final PrintWriter pw = response.getWriter();
 
-        pw.println("<html><head><title>Apache Sling...</title></head>");
+        pw.println("<html><head>");
+        pw.println("<META HTTP-EQUIV=\"refresh\" CONTENT=\"5\">");
+        pw.println("<title>Apache Sling...</title></head>");
         pw.println("<body>");
         pw.println("<h1>Apache Sling is starting up....</h1>");
         pw.println("</body>");

@@ -31,6 +31,12 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 public class Activator implements BundleActivator {
 
+    private final String[] REQUIRED_SERVICES = new String[] {
+            "org.apache.sling.api.auth.Authenticator",
+            "org.apache.sling.api.resource.ResourceResolverFactory",
+            "org.apache.sling.api.servlets.ServletResolver"
+    };
+
     private volatile ServiceTracker<InfoProvider, InfoProvider> infoProviderTracker;
 
     private volatile HttpStartupSetup httpSetup;
@@ -98,7 +104,9 @@ public class Activator implements BundleActivator {
                     public void run() {
                         final InstallationState state = service.getInstallationState();
                         if ( state.getActiveResources().isEmpty()
-                             && state.getUntransformedResources().isEmpty() ) {
+                             && state.getUntransformedResources().isEmpty()
+                             && checkServices(context)) {
+
                             httpSetup.stop();
                             this.cancel();
                         }
@@ -127,5 +135,20 @@ public class Activator implements BundleActivator {
             infoProviderTracker.close();
             infoProviderTracker = null;
         }
+    }
+
+    private boolean checkServices(final BundleContext context) {
+        for(final String name : REQUIRED_SERVICES) {
+            final ServiceReference<?> ref = context.getServiceReference(name);
+            if ( ref == null ) {
+                return false;
+            }
+            final Object service = context.getService(ref);
+            if ( service == null ) {
+                return false;
+            }
+            context.ungetService(ref);
+        }
+        return true;
     }
 }
