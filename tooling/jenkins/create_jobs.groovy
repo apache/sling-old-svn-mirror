@@ -600,9 +600,6 @@ def modules = [
         location: 'karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests'
     ],
     [
-        location: 'karaf/org.apache.sling.karaf-repoinit'
-    ],
-    [
         location: 'karaf/org.apache.sling.karaf-configs'
     ],
     [
