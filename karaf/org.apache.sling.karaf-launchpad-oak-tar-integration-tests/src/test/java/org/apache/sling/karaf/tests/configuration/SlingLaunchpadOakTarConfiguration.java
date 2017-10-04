@@ -18,47 +18,22 @@
  */
 package org.apache.sling.karaf.tests.configuration;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-
 import org.apache.sling.karaf.testing.KarafTestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
-import org.ops4j.pax.tinybundles.core.TinyBundles;
-import org.osgi.framework.Constants;
 
 import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.streamBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
 public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
 
-    private Option testBundle() throws Exception {
-        final String filename = System.getProperty("repoinit.filename");
-        final InputStream repoinit = new FileInputStream(filename);
-        return streamBundle(
-            TinyBundles.bundle()
-                .add("repoinit.txt", repoinit)
-                .set(Constants.BUNDLE_MANIFESTVERSION, "2")
-                .set(Constants.BUNDLE_SYMBOLICNAME, "repoinit")
-                .build()
-        ).start();
-    }
-
     @Configuration
     public Option[] configuration() throws Exception {
         final int httpPort = Integer.getInteger("http.port");
-        final String[] references = new String[]{
-            "raw:classpath://org.apache.sling.karaf-repoinit/sling.txt",
-            "raw:classpath://org.apache.sling.karaf-repoinit/sling-discovery.txt",
-            "raw:classpath://org.apache.sling.karaf-repoinit/sling-event.txt",
-            "raw:classpath://org.apache.sling.karaf-repoinit/sling-i18n.txt",
-            "raw:classpath://org.apache.sling.karaf-repoinit/sling-installer-jcr.txt",
-            "raw:classpath://org.apache.sling.karaf-repoinit/sling-scripting.txt",
-            "raw:classpath://org.apache.sling.karaf-repoinit/sling-xss.txt",
-            "raw:classpath://repoinit/repoinit.txt"
+        final String[] scripts = new String[]{
+            "create path /repoinit/provisioningModelTest\ncreate service user provisioningModelUser"
         };
         return OptionUtils.combine(baseConfiguration(),
             cleanCaches(true),
@@ -70,7 +45,7 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
             editConfigurationFilePut("etc/org.apache.sling.servlets.resolver.SlingServletResolver.config", "servletresolver.cacheSize", "0"),
             editConfigurationFilePut("etc/org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet.config", "dav.root", "/dav"),
             editConfigurationFilePut("etc/org.apache.sling.jcr.davex.impl.servlets.SlingDavExServlet.config", "alias", "/server"),
-            editConfigurationFilePut("etc/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config", "references", references),
+            editConfigurationFilePut("etc/org.apache.sling.jcr.repoinit.RepositoryInitializer-test.config", "scripts", scripts),
             editConfigurationFilePut("etc/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.config", "whitelist.bypass", true),
             addSlingFeatures(
                 "sling-launchpad-oak-tar",
@@ -84,8 +59,6 @@ public class SlingLaunchpadOakTarConfiguration extends KarafTestSupport {
                 "sling-installer-provider-jcr",
                 "sling-jcr-jackrabbit-security"
             ),
-            // bundle for test (contains repoinit.txt)
-            testBundle(),
             // legacy
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.json").versionAsInProject(),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").versionAsInProject(),
