@@ -183,7 +183,63 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</classifier>
+      <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_discovery</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_event</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_i18n</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_installer_jcr</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_scripting</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_validation</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_xss</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
@@ -437,8 +493,6 @@
             <feature>sling-samples-fling</feature>
             <!-- Composum -->
             <feature>composum-sling</feature>
-            <!-- Pax URL (KARAF-4707) -->
-            <feature>pax-url-classpath-sling</feature>
           </installedFeatures>
           <startupFeatures>
             <!-- <feature>eventadmin</feature> -->
