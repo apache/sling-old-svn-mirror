@@ -129,8 +129,43 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
-                  <classifier>org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</classifier>
-                  <file>src/main/resources/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config</file>
+                  <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.repoinit.RepositoryInitializer-sling.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
+                  <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_discovery</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_discovery.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
+                  <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_event</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_event.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
+                  <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_i18n</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_i18n.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
+                  <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_installer_jcr</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_installer_jcr.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
+                  <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_scripting</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_scripting.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
+                  <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_validation</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_validation.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
+                  <classifier>org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_xss</classifier>
+                  <file>src/main/resources/org.apache.sling.jcr.repoinit.RepositoryInitializer-sling_xss.config</file>
                   <type>config</type>
                 </artifact>
                 <artifact>
