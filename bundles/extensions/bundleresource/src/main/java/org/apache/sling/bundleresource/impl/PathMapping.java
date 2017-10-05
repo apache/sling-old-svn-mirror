@@ -74,8 +74,8 @@ class PathMapping {
             final String expandDirective) {
         this.resourceRoot = ensureNoTrailingSlash(resourceRoot);
         this.resourceRootPrefix = ensureTrailingSlash(resourceRoot);
-        this.entryRoot = ensureNoTrailingSlash(entryRoot);
-        this.entryRootPrefix = ensureTrailingSlash(entryRoot);
+        this.entryRoot = ensureLeadingSlash(ensureNoTrailingSlash(entryRoot));
+        this.entryRootPrefix = ensureLeadingSlash(ensureTrailingSlash(entryRoot));
         this.jsonExpandExtension = ensureLeadingDot(expandDirective);
     }
 
@@ -161,6 +161,18 @@ class PathMapping {
 
         if (!path.endsWith("/")) {
             return path.concat("/");
+        }
+
+        return path;
+    }
+
+    private static String ensureLeadingSlash(final String path) {
+        if (path == null || path.length() == 0) {
+            return null;
+        }
+
+        if (!path.startsWith("/")) {
+            return "/".concat(path);
         }
 
         return path;

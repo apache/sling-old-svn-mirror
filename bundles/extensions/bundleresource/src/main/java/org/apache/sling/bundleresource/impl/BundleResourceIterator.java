@@ -65,7 +65,6 @@ class BundleResourceIterator implements Iterator<Resource> {
      * Creates an instance using the given parent bundle resource.
      */
     BundleResourceIterator(final BundleResource parent) {
-
         // trailing slash to enumerate children
         final String parentEntryPath = parent.getMappedPath().getEntryPath(parent.getPath().concat("/"));
         this.prefixLength = parentEntryPath.length();
@@ -123,6 +122,7 @@ class BundleResourceIterator implements Iterator<Resource> {
                 }
             }
         }
+
         return (bundleEntries.isEmpty() ? null : bundleEntries.iterator());
     }
 
@@ -167,7 +167,7 @@ class BundleResourceIterator implements Iterator<Resource> {
             }
 
             // another sanity check if the prefix is correct
-            int slash = entry.indexOf('/', prefixLength);
+            final int slash = entry.indexOf('/', prefixLength);
             if (slash < 0 || slash == entry.length() - 1) {
                 log.debug("seek: Using entry {}", entry);
                 final boolean isFolder = entry.endsWith("/");
