@@ -39,7 +39,7 @@ public interface HApiUtil {
 
     String DEFAULT_SEARCH_PATH = "/libs/sling/hapi/types";
     String SEARCH_PATHS = "org.apache.sling.hapi.tools.searchpaths";
-    String SEARCH_PATHS_DESC = "The path under each hapi types can be identified by their FQDN value in addition to the type path";
+    String SEARCH_PATHS_DESC = "The path under which children resources can be identified as hapi types by their FQDN value in addition to the type path";
 
     String DEFAULT_SERVER_URL = "http://localhost:8080";
     String EXTERNAL_URL = "org.apache.sling.hapi.tools.externalurl";

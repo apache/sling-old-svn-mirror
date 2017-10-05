@@ -61,7 +61,10 @@
                 <configuration>
                     <instructions>
                         <Bundle-Category>sling</Bundle-Category>
-                        <Sling-Initial-Content>SLING-INF/libs/sling/hapi/; path:=/libs/sling/hapi; overwrite:=true; uninstall:=false</Sling-Initial-Content>
+                        <Sling-Bundle-Resources>
+                            /libs/sling/hapi/;path:=SLING-INF/libs/sling/hapi;propsJSON:=json
+                        </Sling-Bundle-Resources>
+                        <Require-Capability>osgi.extender;filter:="(&amp;(osgi.extender=org.apache.sling.bundleresource)(version&gt;=1.1.0)(!(version&gt;=2.0.0)))"</Require-Capability>
                     </instructions>
                 </configuration>
             </plugin>

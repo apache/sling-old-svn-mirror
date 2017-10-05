@@ -26,13 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.QueryResult;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -136,7 +131,7 @@ public class HApiUtilImpl implements HApiUtil {
      * {@inheritDoc}
      */
     @Override
-    public Resource getTypeResource(ResourceResolver resolver, String type) throws RepositoryException {
+    public Resource getTypeResource(ResourceResolver resolver, String type) {
         if (!enabled) {
             return null;
         }
@@ -147,7 +142,7 @@ public class HApiUtilImpl implements HApiUtil {
      * {@inheritDoc}
      */
     @Override
-    public Resource getTypeCollectionResource(ResourceResolver resolver, String collection) throws RepositoryException {
+    public Resource getTypeCollectionResource(ResourceResolver resolver, String collection) {
         if (!enabled) {
             return null;
         }
@@ -155,10 +150,10 @@ public class HApiUtilImpl implements HApiUtil {
     }
 
 
-
-    private Resource getFqdnResource(ResourceResolver resolver, String fqdn, String resType) throws RepositoryException {
-        Session session = resolver.adaptTo(Session.class);
-
+    /**
+     * Get the type resource
+     */
+    private Resource getFqdnResource(ResourceResolver resolver, String fqdn, String resType) {
         // Try to resolve the resource as a path
         Resource res = resolver.getResource(fqdn);
         if (null != res) {
@@ -167,32 +162,29 @@ public class HApiUtilImpl implements HApiUtil {
         } else {
             for (String path : new HashSet<String>(Arrays.asList(hApiPaths))) {
                 // Remove trailing slash from path
-                path = (path.endsWith("/")) ? path.substring(0,path.length() - 1) : path;
+                path = (path.endsWith("/")) ? path.substring(0, path.length() - 1) : path;
+                return getTypeResourceFromFqdn(path, resolver, fqdn, resType);
+            }
+        }
 
-                // Get the query manager for the session
-                QueryManager queryManager = session.getWorkspace().getQueryManager();
+        return null;
+    }
 
-                // Build query for the search paths
-                StringBuilder queryString = new StringBuilder("SELECT * FROM [nt:unstructured] WHERE ");
-                queryString.append(String.format("ISDESCENDANTNODE([%s]) ", path));
-                queryString.append(String.format("AND [sling:resourceType]='%s' AND fqdn = '%s'", resType, fqdn));
-
-                // Execute query
-                Query query = queryManager.createQuery(queryString.toString(), Query.JCR_SQL2);
-                LOG.debug("Querying HApi: {}", queryString.toString());
-                QueryResult result = query.execute();
-
-                NodeIterator nodeIter = result.getNodes();
-                if (nodeIter.hasNext()) {
-                    return resolver.getResource(nodeIter.nextNode().getPath());
-                } else {
-                    // continue
+    /**
+     * Get a type resource as direct _child_ of {{parentPath}} if the fqdn prop matches
+     */
+    private Resource getTypeResourceFromFqdn(String parentPath, ResourceResolver resolver, String fqdn, String resType) {
+        if (null == fqdn) return null;
+        Resource searchParent = resolver.getResource(parentPath);
+        for (Resource tr: searchParent.getChildren()) {
+            if (tr.isResourceType(resType)) {
+                ValueMap resProps = tr.adaptTo(ValueMap.class);
+                if (fqdn.equals(resProps.get("fqdn", (String) null))) {
+                    return tr;
                 }
             }
-
-            // Type has to be abstract
-            return null;
         }
+        return null;
     }
 
 
@@ -346,6 +338,11 @@ class TypesCache {
     private HApiUtil hApiUtil;
     Map<String, HApiType> types;
 
+    /**
+     * Get the singleton instance
+     * @param hApiUtil
+     * @return
+     */
     public static TypesCache getInstance(HApiUtil hApiUtil) {
         if (null == singleton) {
             singleton = new TypesCache(hApiUtil);
@@ -363,6 +360,13 @@ class TypesCache {
         this.hApiUtil = hApiUtil;
     }
 
+    /**
+     * Get a type from the cache
+     * @param resolver
+     * @param typeResource
+     * @return
+     * @throws RepositoryException
+     */
     public HApiType getType(ResourceResolver resolver, Resource typeResource) throws RepositoryException {
         if (null == typeResource) return new AbstractHapiTypeImpl("Abstract");
 
@@ -379,10 +383,18 @@ class TypesCache {
         }
     }
 
+    /**
+     * Add a type to the cache
+     * @param type
+     */
     public void addType(HApiType type) {
         this.types.put(type.getPath(), type);
     }
 
+    /**
+     * Remove a type from the cache
+     * @param path
+     */
     public void removeType(String path) {
         this.types.remove(path);
     }
