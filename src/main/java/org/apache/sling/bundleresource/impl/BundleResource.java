@@ -151,16 +151,17 @@ public class BundleResource extends AbstractResource {
         this.subResources = children;
     }
 
-    Resource getChildResource(String path) {
+    Resource getChildResource(final String path) {
         Resource result = null;
         Map<String, Map<String, Object>> resources = this.subResources;
+        String subPath = null;
         for(String segment : path.split("/")) {
             if ( resources != null ) {
-                path = path.concat("/").concat(segment);
+                subPath = subPath == null ? segment : subPath.concat("/").concat(segment);
                 final Map<String, Object> props = resources.get(segment);
                 if ( props != null ) {
                     result = new BundleResource(this.resourceResolver, this.cache, this.mappedPath,
-                            path, props, false);
+                            this.getPath().concat("/").concat(subPath), props, false);
                     resources = ((BundleResource)result).subResources;
                 } else {
                     result = null;
