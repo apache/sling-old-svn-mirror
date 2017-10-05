@@ -16,17 +16,17 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>30</version>
+        <version>32</version>
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.launchpad</artifactId>
+    <artifactId>org.apache.sling.starter</artifactId>
     <packaging>slingstart</packaging>
     <version>10-SNAPSHOT</version>
 
-    <name>Apache Sling Launchpad Builder</name>
+    <name>Apache Sling Starter Application</name>
     <description>
-        The Launchpad. Available in both JAR and WAR flavors.
+        The Sling Starter application, available in both JAR and WAR flavors.
     </description>
 
     <scm>
