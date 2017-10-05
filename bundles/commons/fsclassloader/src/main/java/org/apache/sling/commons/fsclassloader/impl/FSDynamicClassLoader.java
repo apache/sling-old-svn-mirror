@@ -23,6 +23,7 @@ import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.commons.classloader.DynamicClassLoader;
 
@@ -30,10 +31,9 @@ public class FSDynamicClassLoader
     extends URLClassLoader
     implements DynamicClassLoader {
 
-    private boolean isDirty = false;
+    private volatile boolean isDirty = false;
 
-    private final Set<String> hit = Collections.synchronizedSet(new HashSet<String>());
-    private final Set<String> miss = Collections.synchronizedSet(new HashSet<String>());
+    private final Set<String> loads = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
 
     private final DynamicClassLoader parentLoader;
 
@@ -55,18 +55,15 @@ public class FSDynamicClassLoader
     @Override
     public Class<?> loadClass(final String name) throws ClassNotFoundException {
         try {
-            final Class<?> c = super.loadClass(name);
-            this.hit.add(name);
-            return c;
-        } catch (final ClassNotFoundException cnfe) {
-            this.miss.add(name);
-            throw cnfe;
+            return super.loadClass(name);
+        } finally {
+            this.loads.add(name);
         }
     }
 
     public void check(final String className) {
         if ( !this.isDirty ) {
-            this.isDirty = hit.contains(className) || miss.contains(className);
+            this.isDirty = loads.contains(className);
         }
     }
 }
