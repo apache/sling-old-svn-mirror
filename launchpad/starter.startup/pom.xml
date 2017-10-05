@@ -21,13 +21,13 @@
         <relativePath />
     </parent>
 
-    <artifactId>org.apache.sling.demo.startup</artifactId>
+    <artifactId>org.apache.sling.starter.startup</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Demo Startup Bundle</name>
+    <name>Apache Sling Starter Startup Module</name>
     <description>
-        A module for handling demo startup.
+        A module for handling the startup of the Apache Sling Starter.
     </description>
 
     <properties>
