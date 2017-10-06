@@ -65,33 +65,26 @@ class BundleResourceIterator implements Iterator<Resource> {
      * Creates an instance using the given parent bundle resource.
      */
     BundleResourceIterator(final BundleResource parent) {
-        // trailing slash to enumerate children
-        final String parentEntryPath = parent.getMappedPath().getEntryPath(parent.getPath().concat("/"));
-        this.prefixLength = parentEntryPath.length();
-
-        this.resourceResolver = parent.getResourceResolver();
-        this.cache = parent.getBundle();
-        this.subResources = parent.getSubResources() != null ? new HashMap<>(parent.getSubResources()) : null;
-        this.mappedPath = parent.getMappedPath();
-
-        this.entries = getFilteredEntries(parentEntryPath);
-
-        this.nextResult = (entries != null) ? seek() : null;
+        this(parent.getResourceResolver(),
+                parent.getBundle(),
+                parent.getMappedPath(),
+                parent.getPath(),
+                parent.getSubResources());
     }
 
-    BundleResourceIterator(ResourceResolver resourceResolver, BundleResourceCache bundle,
-            PathMapping mappedPath, String parentPath) {
+    BundleResourceIterator(final ResourceResolver resourceResolver,
+            final BundleResourceCache bundle,
+            final PathMapping mappedPath,
+            final String parentPath,
+            final Map<String, Map<String, Object>> subResources) {
 
         // trailing slash to enumerate children
-        if (!parentPath.endsWith("/")) {
-            parentPath = parentPath.concat("/");
-        }
-        final String parentEntryPath = mappedPath.getEntryPath(parentPath);
+        final String parentEntryPath = mappedPath.getEntryPath(parentPath.concat("/"));
         this.prefixLength = parentEntryPath.length();
 
         this.resourceResolver = resourceResolver;
         this.cache = bundle;
-        this.subResources = null;
+        this.subResources = subResources != null ? new HashMap<>(subResources) : null;
         this.mappedPath = mappedPath;
         this.entries = getFilteredEntries(parentEntryPath);
 

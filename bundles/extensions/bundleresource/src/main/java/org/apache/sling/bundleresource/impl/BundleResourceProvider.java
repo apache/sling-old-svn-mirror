@@ -166,7 +166,7 @@ public class BundleResourceProvider extends ResourceProvider<Object> {
         PathMapping mappedPath = getMappedPath(parentPath);
         if (mappedPath != null) {
             return new BundleResourceIterator(parent.getResourceResolver(),
-                cache, mappedPath, parentPath);
+                cache, mappedPath, parentPath, null);
         }
 
         // the parent resource cannot have children in this provider,
