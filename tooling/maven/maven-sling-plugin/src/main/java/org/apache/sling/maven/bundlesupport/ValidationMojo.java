@@ -21,20 +21,29 @@ package org.apache.sling.maven.bundlesupport;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.json.JsonException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharEncoding;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.DirectoryScanner;
+import org.codehaus.plexus.util.Scanner;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
  * The <code>validate</code> goal checks the JSON code of a bundle.
@@ -42,6 +51,10 @@ import org.codehaus.plexus.util.DirectoryScanner;
 @Mojo(name = "validate", defaultPhase = LifecyclePhase.PROCESS_RESOURCES)
 public class ValidationMojo extends AbstractMojo {
 
+    private static final Pattern LINE_NUMBER_PATTERN = Pattern.compile("lineNumber=(\\d+),");
+    private static final Pattern COLUMN_NUMBER_PATTERN = Pattern.compile("columnNumber=(\\d+),");
+    private static final Pattern MESSAGE_CLEANUP_PATTERN = Pattern.compile("^(.*) on \\[lineNumber=\\d+, columnNumber=\\d+, streamOffset=\\d+\\](.*)$", Pattern.DOTALL);
+    
     /**
      * The Maven project.
      */
@@ -67,24 +80,32 @@ public class ValidationMojo extends AbstractMojo {
     @Parameter(property = "sling.validation.jsonQuoteTick", defaultValue = "false", required = false)
     private boolean jsonQuoteTick;
 
+    @Component
+    private BuildContext buildContext;
+    
     /**
      * @see org.apache.maven.plugin.AbstractMojo#execute()
      */
-    public void execute()
-    throws MojoExecutionException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         if ( this.skip ) {
             getLog().info("Validation is skipped.");
             return;
         }
+        
         final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
         while ( rsrcIterator.hasNext() ) {
             final Resource rsrc = rsrcIterator.next();
 
             final File directory = new File(rsrc.getDirectory());
             if ( directory.exists() ) {
+
+                if (!buildContext.hasDelta(directory)) {
+                    getLog().debug("No files found to validate, skipping.");
+                    return;
+                }
+                
                 getLog().debug("Scanning " + rsrc.getDirectory());
-                final DirectoryScanner scanner = new DirectoryScanner();
-                scanner.setBasedir( directory );
+                final Scanner scanner = buildContext.newScanner(directory);
 
                 if ( rsrc.getExcludes() != null && rsrc.getExcludes().size() > 0 ) {
                     scanner.setExcludes( (String[]) rsrc.getExcludes().toArray(new String[rsrc.getExcludes().size()] ) );
@@ -97,39 +118,95 @@ public class ValidationMojo extends AbstractMojo {
                 scanner.scan();
 
                 final String[] files = scanner.getIncludedFiles();
+                int countProcessed = 0;
+                List<Exception> failures = new ArrayList<>();
                 if ( files != null ) {
                     for(int m=0; m<files.length; m++) {
-                        this.validate(directory, files[m]);
+                        final File file = new File(directory, files[m]);
+                        buildContext.removeMessages(file);
+                        try {
+                            this.validate(file);
+                        }
+                        catch (Exception ex) {
+                            failures.add(ex);
+                            buildContext.addMessage(file,
+                                    parseLineNumber(ex.getMessage()),
+                                    parseColumnNumber(ex.getMessage()), 
+                                    cleanupMessage(ex.getMessage()),
+                                    BuildContext.SEVERITY_ERROR,
+                                    ex.getCause());
+                        }
+                        countProcessed++;
                     }
+                }
+                
+                if (!failures.isEmpty()) {
+                    if (!buildContext.isIncremental()) {
+                        throw new MojoFailureException("Validated " + countProcessed + " file(s), found " + failures.size() + " failures.");
+                    }
+                }
+                else {
+                    getLog().info("Validated " + countProcessed + " file(s).");
                 }
             }
         }
     }
 
-    private void validate(final File directory, final String fileName)
-    throws MojoExecutionException {
-        getLog().debug("Validating " + fileName);
-        final File file = new File(directory, fileName);
+    private void validate(final File file) throws MojoExecutionException {
+        getLog().debug("Validating " + file.getPath());
         if ( file.isFile() ) {
-            if ( fileName.endsWith(".json") && !this.skipJson ) {
-                getLog().debug("Validation JSON file " + fileName);
+            if ( file.getName().endsWith(".json") && !this.skipJson ) {
+                getLog().debug("Validation JSON file " + file.getPath());
                 FileInputStream fis = null;
                 String json = null;
                 try {
                     fis = new FileInputStream(file);
                     json = IOUtils.toString(fis, CharEncoding.UTF_8);
-                } catch (IOException e) {
-                    throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", e);
+                } catch (IOException ex) {
+                    throw new MojoExecutionException(ex.getMessage(), ex);
                 } finally {
                     IOUtils.closeQuietly(fis);
                 }
                 // validate JSON
                 try {
                     JsonSupport.validateJsonStructure(json, jsonQuoteTick);
-                } catch (JsonException e) {
-                    throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", e);
+                } catch (JsonException ex) {
+                    throw new MojoExecutionException("Invalid JSON: " + ex.getMessage());
                 }
             }
         }
     }
+    
+    static int parseLineNumber(String message) {
+        return parseNumber(message, LINE_NUMBER_PATTERN);
+    }
+    
+    static int parseColumnNumber(String message) {
+        return parseNumber(message, COLUMN_NUMBER_PATTERN);
+    }
+
+    static int parseNumber(String message, Pattern pattern) {
+        Matcher matcher = pattern.matcher(message);
+        if (matcher.find()) {
+            return NumberUtils.toInt(matcher.group(1));
+        }
+        else {
+            return 0;
+        }
+    }
+    
+    static String cleanupMessage(String message) {
+        String result;
+        Matcher matcher = MESSAGE_CLEANUP_PATTERN.matcher(message);
+        if (matcher.matches()) {
+            result = matcher.group(1) + matcher.group(2);
+        }
+        else {
+            result = message;
+        }
+        result = StringUtils.replace(result, "\n", "\\n");
+        result = StringUtils.replace(result, "\r", "");
+        return result;
+    }
+
 }
