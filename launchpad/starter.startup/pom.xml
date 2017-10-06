@@ -22,7 +22,7 @@
     </parent>
 
     <artifactId>org.apache.sling.starter.startup</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Starter Startup Module</name>
@@ -35,9 +35,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/starter.startup</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/starter.startup</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/starter.startup</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.starter.startup-1.0.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.starter.startup-1.0.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.starter.startup-1.0.2</url>
     </scm>
 
     <build>
