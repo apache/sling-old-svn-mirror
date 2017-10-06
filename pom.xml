@@ -49,7 +49,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
-                            org.apache.sling.demo.startup.impl.Activator
+                            org.apache.sling.starter.startup.impl.Activator
                         </Bundle-Activator>
                     </instructions>
                 </configuration>
