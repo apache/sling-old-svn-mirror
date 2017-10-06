@@ -34,6 +34,12 @@
         <sling.java.version>8</sling.java.version>
     </properties>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/starter.startup</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/starter.startup</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/starter.startup</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
