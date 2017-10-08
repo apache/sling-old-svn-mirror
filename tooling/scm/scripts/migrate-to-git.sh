@@ -55,7 +55,7 @@ fi
 case "$1" in 
     "-r") echo "Provisioning remote repositories" ;;
     "-c") echo "Converting local repositories";;
-    "-p") echo "Pushing local repositories to remove";;
+    "-p") echo "Pushing local repositories to remote";;
     *)
         usage
         exit -1
@@ -72,6 +72,11 @@ while read -r module; do
     if [ -e ${module_orig}/pom.xml ]; then
 
         artifactId=$(xmllint --xpath "/*[local-name()='project']/*[local-name()='artifactId']/text()" ${module_orig}/pom.xml)
+        short_desc=$(xmllint --xpath "/*[local-name()='project']/*[local-name()='name']/text()" ${module_orig}/pom.xml)
+        if [ -z "${short_desc}" ]; then
+            echo "No name for ${module_orig}, aborting"
+            exit 3
+        fi
 
         # some overrides where it does not make sense to switch the artifact id
         case $artifactId in
@@ -130,8 +135,7 @@ while read -r module; do
         fi
 
     elif [ $1 == "-r" ]; then
-        # TODO - switch to ASF for the final run
-        status=$(curl -s -o /dev/null -I  -w "%{http_code}" https://github.com/not-sling/${repo_name})
+        status=$(curl -s -o /dev/null -I  -w "%{http_code}" https://github.com/apache/${repo_name})
 
         if [ $status = "404" ]; then
             echo "Repository not found, will create";
@@ -143,21 +147,16 @@ while read -r module; do
             exit 1
         fi
 
-        if [ -z "$GITHUB_AUTH" ]; then
-            echo "Please export GITHUB_AUTH='your-github-username your-github-token'"
-            exit 2
-        fi
-
         echo "Creating GIT repository ..."
      
         # TODO - create the repository using the ASF self-service tool
-        ./tooling/scm/scripts/create-gh-repo.sh ${GITHUB_AUTH} ${repo_name}
+        ./tooling/scm/scripts/create-gitbox-repo.sh ${repo_name} "${short_desc}"
 
     else # -p
         pushd ${git_repo_location}/${repo_name}
         # TODO - use the ASF remotes for the final run
         if [ $(git remote show | grep origin | wc -l) -eq 0 ]; then
-            git remote add origin https://github.com/not-sling/${repo_name}.git
+            git remote add origin https://github.com/apache/${repo_name}.git
             git push -u origin master
         else
             echo "Remote origin already exists, skipping"
