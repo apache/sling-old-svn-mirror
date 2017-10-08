@@ -1,8 +1,6 @@
 Apache Sling
 ============
 
-Bringing Back the Fun!
-
 Apache Sling is a web framework that uses a Java
 Content Repository, such as Apache Jackrabbit, to store and manage content.
 
