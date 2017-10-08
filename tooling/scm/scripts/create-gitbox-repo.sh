@@ -6,7 +6,7 @@ if [ $# -ne 2 ]; then
     exit 1
 fi
 
-repo_name=$1
+repo_name=${1#sling-}
 repo_desc=$2
 
 # will fail if wrong credentials are passed
@@ -17,5 +17,5 @@ if [ $status != "200" ]; then
     exit 2
 fi
 
-echo "curl --netrc --data=\"action=create&pmc=sling&name=${repo_name}&description=${repo_desc}&notify=commits@sling.apache.org&ghnotify=dev@sling.apache.org&ispodling=false\" https://gitbox.apache.org/setup/newrepo.cgi"
+curl --netrc --data "action=create&pmc=sling&name=${repo_name}&description=${repo_desc}&notify=commits@sling.apache.org&ghnotify=dev@sling.apache.org" https://gitbox.apache.org/setup/newrepo.cgi
 
