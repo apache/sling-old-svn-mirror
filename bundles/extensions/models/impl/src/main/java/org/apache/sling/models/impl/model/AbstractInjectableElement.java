@@ -204,13 +204,16 @@ abstract class AbstractInjectableElement implements InjectableElement {
     }
 
     private static boolean getOptional(AnnotatedElement element, InjectAnnotationProcessor annotationProcessor) {
+        if (element.isAnnotationPresent(Optional.class)) {
+            return true;
+        }
         if (annotationProcessor != null) {
             Boolean optional = annotationProcessor.isOptional();
             if (optional != null) {
                 return optional.booleanValue();
             }
         }
-        return element.isAnnotationPresent(Optional.class);
+        return false;
     }
 
     private static boolean getRequired(AnnotatedElement element, InjectAnnotationProcessor annotationProcessor) {
