@@ -145,6 +145,12 @@
             <artifactId>org.apache.sling.jcr.contentparser</artifactId>
             <version>1.2.4</version>
             <scope>compile</scope>
+            <exclusions>
+              <exclusion>
+                <groupId>org.apache.geronimo.specs</groupId>
+                <artifactId>geronimo-json_1.0_spec</artifactId>
+              </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
