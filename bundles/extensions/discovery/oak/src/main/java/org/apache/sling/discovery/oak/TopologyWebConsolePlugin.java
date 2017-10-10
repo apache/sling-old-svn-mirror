@@ -589,6 +589,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
      */
     @Override
     public void handleTopologyEvent(final TopologyEvent event) {
+        if (getBundleContext() == null) {
+            logger.info("handleTopologyEvent: ignoring event when not activated: " + event);
+            return;
+        }
         if (event.getType() == Type.PROPERTIES_CHANGED) {
             this.currentView = event.getNewView();
 
@@ -786,11 +790,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 discoveryLiteHistory.remove(0);
             }
         } catch(Exception e) {
-            if (resourceResolverFactory == null) {
-                logger.info("addDiscoveryLiteHistoryEntry: plugin already deactivated (resourceResolverFactory == null), Exception: "+e);
-            } else {
-                logger.error("addDiscoveryLiteHistoryEntry: Exception: "+e, e);
-            }
+            logger.error("addDiscoveryLiteHistoryEntry: Exception: "+e, e);
         } finally {
             if (resourceResolver != null) {
                 resourceResolver.close();
