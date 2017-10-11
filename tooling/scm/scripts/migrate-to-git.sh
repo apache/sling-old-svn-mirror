@@ -93,6 +93,11 @@ while read -r module; do
         fi
     else
         repo_name="sling-$(echo ${module} | tr '/' '-')"
+        case ${module} in
+            "tooling/scm") short_desc="Apache Sling SCM Tooling";;
+            "tooling/jenkins") short_desc="Apache Sling Jenkins Tooling";;
+            *) echo "Unknown non-Maven module ${module}, unable to set description"; exit 1;;
+        esac
     fi
     
     echo "---- Preparing to process $module_orig as $repo_name ---"
