@@ -65,7 +65,7 @@ public enum ResourceResolverType {
      * </ul>
      */
     JCR_OAK("org.apache.sling.testing.mock.sling.oak.OakMockResourceResolverAdapter",
-            "org.apache.sling:org.apache.sling.testing.sling-mock-jackrabbit-oak", NodeTypeMode.NODETYPES_REQUIRED),
+            "org.apache.sling:org.apache.sling.testing.sling-mock-oak", NodeTypeMode.NODETYPES_REQUIRED),
             
     /**
      * Provides resource resolver environment without any ResourceProvider.
