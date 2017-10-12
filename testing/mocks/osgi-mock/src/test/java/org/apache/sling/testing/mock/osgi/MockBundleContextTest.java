@@ -77,17 +77,17 @@ public class MockBundleContextTest {
         // prepare test services
         String[] clazzes1 = new String[] { String.class.getName(), Integer.class.getName() };
         Object service1 = new Object();
-        Dictionary<String, Object> properties2 = getServiceProperties(null);
+        Dictionary<String, Object> properties2 = ranking(null);
         ServiceRegistration reg1 = bundleContext.registerService(clazzes1, service1, properties2);
 
         String clazz2 = String.class.getName();
         Object service2 = new Object();
-        Dictionary<String, Object> properties1 = getServiceProperties(null);
+        Dictionary<String, Object> properties1 = ranking(null);
         ServiceRegistration reg2 = bundleContext.registerService(clazz2, service2, properties1);
 
         String clazz3 = Integer.class.getName();
         Object service3 = new Object();
-        Dictionary<String, Object> properties3 = getServiceProperties(-100L);
+        Dictionary<String, Object> properties3 = ranking(-100);
         ServiceRegistration reg3 = bundleContext.registerService(clazz3, service3, properties3);
 
         // test get service references
@@ -130,7 +130,7 @@ public class MockBundleContextTest {
         // prepare test services
         Class<String> clazz = String.class;
         final String service = "abc";
-        Dictionary<String, Object> properties1 = getServiceProperties(null);
+        Dictionary<String, Object> properties1 = ranking(null);
         ServiceRegistration reg = bundleContext.registerService(clazz, new ServiceFactory<String>() {
             @Override
             public String getService(Bundle bundle, ServiceRegistration<String> registration) {
@@ -164,7 +164,7 @@ public class MockBundleContextTest {
         // prepare test services
         String clazz1 = String.class.getName();
         Object service1 = new Object();
-        Dictionary<String, Object> properties1 = getServiceProperties(null);
+        Dictionary<String, Object> properties1 = ranking(null);
         ServiceRegistration reg1 = bundleContext.registerService(clazz1, service1, properties1);
         
         assertNotNull(bundleContext.getServiceReference(clazz1));
@@ -174,14 +174,6 @@ public class MockBundleContextTest {
         assertNull(bundleContext.getServiceReference(clazz1));
     }
     
-
-    private Dictionary<String, Object> getServiceProperties(final Long serviceRanking) {
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
-        if (serviceRanking != null) {
-            props.put(Constants.SERVICE_RANKING, serviceRanking);
-        }
-        return props;
-    }
 
     @Test
     public void testGetBundles() throws Exception {
@@ -276,6 +268,42 @@ public class MockBundleContextTest {
         assertEquals(Constants.SYSTEM_BUNDLE_ID, systemBundle.getBundleId());
         assertEquals(Constants.SYSTEM_BUNDLE_SYMBOLICNAME, systemBundle.getSymbolicName());
         assertEquals(Constants.SYSTEM_BUNDLE_LOCATION, systemBundle.getLocation());
+    }
+
+    @Test
+    public void testGetServiceOrderWithRanking() {
+        bundleContext.registerService(String.class, "service1", ranking(10));
+        bundleContext.registerService(String.class, "service2", ranking(20));
+        bundleContext.registerService(String.class, "service3", ranking(5));
+        
+        // should return service with highest ranking
+        ServiceReference<String> ref = bundleContext.getServiceReference(String.class);
+        String service = bundleContext.getService(ref);
+        assertEquals("service2", service);
+        
+        bundleContext.ungetService(ref);
+    }
+
+    @Test
+    public void testGetServiceOrderWithoutRanking() {
+        bundleContext.registerService(String.class, "service1", ranking(null));
+        bundleContext.registerService(String.class, "service2", ranking(null));
+        bundleContext.registerService(String.class, "service3", ranking(null));
+        
+        // should return service with lowest service id = which was registered first
+        ServiceReference<String> ref = bundleContext.getServiceReference(String.class);
+        String service = bundleContext.getService(ref);
+        assertEquals("service1", service);
+        
+        bundleContext.ungetService(ref);
+    }
+
+    private static Dictionary<String, Object> ranking(final Integer serviceRanking) {
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        if (serviceRanking != null) {
+            props.put(Constants.SERVICE_RANKING, serviceRanking);
+        }
+        return props;
     }
 
 }
