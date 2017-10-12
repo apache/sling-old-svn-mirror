@@ -191,13 +191,13 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
-            <version>1.0.24-SNAPSHOT</version>
+            <version>1.0.26</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.teleporter</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
+            <version>1.0.16</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
