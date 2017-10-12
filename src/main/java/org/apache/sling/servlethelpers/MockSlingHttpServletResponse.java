@@ -29,7 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.adapter.SlingAdaptable;
-import org.osgi.annotation.versioning.ConsumerType;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Mock {@link SlingHttpServletResponse} implementation.
@@ -277,11 +278,6 @@ public class MockSlingHttpServletResponse extends SlingAdaptable implements Slin
 
     @Override
     public String encodeURL(String url) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setContentLengthLong(long len) {
         throw new UnsupportedOperationException();
     }
 

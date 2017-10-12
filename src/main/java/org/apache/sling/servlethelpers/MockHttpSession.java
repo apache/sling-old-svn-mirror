@@ -27,7 +27,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.collections.IteratorUtils;
-import org.osgi.annotation.versioning.ConsumerType;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Mock {@link HttpSession} implementation.

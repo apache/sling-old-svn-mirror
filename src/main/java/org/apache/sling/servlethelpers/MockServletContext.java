@@ -37,7 +37,7 @@ import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
 
-import org.osgi.annotation.versioning.ConsumerType;
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Mock {@link ServletContext} implementation.
@@ -298,11 +298,6 @@ public class MockServletContext implements ServletContext {
 
     @Override
     public void declareRoles(final String... roleNames) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getVirtualServerName() {
         throw new UnsupportedOperationException();
     }
 

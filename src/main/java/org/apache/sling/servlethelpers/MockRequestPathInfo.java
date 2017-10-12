@@ -21,7 +21,8 @@ package org.apache.sling.servlethelpers;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
-import org.osgi.annotation.versioning.ConsumerType;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Mock {@link RequestPathInfo} implementation.

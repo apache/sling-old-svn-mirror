@@ -24,11 +24,9 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +42,6 @@ import java.util.ResourceBundle;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
-import javax.servlet.ReadListener;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -54,7 +51,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
 import org.apache.commons.collections.IteratorUtils;
@@ -70,7 +66,8 @@ import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HttpConstants;
-import org.osgi.annotation.versioning.ConsumerType;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Mock {@link SlingHttpServletRequest} implementation.
@@ -103,8 +100,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private String remoteHost;
     private int remotePort;
     private Locale locale = Locale.US;
-    private boolean getInputStreamCalled;
-    private boolean getReaderCalled;
 
     private MockRequestDispatcherFactory requestDispatcherFactory;
     
@@ -544,27 +539,14 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public ServletInputStream getInputStream() {
-        if (getReaderCalled) {
-            throw new IllegalStateException();
+        if (content == null) {
+            return null;
         }
-        getInputStreamCalled = true;
         return new ServletInputStream() {
-            private final InputStream is = content == null ? new ByteArrayInputStream(new byte[0]) : new ByteArrayInputStream(content);
+            private final InputStream is = new ByteArrayInputStream(content);
             @Override
             public int read() throws IOException {
                 return is.read();
-            }
-            @Override
-            public boolean isReady() {
-                return true;
-            }
-            @Override
-            public boolean isFinished() {
-                throw new UnsupportedOperationException();
-            }
-            @Override
-            public void setReadListener(ReadListener readListener) {
-                throw new UnsupportedOperationException();
             }
         };  
     }
@@ -828,26 +810,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public BufferedReader getReader() {
-        if (getInputStreamCalled) {
-            throw new IllegalStateException();
-        }
-        getReaderCalled = true;
-        if (this.content == null) {
-            return new BufferedReader(new StringReader(""));
-        } else {
-            String content;
-            try {
-                if (characterEncoding == null) {
-                    content = new String(this.content, Charset.defaultCharset());
-                } else {
-                    content = new String(this.content, characterEncoding);
-                }
-            } catch (UnsupportedEncodingException e) {
-                content = new String(this.content, Charset.defaultCharset());
-            }
-            return new BufferedReader(new StringReader(content));
-        }
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -912,21 +875,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public DispatcherType getDispatcherType() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String changeSessionId() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) throws IOException, ServletException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public long getContentLengthLong() {
         throw new UnsupportedOperationException();
     }
 
