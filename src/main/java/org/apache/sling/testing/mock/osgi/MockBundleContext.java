@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
@@ -283,7 +284,13 @@ class MockBundleContext implements BundleContext {
     @SuppressWarnings("unchecked")
     @Override
     public ServiceReference[] getServiceReferences(final String clazz, final String filter) throws InvalidSyntaxException {
-        Set<ServiceReference> result = new TreeSet<ServiceReference>();
+        Set<ServiceReference> result = new TreeSet<ServiceReference>(new Comparator<ServiceReference>() {
+            @Override
+            public int compare(ServiceReference o1, ServiceReference o2) {
+                // reverse sort order to get highest ranking first
+                return o2.compareTo(o1);
+            }
+        });
         for (MockServiceRegistration serviceRegistration : this.registeredServices) {
             if (serviceRegistration.matches(clazz, filter)) {
                 result.add(serviceRegistration.getReference());
