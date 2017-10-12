@@ -25,9 +25,6 @@ def modules = [
         location: 'bundles/commons/compiler'
     ],
     [
-        location: 'bundles/commons/json'
-    ],
-    [
         location: 'bundles/commons/johnzon',
     ],
     [
@@ -436,9 +433,6 @@ def modules = [
     ],
     [
         location: 'contrib/extensions/distribution/sample'
-    ],
-    [
-        location: 'contrib/extensions/distribution/extensions'
     ],
     [
         location: 'contrib/extensions/hapi/samplecontent'
