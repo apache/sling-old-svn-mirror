@@ -113,7 +113,8 @@ public class U {
                     mavenBundle("commons-collections", "commons-collections", "3.2.1"),
                     mavenBundle("commons-io", "commons-io", "1.4"),
                     mavenBundle("commons-fileupload", "commons-fileupload", "1.2.2"),
-                    mavenBundle("commons-lang", "commons-lang", "2.5")            )
+                    mavenBundle("commons-lang", "commons-lang", "2.5") ,
+                    mavenBundle("org.apache.commons", "commons-lang3", "3.6"))
         );
     }
 }
