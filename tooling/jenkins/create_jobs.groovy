@@ -689,12 +689,6 @@ def modules = [
         location: 'samples/testing/module-with-it'
     ],
     [
-        location: 'samples/webloader/service'
-    ],
-    [
-        location: 'samples/webloader/ui'
-    ],
-    [
         location: 'testing/email'
     ],
     [
