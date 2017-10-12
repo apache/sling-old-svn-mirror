@@ -34,7 +34,9 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
-/** Test the service-ranking based sorting of mock service references */
+/** 
+ * Test the service-ranking based sorting of mock service references
+ */
 public class MockServiceReferencesSortTest {
     
     private BundleContext bundleContext;
@@ -57,7 +59,7 @@ public class MockServiceReferencesSortTest {
         registerStringServiceWithRanking("D", 1);
         registerStringServiceWithRanking("E", 2);
         
-        assertEquals("BCAED", getSortedServicesString());
+        assertEquals("DEACB", getSortedServicesString());
         assertEquals("B", bundleContext.getService(bundleContext.getServiceReference(String.class)));
     }
 
@@ -69,7 +71,7 @@ public class MockServiceReferencesSortTest {
         registerStringServiceWithoutRanking("D");
         registerStringServiceWithoutRanking("E");
         
-        assertEquals("ABCDE", getSortedServicesString());
+        assertEquals("EDCBA", getSortedServicesString());
         assertEquals("A", bundleContext.getService(bundleContext.getServiceReference(String.class)));
     }
 
@@ -81,7 +83,7 @@ public class MockServiceReferencesSortTest {
         registerStringServiceWithRanking("D", 10);
         registerStringServiceWithoutRanking("E");
         
-        assertEquals("DBACE", getSortedServicesString());
+        assertEquals("ECABD", getSortedServicesString());
         assertEquals("D", bundleContext.getService(bundleContext.getServiceReference(String.class)));
     }
 
@@ -104,7 +106,7 @@ public class MockServiceReferencesSortTest {
         try {
             refs = bundleContext.getServiceReferences(String.class.getName(), null);
         }
-        catch(InvalidSyntaxException ise) {
+        catch (InvalidSyntaxException ise) {
             fail("Unexpected InvalidSyntaxException");
         }
         assertNotNull("Expecting our service references", refs);
