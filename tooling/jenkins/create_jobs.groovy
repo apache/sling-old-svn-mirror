@@ -653,25 +653,13 @@ def modules = [
         location: "parent"
     ],
     [
-        location: 'samples/accessmanager-ui'
-    ],
-    [
         location: 'samples/custom-login-form'
-    ],
-    [
-        location: 'samples/custom-selector-login-form'
     ],
     [
         location: 'samples/espblog'
     ],
     [
         location: 'samples/fling'
-    ],
-    [
-        location: 'samples/framework-fragment'
-    ],
-    [
-        location: 'samples/installing-dependencies'
     ],
     [
         location: 'samples/javashell'
@@ -695,9 +683,6 @@ def modules = [
         location: 'samples/post-servlet-extensions'
     ],
     [
-        location: 'samples/simple-launchpad'
-    ],
-    [
         location: 'samples/slingbucks'
     ],
     [
@@ -710,22 +695,13 @@ def modules = [
         location: 'samples/testing/module-with-it'
     ],
     [
-        location: 'samples/urlfilter'
-    ],
-    [
-        location: 'samples/usermanager-ui'
-    ],
-    [
         location: 'samples/webloader/service'
     ],
     [
         location: 'samples/webloader/ui'
     ],
     [
-        location: 'samples/workspacepicker'
-    ],
-    [
-        location: 'email/testing'
+        location: 'testing/email'
     ],
     [
         location: 'testing/junit/core',
