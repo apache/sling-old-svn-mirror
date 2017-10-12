@@ -99,6 +99,9 @@ while read -r module; do
             *) echo "Unknown non-Maven module ${module}, unable to set description"; exit 1;;
         esac
     fi
+
+    # ASF infra does not permit dots in repository names
+    repo_name=${repo_name//./-}
     
     echo "---- Preparing to process $module_orig as $repo_name ---"
 
@@ -154,12 +157,10 @@ while read -r module; do
 
         echo "Creating GIT repository ..."
      
-        # TODO - create the repository using the ASF self-service tool
         ./tooling/scm/scripts/create-gitbox-repo.sh ${repo_name} "${short_desc}"
 
     else # -p
         pushd ${git_repo_location}/${repo_name}
-        # TODO - use the ASF remotes for the final run
         if [ $(git remote show | grep origin | wc -l) -eq 0 ]; then
             git remote add origin https://github.com/apache/${repo_name}.git
             git push -u origin master
