@@ -27,7 +27,7 @@
         <relativePath/>
     </parent>
 
-    <artifactId>org.apache.sling.testing.samples.module-with-it</artifactId>
+    <artifactId>org.apache.sling.samples.testing.module-with-it</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging> <!-- means the launchpad is configured in /src/main/provisioning, extends classpath -->
 

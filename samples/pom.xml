@@ -73,6 +73,8 @@
           <module>post-servlet-extensions</module>
           <module>slingbucks</module>
           <module>slingshot</module>
+          <module>testing/bundle-with-it</module>
+          <module>testing/module-with-it</module>
           <module>usermanager-ui</module>
           <module>webloader/service</module>
           <module>webloader/ui</module>

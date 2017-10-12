@@ -27,7 +27,7 @@
         <relativePath/>
     </parent>
 
-    <artifactId>org.apache.sling.testing.samples.bundle-with-it</artifactId>
+    <artifactId>org.apache.sling.samples.testing.bundle-with-it</artifactId>
     <version>0.0.9-SNAPSHOT</version>
     <packaging>bundle</packaging>
 

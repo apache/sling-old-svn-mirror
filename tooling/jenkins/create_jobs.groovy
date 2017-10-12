@@ -704,6 +704,12 @@ def modules = [
         location: 'samples/slingshot'
     ],
     [
+        location: 'samples/testing/bundle-with-it'
+    ],
+    [
+        location: 'samples/testing/module-with-it'
+    ],
+    [
         location: 'samples/urlfilter'
     ],
     [
@@ -765,12 +771,6 @@ def modules = [
     ],
     [
         location: 'testing/mocks/sling-mock-oak'
-    ],
-    [
-        location: 'testing/samples/bundle-with-it'
-    ],
-    [
-        location: 'testing/samples/module-with-it'
     ],
     [
         location: 'testing/sling-pax-util'
