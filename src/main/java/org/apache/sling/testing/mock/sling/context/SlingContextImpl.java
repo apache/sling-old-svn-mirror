@@ -479,7 +479,8 @@ public class SlingContextImpl extends OsgiContextImpl {
                     adapterClass.getName()
                 })
                 // make sure this overlay has higher ranking than other adapter factories
-                .put(Constants.SERVICE_RANKING, Integer.MAX_VALUE)
+                // normally we should use Integer.MAX_VALUE for this - but due to SLING-7194 prefers lowest-ranking services first
+                .put(Constants.SERVICE_RANKING, Integer.MIN_VALUE)
                 .build());
     }
 
