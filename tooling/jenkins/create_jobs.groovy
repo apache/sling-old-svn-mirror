@@ -876,9 +876,8 @@ for more details</p>''')
             triggers {
                 snapshotDependencies(true)
                 scm('H/15 * * * *')
-                if ( module.rebuildDaily ) {
-                    cron('@daily')
-                }
+                def rebuildFrequency = module.rebuildDaily ? '@daily' : '@weekly'
+                cron(rebuildFrequency)
             }
 
             // timeout if the job takes 4 times longer than the average
