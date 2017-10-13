@@ -479,14 +479,6 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             }
         }
 
-        for (Mapping mapping : this.activeMappings) {
-            final Iterable<String> principalNames = mapping.mapPrincipals(serviceName, null);
-            if (principalNames != null) {
-                log.debug("Got principalNames [{}] from {}/{}", new Object[] {principalNames, serviceName });
-                return principalNames;
-            }
-        }
-
         // second round without serviceInfo
         log.debug(
                 "internalGetPrincipalNames: {} active mappings, looking for mapping for {}/<no subServiceName>",
