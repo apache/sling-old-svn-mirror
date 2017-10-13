@@ -128,7 +128,7 @@ public class JcrSystemUserValidator implements ServiceUserValidator, ServicePrin
                     if (administrativeSession instanceof JackrabbitSession) {
                         final UserManager userManager = ((JackrabbitSession) administrativeSession).getUserManager();
                         final Authorizable authorizable = userManager.getAuthorizable(serviceUserId);
-                        if (authorizable != null && !authorizable.isGroup() && (isSystemUser((User)authorizable))) {
+                        if (isValidSystemUser(authorizable)) {
                             validIds.add(serviceUserId);
                             log.debug("The provided service user id {} is a known JCR system user id", serviceUserId);
                             return true;
@@ -191,7 +191,7 @@ public class JcrSystemUserValidator implements ServiceUserValidator, ServicePrin
                             return pName;
                         }
                     });
-                    if (authorizable != null && !authorizable.isGroup() && (isSystemUser((User) authorizable))) {
+                    if (isValidSystemUser(authorizable)) {
                         validPrincipalNames.add(pName);
                         log.debug("The provided service principal name {} is a known JCR system user", pName);
                     } else {
@@ -210,16 +210,28 @@ public class JcrSystemUserValidator implements ServiceUserValidator, ServicePrin
         return invalid.isEmpty();
     }
 
-    private boolean isSystemUser(final User user){
-        if (isSystemUserMethod != null) {
-            try {
-                return (Boolean) isSystemUserMethod.invoke(user);
-            } catch (Exception e) {
-                log.debug("Exception while invoking isSystemUser method", e);
-                return true;
+    private boolean isValidSystemUser(final Authorizable authorizable){
+        if (authorizable == null || authorizable.isGroup()) {
+            return false;
+        }
+
+        User user = (User) authorizable;
+        try {
+            if (!user.isDisabled()) {
+                if (isSystemUserMethod != null) {
+                    try {
+                        return (Boolean) isSystemUserMethod.invoke(user);
+                    } catch (Exception e) {
+                        log.debug("Exception while invoking isSystemUser method", e);
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
             }
-         } else {
-             return true;
-         }
+        } catch (RepositoryException e) {
+            log.debug("Exception while invoking isDisabled method", e);
+        }
+        return false;
     }
 }
