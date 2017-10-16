@@ -793,18 +793,6 @@ modules.each { module ->
     def deploy = true
 
     def downstreamProjects = module.downstream?: []
-    // assume that all modules from bundles and installer are deployed in the launchpad
-    // this might be a little to heavy right now since
-    //
-    // 1. Not all modules are at a snapshot version in the launchpad
-    // 2. Not all modules from those location are present in the launchpad
-    //
-    // but for now it's a good start
-    if ( module.location.startsWith('bundles/') ||
-        module.location.startsWith('installer/') ) {
-        downstreamProjects.add('launchpad/builder')
-    }
-
     def downstreamEntries = modules.findAll { downstreamProjects.contains(it.location) }
     def downstreamJobs = []
 
