@@ -64,10 +64,12 @@ import org.slf4j.LoggerFactory;
 @Component(
     service = ScriptCache.class,
     reference = @Reference(
-        name = "ScriptEngineFactory",
-        service = ScriptEngineFactory.class,
-        cardinality = ReferenceCardinality.MULTIPLE,
-        policy = ReferencePolicy.DYNAMIC
+            name = "ScriptEngineFactory",
+            bind = "bindScriptEngineFactory",
+            unbind = "unbindScriptEngineFactory",
+            service = ScriptEngineFactory.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC
     ),
     property = {
             Constants.SERVICE_VENDOR + "=The Apache Software Foundation"
