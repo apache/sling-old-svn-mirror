@@ -27,6 +27,7 @@
   org.apache.sling/org.apache.sling.scripting.sightly.js.provider
   org.apache.sling/org.apache.sling.scripting.sightly.models.provider
   org.apache.sling/org.apache.sling.scripting.sightly.testing-content/1.0.7-SNAPSHOT
+  org.apache.sling/org.apache.sling.scripting.core/2.0.49-SNAPSHOT
 
 
 # additional configuration for testing
