@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.json.JsonObject;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.jcr.contentparser.ParseException;
 import org.apache.sling.jcr.contentparser.ParserOptions;
 
@@ -67,17 +68,20 @@ class ParserHelper {
 
     public Calendar tryParseCalendar(String value) {
         if (options.isDetectCalendarValues() && !StringUtils.isBlank(value)) {
-            synchronized (calendarFormat) {
+            Calendar calendar = ISO8601.parse(value);
+            if (calendar == null) {
+            	calendar = Calendar.getInstance();
                 try {
-                    Date date = calendarFormat.parse(value);
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTime(date);
-                    return calendar;
-                }
-                catch (java.text.ParseException ex) {
+                    synchronized (calendarFormat) {
+                        Date date = calendarFormat.parse(value);
+                        calendar.setTime(date);
+                     }
+                     return calendar;
+                } catch (java.text.ParseException ex2) {
                     // ignore
                 }
             }
+            return calendar;
         }
         return null;
     }
