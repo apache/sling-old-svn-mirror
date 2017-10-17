@@ -58,6 +58,7 @@ public class PerformanceIT {
      */
     public PerformanceIT() {
         serverURL = System.getProperty(Constants.SYS_PROP_SERVER_URL);
+        Assert.assertNotNull("System property " + Constants.SYS_PROP_SERVER_URL + " must be set to run this test", serverURL);
         String user = System.getProperty(Constants.SYS_PROP_USER);
         String password = System.getProperty(Constants.SYS_PROP_PASS);
         if (StringUtils.isNotEmpty(user) && StringUtils.isNotEmpty(password)) {
