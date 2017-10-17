@@ -107,6 +107,28 @@ public class JsonContentParserTest {
         assertEquals(11, calendar.get(Calendar.MINUTE));
         assertEquals(24, calendar.get(Calendar.SECOND));
     }
+    
+    @Test
+    public void testIso8601Calendar() throws Exception {
+        ContentParser underTest = ContentParserFactory.create(ContentType.JSON,
+                new ParserOptions().detectCalendarValues(true));
+        ContentElement content = parse(underTest, file);
+
+        Map<String, Object> props = content.getChild("jcr:content").getProperties();
+
+        Calendar calendar = (Calendar) props.get("dateISO8601String");
+        assertNotNull(calendar);
+
+        calendar.setTimeZone(TimeZone.getTimeZone("GMT+2"));
+
+        assertEquals(2014, calendar.get(Calendar.YEAR));
+        assertEquals(4, calendar.get(Calendar.MONTH) + 1);
+        assertEquals(22, calendar.get(Calendar.DAY_OF_MONTH));
+
+        assertEquals(15, calendar.get(Calendar.HOUR_OF_DAY));
+        assertEquals(11, calendar.get(Calendar.MINUTE));
+        assertEquals(24, calendar.get(Calendar.SECOND));
+    }
 
     @Test
     public void testUTF8Chars() throws Exception {
