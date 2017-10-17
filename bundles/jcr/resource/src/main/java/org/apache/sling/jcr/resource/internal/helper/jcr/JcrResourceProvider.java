@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.CheckForNull;
@@ -40,6 +41,7 @@ import javax.jcr.Session;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.oak.api.conversion.URIProvider;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
@@ -107,11 +109,15 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
     /** The JCR observation listeners. */
     private final Map<ObserverConfiguration, Closeable> listeners = new HashMap<>();
 
+    private final Map<URIProvider, URIProvider> providers = new ConcurrentHashMap<URIProvider, URIProvider>();
+
     private volatile SlingRepository repository;
 
     private volatile JcrProviderStateFactory stateFactory;
 
     private final AtomicReference<DynamicClassLoaderManager> classLoaderManagerReference = new AtomicReference<DynamicClassLoaderManager>();
+
+    private AtomicReference<URIProvider[]> uriProviderReference = new AtomicReference<URIProvider[]>();
 
     @Activate
     protected void activate(final ComponentContext context) throws RepositoryException {
@@ -128,7 +134,7 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
         this.repository = repository;
 
         this.stateFactory = new JcrProviderStateFactory(repositoryReference, repository,
-                classLoaderManagerReference);
+                classLoaderManagerReference, uriProviderReference);
     }
 
     @Deactivate
@@ -145,6 +151,29 @@ public class JcrResourceProvider extends ResourceProvider<JcrProviderState> {
 
     protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager dynamicClassLoaderManager) {
         this.classLoaderManagerReference.compareAndSet(dynamicClassLoaderManager, null);
+    }
+
+    @Reference(
+            name = "uriprovider",
+            service = URIProvider.class,
+            cardinality = ReferenceCardinality.MULTIPLE,
+            policy = ReferencePolicy.DYNAMIC,
+            bind = "bindUriProvider",
+            unbind = "unbindUriProvider"
+    )
+    private void bindUriProvider(URIProvider uriProvider) {
+
+        providers.put(uriProvider, uriProvider);
+        updateURIProviders();
+    }
+    private void unbindUriProvider(URIProvider uriProvider) {
+        providers.remove(uriProvider);
+        updateURIProviders();
+    }
+
+    private void updateURIProviders() {
+        URIProvider[] ups = providers.values().toArray(new URIProvider[providers.size()]);
+        this.uriProviderReference.set(ups);
     }
 
     @Override
