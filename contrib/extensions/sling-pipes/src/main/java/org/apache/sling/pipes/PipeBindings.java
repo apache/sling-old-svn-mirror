@@ -161,11 +161,20 @@ public class PipeBindings {
      */
     public void updateBindings(Pipe pipe, Resource resource) {
         outputResources.put(pipe.getName(), resource);
-        if (resource != null) {
-            pathBindings.put(pipe.getName(), resource.getPath());
-            nameBindings.put(pipe.getName(), resource.getName());
-        }
+        updateStaticBindings(pipe.getName(), resource);
         addBinding(pipe.getName(), pipe.getOutputBinding());
+    }
+
+    /**
+     * Update all the static bindings related to a given resource
+     * @param name name under which static bindings should be recorded
+     * @param resource resource from which static bindings will be built
+     */
+    public void updateStaticBindings(String name, Resource resource){
+        if (resource != null) {
+            pathBindings.put(name, resource.getPath());
+            nameBindings.put(name, resource.getName());
+        }
     }
 
     /**

@@ -27,6 +27,7 @@ import java.util.Map;
 
 import javax.script.ScriptException;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +40,7 @@ public class PipeBindingsTest extends AbstractPipeTest {
     private static final String NN_MOREBINDINGS = "moreBindings";
 
     @Before
-    public void setup() {
+    public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/container.json", PATH_PIPE);
     }

@@ -18,6 +18,7 @@ package org.apache.sling.pipes.internal;
 
 import static org.junit.Assert.assertTrue;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +29,7 @@ import org.junit.Test;
 public class SlingQueryPipeTest extends AbstractPipeTest {
 
     @Before
-    public void setup() {
+    public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/users.json", "/content/users");
         context.load().json("/slingQuery.json", PATH_PIPE);

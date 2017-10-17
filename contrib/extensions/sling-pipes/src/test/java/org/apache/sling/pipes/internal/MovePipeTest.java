@@ -20,6 +20,7 @@ import java.util.Iterator;
 
 import javax.jcr.Session;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.junit.Assert;
@@ -38,7 +39,7 @@ public class MovePipeTest extends AbstractPipeTest {
     static final String MOVED_PROPERTY_PATH = "/indexFruits";
 
     @Before
-    public void setup() {
+    public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/move.json", PATH_PIPE);
     }

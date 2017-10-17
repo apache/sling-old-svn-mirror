@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Iterator;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.dummies.DummyNull;
 import org.apache.sling.pipes.dummies.DummySearch;
@@ -53,7 +54,7 @@ public class AbstractPipeTest {
     public SlingContext context = new SlingContext(ResourceResolverType.JCR_MOCK);
 
     @Before
-    public void setup(){
+    public void setup() throws PersistenceException {
         PlumberImpl plumberImpl = new PlumberImpl();
         PlumberImpl.Configuration configuration = mock(PlumberImpl.Configuration.class);
         when(configuration.authorizedUsers()).thenReturn(new String[]{});
@@ -63,7 +64,7 @@ public class AbstractPipeTest {
         plumberImpl.registerPipe("slingPipes/dummyNull", DummyNull.class);
         plumberImpl.registerPipe("slingPipes/dummySearch", DummySearch.class);
         plumber = plumberImpl;
-        context.load().json("/fruits.json", PATH_FRUITS);
+        context.load().json("/SLING-INF/jcr_root/content/fruits.json", PATH_FRUITS);
     }
 
     protected Pipe getPipe(String path){

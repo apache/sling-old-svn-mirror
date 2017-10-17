@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class ContainerPipeTest extends AbstractPipeTest {
     public static final String NN_ONEPIPE = "onePipeContainer";
 
     @Before
-    public void setup() {
+    public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/container.json", PATH_PIPE);
     }

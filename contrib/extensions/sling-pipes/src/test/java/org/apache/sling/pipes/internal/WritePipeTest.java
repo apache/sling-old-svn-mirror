@@ -27,6 +27,7 @@ import java.util.Iterator;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
@@ -44,7 +45,7 @@ public class WritePipeTest extends AbstractPipeTest {
     public static final String NN_SIMPLETREE = "simpleTree";
 
     @Before
-    public void setup() {
+    public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/write.json", PATH_PIPE);
     }

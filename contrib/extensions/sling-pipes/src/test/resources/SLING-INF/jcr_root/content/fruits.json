@@ -3,6 +3,8 @@
   "index":["apple","banana"],
   "apple":{
     "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"/apps/pipes-it/fruit",
+    "jcr:title":"Apple",
     "worm": true,
     "isnota":{
       "jcr:primaryType":"nt:unstructured",
@@ -23,6 +25,8 @@
   },
   "banana":{
     "jcr:primaryType":"nt:unstructured",
+    "jcr:title":"Banana",
+    "sling:resourceType":"/apps/pipes-it/fruit",
     "isnota":{
       "jcr:primaryType":"nt:unstructured",
       "pea":{

@@ -36,6 +36,7 @@ import javax.servlet.ServletException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
@@ -68,7 +69,7 @@ public class PlumberServletTest extends AbstractPipeTest {
     PlumberServlet servlet = new PlumberServlet();
 
     @Before
-    public void setup() {
+    public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/plumber.json", PATH_PIPE);
         context.load().json("/container.json", containersPath);

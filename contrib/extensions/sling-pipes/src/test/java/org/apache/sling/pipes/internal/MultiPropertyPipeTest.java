@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.Iterator;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
@@ -34,7 +35,7 @@ import org.junit.Test;
 public class MultiPropertyPipeTest extends AbstractPipeTest {
 
     @Before
-    public void setup() {
+    public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/multiProperty.json", PATH_PIPE);
     }

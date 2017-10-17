@@ -40,7 +40,8 @@ public class FilterPipeTest extends AbstractPipeTest {
     public static final String NN_NOCHILDREN_FAILS = "noChildrenVoid";
     public static final String NN_TEST = "testPasses";
     public static final String NN_TEST_FAILS = "testFails";
-    public void setup() {
+
+    public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/filter.json", PATH_PIPE);
     }

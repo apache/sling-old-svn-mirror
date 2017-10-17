@@ -1,0 +1,8 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "jcr:description":"returns fruit list under /content/fruits",
+  "sling:resourceType":"slingPipes/slingQuery",
+  "name":"fruits",
+  "path":"${currentResource.fruitsRootPath}",
+  "expr":"nt:base"
+}

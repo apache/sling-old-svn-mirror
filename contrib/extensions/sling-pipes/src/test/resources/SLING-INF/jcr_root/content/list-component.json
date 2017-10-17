@@ -1,0 +1,14 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "sling:resourceType":"/apps/pipes-it/list",
+  "fruitsRootPath":"/content/fruits",
+  "pipes":{
+    "jcr:primaryType":"nt:unstructured",
+    "fruits": {
+      "jcr:primaryType":"nt:unstructured",
+      "sling:resourceType": "slingPipes/reference",
+      "jcr:description":"referencing a pipe located in /etc/pipes-it/fruit-list",
+      "expr":"/etc/pipes-it/fruit-list"
+    }
+  }
+}

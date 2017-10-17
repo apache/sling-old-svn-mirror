@@ -122,5 +122,11 @@
         }
       }
     }
+  },
+  "resourceBinding": {
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:description": "one pipe only, returning test value in the binding (expected to be valuemap) 'resourceUtil'",
+    "sling:resourceType": "slingPipes/base",
+    "path":"${currentResource.test}"
   }
 }

@@ -61,28 +61,11 @@
             <Embed-Dependency>
               org.apache.sling.jcr.contentparser;inline="org/apache/sling/jcr/contentparser/impl/JsonTicksConverter.class"
             </Embed-Dependency>
-          </instructions>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <redirectTestOutputToFile>true</redirectTestOutputToFile>
-          <systemProperties>
-            <property>
-              <name>bundle.filename</name>
-              <value>${basedir}/target/${project.build.finalName}.jar</value>
-            </property>
-          </systemProperties>
+            <Export-Package>!org.apache.sling.pipes.internal.*, org.apache.sling.pipes.*</Export-Package>
+                <Sling-Model-Packages>
+                  org.apache.sling.pipes.models
+                </Sling-Model-Packages>
+              </instructions>
         </configuration>
       </plugin>
       <plugin>
@@ -108,6 +91,36 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>integration-tests</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <redirectTestOutputToFile>true</redirectTestOutputToFile>
+              <systemProperties>
+                <property>
+                  <name>bundle.filename</name>
+                  <value>${basedir}/target/${project.build.finalName}.jar</value>
+                </property>
+              </systemProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <dependencies>
     <dependency>
@@ -209,17 +222,15 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.commons.johnzon</artifactId>
-      <version>1.0.0</version>
-      <scope>test</scope>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>maven-sling-plugin</artifactId>
+        <version>2.1.0</version>
     </dependency>
-    <!-- Apache Felix -->
     <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.framework</artifactId>
-      <version>5.6.6</version>
-      <scope>test</scope>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.models.api</artifactId>
+      <version>1.3.2</version>
+      <scope>provided</scope>
     </dependency>
     <!-- testing -->
     <dependency>
@@ -237,6 +248,12 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.testing.sling-mock</artifactId>
       <version>2.2.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.auth.core</artifactId>
+      <version>1.3.22</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -275,6 +292,30 @@
       <version>0.0.4</version>
       <scope>test</scope>
     </dependency>
+    <!-- jsoup -->
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.9.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.hamcrest</artifactId>
+      <version>1.3_1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.johnzon</artifactId>
+      <version>1.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>5.6.6</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
-
 </project>

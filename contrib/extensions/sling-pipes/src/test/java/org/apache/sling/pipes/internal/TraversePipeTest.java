@@ -17,6 +17,7 @@
 package org.apache.sling.pipes.internal;
 
 import org.apache.commons.collections.IteratorUtils;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.junit.Before;
@@ -39,7 +40,7 @@ public class TraversePipeTest extends AbstractPipeTest {
     public static final String CONF_ROOT = ROOT + "/pipes/";
 
     @Before
-    public void setup() {
+    public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/traverse.json", ROOT);
     }

@@ -22,14 +22,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
-import org.apache.sling.pipes.PipeBuilder;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.json.JsonObject;
 
 /**
  * testing json pipe with anonymous yahoo meteo API
@@ -38,11 +36,9 @@ public class JsonPipeTest extends AbstractPipeTest {
     public static final String CONTENT_JSON = "/content/json";
     public static final String CONF = CONTENT_JSON + "/conf/weather";
     public static final String ARRAY = CONTENT_JSON + "/conf/array";
-    public static final String JSON_DUMP = CONTENT_JSON + "/jsonDump";
-    public static final String CONTENT_ARRAY = CONTENT_JSON + "/array";
 
     @Before
-    public void setup() {
+    public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/json.json", "/content/json");
     }
