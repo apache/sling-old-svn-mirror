@@ -36,12 +36,18 @@ public class ContainerPipe extends BasePipe {
 
     public static final String RESOURCE_TYPE = "slingPipes/container";
 
+    /**
+     * Sleep time, in ms, after each resource returned
+     */
+    public static final String PN_SLEEP = "sleep";
+
     Map<String, Pipe> pipes = new HashMap<>();
 
     List<Pipe> pipeList = new ArrayList<>();
 
     List<Pipe> reversePipeList = new ArrayList<>();
 
+    long sleep = 0L;
     /**
      * Constructor
      * @param plumber plumber
@@ -50,6 +56,7 @@ public class ContainerPipe extends BasePipe {
      */
     public ContainerPipe(Plumber plumber, Resource resource) throws Exception{
         super(plumber, resource);
+        sleep = properties.get(PN_SLEEP, 0L);
         for (Iterator<Resource> childPipeResources = getConfiguration().listChildren(); childPipeResources.hasNext();){
             Resource pipeResource = childPipeResources.next();
             Pipe pipe = plumber.getPipe(pipeResource);
@@ -86,7 +93,7 @@ public class ContainerPipe extends BasePipe {
 
     @Override
     public Iterator<Resource> getOutput()  {
-        return new ContainerResourceIterator(this);
+        return new ContainerResourceIterator(this, sleep);
     }
 
     /**
@@ -148,17 +155,19 @@ public class ContainerPipe extends BasePipe {
 
         boolean computedCursor = false;
         boolean hasNext = false;
+        long sleep = 0L;
         int cursor = 0;
 
         /**
          * Constructor
          * @param containerPipe corresponding container pipe
          */
-        ContainerResourceIterator(ContainerPipe containerPipe) {
+        ContainerResourceIterator(ContainerPipe containerPipe, long sleep) {
             container = containerPipe;
             bindings = container.bindings;
             iterators = new HashMap<>();
             Pipe firstPipe = container.getFirstPipe();
+            this.sleep = sleep;
             //we initialize the first iterator the only one not to be updated
             iterators.put(firstPipe, firstPipe.getOutput());
         }
@@ -214,13 +223,20 @@ public class ContainerPipe extends BasePipe {
 
         @Override
         public Resource next() {
-            hasNext = computedCursor && hasNext || hasNext();
-            if (hasNext) {
-                computedCursor = false;
-                hasNext = false;
-                Resource resource =  iterators.get(container.getLastPipe()).next();
-                bindings.updateBindings(container.getLastPipe(), resource);
-                return resource;
+            try {
+                hasNext = computedCursor && hasNext || hasNext();
+                if (hasNext) {
+                    computedCursor = false;
+                    hasNext = false;
+                    Resource resource = iterators.get(container.getLastPipe()).next();
+                    bindings.updateBindings(container.getLastPipe(), resource);
+                    if (sleep > 0) {
+                        Thread.sleep(sleep);
+                    }
+                    return resource;
+                }
+            } catch (InterruptedException e){
+                log.error("interrupted while sleeping", e);
             }
             return null;
         }

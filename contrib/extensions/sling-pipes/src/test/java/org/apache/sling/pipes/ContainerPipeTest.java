@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.junit.Before;
@@ -46,9 +47,7 @@ public class ContainerPipeTest extends AbstractPipeTest {
 
     @Test
     public void testDummyTree() throws Exception {
-        ContainerPipe pipe = (ContainerPipe)getPipe(PATH_PIPE + "/" + NN_DUMMYTREE);
-        assertNotNull("A container pipe should be built out from the given configuration", pipe);
-        Iterator<Resource> resourceIterator = pipe.getOutput();
+        Iterator<Resource> resourceIterator = getOutput(PATH_PIPE + "/" + NN_DUMMYTREE);
         assertTrue("There should be some results", resourceIterator.hasNext());
         Resource firstResource = resourceIterator.next();
         assertNotNull("First resource should not be null", firstResource);
@@ -78,8 +77,7 @@ public class ContainerPipeTest extends AbstractPipeTest {
 
     @Test
     public void testOtherTree() throws Exception {
-        ContainerPipe pipe = (ContainerPipe)getPipe(PATH_PIPE + "/" + NN_OTHERTREE);
-        Iterator<Resource> resourceIterator = pipe.getOutput();
+        Iterator<Resource> resourceIterator = getOutput(PATH_PIPE + "/" + NN_OTHERTREE);
         assertTrue("There should be some results", resourceIterator.hasNext());
         Resource firstResource = resourceIterator.next();
         assertNotNull("First resource should not be null", firstResource);
@@ -103,5 +101,17 @@ public class ContainerPipeTest extends AbstractPipeTest {
     @Test
     public void testOnePipe() throws Exception {
         assertTrue("There should be children", getOutput(PATH_PIPE + "/" + NN_ONEPIPE).hasNext());
+    }
+
+    @Test
+    public void testSleep() throws Exception {
+        long interval = 100L;
+        String path = PATH_PIPE + "/" + NN_DUMMYTREE;
+        context.resourceResolver().getResource(path).adaptTo(ModifiableValueMap.class).put(ContainerPipe.PN_SLEEP, interval);
+        context.resourceResolver().commit();
+        Iterator<Resource> outputs = getOutput(path);
+        long start = System.currentTimeMillis();
+        outputs.next();
+        assertTrue("time spent should be bigger than interval", System.currentTimeMillis() - start > interval);
     }
 }
