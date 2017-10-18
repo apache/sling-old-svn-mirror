@@ -25,8 +25,8 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.oak.api.conversion.URIProvider;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.URIProvider;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.MockNode;
 import org.apache.sling.commons.testing.jcr.MockNodeIterator;

@@ -34,13 +34,13 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
-import org.apache.jackrabbit.oak.api.conversion.URIProvider;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.resource.ExternalizableInputStream;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.URIProvider;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.HelperData;
@@ -206,7 +206,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
                         data = null;
                     }
                 }
-                URI uri =  convertToURI(data.getValue());
+                URI uri =  convertToURI();
                 if ( uri != null ) {
                     return new JcrExternalizableInputStream(data, uri);
                 }
@@ -224,9 +224,9 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         return null;
     }
 
-    private URI convertToURI(Value o) {
+    private URI convertToURI() {
         for (URIProvider up : helper.getURIProviders()) {
-            URI u = up.toURI(o);
+            URI u = up.toURI(URIProvider.Scope.PUBLIC, this);
             if ( u != null) {
                 return u;
             }

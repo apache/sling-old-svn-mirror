@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.jackrabbit.oak.api.conversion.URIProvider;
+import org.apache.sling.api.resource.URIProvider;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 
 /**

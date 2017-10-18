@@ -29,7 +29,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.oak.api.conversion.URIProvider;
+import org.apache.sling.api.resource.URIProvider;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.internal.HelperData;

@@ -50,7 +50,7 @@
     <properties>
         <site.jira.version.id>12314286</site.jira.version.id>
         <site.javadoc.exclude>**.internal.**</site.javadoc.exclude>
-        <oak.version>1.6.5-SNAPSHOT</oak.version>
+        <oak.version>1.5.15</oak.version>
         <jackrabbit.version>2.13.4</jackrabbit.version>
     </properties>
 
@@ -144,7 +144,7 @@
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-core</artifactId>
             <version>${oak.version}</version>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
