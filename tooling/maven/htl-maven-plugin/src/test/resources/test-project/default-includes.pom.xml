@@ -32,7 +32,6 @@
                 <artifactId>htl-maven-plugin</artifactId>
                 <configuration>
                     <sourceDirectory>src/main/resources</sourceDirectory>
-                    <!-- only exclude.html will be compiled -->
                 </configuration>
                 <executions>
                     <execution>

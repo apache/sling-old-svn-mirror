@@ -17,8 +17,11 @@
 package org.apache.sling.maven.htl;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenSession;
@@ -30,6 +33,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuilder;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,6 +54,7 @@ public class ValidateMojoTest {
     private static final String EXPLICIT_EXCLUDES_POM = "explicit-excludes.pom.xml";
     private static final String FAIL_ON_WARNINGS_POM = "fail-on-warnings.pom.xml";
     private static final String DEFAULT_INCLUDES_POM = "default-includes.pom.xml";
+    private static final String GENERATE_JAVA_CLASSES_POM = "generate-java-classes.pom.xml";
 
     @Rule
     public MojoRule mojoRule = new MojoRule() {
@@ -63,6 +68,12 @@ public class ValidateMojoTest {
                     .separator + TEST_PROJECT).getAbsolutePath());
         }
     };
+
+    @After
+    public void tearDown() throws IOException {
+        File baseDir = new File(System.getProperty("basedir"));
+        FileUtils.deleteQuietly(new File(baseDir, "target"));
+    }
 
     @Test
     public void testExplicitIncludes() throws Exception {
@@ -127,6 +138,22 @@ public class ValidateMojoTest {
         assertEquals("Did not expect compilation warnings.", false, validateMojo.hasWarnings());
     }
 
+    @Test
+    public void testGenerateJavaClasses() throws Exception {
+        File baseDir = new File(System.getProperty("basedir"));
+        ValidateMojo validateMojo = getMojo(baseDir, GENERATE_JAVA_CLASSES_POM);
+        validateMojo.execute();
+        List<File> processedFiles = validateMojo.getProcessedFiles();
+        assertEquals("Expected 1 files to process.", 1, processedFiles.size());
+        assertTrue("Expected script.html to be one of the processed files.", processedFiles.contains(new File(baseDir,
+                SCRIPT_HTML)));
+        String generatedSourceCode = FileUtils.readFileToString(new File(baseDir,
+                "target/generated-sources/htl/apps/projects/script_html.java"), Charset
+                .forName("UTF-8"));
+        assertTrue(generatedSourceCode.contains("import org.apache.sling.settings.SlingSettingsService;"));
+        assertTrue(generatedSourceCode.contains("import apps.projects.Pojo;"));
+    }
+
     private ValidateMojo getMojo(File baseDir, String pomFile) throws Exception {
         SilentLog log = new SilentLog();
         DefaultBuildContext buildContext = new DefaultBuildContext();
@@ -144,7 +171,7 @@ public class ValidateMojoTest {
     }
 
     /**
-     * Copied from {@code org.apache.maven.plugin.testing.readMavenProject(...)} but customized to allow custom pom names
+     * Copied from {@link org.apache.maven.plugin.testing.MojoRule#readMavenProject(java.io.File)} but customized to allow custom pom names
      */
     private MavenProject readMavenProject(File basedir, String pomFileName) throws Exception {
         File pom = new File(basedir, pomFileName);

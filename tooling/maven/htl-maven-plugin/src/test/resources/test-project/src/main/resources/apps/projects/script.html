@@ -14,4 +14,5 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/-->
-${this.is.an.expression @ i18n, locale='de'}
+<div data-sly-use.slingSettings="org.apache.sling.settings.SlingSettingsService">${slingSettings.slingId}</div>
+<div data-sly-use.pojo="apps.projects.Pojo">${pojo.toString}</div>

@@ -35,6 +35,7 @@
                     <!-- only script.html will be compiled -->
                     <excludes>
                         <exclude>**/exclude.html</exclude>
+                        <exclude>**/javaclasses.html</exclude>
                     </excludes>
                 </configuration>
                 <executions>
