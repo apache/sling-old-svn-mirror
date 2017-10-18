@@ -93,6 +93,18 @@ public class JavaClassBackendCompilerTest {
         assertEquals(expectedOutput, writer.toString());
     }
 
+    @Test
+    public void generateImportStatements() throws Exception {
+        CompilationUnit compilationUnit = TestUtils.readScriptFromClasspath("/imports.html");
+        JavaClassBackendCompiler backendCompiler = new JavaClassBackendCompiler();
+        SightlyCompiler sightlyCompiler = new SightlyCompiler();
+        sightlyCompiler.compile(compilationUnit, backendCompiler);
+        ClassInfo classInfo = buildClassInfo("imports");
+        String source = backendCompiler.build(classInfo);
+        String expectedJavaOutput = IOUtils.toString(this.getClass().getResourceAsStream("/imports.html.java"), "UTF-8");
+        assertEquals(expectedJavaOutput, source);
+    }
+
     private ClassInfo buildClassInfo(final String info) {
         return new ClassInfo() {
             @Override

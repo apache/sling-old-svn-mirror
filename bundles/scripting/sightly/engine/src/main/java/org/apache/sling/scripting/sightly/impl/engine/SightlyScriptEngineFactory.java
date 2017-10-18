@@ -21,6 +21,9 @@ package org.apache.sling.scripting.sightly.impl.engine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
@@ -30,7 +33,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
+import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.apache.sling.scripting.sightly.compiler.SightlyCompiler;
+import org.apache.sling.scripting.sightly.java.compiler.JavaEscapeUtils;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -70,6 +75,9 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
     @Reference
     private SightlyJavaCompilerService sightlyJavaCompilerService;
 
+    @Reference
+    private ScriptingResourceResolverProvider scriptingResourceResolverProvider;
+
     public final static String SHORT_NAME = "sightly";
 
     public final static String LANGUAGE_NAME = "The HTL Templating Language";
@@ -97,7 +105,7 @@ public class SightlyScriptEngineFactory extends AbstractScriptEngineFactory {
 
     @Override
     public ScriptEngine getScriptEngine() {
-        return new SightlyScriptEngine(this, sightlyCompiler, sightlyJavaCompilerService, sightlyEngineConfiguration);
+        return new SightlyScriptEngine(this, sightlyCompiler, sightlyJavaCompilerService, sightlyEngineConfiguration, scriptingResourceResolverProvider);
     }
 
     protected ClassLoader getClassLoader() {

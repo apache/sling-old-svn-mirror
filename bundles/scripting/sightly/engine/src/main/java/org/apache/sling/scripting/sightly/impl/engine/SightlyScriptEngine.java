@@ -30,10 +30,12 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.api.ScriptNameAware;
+import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.compiler.CompilationResult;
 import org.apache.sling.scripting.sightly.compiler.CompilationUnit;
@@ -43,6 +45,8 @@ import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
 import org.apache.sling.scripting.sightly.impl.utils.BindingsUtils;
 import org.apache.sling.scripting.sightly.java.compiler.GlobalShadowCheckBackendCompiler;
 import org.apache.sling.scripting.sightly.java.compiler.JavaClassBackendCompiler;
+import org.apache.sling.scripting.sightly.java.compiler.JavaEscapeUtils;
+import org.apache.sling.scripting.sightly.java.compiler.JavaImportsAnalyzer;
 import org.apache.sling.scripting.sightly.java.compiler.RenderUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,15 +63,20 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine implements Co
     private SightlyCompiler sightlyCompiler;
     private SightlyJavaCompilerService javaCompilerService;
     private final SightlyEngineConfiguration configuration;
+    private final ScriptingResourceResolverProvider scriptingResourceResolverProvider;
+    private final SlingJavaImportsAnalyser importsAnalyser;
 
     public SightlyScriptEngine(ScriptEngineFactory scriptEngineFactory,
                                SightlyCompiler sightlyCompiler,
                                SightlyJavaCompilerService javaCompilerService,
-                               SightlyEngineConfiguration configuration) {
+                               SightlyEngineConfiguration configuration,
+                               ScriptingResourceResolverProvider scriptingResourceResolverProvider) {
         super(scriptEngineFactory);
         this.sightlyCompiler = sightlyCompiler;
         this.javaCompilerService = javaCompilerService;
         this.configuration = configuration;
+        this.scriptingResourceResolverProvider = scriptingResourceResolverProvider;
+        importsAnalyser = new SlingJavaImportsAnalyser();
     }
 
     @Override
@@ -125,7 +134,7 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine implements Co
                     return script;
                 }
             };
-            JavaClassBackendCompiler javaClassBackendCompiler = new JavaClassBackendCompiler();
+            JavaClassBackendCompiler javaClassBackendCompiler = new JavaClassBackendCompiler(importsAnalyser);
             GlobalShadowCheckBackendCompiler shadowCheckBackendCompiler = null;
             if (scriptContext != null) {
                 Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
@@ -136,8 +145,7 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine implements Co
                     javaClassBackendCompiler) : sightlyCompiler.compile(compilationUnit, shadowCheckBackendCompiler);
             if (result.getWarnings().size() > 0) {
                 for (CompilerMessage warning : result.getWarnings()) {
-                    LOGGER.warn("Script {} {}:{}: {}", new Object[] {warning.getScriptName(), warning.getLine(), warning.getColumn(),
-                            warning.getMessage()});
+                    LOGGER.warn("Script {} {}:{}: {}", warning.getScriptName(), warning.getLine(), warning.getColumn(), warning.getMessage());
                 }
             }
             if (result.getErrors().size() > 0) {
@@ -179,5 +187,22 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine implements Co
             }
         }
         return NO_SCRIPT;
+    }
+
+    /**
+     * This custom imports analyser makes sure that no import statements are generated for repository-based use objects, since these are
+     * not compiled ahead of the HTL scripts.
+     */
+    class SlingJavaImportsAnalyser implements JavaImportsAnalyzer {
+        @Override
+        public boolean allowImport(String importedClass) {
+            for (String searchPath : scriptingResourceResolverProvider.getRequestScopedResourceResolver().getSearchPath()) {
+                String subPackage = JavaEscapeUtils.makeJavaPackage(searchPath);
+                if (importedClass.startsWith(subPackage)) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }

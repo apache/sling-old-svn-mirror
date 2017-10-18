@@ -19,10 +19,12 @@ package org.apache.sling.scripting.sightly.java.compiler.impl;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.sling.scripting.sightly.java.compiler.CompilationOutput;
+import org.apache.sling.scripting.sightly.java.compiler.JavaImportsAnalyzer;
 
 /**
  * Builder for compiled sources
@@ -32,9 +34,12 @@ public class UnitBuilder {
     private final JavaSource source = new JavaSource();
     private final Set<String> parameters;
     private final Map<String, UnitBuilder> subTemplates = new HashMap<String, UnitBuilder>();
+    private Set<String> imports = new HashSet<>();
+    private JavaImportsAnalyzer javaImportsAnalyzer;
 
-    public UnitBuilder() {
-        this(Collections.<String>emptySet());
+    public UnitBuilder(JavaImportsAnalyzer javaImportsAnalyzer) {
+        this(Collections.emptySet());
+        this.javaImportsAnalyzer = javaImportsAnalyzer;
     }
 
     public UnitBuilder(Set<String> parameters) {
@@ -61,5 +66,13 @@ public class UnitBuilder {
             map.put(entry.getKey(), entry.getValue().build());
         }
         return new CompilationOutputImpl(source.toString(), map);
+    }
+
+    public JavaImportsAnalyzer getJavaImportsAnalyzer() {
+        return javaImportsAnalyzer;
+    }
+
+    public Set<String> getImports() {
+        return imports;
     }
 }

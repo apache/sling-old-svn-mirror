@@ -78,7 +78,7 @@ public class VariableDescriptor {
     }
 
     /**
-     * Get the inferred type fot this variable
+     * Get the inferred type for this variable
      * @return - the class of the variable
      */
     public Type getType() {

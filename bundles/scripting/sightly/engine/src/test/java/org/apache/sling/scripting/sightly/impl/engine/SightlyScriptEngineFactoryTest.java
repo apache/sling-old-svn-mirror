@@ -15,12 +15,13 @@
  * limitations under the License.
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.scripting.api.resource.ScriptingResourceResolverProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,12 +39,18 @@ import static org.mockito.Mockito.when;
 public class SightlyScriptEngineFactoryTest {
 
     private SightlyEngineConfiguration sightlyEngineConfiguration;
+    private ScriptingResourceResolverProvider scriptingResourceResolverProvider;
 
     @Before
     public void setUp() {
         sightlyEngineConfiguration = mock(SightlyEngineConfiguration.class);
         when(sightlyEngineConfiguration.getEngineVersion()).thenReturn("1.0.17-SNAPSHOT");
         when(sightlyEngineConfiguration.getScratchFolder()).thenReturn("/org/apache/sling/scripting/sightly");
+
+        ResourceResolver scriptingResourceResolver = mock(ResourceResolver.class);
+        scriptingResourceResolverProvider = mock(ScriptingResourceResolverProvider.class);
+        when(scriptingResourceResolverProvider.getRequestScopedResourceResolver()).thenReturn(scriptingResourceResolver);
+        when(scriptingResourceResolver.getSearchPath()).thenReturn(new String[] {"/apps", "/libs"});
     }
 
     @After
@@ -59,6 +66,7 @@ public class SightlyScriptEngineFactoryTest {
         when(classLoaderWriter.getOutputStream(SightlyScriptEngineFactory.SIGHTLY_CONFIG_FILE)).thenReturn(outputStream);
         Whitebox.setInternalState(scriptEngineFactory, "classLoaderWriter", classLoaderWriter);
         Whitebox.setInternalState(scriptEngineFactory, "sightlyEngineConfiguration", sightlyEngineConfiguration);
+        Whitebox.setInternalState(scriptEngineFactory, "scriptingResourceResolverProvider", scriptingResourceResolverProvider);
         scriptEngineFactory.activate();
         verify(classLoaderWriter).delete(sightlyEngineConfiguration.getScratchFolder());
         assertEquals("1.0.17-SNAPSHOT", outputStream.toString());
@@ -79,6 +87,7 @@ public class SightlyScriptEngineFactoryTest {
         when(classLoaderWriter.delete(sightlyEngineConfiguration.getScratchFolder())).thenReturn(true);
         Whitebox.setInternalState(scriptEngineFactory, "classLoaderWriter", classLoaderWriter);
         Whitebox.setInternalState(scriptEngineFactory, "sightlyEngineConfiguration", sightlyEngineConfiguration);
+        Whitebox.setInternalState(scriptEngineFactory, "scriptingResourceResolverProvider", scriptingResourceResolverProvider);
         scriptEngineFactory.activate();
         verify(classLoaderWriter).delete(sightlyEngineConfiguration.getScratchFolder());
         assertEquals("1.0.17-SNAPSHOT", outputStream.toString());
@@ -99,6 +108,7 @@ public class SightlyScriptEngineFactoryTest {
         when(classLoaderWriter.getOutputStream(SightlyScriptEngineFactory.SIGHTLY_CONFIG_FILE)).thenReturn(spyOutputStream);
         Whitebox.setInternalState(scriptEngineFactory, "classLoaderWriter", classLoaderWriter);
         Whitebox.setInternalState(scriptEngineFactory, "sightlyEngineConfiguration", sightlyEngineConfiguration);
+        Whitebox.setInternalState(scriptEngineFactory, "scriptingResourceResolverProvider", scriptingResourceResolverProvider);
         scriptEngineFactory.activate();
         verify(classLoaderWriter, never()).delete(sightlyEngineConfiguration.getScratchFolder());
         try {

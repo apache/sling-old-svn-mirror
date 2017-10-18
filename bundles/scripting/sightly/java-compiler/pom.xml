@@ -49,6 +49,7 @@
 
     <properties>
         <jacoco.maven.plugin.version>0.7.9</jacoco.maven.plugin.version>
+        <sling.java.version>8</sling.java.version>
     </properties>
 
     <!-- ======================================================================= -->

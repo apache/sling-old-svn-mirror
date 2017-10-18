@@ -19,10 +19,10 @@ package org.apache.sling.scripting.sightly.java.compiler.impl;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
-import org.apache.sling.scripting.sightly.java.compiler.impl.operator.BinaryOpGen;
-import org.apache.sling.scripting.sightly.java.compiler.impl.operator.Operators;
-import org.apache.sling.scripting.sightly.java.compiler.impl.operator.UnaryOpGen;
+import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.compiler.expression.NodeVisitor;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.ArrayLiteral;
@@ -37,6 +37,9 @@ import org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.StringConstant;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.TernaryOperator;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.UnaryOperation;
+import org.apache.sling.scripting.sightly.java.compiler.impl.operator.BinaryOpGen;
+import org.apache.sling.scripting.sightly.java.compiler.impl.operator.Operators;
+import org.apache.sling.scripting.sightly.java.compiler.impl.operator.UnaryOpGen;
 
 /**
  * Expression translator which uses type information
@@ -44,17 +47,20 @@ import org.apache.sling.scripting.sightly.compiler.expression.nodes.UnaryOperati
 public final class TypeInference implements NodeVisitor<Type> {
 
     private final VariableAnalyzer analyzer;
-    private final Map<ExpressionNode, Type> inferMap = new IdentityHashMap<ExpressionNode, Type>();
+    private final Map<ExpressionNode, Type> inferMap = new IdentityHashMap<>();
+    private final Set<String> imports;
+    private static final Pattern FQCN_PATTERN = Pattern.compile("([[\\p{L}&&[^\\p{Lu}]]_$][\\p{L}\\p{N}_$]*\\.)+[\\p{Lu}_$][\\p{L}\\p{N}_$]*");
 
 
-    public static TypeInfo inferTypes(ExpressionNode node, VariableAnalyzer analyzer) {
-        TypeInference typeInference = new TypeInference(analyzer);
+    public static TypeInfo inferTypes(ExpressionNode node, VariableAnalyzer analyzer, Set<String> imports) {
+        TypeInference typeInference = new TypeInference(analyzer, imports);
         typeInference.infer(node);
         return new TypeInfo(typeInference.inferMap);
     }
 
-    private TypeInference(VariableAnalyzer analyzer) {
+    private TypeInference(VariableAnalyzer analyzer, Set<String> imports) {
         this.analyzer = analyzer;
+        this.imports = imports;
     }
 
 
@@ -128,6 +134,16 @@ public final class TypeInference implements NodeVisitor<Type> {
     @Override
     public Type evaluate(RuntimeCall runtimeCall) {
         inferAll(runtimeCall.getArguments());
+        if (runtimeCall.getFunctionName().equals(RuntimeFunction.USE)) {
+            ExpressionNode identifier = runtimeCall.getArguments().get(0);
+            if (identifier instanceof StringConstant) {
+                String objectType = ((StringConstant) identifier).getText();
+                if (FQCN_PATTERN.matcher(objectType).matches()) {
+                    imports.add(objectType);
+                    return Type.dynamic(objectType);
+                }
+            }
+        }
         return Type.UNKNOWN;
     }
 

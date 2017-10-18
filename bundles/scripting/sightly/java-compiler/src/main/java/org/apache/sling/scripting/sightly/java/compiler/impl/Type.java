@@ -20,27 +20,38 @@ package org.apache.sling.scripting.sightly.java.compiler.impl;
 /**
  * Type inferred for an expression
  */
-public enum Type {
-    UNKNOWN("Object", false),
-    STRING("String", false),
-    LONG("long", true),
-    DOUBLE("double", true),
-    BOOLEAN("boolean", true),
-    MAP("java.util.Map", false);
+public class Type {
 
-    private final String nativeClass;
+    public static final Type UNKNOWN = new Type("Object", false, null);
+    public static final Type STRING = new Type("String", false, null);
+    public static final Type LONG = new Type("long", true, 0);
+    public static final Type DOUBLE = new Type("double", true, 0.0d);
+    public static final Type BOOLEAN = new Type("boolean", true, false);
+    public static final Type MAP = new Type("java.util.Map", false, null);
+
+    private String nativeClass;
     private final boolean isPrimitive;
+    private final Object defaultValue;
 
-    Type(String nativeClass, boolean isPrimitive) {
+    private Type(String nativeClass, boolean isPrimitive, Object defaultValue) {
         this.nativeClass = nativeClass;
         this.isPrimitive = isPrimitive;
+        this.defaultValue = defaultValue;
     }
 
     public String getNativeClass() {
         return nativeClass;
     }
 
+    public Object getDefaultValue() {
+        return defaultValue;
+    }
+
     public boolean isPrimitive() {
         return isPrimitive;
+    }
+
+    public static Type dynamic(String type) {
+        return new Type(type, false, null);
     }
 }

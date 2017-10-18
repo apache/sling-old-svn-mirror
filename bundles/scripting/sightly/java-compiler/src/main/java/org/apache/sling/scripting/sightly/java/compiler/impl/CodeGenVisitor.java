@@ -117,7 +117,7 @@ public class CodeGenVisitor implements CommandVisitor {
     @Override
     public void visit(VariableBinding.Start variableBinding) {
         source.startBlock();
-        TypeInfo typeInfo = TypeInference.inferTypes(variableBinding.getExpression(), analyzer);
+        TypeInfo typeInfo = TypeInference.inferTypes(variableBinding.getExpression(), analyzer, unitBuilder.getImports());
         Type type = typeInfo.typeOf(variableBinding.getExpression());
         String properName = declare(variableBinding.getVariableName(), type);
         source.beginAssignment(properName, type.getNativeClass());
@@ -142,7 +142,7 @@ public class CodeGenVisitor implements CommandVisitor {
 
     @Override
     public void visit(VariableBinding.Global globalAssignment) {
-        TypeInfo typeInfo = TypeInference.inferTypes(globalAssignment.getExpression(), analyzer);
+        TypeInfo typeInfo = TypeInference.inferTypes(globalAssignment.getExpression(), analyzer, unitBuilder.getImports());
         VariableDescriptor descriptor = analyzer.declareGlobal(globalAssignment.getVariableName());
         String name = descriptor.getAssignedName();
         source.append(name).assign();

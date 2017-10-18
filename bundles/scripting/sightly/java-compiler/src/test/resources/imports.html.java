@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package ##PackageName##;
+package org.apache.sling.scripting.sightly.compiler.java;
 
 import java.io.PrintWriter;
 import java.util.Collection;
@@ -25,9 +25,10 @@ import javax.script.Bindings;
 import org.apache.sling.scripting.sightly.java.compiler.RenderUnit;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
-##Imports##
+import org.apache.sling.settings.SlingSettingsService;
 
-public final class ##ClassName## extends RenderUnit {
+
+public final class Test_imports extends RenderUnit {
 
     @Override
     protected final void render(PrintWriter out,
@@ -36,7 +37,15 @@ public final class ##ClassName## extends RenderUnit {
                                 RenderContext renderContext) {
 // Main Template Body -----------------------------------------------------------------------------
 
-##MainBody##
+Object _global_slingsettings = null;
+Object _global_js = null;
+Object _global_pojo = null;
+out.write("\n");
+_global_slingsettings = renderContext.call("use", "org.apache.sling.settings.SlingSettingsService", obj());
+_global_js = renderContext.call("use", "script.js", obj());
+_global_pojo = renderContext.call("use", "Pojo", obj());
+out.write("<div></div>\n");
+
 
 // End Of Main Template Body ----------------------------------------------------------------------
     }
@@ -46,7 +55,7 @@ public final class ##ClassName## extends RenderUnit {
     {
 //Sub-Templates Initialization --------------------------------------------------------------------
 
-##SubTemplateMapInit##
+
 
 //End of Sub-Templates Initialization -------------------------------------------------------------
     }

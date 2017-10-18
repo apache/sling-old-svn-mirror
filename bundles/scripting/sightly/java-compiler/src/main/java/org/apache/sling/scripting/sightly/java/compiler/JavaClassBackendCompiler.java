@@ -38,7 +38,8 @@ public final class JavaClassBackendCompiler implements BackendCompiler {
     private static final String mainTemplate;
     private static final String childTemplate;
 
-    private UnitBuilder unitBuilder = new UnitBuilder();
+    private UnitBuilder unitBuilder;
+    private final JavaImportsAnalyzer JAVA_IMPORTS_ANALYZER;
 
     static {
         try {
@@ -50,6 +51,14 @@ public final class JavaClassBackendCompiler implements BackendCompiler {
         }
     }
 
+    public JavaClassBackendCompiler() {
+        this(new JavaImportsAnalyzer() {});
+    }
+
+    public JavaClassBackendCompiler(JavaImportsAnalyzer javaImportsAnalyzer) {
+        JAVA_IMPORTS_ANALYZER = javaImportsAnalyzer;
+        unitBuilder = new UnitBuilder(JAVA_IMPORTS_ANALYZER);
+    }
 
     @Override
     public void handle(CommandStream stream) {
@@ -76,6 +85,13 @@ public final class JavaClassBackendCompiler implements BackendCompiler {
         JavaClassTemplate mainTemplate = newMainTemplate();
         mainTemplate.setPackageName(classInfo.getPackageName());
         mainTemplate.setClassName(classInfo.getSimpleClassName());
+        StringBuilder imports = new StringBuilder();
+        for (String importClass : unitBuilder.getImports()) {
+            if (JAVA_IMPORTS_ANALYZER.allowImport(importClass)) {
+                imports.append("import ").append(importClass).append(";").append(System.lineSeparator());
+            }
+        }
+        mainTemplate.setImports(imports.toString());
         processCompilationResult(compilationOutput, mainTemplate);
         return mainTemplate.toString();
     }
