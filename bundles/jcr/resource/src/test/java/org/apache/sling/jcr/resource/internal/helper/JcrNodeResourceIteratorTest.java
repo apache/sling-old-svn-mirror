@@ -26,6 +26,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.URIProvider;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.MockNode;
 import org.apache.sling.commons.testing.jcr.MockNodeIterator;
@@ -37,7 +38,7 @@ import junit.framework.TestCase;
 public class JcrNodeResourceIteratorTest extends TestCase {
 
     private HelperData getHelperData() {
-        return new HelperData(new AtomicReference<DynamicClassLoaderManager>());
+        return new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new AtomicReference<URIProvider[]>());
     }
 
     public void testEmpty() {

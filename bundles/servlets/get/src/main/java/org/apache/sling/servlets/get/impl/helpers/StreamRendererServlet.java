@@ -42,6 +42,7 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
+import org.apache.sling.api.resource.ExternalizableInputStream;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceNotFoundException;
@@ -50,6 +51,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.api.resource.ExternalizableInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -167,6 +169,10 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
         }
         InputStream stream = resource.adaptTo(InputStream.class);
         if (stream != null) {
+            if ( stream instanceof ExternalizableInputStream) {
+                response.sendRedirect(((ExternalizableInputStream)stream).getURI().toString());
+                return;
+            }
             if (isHeadRequest(request)) {
                 setContentLength(response, resource.getResourceMetadata().getContentLength());
                 setHeaders(resource, response);
