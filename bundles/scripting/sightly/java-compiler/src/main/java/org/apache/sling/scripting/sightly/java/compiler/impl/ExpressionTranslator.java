@@ -17,7 +17,9 @@
 package org.apache.sling.scripting.sightly.java.compiler.impl;
 
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.sling.scripting.sightly.compiler.RuntimeFunction;
 import org.apache.sling.scripting.sightly.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.compiler.expression.SideEffectVisitor;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.ArrayLiteral;
@@ -33,6 +35,7 @@ import org.apache.sling.scripting.sightly.compiler.expression.nodes.StringConsta
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.TernaryOperator;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.UnaryOperation;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.UnaryOperator;
+import org.apache.sling.scripting.sightly.java.compiler.JavaEscapeUtils;
 import org.apache.sling.scripting.sightly.java.compiler.impl.operator.BinaryOpGen;
 import org.apache.sling.scripting.sightly.java.compiler.impl.operator.Operators;
 import org.apache.sling.scripting.sightly.java.compiler.impl.operator.UnaryOpGen;
@@ -45,18 +48,21 @@ public final class ExpressionTranslator extends SideEffectVisitor {
     private final JavaSource source;
     private final VariableAnalyzer analyzer;
     private final TypeInfo typeInfo;
+    private final Set<String> imports;
 
-    private ExpressionTranslator(JavaSource source, VariableAnalyzer analyzer, TypeInfo typeInfo) {
+    private ExpressionTranslator(JavaSource source, VariableAnalyzer analyzer, TypeInfo typeInfo, Set<String> imports) {
         this.source = source;
         this.analyzer = analyzer;
         this.typeInfo= typeInfo;
+        this.imports = imports;
     }
 
     public static void buildExpression(ExpressionNode node,
                                        JavaSource source,
                                        VariableAnalyzer analyzer,
-                                       TypeInfo typeInfo) {
-        ExpressionTranslator builder = new ExpressionTranslator(source, analyzer, typeInfo);
+                                       TypeInfo typeInfo,
+                                       Set<String> imports) {
+        ExpressionTranslator builder = new ExpressionTranslator(source, analyzer, typeInfo, imports);
         builder.traverse(node);
     }
 
@@ -136,11 +142,27 @@ public final class ExpressionTranslator extends SideEffectVisitor {
 
     @Override
     public void visit(RuntimeCall runtimeCall) {
+        String runtimeCallName = runtimeCall.getFunctionName();
         source.startMethodCall(SourceGenConstants.RENDER_CONTEXT_INSTANCE, SourceGenConstants.RUNTIME_CALL_METHOD)
-                .stringLiteral(runtimeCall.getFunctionName());
+                .stringLiteral(runtimeCallName);
+        int index = 0;
         for (ExpressionNode arg : runtimeCall.getArguments()) {
             source.separateArgument();
-            visit(arg);
+            if (RuntimeFunction.USE.equals(runtimeCallName) && index == 0) {
+                if (arg instanceof StringConstant) {
+                    StringConstant constant = (StringConstant) arg;
+                    String className = constant.getText();
+                    if (imports.contains(className)) {
+                        source.className(className.substring(className.lastIndexOf('.') + 1));
+                    } else {
+                        visit(arg);
+                    }
+                } else {
+                    visit(arg);
+                }
+            } else {
+                visit(arg);
+            }
         }
         source.endCall();
     }

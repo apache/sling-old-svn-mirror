@@ -244,6 +244,14 @@ public class JavaSource {
         return startMethodCall(SourceGenConstants.RENDER_CONTEXT_INSTANCE, SourceGenConstants.RENDER_CONTEXT_GET_OBJECT_MODEL).endCall();
     }
 
+    public JavaSource property(String target, String property) {
+        return append(target).append(".").append(property);
+    }
+
+    public JavaSource className(String className) {
+        return property(className, "class").startCall("getName", true).endCall();
+    }
+
     private StringBuilder indent() {
         for (int i = 0; i < indentLevel; i++) {
             builder.append(INDENT);

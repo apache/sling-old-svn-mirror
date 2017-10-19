@@ -103,6 +103,9 @@ public class JavaClassBackendCompilerTest {
         String source = backendCompiler.build(classInfo);
         String expectedJavaOutput = IOUtils.toString(this.getClass().getResourceAsStream("/imports.html.java"), "UTF-8");
         assertEquals(expectedJavaOutput, source);
+        ClassLoader classLoader = JavaClassBackendCompilerTest.class.getClassLoader();
+        CharSequenceJavaCompiler<RenderUnit> compiler = new CharSequenceJavaCompiler<>(classLoader, null);
+        compiler.compile(classInfo.getFullyQualifiedClassName(), source);
     }
 
     private ClassInfo buildClassInfo(final String info) {

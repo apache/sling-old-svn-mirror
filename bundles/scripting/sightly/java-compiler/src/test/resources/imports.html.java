@@ -25,7 +25,7 @@ import javax.script.Bindings;
 import org.apache.sling.scripting.sightly.java.compiler.RenderUnit;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
-import org.apache.sling.settings.SlingSettingsService;
+import org.apache.sling.scripting.sightly.Record;
 
 
 public final class Test_imports extends RenderUnit {
@@ -37,11 +37,11 @@ public final class Test_imports extends RenderUnit {
                                 RenderContext renderContext) {
 // Main Template Body -----------------------------------------------------------------------------
 
-Object _global_slingsettings = null;
+Object _global_record = null;
 Object _global_js = null;
 Object _global_pojo = null;
 out.write("\n");
-_global_slingsettings = renderContext.call("use", "org.apache.sling.settings.SlingSettingsService", obj());
+_global_record = renderContext.call("use", Record.class.getName(), obj());
 _global_js = renderContext.call("use", "script.js", obj());
 _global_pojo = renderContext.call("use", "Pojo", obj());
 out.write("<div></div>\n");

@@ -37,6 +37,7 @@ import org.apache.sling.scripting.sightly.compiler.expression.nodes.RuntimeCall;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.StringConstant;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.TernaryOperator;
 import org.apache.sling.scripting.sightly.compiler.expression.nodes.UnaryOperation;
+import org.apache.sling.scripting.sightly.java.compiler.JavaImportsAnalyzer;
 import org.apache.sling.scripting.sightly.java.compiler.impl.operator.BinaryOpGen;
 import org.apache.sling.scripting.sightly.java.compiler.impl.operator.Operators;
 import org.apache.sling.scripting.sightly.java.compiler.impl.operator.UnaryOpGen;
@@ -49,18 +50,21 @@ public final class TypeInference implements NodeVisitor<Type> {
     private final VariableAnalyzer analyzer;
     private final Map<ExpressionNode, Type> inferMap = new IdentityHashMap<>();
     private final Set<String> imports;
+    private final JavaImportsAnalyzer importsAnalyzer;
     private static final Pattern FQCN_PATTERN = Pattern.compile("([[\\p{L}&&[^\\p{Lu}]]_$][\\p{L}\\p{N}_$]*\\.)+[\\p{Lu}_$][\\p{L}\\p{N}_$]*");
 
 
-    public static TypeInfo inferTypes(ExpressionNode node, VariableAnalyzer analyzer, Set<String> imports) {
-        TypeInference typeInference = new TypeInference(analyzer, imports);
+    public static TypeInfo inferTypes(ExpressionNode node, VariableAnalyzer analyzer, Set<String> imports,
+                                      JavaImportsAnalyzer importsAnalyzer) {
+        TypeInference typeInference = new TypeInference(analyzer, imports, importsAnalyzer);
         typeInference.infer(node);
         return new TypeInfo(typeInference.inferMap);
     }
 
-    private TypeInference(VariableAnalyzer analyzer, Set<String> imports) {
+    private TypeInference(VariableAnalyzer analyzer, Set<String> imports, JavaImportsAnalyzer importsAnalyzer) {
         this.analyzer = analyzer;
         this.imports = imports;
+        this.importsAnalyzer = importsAnalyzer;
     }
 
 
@@ -138,7 +142,7 @@ public final class TypeInference implements NodeVisitor<Type> {
             ExpressionNode identifier = runtimeCall.getArguments().get(0);
             if (identifier instanceof StringConstant) {
                 String objectType = ((StringConstant) identifier).getText();
-                if (FQCN_PATTERN.matcher(objectType).matches()) {
+                if (FQCN_PATTERN.matcher(objectType).matches() && importsAnalyzer != null && importsAnalyzer.allowImport(objectType)) {
                     imports.add(objectType);
                     return Type.dynamic(objectType);
                 }
