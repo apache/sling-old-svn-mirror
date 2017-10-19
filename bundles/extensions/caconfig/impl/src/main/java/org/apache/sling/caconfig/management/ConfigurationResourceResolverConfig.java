@@ -16,15 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.caconfig.impl;
+package org.apache.sling.caconfig.management;
 
 import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
- * Internal service for accessing the ConfigurationResourceResolver configuration from other services.
+ * Service for accessing the ConfigurationResourceResolver configuration from other services.
  */
+@ProviderType
 public interface ConfigurationResourceResolverConfig {
 
     /**

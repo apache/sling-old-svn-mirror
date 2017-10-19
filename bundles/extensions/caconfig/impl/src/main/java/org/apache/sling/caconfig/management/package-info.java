@@ -21,5 +21,5 @@
  * This API is only indented for advanced use cases like writing a configuration editor,
  * not for "normal" applications just reading configuration.
  */
-@org.osgi.annotation.versioning.Version("2.1.0")
+@org.osgi.annotation.versioning.Version("2.2.0")
 package org.apache.sling.caconfig.management;

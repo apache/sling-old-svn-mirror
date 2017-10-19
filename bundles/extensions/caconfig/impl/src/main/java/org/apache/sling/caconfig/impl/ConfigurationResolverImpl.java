@@ -28,6 +28,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.caconfig.ConfigurationBuilder;
 import org.apache.sling.caconfig.ConfigurationResolver;
+import org.apache.sling.caconfig.management.ConfigurationResourceResolverConfig;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationInheritanceStrategyMultiplexer;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationMetadataProviderMultiplexer;
 import org.apache.sling.caconfig.management.multiplexer.ConfigurationOverrideMultiplexer;
