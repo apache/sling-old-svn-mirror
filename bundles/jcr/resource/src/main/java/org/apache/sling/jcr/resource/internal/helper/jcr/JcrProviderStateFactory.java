@@ -35,6 +35,7 @@ import javax.jcr.SimpleCredentials;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.URIProvider;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.api.JcrResourceConstants;
@@ -55,13 +56,16 @@ public class JcrProviderStateFactory {
     private final SlingRepository repository;
 
     private final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference;
+    private final AtomicReference<URIProvider[]> uriProviderReference;
 
     public JcrProviderStateFactory(final ServiceReference<SlingRepository> repositoryReference,
             final SlingRepository repository,
-            final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference) {
+            final AtomicReference<DynamicClassLoaderManager> dynamicClassLoaderManagerReference,
+                                   final AtomicReference<URIProvider[]> uriProviderReference) {
         this.repository = repository;
         this.repositoryReference = repositoryReference;
         this.dynamicClassLoaderManagerReference = dynamicClassLoaderManagerReference;
+        this.uriProviderReference = uriProviderReference;
     }
 
     /** Get the calling Bundle from auth info, fail if not provided
@@ -142,7 +146,7 @@ public class JcrProviderStateFactory {
             @Nullable final BundleContext ctx
     ) throws LoginException {
         final Session session = handleImpersonation(s, authenticationInfo, logoutSession);
-        final HelperData data = new HelperData(this.dynamicClassLoaderManagerReference);
+        final HelperData data = new HelperData(this.dynamicClassLoaderManagerReference, this.uriProviderReference);
         return new JcrProviderState(session, data, logoutSession, ctx, ctx == null ? null : repositoryReference);
     }
 

@@ -45,6 +45,7 @@ import javax.jcr.nodetype.NodeType;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.URIProvider;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
@@ -131,7 +132,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
     }
 
     private HelperData getHelperData() throws Exception {
-        return new HelperData(new AtomicReference<DynamicClassLoaderManager>());
+        return new HelperData(new AtomicReference<DynamicClassLoaderManager>(), new AtomicReference<URIProvider[]>());
     }
 
     private Map<String, Object> initialSet() {
