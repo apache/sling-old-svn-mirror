@@ -16,12 +16,6 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
-import java.text.ParseException;
-import java.util.*;
-
-import javax.jcr.*;
-import javax.jcr.nodetype.NodeType;
-
 import junitx.util.PrivateAccessor;
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -35,6 +29,13 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import javax.jcr.*;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
+import java.text.ParseException;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -76,12 +77,16 @@ public class DefaultContentCreatorTest {
         prop = mockery.mock(Property.class);
         contentCreator.init(ImportOptionsFactory.createImportOptions(true, true, true, false, false),
                 new HashMap<String, ContentReader>(), null, null);
+        final PropertyDefinition definition = mockery.mock(PropertyDefinition.class);
 
         contentCreator.prepareParsing(parentNode, null);
         this.mockery.checking(new Expectations() {{
         	allowing(parentNode).isNodeType("mix:versionable"); will(returnValue(Boolean.FALSE));
         	allowing(parentNode).getParent(); will(returnValue(null));
-            oneOf (parentNode).hasProperty("foo"); will(returnValue(Boolean.TRUE));
+            exactly(2).of(parentNode).hasProperty("foo"); will(returnValue(Boolean.TRUE));
+            allowing(parentNode).getProperty("foo"); will(returnValue(prop));
+            allowing(prop).getDefinition(); will(returnValue(definition));
+            allowing(definition).isProtected(); will(returnValue(Boolean.FALSE));
             oneOf (parentNode).setProperty(with(equal("foo")), with(equal("bar")));
         }});
         contentCreator.createProperty("foo", PropertyType.UNDEFINED, "bar");
@@ -93,11 +98,14 @@ public class DefaultContentCreatorTest {
         prop = mockery.mock(Property.class);
         contentCreator.init(ImportOptionsFactory.createImportOptions(false, false, true, false, false),
                 new HashMap<String, ContentReader>(), null, null);
+        final PropertyDefinition definition = mockery.mock(PropertyDefinition.class);
 
         contentCreator.prepareParsing(parentNode, null);
         this.mockery.checking(new Expectations() {{
-            oneOf (parentNode).hasProperty("foo"); will(returnValue(Boolean.TRUE));
-            oneOf (parentNode).getProperty("foo"); will(returnValue(prop));
+            exactly (2).of(parentNode).hasProperty("foo"); will(returnValue(Boolean.TRUE));
+            exactly(2).of (parentNode).getProperty("foo"); will(returnValue(prop));
+            allowing(prop).getDefinition(); will(returnValue(definition));
+            allowing(definition).isProtected(); will(returnValue(Boolean.FALSE));
             oneOf (prop).isNew(); will(returnValue(Boolean.FALSE));
         }});
         contentCreator.createProperty("foo", PropertyType.UNDEFINED, "bar");
@@ -143,7 +151,7 @@ public class DefaultContentCreatorTest {
             oneOf(parentNode).isNodeType("mix:referenceable"); will(returnValue(true));
             oneOf(parentNode).getUUID(); will(returnValue(uuid));
             oneOf(parentNode).getSession(); will(returnValue(session));
-            oneOf(parentNode).hasProperty(with(any(String.class)));
+            exactly(2).of(parentNode).hasProperty(with(any(String.class)));
             oneOf(parentNode).setProperty(propertyName, uuid, PropertyType.REFERENCE);
             oneOf(parentNode).getProperty(with(any(String.class)));
             oneOf(listener).onCreate(with(any(String.class)));
@@ -162,7 +170,7 @@ public class DefaultContentCreatorTest {
         parentNode = mockery.mock(Node.class);
 
         this.mockery.checking(new Expectations(){{
-            oneOf(parentNode).hasProperty(with(any(String.class)));
+            exactly(2).of(parentNode).hasProperty(with(any(String.class)));
         }});
 
         contentCreator.init(ImportOptionsFactory.createImportOptions(false, false, false, false, false),
@@ -181,7 +189,7 @@ public class DefaultContentCreatorTest {
         parentNode = mockery.mock(Node.class);
 
         this.mockery.checking(new Expectations(){{
-            oneOf(parentNode).hasProperty(with(any(String.class)));
+            exactly(2).of(parentNode).hasProperty(with(any(String.class)));
         }});
 
         contentCreator.init(ImportOptionsFactory.createImportOptions(false, false, false, false, false),
@@ -204,7 +212,7 @@ public class DefaultContentCreatorTest {
         prop = mockery.mock(Property.class);
 
         this.mockery.checking(new Expectations(){{
-            oneOf(parentNode).hasProperty(with(any(String.class)));
+            exactly(2).of(parentNode).hasProperty(with(any(String.class)));
             oneOf(parentNode).setProperty(with(any(String.class)), with(any(Calendar.class)));
             oneOf(parentNode).getProperty(with(any(String.class))); will(returnValue(prop));
             oneOf(prop).getPath(); will(returnValue(""));
@@ -229,7 +237,7 @@ public class DefaultContentCreatorTest {
         prop = mockery.mock(Property.class);
 
         this.mockery.checking(new Expectations(){{
-            oneOf(parentNode).hasProperty(with(any(String.class)));
+            exactly(2).of(parentNode).hasProperty(with(any(String.class)));
             oneOf(parentNode).getProperty(propertyName); will(returnValue(prop));
             oneOf(parentNode).setProperty(propertyName, propertyValue, propertyType);
             oneOf(prop).getPath(); will(returnValue(""));
@@ -340,6 +348,28 @@ public class DefaultContentCreatorTest {
         mockery.assertIsSatisfied();
     }
 
+    @Test
+    public void createNodeUnderProtectedNode() throws RepositoryException {
+        final String newNodeName = uniqueId();
+        final List<String> createdNodes = new ArrayList<String>();
+        final ContentImportListener listener = mockery.mock(ContentImportListener.class);
+        parentNode = mockery.mock(Node.class);
+        final NodeDefinition parentNodeDefinition = mockery.mock(NodeDefinition.class);
+
+        this.mockery.checking(new Expectations(){{
+            never(listener).onCreate(with(any(String.class)));
+            allowing(parentNode).hasNode(with(any(String.class))); will(returnValue(false));
+            allowing(parentNode).getDefinition(); will(returnValue(parentNodeDefinition));
+            allowing(parentNodeDefinition).isProtected(); will(returnValue(true));
+        }});
+
+        contentCreator.init(ImportOptionsFactory.createImportOptions(true, false, true, false, false),
+                new HashMap<String, ContentReader>(), createdNodes, listener);
+        contentCreator.prepareParsing(parentNode, DEFAULT_NAME);
+
+        contentCreator.createNode(newNodeName, NodeType.NT_UNSTRUCTURED, null);
+    }
+
     //----- DefaultContentCreator#createProperty(String name, int propertyType, String[] values)-------//
 
     @Test
@@ -441,6 +471,29 @@ public class DefaultContentCreatorTest {
         assertFalse(parentNode.hasProperty(propName));
         contentCreator.createProperty(propName, PropertyType.STRING, new String[]{});
         assertTrue(parentNode.hasProperty(propName));
+    }
+
+    @Test
+    public void createProtectedProperty() throws RepositoryException, ParseException {
+        parentNode = mockery.mock(Node.class);
+        final String propName = "jcr:created";
+        final ContentImportListener listener = mockery.mock(ContentImportListener.class);
+
+        final Property property = mockery.mock(Property.class);
+        final PropertyDefinition propDefinition = mockery.mock(PropertyDefinition.class);
+        this.mockery.checking(new Expectations(){{
+            never(listener).onCreate(with(any(String.class)));
+            exactly (2).of(parentNode).hasProperty(with(any(String.class))); will(returnValue(Boolean.TRUE));
+            oneOf (property).isNew(); will(returnValue(Boolean.FALSE));
+            allowing(parentNode).getProperty(propName); will(returnValue(property));
+            allowing(property).getDefinition(); will(returnValue(propDefinition));
+            allowing(propDefinition).isProtected(); will(returnValue(true));
+        }});
+
+        contentCreator.init(ImportOptionsFactory.createImportOptions(false, false, true, false, false),
+                new HashMap<String, ContentReader>(), null, listener);
+        contentCreator.prepareParsing(parentNode, null);
+        contentCreator.createProperty(propName, PropertyType.DATE, "2012-10-01T09:45:00.000+02:00");
     }
 
     //------DefaultContentCreator#finishNode()------//

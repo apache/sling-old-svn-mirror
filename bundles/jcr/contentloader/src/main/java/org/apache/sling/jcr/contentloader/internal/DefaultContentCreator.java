@@ -18,35 +18,6 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.Principal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.Stack;
-import java.util.StringTokenizer;
-import java.util.regex.Pattern;
-
-import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.ValueFactory;
-
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
@@ -59,6 +30,28 @@ import org.apache.sling.jcr.contentloader.ContentReader;
 import org.apache.sling.jcr.contentloader.ImportOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.PropertyDefinition;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 /**
  * The <code>ContentLoader</code> creates the nodes and properties.
@@ -229,10 +222,15 @@ public class DefaultContentCreator implements ContentCreator {
 
         // if we are in parent node import mode, we don't create the root top level node!
         if (!isParentImport || this.parentNodeStack.size() > 1) {
+
             // if node already exists but should be overwritten, delete it
             if (!this.ignoreOverwriteFlag && this.configuration.isOverwrite() && parentNode.hasNode(name)) {
                 checkoutIfNecessary(parentNode);
                 parentNode.getNode(name).remove();
+            }
+
+            if (isParentNodeProtected(parentNode)) {
+                return;
             }
 
             // ensure repository node
@@ -290,6 +288,10 @@ public class DefaultContentCreator implements ContentCreator {
             return;
         }
 
+        if (isPropertyProtected(node, name)) {
+            return;
+        }
+
         if (propertyType == PropertyType.REFERENCE) {
             // need to resolve the reference
             String propPath = node.getPath() + "/" + name;
@@ -343,6 +345,12 @@ public class DefaultContentCreator implements ContentCreator {
         if (node.hasProperty(name) && !this.configuration.isPropertyOverwrite() && !node.getProperty(name).isNew()) {
             return;
         }
+
+        if (isPropertyProtected(node, name)) {
+            log.debug("Property " + name + " is protected, ignored");
+            return;
+        }
+
         if (propertyType == PropertyType.REFERENCE) {
             String propPath = node.getPath() + "/" + name;
             boolean hasAll = true;
@@ -602,6 +610,12 @@ public class DefaultContentCreator implements ContentCreator {
         if (node.hasProperty(name) && !node.getProperty(name).isNew() && !overwriteExisting) {
             return;
         }
+
+        if (isPropertyProtected(node, name)) {
+            log.debug("Property " + name + " is protected, ignored");
+            return;
+        }
+
         if (value == null) {
             if (node.hasProperty(name)) {
                 checkoutIfNecessary(node);
@@ -627,6 +641,12 @@ public class DefaultContentCreator implements ContentCreator {
         if (node.hasProperty(name) && !node.getProperty(name).isNew() && !overwriteExisting) {
             return;
         }
+
+        if (isPropertyProtected(node, name)) {
+            log.debug("Property " + name + " is protected, ignored");
+            return;
+        }
+
         if (values == null || values.length == 0) {
             if (node.hasProperty(name)) {
                 checkoutIfNecessary(node);
@@ -910,4 +930,17 @@ public class DefaultContentCreator implements ContentCreator {
         }
     }
 
+    private boolean isPropertyProtected(Node node, String propertyName) throws RepositoryException {
+        if (node.hasProperty(propertyName)) {
+            Property property = node.getProperty(propertyName);
+            PropertyDefinition propertyDefinition = property.getDefinition();
+            return propertyDefinition.isProtected();
+        }
+        return false;
+    }
+
+    private boolean isParentNodeProtected(Node parentNode) throws RepositoryException {
+        NodeDefinition definition = parentNode.getDefinition();
+        return definition.isProtected();
+    }
 }
